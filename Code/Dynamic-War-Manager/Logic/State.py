@@ -1,4 +1,12 @@
+"""
+ CLASS State
+ 
+ Rappresenta lo stato di un asset
+
+"""
+
 from LoggerClass import Logger
+from Context import STATE
 
 # LOGGING --
  
@@ -6,99 +14,19 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 class State:
 
-    def __init__(self, active = True, run = None  ): 
-
-            self._active = active
-            self._run = run # True only with active True                      
-            self._destroy = False # True only with run False
-            self._remove = False # True only with start and run False
-            self._anomaly = False # True only with active true. Depends from efficiency: efficiency <= 3 -> anomaly = True
-            self._critical = False # True only with active true. Depends from health: helath <= 3 -> critical = True
-            self._efficiency = 100 #full
-            self._energy = 100 #full 
-            self._health = 100 #full            
-
-            if not run:
-                self. _run = False
+    def __init__(self, name = "no_name"): 
             
-            elif not active and run:
-                self._run = False
-
-    def getEnergy(self):
-        return self._energy
-
-
-    def getEfficiency(self):
-        return self._efficiency
+            self._name = name
+            self._damage = 0 # asset damage float := [0:1]
+            self._state =  STATE.Inactive # Active, Inactive, Standby, Destroyed
+            
+            
+    def getDamage(self):
+        return self._damage
 
 
-    def getHealth(self):
-        return self._health
-
-
-    def updateEnergy(self, power, delta_t):
-        """ update energy level with power consumption in interval delta_t """
-        # unit test: ok
-
-        if not power:
-            return False
-
-        self._energy = self._energy - int( round( power * delta_t ) )
-
-        if self._energy < 0:
-            self._energy = 0
-            self.stop()
-         
-        self.updateEfficiency()        
-
-        return self._energy
-
-
-    def decrementHealth(self, damage):
-        """ update state with damage """
-        # unit test: ok
-
-        if not self._active or not damage or not isinstance(damage, int):
-            return False
-
-        self._health = self._health - damage
-
-        if self._health <= 0:
-            self._health = 0
-            self.destroy()
-
-        self.evalutateCritical()         
-        self.updateEfficiency()        
-
-        return self._health
-
-
-
-    def decrementEnergy( self, energy_consumption ):
-        """ update energy proprerty with energy_consumption """
-
-        if not self._active or not energy_consumption or not isinstance(energy_consumption, int):
-            return False
-        self._energy = self._energy - energy_consumption
-
-        if self._energy < 0:
-            self._energy = 0
-            self.stop()         
-        self.updateEfficiency()        
-        return self._energy
-
-    
-    def incrementEnergy( self, energy ):
-        """ increment energy proprerty with energy """
-
-        if not self._active or not energy or not isinstance(energy, int):
-            return False
-        self._energy = self._energy + energy         
-        self.updateEfficiency()        
-        return self._energy
-
-
-    
+    def getState(self):
+        return self._state
 
 
     def updateEfficiency(self):
@@ -188,76 +116,6 @@ class State:
 
         return True
        
- 
-    def active(self):
-        """Check state, set active state and return true. Raise Exception for state anomaly or return false for not correct conditions"""        
-
-        if self._remove or self._destroy:
-            return False
-            
-        self._active = True
-        self.checkState()
-        
-        return True
-        
-        
-    
-    def stop(self):
-        """Check state, set stop state and return true. Raise Exception for state anomaly or return false for not correct conditions"""       
-
-        if not self._run:
-            return False 
-
-        self._run = False
-        self.checkState()
-
-        return True
-
-
-    def run(self):
-        """Check state, set run state and return true. Raise Exception for state anomaly or return false for not correct conditions"""
-
-        if not self._active:
-            return False
-
-        self._run = True
-        self.checkState()        
-
-        return True
-
-
-
-    def remove(self):
-        """Check state, set remove state and return true. Raise Exception for state anomaly or return false for not correct conditions"""
-
-        if self._run or not self._active:
-            return False 
-
-        self._remove = True
-        self._destroy = True
-        self._active = False
-        self._run = False
-        self.checkState()
-        
-        return True
-
-
-
-    def destroy(self):
-        """Check state, set destroy state and return true. Raise Exception for state anomaly or return false for not correct conditions"""        
-        
-        #( self._active and self._remove ) or ( self._run and ( not self._active or self._destroy or self._remove)
-
-        if self._remove or not self._active:
-            return False 
-
-        self._destroy = True
-        self._run = False
-        self._remove = True
-        self._active = False
-        self.checkState()
-
-        return True
 
 
     def checkStateClass(self, state):
