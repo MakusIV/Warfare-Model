@@ -3,6 +3,7 @@ import Utility
 from State import State
 from LoggerClass import Logger
 from Event import Event
+from Context import STATE
 
 # LOGGING --
  
@@ -11,24 +12,21 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK
 class Block:    
 
-    def __init__(self, name = None, state = None ):
+    def __init__(self, name = None ):
 
             # propriety
             self._name = name 
             self._id = Utility.setId("Block_" + name + "_")
-            self.description = None
-            self.category = None
-            self.function = None
-            self.value = None
-            self.position = None
-            self.acs = None # assigned 
-            self.rcs = None # requested
-            self.payload = None
+            self._description = None
+            self._category = None
+            self._function = None
+            self._value = None
+            self._position = None
+            self._acs = None # assigned 
+            self._rcs = None # requested
+            self._payload = None
+        
             
-
-            # association            
-            self.setState(state)           
-            self._eventsQueue = {} #  {key: event id, value = event}
             
 
             if not self.checkParam( dimension, mass, resilience, state, coord ):
@@ -38,15 +36,21 @@ class Block:
             if not name:
                 self._name = Utility.setName('Block_')
                 self._id = Utility.setId('Block_ID_', None)
+
             else:
                 self._name = "Block_" + name
                 self._id = Utility.setId('Block_' + name + '_ID', None)
            
+            # Association      
+            self._state = State(self._name)
+
+
  
     def setState(self, state):
 
         if not state or not isinstance(state, State):
             self._state = State( run = True )
+
         else:
             self._state = state
 
