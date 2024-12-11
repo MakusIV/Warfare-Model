@@ -4,7 +4,7 @@ import random
 import logging
 import os
 import math
-
+from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
 # non èpossibile usare la classe Logger per evitare le circular dependencies: Logger importa General e Geneal imprta Logger
@@ -117,7 +117,7 @@ SENSOR_TYPE = {
 
 # 3D Geometry
 
-from sympy import Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+
 
 def segment_equation(p1, p2):
     """
