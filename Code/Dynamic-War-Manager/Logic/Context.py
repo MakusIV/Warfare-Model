@@ -4,36 +4,15 @@
  Elenco delle variabili di contesto
 
 """
-from enum import Enum
 
-class STATE(Enum):
-    Active = 1
-    Inactive = 2
-    Standby = 3
-    Destroyed = 4
-    
-class SHAPE3D(Enum):
-    Cylinder = 1
-    Cube = 2
-    Sphere = 3
-    SemiSphere = 4
-    Pyramid = 5
-    Cone = 6
-    Trunc_Cone = 7
+from typing import Literal
 
-class SHAPE2D(Enum):
-    Circonference = 1
-    Square = 2
-    Hexagon = 3
-
-class VALUE(Enum):
-    Critical = 1
-    Very_High = 2
-    High = 3
-    Medium = 4
-    Low = 5
-    Very_Low = 6
-    
+STATE: Literal["Active", "Inactive", "Standby", "Destroyed"]
+SHAPE3D: Literal["Cylinder", "Cube", "Sphere", "SemiSphere", "Pyramid", "Cone", "Trunc_Cone"]
+SHAPE2D: Literal["Circonference", "Square", "Hexagon"]
+VALUE: Literal["Critical", "Very_High", "High", "Medium", "Low", "Very_Low"]
+CATEGORY: Literal["Goods", "Energy", "Goods & Energy"]
+MIL_CATEGORY: Literal["Airbase", "Port", "Stronghold", "Farp", "Regiment", "Battallion", "Brigade", "Company", "EWR"]
 
 
 AIR_DEFENCE_ASSET = {  

@@ -3,7 +3,9 @@ import Utility
 from State import State
 from LoggerClass import Logger
 from Event import Event
-from Context import STATE
+from Context import STATE, CATEGORY, MIL_CATEGORY
+from typing import Literal
+from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
  
@@ -12,44 +14,45 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK
 class Block:    
 
-    def __init__(self, name = None ):
+    def __init__(self, name = None, description = None, category = None, function = None, value = None, acp = None, rcp = None, payload = None):
 
             # propriety
-            self._name = name 
-            self._id = Utility.setId("Block_" + name + "_")
-            self._description = None
-            self._category = None
-            self._function = None
-            self._value = None
-            self._position = None
-            self._acs = None # assigned 
-            self._rcs = None # requested
-            self._payload = None
-        
+            self._name = name # block name - type str
+            self._id = None # id self-assigned - type str
+            self._description = description # block description - type str
+            self._category = category # block category - type Literal
+            self._function = function # block function - type str
+            self._value = value # block value - type int            
+            self._acs = acp # assigned consume profile - type Payload
+            self._rcs = rcp # requested consume profile - type Payload            
+            self._payload = None # block payload - type Payload
             
-            
+            # Association      
+            self._state = State(self._name) # block state - type State
 
-            if not self.checkParam( dimension, mass, resilience, state, coord ):
+            # check input parameters
+            if not self.checkParam( name, description, category, function, value, acp, rcp, payload ):
                 raise Exception("Invalid parameters! Object not istantiate.")
 
 
             if not name:
-                self._name = Utility.setName('Block_')
-                self._id = Utility.setId('Block_ID_', None)
+                self._name = Utility.setName('Unamed_Block')
 
             else:
-                self._name = "Block_" + name
-                self._id = Utility.setId('Block_' + name + '_ID', None)
+                self._name = "Block." + name
+
+            self._id = Utility.setId(self._name, None)
            
-            # Association      
-            self._state = State(self._name)
+            
+            
 
 
- 
+    # methods
+
     def setState(self, state):
 
         if not state or not isinstance(state, State):
-            self._state = State( run = True )
+            self._state = State( name = "State." + self._name )
 
         else:
             self._state = state
@@ -72,6 +75,11 @@ class Block:
             self._id = str( id )       
             
         return True
+    
+    
+    def getId(self):
+        return self._id
+
 
 
     def setName(self, name):
@@ -84,77 +92,9 @@ class Block:
         return True
             
 
-    
-    def setDimension(self, dimension):
-
-        if not dimension or not isinstance(dimension, tuple) and not len(dimension) == 3 or not isinstance( dimension[0], int) or not  isinstance( dimension[1], int) or not  isinstance( dimension[2], int):
-            return False
-        else:
-            self._dimension = dimension
-
-     
-        #if not General.checkDimension(dimension): # not dimension or not isinstance(dimension, list) and not len(dimension) == 3 or not isinstance( dimension[0], int) or not  isinstance( dimension[1], int) or not  isinstance( dimension[2], int) :
-         #   return False
-        #else:
-         #   self._dimension = dimension
-
-        return True
-
-
-    def isCollision(self, volume):
-        """Return True if object's volume collide with volume"""
-        # xd = dimension[0], yd = dimension[1], zd =dimension[2]
-        # xvol_low = volume[0][0], yvol_low = volume[0][1], zvol_low = volume[0][2]
-        # xvol_high = volume[1][0], yvol_high = volume[1][1], zvol_high = volume[1][2]
-        # not intersection in x axes: x > xvol_high and x + xd < xvol_low
-        # not intersection in y axes: y > yvol_high and y + yd < yvol_low
-        # not intersection in z axes: z > zvol_high and z + zd < zvol_low
-        # not interection -> one or more axis not intersection
-
-        ## NOTA: volume = [ [xl, yl, zl],  [xh, yh, zh] ] dove xl, yl, zl <= xh, yh, zh
-
-        if not General.checkVolume(volume): #not volume or not isinstance( volume, list ):
-            raise Exception('Invalid parameters')
-
-        pos = self._coord.getPosition()
-
-        x_not_intersection =  pos[0] > volume[1][0] or pos[0] + self._dimension[0] < volume[0][0] 
-        y_not_intersection =  pos[1] > volume[1][1] or pos[1] + self._dimension[1] < volume[0][1] 
-        z_not_intersection =  pos[2] > volume[1][2] or pos[2] + self._dimension[2] < volume[0][2] 
-
-        # not interection -> one or more axis not intersection
-        if x_not_intersection or y_not_intersection or z_not_intersection:
-            return False
-
-        return True
-
-
-    def getDistance(self, coord):
-        """Return distance (d, xd, yd, zd) from object.coordinate to pos:[x, y, z]""" 
-
-        if not coord or not isinstance(coord, Coordinate):
-            return False       
-
-        return self._coord.distance(coord)
-        
-
-    def getHealth( self ):
-        return self._state.getHealth()
-
-    def getId(self):
-        return self._id
-
     def getName(self):
         return self._name
 
-    def getPosition(self):
-        return self._coord.getPosition()
-
-    def setPosition(self, position):
-        self._coord.setPosition( position )
-
-    def getDimension(self):
-        return self._dimension
 
     def to_string(self):
         return 'Name: {0}  -  Id: {1}'.format(self.getName(), str(self._id))
@@ -167,7 +107,7 @@ class Block:
         return True
 
     def checkBlockList(self, objects):
-        """Return True if objectsobject is a list of Object object otherwise False"""
+        """Return True if objectsobject is a list of Block object otherwise False"""
 
         if objects and isinstance(objects, list) and all( isinstance(object, Block) for object in objects ):
             return True
@@ -176,42 +116,31 @@ class Block:
 
 
      # vedi il libro
-    def checkParam(self, dimension, mass, resilience, state, coord ):
-        """Return True if conformity of the parameters is verified"""   
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload) -> bool:
+        """Return True if type compliance of the parameters is verified"""   
     
-        if state != None and not isinstance( state, State ) or coord != None and not isinstance( coord, Coordinate ) or resilience != None and ( not isinstance( resilience, int )  or not( resilience <= 100 and resilience >= 0 ) ) or not( mass >= 0 ) or not General.checkDimension( dimension ):
+        # Controlla se i tipi dei parametri sono conformi
+        if not isinstance(name, str):
             return False
-                
+        if not isinstance(description, str):
+            return False
+        if not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]:                        
+            return False        
+        if not isinstance(function, str):
+            return False
+        if not isinstance(value, int):
+            return False
+        if not isinstance(position, Point):
+            return False
+        if not isinstance(acs, Payload):
+            return False        
+        if not isinstance(rcs, Payload):
+            return False        
+        if not isinstance(payload, Payload):
+            return False
+            
         return True
-
-
-    def getVolumePosition( self ):
-        """Return the position of the object's volume"""
-        
-        position = self.getPosition()
-        dimension = self.getDimension()
-        volume_position = dict()
-
-        for z in range( position[ 2 ], position[ 2 ] + dimension[ 2 ] ):           
-           for y in range( position[ 1 ], position[ 1 ] + dimension[ 1 ] ):              
-              for x in range( position[ 0 ], position[ 0 ] + dimension[ 0 ] ):
-                  volume_position[ ( x, y, z ) ] = True
-
-        return volume_position
-
-
-    def getVolume( self, position = None, dimension = None ):
-        """Return [ [ position ], [ position + dimensione ] ] """
-        
-        if position == None:
-            position = self.getPosition() 
-        
-        if dimension == None:
-            dimension = self.getDimension()
-
-        return [ position, [ position[ 0 ] + dimension[ 0 ], position[ 1 ] + dimension[ 1 ], position[ 2 ] + dimension[ 2 ] ] ] 
-
-
+    
     def destroy( self ):
         """Destroy this object"""
 
@@ -224,16 +153,58 @@ class Block:
         logger.logger.debug("Object: {0} destroyed".format( self._name ) )
         return True
 
-    def getValueVolume( self ):
-        """Return Object volume dimension"""
-        return self._dimension[0] * self._dimension[1] * self._dimension[2]
 
-    def differenceWithValueVolume( self, valueVolume ):        
-        """Return difference of automa volume dimensione and valueVolume:"""
-        return self.getValueVolume() - valueVolume
+    def efficiency(self): # sostituisce operational()
+        """calculate efficiency from asset state, rcp, acp, .."""
+        # efficiency = state * acp / rcp
+        # return efficiency
+        pass
+        
+    def value(self):
+        """calculate Value from asset Value"""
+        # Value = median(assetValue)
+        # return Value
+        pass
 
-    def getFootPrint( self ):
-        """Return hash code for Object"""        
-    
-        objectFootPrint = hash( General.calcVectorModule( self._dimension ) + self._mass )
-        return objectFootPrint, False
+    def cost(self):
+        """calculate cost from asset cost """
+        # cost = sum(assetCost)
+        # return cost
+        pass
+
+    def rcp(self):
+        """calculate request consume payload (rcp) from asset rcp"""
+        # rcp = sum(assetRcp) 
+        # return rcp
+        pass
+
+    def acp(self):
+        """calculate assigned consume payload (acp) from asset acp"""
+        # acp = sum(assetAcp) 
+        # return acp
+        pass
+
+    def payload(self):
+        """calculate payload from asset payload"""
+        # pl = sum(assetPayload) 
+        # return pl
+        pass
+
+    def asset_status(self):
+        """calculate Asset_Status from asset Asset_Status"""
+        # as = median(Asset_Status) 
+        # return as
+        pass
+
+    def threat_volume(self):
+        """calculate Threat_Volume from asset Threat_Volume"""
+        # tv = max(assetThreat_Volume) 
+        # return tv
+        pass
+
+    def position(self):
+        """calculate position from asset position"""
+        # ap = median(assetPosition) 
+        # return ap
+        pass
+

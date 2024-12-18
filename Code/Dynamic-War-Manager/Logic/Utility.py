@@ -4,6 +4,8 @@ import random
 import logging
 import os
 import math
+import hashlib
+import uuid
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
@@ -325,7 +327,9 @@ def checkVolume(volume):
 def setId(name, id):
     """Return string name plus random int 6 digit"""                    
     if not id or not isinstance(id, int):
-        id = str( name ) + '_#' + str( random.randint( 1, 999999 ) )  # hashing or radInt
+        # Genera un identificativo univoco basato su codifica hash e generazione casuale di numeri
+        hash_object = hashlib.sha256((name + str(uuid.uuid4())).encode())
+        id = str( name ) + '_#' + str( int(hash_object.hexdigest(), 16) % 10**6 )  # hashing or radInt
     else:
         id = str( name ) + '_#' + str( id )    
     return id
