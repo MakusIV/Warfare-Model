@@ -1,12 +1,13 @@
 """
  CLASS State
  
- Rappresenta lo stato di un asset
+ Rappresenta lo stato di un Block
 
 """
 
 from LoggerClass import Logger
 from Context import STATE
+import Utility
 
 # LOGGING --
  
@@ -14,11 +15,11 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 class State:
 
-    def __init__(self, name = "no_name"): 
+    def __init__(self, parent_name = "unamed_parent", parent_id = None): 
             
-            self._name = name
-            self._damage = 0 # asset damage float := [0:1]
-            self._state =  STATE.Inactive # Active, Inactive, Standby, Destroyed
+            self._ID =  parent_name + Utility.setId(parent_name, parent_id) # name - string
+            self._damage = 0.0 # damage  - float := [0:1]
+            self._state_value =  STATE.Inactive # Active, Inactive, Standby, Destroyed
             
             
     def getDamage(self):
@@ -26,106 +27,53 @@ class State:
 
 
     def getState(self):
-        return self._state
-
-
-    def updateEfficiency(self):
-        """Update efficiency from energy and health levels ad return efficiency level"""
-        # unit test: ok
-
-        self._efficiency = int( round( self._energy * self._health / 100 ) )
-        return self._efficiency
-
+        return self._state_value
     
-    def evalutateAnomaly(self):
-        """Update anomaly state from efficiency level and return it"""
-        # unit test: ok
 
-        if (self._efficiency <= 30):
-            self.setAnomaly(True)
+    def setStateValue(self, state_value):
+        if not state_value or not isinstance(state_value, str):
+            raise ValueError("type not valid, str type expected")
         
-        return self._anomaly
+        elif state_value not in [STATE]:
+            value = [v for v in STATE]
+            str_value = ', '.join(value)
+            raise ValueError("value not valid: " + state_value + ". Value expected: \n" + str_value)
         
-
-    def evalutateCritical(self):
-        """Upgrade critical state from health level and return it"""
-        # unit test: ok
-
-        if (self._health <= 30 ):
-            self.setCritical(True)
-        
-        return self._critical
-
-
-    def setCritical(self, value):
-
-        if not self._active or self._destroy or self._remove:
-            return False
-
-        self._critical = value
-        self.checkState()
+        else:
+            self._state_value = state_value
 
         return True
 
 
-    def setAnomaly(self, value):
-
-        if not self._active or self._destroy or self._remove:
-            return False
-
-        self._anomaly = value
-        self.checkState()
-
-        return True
-
+   
 
     def toString(self):
-        return "active: " + str(self._active) + ", run: " + str(self._run) + ", remove: " + str(self._remove) + ", destroy: " + str(self._destroy) + ", anomaly: " + str(self._anomaly) + ", critical: " + str(self._critical) 
+        return "name: " + self._name + ", damage: " + str(self._damage) + ", state:value: " + self._state_value
             
 
     def isActive(self):
-        return self._active            
-
-
-    def isRunning(self):
-        return self._run            
-
+        return self._state_value == STATE.Active               
+    
+    def isInactive(self):
+        return self._state_value == STATE.Inactive
 
     def isDestroyed(self):
-        return self._destroy
+        return self._state_value == STATE.Destroyed
 
-
-    def isRemoved(self):
-        return self._remove
-
-    def isAnomaly(self):
-        return self._anomaly
+    def isDamaged(self):
+        return self._state_value == STATE.Damaged
     
     def isCritical(self):
-        return self._critical
-
+        return self._damage <= 0.3
 
     def checkState(self):
-        """Check state and return true if correct state is verificated or raise Exception for state anomaly"""
-        # unit test: ok
-
-        wrongState = ( self._active and self._remove ) or ( self._run and ( not self._active or self._destroy or self._remove) ) 
-
-        if wrongState:
-            raise Exception("Anomaly state!")
-
-        return True
-       
-
-
-    def checkStateClass(self, state):
-
-        if not state or not isinstance(state, State):
-            return False
         
-        return True
+        if self._damage >= 1:
+            self._state_value = STATE.Destroyed
 
+        elif self._damage > 0:
+            self._state_value = STATE.Damaged
 
-    
+        
 
     # le funzionalità specifiche le "inietti" o crei delle specializzazioni (classi derivate)
