@@ -1,4 +1,3 @@
-from Coordinate import Coordinate
 import General
 from State import State
 from LoggerClass import Logger
@@ -6,7 +5,7 @@ from LoggerClass import Logger
 # LOGGING --
  
 logger = Logger(module_name = __name__, class_name = 'Event')
-
+ 
 
 class Event:
     
