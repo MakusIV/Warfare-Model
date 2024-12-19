@@ -331,7 +331,7 @@ def setId(name, id):
         hash_object = hashlib.sha256((name + str(uuid.uuid4())).encode())
         id = str( name ) + '_#' + str( int(hash_object.hexdigest(), 16) % 10**6 )  # hashing or radInt
     else:
-        id = str( name ) + '_#' + str( id )    
+        id = str( id )    
     return id
 
 def setName(name):
