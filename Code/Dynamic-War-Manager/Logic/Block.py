@@ -1,5 +1,4 @@
-import random
-import Utility
+from Utility import Utility
 from State import State
 from LoggerClass import Logger
 from Event import Event
@@ -7,6 +6,7 @@ from Payload import Payload
 from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from Asset import Asset
 
 # LOGGING --
  
@@ -15,7 +15,7 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK
 class Block:    
 
-    def __init__(self, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None):
+    def __init__(self, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, region: Region = None):
 
             # propriety
             self._name = name # block name - type str
@@ -32,6 +32,7 @@ class Block:
             self._rcp = rcp # requested consume profile - component of Block - type Payload            
             self._payload = payload # block payload - component of Block - type Payload
             self._asset = Dict[str, Asset]= {} # assets - component of Block - type list forse è meglio un dict
+            self._region = region # block map region - type Region
 
             # check input parameters
             if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload ):
@@ -65,7 +66,7 @@ class Block:
     def name(self, name):
 
         if not isinstance(id, str):
-            raise TypeError("type not valid, str type expected")
+            raise TypeError("Invalid parameters! Type not valid, str type expected")
 
         self._name = id    
         return True
@@ -78,7 +79,7 @@ class Block:
     def id(self, id):
 
         if not ( isinstance(id, int) or isinstance(id, str) ):
-            raise TypeError("type not valid, int or str type expected")
+            raise TypeError("Invalid parameters! Type not valid, int or str type expected")
 
         elif isinstance(id, int):
             self._id = str( id )       
@@ -96,7 +97,7 @@ class Block:
     def description(self, id):
 
         if not isinstance(id, str):
-            raise TypeError("type not valid, str type expected")
+            raise TypeError("Invalid parameters! Type not valid, str type expected")
         
         self._description = id       
             
@@ -110,7 +111,7 @@ class Block:
     def category(self, id):
 
         if not isinstance(id, str):
-            raise TypeError("type not valid, str type expected")
+            raise TypeError("Invalid parameters! Type not valid, str type expected")
         
         self._category = id    
 
@@ -125,7 +126,7 @@ class Block:
     def functionality(self, id):
 
         if not isinstance(id, str):
-            raise TypeError("type not valid, str type expected")
+            raise TypeError("Invalid parameters! Type not valid, str type expected")
 
         self._functionality = id    
             
@@ -140,7 +141,7 @@ class Block:
     def value(self, id):
 
         if not ( isinstance(id, int) or isinstance(id, str) ):
-            raise TypeError("type not valid, int or str type expected")
+            raise TypeError("Invalid parameters! Type not valid, int or str type expected")
 
         elif isinstance(id, int):
             self._value = str( id )       
@@ -153,14 +154,16 @@ class Block:
 
     @property
     def cost(self) -> int:
-
         cost = 0
 
         for asset in self.assets:
             cost += asset.cost
 
         return cost
-
+    
+    @cost.setter
+    def cost(self, cost):
+        raise ValueError("cost not modifiable for Block")
     
 
 
@@ -177,11 +180,11 @@ class Block:
     def state(self, state) -> bool:
 
         if not not isinstance(state, State):
-            raise TypeError("type not valid, State Class expected")
+            raise TypeError("Invalid parameters! Type not valid, State Class expected")
 
         else:
             if not self._state or self._state != state: 
-                raise ValueError("invalid construction of state object: parent association not defined during construction")
+                raise ValueError("Invalid construction of state: parent association not defined during construction")
 
         return True
 
@@ -195,7 +198,7 @@ class Block:
     def acp(self, payload: Payload) -> bool:
 
         if not isinstance(payload, Payload):
-            raise TypeError("type not valid, Payload Class expected")
+            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
 
         else:
             self._acp = payload             
@@ -214,7 +217,7 @@ class Block:
     def rcp(self, payload: Payload) -> bool:
 
         if not isinstance(payload, Payload):
-            raise TypeError("type not valid, Payload Class expected")
+            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
 
         else:
             self._rcp = payload             
@@ -233,7 +236,7 @@ class Block:
     def payload(self, payload: Payload) -> bool:
 
         if not isinstance(payload, Payload):
-            raise TypeError("type not valid, Payload Class expected")
+            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
 
         else:
             self._payload = payload             
@@ -242,49 +245,55 @@ class Block:
 
         return True
 
+    @property
+    def region(self):
+        return self._region
+
+    @region.setter
+    def region(self, id):
+
+        if not isinstance(id, Region):
+            raise TypeError("Invalid parameters! Type not valid, Region type expected")
+        
+        self._region = id       
+            
+        return True
 
 
     def to_string(self):
         return 'Name: {0}  -  Id: {1}'.format(self.getName(), str(self._id))
     
-    def checkBlockClass(self, object):
+    def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
-        if not object or not isinstance(object, Block):
-            return False
+        return type(object) == type(self)
         
-        return True
 
-    def checkBlockList(self, objects):
+    def checkClassList(self, objects):
         """Return True if objectsobject is a list of Block object otherwise False"""
-
-        if objects and isinstance(objects, list) and all( isinstance(object, Block) for object in objects ):
-            return True
-
-        return False
+        return all(type(obj) == type(self) for obj in objects)
 
 
      # vedi il libro
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload) -> bool:
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
-    
-        # Controlla se i tipi dei parametri sono conformi
+                   
         if not isinstance(name, str):
             return False
-        if not isinstance(description, str):
+        if description and not isinstance(description, str):
             return False
-        if not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]:                        
+        if category and (not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]):                        
             return False        
-        if not isinstance(function, str):
+        if function and not isinstance(function, str):
             return False
-        if not isinstance(value, int):
+        if value and not isinstance(value, int):
             return False
-        if not isinstance(position, Point):
+        if position and not isinstance(position, Point):
             return False
-        if not isinstance(acs, Payload):
+        if acp and not isinstance(acp, Payload):
             return False        
-        if not isinstance(rcs, Payload):
+        if rcp and not isinstance(rcp, Payload):
             return False        
-        if not isinstance(payload, Payload):
+        if payload and not isinstance(payload, Payload):
             return False
             
         return True
