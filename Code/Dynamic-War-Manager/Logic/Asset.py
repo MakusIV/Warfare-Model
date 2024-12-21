@@ -148,3 +148,20 @@ class Asset(Block) :
         # return ap
         pass
 
+    @property #overload
+    def assets(self):
+        raise Exception("Metodo non implementato in questa classe")
+     
+    @assets.setter #overload
+    def assets(self, value):
+            raise Exception("Metodo non implementato in questa classe")
+
+    def getAsset(self, key): #overload
+            raise Exception("Metodo non implementato in questa classe")
+
+    def setAsset(self, key, value): #overload
+            raise Exception("Metodo non implementato in questa classe")
+
+    def removeAsset(self, key):#overload
+            raise Exception("Metodo non implementato in questa classe")
+  
