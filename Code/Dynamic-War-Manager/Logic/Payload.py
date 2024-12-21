@@ -29,7 +29,7 @@ class Payload:
         # association
         
         if parent != None and not isinstance(parent, Block):
-            raise TypeError("type not valid, Block Class expected")
+            raise TypeError("Invalid parameters! Type not valid, Block Class expected")
         
         elif parent != None:             
             parent.payload = self # set parent association with payload
@@ -47,7 +47,7 @@ class Payload:
     def parent(self, parent):
         
         if not isinstance(parent, Block):
-                raise TypeError("type not valid, Block Class expected")
+                raise TypeError("Invalid parameters! Type not valid, Block Class expected")
                 
         self._parent = parent # parent association  
         parent.payload = self # set parent association with payload

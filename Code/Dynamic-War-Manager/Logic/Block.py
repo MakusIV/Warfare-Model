@@ -24,14 +24,14 @@ class Block:
             self._category = category # block category - type Literal
             self._functionality = functionality # block functionality - type str
             self._value = value # block value - type int             
-            self._event = List[Event] = [] # block event - list of Block event's          
+            self._events = List[Event] = [] # block event - list of Block event's          
 
             # Association    
             self._state = State(self) # block state- component of Block - type State  
             self._acp = acp # assigned consume profile - component of Block - type Payload -
             self._rcp = rcp # requested consume profile - component of Block - type Payload            
             self._payload = payload # block payload - component of Block - type Payload
-            self._asset = Dict[str, Asset]= {} # assets - component of Block - type list forse è meglio un dict
+            self._assets = Dict[str, Asset]= {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
 
             # check input parameters
@@ -150,7 +150,43 @@ class Block:
             self._value = id
             
         return True
-    
+
+
+    @property
+    def events(self):
+        return self._events
+
+    @events.setter
+    def events(self, value):
+        if isinstance(value, list):
+            self._events = value
+        else:
+            raise ValueError("Il valore deve essere una lista")
+
+    def addEvent(self, event):
+        if isinstance(event, Event):
+            self._events.append(event)
+        else:
+            raise ValueError("Il valore deve essere un oggetto di tipo Event")
+
+    def getLastEvent(self):
+        if self._events:
+            return self._events[-1]
+        else:
+            raise IndexError("La lista è vuota")
+
+    def getEvent(self, index):
+        if index < len(self._events):
+            return self._events[index]
+        else:
+            raise IndexError("Indice fuori range")
+
+    def removeEvent(self, event):
+        if event in self._events:
+            self._events.remove(event)
+        else:
+            raise ValueError("L'evento non esiste nella lista")
+
 
     @property
     def cost(self) -> int:
@@ -244,6 +280,36 @@ class Block:
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
         return True
+    
+    @property
+    def assets(self):
+        return self._assets
+    
+    @assets.setter
+    def assets(self, value):
+        if isinstance(value, dict):
+            self._assets = value
+        else:
+            raise ValueError("Il valore deve essere un dizionario")
+
+    def getAsset(self, key):
+        if key in self._assets:
+            return self._assets[key]
+        else:
+            raise KeyError(f"L'asset {key} non esiste in assets")
+
+    def setAsset(self, key, value):
+        if isinstance(value, Asset):
+            self._assets[key] = value
+        else:
+            raise ValueError("Il valore deve essere un Asset")  
+
+    def removeAsset(self, key):
+        if key in self._assets:
+            del self._assets[key]
+        else:
+            raise KeyError(f"L'asset {key} non esiste nel dizionario")
+  
 
     @property
     def region(self):
