@@ -6,6 +6,9 @@ import os
 import math
 import hashlib
 import uuid
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import numpy as np
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
@@ -252,29 +255,6 @@ def tangent_to_semisphere(center, radius, p):
 
 
 
-def getActuatorParam(_class, _type, param):
-    """Return power, speed, accuracy, resilience, strenght for actuator of that _class and _type, otherwise False"""
-    
-    #if not checkActuatorTypeAndClass(_type, _class) non serve in quanto il controllo viene effettuato al momento della creazione dell'istanza dell'Actuator
-    #    return False
-    return ACTUATOR_TYPE.get( _class ).get( _type )[param]#values()
-
-def getSensorParam(_class, _type, param):
-    """Return power, speed, accuracy, resilience, strenght for actuator of that _class and _type, otherwise False"""
-    
-    #if not checkActuatorTypeAndClass(_type, _class) non serve in quanto il controllo viene effettuato al momento della creazione dell'istanza dell'Actuator
-    #    return False
-    return SENSOR_TYPE.get( _class ).get( _type )[param]#values()
-
-def checkActionType(_type):
-    """Return True if _type is compliance with standard type defined for ACTION_TYPE in General.py"""
-    return _type != None and isinstance(_type, str) and any( [ True for el in ACTION_TYPE if el == _type ] )
-
-
-def checkSensorType(_type):
-    """Return True if _type is compliance with standard type defined for Sensor in General.py"""
-    return _type != None and isinstance(_type, str) and any( [ True for el in SENSOR_TYPE if el == _type ] )
-
 
 
 
@@ -282,46 +262,6 @@ def checkEventType(_type):
     """Return True if _type is compliance with standard type defined for Event in General.py"""
     return _type != None and isinstance(_type, str) and any( [ True for el in EVENT_TYPE if el == _type ] )
 
-def checkSensorTypeAndClass(_type, _class):
-    """Return True if _type and _class are compliance with standard type and class defined for Sensor in General.py"""
-    return _type != None and _class != None and isinstance(_type, str) and isinstance(_class, str) and any( [True for key in SENSOR_TYPE.keys() if key == _class] ) and any( [True for key in SENSOR_TYPE[ _class ].keys() if key == _type ] )
-
-def checkActuatorTypeAndClass(_type, _class):
-    """Return True if _type and _class are compliance with standard type and class defined for Actuator in General.py"""
-    return _type != None and _class != None and isinstance(_type, str) and isinstance(_class, str) and any( [True for key in ACTUATOR_TYPE.keys() if key == _class] ) and any( [True for key in ACTUATOR_TYPE[ _class ].keys() if key == _type ] )
-
-
-def checkDimension(dimension):
-    """ Return True if dimension is a list normalized as dimension:  dimension: [int dim_x, int dim_y, int dim_z]"""
-
-    if not dimension or not ( isinstance(dimension, list) or isinstance(dimension, tuple) ) and not len(dimension) == 3 or not isinstance( dimension[0], int) or not  isinstance( dimension[1], int) or not  isinstance( dimension[2], int):
-        return False
-    
-    return True
-
-def checkPosition(position):
-    """ Return True if position is a tuple normalized as dimension:  dimension: ( int dim_x, int dim_y, int dim_z)"""
-
-    if not position or not ( isinstance(position, tuple) and len(position) == 3 ) or not isinstance( position[0], int) or not  isinstance( position[1], int) or not  isinstance( position[2], int):
-            return False
-    
-    return True
-
-
-def checkVolume(volume):
-    """ Return True if volume is an list normalized as volume:  volume: [ [ int x_low, int y_low, int z_low ], [ int x_high, int y_high, int z_high ] ]"""
-
-    if not volume or not isinstance( volume, list ) or len(volume) != 2 or len(volume[0]) != 3  or len(volume[1]) != 3:
-         return False
-    
-    elif not isinstance( volume[0][0], int ) or not isinstance( volume[0][1], int ) or not isinstance( volume[0][2], int ) or not isinstance( volume[1][0], int ) or not isinstance( volume[1][1], int ) or not isinstance( volume[1][2], int ):
-             return False
-
-    # LO ESCLUDO DAL TEST IN QUANTO IN UN CONTESTO RELATIVO CON COOORDINATE NEGATIVE I LIMITI SUPERIORI E INFERIORI DEL VOLUME SI INVERTONO ANCHE UTILIZZANDO ABS NON E' POSSIBILE GARANTIRE COERENZA (VEDI Sensibility.get_probability_of_perception)
-    #if abs( volume[0][0] ) > abs( volume[1][0] ) and abs( volume[0][1] ) > abs( volume[1][1] ) and abs( volume[0][2] ) > abs( volume[1][2] ):
-    #    return False
-    
-    return True
 
 
 def setId(name, id):
@@ -370,3 +310,147 @@ def calcProbability( probability ):
     num = random.uniform(0, 1)
     return num < probability
     
+
+
+
+def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
+    """
+    Calculate Priority of Transport Line Target using Fuzzy Logic.
+
+    input param: 
+    target_priority (string): ['L', 'M', 'H', 'VH'], 
+    transport_line_efficiency, storage_efficiency (float): [0,1]
+
+    return (string): ['L', 'M', 'H', 'VH'] 
+
+    TEST: OK CON JUPITER NOTEBOOK
+    """
+
+    # Variabili di input
+    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # 0=L, 1=M, 2=H, 3=VH
+    l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'l_e')  # Valori continui [0, 1]
+    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # Valori continui [0, 1]
+
+    # Variabile di output
+    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_l_p')  # Valori continui [0, 1]
+
+    # Funzioni di appartenenza
+    t_p.automf(names=['L', 'M', 'H', 'VH'])
+    l_e['L'] = fuzz.trapmf(l_e.universe, [0, 0, 0.3, 0.35])
+    l_e['M'] = fuzz.trapmf(l_e.universe, [0.3, 0.35, 0.6, 0.65])
+    l_e['H'] = fuzz.trapmf(l_e.universe, [0.6, 0.65, 0.85, 0.95])
+    l_e['VH'] = fuzz.trapmf(l_e.universe, [0.9, 0.95, 1, 1])
+    s_e['L'] = fuzz.trapmf(s_e.universe, [0, 0, 0.3, 0.35])
+    s_e['M'] = fuzz.trapmf(s_e.universe, [0.3, 0.35, 0.6, 0.65])
+    s_e['H'] = fuzz.trapmf(s_e.universe, [0.6, 0.65, 0.85, 0.95])
+    s_e['VH'] = fuzz.trapmf(s_e.universe, [0.9, 0.95, 1, 1])
+    t_l_p['L'] = fuzz.trapmf(t_l_p.universe, [0, 0, 0.3, 0.35])
+    t_l_p['M'] = fuzz.trapmf(t_l_p.universe, [0.3, 0.35, 0.6, 0.65])
+    t_l_p['H'] = fuzz.trapmf(t_l_p.universe, [0.6, 0.65, 0.85, 0.95])
+    t_l_p['VH'] = fuzz.trapmf(t_l_p.universe, [0.9, 0.95, 1, 1])
+
+    # Definizione delle regole
+    rules = [
+        ctrl.Rule(t_p['VH'] & l_e['VH'] & s_e['VH'], t_l_p['VH']),
+        ctrl.Rule(t_p['VH'] & l_e['VH'] & s_e['H'], t_l_p['VH']),
+        ctrl.Rule(t_p['VH'] & l_e['VH'] & s_e['M'], t_l_p['H']),
+        ctrl.Rule(t_p['VH'] & l_e['VH'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['VH'] & l_e['H'] & s_e['VH'], t_l_p['VH']),
+        ctrl.Rule(t_p['VH'] & l_e['H'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['VH'] & l_e['H'] & s_e['M'], t_l_p['H']),
+        ctrl.Rule(t_p['VH'] & l_e['H'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['VH'] & l_e['M'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['VH'] & l_e['M'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['VH'] & l_e['M'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['VH'] & l_e['M'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['VH'] & l_e['L'] & s_e['VH'], t_l_p['L']),
+        ctrl.Rule(t_p['VH'] & l_e['L'] & s_e['H'], t_l_p['L']),
+        ctrl.Rule(t_p['VH'] & l_e['L'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['VH'] & l_e['L'] & s_e['L'], t_l_p['L']),
+        
+        ctrl.Rule(t_p['H'] & l_e['VH'] & s_e['VH'], t_l_p['VH']),
+        ctrl.Rule(t_p['H'] & l_e['VH'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['VH'] & s_e['M'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['VH'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['H'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['H'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['H'] & s_e['M'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['H'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['M'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['M'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['H'] & l_e['M'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['M'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['L'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['L'] & s_e['H'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['L'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['H'] & l_e['L'] & s_e['L'], t_l_p['L']),
+        
+        ctrl.Rule(t_p['M'] & l_e['VH'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['M'] & l_e['VH'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['M'] & l_e['VH'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['VH'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['H'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['M'] & l_e['H'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['M'] & l_e['H'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['H'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['M'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['M'] & s_e['H'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['M'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['M'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['L'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['L'] & s_e['H'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['L'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['M'] & l_e['L'] & s_e['L'], t_l_p['L']),
+        
+        ctrl.Rule(t_p['L'] & l_e['VH'] & s_e['VH'], t_l_p['H']),
+        ctrl.Rule(t_p['L'] & l_e['VH'] & s_e['H'], t_l_p['H']),
+        ctrl.Rule(t_p['L'] & l_e['VH'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['VH'] & s_e['L'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['H'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['H'] & s_e['H'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['H'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['H'] & s_e['L'], t_l_p['L']),
+        ctrl.Rule(t_p['L'] & l_e['M'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['M'] & s_e['H'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['M'] & s_e['M'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['M'] & s_e['L'], t_l_p['L']),
+        ctrl.Rule(t_p['L'] & l_e['L'] & s_e['VH'], t_l_p['M']),
+        ctrl.Rule(t_p['L'] & l_e['L'] & s_e['H'], t_l_p['L']),
+        ctrl.Rule(t_p['L'] & l_e['L'] & s_e['M'], t_l_p['L']),
+        ctrl.Rule(t_p['L'] & l_e['L'] & s_e['L'], t_l_p['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    t_l_p_ctrl = ctrl.ControlSystem(rules)
+    t_l_p_sim = ctrl.ControlSystemSimulation(t_l_p_ctrl)
+
+    # Mappa per convertire i valori stringa in interi per t_p
+    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+
+    # Esempio di input e calcolo
+    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_l_p_sim.input['t_p'] = t_p_value
+    t_l_p_sim.input['l_e'] = transport_line_efficiency #0.95
+    t_l_p_sim.input['s_e'] = storage_efficiency #0.9
+
+    # Calcolo dell'output
+    t_l_p_sim.compute()
+    output_numeric = t_l_p_sim.output['t_l_p']
+
+    # Conversione dell'output in stringa usando le funzioni di appartenenza
+    def get_membership_label(output_value, variable):
+        max_membership = 0
+        label = None
+        for term in variable.terms:
+            membership_value = fuzz.interp_membership(variable.universe, variable[term].mf, output_value)
+            if membership_value > max_membership:
+                max_membership = membership_value
+                label = term
+        return label
+
+    output_string = get_membership_label(output_numeric, t_l_p)
+
+    return output_string, output_numeric
+    #print("Valore numerico di t_l_p:", output_numeric)
+    #print("Valore stringa di t_l_p:", output_string)
