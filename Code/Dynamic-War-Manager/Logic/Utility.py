@@ -39,6 +39,8 @@ logger.addHandler(c_handler)
 logger.addHandler(f_handler)
 
 
+# GLOBAL DATA
+
 
 
 # METHODS
@@ -311,14 +313,102 @@ def calcProbability( probability ):
     return num < probability
     
 
+# Conversione dell'output in stringa usando le funzioni di appartenenza Funzione privata di calcProductionTargetPriority, calcStorageTargetPriority, calcTransportLineTargetPriority
+def get_membership_label(output_value, variable):
+    """
+    Conversione dell'output in stringa usando le funzioni di appartenenza 
+    Funzione privata di:
+    calcProductionTargetPriority, calcStorageTargetPriority, calcTransportLineTargetPriority
+    
+    """
+    max_membership = 0
+    label = None
+    for term in variable.terms:
+        membership_value = fuzz.interp_membership(variable.universe, variable[term].mf, output_value)
+        if membership_value > max_membership:
+            max_membership = membership_value
+            label = term
+    return label
+
+def calcProductionTargetPriority(target_priority: str, production_efficiency: float):
+    """
+    Calculate Priority of Production Target using Fuzzy Logic.
+
+    input param: 
+    target_priority (string): ['L', 'M', 'H', 'VH'], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
+    production_efficiency (float): [0,1]
+
+    return (string): ['L', 'M', 'H', 'VH'] 
+
+    TEST:  OK CON JUPITER NOTEBOOK
+    """
+
+    # Variabili di input
+    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH    
+    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'p_e')  # production efficiency Valori continui [0, 1]
+
+    # Variabile di output
+    t_p_p = ctrl.Consequent(np.arange(0, 4, 1), 't_p_p')  # target production priority Valori: 0=L, 1=M, 2=H, 3=VH
+
+    # Funzioni di appartenenza target production efficiency
+    t_p.automf(names=['L', 'M', 'H', 'VH'])    
+    p_e['L'] = fuzz.trapmf(p_e.universe, [0, 0, 0.3, 0.35])
+    p_e['M'] = fuzz.trapmf(p_e.universe, [0.3, 0.35, 0.6, 0.65])
+    p_e['H'] = fuzz.trapmf(p_e.universe, [0.6, 0.65, 0.85, 0.95])
+    p_e['VH'] = fuzz.trapmf(p_e.universe, [0.9, 0.95, 1, 1])
+   
+    t_p_p.automf(names=['L', 'M', 'H', 'VH'])
+
+    # Definizione delle regole
+    rules = [
+        ctrl.Rule(t_p['VH'] & p_e['VH'], t_p_p['VH']),
+        ctrl.Rule(t_p['VH'] & p_e['H'], t_p_p['VH']),
+        ctrl.Rule(t_p['VH'] & p_e['M'], t_p_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['L'], t_p_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['VH'], t_p_p['VH']),
+        ctrl.Rule(t_p['H'] & p_e['H'], t_p_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['M'], t_p_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['L'], t_p_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['VH'], t_p_p['H']),
+        ctrl.Rule(t_p['M'] & p_e['H'], t_p_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['M'], t_p_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['L'], t_p_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['VH'], t_p_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['H'], t_p_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['M'], t_p_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['L'], t_p_p['L']),        
+    ]
 
 
-def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
+    # Aggiunta delle regole al sistema di controllo
+    t_p_p_ctrl = ctrl.ControlSystem(rules)
+    t_p_p_sim = ctrl.ControlSystemSimulation(t_p_p_ctrl)
+
+    # Mappa per convertire i valori stringa in interi per t_p
+    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+
+    # Esempio di input e calcolo
+    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_p_p_sim.input['t_p'] = t_p_value    
+    t_p_p_sim.input['p_e'] = production_efficiency #0.9
+
+    # Calcolo dell'output
+    t_p_p_sim.compute()
+    output_numeric = t_p_p_sim.output['t_p_p']
+
+    output_string = get_membership_label(output_numeric, t_p_p)
+
+    return output_string, output_numeric
+    #print("Valore numerico di t_p_p:", output_numeric)
+    #print("Valore stringa di t_p_p:", output_string)
+
+
+def calcStorageTargetPriority(target_priority: str, production_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
 
     input param: 
-    target_priority (string): ['L', 'M', 'H', 'VH'], 
+    target_priority (string): ['L', 'M', 'H', 'VH'], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
     transport_line_efficiency, storage_efficiency (float): [0,1]
 
     return (string): ['L', 'M', 'H', 'VH'] 
@@ -327,27 +417,159 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     """
 
     # Variabili di input
-    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # 0=L, 1=M, 2=H, 3=VH
-    l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'l_e')  # Valori continui [0, 1]
-    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # Valori continui [0, 1]
+    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority 0=L, 1=M, 2=H, 3=VH
+    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'p_e')  # production efficiency Valori continui [0, 1]
+    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # storage efficiency Valori continui [0, 1]
 
     # Variabile di output
-    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_l_p')  # Valori continui [0, 1]
+    t_s_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_s_p')  # target storage priority Valori continui [0, 1]
 
     # Funzioni di appartenenza
     t_p.automf(names=['L', 'M', 'H', 'VH'])
-    l_e['L'] = fuzz.trapmf(l_e.universe, [0, 0, 0.3, 0.35])
-    l_e['M'] = fuzz.trapmf(l_e.universe, [0.3, 0.35, 0.6, 0.65])
-    l_e['H'] = fuzz.trapmf(l_e.universe, [0.6, 0.65, 0.85, 0.95])
-    l_e['VH'] = fuzz.trapmf(l_e.universe, [0.9, 0.95, 1, 1])
-    s_e['L'] = fuzz.trapmf(s_e.universe, [0, 0, 0.3, 0.35])
-    s_e['M'] = fuzz.trapmf(s_e.universe, [0.3, 0.35, 0.6, 0.65])
-    s_e['H'] = fuzz.trapmf(s_e.universe, [0.6, 0.65, 0.85, 0.95])
-    s_e['VH'] = fuzz.trapmf(s_e.universe, [0.9, 0.95, 1, 1])
-    t_l_p['L'] = fuzz.trapmf(t_l_p.universe, [0, 0, 0.3, 0.35])
-    t_l_p['M'] = fuzz.trapmf(t_l_p.universe, [0.3, 0.35, 0.6, 0.65])
-    t_l_p['H'] = fuzz.trapmf(t_l_p.universe, [0.6, 0.65, 0.85, 0.95])
-    t_l_p['VH'] = fuzz.trapmf(t_l_p.universe, [0.9, 0.95, 1, 1])
+
+    p_e['L'] = fuzz.trapmf(p_e.universe, [0, 0, 0.3, 0.35])
+    p_e['M'] = fuzz.trapmf(p_e.universe, [0.3, 0.35, 0.6, 0.65])
+    p_e['H'] = fuzz.trapmf(p_e.universe, [0.6, 0.65, 0.85, 0.95])
+    p_e['VH'] = fuzz.trapmf(p_e.universe, [0.9, 0.95, 1, 1])
+    
+    s_e['L'] = fuzz.trapmf(s_e.universe, [0, 0, 0.2, 0.3])
+    s_e['M'] = fuzz.trapmf(s_e.universe, [0.25, 0.4, 0.5, 0.6])
+    s_e['H'] = fuzz.trapmf(s_e.universe, [0.55, 0.75, 0.85, 0.95])
+    s_e['VH'] = fuzz.trapmf(s_e.universe, [0.85, 0.95, 1, 1])
+    
+    t_s_p.automf(names=['L', 'M', 'H', 'VH'])
+
+    # Definizione delle regole
+    rules = [
+        ctrl.Rule(t_p['VH'] & p_e['VH'] & s_e['VH'], t_s_p['VH']),
+        ctrl.Rule(t_p['VH'] & p_e['VH'] & s_e['H'], t_s_p['VH']),
+        ctrl.Rule(t_p['VH'] & p_e['VH'] & s_e['M'], t_s_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['VH'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['VH'] & p_e['H'] & s_e['VH'], t_s_p['VH']),
+        ctrl.Rule(t_p['VH'] & p_e['H'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['H'] & s_e['M'], t_s_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['H'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['VH'] & p_e['M'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['M'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['VH'] & p_e['M'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['VH'] & p_e['M'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['VH'] & p_e['L'] & s_e['VH'], t_s_p['L']),
+        ctrl.Rule(t_p['VH'] & p_e['L'] & s_e['H'], t_s_p['L']),
+        ctrl.Rule(t_p['VH'] & p_e['L'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['VH'] & p_e['L'] & s_e['L'], t_s_p['L']),
+        
+        ctrl.Rule(t_p['H'] & p_e['VH'] & s_e['VH'], t_s_p['VH']),
+        ctrl.Rule(t_p['H'] & p_e['VH'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['VH'] & s_e['M'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['VH'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['H'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['H'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['H'] & s_e['M'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['H'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['M'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['M'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['H'] & p_e['M'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['M'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['L'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['L'] & s_e['H'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['L'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['H'] & p_e['L'] & s_e['L'], t_s_p['L']),
+        
+        ctrl.Rule(t_p['M'] & p_e['VH'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['M'] & p_e['VH'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['M'] & p_e['VH'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['VH'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['H'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['M'] & p_e['H'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['M'] & p_e['H'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['H'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['M'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['M'] & s_e['H'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['M'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['M'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['L'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['L'] & s_e['H'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['L'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['M'] & p_e['L'] & s_e['L'], t_s_p['L']),
+        
+        ctrl.Rule(t_p['L'] & p_e['VH'] & s_e['VH'], t_s_p['H']),
+        ctrl.Rule(t_p['L'] & p_e['VH'] & s_e['H'], t_s_p['H']),
+        ctrl.Rule(t_p['L'] & p_e['VH'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['VH'] & s_e['L'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['H'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['H'] & s_e['H'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['H'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['H'] & s_e['L'], t_s_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['M'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['M'] & s_e['H'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['M'] & s_e['M'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['M'] & s_e['L'], t_s_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['L'] & s_e['VH'], t_s_p['M']),
+        ctrl.Rule(t_p['L'] & p_e['L'] & s_e['H'], t_s_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['L'] & s_e['M'], t_s_p['L']),
+        ctrl.Rule(t_p['L'] & p_e['L'] & s_e['L'], t_s_p['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    t_s_p_ctrl = ctrl.ControlSystem(rules)
+    t_s_p_sim = ctrl.ControlSystemSimulation(t_s_p_ctrl)
+
+    # Mappa per convertire i valori stringa in interi per t_p
+    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+
+    # Esempio di input e calcolo
+    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_s_p_sim.input['t_p'] = t_p_value
+    t_s_p_sim.input['p_e'] = production_efficiency #0.95
+    t_s_p_sim.input['s_e'] = storage_efficiency #0.9
+
+    # Calcolo dell'output
+    t_s_p_sim.compute()
+    output_numeric = t_s_p_sim.output['t_s_p']
+
+    output_string = get_membership_label(output_numeric, t_s_p)
+
+    return output_string, output_numeric
+    #print("Valore numerico di t_s_p:", output_numeric)
+    #print("Valore stringa di t_s_p:", output_string)
+
+
+def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
+    """
+    Calculate Priority of Transport Line Target using Fuzzy Logic.
+
+    input param: 
+    target_priority (string): ['L', 'M', 'H', 'VH'], rappresenta la target priority riferita alla military base connessa alle Transport Line
+    transport_line_efficiency, storage_efficiency (float): [0,1]
+
+    return (string): ['L', 'M', 'H', 'VH'] 
+
+    TEST: OK CON JUPITER NOTEBOOK
+    """
+
+    # Variabili di input
+    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH 
+    l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'l_e')  # transport line efficiency Valori continui [0, 1]
+    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # storage efficiency Valori continui [0, 1]
+
+    # Variabile di output
+    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_l_p')  # target trasnsport line priority Valori continui [0, 1]
+
+    # Funzioni di appartenenza
+    t_p.automf(names=['L', 'M', 'H', 'VH'])
+    
+    l_e['L'] = fuzz.trapmf(l_e.universe, [0, 0, 0.2, 0.35])
+    l_e['M'] = fuzz.trapmf(l_e.universe, [0.3, 0.4, 0.6, 0.7])
+    l_e['H'] = fuzz.trapmf(l_e.universe, [0.65, 0.75, 0.8, 0.85])
+    l_e['VH'] = fuzz.trapmf(l_e.universe, [0.8, 0.95, 1, 1])
+
+    s_e['L'] = fuzz.trapmf(s_e.universe, [0, 0, 0.2, 0.3])
+    s_e['M'] = fuzz.trapmf(s_e.universe, [0.25, 0.4, 0.5, 0.6])
+    s_e['H'] = fuzz.trapmf(s_e.universe, [0.55, 0.75, 0.85, 0.95])
+    s_e['VH'] = fuzz.trapmf(s_e.universe, [0.85, 0.95, 1, 1])
+    
+    t_l_p.automf(names=['L', 'M', 'H', 'VH'])
 
     # Definizione delle regole
     rules = [
@@ -437,17 +659,6 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     # Calcolo dell'output
     t_l_p_sim.compute()
     output_numeric = t_l_p_sim.output['t_l_p']
-
-    # Conversione dell'output in stringa usando le funzioni di appartenenza
-    def get_membership_label(output_value, variable):
-        max_membership = 0
-        label = None
-        for term in variable.terms:
-            membership_value = fuzz.interp_membership(variable.universe, variable[term].mf, output_value)
-            if membership_value > max_membership:
-                max_membership = membership_value
-                label = term
-        return label
 
     output_string = get_membership_label(output_numeric, t_l_p)
 
