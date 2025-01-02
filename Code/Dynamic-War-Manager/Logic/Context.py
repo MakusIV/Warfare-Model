@@ -8,11 +8,18 @@
 from typing import Literal
 
 STATE: Literal["Active", "Inactive", "Standby", "Destroyed"]
-SHAPE3D: Literal["Cylinder", "Cube", "Sphere", "SemiSphere", "Pyramid", "Cone", "Trunc_Cone"]
-SHAPE2D: Literal["Circonference", "Square", "Hexagon"]
+SHAPE3D: Literal["Cylinder", "Cube", "Sphere", "SemiSphere", "Cone", "Trunc_Cone", "Prism", "Solid"]
+SHAPE2D: Literal["Circle", "Square", "Hexagon"]
 VALUE: Literal["Critical", "Very_High", "High", "Medium", "Low", "Very_Low"]
 CATEGORY: Literal["Goods", "Energy", "Goods & Energy"]
 MIL_CATEGORY: Literal["Airbase", "Port", "Stronghold", "Farp", "Regiment", "Battallion", "Brigade", "Company", "EWR"]
+
+AREA_FOR_VOLUME = {  
+    SHAPE2D.Circle : {SHAPE3D.Cylinder, SHAPE3D.Sphere, SHAPE3D.SemiSphere, SHAPE3D.Cone, SHAPE3D.Trunc_Cone, SHAPE3D.Solid},
+    SHAPE2D.Square : {SHAPE3D.Cube},
+    SHAPE2D.Hexagon: {SHAPE3D.Prism}
+}
+    
 
 
 AIR_DEFENCE_ASSET = {  
