@@ -668,7 +668,7 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
 
 
 
-def calcAAThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
+def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
     """
     Calculate anti-arcraft threat Level using Fuzzy Logic
 

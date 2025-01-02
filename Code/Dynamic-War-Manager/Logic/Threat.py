@@ -1,4 +1,3 @@
-from Coordinate import Coordinate
 import General
 from LoggerClass import Logger
 
