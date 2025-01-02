@@ -345,7 +345,7 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
 
     # Variabili di input
     t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH    
-    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'p_e')  # production efficiency Valori continui [0, 1]
+    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'p_e')  # production efficiency Valori continui [0, 1]
 
     # Variabile di output
     t_p_p = ctrl.Consequent(np.arange(0, 4, 1), 't_p_p')  # target production priority Valori: 0=L, 1=M, 2=H, 3=VH
@@ -418,11 +418,11 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
 
     # Variabili di input
     t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority 0=L, 1=M, 2=H, 3=VH
-    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'p_e')  # production efficiency Valori continui [0, 1]
-    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # storage efficiency Valori continui [0, 1]
+    p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'p_e')  # production efficiency Valori continui [0, 1]
+    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 's_e')  # storage efficiency Valori continui [0, 1]
 
     # Variabile di output
-    t_s_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_s_p')  # target storage priority Valori continui [0, 1]
+    t_s_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_s_p')  # target storage priority Valori continui [0, 1]
 
     # Funzioni di appartenenza
     t_p.automf(names=['L', 'M', 'H', 'VH'])
@@ -550,11 +550,11 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
 
     # Variabili di input
     t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH 
-    l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 'l_e')  # transport line efficiency Valori continui [0, 1]
-    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.1), 's_e')  # storage efficiency Valori continui [0, 1]
+    l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'l_e')  # transport line efficiency Valori continui [0, 1]
+    s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 's_e')  # storage efficiency Valori continui [0, 1]
 
     # Variabile di output
-    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.1), 't_l_p')  # target trasnsport line priority Valori continui [0, 1]
+    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_l_p')  # target trasnsport line priority Valori continui [0, 1]
 
     # Funzioni di appartenenza
     t_p.automf(names=['L', 'M', 'H', 'VH'])
@@ -665,3 +665,86 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
+
+
+
+def calcAAThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
+    """
+    Calculate anti-arcraft threat Level using Fuzzy Logic
+
+    input param:     
+    pointDistance2D: planar distance from point to center of threath - float, 
+    threatRadius: radius of threath - float, 
+    pointHeight: height of point - float, 
+    maxThreatHeight: height of threath - float
+    
+    
+
+    return (string): ['L', 'M', 'H', 'VH'] 
+
+    TEST:
+    """
+
+    # Variabili di input
+    kd = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'kd')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
+    kh = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'kh')  # kh = pointHeight / maxThreatHeight Valori continui [0, 1]
+
+    # Variabile di output
+    t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_l_p')  # target trasnsport line priority Valori continui [0, 1]
+
+    # Funzioni di appartenenza
+    kd['L'] = fuzz.trapmf(kd.universe, [0.85, 0.9, 1, 1])
+    kd['M'] = fuzz.trapmf(kd.universe, [0.7, 0.8, 0.85, 0.9])
+    kd['H'] = fuzz.trapmf(kd.universe, [0.4, 0.5, 0.7, 0.8])
+    kd['VH'] = fuzz.trapmf(kd.universe, [0, 0, 0.3, 0.6])
+
+    kh['L'] = fuzz.trapmf(kh.universe, [0.85, 0.9, 1, 1])
+    kh['M'] = fuzz.trapmf(kh.universe, [0.7, 0.75, 0.8, 0.9])
+    kh['H'] = fuzz.trapmf(kh.universe, [0.3, 0.4, 0.7, 0.75])
+    kh['VH'] = fuzz.trapmf(kh.universe, [0, 0, 0.35, 0.5])
+    
+    t_l_p.automf(names=['L', 'M', 'H', 'VH'])
+
+    # Definizione delle regole
+    rules = [
+        ctrl.Rule(kd['VH'] & kh['VH'], t_l_p['VH']),
+        ctrl.Rule(kd['VH'] & kh['H'], t_l_p['VH']),
+        ctrl.Rule(kd['VH'] & kh['M'], t_l_p['H']),
+        ctrl.Rule(kd['VH'] & kh['L'], t_l_p['M']),
+        ctrl.Rule(kd['H'] & kh['VH'], t_l_p['VH']),
+        ctrl.Rule(kd['H'] & kh['H'], t_l_p['H']),
+        ctrl.Rule(kd['H'] & kh['M'], t_l_p['H']),
+        ctrl.Rule(kd['H'] & kh['L'], t_l_p['M']),
+        ctrl.Rule(kd['M'] & kh['VH'], t_l_p['H']),
+        ctrl.Rule(kd['M'] & kh['H'], t_l_p['H']),
+        ctrl.Rule(kd['M'] & kh['M'], t_l_p['M']),
+        ctrl.Rule(kd['M'] & kh['L'], t_l_p['L']),
+        ctrl.Rule(kd['L'] & kh['VH'], t_l_p['M']),
+        ctrl.Rule(kd['L'] & kh['H'], t_l_p['M']),
+        ctrl.Rule(kd['L'] & kh['M'], t_l_p['L']),
+        ctrl.Rule(kd['L'] & kh['L'], t_l_p['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    t_l_p_ctrl = ctrl.ControlSystem(rules)
+    t_l_p_sim = ctrl.ControlSystemSimulation(t_l_p_ctrl)
+
+    # Mappa per convertire i valori stringa in interi per t_p
+    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+
+    # Esempio di input e calcolo
+    t_l_p_sim.input['kd'] = pointDistance2D / threatRadius #0.95
+    t_l_p_sim.input['kh'] = pointHeight / maxThreatHeight #0.9
+
+    # Calcolo dell'output
+    t_l_p_sim.compute()
+    output_numeric = t_l_p_sim.output['t_l_p']
+
+    output_string = get_membership_label(output_numeric, t_l_p)
+
+    return output_string, output_numeric
+    #print("Valore numerico di t_l_p:", output_numeric)
+    #print("Valore stringa di t_l_p:", output_string)
+
+    
