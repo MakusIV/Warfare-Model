@@ -13,8 +13,7 @@
 
 from LoggerClass import Logger
 from Context import STATE
-from Block import Block
-import Utility
+import Block, Utility
 
 # LOGGING --
  

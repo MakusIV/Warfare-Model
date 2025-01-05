@@ -402,7 +402,6 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
     #print("Valore numerico di t_p_p:", output_numeric)
     #print("Valore stringa di t_p_p:", output_string)
 
-
 def calcStorageTargetPriority(target_priority: str, production_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
@@ -534,7 +533,6 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     #print("Valore numerico di t_s_p:", output_numeric)
     #print("Valore stringa di t_s_p:", output_string)
 
-
 def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
@@ -665,8 +663,6 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
-
-
 
 def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
     """
