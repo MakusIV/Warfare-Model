@@ -17,13 +17,13 @@ class Volume:
      def __init__(self, area_base: Area, volume_shape: str, radius_at_height: dict = None): 
             
           if not isinstance(area_base, Area):
-                raise TypeError("Bad Arg: only Class Area, are allowed")
+               raise TypeError("Bad Arg: only Class Area, are allowed")
             
           if not isinstance(volume_shape, str) or not (volume_shape in SHAPE3D):
-                raise TypeError("Bad Arg: shape must be a string from SHAPE3D: {0}".format(SHAPE3D))
+               raise TypeError("Bad Arg: shape must be a string from SHAPE3D: {0}".format(SHAPE3D))
             
           if not AREA_FOR_VOLUME[area_base._shape] in SHAPE3D:
-                raise TypeError("Bad Arg: {0} area shape must be associable to volume shape: {1}".format(area_base.shape, AREA_FOR_VOLUME[area_base._shape]))
+               raise TypeError("Bad Arg: {0} area shape must be associable to volume shape: {1}".format(area_base.shape, AREA_FOR_VOLUME[area_base._shape]))
             
           if volume_shape == SHAPE3D.Solid:
                if radius_at_height == None:
