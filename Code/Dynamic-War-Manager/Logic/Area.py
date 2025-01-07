@@ -9,7 +9,7 @@ from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, 
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'State')
+logger = Logger(module_name = __name__, class_name = 'Area')
 
 class Area:
 
