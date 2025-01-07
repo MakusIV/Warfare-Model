@@ -8,8 +8,7 @@ from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
-# LOGGING --
- 
+# LOGGING -- 
 logger = Logger(module_name = __name__, class_name = 'Mil_Base')
 
 # ASSET
