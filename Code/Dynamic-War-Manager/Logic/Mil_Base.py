@@ -7,6 +7,8 @@ from Payload import Payload
 from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from Asset import Asset
+from Region import Region
 
 # LOGGING -- 
 logger = Logger(module_name = __name__, class_name = 'Mil_Base')
@@ -14,7 +16,7 @@ logger = Logger(module_name = __name__, class_name = 'Mil_Base')
 # ASSET
 class Mil_Base(Block) :    
 
-    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None):   
+    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, region: Region = None):   
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload)
 
@@ -24,25 +26,13 @@ class Mil_Base(Block) :
             # Association    
             
             if not name:
-                self._name = Utility.setName('Unnamed_Block')
+                self._name = Utility.setName('Unnamed_Mil_Base')
 
             else:
-                self._name = "Block." + name
+                self._name = "Mil_Base." + name
 
             self._id = Utility.setId(self._name)
-           
-            if not acp:
-                acp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-            
-            if not rcp:
-                rcp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
-            if not payload:
-                payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
-             # check input parameters
-            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time ):    
-                raise Exception("Invalid parameters! Object not istantiate.")
+                       
 
     # methods
 
@@ -73,31 +63,32 @@ class Mil_Base(Block) :
         pass
         
 
-    def threat_volume(self):
-        """calculate Threat_Volume from asset Threat_Volume"""
-        # tv = max(assetThreat_Volume) 
-        # return tv
+    def air_defense(self):
+        """calculate air defense Volume from asset air defense volume"""
+        # adsVolume = asset.air_defense from asset in self.assets 
+        # adMax = max(adsVolume.range for adsVolume in adsVolume)
+        # return adsVolume, adMax
         pass
 
     def combatRange(self, type: str = Artillery, height: int = 0):
         """calculate combat range from asset position"""    
-        # return combatVolume(type=type).range(height=height)
-         
+        # return combatVolume(type=type).range(height=height)         
         pass
 
-    def cdefenceAARange(self, height: int = 0):
-        """calculate combat range from asset position"""    
-        # return defenceAAVolume().range(height=height)
-         
+    
+
+    def defenseAARange(self, height: int = 0):
+        """calculate combat range from assets"""    
+        # return defenceAAVolume().range(height=height)         
         pass
 
     def combatVolume(self, type: str = Artillery):
-        """calculate combat volume from asset position"""
-        # distinguere tra arty, mech, mototized, 
+        """calculate combat volume from asset"""
+        # distinguere tra arty, mech, motorized, 
         pass
     
-    def defenceAAVolume(self):
-        """calculate defence volume from asset position"""    
+    def defenseAAVolume(self):
+        """return defense volume from asset"""    
         pass
 
 
@@ -117,14 +108,14 @@ class Mil_Base(Block) :
 
     def intelligence(self):
         """calculate intelligence level"""
-        # intelligence = median(asset.efficiency for asset in assets.recognitor())
-        # return intelligence
+        # intelligence_level = median(asset.efficiency for asset in assets.recognitor())
+        # return intelligence_leve4l
         pass
     
     def recognition(self):
         """calculate recognition report"""
-        # intelligence = median(asset.efficiency for asset in assetIntelligence)
-        # return intelligence
+        # f(intelligenze, evaluate neightroom, front)
+        # return Dict{evaluate.enemy.asset.position, evaluate.enemy.asset.category, evaluate.enemy.asset.class, evaluate.enemy.asset.type, evaluate.enemy.asset.status, evaluate.enemy.asset.qty, evaluate.enemy.asset.efficiency}
         pass
     
 

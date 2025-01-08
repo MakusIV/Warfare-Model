@@ -3,7 +3,6 @@ from State import State
 from Block import Block
 from Asset import Asset
 from Limes import Limes
-from Front import Front
 from Payload import Payload
 from Event import Event
 from LoggerClass import Logger

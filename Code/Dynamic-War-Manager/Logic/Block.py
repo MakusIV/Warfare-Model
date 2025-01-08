@@ -7,6 +7,7 @@ from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Asset import Asset
+from Region import Region
 
 # LOGGING --
  
@@ -35,7 +36,7 @@ class Block:
             self._region = region # block map region - type Region
 
             # check input parameters
-            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload ):
+            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region ):
                 raise Exception("Invalid parameters! Object not istantiate.")
 
 
@@ -316,18 +317,18 @@ class Block:
         return self._region
 
     @region.setter
-    def region(self, id):
+    def region(self, region: Region) -> bool:
 
         if not isinstance(id, Region):
             raise TypeError("Invalid parameters! Type not valid, Region type expected")
         
-        self._region = id       
+        self._region = region       
             
         return True
 
 
     def to_string(self):
-        return 'Name: {0}  -  Id: {1}'.format(self.getName(), str(self._id))
+        return 'Name: {0}  -  Id: {1} - value: {2} \n description: {3}\n category: {4}\n'.format(self.name, self.id, self.value, self.description, self.category)
     
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
@@ -340,7 +341,7 @@ class Block:
 
 
      # vedi il libro
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
         if not isinstance(name, str):
@@ -360,6 +361,8 @@ class Block:
         if rcp and not isinstance(rcp, Payload):
             return False        
         if payload and not isinstance(payload, Payload):
+            return False
+        if region and not isinstance(region, Region):
             return False
             
         return True
@@ -398,7 +401,7 @@ class Block:
         pass
 
     def position(self):
-        """calculate position from asset position"""
+        """calculate center point from assets position"""
         # ap = median(assetPosition) 
         # return ap
         pass
