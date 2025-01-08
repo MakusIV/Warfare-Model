@@ -7,6 +7,7 @@ from Payload import Payload
 from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from Region import Region
 
 # LOGGING --
  
@@ -15,9 +16,9 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset(Block) :    
 
-    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0):   
+    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0, region: Region = None):      
             
-            super().__init__(name, description, category, functionality, value, acp, rcp, payload)
+            super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
 
             # propriety             
             self._position = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
@@ -32,24 +33,15 @@ class Asset(Block) :
             self._block = block # asset block - component of Block - type Block asset not exist without block
 
             if not name:
-                self._name = Utility.setName('Unnamed_Block')
+                self.name = Utility.setName('Unnamed_Asset')
 
             else:
-                self._name = "Block." + name
+                self.name = "Asset." + name
 
             self._id = Utility.setId(self._name)
            
-            if not acp:
-                acp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-            
-            if not rcp:
-                rcp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
-            if not payload:
-                payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
              # check input parameters
-            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time ):    
+            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time, region ):    
                 raise Exception("Invalid parameters! Object not istantiate.")
 
     # methods

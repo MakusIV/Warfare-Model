@@ -20,7 +20,8 @@ class Mobile(Asset) :
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time) 
 
-            # propriety             
+            # propriety   
+            self._position = position          
             
     
             # Association    
@@ -32,3 +33,11 @@ class Mobile(Asset) :
 
     # methods
 
+    def attackRange(self):
+         #return value
+         pass
+    
+
+    def airDefense(self):
+        #return Volume
+        pass
