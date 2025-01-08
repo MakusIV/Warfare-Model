@@ -9,6 +9,7 @@ from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Asset import Asset
 from Region import Region
+from Volume import Volume
 
 # LOGGING -- 
 logger = Logger(module_name = __name__, class_name = 'Mil_Base')
@@ -43,16 +44,7 @@ class Mil_Base(Block) :
     
         if not super().checkParam(name, description, category, function, value, position, acs, rcs, payload):
             return False     
-        if position and not isinstance(position, Point):
-            return False
-        if volume and not isinstance(volume, Volume):
-            return False
-        if threat and not isinstance(threat, Threat):                        
-            return False                    
-        if crytical and not isinstance(position, bool):
-            return False
-        if repair_time and not isinstance(repair_time, int):
-            return False
+        
         return True
     
     
@@ -109,7 +101,7 @@ class Mil_Base(Block) :
     def intelligence(self):
         """calculate intelligence level"""
         # intelligence_level = median(asset.efficiency for asset in assets.recognitor())
-        # return intelligence_leve4l
+        # return intelligence_level
         pass
     
     def recognition(self):
@@ -132,9 +124,12 @@ class Mil_Base(Block) :
         pass
 
     def front(self):
-        """calculate front from asset position"""
+        """calculate"""
         # ap = median(assetPosition) 
         # return ap
         pass
+
+    def combat_state(self)
+        """calculate front from state of assets"""
 
     
