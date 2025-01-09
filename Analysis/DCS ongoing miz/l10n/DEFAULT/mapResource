@@ -1,0 +1,12 @@
+mapResource = {
+	['ResKey_Action_3'] = 'EventsTracker.lua',
+	['ResKey_Action_9'] = 'CarrierIntoWindScript.lua',
+	['ResKey_Action_5'] = 'GCIdata.lua',
+	['ResKey_Action_4'] = 'AddCommandRadioF10.lua',
+	['ResKey_BriefingImage_FrontlineCaucasus.png'] = 'FrontlineCaucasus.png',
+	['ResKey_Action_10'] = 'Pedro.lua',
+	['ResKey_Action_8'] = 'CustomTasksScript.lua',
+	['ResKey_Action_2'] = 'camp_status.lua',
+	['ResKey_Action_6'] = 'GCIscript.lua',
+	['ResKey_Action_7'] = 'ARM_Defence_Script.lua',
+}
