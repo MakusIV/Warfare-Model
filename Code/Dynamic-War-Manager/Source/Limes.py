@@ -8,7 +8,7 @@ Represents the limes of a Region: a closed line defined from points
 from LoggerClass import Logger
 from Area import Area
 from typing import Literal, List, Dict
-from Context import SHAPE2D
+from Context import Context
 from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 import numpy as np
 from collections import deque
@@ -40,16 +40,21 @@ class Limes:
         """" 
         returns near points and they distance from point using center like referent point for external/internal evaluation. 
         external == False point is inside limes (on distance from center to limes) otherwise point is outside.
+        far_point == True point is far from limes (on distance from center to limes)
 
-        center: Point2D 
+        center: center of limes or center of Mil_Base object - Point2D 
         point: Point2D
+
+        return: { 'distance_A': float, 'distance_B': float, 'point_A': Point2D, 'point_B': Point2D, 'external_point': bool, 'far_point': bool }  
 
         """
 
 
         external_point = False
+        far_point = False
         pointA = np.array(point)
-        min_distance = 1.2e+90
+        min_distance = Context.MAX_WORLD_DISTANCE
+        max_limes_distance2center = 0
         distance_Point2Center = np.linalg.norm( np.array(center) - pointA )
         duplicate_points = self._points.copy()
         
@@ -57,6 +62,13 @@ class Limes:
         while duplicate_points:
             limes_point = duplicate_points.popleft()            
             distance_A = np.linalg.norm( np.array(limes_point.position) - pointA )
+            limes_distance2center = np.linalg.norm( np.array(limes_point.position) - np.array(center) )
+
+            if limes_distance2center > max_limes_distance2center:
+                max_limes_distance2center = limes_distance2center
+
+            if distance_A > Context.MAX_WORLD_DISTANCE:
+                 raise Exception("distance too big for map")
 
             if distance_A < min_distance:
                 min_distance = distance_A
@@ -68,8 +80,13 @@ class Limes:
 
         if distance_Point2Center < min_distance or distance_Point2Center < distance_B:
             external_point = True
-                
-        return min_distance, distance_B, min_point_A, min_point_B, external_point
+
+        if min_distance > max_limes_distance2center and distance_B > max_limes_distance2center:
+            far_point = True
+
+        result = { 'distance_A': min_distance, 'distance_B': distance_B, 'point_A': min_point_A, 'point_B': min_point_B, 'external_point': external_point, 'far_point': far_point }  
+        
+        return result 
 
 
     def inside(self, obj):

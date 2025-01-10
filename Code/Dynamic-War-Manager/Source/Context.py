@@ -7,6 +7,7 @@
 
 from typing import Literal
 
+MAX_WORLD_DISTANCE = 1.2e+90
 STATE: Literal["Active", "Inactive", "Standby", "Destroyed"]
 SHAPE3D: Literal["Cylinder", "Cube", "Sphere", "SemiSphere", "Cone", "Trunc_Cone", "Prism", "Solid"]
 SHAPE2D: Literal["Circle", "Square", "Hexagon"]

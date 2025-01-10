@@ -19,7 +19,7 @@ logging.basicConfig( level = logging.DEBUG )
 logger = logging.getLogger( __name__ )
 
 log_dir = os.path.join(os.path.normpath(os.getcwd()), 'logs')
-log_fname = os.path.join(log_dir, 'log_General.log')
+log_fname = os.path.join(log_dir, 'log_Utility.log')
 
 
 # Create handlers
