@@ -7,6 +7,7 @@ from LoggerClass import Logger
 from Context import SHAPE2D, SHAPE3D, AREA_FOR_VOLUME
 from Area import Area
 from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from typing import Literal, List, Dict
 
 # LOGGING --
  
@@ -26,12 +27,16 @@ class Volume:
                raise TypeError("Bad Arg: {0} area shape must be associable to volume shape: {1}".format(area_base.shape, AREA_FOR_VOLUME[area_base._shape]))
             
           if volume_shape == SHAPE3D.Solid:
+
                if radius_at_height == None:
                     raise TypeError("Bad Arg: radius_at_height must be defined if volume shape is {0}".format(SHAPE3D.Solid))
+
                else:                    
                     for key in radius_at_height:
+
                          if not isinstance(radius_at_height[key], float) or radius_at_height[key] < 0:
                               raise TypeError("Bad Arg: radius_at_height must be a float >= 0")
+                              
                          if float(key) < 0: 
                               raise TypeError("Bad Arg: height must be a float >= 0")
                     

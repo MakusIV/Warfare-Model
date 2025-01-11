@@ -35,10 +35,6 @@ class Block:
             self._assets = Dict[str, Asset]= {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
 
-            # check input parameters
-            if not self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region ):
-                raise Exception("Invalid parameters! Object not istantiate.")
-
 
             if not name:
                 self._name = Utility.setName('Unnamed_Block')
@@ -47,7 +43,7 @@ class Block:
                 self._name = "Block." + name
 
             self._id = Utility.setId(self._name)
-           
+
             if not acp:
                 acp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
             
@@ -57,6 +53,13 @@ class Block:
             if not payload:
                 payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
 
+            # check input parameters            
+            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region ):            
+            
+            if not check_results[1]:
+                raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
+                       
+
     # methods
 
     @property
@@ -64,12 +67,14 @@ class Block:
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, param):
 
-        if not isinstance(id, str):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
+        check_result = self.checkParam(name = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
 
-        self._name = id    
+        self._name = param  
         return True
             
     @property
@@ -77,16 +82,15 @@ class Block:
         return self._id
 
     @id.setter
-    def id(self, id):
+    def id(self, param):
 
-        if not ( isinstance(id, int) or isinstance(id, str) ):
-            raise TypeError("Invalid parameters! Type not valid, int or str type expected")
-
-        elif isinstance(id, int):
-            self._id = str( id )       
+        check_result = self.checkParam(id = param)
         
-        else:
-            self._id = id 
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._id = str(param)
             
         return True
     
@@ -95,12 +99,15 @@ class Block:
         return self._description
 
     @description.setter
-    def description(self, id):
+    def description(self, param):
 
-        if not isinstance(id, str):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
+        check_result = self.checkParam(description = param)
         
-        self._description = id       
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._description = param       
             
         return True
     
@@ -109,12 +116,14 @@ class Block:
         return self._category
 
     @category.setter
-    def category(self, id):
+    def category(self, param):
 
-        if not isinstance(id, str):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
+        check_result = self.checkParam(category = param)
         
-        self._category = id    
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._category = param
 
         return True
     
@@ -124,12 +133,15 @@ class Block:
         return self._functionality
 
     @functionality.setter
-    def functionality(self, id):
+    def functionality(self, param):
 
-        if not isinstance(id, str):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
+        check_result = self.checkParam(functionality = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
 
-        self._functionality = id    
+
+        self._functionality = param  
             
         return True
     
@@ -139,17 +151,14 @@ class Block:
         return self._value
 
     @value.setter
-    def value(self, id):
+    def value(self, param):
 
-        if not ( isinstance(id, int) or isinstance(id, str) ):
-            raise TypeError("Invalid parameters! Type not valid, int or str type expected")
-
-        elif isinstance(id, int):
-            self._value = str( id )       
+        check_result = self.checkParam(value = param)
         
-        else:
-            self._value = id
-            
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+    
+        self._value = param            
         return True
 
 
@@ -232,13 +241,15 @@ class Block:
 
 
     @acp.setter
-    def acp(self, payload: Payload) -> bool:
+    def acp(self, param: Payload) -> bool:
 
-        if not isinstance(payload, Payload):
-            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
+        check_result = self.checkParam(acp = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
 
         else:
-            self._acp = payload             
+            self._acp = param
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
@@ -251,13 +262,14 @@ class Block:
 
 
     @rcp.setter
-    def rcp(self, payload: Payload) -> bool:
+    def rcp(self, param: Payload) -> bool:
 
-        if not isinstance(payload, Payload):
-            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
-
+        check_result = self.checkParam(rcp = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
         else:
-            self._rcp = payload             
+            self._rcp = param           
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
@@ -270,13 +282,14 @@ class Block:
 
 
     @payload.setter
-    def payload(self, payload: Payload) -> bool:
+    def payload(self, param: Payload) -> bool:
 
-        if not isinstance(payload, Payload):
-            raise TypeError("Invalid parameters! Type not valid, Payload Class expected")
-
+        check_result = self.checkParam(payload = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
         else:
-            self._payload = payload             
+            self._payload = param             
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
@@ -317,12 +330,14 @@ class Block:
         return self._region
 
     @region.setter
-    def region(self, region: Region) -> bool:
+    def region(self, param: Region) -> bool:
 
-        if not isinstance(id, Region):
-            raise TypeError("Invalid parameters! Type not valid, Region type expected")
+        check_result = self.checkParam(region = param)
         
-        self._region = region       
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+        
+        self._region = param       
             
         return True
 
@@ -344,26 +359,26 @@ class Block:
     def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
-        if not isinstance(name, str):
-            return False
+        if name and not isinstance(name, str):
+            return (False, "Bad Arg: name must be a str")
         if description and not isinstance(description, str):
-            return False
+            return (False, "Bad Arg: description must be a str")
         if category and (not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]):                        
-            return False        
+            return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
         if function and not isinstance(function, str):
-            return False
+            return (False, "Bad Arg: function must be a str")
         if value and not isinstance(value, int):
-            return False
+            return (False, "Bad Arg: value must be a int")
         if position and not isinstance(position, Point):
-            return False
+            return (False, "Bad Arg: position must be a Point object")
         if acp and not isinstance(acp, Payload):
-            return False        
+            return (False, "Bad Arg: acp must be a Payload object")        
         if rcp and not isinstance(rcp, Payload):
-            return False        
+            return (False, "Bad Arg: rcp must be a Payload object")        
         if payload and not isinstance(payload, Payload):
-            return False
+            return (False, "Bad Arg: payload must be a Payload object")
         if region and not isinstance(region, Region):
-            return False
+            return (False, "Bad Arg: region must be a Region object")
             
         return True
     
