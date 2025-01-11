@@ -14,6 +14,9 @@ SHAPE2D: Literal["Circle", "Square", "Hexagon"]
 VALUE: Literal["Critical", "Very_High", "High", "Medium", "Low", "Very_Low"]
 CATEGORY: Literal["Goods", "Energy", "Goods & Energy"]
 MIL_CATEGORY: Literal["Airbase", "Port", "Stronghold", "Farp", "Regiment", "Battallion", "Brigade", "Company", "EWR"]
+COUNTRY: Literal["Germany", "France", "Britain", "USA", "Russia", "China", "India", "Japan", "Korea", "Georgia", "Turkey", "Greece", "Vietnam", "Australia", "Brazil", "Canada"]
+SKILL: Literal["Average", "Good", "High", "Excellent"]
+TASK: Literal["CAS", "PATROL"]
 
 AREA_FOR_VOLUME = {  
     SHAPE2D.Circle : {SHAPE3D.Cylinder, SHAPE3D.Sphere, SHAPE3D.SemiSphere, SHAPE3D.Cone, SHAPE3D.Trunc_Cone, SHAPE3D.Solid},
@@ -66,50 +69,14 @@ AIR_DEFENCE_ASSET = {
                     
 }
 
-VEHICLE_ASSET = {  
-    
-
-
-    "Vehicle":               {   "Vehicle": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
-                                    "Tank": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Armored": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Motorized": {"cost": None, "value": VALUE.Very_High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Truck": {"cost": None, "value": VALUE.Medium, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Jeep": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Artillery": {"cost": None, "value": VALUE.High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33}                                    
-                                },
-                                "M": {
-                                    "Command&Control": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Track_Radar": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Search_Radar": {"cost": None, "value": VALUE.Very_High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Search&Track_Radar": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Launcher": {"cost": None, "value": VALUE.Medium, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Truck": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Generator": {"cost": None, "value": VALUE.High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33}                                    
-                                },
-                                "Small": {
-                                    "SAM": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},                                    
-                                    "Truck": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},                                    
-                                },                                                                                                
-                            },
-    "EWR":                  {   "EWR": {
-                                    "Command&Control": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},                                    
-                                    "Radar": {"cost": None, "value": VALUE.Very_High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},                                    
-                                    "Truck": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Generator": {"cost": None, "value": VALUE.High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33}                                    
-                                },                                
-                            },
-
-    "AAA":                  {   "AAA": {                                    
-                                    "AAA": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "Truck": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33}                                    
-                                },                                
-                            },
-    
-                    
-}
-
-
+VEHICLE_ASSET = {  #Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
+                    "Tank": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
+                    "Armored": {"cost": None, "value": VALUE.Critical, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
+                    "Motorized": {"cost": None, "value": VALUE.Very_High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
+                    "Truck": {"cost": None, "value": VALUE.Medium, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
+                    "Jeep": {"cost": None, "value": VALUE.Low, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
+                    "Artillery": {"cost": None, "value": VALUE.High, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33}                                    
+                },
 
 BLOCK_ASSET = {  
     
