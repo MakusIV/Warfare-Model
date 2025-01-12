@@ -27,36 +27,15 @@ class Asset(Block) :
 
     def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0, region: Region = None, country: str = None):      
             
-            super().__init__(name, description, category, functionality, value, acp, rcp, payload, region, nationality)
+            super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
 
             # propriety             
             self._position = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
             self._cost = cost # asset cost - type int 
             self._crytical = crytical 
             self._repair_time = repair_time
-            self._country = country # DCS country name - str
-            self._side # DCS country side - str             
-            self._country_id # DCS country id
-            self._country_bullseye # DCS country side bullseye
-            self._nav_points_side # DCS side nav_points 
-            self._category_country_group # DCS country category (ship, helicopter, vehicle, plane, static)
-            self._group_index # DCS country group index
-            self._group_modulation # DCS group modulation            
-            self._group_task  # DCS group task (CAS, ...) - str
-            self._group_radioSet # DCS group radioset - bool
-            self._group_uncontrolled  # DCS group uncontrolled - bool
-            self._group_taskSelected  # DCS group task selected - bool
-            self._group_groupId # DCS group id - int
-            self._group_hidden # DCS group hidden - bool
-            self._group_x # DCS group x - float
-            self._group_y # DCS group y - float
-            self._group_name # DCS group name - str
-            self._group_communication # DCS group communication - bool
-            self._group_lateActivation # DCS group lateActivation - bool
-            self._group_start_time # DCS group start_time - int
-            self._group_frequency # DCS group frequency - float
-            self._group_tasks # DCS group tasks - index Dict
-            self._group_route # DCS group route - index Dict
+            
+            
             
             self._unit_index # DCS group unit_index - index Dict            
             self._unit_name # DCS unit group name - str
@@ -137,8 +116,8 @@ class Asset(Block) :
     def country(self) -> str: #override      
         return self._country
     
-    @nationality.setter
-    def nationality(self, param) -> bool: #override
+    @country.setter
+    def country(self, param) -> bool: #override
         
         check_result = self.checkParam(country = param)
 
@@ -194,7 +173,7 @@ class Asset(Block) :
     def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
-        chek_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)
+        check_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)
 
         if not check_super_result[1]:
             return (False, check_super_result[2])     
@@ -212,10 +191,7 @@ class Asset(Block) :
             return (False, "Bad Arg: repair_time must be a int")
         
         if cost and not isinstance(repair_time, int):
-            return (False, "Bad Arg: cost must be a int")
-        
-        if country and not (country in COUNTRY):
-            return (False, "Bad Arg: nationality must be a Literal.COUNTRY")
+            return (False, "Bad Arg: cost must be a int")        
 
         return (True, "parameters ok")
     
