@@ -17,6 +17,8 @@ MIL_CATEGORY: Literal["Airbase", "Port", "Stronghold", "Farp", "Regiment", "Batt
 COUNTRY: Literal["Germany", "France", "Britain", "USA", "Russia", "China", "India", "Japan", "Korea", "Georgia", "Turkey", "Greece", "Vietnam", "Australia", "Brazil", "Canada"]
 SKILL: Literal["Average", "Good", "High", "Excellent"]
 TASK: Literal["CAS", "PATROL"]
+SIDE: Literal["red", "blue", "neutral"]
+GROUP_CATEGORY: Literal["helicopter", "plane", "vehicle", "static"]
 
 AREA_FOR_VOLUME = {  
     SHAPE2D.Circle : {SHAPE3D.Cylinder, SHAPE3D.Sphere, SHAPE3D.SemiSphere, SHAPE3D.Cone, SHAPE3D.Trunc_Cone, SHAPE3D.Solid},

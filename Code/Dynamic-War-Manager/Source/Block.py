@@ -301,7 +301,7 @@ class Block:
     
     @assets.setter
     def assets(self, value):
-        if isinstance(value, dict):
+        if isinstance(value, dict) and all(isinstance(asset, Asset) for asset in value.values()):
             self._assets = value
         else:
             raise ValueError("Il valore deve essere un dizionario")
