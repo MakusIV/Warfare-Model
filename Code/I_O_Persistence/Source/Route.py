@@ -26,8 +26,8 @@ class Route:
         
         
 
-        self._points # DCS coalition points - Dict
-        self._spans # DCS coalition spans - Dict
+        self._points # DCS route points - Dict
+        self._spans # DCS route spans - Dict
         
 
     
@@ -46,22 +46,22 @@ class Route:
         self._points = param
 
     @property
-    def spams(self):
-        return self._spams   
+    def spans(self):
+        return self._spans   
     
-    @spams.setter
-    def spams(self, param):
+    @spans.setter
+    def spans(self, param):
 
-        check_result = self.checkParam(spams = param)
+        check_result = self.checkParam(spans = param)
 
         if not check_result[1]:
             raise Exception(check_result[2]) 
         
-        self._spams = param 
+        self._spans = param 
 
     
     
-    def addSpam(self, index: int, points: List):
+    def addSpan(self, index: int, points: List):
         
         if not isinstance(points, List) or not isinstance(index, int) or index < 0 or index in self._units:
             raise Exception("Bad Arg: points must be a List of point and index must be an integer greater of 0 and unique")
@@ -73,47 +73,47 @@ class Route:
             
             self._countries[index][point_index] = point # point = ('x': int, 'y': int)
 
-    def removeSpamPoint(self, point: List):
+    def removeSpanPoint(self, point: List) -> bool:
         
-        if not isinstance(point, List):
-            raise Exception("Bad Arg: point must be a List")
+        if not isinstance(point, List) and 'x' in point.keys() and 'y' in point.keys() and isinstance(point.x, int) and isinstance(point.y, int):    
+            raise Exception("Bad Arg: point must be a List: point = ('x': int, 'y': int)")
 
-        response, spam_index, point_index, point = self.searchSpamPoint(point = point)
+        response, span_index, point_index, point = self.searchSpamPoint(point = point)
 
         if response:
-            del self._spams[spam_index][point_index]
+            del self._spans[span_index][point_index]
             return True
         else:
             return False
 
-    def removeSpam(self, index: int):
+    def removeSpan(self, index: int) -> bool:
         if not isinstance(index, int):
             raise Exception("Bad Arg: index must be an integer")
 
-        if index in self._spams:
-            del self._spams[index]
+        if index in self._spans:
+            del self._spans[index]
             return True
         else:
             return False
 
-    def searchSpamPoint(self, point: List = None, index: int = None) -> bool:
+    def searchSpanPoint(self, point: List = None, index: int = None) -> bool:
 
         if point and isinstance(point, List):
-            for spam_index, spam in self._spams.items():
-                for point_index, point_ in spam:
+            for span_index, span in self._spans.items():
+                for point_index, point_ in span:
                     if point_.x == point.x and point_.y == point.y:
-                        return True, spam_index, point_index, point
+                        return True, span_index, point_index, point
 
         if index and isinstance(point_index, int) and point_index >= 0:
-            for spam_index, spam in self._spams.items():
-                for point_index_, point_ in spam:
+            for span_index, span in self._spans.items():
+                for point_index_, point_ in span:
                     if point_index_ == point_index:
-                        return True, spam_index, point_index, point_        
+                        return True, span_index, point_index, point_        
 
         return False, None, None, None    
 
     
-    def checkParam(side: str, bullseye: Point2D, nav_points: Dict(Point2D), countries: Dict(Country)) -> bool: # type: ignore
+    def checkParam(side: str, bullseye: Point2D, nav_points: Dict(Point2D), countries: Dict(Country), spans: Dict) -> List: # type: ignore
         
         """Return True if type compliance of the parameters is verified"""   
     
@@ -128,6 +128,11 @@ class Route:
 
         if countries and not isinstance(countries, Dict) or not (isinstance(country, Point2D) for country in countries.values):
             return (False, "Bad Arg: nav_points must be a dict of Country")   
+        
+        if spans and not isinstance(spans, Dict):
+
+            if not all (( isinstance(span, List), isinstance(span_index, int), span_index >= 0, all( isinstance(point, List) and 'x' in point.keys() and 'y' in point.keys() and isinstance(point.x, int) and isinstance(point.y, int) for point in span)) for span_index, span in self._spans.items()):
+                return (False, "Bad Arg: spans must be a dict: spans = { span_index: [ point = ('x': int, 'y': int) ] }")
         
         return (True, "parameters ok")
 
