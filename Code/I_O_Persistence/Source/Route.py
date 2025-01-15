@@ -1,6 +1,7 @@
 """
 Class Route
-contains DCS Route information
+contains DCS Group Route information
+Coalition -> Country -> Group -> Route
 """
 
 from LoggerClass import Logger
@@ -45,6 +46,18 @@ class Route:
                 
         self._points = param
 
+    def addPoint(self, index: int, point: List):
+        
+        if not isinstance(point, List) and 'x' in point.keys() and 'y' in point.keys() and isinstance(point.x, int) and isinstance(point.y, int):    
+            raise Exception("Bad Arg: point must be a List: point = ('x': int, 'y': int)")
+        
+        if not isinstance(index, int) or index < 0 or index in self._points:
+            raise Exception("Bad Arg: index must be an integer greater of 0 and unique")
+        
+        self._points[index] = point 
+
+
+
     @property
     def spans(self):
         return self._spans   
@@ -59,7 +72,6 @@ class Route:
         
         self._spans = param 
 
-    
     
     def addSpan(self, index: int, points: List):
         

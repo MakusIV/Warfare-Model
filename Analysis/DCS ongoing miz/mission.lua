@@ -3563,8 +3563,8 @@ mission = {
 				['type'] = 0,
 			},
 		},
-	},
-	['coalition'] = {
+	},   ----- DEFINIZIONE CLASSI PYTHON PER I/O
+	['coalition'] = { -- Coalition Class
 		['blue'] = {
 			['bullseye'] = {
 				['y'] = 516290.23098695,
@@ -3573,7 +3573,7 @@ mission = {
 			['nav_points'] = {
 			},
 			['name'] = 'blue',
-			['country'] = {
+			['country'] = {-- Country Class 
 				[1] = {
 					['helicopter'] = {
 						['group'] = {
@@ -4812,8 +4812,8 @@ mission = {
 							},
 						},
 					},
-					['plane'] = {
-						['group'] = {
+					['plane'] = {  
+						['group'] = { -- Group Class
 							[1] = {
 								['modulation'] = 0,
 								['tasks'] = {
@@ -4836,8 +4836,8 @@ mission = {
 								['task'] = 'CAS',
 								['uncontrolled'] = true,
 								['taskSelected'] = true,
-								['route'] = {
-									['points'] = {
+								['route'] = { -- Route Class
+									['points'] = { -- Point Class
 										[1] = {
 											['speed_locked'] = true,
 											['briefing_name'] = 'Departure',
@@ -4851,11 +4851,11 @@ mission = {
 												['steer'] = 2,
 											},
 											['speed'] = 187.5,
-											['task'] = {
+											['task'] = { 
 												['id'] = 'ComboTask',
 												['params'] = {
-													['tasks'] = {
-														[1] = {
+													['tasks'] = { 
+														[1] = { -- Task Class
 															['number'] = 1,
 															['auto'] = false,
 															['id'] = 'WrappedAction',

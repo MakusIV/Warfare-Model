@@ -1,11 +1,13 @@
 """
 Class Point
 contains DCS Point information
+Coalition -> Country -> Group -> Route -> Point
 """
 
 from LoggerClass import Logger
 from Country import Country
 from Context import SIDE
+from Task import Task
 from sympy import Point2D
 from typing import Literal, List, Dict
 
@@ -15,35 +17,35 @@ logger = Logger(module_name = __name__, class_name = 'Point')
 
 class Point:
 
-    def __init__(self, task: Dict = None, properties: Dict = None): 
+    def __init__(self, task: Dict = None, properties: Dict = None, briefing_name: str = None, action: str = None, type: str = None, speed_locked: bool = None, alt: float = None, speed: float = None, ETA: float = None, ETA_locked: bool = None, x: float = None, y: float = None, name: str = None, airdromeId: int = None, formation_template: str = None): 
             
-
         # check input parameters
         check_results =  self.checkParam( task, properties )
         
         if not check_results[1]:
             raise Exception(check_results[2] + ". Object not istantiate.")    
         
-        
-        self._briefing_name # DCS point breafing_name  - str  (e.g.: spawn)
-        self._action # DCS point action  - str  (e.g.: Turning Point)
-        self._type # DCS point type  - str  (e.g.: Turning Point)
-        self._speed_locked # DCS point speed_locked  - bool
-        self._alt_type # DCS point alt_type  - str  (e.g.: BARO, MSL)
-        self._speed # DCS point speed - float
-        self._ETA # DCS point ETA - float
-        self._ETA_locked # DCS point ETA_locked - bool
-        self._y # DCS point y - float
-        self._x # DCS point x - float
-        self._name # DCS point name - str
-        self._alt # DCS point altitude - float
-        self._airdromeId # DCS point airdromeId - int
-        self._formation_template # DCS point formation_template - str
+        self._briefing_name = briefing_name # DCS point breafing_name  - str  (e.g.: spawn)
+        self._action = action # DCS point action  - str  (e.g.: Turning Point)
+        self._type = type # DCS point type  - str  (e.g.: Turning Point)
+        self._speed_locked = speed_locked # DCS point speed_locked  - bool
+        self._alt_type = alt_type # DCS point alt_type  - str  (e.g.: BARO, MSL)
+        self._speed = speed # DCS point speed - float
+        self._ETA = ETA # DCS point ETA - float
+        self._ETA_locked = ETA_locked # DCS point ETA_locked - bool
+        self._y = y # DCS point y - float
+        self._x = x # DCS point x - float
+        self._name = name # DCS point name - str
+        self._alt = alt # DCS point altitude - float
+        self._airdromeId= airdromeId # DCS point airdromeId - int
+        self._formation_template = formation_template # DCS point formation_template - str
 
-        self._properties = # DCS point properties  - Dict: {'vnav': 0, 'scale': 0, 'angle': 0, 'vangle': 0, 'steer': 0} 
-        self._task # DCS point task - Dict
-        
+        self._properties = properties # DCS point properties  - Dict: {'vnav': 0, 'scale': 0, 'angle': 0, 'vangle': 0, 'steer': 0} 
 
+        # task.id: str, task.params: Dict
+        # task.params.tasks Dict        
+        self._task = task # DCS point task - Dict: {'id': str, 'params': Dict: {index_int: value.Task} }
+    
     
     @property
     def task(self):
@@ -59,6 +61,7 @@ class Point:
                 
         self._task = param
 
+    
     @property
     def properties(self):
         return self._properties   
@@ -73,93 +76,265 @@ class Point:
         
         self._properties = param 
 
+    @properties
+    def briefing_name(self):
+        return self._briefing_name
     
-    
-    def setProperty(self, vnav: int, scale: int, angle: int, vangle: int, steer: int):
-        # {'vnav': 0, 'scale': 0, 'angle': 0, 'vangle': 0, 'steer': 0} 
-
-        if vnav and not isinstance(vnav, int) or scale and not isinstance(scale, int) or angle and not isinstance(angle, int) or vangle and not isinstance(vangle, int) or steer and not isinstance(steer, int):
-            raise Exception("Bad Arg: vnav, scale, angle, vangle, steer must be integers")
-
-        if vnav and isinstance(vnav, int):
-            self._properties['vnav'] = vnav
-
-        if scale and isinstance(scale, int):
-            self._properties['scale'] = scale
-
-        if angle and isinstance(angle, int):
-            self._properties['angle'] = angle
-
-        if vangle and isinstance(vangle, int):
-            self._properties['vangle'] = vangle
-
-        if steer and isinstance(steer, int):
-            self._properties['steer'] = steer        
-
-        return 
-
-    def removeSpanPoint(self, point: List) -> bool:
+    @briefing_name.setter 
+    def briefing_name(self, param):
         
-        if not isinstance(point, List) and 'x' in point.keys() and 'y' in point.keys() and isinstance(point.x, int) and isinstance(point.y, int):    
-            raise Exception("Bad Arg: point must be a List: point = ('x': int, 'y': int)")
+        check_result = self.checkParam(briefing_name = param)
 
-        response, span_index, point_index, point = self.searchSpamPoint(point = point)
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._briefing_name = param 
 
-        if response:
-            del self._properties[span_index][point_index]
-            return True
-        else:
-            return False
 
-    def removeSpan(self, index: int) -> bool:
+    @properties
+    def action(self):
+        return self._action
+    
+    @action.setter 
+    def action(self, param):
+        
+        check_result = self.checkParam(action = param)
 
-        if not isinstance(index, int):
-            raise Exception("Bad Arg: index must be an integer")
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._action = param    
 
-        if index in self._properties:
-            del self._properties[index]
-            return True
-        else:
-            return False
 
-    def searchSpanPoint(self, point: List = None, index: int = None) -> bool:
+    @properties
+    def type(self):
+        return self._type  
+    
+    @type.setter 
+    def type(self, param):
+        
+        check_result = self.checkParam(type = param)
 
-        if point and isinstance(point, List):
-            for span_index, span in self._properties.items():
-                for point_index, point_ in span:
-                    if point_.x == point.x and point_.y == point.y:
-                        return True, span_index, point_index, point
+        if not check_result[1]:
+            raise Exception(check_result[2])
+        
+        self._type = param
 
-        if index and isinstance(point_index, int) and point_index >= 0:
-            for span_index, span in self._properties.items():
-                for point_index_, point_ in span:
-                    if point_index_ == point_index:
-                        return True, span_index, point_index, point_        
 
-        return False, None, None, None    
+    @properties
+    def speed_locked(self):
+        return self._speed_locked
+    
+    @speed_locked.setter 
+    def speed_locked(self, param):
+        
+        check_result = self.checkParam(speed_locked = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._speed_locked = param
+
+
+    @properties
+    def alt_type(self):
+        return self._alt_type    
+   
+    @alt_type.setter 
+    def alt_type(self, param):
+        
+        check_result = self.checkParam(alt_type = param)    
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._alt_type = param
+
+
+    @properties
+    def speed(self):
+        return self._speed
+    
+    @speed.setter 
+    def speed(self, param):
+        
+        check_result = self.checkParam(speed = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._speed = param
+
+
+    @properties
+    def ETA(self):
+        return self._ETA    
+    
+    @ETA.setter 
+    def ETA(self, param):
+        
+        check_result = self.checkParam(ETA = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._ETA = param
+
+
+    @properties
+    def ETA_locked(self):
+        return self._ETA_locked
+    
+    @ETA_locked.setter 
+    def ETA_locked(self, param):
+        
+        check_result = self.checkParam(ETA_locked = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._ETA_locked = param
+
+
+    @properties
+    def y(self):
+        return self._y    
+   
+    @y.setter 
+    def y(self, param):
+        
+        check_result = self.checkParam(y = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._y = param
+
+
+    @properties
+    def x(self):
+        return self._x
+    
+    @x.setter   
+    def x(self, param):
+        
+        check_result = self.checkParam(x = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._x = param
+
+
+    @properties
+    def name(self):
+        return self._name
+    
+    @name.setter    
+    def name(self, param):
+        
+        check_result = self.checkParam(name = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._name = param
+
+    @properties
+    def alt(self):
+        return self._alt
+    
+    @alt.setter    
+    def alt(self, param):
+        
+        check_result = self.checkParam(alt = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._alt = param
+
+
+    @properties
+    def airdromeId(self):
+        return self._airdromeId
+    
+    @airdromeId.setter    
+    def airdromeId(self, param):
+        
+        check_result = self.checkParam(airdromeId = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2])
+        
+
+        self._airdromeId = param   
+
+
+    @properties
+    def formation_template(self):
+        return self._formation_template
+    
+    @formation_template.setter    
+    def formation_template(self, param):
+        
+        check_result = self.checkParam(formation_template = param)
+
+        if not check_result[1]:
+            raise Exception(check_result[2]) 
+        
+        self._formation_template = param
+
 
     
-    def checkParam(task: Task, properties: Dict, nav_task: Dict(Point2D), countries: Dict(Country)) -> bool: # type: ignore
+    def checkParam(task: Dict = None, properties: Dict = None, briefing_name: str = None, action: str = None, type: str = None, speed_locked: bool = None, alt: float = None, speed: float = None, ETA: float = None, ETA_locked: bool = None, x: float = None, y: float = None, name: str = None, airdromeId: int = None, formation_template: str = None) -> bool: # type: ignore
         
         """Return True if type compliance of the parameters is verified"""   
     
-        if not isinstance(side, str) or not (side in SIDE):
-            return (False, "Bad Arg: shape must be a string from SIDE")
+        if briefing_name and not isinstance(briefing_name, str):
+            return (False, "Bad Arg: briefing_name must be a str")
         
-        if bullseye and not isinstance(bullseye, Point2D):
-            return (False, "Bad Arg: bullseye must be a Point2D")
+        if action and not isinstance(action, str):
+            return (False, "Bad Arg: action must be a str")
         
-        if nav_task and not isinstance(nav_task, Dict) or not (isinstance(nav_point, Point2D) for nav_point in nav_task.values):
-            return (False, "Bad Arg: nav_task must be a dict of Point2D") 
+        if type and not isinstance(type, str):
+            return (False, "Bad Arg: type must be a str")
+        
+        if speed_locked and not isinstance(speed_locked, bool):
+            return (False, "Bad Arg: speed_locked must be a bool")
+        
+        if alt and not isinstance(alt, float):
+            return (False, "Bad Arg: alt must be a float")
+        
+        if speed and not isinstance(speed, float):
+            return (False, "Bad Arg: speed must be a float")
+        
+        if ETA and not isinstance(ETA, float):
+            return (False, "Bad Arg: ETA must be a float")
+        
+        if ETA_locked and not isinstance(ETA_locked, bool):
+            return (False, "Bad Arg: ETA_locked must be a bool")
+        
+        if x and not isinstance(x, float):
+            return (False, "Bad Arg: x must be a float")
+        
+        if y and not isinstance(y, float):
+            return (False, "Bad Arg: y must be a float")
+        
+        if name and not isinstance(name, str):
+            return (False, "Bad Arg: name must be a str")
+        
+        if airdromeId and not isinstance(airdromeId, int):
+            return (False, "Bad Arg: airdromeId must be a int")
+        
+        if formation_template and not isinstance(formation_template, str):
+            return (False, "Bad Arg: formation_template must be a str")
+        
+        if task and not isinstance(task, Dict) or not all( keys in task.keys() for keys in ['id', 'params'] ) or not isinstance(task.params, Dict) or not all( isinstance(value, Task) for value in task.params.values() ):
+            return (False, "Bad Arg: task must be a Dict: task = {'id': str, 'params': Dict {index: int, value: Task}}")
 
-        if countries and not isinstance(countries, Dict) or not (isinstance(country, Point2D) for country in countries.values):
-            return (False, "Bad Arg: nav_task must be a dict of Country")   
-        
-        if task and not isinstance(task, Task):
-            return (False, "Bad Arg: task must be a Task")
-
-        if properties and not isinstance(property, List) or not all (keys in property.keys() for keys in ['vnav', 'scale', 'angle', 'vangle', 'steer'] ) or not all ( isinstance(value, int) for value in property.values() ): 
-            return (False, "Bad Arg: property must be a List: properties = {'vnav': 0, 'scale': 0, 'angle': 0, 'vangle': 0, 'steer': 0}")
+        if properties and not isinstance(property, Dict) or not all (keys in property.keys() for keys in ['vnav', 'scale', 'angle', 'vangle', 'steer'] ) or not all ( isinstance(value, int) for value in property.values() ): 
+            return (False, "Bad Arg: property must be a Dict: properties = {'vnav': 0, 'scale': 0, 'angle': 0, 'vangle': 0, 'steer': 0}")
         
         return (True, "parameters ok")
 
