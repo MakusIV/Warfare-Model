@@ -17,7 +17,7 @@ logger = Logger(module_name = __name__, class_name = 'Point')
 
 class Point:
 
-    def __init__(self, task: Dict = None, properties: Dict = None, briefing_name: str = None, action: str = None, type: str = None, speed_locked: bool = None, alt: float = None, speed: float = None, ETA: float = None, ETA_locked: bool = None, x: float = None, y: float = None, name: str = None, airdromeId: int = None, formation_template: str = None): 
+    def __init__(self, task: Dict = None, properties: Dict = None, briefing_name: str = None, action: str = None, type: str = None, speed_locked: bool = None, alt_type: str = None, alt: float = None, speed: float = None, ETA: float = None, ETA_locked: bool = None, x: float = None, y: float = None, name: str = None, airdromeId: int = None, formation_template: str = None): 
             
         # check input parameters
         check_results =  self.checkParam( task, properties )
@@ -46,6 +46,7 @@ class Point:
         # task.params.tasks Dict        
         self._task = task # DCS point task - Dict: {'id': str, 'params': Dict: {index_int: value.Task} }
     
+    # nota: non implemento un metodo addTask come fatto in Group, in quanto per il momento non prevedo di modificare i task assegnati al livello di Point
     
     @property
     def task(self):
