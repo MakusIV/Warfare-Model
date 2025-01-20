@@ -262,7 +262,7 @@ class Group:
         self._tasks = param
 
 
-    def addTask(self, task):
+    def addTask(self, task, index):
 
         if not isinstance(task, Task) or not isinstance(index, int) or index < 0 or index in self._tasks:
             raise Exception("Bad Arg: task must be a Task object, index must be an integer greater of 0 and unique")

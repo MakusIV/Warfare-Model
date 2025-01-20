@@ -1,10 +1,11 @@
 """
 Class Task
 contains DCS Task information
-Coalition -> Country -> Group -> Route -> Point -> Task
+Coalition -> Country -> Group -> Route -> Point -> Task -> params -> Tasks
+Coalition -> Country -> Group -> Tasks
 """
 
-from LoggerClass import Logger
+from Code.LoggerClass import Logger
 from Country import Country
 from Context import SIDE
 from sympy import Point2D
@@ -36,6 +37,8 @@ class Task:
         # params.action.params.name, params.action.params.value,
         self._params = params # DCS point task - Dict: {'action': Dict: {'id': str, params': Dict: {'value': int , 'name': str } } } 
         
+        # params.action.params = ['number': int, 'callnameFlag': bool, 'callname': str, 'power': int, 'modulation': int, 'frequency': int]
+        # non lo inserisco in quanto probabilmente ci sono campi aggiuntivi in relazione al tipo di object: vehicle, plane ed al tipo di missione
 
     
     @property
@@ -50,9 +53,27 @@ class Task:
         if not check_result[1]:
             raise Exception(check_result[2]) 
                 
-        self._params = param
+        self._params = param        
+        return
 
-    
+    def toString(self):
+        s1 = "number: " + str(self._number) + ", auto: " + str(self._auto) + ", id: " + str(self._id) + ", enabled: " + str(self._enabled)
+        
+        for key_action, value_action in self._params.items(): # action
+
+            if key_action == 'action':
+                s2 = "action:\n id: " + value_action.id
+                s3 = " "
+
+                for key, value in value_action.params.items(): # params
+                    s3 = s3 + key + ": " + str(value) + ", "
+
+                s2 = s2 + s3
+
+            else:
+                s2 = key_action + ": " + str(value_action)  
+                
+        return s1 + '\n' + s2
     
     def checkParam(params: Dict = None, number: int = None, auto: bool = None, id: str = None, enabled: bool = None) -> bool: # type: ignore
         
