@@ -6,7 +6,7 @@ Coalition -> Country -> Group -> Tasks
 """
 
 from Code.LoggerClass import Logger
-from Country import Country
+from Code.Persistence.Source.Country import Country
 from Context import SIDE
 from sympy import Point2D
 from typing import Literal, List, Dict
