@@ -4,7 +4,7 @@ contains DCS Country information
 """
 
 from LoggerClass import Logger
-from Context import name, GROUP_CATEGORY
+from Context import GROUP_CATEGORY
 from sympy import Point2D
 from typing import Literal, List, Dict
 

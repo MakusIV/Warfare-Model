@@ -1,5 +1,8 @@
+#import sys
+#print(sys.path)
 import unittest
-from Task import Task
+from Persistence.Source.Task import Task
+
 
 class TestTask(unittest.TestCase):
     def test_init(self):
