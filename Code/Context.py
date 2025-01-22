@@ -85,7 +85,7 @@ class SKILL(Enum):
     
 class TASK(Enum): 
     CAS = "CAS"
-    PATROL = "PATROL"
+    PATROL = "Patrol"
     CAP = "CAP"    
     STRIKE = "Strike"
     INTERCEPT = "Intercept"
@@ -257,10 +257,10 @@ BLOCK_ASSET = {
                                     "Tank_Vehicle": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
                                     "Armored_Vehicle": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
                                     "Motorized_Vehicle": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "h": None, "g": 1, "e": None}, "payload%": 33},
-                                    "SAM_Big": AIR_DEFENCE_ASSET.SAM.Big,
-                                    "SAM_Medium": AIR_DEFENCE_ASSET.SAM.Medium,
-                                    "SAM_Small": AIR_DEFENCE_ASSET.SAM.Small,
-                                    "AAA": AIR_DEFENCE_ASSET.AAA.AAA                                                                        
+                                    "SAM_Big": AIR_DEFENCE_ASSET["SAM"]["Big"],
+                                    "SAM_Medium": AIR_DEFENCE_ASSET["SAM"]["Medium"],
+                                    "SAM_Small": AIR_DEFENCE_ASSET["SAM"]["Small"],
+                                    "AAA": AIR_DEFENCE_ASSET["AAA"]["AAA"]                                                                        
                                 },
                                 "Farp": {
                                     "Factories": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "h": None, "g": 1, "e": None}, "payload%": 33},

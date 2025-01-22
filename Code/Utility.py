@@ -9,10 +9,13 @@ import uuid
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from Sphere import Sphere
+from Hemisphere import Hemisphere
+from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
-# non èpossibile usare la classe Logger per evitare le circular dependencies: Logger importa General e Geneal imprta Logger
+# non èpossibile usare la classe Logger per evitare le circular dependencies: Logger importa Utility e Utility imprta Logger
+# tuttavia, considerando che Logger importa utility solo per utilizzare il metodo setName(), elimina la questo utilizzo ed implementa qui logger
 
 logging.basicConfig( level = logging.DEBUG )
 # Create a custom logger

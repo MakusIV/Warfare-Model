@@ -11,7 +11,8 @@ class TestTask(unittest.TestCase):
         self.assertEqual(task.number, 2)
         self.assertTrue(task.auto)
         self.assertEqual(task.id, 'task_id')
-        self.assertTrue(task.enabled)
+        self.assertTrue(task.enabled)        
+       
 
     def test_toString(self):
         task = Task(params={'action': {'id': 'WrappedAction', 'params': {'value': 1, 'name': 'test'}}}, number=1, auto=True, id='task_id', enabled=True)

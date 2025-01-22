@@ -5,7 +5,7 @@ Represents the volume occupied by a Block or an Asset
 
 from Code.LoggerClass import Logger
 from Code.Context import SHAPE2D, SHAPE3D, AREA_FOR_VOLUME
-from Area import Area
+from Dynamic_War_Manager.Source.Area import Area
 from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from typing import Literal, List, Dict
 
