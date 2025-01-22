@@ -1,6 +1,6 @@
-import Coordinate
+
 from Code.LoggerClass import Logger
-import Code.General as General
+
 
 # LOGGING --
  

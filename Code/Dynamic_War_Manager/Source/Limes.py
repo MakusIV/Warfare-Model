@@ -6,7 +6,7 @@ Represents the limes of a Region: a closed line defined from points
 """
 
 from Code.LoggerClass import Logger
-from Area import Area
+from Dynamic_War_Manager.Source.Area import Area
 from typing import Literal, List, Dict
 from Code.Context import Context
 from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And

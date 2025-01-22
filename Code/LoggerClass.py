@@ -1,4 +1,5 @@
 import logging
+import Utility
 import os
 
 # LOGGING --
@@ -29,7 +30,7 @@ class Logger:
 
 
         if not class_name:
-            self._name = General.setName('Logger_Name')
+            self._name = Utility.setName('Logger_Name')
         else:
             self._name = name
 

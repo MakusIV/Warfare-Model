@@ -1,13 +1,13 @@
-from Utility import Utility
-from State import State
+from Code.Utility import Utility
+from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
-from Event import Event
-from Payload import Payload
+from Dynamic_War_Manager.Source.Event import Event
+from Dynamic_War_Manager.Source.Payload import Payload
 from Code.Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
-from Asset import Asset
-from Region import Region
+from Dynamic_War_Manager.Source.Asset import Asset
+from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
  
@@ -54,7 +54,7 @@ class Block:
                 payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
 
             # check input parameters            
-            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region ):            
+            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region )            
             
             if not check_results[1]:
                 raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")

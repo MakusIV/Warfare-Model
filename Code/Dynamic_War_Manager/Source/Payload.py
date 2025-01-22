@@ -1,6 +1,6 @@
 from Code.LoggerClass import Logger
 from Code.Context import STATE
-from Block import Block
+from Dynamic_War_Manager.Source.Block import Block
 import Utility
 
 # LOGGING --

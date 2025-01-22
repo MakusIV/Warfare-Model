@@ -1,5 +1,5 @@
-import Code.General as General
-from State import State
+
+from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
 
 # LOGGING --

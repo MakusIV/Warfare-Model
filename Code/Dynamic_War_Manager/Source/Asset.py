@@ -7,16 +7,16 @@ Il Block può essere costituito da diversi gruppi apparenenti a country diverse 
 """
 
 
-from Block import Block
+from Dynamic_War_Manager.Source.Block import Block
 from Utility import Utility
-from State import State
+from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
-from Event import Event
-from Payload import Payload
+from Dynamic_War_Manager.Source.Event import Event
+from Dynamic_War_Manager.Source.Payload import Payload
 from Code.Context import STATE, CATEGORY, MIL_CATEGORY, COUNTRY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
-from Region import Region
+from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
  
@@ -170,7 +170,7 @@ class Asset(Block) :
     
     
 
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
         check_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)

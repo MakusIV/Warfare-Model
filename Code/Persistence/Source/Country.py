@@ -7,6 +7,7 @@ from LoggerClass import Logger
 from Context import GROUP_CATEGORY
 from sympy import Point2D
 from typing import Literal, List, Dict
+from Persistence.Source.Group import Group
 
 # LOGGING --
  
