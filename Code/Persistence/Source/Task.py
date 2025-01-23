@@ -1,8 +1,10 @@
 """
 Class Task
 contains DCS Task information
+
 Coalition -> Country -> Group -> Route -> Point -> Task -> params -> Tasks
 Coalition -> Country -> Group -> Tasks
+
 """
 
 from Code.LoggerClass import Logger
@@ -11,8 +13,7 @@ from Context import SIDE
 from sympy import Point2D
 from typing import Literal, List, Dict
 
-# LOGGING --
- 
+# LOGGING -- 
 logger = Logger(module_name = __name__, class_name = 'Task')
 
 class Task:
