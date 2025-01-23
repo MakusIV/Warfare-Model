@@ -14,7 +14,7 @@ from Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
-# non èpossibile usare la classe Logger per evitare le circular dependencies: Logger importa Utility e Utility imprta Logger
+# non è possibile usare la classe Logger per evitare le circular dependencies: Logger importa Utility e Utility imprta Logger
 # tuttavia, considerando che Logger importa utility solo per utilizzare il metodo setName(), elimina la questo utilizzo ed implementa qui logger
 
 logging.basicConfig( level = logging.DEBUG )
@@ -158,7 +158,6 @@ def get_Semisphere(center, radius):
 
     return semisphere_equation
 
-    
 
 def line_Intersect(p1, p2, center, radius):
     """
@@ -259,14 +258,9 @@ def tangent_to_semisphere(center, radius, p):
     return {"points": points, "lines": lines}
 
 
-
-
-
-
 def checkEventType(_type):
     """Return True if _type is compliance with standard type defined for Event in General.py"""
     return _type != None and isinstance(_type, str) and any( [ True for el in EVENT_TYPE if el == _type ] )
-
 
 
 def setId(name, id):
@@ -279,6 +273,7 @@ def setId(name, id):
         id = str( id )    
     return id
 
+
 def setName(name):
     """Return string with name plus random int 4 digit"""            
     if not name or not isinstance( name, str ):
@@ -287,22 +282,27 @@ def setName(name):
         name = name + '_#' + str( random.randint( 1, 9999 ) ) # hashing or radInt        
     return name
 
+
 def calcVectorModule( vect ):
     """Return module of vect"""
     return math.sqrt( vect[0]**2 + vect[1]**2 + vect[2]**2 )
+
 
 def calcVectorDiff( vect1, vect2):
     """Return vector diff"""
     return ( ( vect2[0] - vect1[0] ), ( vect2[1] - vect1[1] ), ( vect2[1] - vect1[2] ) )
 
+
 def calcVectorSum( vect1, vect2):
     """Return vector sum"""
     return ( ( vect2[0] + vect1[0] ), ( vect2[1] + vect1[1] ), ( vect2[1] + vect1[2] ) )
+
 
 def calcScalProd( vect1, vect2):
     # se perpendicolari: prod_scal = 0, se alfa>0, <=90 prod scal > 0, se alfa>90, <=180 prod scal < 0
     """Return scalar product"""
     return vect1[0]*vect2[0] + vect1[1]*vect2[2] + vect1[2]*vect2[2]
+
 
 def calcVectProd( vect1, vect2):
     """Return scalar product"""
@@ -310,12 +310,12 @@ def calcVectProd( vect1, vect2):
     # (y1*z2 - z1*y2), (z1*x2 - x1*z2), (x1*y2 - y1*x2)
     return ( ( vect1[1]*vect2[2] - vect1[2]*vect2[1] ), ( vect1[2]*vect2[0] - vect1[0]*vect2[2] ), ( vect1[0]*vect2[1] - vect1[1]*vect2[0] ) )
 
+
 def calcProbability( probability ):
     """Return true if random number is greater of probability"""
     num = random.uniform(0, 1)
     return num < probability
     
-
 # Conversione dell'output in stringa usando le funzioni di appartenenza Funzione privata di calcProductionTargetPriority, calcStorageTargetPriority, calcTransportLineTargetPriority
 def get_membership_label(output_value, variable):
     """
@@ -332,6 +332,7 @@ def get_membership_label(output_value, variable):
             max_membership = membership_value
             label = term
     return label
+
 
 def calcProductionTargetPriority(target_priority: str, production_efficiency: float):
     """
@@ -404,6 +405,7 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
     return output_string, output_numeric
     #print("Valore numerico di t_p_p:", output_numeric)
     #print("Valore stringa di t_p_p:", output_string)
+
 
 def calcStorageTargetPriority(target_priority: str, production_efficiency: float, storage_efficiency: float):
     """
@@ -536,6 +538,7 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     #print("Valore numerico di t_s_p:", output_numeric)
     #print("Valore stringa di t_s_p:", output_string)
 
+
 def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
@@ -666,6 +669,7 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
+
 
 def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
     """

@@ -10,6 +10,8 @@
 from enum import Enum
 
 MAX_WORLD_DISTANCE = 1.2e+90
+DCS_DATA_DIRECTORY = "E:\Sviluppo\Warfare_Model\Code\Persistence\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
+
 
 class STATE(Enum):
     ACTIVE = "Active" 

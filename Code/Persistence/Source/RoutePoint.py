@@ -13,9 +13,9 @@ from typing import Literal, List, Dict
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Point')
+logger = Logger(module_name = __name__, class_name = 'RoutePoint')
 
-class Point:
+class RoutePoint:
 
     def __init__(self, task: Dict = None, properties: Dict = None, briefing_name: str = None, action: str = None, type: str = None, speed_locked: bool = None, alt_type: str = None, alt: float = None, speed: float = None, ETA: float = None, ETA_locked: bool = None, x: float = None, y: float = None, name: str = None, airdromeId: int = None, formation_template: str = None): 
             
