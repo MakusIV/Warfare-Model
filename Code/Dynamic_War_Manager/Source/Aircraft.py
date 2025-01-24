@@ -1,13 +1,13 @@
+import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.Mobile import Mobile
 from Dynamic_War_Manager.Source.Block import Block
-from Utility import Utility
 from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import STATE, CATEGORY, MIL_CATEGORY
+from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
  

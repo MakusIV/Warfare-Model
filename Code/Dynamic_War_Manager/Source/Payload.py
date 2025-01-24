@@ -1,6 +1,5 @@
-from Code.LoggerClass import Logger
-from Code.Context import STATE
-from Dynamic_War_Manager.Source.Block import Block
+from LoggerClass import Logger
+from Context import STATE
 import Utility
 
 # LOGGING --
@@ -18,7 +17,7 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 
 class Payload:
-    def __init__(self, goods: int = 0, energy: int = 0, hr: int = 0, hc: int = 0, hs: int = 0, hb: int = 0, parent: Block = None):
+    def __init__(self, goods: int = 0, energy: int = 0, hr: int = 0, hc: int = 0, hs: int = 0, hb: int = 0 ):
         self._goods = goods # int 
         self._energy = energy # int
         self._hr = hr # human resource: civil worker int
@@ -28,26 +27,8 @@ class Payload:
 
         # association
         
-        if parent != None and not isinstance(parent, Block):
-            raise TypeError("Invalid parameters! Type not valid, Block Class expected")
         
-        elif parent != None:             
-            parent.payload = self # set parent association with payload
-
-        self._parent = parent # parent association
 
 
 
-    @property        
-    def parent(self):
-        
-        return self._parent
-    
-    @parent.setter
-    def parent(self, parent):
-        
-        if not isinstance(parent, Block):
-                raise TypeError("Invalid parameters! Type not valid, Block Class expected")
-                
-        self._parent = parent # parent association  
-        parent.payload = self # set parent association with payload
+   

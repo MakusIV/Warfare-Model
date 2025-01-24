@@ -3,11 +3,11 @@ Class Group
 contains DCS Group information
 """
 
-from Code.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.Asset import Asset
-from Code.Persistence.Source.Route import Route
+from LoggerClass import Logger
+from Dynamic_War_Manager.Source.Asset import Asset
+from Persistence.Source.Route import Route
 from Context import name, GROUP_CATEGORY
-from Task import Task
+from Persistence.Source.Task import Task
 from sympy import Point2D
 from typing import Literal, List, Dict
 

@@ -8,14 +8,16 @@ Il Block può essere costituito da diversi gruppi apparenenti a country diverse 
 
 
 from Dynamic_War_Manager.Source.Block import Block
-from Utility import Utility
+import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
+from Dynamic_War_Manager.Source.Volume import Volume
+from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import STATE, CATEGORY, MIL_CATEGORY, COUNTRY
+from Context import STATE, CATEGORY, MIL_CATEGORY, COUNTRY
 from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
@@ -25,44 +27,44 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset(Block) :    
 
-    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0, region: Region = None, country: str = None):      
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, value: int|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None):      
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
 
             # propriety             
-            self._position = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
-            self._cost = cost # asset cost - type int 
-            self._crytical = crytical 
-            self._repair_time = repair_time
+            self._position: int|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
+            self._cost: int|None = cost # asset cost - type int 
+            self._crytical: bool|None = crytical 
+            self._repair_time: int|None = repair_time
             
             
             
-            self._unit_index # DCS group unit_index - index Dict            
-            self._unit_name # DCS unit group name - str
-            self._unit_type # DCS unit group type - str
-            self._unit_unitId # DCS unit group id - int
-            self._unit_communication # DCS unit group communication - bool
-            self._unit_lateActivation # DCS unit group lateActivation - bool
-            self._unit_start_time # DCS unit group start_time - int
-            self._unit_frequency # DCS unit group frequency - float
-            self._unit_x # DCS unit x - float
-            self._unit_y # DCS unit y - float
-            self._unit_alt # DCS unit altitude - float
-            self._unit_alt_type # DCS unit altitude type - str (BARO, ...)
-            self._heading # DCS unit heading - int
-            self._unit_speed # DCS unit speed - float
-            self._unit_hardpoint_racks # DCS unit hardpoint_racks - int
-            self._unit_livery_id # DCS unit livery_id - int
-            self._unit_psi # DCS unit psi - float
-            self._unit_skill # DCS unit skill - Literal (Average, ....)
-            self._unit_onboard_num # DCS unit onboard_num - int
-            self._unit_payload # DCS unit payload - Dict
-            self._unit_callsign  # DCS unit callsign - Dict
+            self._unit_index: str|Dict = None # DCS group unit_index - index Dict            
+            self._unit_name: str|None = None # DCS unit group name - str
+            self._unit_type: str|None = None # DCS unit group type - str
+            self._unit_unitId: int|None = None # DCS unit group id - int
+            self._unit_communication: bool|None = None # DCS unit group communication - bool
+            self._unit_lateActivation: bool|None = None # DCS unit group lateActivation - bool
+            self._unit_start_time: int|None = None # DCS unit group start_time - int
+            self._unit_frequency: float|None = None # DCS unit group frequency - float
+            self._unit_x: float|None = None # DCS unit x - float
+            self._unit_y: float|None = None # DCS unit y - float
+            self._unit_alt: float|None = None # DCS unit altitude - float
+            self._unit_alt_type: str|None = None # DCS unit altitude type - str (BARO, ...)
+            self._heading: int|None = None # DCS unit heading - int
+            self._unit_speed: float|None = None # DCS unit speed - float
+            self._unit_hardpoint_racks: int|None = None # DCS unit hardpoint_racks - int
+            self._unit_livery_id: int|None = None # DCS unit livery_id - int
+            self._unit_psi: float|None = None # DCS unit psi - float
+            self._unit_skill: str|None = None # DCS unit skill - Literal (Average, ....)
+            self._unit_onboard_num: int|None = None # DCS unit onboard_num - int
+            self._unit_payload: str|Dict = None # DCS unit payload - Dict
+            self._unit_callsign: str|Dict = None  # DCS unit callsign - Dict
 
             # Association    
-            self._volume = volume
-            self._threat = threat
-            self._block = block # asset block - component of Block - type Block asset not exist without block
+            self._volume: int|Volume = volume
+            self._threat: int|Threat = threat
+            self._block: int|Block = block # asset block - component of Block - type Block asset not exist without block
            
             # check input parameters
             check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time, region, country )
@@ -168,9 +170,25 @@ class Asset(Block) :
         self._threat = param
         return True
     
+    @property
+    def block(self):
+        return self._block
     
+    @block.setter
+    def block(self, param):
+        check_result = self.checkParam(block = param)
 
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str) -> bool: # type: ignore
+        if not check_result[1]:
+            raise Exception(check_result[2])                
+        
+        if param.get_asset(self._id).get_id() != self._id:
+            raise Exception("Association Incongruence: this Asset id is present like a key in Block association dictionary, but Asset object has different id")
+        
+        self._block = param
+        return True
+
+
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
         check_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)
@@ -180,6 +198,9 @@ class Asset(Block) :
         
         if position and not isinstance(position, Point):
             return (False, "Bad Arg: position must be a Point object")
+        
+        if block and not isinstance(block, Block):
+            return (False, "Bad Arg: block must be a Block object")
         
         if volume and not isinstance(volume, Volume):
             return (False, "Bad Arg: volume must be a Volume object")
@@ -214,7 +235,7 @@ class Asset(Block) :
         # return efficiency
         pass
         
-
+    
     
     def asset_status(self):
         """calculate Asset_Status from asset Asset_Status"""
@@ -242,12 +263,12 @@ class Asset(Block) :
     def assets(self, value):
             raise Exception("Metodo non implementato in questa classe")
 
-    def getAsset(self, key): #overload
+    def get_Asset(self, key): #overload
             raise Exception("Metodo non implementato in questa classe")
 
-    def setAsset(self, key, value): #overload
+    def set_Asset(self, key, value): #overload
             raise Exception("Metodo non implementato in questa classe")
 
-    def removeAsset(self, key):#overload
+    def remove_Asset(self, key):#overload
             raise Exception("Metodo non implementato in questa classe")
   

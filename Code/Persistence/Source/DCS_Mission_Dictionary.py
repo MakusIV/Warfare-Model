@@ -7,18 +7,18 @@
  TEST: OK with Jupiter Notebook
 
 """
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 from typing import Literal
 import lupa
 from lupa import LuaRuntime
 import unicodedata, logging, os
-from Task import Task
-from RoutePoint import RoutePoint
-from Coalition import Coalition
-from Group import Group
-from Country import Country
+from Persistence.Source.Task import Task
+from Persistence.Source.RoutePoint import RoutePoint
+from Persistence.Source.Coalition import Coalition
+from Persistence.Source.Group import Group
+from Persistence.Source.Country import Country
 from Context import DCS_DATA_DIRECTORY # Store Lua file table and Python dictionary
-import Code.Persistence.Source.DCS_Data_Management as DCS_Data_Management
+import Persistence.Source.DCS_Data_Management as DCS_Data_Management
 
 
 # LOGGING --
