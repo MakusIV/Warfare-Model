@@ -1,13 +1,18 @@
-from Code.Utility import Utility
+import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import STATE, CATEGORY, MIL_CATEGORY
+from Context import STATE, CATEGORY, MIL_CATEGORY
 from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Region import Region
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from Dynamic_War_Manager.Source.Asset import Asset
 
 # LOGGING --
  
@@ -32,7 +37,7 @@ class Block:
             self._acp = acp # assigned consume profile - component of Block - type Payload -
             self._rcp = rcp # requested consume profile - component of Block - type Payload            
             self._payload = payload # block payload - component of Block - type Payload
-            self._assets = Dict[str, Asset]= {} # assets - component of Block - type list forse è meglio un dict
+            self._assets = Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
 
 
@@ -61,7 +66,7 @@ class Block:
                        
 
     # methods
-
+  
     @property
     def name(self):
         return self._name
@@ -306,20 +311,29 @@ class Block:
         else:
             raise ValueError("Il valore deve essere un dizionario")
 
-    def getAsset(self, key):
+
+    def list_Asset_keys(self) -> list[str]:
+        """Restituisce la lista degli identificatori associati."""
+        return list(self._assets.keys())
+
+
+    def get_Asset(self, key):
         if key in self._assets:
             return self._assets[key]
         else:
             raise KeyError(f"L'asset {key} non esiste in assets")
 
-    def setAsset(self, key, value):
+    def set_Asset(self, key, value):
+
         if isinstance(value, Asset):
             self._assets[key] = value
+            value.block = self 
         else:
             raise ValueError("Il valore deve essere un Asset")  
 
     def removeAsset(self, key):
         if key in self._assets:
+            self._assets[key].block = None
             del self._assets[key]
         else:
             raise KeyError(f"L'asset {key} non esiste nel dizionario")
@@ -381,18 +395,6 @@ class Block:
             return (False, "Bad Arg: region must be a Region object")
             
         return True
-    
-    def destroy( self ):
-        """Destroy this object"""
-
-        for ev in self._eventsQueue:
-            ev.destroy()
-
-        self._state.destroy()
-        self._coord = None
-        self._eventsQueue = None        
-        logger.logger.debug("Object: {0} destroyed".format( self._name ) )
-        return True
 
 
     def efficiency(self): # sostituisce operational()
@@ -401,7 +403,6 @@ class Block:
         # return efficiency
         pass
         
-
     
     def asset_status(self):
         """calculate Asset_Status from asset Asset_Status"""

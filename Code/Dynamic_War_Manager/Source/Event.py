@@ -1,6 +1,7 @@
 
+import Utility
 from Dynamic_War_Manager.Source.State import State
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 
 # LOGGING --
  
@@ -14,8 +15,8 @@ class Event:
         if not self.checkParam(typ, volume,  time2go, duration, energy, power, mass):
             raise Exception("Invalid parameters! Event not istantiate.")        
 
-        self._type = typ # type: HIT, PUSH, POP, ASSIMILATE, MOVE
-        self._id = General.setId(self._type, typ) # l'id viene generato automaticamente nel runtime per ogni istanza creata
+        self._type = typ # type of event:
+        self._id = Utility.setId(self._type, typ) # l'id viene generato automaticamente nel runtime per ogni istanza creata
         self._volume = volume # volume coinvolto dall'evento
         self._time2go = time2go # il tempo di attesa (in task o cicli) per considerare gli effetti dell'evento. time2go = 0 -> valutazione effetti evento
         self._duration = duration # la durata (in task o cicli) dell'evento. duration = 0 -> evento concluso 

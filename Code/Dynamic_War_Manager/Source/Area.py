@@ -3,9 +3,10 @@ Class Area
 Represents the area occupied by a Block or an Asset
 """
 
-from Code.LoggerClass import Logger
-from Code.Context import SHAPE2D
-from sympy import Point2D, Line2D, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
+import Utility, Sphere, Hemisphere
+from LoggerClass import Logger
+from Context import SHAPE2D
+from sympy import Point2D, Line2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
  

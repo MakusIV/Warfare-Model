@@ -1,5 +1,5 @@
-import Code.General as General
-from Code.LoggerClass import Logger
+import Utility, Sphere, Hemisphere
+from LoggerClass import Logger
 
 # LOGGING --
  

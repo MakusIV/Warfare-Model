@@ -7,7 +7,7 @@
  TEST: OK with Jupiter Notebook
 
 """
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 from typing import Literal
 import lupa
 from lupa import LuaRuntime

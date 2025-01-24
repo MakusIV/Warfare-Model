@@ -11,9 +11,10 @@
 
 """
 
-from Code.LoggerClass import Logger
-from Code.Context import STATE
-import Block, Utility
+from LoggerClass import Logger
+from Context import STATE
+import Dynamic_War_Manager.Source.Block as Block
+import Utility
 
 # LOGGING --
  

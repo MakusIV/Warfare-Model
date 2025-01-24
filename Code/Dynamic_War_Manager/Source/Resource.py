@@ -1,5 +1,5 @@
 
-from Code.LoggerClass import Logger
+from LoggerClass import Logger
 
 
 # LOGGING --

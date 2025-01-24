@@ -4,7 +4,7 @@ contains DCS Coalition information
 """
 
 from LoggerClass import Logger
-from Country import Country
+from Persistence.Source.Country import Country
 from Context import SIDE
 from sympy import Point2D
 from typing import Literal, List, Dict
