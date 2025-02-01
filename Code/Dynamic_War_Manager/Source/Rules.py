@@ -36,7 +36,7 @@ rules = [
 
 
 
-AIR_DEFENCE_ASSET = {  
+Rules = {  
     # GS: GROUND SUPERIORITY (combat power ratio), FLR: FIGHT LOAD RATIO (losses ratio), DYN_INC: DYNAMIC INCREMENT (variation losses)
     # CLS: COMBAT LOAD SUSTAINABILITY (Sustained fight ratio)
 
