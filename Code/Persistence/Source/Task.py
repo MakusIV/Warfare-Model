@@ -18,7 +18,7 @@ logger = Logger(module_name = __name__, class_name = 'Task')
 
 class Task:
 
-    def __init__(self, params: Dict = None, number: int = None, auto: bool = None, id: str = None, enabled: bool = None): 
+    def __init__(self, params: Dict|None = None, number: int|None  = None, auto: bool|None = None, id: str|None = None, enabled: bool|None = None): 
             
 
         # check input parameters
@@ -76,7 +76,7 @@ class Task:
                 
         return s1 + '\n' + s2
     
-    def checkParam(params: Dict = None, number: int = None, auto: bool = None, id: str = None, enabled: bool = None) -> bool: # type: ignore
+    def checkParam(params: Dict|None = None, number: int|None = None, auto: bool|None = None, id: str|None = None, enabled: bool|None = None) -> bool: # type: ignore
         
         """Return True if type compliance of the parameters is verified"""   
     
