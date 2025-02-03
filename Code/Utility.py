@@ -1,14 +1,12 @@
 ### data type
 
-import random
+import random 
 import logging
 import os
+import Context
 import math
 import hashlib
 import uuid
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
-import numpy as np
 from Sphere import Sphere
 from Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
@@ -316,6 +314,11 @@ def calcProbability( probability ):
     num = random.uniform(0, 1)
     return num < probability
     
+
+
+
+# FUZZY LOGIC METHODS
+
 # Conversione dell'output in stringa usando le funzioni di appartenenza Funzione privata di calcProductionTargetPriority, calcStorageTargetPriority, calcTransportLineTargetPriority
 def get_membership_label(output_value, variable):
     """
@@ -334,12 +337,12 @@ def get_membership_label(output_value, variable):
     return label
 
 
-def calcProductionTargetPriority(target_priority: str, production_efficiency: float):
+def calc_Production_Target_Priority(target_priority: str|float, production_efficiency: float):
     """
     Calculate Priority of Production Target using Fuzzy Logic.
 
     input param: 
-    target_priority (string): ['L', 'M', 'H', 'VH'], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
+    target_priority (string): ['L', 'M', 'H', 'VH'] oppure float: [0,1], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
     production_efficiency (float): [0,1]
 
     return (string): ['L', 'M', 'H', 'VH'] 
@@ -348,14 +351,25 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
     """
 
     # Variabili di input
-    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH    
+    t_p = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 't_p')  # target priority  0=L, 0.33=M, 0.66=H, 1=VH    
     p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'p_e')  # production efficiency Valori continui [0, 1]
 
     # Variabile di output
-    t_p_p = ctrl.Consequent(np.arange(0, 4, 1), 't_p_p')  # target production priority Valori: 0=L, 1=M, 2=H, 3=VH
+    t_p_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_p_p')  # target production priority Valori: 0=L, 0.33=M, 0.66=H, 1=VH
 
     # Funzioni di appartenenza target production efficiency
-    t_p.automf(names=['L', 'M', 'H', 'VH'])    
+    # t_p.automf(names=['L', 'M', 'H', 'VH'])    
+    if isinstance(target_priority, str):
+        t_p['L'] = 0
+        t_p['M'] = 0.33
+        t_p['H'] = 0.66
+        t_p['VH'] = 1
+
+    t_p['L'] = fuzz.trimf(l_e.universe, [0, 0, 1/3])
+    t_p['M'] = fuzz.trimf(l_e.universe, [0, 1/3, 2/3])
+    t_p['H'] = fuzz.trimf(l_e.universe, [1/3, 2/3, 1])
+    t_p['VH'] = fuzz.trimf(l_e.universe, [2/3, 1, 1])
+
     p_e['L'] = fuzz.trapmf(p_e.universe, [0, 0, 0.3, 0.35])
     p_e['M'] = fuzz.trapmf(p_e.universe, [0.3, 0.35, 0.6, 0.65])
     p_e['H'] = fuzz.trapmf(p_e.universe, [0.6, 0.65, 0.85, 0.95])
@@ -389,11 +403,11 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
     t_p_p_sim = ctrl.ControlSystemSimulation(t_p_p_ctrl)
 
     # Mappa per convertire i valori stringa in interi per t_p
-    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+    #string_to_value = {'L': 0, 'M': 0.33, 'H': 0.66, 'VH': 1}
 
     # Esempio di input e calcolo
-    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
-    t_p_p_sim.input['t_p'] = t_p_value    
+    # t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_p_p_sim.input['t_p'] = target_priority# t_p_value    
     t_p_p_sim.input['p_e'] = production_efficiency #0.9
 
     # Calcolo dell'output
@@ -407,12 +421,12 @@ def calcProductionTargetPriority(target_priority: str, production_efficiency: fl
     #print("Valore stringa di t_p_p:", output_string)
 
 
-def calcStorageTargetPriority(target_priority: str, production_efficiency: float, storage_efficiency: float):
+def calc_Storage_Target_Priority(target_priority: str|float, production_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
 
     input param: 
-    target_priority (string): ['L', 'M', 'H', 'VH'], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
+    target_priority (string): ['L', 'M', 'H', 'VH'] o float: [0,1], da utilizzare come parametro di condizionamento oppure per un altra variabile d'influenza
     transport_line_efficiency, storage_efficiency (float): [0,1]
 
     return (string): ['L', 'M', 'H', 'VH'] 
@@ -421,7 +435,7 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     """
 
     # Variabili di input
-    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority 0=L, 1=M, 2=H, 3=VH
+    t_p = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 't_p')  # target priority 0=L, 0.33=M, 0.66=H, 1=VH
     p_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'p_e')  # production efficiency Valori continui [0, 1]
     s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 's_e')  # storage efficiency Valori continui [0, 1]
 
@@ -429,7 +443,17 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     t_s_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_s_p')  # target storage priority Valori continui [0, 1]
 
     # Funzioni di appartenenza
-    t_p.automf(names=['L', 'M', 'H', 'VH'])
+    #t_p.automf(names=['L', 'M', 'H', 'VH'])
+    if isinstance(target_priority, str):
+        t_p['L'] = 0
+        t_p['M'] = 0.33
+        t_p['H'] = 0.66
+        t_p['VH'] = 1
+
+    t_p['L'] = fuzz.trimf(l_e.universe, [0, 0, 1/3])
+    t_p['M'] = fuzz.trimf(l_e.universe, [0, 1/3, 2/3])
+    t_p['H'] = fuzz.trimf(l_e.universe, [1/3, 2/3, 1])
+    t_p['VH'] = fuzz.trimf(l_e.universe, [2/3, 1, 1])
 
     p_e['L'] = fuzz.trapmf(p_e.universe, [0, 0, 0.3, 0.35])
     p_e['M'] = fuzz.trapmf(p_e.universe, [0.3, 0.35, 0.6, 0.65])
@@ -520,11 +544,11 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     t_s_p_sim = ctrl.ControlSystemSimulation(t_s_p_ctrl)
 
     # Mappa per convertire i valori stringa in interi per t_p
-    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+    #string_to_value = {'L': 0, 'M': 0.33, 'H': 0.66, 'VH': 1}
 
     # Esempio di input e calcolo
-    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
-    t_s_p_sim.input['t_p'] = t_p_value
+    #t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_s_p_sim.input['t_p'] = target_priority # t_p_value
     t_s_p_sim.input['p_e'] = production_efficiency #0.95
     t_s_p_sim.input['s_e'] = storage_efficiency #0.9
 
@@ -539,12 +563,12 @@ def calcStorageTargetPriority(target_priority: str, production_efficiency: float
     #print("Valore stringa di t_s_p:", output_string)
 
 
-def calcTransportLineTargetPriority(target_priority: str, transport_line_efficiency: float, storage_efficiency: float):
+def calc_Transport_Line_Target_Priority(target_priority: str|float, transport_line_efficiency: float, storage_efficiency: float):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
 
     input param: 
-    target_priority (string): ['L', 'M', 'H', 'VH'], rappresenta la target priority riferita alla military base connessa alle Transport Line
+    target_priority (string): ['L', 'M', 'H', 'VH'] oppure float: [0,1], rappresenta la target priority riferita alla military base connessa alle Transport Line
     transport_line_efficiency, storage_efficiency (float): [0,1]
 
     return (string): ['L', 'M', 'H', 'VH'] 
@@ -553,16 +577,26 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     """
 
     # Variabili di input
-    t_p = ctrl.Antecedent(np.arange(0, 4, 1), 't_p')  # target priority  0=L, 1=M, 2=H, 3=VH 
+    t_p = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 't_p')  # target priority  0=L, 0.33=M, 0.66=H, 1=VH 
     l_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'l_e')  # transport line efficiency Valori continui [0, 1]
     s_e = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 's_e')  # storage efficiency Valori continui [0, 1]
 
     # Variabile di output
     t_l_p = ctrl.Consequent(np.arange(0, 1.1, 0.01), 't_l_p')  # target trasnsport line priority Valori continui [0, 1]
 
-    # Funzioni di appartenenza
-    t_p.automf(names=['L', 'M', 'H', 'VH'])
+    # Funzioni di appartenenza    
+    #t_p.automf(names=['L', 'M', 'H', 'VH'])
+    if isinstance(target_priority, str):
+        t_p['L'] = 0
+        t_p['M'] = 0.33
+        t_p['H'] = 0.66
+        t_p['VH'] = 1
     
+    t_p['L'] = fuzz.trimf(l_e.universe, [0, 0, 1/3])
+    t_p['M'] = fuzz.trimf(l_e.universe, [0, 1/3, 2/3])
+    t_p['H'] = fuzz.trimf(l_e.universe, [1/3, 2/3, 1])
+    t_p['VH'] = fuzz.trimf(l_e.universe, [2/3, 1, 1])
+
     l_e['L'] = fuzz.trapmf(l_e.universe, [0, 0, 0.2, 0.35])
     l_e['M'] = fuzz.trapmf(l_e.universe, [0.3, 0.4, 0.6, 0.7])
     l_e['H'] = fuzz.trapmf(l_e.universe, [0.65, 0.75, 0.8, 0.85])
@@ -652,11 +686,11 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     t_l_p_sim = ctrl.ControlSystemSimulation(t_l_p_ctrl)
 
     # Mappa per convertire i valori stringa in interi per t_p
-    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
+    #string_to_value = {'L': 0, 'M': 0.33, 'H': 0.66, 'VH': 1}
 
     # Esempio di input e calcolo
-    t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
-    t_l_p_sim.input['t_p'] = t_p_value
+    #t_p_value = string_to_value[target_priority]  # Cambia qui con 'L', 'M', 'H', o 'VH'
+    t_l_p_sim.input['t_p'] = target_priority #t_p_value
     t_l_p_sim.input['l_e'] = transport_line_efficiency #0.95
     t_l_p_sim.input['s_e'] = storage_efficiency #0.9
 
@@ -671,9 +705,9 @@ def calcTransportLineTargetPriority(target_priority: str, transport_line_efficie
     #print("Valore stringa di t_l_p:", output_string)
 
 
-def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
+def calc_Threat_Level(pointDistance2D: float, threatRadius: float, pointHeight: float, maxThreatHeight: float):
     """
-    Calculate anti-arcraft threat Level using Fuzzy Logic
+    Calculate anti-aircraft threat Level using Fuzzy Logic
 
     input param:     
     pointDistance2D: planar distance from point to center of threath - float, 
@@ -687,6 +721,12 @@ def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: fl
 
     TEST:
     """
+
+    if pointDistance2D <= 0 or threatRadius <= 0 or pointHeight <= 0 or maxThreatHeight <= 0:
+        raise ValueError("Input values must be positive and non-zero.")
+        
+    if pointDistance2D > threatRadius or pointHeight > maxThreatHeight:
+        return 'L', 1
 
     # Variabili di input
     kd = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'kd')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
@@ -733,9 +773,6 @@ def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: fl
     t_l_p_ctrl = ctrl.ControlSystem(rules)
     t_l_p_sim = ctrl.ControlSystemSimulation(t_l_p_ctrl)
 
-    # Mappa per convertire i valori stringa in interi per t_p
-    string_to_value = {'L': 0, 'M': 1, 'H': 2, 'VH': 3}
-
     # Esempio di input e calcolo
     t_l_p_sim.input['kd'] = pointDistance2D / threatRadius #0.95
     t_l_p_sim.input['kh'] = pointHeight / maxThreatHeight #0.9
@@ -750,4 +787,4 @@ def calcThreatLevel(pointDistance2D: float, threatRadius: float, pointHeight: fl
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
 
-    
+
