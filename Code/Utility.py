@@ -10,6 +10,9 @@ import uuid
 from Sphere import Sphere
 from Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import numpy as np
 
 # LOGGING --
 # non è possibile usare la classe Logger per evitare le circular dependencies: Logger importa Utility e Utility imprta Logger
@@ -337,7 +340,7 @@ def get_membership_label(output_value, variable):
     return label
 
 
-def calc_Production_Target_Priority(target_priority: str|float, production_efficiency: float):
+def calc_Production_Target_Priority(target_priority, production_efficiency):
     """
     Calculate Priority of Production Target using Fuzzy Logic.
 
@@ -421,7 +424,7 @@ def calc_Production_Target_Priority(target_priority: str|float, production_effic
     #print("Valore stringa di t_p_p:", output_string)
 
 
-def calc_Storage_Target_Priority(target_priority: str|float, production_efficiency: float, storage_efficiency: float):
+def calc_Storage_Target_Priority(target_priority, production_efficiency, storage_efficiency):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
 
@@ -563,7 +566,7 @@ def calc_Storage_Target_Priority(target_priority: str|float, production_efficien
     #print("Valore stringa di t_s_p:", output_string)
 
 
-def calc_Transport_Line_Target_Priority(target_priority: str|float, transport_line_efficiency: float, storage_efficiency: float):
+def calc_Transport_Line_Target_Priority(target_priority, transport_line_efficiency, storage_efficiency):
     """
     Calculate Priority of Transport Line Target using Fuzzy Logic.
 
