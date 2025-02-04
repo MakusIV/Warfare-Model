@@ -8,7 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-import Utility
+from Code.Utility import get_membership_label
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -56,7 +56,7 @@ Tactical_Rules = {
 }
 
 
-def evaluate_ground_superiority(asset_force: dict|None, enemy_asset_force: dict|None) -> bool|str: 
+def evaluate_ground_superiority(asset_force, enemy_asset_force): 
     
     # asset_force = {"n_tanks": int, "n_armors": int, "n_motorized": int, "n_artillery": int}
     kt, ka, km, kar = Context.WEIGHT_FORCE_GROUND_ASSET["tank"], Context.WEIGHT_FORCE_GROUND_ASSET["armor"], Context.WEIGHT_FORCE_GROUND_ASSET["motorized"], Context.WEIGHT_FORCE_GROUND_ASSET["artillery"] 
@@ -74,8 +74,9 @@ def evaluate_ground_superiority(asset_force: dict|None, enemy_asset_force: dict|
     return
 
 
-def evaluate_ground_tactical_action(ground_superiority: float|str, fight_load_ratio: float|str, dynamic_increment: float|str, combat_load_sustainability: float|str) -> bool|str: 
+def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
 
+    # realizzare un test che visualizzi una tabella con tutte le combinazioni gs, flr, dyn_inc e cls per verificare la coerenza e inserire nuove regole oppure eliminare eventuali sbagliate
 
     # Variabili di input
     gs = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'gs')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
@@ -155,6 +156,6 @@ def evaluate_ground_tactical_action(ground_superiority: float|str, fight_load_ra
     action_sim.compute()
     output_numeric = action_sim.output['action']
 
-    output_string = Utility.get_membership_label(output_numeric, action)
+    output_string = get_membership_label(output_numeric, action)
 
     return output_string, output_numeric
