@@ -187,6 +187,9 @@ class Asset(Block) :
         self._block = param
         return True
 
+    def getReport(self) -> str:
+        """Return a report of the asset: check """
+        pass
 
     def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
