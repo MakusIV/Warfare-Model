@@ -1,7 +1,7 @@
 """
- MODULE Tactical_Evaluation
+ MODULE Strategical_Evaluation
  
- Data and methods for tactical evaluation. Used by Mil_Base
+ Data and methods for strategical evaluation. Used by Lead Command & Control
 
 """
 
@@ -16,22 +16,30 @@ import numpy as np
 
 
 
-def evaluate_ground_superiority(asset_force, enemy_asset_force): 
-    
-    # asset_force = {"n_tanks": int, "n_armors": int, "n_motorized": int, "n_artillery": int}
-    kt, ka, km, kar = Context.WEIGHT_FORCE_GROUND_ASSET["tank"], Context.WEIGHT_FORCE_GROUND_ASSET["armor"], Context.WEIGHT_FORCE_GROUND_ASSET["motorized"], Context.WEIGHT_FORCE_GROUND_ASSET["artillery"] 
-    ground_force = ( asset_force["tanks"]["n_tanks"] * kt + asset_force["armors"]["n_armors"] * ka + asset_force["motorized"]["n_motorized"] * km + asset_force["artillery"]["n_artillery"] * kar ) / (kt + ka + km + kar)
-    enemy_ground_force = ( enemy_asset_force["tanks"]["n_tanks"] * kt + enemy_asset_force["armors"]["n_armors"] * ka + enemy_asset_force["motorized"]["n_motorized"] * km + enemy_asset_force["artillery"]["n_artillery"] * kar ) / (kt + ka + km + kar)
-    
-    try:
-        ground_superiority = ground_force / enemy_ground_force
-    except ZeroDivisionError: 
-        print("division by zero: enemy_ground_force = 0/n tank: {0}, armor: {1}, motorized: {2}, artillery: {3}".format(enemy_asset_force["tanks"]["n_tanks"],  enemy_asset_force["armors"]["n_armors"], enemy_asset_force["motorized"]["n_motorized"], enemy_asset_force["artillery"]["n_artillery"]) )
-        return False, "MAINTAIN"
+def get_Tactical_Report():
+    """ request report to any Mil_Base"""
+    """ scorre elenco Mil_Base:
+            aggiunge alla lista di report il report corrente. La lista è ordinata per criticità"""
+    pass
+
+def evaluate_Tactical_Report(report_list):
+    """Evaluate priority of tactical reports and resource request. List ordered by priority."""
+    # High probaility of attack (our asset is very weak respect wenemy force)
+    # asset is very important 
 
     pass
 
-    return
+def evaluate_Defence_Priority_Zone(infrastructure_list):
+    """ Evaluate priority of strategic zone (Production Zone, Transport Line, Storage Zone ecc, Mil_Base) and resource request. List ordered by priority."""
+    # High probaility of attack (our asset is very weak respect wenemy force)
+    pass
+
+def evaluate_Resource_Request(report):
+    pass
+
+def evaluate_Target_Priority(target_list):
+    """Evaluate priority of targets and resource request. List ordered by priority """
+    pass
 
 
 def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
