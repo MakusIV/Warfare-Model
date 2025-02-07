@@ -8,7 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-from Code.Utility import get_membership_label
+from Utility import get_membership_label
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl

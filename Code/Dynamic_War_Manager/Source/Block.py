@@ -1,3 +1,4 @@
+from __future__ import annotations
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
@@ -8,7 +9,6 @@ from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Region import Region
-from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -422,27 +422,27 @@ class Block:
         # return ap
         pass
 
-    def getEnemyStatus(self, intelligence_level) - > Dict:
-    """Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
-    e.g.:
-    [1]:
-        name_group: xxxx
-        type: Armor Brigade
-        comand&control: n, efficiency
-        tank: n, efficiency
-        armor: n, efficiency
-        motorized: n, efficiency
-        artillery: n, efficiency
-        sam: n, efficiency, class: low
-        aaa: n, efficiency
-        storage: n, efficiency
-        supply line: n, efficiency
-        combat_range: x 
-        distance: y # calcolata in base a roads (lì'offroads può essere considerato solo per brevissime distanze)
-        estimated_running_time: (hour, mission) #
+    def getEnemyStatus(self, intelligence_level) -> Dict:
+        """Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
+        e.g.:
+        [1]:
+            name_group: xxxx
+            type: Armor Brigade
+            comand&control: n, efficiency
+            tank: n, efficiency
+            armor: n, efficiency
+            motorized: n, efficiency
+            artillery: n, efficiency
+            sam: n, efficiency, class: low
+            aaa: n, efficiency
+            storage: n, efficiency
+            supply line: n, efficiency
+            combat_range: x 
+            distance: y # calcolata in base a roads (lì'offroads può essere considerato solo per brevissime distanze)
+            estimated_running_time: (hour, mission) #
 
-    
-    """
+        
+        """
     def getTacticalReport(self, intelligence_level) -> Dict:
         """Return a tactical report of the
          in base  a intelligence_level"""
