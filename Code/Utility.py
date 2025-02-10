@@ -448,15 +448,19 @@ def calc_Storage_Target_Priority(target_priority, production_efficiency, storage
     # Funzioni di appartenenza
     #t_p.automf(names=['L', 'M', 'H', 'VH'])
     if isinstance(target_priority, str):
-        t_p['L'] = 0
-        t_p['M'] = 0.33
-        t_p['H'] = 0.66
-        t_p['VH'] = 1
+        
+        if target_priority not in ['L', 'M', 'H', 'VH']: 
+            raise ValueError("Invalid target priority value. Must be 'L', 'M', 'H', or 'VH'.")
+        
+        if target_priority == 'L': t_p['L'] = 0
+        elif target_priority == 'M': t_p['M'] = 0.33
+        elif target_priority == 'H': t_p['H'] = 0.66
+        else: t_p['VH'] = 1
 
-    t_p['L'] = fuzz.trimf(l_e.universe, [0, 0, 1/3])
-    t_p['M'] = fuzz.trimf(l_e.universe, [0, 1/3, 2/3])
-    t_p['H'] = fuzz.trimf(l_e.universe, [1/3, 2/3, 1])
-    t_p['VH'] = fuzz.trimf(l_e.universe, [2/3, 1, 1])
+    t_p['L'] = fuzz.trimf(t_p.universe, [0, 0, 1/3])
+    t_p['M'] = fuzz.trimf(t_p.universe, [0, 1/3, 2/3])
+    t_p['H'] = fuzz.trimf(t_p.universe, [1/3, 2/3, 1])
+    t_p['VH'] = fuzz.trimf(t_p.universe, [2/3, 1, 1])
 
     p_e['L'] = fuzz.trapmf(p_e.universe, [0, 0, 0.3, 0.35])
     p_e['M'] = fuzz.trapmf(p_e.universe, [0.3, 0.35, 0.6, 0.65])
@@ -789,5 +793,81 @@ def calc_Threat_Level(pointDistance2D: float, threatRadius: float, pointHeight: 
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
+
+def calc_Reco_Accuracy(mission_recon_success_ratio: float, asset_reco_efficiency: float):
+    """
+    Calculate accuracy of recognitions using Fuzzy Logic
+
+    input param:     
+    mission_recon_success_ratio: represents quantity and quality fo intelligence information ( function of level of success of recognition mission )  - float, 
+    asset_reco_efficiency: represents efficiency of intelligence and recongition asset - float, 
+    
+    return (string): ['L', 'M', 'H', 'VH'], (float): [0, 1] 
+
+    TEST:
+    """
+
+    if mission_recon_success_ratio <= 0 or asset_reco_efficiency <= 0:
+        raise ValueError("Input values must be positive and non-zero.")
+        
+
+    # Variabili di input
+    intel = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'intel')  # intel Valori continui [0, 1]
+    eff = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'eff')  # eff Valori continui [0, 1]
+
+    # Variabile di output
+    accuracy = ctrl.Consequent(np.arange(0.25, 0.51, 0.005), 'accuracy')  # target trasnsport line priority Valori continui [0, 1]
+
+    # Funzioni di appartenenza
+    intel['L'] = fuzz.trapmf(intel.universe, [0.25, 0.3, 0.5, 0.65])
+    intel['M'] = fuzz.trapmf(intel.universe, [0.5, 0.65, 0.75, 0.85])
+    intel['H'] = fuzz.trapmf(intel.universe, [0.75, 0.85, 1, 1])
+    
+    eff['L'] = fuzz.trapmf(eff.universe, [0.25, 0.3, 0.5, 0.65])
+    eff['M'] = fuzz.trapmf(eff.universe, [0.5, 0.65, 0.75, 0.85])
+    eff['H'] = fuzz.trapmf(eff.universe, [0.75, 0.85, 1, 1])
+    
+    # accuracy['L'] = fuzz.trapmf(eff.universe, [0.3, 0.4, 0.5, 0.5])
+    # accuracy['M'] = fuzz.trimf(eff.universe, [0.2, 0.3, 0.4])
+    # accuracy['H'] = fuzz.trimf(eff.universe, [0.1, 0.2, 0.3])
+    # accuracy['MAX'] = fuzz.trapmf(eff.universe, [0, 0, 0.1, 0.2])
+
+    
+    accuracy.automf(names=['L', 'M', 'H', 'MAX'])
+
+    # Definizione delle regole
+    rules = [        
+        
+        ctrl.Rule(intel['H'] & eff['H'], accuracy['MAX']),
+        ctrl.Rule(intel['M'] & eff['H'], accuracy['H']),
+        ctrl.Rule(intel['L'] & eff['H'], accuracy['M']),
+
+        ctrl.Rule(intel['H'] & eff['M'], accuracy['M']),
+        ctrl.Rule(intel['M'] & eff['M'], accuracy['M']),
+        ctrl.Rule(intel['L'] & eff['M'], accuracy['L']),
+
+        ctrl.Rule(intel['H'] & eff['L'], accuracy['L']),                    
+        ctrl.Rule(intel['M'] & eff['L'], accuracy['L']),
+        ctrl.Rule(intel['L'] & eff['L'], accuracy['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    accuracy_ctrl = ctrl.ControlSystem(rules)
+    accuracy_sim = ctrl.ControlSystemSimulation(accuracy_ctrl)
+
+    # Esempio di input e calcolo
+    accuracy_sim.input['intel'] = mission_recon_success_ratio #0.95
+    accuracy_sim.input['eff'] = asset_reco_efficiency #0.9
+
+    # Calcolo dell'output
+    accuracy_sim.compute()
+    output_numeric = accuracy_sim.output['accuracy']
+
+    output_string = get_membership_label(output_numeric, accuracy)
+
+    return output_string, output_numeric
+    #print("Valore numerico di accuracy:", output_numeric)
+    #print("Valore stringa di accuracy:", output_string)
 
 

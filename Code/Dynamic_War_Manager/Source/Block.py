@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
@@ -9,7 +10,7 @@ from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Region import Region
-from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from Dynamic_War_Manager.Source.Asset import Asset
