@@ -39,13 +39,18 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
     # realizzare un test che visualizzi una tabella con tutte le combinazioni gs, flr, dyn_inc e cls per verificare la coerenza e inserire nuove regole oppure eliminare eventuali sbagliate
 
     # Variabili di input
-    gs = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'gs')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
-    flr = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'flr')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
-    dyn_inc = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'dyn_inc')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
-    cls = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'cls')  # kd = pointDistance2D / threatRadius Valori continui [0, 1]
+    # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
+    # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
+    # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
+    # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
+    gs = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'gs')  # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
+    flr = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'flr')  # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
+    dyn_inc = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'dyn_inc')  # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
+    cls = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'cls')  # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
+    
 
     # Variabile di output
-    action = ctrl.Consequent(np.arange(0, 1.1, 0.01), 'action')  # target trasnsport line priority Valori continui [0, 1]
+    action = ctrl.Consequent(np.arange(0, 1.1, 0.01), 'action')  # action Valori continui [0, 1]
 
     # Funzioni di appartenenza
     gs['HI'] = fuzz.trapmf(gs.universe, [0, 0, 1/5, 1/2.7])
@@ -54,17 +59,17 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
     gs['MS'] = fuzz.trapmf(gs.universe, [1.05, 2, 2.7, 3])
     gs['HS'] = fuzz.trapmf(gs.universe, [2.7, 5, 10, 10])
 
-    flr['HI'] = fuzz.trapmf(flr.universe, [0, 0, 1/5, 1/3])
-    flr['MI'] = fuzz.trapmf(flr.universe, [1/5, 1/3, 1/2, 1])
+    flr['HS'] = fuzz.trapmf(flr.universe, [0, 0, 1/5, 1/3])
+    flr['MS'] = fuzz.trapmf(flr.universe, [1/5, 1/3, 1/2, 1])
     flr['EQ'] = fuzz.trimf(flr.universe, [1/2, 1, 2])
-    flr['MS'] = fuzz.trapmf(flr.universe, [1, 2, 3, 5])
-    flr['HS'] = fuzz.trapmf(flr.universe, [3, 5, 10, 10])
+    flr['MI'] = fuzz.trapmf(flr.universe, [1, 2, 3, 5])
+    flr['HI'] = fuzz.trapmf(flr.universe, [3, 5, 10, 10])
 
-    dyn_inc['HI'] = fuzz.trapmf(dyn_inc.universe, [0, 0, 1/5, 1/2.7])
-    dyn_inc['MI'] = fuzz.trapmf(dyn_inc.universe, [1/5, 1/3, 1/2, 1])
+    dyn_inc['HS'] = fuzz.trapmf(dyn_inc.universe, [0, 0, 1/5, 1/2.7])
+    dyn_inc['MS'] = fuzz.trapmf(dyn_inc.universe, [1/5, 1/3, 1/2, 1])
     dyn_inc['EQ'] = fuzz.trimf(dyn_inc.universe, [1/2, 1, 2])
-    dyn_inc['MS'] = fuzz.trapmf(dyn_inc.universe, [1, 2, 3, 5])
-    dyn_inc['HS'] = fuzz.trapmf(dyn_inc.universe, [3, 5, 10, 10])
+    dyn_inc['MI'] = fuzz.trapmf(dyn_inc.universe, [1, 2, 3, 5])
+    dyn_inc['HI'] = fuzz.trapmf(dyn_inc.universe, [3, 5, 10, 10])
 
     cls['HI'] = fuzz.trapmf(cls.universe, [0, 0, 1/5, 1/3])
     cls['MI'] = fuzz.trapmf(cls.universe, [1/5, 1/3, 1/2, 1])
@@ -77,10 +82,10 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
     # Definizione delle regole
     rules = [
         # RETRAIT
-        ctrl.Rule( (gs['HI'] | gs['MI']) & ( flr['HI'] | flr['MI']), action['RETRAIT']),
-        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & ( dyn_inc['HI'] | dyn_inc['MI'] ), action['RETRAIT']),
-        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & dyn_inc['EQ'] & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT']),
-        ctrl.Rule(  gs['EQ'] & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT']),
+        ctrl.Rule( ( gs['HI'] | gs['MI']) & ( flr['HI'] | flr['MI'] ), action['RETRAIT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & ( dyn_inc['HI'] | dyn_inc['MI'] ), action['RETRAIT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & dyn_inc['EQ'] & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] | gs['EQ'] ) & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
         # DEFENCE
         ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ), action['DEFENCE']),
         ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & dyn_inc['EQ'] & ( cls['MS'] | cls['HS'] ), action['DEFENCE']),
@@ -95,8 +100,8 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
         ctrl.Rule( gs['MS'] & ( flr['HI'] | flr['MI']), action['MAINTAIN']),
         ctrl.Rule( gs['HS'] & ( flr['HI'] | flr['MI']) & ( cls['MI'] | cls['HI'] ), action['MAINTAIN']),
         # ATTACK
-        ctrl.Rule( (gs['MS'] | gs['EQ']) & ( flr['HS'] | flr['MS']), action['ATTACK']),
-        ctrl.Rule( (gs['MS'] | gs['EQ']) & flr['EQ'] & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
+        ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['HS'] | flr['MS']), action['ATTACK']), # puoi sostituirlo con un not !(gs['HI'] | gs['MI'])
+        ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['EQ'] | flr['MS'] | flr['HS'] ) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
         ctrl.Rule( gs['HS'] & ( flr['HS'] | flr['MS'] | flr['EQ']), action['ATTACK']),
         ctrl.Rule( gs['HS'] & ( flr['HI'] | flr['MI']) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
     ]
