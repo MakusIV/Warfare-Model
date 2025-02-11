@@ -124,3 +124,81 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
     output_string = get_membership_label(output_numeric, action)
 
     return output_string, output_numeric
+
+
+
+def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficiency: float):
+    """
+    Calculate accuracy of recognitions using Fuzzy Logic
+
+    input param:     
+    recon_mission_success_ratio (rmsr): level of success of recognition mission: 1/3 ok, 1/5 low  - float, 
+    recon_asset_efficiency (rae): efficiency of intelligence and recongition asset 0.7 ok, 0.4 low - float, 
+    
+    return (string): ['L', 'M', 'H', 'VH'], (float): [0, 1] 
+
+    TEST:
+    """
+
+    if recon_mission_success_ratio <= 0 or recon_asset_efficiency <= 0:
+        raise ValueError("Input values must be positive and non-zero.")
+        
+
+    # Variabili di input
+    rmsr = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'rmsr')  # rmsr Valori continui [0, 1]
+    rae = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'rae')  # rae Valori continui [0, 1]
+
+    # Variabile di output
+    accuracy = ctrl.Consequent(np.arange(0.7, 1.1, 0.005), 'accuracy')  # accuracy of asset number evaluation  Valori continui [0, 1] max 30% error 
+    accuracy_eff = ctrl.Consequent(np.arange(0.5, 1.1, 0.005), 'accuracy_eff')  # accuracy of asset efficiency evaluation  Valori continui [0, 1] max 50% errore
+
+    # Funzioni di appartenenza
+    rmsr['L'] = fuzz.trapmf(rmsr.universe, [0, 0, 0.25, 0.3])
+    rmsr['M'] = fuzz.trapmf(rmsr.universe, [0.25, 0.35, 0.4, 0.5])
+    rmsr['H'] = fuzz.trapmf(rmsr.universe, [0.35, 0.4, 1, 1])
+    
+    rae['L'] = fuzz.trapmf(rae.universe, [0, 0, 0.25, 0.35])
+    rae['M'] = fuzz.trapmf(rae.universe, [0.3, 0.4, 0.5, 0.65])
+    rae['H'] = fuzz.trapmf(rae.universe, [0.5, 0.65, 1, 1])
+    
+
+    accuracy.automf(names=['L', 'M', 'H', 'MAX'])
+
+    # Definizione delle regole
+    rules = [        
+        
+        ctrl.Rule(rmsr['H'] & rae['H'], accuracy['MAX']),
+        ctrl.Rule(rmsr['M'] & rae['H'], accuracy['H']),
+        ctrl.Rule(rmsr['L'] & rae['H'], accuracy['M']),
+
+        ctrl.Rule(rmsr['H'] & rae['M'], accuracy['H']),
+        ctrl.Rule(rmsr['M'] & rae['M'], accuracy['M']),
+        ctrl.Rule(rmsr['L'] & rae['M'], accuracy['L']),
+
+        ctrl.Rule(rmsr['H'] & rae['L'], accuracy['M']),                    
+        ctrl.Rule(rmsr['M'] & rae['L'], accuracy['L']),
+        ctrl.Rule(rmsr['L'] & rae['L'], accuracy['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    accuracy_ctrl = ctrl.ControlSystem(rules)
+    accuracy_sim = ctrl.ControlSystemSimulation(accuracy_ctrl)
+
+    # Esempio di input e calcolo
+    accuracy_sim.input['rmsr'] = recon_mission_success_ratio #0.95
+    accuracy_sim.input['rae'] = recon_asset_efficiency #0.9
+
+    # Calcolo dell'output
+    accuracy_sim.compute()
+    accuracy_num_value = accuracy_sim.output['accuracy']
+    accuracy_eff_value = accuracy_sim.output['accuracy_eff']
+    
+    accuracy_num_string = get_membership_label(accuracy_num_value, accuracy)
+    accuracy_eff_string = get_membership_label(accuracy_eff_value, accuracy_eff)
+
+    return accuracy_num_string, accuracy_num_value, accuracy_eff_string, accuracy_eff_value
+    #print("Valore numerico di accuracy_num:", accuracy_num_value)
+    #print("Valore stringa di accuracy_num:", accuracy_num_string)
+
+
