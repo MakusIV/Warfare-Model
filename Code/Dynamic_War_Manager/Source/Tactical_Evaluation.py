@@ -163,6 +163,7 @@ def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficienc
     
 
     accuracy.automf(names=['L', 'M', 'H', 'MAX'])
+    accuracy_eff.automf(names=['L', 'M', 'H', 'MAX'])
 
     # Definizione delle regole
     rules = [        
