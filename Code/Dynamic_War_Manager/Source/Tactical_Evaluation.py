@@ -50,7 +50,7 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
     
 
     # Variabile di output
-    action = ctrl.Consequent(np.arange(0, 1.1, 0.01), 'action')  # action Valori continui [0, 1]
+    action = ctrl.Consequent(np.arange(0, 1.01, 0.01), 'action')  # action Valori continui [0, 1]
 
     # Funzioni di appartenenza
     gs['HI'] = fuzz.trapmf(gs.universe, [0, 0, 1/5, 1/2.7])
@@ -127,9 +127,10 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
 
 
 
-def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficiency: float):
+def calc_Reco_Accuracy(parameter: str, recon_mission_success_ratio: float, recon_asset_efficiency: float):
     """
-    Calculate accuracy of recognitions using Fuzzy Logic
+    Calculate accuracy of asset recognitions using Fuzzy Logic.
+    if parameter == "Number" asset number accuracy is calculated, if "Efficiency" asset efficiency accuracy is calculated.
 
     input param:     
     recon_mission_success_ratio (rmsr): level of success of recognition mission: 1/3 ok, 1/5 low  - float, 
@@ -140,17 +141,30 @@ def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficienc
     TEST:
     """
 
-    if recon_mission_success_ratio <= 0 or recon_asset_efficiency <= 0:
-        raise ValueError("Input values must be positive and non-zero.")
+    if recon_mission_success_ratio < 0 or recon_asset_efficiency < 0:
+        raise ValueError("Input values must be positive.")
         
+    if parameter not in ["Number", "Efficiency"]:
+        raise ValueError("Parameter must be 'Number' or 'Efficiency'")
+
+    if recon_mission_success_ratio > 1:
+        recon_mission_success_ratio = 1
+
+    if recon_asset_efficiency > 1:
+        recon_asset_efficiency = 1
+
+    min = 0.5 # max error for asset efficiency calculation is 50%
+
+    if parameter == "Number":
+        min = 0.7 # max error for asset number calculation is 30%
+    
 
     # Variabili di input
-    rmsr = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'rmsr')  # rmsr Valori continui [0, 1]
-    rae = ctrl.Antecedent(np.arange(0, 1.1, 0.01), 'rae')  # rae Valori continui [0, 1]
+    rmsr = ctrl.Antecedent(np.arange(0, 1.001, 0.01), 'rmsr')  # rmsr Valori continui [0, 1]
+    rae = ctrl.Antecedent(np.arange(0, 1.001, 0.01), 'rae')  # rae Valori continui [0, 1]
 
     # Variabile di output
-    accuracy = ctrl.Consequent(np.arange(0.7, 1.1, 0.005), 'accuracy')  # accuracy of asset number evaluation  Valori continui [0, 1] max 30% error 
-    accuracy_eff = ctrl.Consequent(np.arange(0.5, 1.1, 0.005), 'accuracy_eff')  # accuracy of asset efficiency evaluation  Valori continui [0, 1] max 50% errore
+    accuracy = ctrl.Consequent(np.arange(min, 1.001, 0.005), 'accuracy')  # accuracy of asset number evaluation  Valori continui [0, 1] max 30% error     
 
     # Funzioni di appartenenza
     rmsr['L'] = fuzz.trapmf(rmsr.universe, [0, 0, 0.25, 0.3])
@@ -163,7 +177,6 @@ def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficienc
     
 
     accuracy.automf(names=['L', 'M', 'H', 'MAX'])
-    accuracy_eff.automf(names=['L', 'M', 'H', 'MAX'])
 
     # Definizione delle regole
     rules = [        
@@ -192,14 +205,12 @@ def calc_Reco_Accuracy(recon_mission_success_ratio: float, recon_asset_efficienc
 
     # Calcolo dell'output
     accuracy_sim.compute()
-    accuracy_num_value = accuracy_sim.output['accuracy']
-    accuracy_eff_value = accuracy_sim.output['accuracy_eff']
+    accuracy_value = accuracy_sim.output['accuracy']    
     
-    accuracy_num_string = get_membership_label(accuracy_num_value, accuracy)
-    accuracy_eff_string = get_membership_label(accuracy_eff_value, accuracy_eff)
+    accuracy_string = get_membership_label(accuracy_value, accuracy)
 
-    return accuracy_num_string, accuracy_num_value, accuracy_eff_string, accuracy_eff_value
-    #print("Valore numerico di accuracy_num:", accuracy_num_value)
-    #print("Valore stringa di accuracy_num:", accuracy_num_string)
+    return accuracy_string, accuracy_value
+    #print("Valore numerico di accuracy:", accuracy_value)
+    #print("Valore stringa di accuracy:", accuracy_string)
 
 
