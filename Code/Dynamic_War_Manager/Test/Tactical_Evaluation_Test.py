@@ -106,53 +106,114 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
 
     def test_evaluate_ground_tactical_action(self):
-        # Definisci i valori di input da testare
-        ground_superiority_values = [0.3, 0.9, 1.4] #[0.3, 0.9, 1.4, 3] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
-        fight_load_ratio_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
-        dynamic_increment_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
-        combat_load_sustainability_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
+        
+        # attiva tabella risultati
+        table_results = True
+        
+        # Variabili di input
+        # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
+        # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
+        # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
+        # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
+        
+        # gs > 1 -> vantaggio                       HI: 0.1, MI: 0.5, EQ: 1, MS: 2.5, HS: 5
+        # flr < 1 -> vantaggio                      HI: 5, MI: 2.5, EQ: 1, MS: 0.37, HS: 0.1
+        # dyn_inc < 1 -> combat success increment   HI: 5, MI: 2.5, EQ: 1, MS: 0.35, HS: 0.1
+        # cls > 1 -> vantaggio                      HI: 0.1, MI: 0.35, EQ: 1, MS: 2.5, HS: 5
 
-        # Crea una lista per memorizzare i risultati
-        results = []
-
-        # Itera su tutte le combinazioni di input
-        for gs in ground_superiority_values:
-            for flr in fight_load_ratio_values:
-                for dyn_inc in dynamic_increment_values:
-                    for cls in combat_load_sustainability_values:
-                        # Esegui il metodo con la combinazione corrente di input
-                        output_string, output_numeric = evaluate_ground_tactical_action(gs, flr, dyn_inc, cls)
+        test_cases = [
+            # RETRAIT Cases
+            (0.1, 5, 5, 0.1, "RETRAIT", 0.1), # gs: HI, flr: HI, dyn_inc: HI, cls: HI
+            (1, 5, 5, 0.1, "RETRAIT", 0.1), #  gs: EQ, flr: HI, dyn_inc: HI, cls: HI
+            (0.5, 2.5, 2.5, 0.1, "RETRAIT", 0.15), # gs: MI, flr: MI, dyn_inc: HI, cls: HI
+            (0.1, 1, 1, 0.35, "RETRAIT", 0.2), # gs: HI, flr: EQ, dyn_inc: EQ, cls: MI
+            (1, 2.5, 2.5, 1, "RETRAIT", 0.2), # gs: EQ, flr: MI, dyn_inc: MI, cls: EQ
+            (0.5, 2.5, 2.5, 5, "RETRAIT", 0.2), # gs: MI, flr: MI, dyn_inc: MI, cls: HS
+            (0.5, 1, 1, 0.35, "RETRAIT", 0.2), # gs: MI, flr: EQ, dyn_inc: EQ, cls: MI           
+            (0.5, 2.5, 2.5, 0.35, "RETRAIT", 0.1), # gs: MI, flr: MI, dyn_inc: MI, cls: MI
+            (0.1, 2.5, 2.5, 0.1, "RETRAIT", 0.1), # gs: HI, flr: MI, dyn_inc: MI, cls: MI
+            
+            # DEFENCE Cases
+            (1, 1, 1, 0.33, "DEFENCE", 0.35), # gs: EQ, flr: EQ, dyn_inc: EQ, cls: MI
+            (0.5, 1, 1, 2.5, "DEFENCE", 0.4), # gs: MI, flr: EQ, dyn_inc: EQ, cls: MS                                       
+            
+            # MAINTAIN Cases                        
+            (2.5, 1, 1, 0.33, "MAINTAIN", 0.7), # gs: MS, flr: EQ, dyn_inc: EQ, cls: MI            
+            (0.5, 0.37, 0.35, 0.35, "MAINTAIN", 0.6), # gs: MI, flr: MS, dyn_inc: MS, cls: MI
+            (1, 0.37, 0.35, 1, "MAINTAIN", 0.7), # gs: EQ, flr: MS, dyn_inc: MS, cls: EQ            
+            (1, 1, 0.35, 0.35, "MAINTAIN", 0.7), # gs: EQ, flr: EQ, dyn_inc: MS, cls: MI
                         
-                        # Aggiungi il risultato alla lista
-                        results.append({
-                            'gs': gs,
-                            'flr': flr,
-                            'dyn_inc': dyn_inc,
-                            'cls': cls,
-                            'output_string': output_string,
-                            'output_numeric': output_numeric
-                        })
 
-        # Disabilita il troncamento delle righe e delle colonne
-        pd.set_option('display.max_rows', None)  # Visualizza tutte le righe
-        pd.set_option('display.max_columns', None)  # Visualizza tutte le colonne
-        pd.set_option('display.width', None)  # Disabilita il wrapping del testo
-        pd.set_option('display.max_colwidth', None)  # Visualizza tutto il contenuto delle celle
+            # ATTACK Cases
+            (5, 0.1, 0.1, 5, "ATTACK", 0.9), # gs: HS, flr: HS, dyn_inc: HS, cls: HS
+            (2.5, 0.1, 0.1, 2.5, "ATTACK", 0.85), # gs: MS, flr: HS, dyn_inc: HS, cls: MS
+            (5, 0.37, 0.35, 1, "ATTACK", 0.88), # gs: HS, flr: MS, dyn_inc: MS, cls: EQ
+            (2.5, 0.37, 0.35, 5, "ATTACK", 0.82), # gs: MS, flr: MS, dyn_inc: MS, cls: HS   
+            (1, 0.37, 0.35, 0.35, "ATTACK", 0.80), # gs: EQ, flr: MS, dyn_inc: MS, cls: MI         
+            (2.5, 0.37, 0.35, 1, "ATTACK", 0.88), # gs: MS, flr: MS, dyn_inc: MS, cls: EQ
+            (1, 0.37, 0.35, 2.5, "ATTACK", 0.8), # gs: EQ, flr: MS, dyn_inc: MS, cls: MS
+            (5, 1, 1, 0.35, "ATTACK", 0.88), # gs: HS, flr: EQ, dyn_inc: EQ, cls: MI
+            (2.5, 0.1, 0.1, 1, "ATTACK", 0.88), # gs: MS, flr: HS, dyn_inc: HS, cls: EQ
+            
+            # (5, 0.37, 0.35, 5, "ATTACK", 1.0), # gs: HS, flr: MS, dyn_inc: MS, cls: HS
+        ]
+        
+        for gs, flr, dyn_inc, cls, expected_string, expected_numeric in test_cases:
+            output_string, output_numeric = evaluate_ground_tactical_action(gs, flr, dyn_inc, cls)
+            self.assertAlmostEqual(output_numeric, expected_numeric, delta=0.1, msg=f"gs: {gs}, flr: {flr}, dyn_inc: {dyn_inc}, cls: {cls}")
+            self.assertEqual(output_string, expected_string, msg=f"gs: {gs}, flr: {flr}, dyn_inc: {dyn_inc}, cls: {cls}")
 
 
-        # Crea un DataFrame con i risultati
-        results_df = pd.DataFrame(results)
+                
+        if table_results:
 
-        results_df.to_csv('tactical_evaluation_results.csv', index=False)
+            ground_superiority_values = [0.3, 0.9, 1.4] #[0.3, 0.9, 1.4, 3] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
+            fight_load_ratio_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
+            dynamic_increment_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
+            combat_load_sustainability_values = [0.3, 0.9, 1.4] #[0.0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.1, 1.5, 2, 3, 5, 10]  #np.arange( 0.1, 3.0, 0.3 )
 
-        # Visualizza la tabella con i risultati
-        print(results_df)
 
-        # Verifica che i risultati siano coerenti con le aspettative
-        for result in results:
-            self.assertIsInstance(result['output_string'], str)
-            self.assertIsInstance(result['output_numeric'], float)
-            self.assertTrue(0 <= result['output_numeric'] <= 10)
+            # Crea una lista per memorizzare i risultati
+            results = []
+
+            # Itera su tutte le combinazioni di input
+            for gs in ground_superiority_values:
+                for flr in fight_load_ratio_values:
+                    for dyn_inc in dynamic_increment_values:
+                        for cls in combat_load_sustainability_values:
+                            # Esegui il metodo con la combinazione corrente di input
+                            output_string, output_numeric = evaluate_ground_tactical_action(gs, flr, dyn_inc, cls)
+                            
+                            # Aggiungi il risultato alla lista
+                            results.append({
+                                'gs': gs,
+                                'flr': flr,
+                                'dyn_inc': dyn_inc,
+                                'cls': cls,
+                                'output_string': output_string,
+                                'output_numeric': output_numeric
+                            })
+
+            # Disabilita il troncamento delle righe e delle colonne
+            pd.set_option('display.max_rows', None)  # Visualizza tutte le righe
+            pd.set_option('display.max_columns', None)  # Visualizza tutte le colonne
+            pd.set_option('display.width', None)  # Disabilita il wrapping del testo
+            pd.set_option('display.max_colwidth', None)  # Visualizza tutto il contenuto delle celle
+
+
+            # Crea un DataFrame con i risultati
+            results_df = pd.DataFrame(results)
+
+            results_df.to_csv('tactical_evaluation_results.csv', index=False)
+
+            # Visualizza la tabella con i risultati
+            print(results_df)
+
+            # Verifica che i risultati siano coerenti con le aspettative
+            for result in results:
+                self.assertIsInstance(result['output_string'], str)
+                self.assertIsInstance(result['output_numeric'], float)
+                self.assertTrue(0 <= result['output_numeric'] <= 10)
 
 
 
