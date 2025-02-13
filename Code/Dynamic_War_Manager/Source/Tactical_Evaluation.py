@@ -93,15 +93,17 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
         ctrl.Rule( gs['EQ'] & flr['EQ'] & ( dyn_inc['EQ'] | dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['MI'] | cls['HI'] ), action['DEFENCE']),
         # MAINTAIN
         ctrl.Rule( (gs['HI'] | gs['MI']) & ( flr['HS'] | flr['MS']), action['MAINTAIN']),
-        ctrl.Rule( gs['EQ'] & ( flr['HS'] | flr['MS']) & ( cls['EQ'] | cls['MS'] | cls['HS'] ), action['MAINTAIN']),
-        ctrl.Rule( gs['EQ'] & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ) & ( cls['MI'] | cls['HI'] ), action['MAINTAIN']),
+        ctrl.Rule( gs['EQ'] & ( flr['HS'] | flr['MS']) & ( cls['EQ'] ), action['MAINTAIN']),
+        ctrl.Rule( gs['EQ'] & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['MAINTAIN']),
         ctrl.Rule( gs['EQ'] & ( flr['HI'] | flr['MI']) & ( dyn_inc['EQ'] | dyn_inc['HS'] | dyn_inc['MS'] ) & ( cls['MS'] | cls['HS'] ), action['MAINTAIN']),
         ctrl.Rule( gs['MS'] & ( flr['EQ'] | flr['HS'] | flr['MS']) & ( cls['MI'] | cls['HI'] ), action['MAINTAIN']),
         ctrl.Rule( gs['MS'] & ( flr['HI'] | flr['MI']), action['MAINTAIN']),
         ctrl.Rule( gs['HS'] & ( flr['HI'] | flr['MI']) & ( cls['MI'] | cls['HI'] ), action['MAINTAIN']),
-        # ATTACK
+        # ATTACK    
+        ctrl.Rule( gs['EQ'] & ( flr['HS'] | flr['MS']) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
         ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['HS'] | flr['MS']), action['ATTACK']), # puoi sostituirlo con un not !(gs['HI'] | gs['MI'])
-        ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['EQ'] | flr['MS'] | flr['HS'] ) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
+        ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['EQ'] ) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
+        ctrl.Rule( (gs['HS'] | gs['MS'] | gs['EQ']) & ( flr['EQ'] ) & cls['EQ'] & ( dyn_inc['MS'] | dyn_inc['HS'] ), action['ATTACK']),
         ctrl.Rule( gs['HS'] & ( flr['HS'] | flr['MS'] | flr['EQ']), action['ATTACK']),
         ctrl.Rule( gs['HS'] & ( flr['HI'] | flr['MI']) & ( cls['MS'] | cls['HS'] ), action['ATTACK']),
     ]
