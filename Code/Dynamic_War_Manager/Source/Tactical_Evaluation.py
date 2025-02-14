@@ -34,7 +34,7 @@ def evaluate_ground_superiority(asset_force, enemy_asset_force):
     return
 
 
-def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
+def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
 
     # realizzare un test che visualizzi una tabella con tutte le combinazioni gs, flr, dyn_inc e cls per verificare la coerenza e inserire nuove regole oppure eliminare eventuali sbagliate
 
@@ -129,7 +129,7 @@ def evaluate_ground_tactical_action(ground_superiority, fight_load_ratio, dynami
 
 
 
-def calc_Reco_Accuracy(parameter: str, recon_mission_success_ratio: float, recon_asset_efficiency: float):
+def calcRecoAccuracy(parameter: str, recon_mission_success_ratio: float, recon_asset_efficiency: float):
     """
     Calculate accuracy of asset recognitions using Fuzzy Logic.
     if parameter == "Number" asset number accuracy is calculated, if "Efficiency" asset efficiency accuracy is calculated.

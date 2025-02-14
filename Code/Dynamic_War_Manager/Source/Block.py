@@ -5,7 +5,7 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, CATEGORY, MIL_CATEGORY
+from Context import STATE, CATEGORY, MIL_CATEGORY, SIDE
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
@@ -22,12 +22,13 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK
 class Block:    
 
-    def __init__(self, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, region: Region = None):
+    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):
 
             # propriety
             self._name = name # block name - type str
             self._id = None # id self-assigned - type str
             self._description = description # block description - type str
+            self._side = side # block side - type str
             self._category = category # block category - type Literal
             self._functionality = functionality # block functionality - type str
             self._value = value # block value - type int             
@@ -59,8 +60,10 @@ class Block:
             if not payload:
                 payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
 
+            if not side:
+                side = "Neutral"
             # check input parameters            
-            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, region )            
+            check_results =  self.checkParam( name, description, side, category, functionality, value, acp, rcp, payload, region )            
             
             if not check_results[1]:
                 raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
@@ -117,6 +120,23 @@ class Block:
             
         return True
     
+    @property
+    def side(self):
+        return self._side
+
+    @side.setter
+    def side(self, param):
+        
+        check_result = self.checkParam(description = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._description = param       
+            
+        return True
+
     @property
     def category(self):
         return self._category
@@ -313,18 +333,18 @@ class Block:
             raise ValueError("Il valore deve essere un dizionario")
 
 
-    def list_Asset_keys(self) -> list[str]:
+    def listAssetKeys(self) -> list[str]:
         """Restituisce la lista degli identificatori associati."""
         return list(self._assets.keys())
 
 
-    def get_Asset(self, key):
+    def getAsset(self, key):
         if key in self._assets:
             return self._assets[key]
         else:
             raise KeyError(f"L'asset {key} non esiste in assets")
 
-    def set_Asset(self, key, value):
+    def setAsset(self, key, value):
 
         if isinstance(value, Asset):
             self._assets[key] = value
@@ -357,27 +377,29 @@ class Block:
         return True
 
 
-    def to_string(self):
+    def toString(self):
         return 'Name: {0}  -  Id: {1} - value: {2} \n description: {3}\n category: {4}\n'.format(self.name, self.id, self.value, self.description, self.category)
     
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
         return type(object) == type(self)
         
-
     def checkClassList(self, objects):
         """Return True if objectsobject is a list of Block object otherwise False"""
         return all(type(obj) == type(self) for obj in objects)
 
 
      # vedi il libro
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
+    
+    def checkParam(name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
         if description and not isinstance(description, str):
             return (False, "Bad Arg: description must be a str")
+        if side and (not isinstance(side, str) or side not in SIDE):
+            return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
         if category and (not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]):                        
             return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
         if function and not isinstance(function, str):
@@ -397,21 +419,19 @@ class Block:
             
         return True
 
-
     def efficiency(self): # sostituisce operational()
         """calculate efficiency from asset state, rcp, acp, .."""
         # efficiency = state * acp / rcp
         # return efficiency
         pass
-        
-    
-    def asset_status(self):
+          
+    def assetStatus(self):
         """calculate Asset_Status from asset Asset_Status"""
         # as = median(Asset_Status) 
         # return as
         pass
 
-    def threat_volume(self):
+    def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
         # tv = max(assetThreat_Volume) 
         # return tv
@@ -423,27 +443,4 @@ class Block:
         # return ap
         pass
 
-    def getEnemyStatus(self, intelligence_level) -> Dict:
-        """Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
-        e.g.:
-        [1]:
-            name_group: xxxx
-            type: Armor Brigade
-            comand&control: n, efficiency
-            tank: n, efficiency
-            armor: n, efficiency
-            motorized: n, efficiency
-            artillery: n, efficiency
-            sam: n, efficiency, class: low
-            aaa: n, efficiency
-            storage: n, efficiency
-            supply line: n, efficiency
-            combat_range: x 
-            distance: y # calcolata in base a roads (lì'offroads può essere considerato solo per brevissime distanze)
-            estimated_running_time: (hour, mission) #
-
-        
-        """
-    def getTacticalReport(self, intelligence_level) -> Dict:
-        """Return a tactical report of the
-         in base  a intelligence_level"""
+   

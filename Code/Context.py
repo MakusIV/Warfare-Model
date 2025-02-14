@@ -12,12 +12,14 @@ from enum import Enum
 MAX_WORLD_DISTANCE = 1.2e+90
 DCS_DATA_DIRECTORY = "E:\Sviluppo\Warfare_Model\Code\Persistence\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
 
+GROUND_ASSET_CATEGORY = ["Tank", "Armor", "Motorized", "Artillery", "SAM", "AAA", "EWR", "Command_&_Control"]
+
 WEIGHT_FORCE_GROUND_ASSET = {
 
-            "tank": 7,
-            "armor": 5,
-            "motorized": 3,
-            "artillery": 7,
+            "Tank": 7,
+            "Armor": 5,
+            "Motorized": 3,
+            "Artillery": 7,
 }
 
 
@@ -53,7 +55,7 @@ class VALUE(Enum):
     LOW = "Low"
     VERY_LOW = "Very_Low"
 
-class CATEGORY(Enum):
+class FOOD_CATEGORY(Enum):
     GOODS = "Goods"
     ENERGY = "Energy"
     GOODS_AND_ENERGY = "Goods & Energy"
@@ -104,17 +106,13 @@ class TASK(Enum):
     RECON = "Recon"
     ATTACK = "Attack"
 
-class SIDE(Enum): 
-    RED = "red"
-    BLUE = "blue"
-    NEUTRAL = "neutral"
-
-
 class GROUP_CATEGORY(Enum): 
     HELICOPTER = "helicopter"
     PLANE = "plane"
     VEHICLE = "vehicle"
     STATIC = "static"
+
+SIDE = ["Blue", "Red", "Neutral"]
 
 AREA_FOR_VOLUME = {  
     SHAPE2D.CIRCLE : {SHAPE3D.CYLINDER, SHAPE3D.SPHERE, SHAPE3D.SEMISPHERE, SHAPE3D.CONE, SHAPE3D.TRUNC_CONE, SHAPE3D.SOLID},
