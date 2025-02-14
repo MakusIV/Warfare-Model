@@ -4,8 +4,8 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import pandas as pd
 
-# Importa il metodo da testare
-from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluate_ground_tactical_action, calc_Reco_Accuracy
+# Importa il metodo da testare evaluateGroundTacticalAction
+from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calc_Reco_Accuracy
 
 class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
@@ -105,7 +105,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
 
 
-    def test_evaluate_ground_tactical_action(self):
+    def test_evaluateGroundTacticalAction(self):
         
         # attiva tabella risultati
         table_results = True
@@ -159,7 +159,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         ]
         
         for gs, flr, dyn_inc, cls, expected_string, expected_numeric in test_cases:
-            output_string, output_numeric = evaluate_ground_tactical_action(gs, flr, dyn_inc, cls)
+            output_string, output_numeric = evaluateGroundTacticalAction(gs, flr, dyn_inc, cls)
             self.assertAlmostEqual(output_numeric, expected_numeric, delta=0.1, msg=f"gs: {gs}, flr: {flr}, dyn_inc: {dyn_inc}, cls: {cls}")
             self.assertEqual(output_string, expected_string, msg=f"gs: {gs}, flr: {flr}, dyn_inc: {dyn_inc}, cls: {cls}")
 
@@ -182,7 +182,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
                     for dyn_inc in dynamic_increment_values:
                         for cls in combat_load_sustainability_values:
                             # Esegui il metodo con la combinazione corrente di input
-                            output_string, output_numeric = evaluate_ground_tactical_action(gs, flr, dyn_inc, cls)
+                            output_string, output_numeric = evaluateGroundTacticalAction(gs, flr, dyn_inc, cls)
                             
                             # Aggiungi il risultato alla lista
                             results.append({
