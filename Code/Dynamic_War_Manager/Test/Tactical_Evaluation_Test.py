@@ -5,107 +5,107 @@ from skfuzzy import control as ctrl
 import pandas as pd
 
 # Importa il metodo da testare evaluateGroundTacticalAction
-from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calc_Reco_Accuracy
+from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult
 
 class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
-    def test_calc_Reco_Number_Accuracy(self):
+    def testCalcRecoNumberAccuracy(self):
         # Test con valori di input validi
         recon_mission_success_ratio = 0.65
         recon_asset_efficiency = 0.70
         expected_result = 0.95  # calcolato manualmente sostituisce con string
-        self.assertAlmostEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
+        self.assertAlmostEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
 
          # Test con valori di input validi
         recon_mission_success_ratio = 0.37
         recon_asset_efficiency = 0.45
         expected_result = 0.83  # calcolato manualmente
-        self.assertAlmostEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "M")
+        self.assertAlmostEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "M")
 
          # Test con valori di input validi
         recon_mission_success_ratio = 0.2
         recon_asset_efficiency = 0.25
         expected_result = 0.72  # calcolato manualmente
-        self.assertAlmostEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
+        self.assertAlmostEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
 
         # Test con valori di input estremi
         recon_mission_success_ratio = 0.0
         recon_asset_efficiency = 0.0
         expected_result = 0.73
-        self.assertAlmostEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
+        self.assertAlmostEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
 
         recon_mission_success_ratio = 1.0
         recon_asset_efficiency = 1.0
         expected_result = 0.96
-        self.assertAlmostEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
+        self.assertAlmostEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
 
         # Test con valori di input non validi
         recon_mission_success_ratio = -1.0
         recon_asset_efficiency = 0.5
         with self.assertRaises(ValueError):
-            calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)
+            calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)
 
         recon_mission_success_ratio = 0.5
         recon_asset_efficiency = -1.0
         with self.assertRaises(ValueError):
-            calc_Reco_Accuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)
+            calcRecoAccuracy("Number", recon_mission_success_ratio, recon_asset_efficiency)
 
 
-    def test_calc_Reco_Efficiency_Accuracy(self):
+    def testCalcRecoEfficiencyAccuracy(self):
         # Test con valori di input validi
         recon_mission_success_ratio = 0.65
         recon_asset_efficiency = 0.75
         expected_result = 0.95  # calcolato manualmente sostituisce con string
-        self.assertAlmostEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
+        self.assertAlmostEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
 
 
         # Test con valori di input validi
         recon_mission_success_ratio = 0.37
         recon_asset_efficiency = 0.45
         expected_result = 0.74  # calcolato manualmente
-        self.assertAlmostEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "M")
+        self.assertAlmostEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "M")
 
         # Test con valori di input validi
         recon_mission_success_ratio = 0.2
         recon_asset_efficiency = 0.25
         expected_result = 0.55  # calcolato manualmente
-        self.assertAlmostEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
+        self.assertAlmostEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
 
         # Test con valori di input estremi
         recon_mission_success_ratio = 0.0
         recon_asset_efficiency = 0.0
         expected_result = 0.54
-        self.assertAlmostEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
+        self.assertAlmostEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "L")
 
         recon_mission_success_ratio = 1.0
         recon_asset_efficiency = 1.0
         expected_result = 0.96
-        self.assertAlmostEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
-        self.assertEqual(calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
+        self.assertAlmostEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[1], expected_result, delta=0.03)
+        self.assertEqual(calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)[0], "MAX")
 
         # Test con valori di input non validi
         recon_mission_success_ratio = -1.0
         recon_asset_efficiency = 0.5
         with self.assertRaises(ValueError):
-            calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)
+            calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)
 
         recon_mission_success_ratio = 0.5
         recon_asset_efficiency = -1.0
         with self.assertRaises(ValueError):
-            calc_Reco_Accuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)
+            calcRecoAccuracy("Efficiency", recon_mission_success_ratio, recon_asset_efficiency)
 
 
 
-    def test_evaluateGroundTacticalAction(self):
+    def testEvaluateGroundTacticalAction(self):
         
         # attiva tabella risultati
         table_results = True
@@ -215,6 +215,101 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
                 self.assertIsInstance(result['output_numeric'], float)
                 self.assertTrue(0 <= result['output_numeric'] <= 10)
 
+
+    def testCalcFightResult(self):
+        # Test con valori di input validi
+        n_fr = 10
+        n_en = 5
+        eff_fr = 0.8
+        eff_en = 0.6
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)        
+        self.assertLessEqual(result, 1)
+
+        # Test con valori di input estremi
+        n_fr = 100
+        n_en = 101
+        eff_fr = 0.75
+        eff_en = 0.76
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertAlmostEqual(result, 1, delta = 0.)
+
+        n_fr = 120
+        n_en = 1
+        eff_fr = 1.0
+        eff_en = 1.0
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertLess(result, 0.3)
+
+        n_fr = 1
+        n_en = 150
+        eff_fr = 1.0
+        eff_en = 1.0
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertGreater(result, 3)
+
+        n_fr = 10
+        n_en = 10
+        eff_fr = 0.7
+        eff_en = 0.3
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertLess(result, 1)
+
+        n_fr = 10
+        n_en = 10
+        eff_fr = 0.3
+        eff_en = 0.7
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertGreater(result, 1)
+
+        n_fr = 10
+        n_en = 10
+        eff_fr = 0.5
+        eff_en = 0.6
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertAlmostEqual(result, 1, delta = 0.5)
+
+        n_fr = 18
+        n_en = 20
+        eff_fr = 0.8
+        eff_en = 0.8
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertAlmostEqual(result, 1, delta = 0.5)# 2.38 troppo
+
+        n_fr = 132
+        n_en = 13
+        eff_fr = 0.4
+        eff_en = 1
+        result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
+        self.assertLess(result, 1)
+
+        # Test con valori di input non validi
+        n_fr = -1
+        n_en = 5
+        eff_fr = 0.8
+        eff_en = 0.6
+        with self.assertRaises(ValueError):
+            calcFightResult(n_fr, n_en, eff_fr, eff_en)
+
+        n_fr = 10
+        n_en = -1
+        eff_fr = 0.8
+        eff_en = 0.6
+        with self.assertRaises(ValueError):
+            calcFightResult(n_fr, n_en, eff_fr, eff_en)
+
+        n_fr = 10
+        n_en = 5
+        eff_fr = -1.0
+        eff_en = 0.6
+        with self.assertRaises(ValueError):
+            calcFightResult(n_fr, n_en, eff_fr, eff_en)
+
+        n_fr = 10
+        n_en = 5
+        eff_fr = 0.8
+        eff_en = -1.0
+        with self.assertRaises(ValueError):
+            calcFightResult(n_fr, n_en, eff_fr, eff_en)
 
 
 if __name__ == '__main__':

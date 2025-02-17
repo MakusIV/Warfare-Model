@@ -9,13 +9,13 @@
 #VARIABLE = Literal["A", "B, "C"]
 
 from Utility import get_membership_label
-import Context
+import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
 
-
-
+LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFihtResult() restituiscono 1 (parity)ù
+DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
 def evaluate_ground_superiority(asset_force, enemy_asset_force): 
     
     # asset_force = {"n_tanks": int, "n_armors": int, "n_motorized": int, "n_artillery": int}
@@ -214,5 +214,122 @@ def calcRecoAccuracy(parameter: str, recon_mission_success_ratio: float, recon_a
     return accuracy_string, accuracy_value
     #print("Valore numerico di accuracy:", accuracy_value)
     #print("Valore stringa di accuracy:", accuracy_string)
+
+
+def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float):
+    
+
+    """
+    Calculate the result of a fight between two forces given the number of forces, number of enemy, efficiency of forces and efficiency of enemy.
+
+    Parameters
+    ----------
+    n_fr : int 
+        Number of forces.
+    n_en : int
+        Number of enemy.
+    eff_fr : float [0:1]
+        Efficiency of forces.
+    eff_en : float (0:1]
+        Efficiency of enemy.
+
+    Returns
+    -------
+    float
+        The result of the fight. The result is a float number between 0 and infinity.
+        - 0 means absolute friendly victory (minimal losses).
+        - 0.5 means friendly victory.
+        - 1 means parity (equal losses).
+        - 2 means enemy victory.
+        - From 10 to infinity means absolute enemy victory (minimal losses).
+
+    Raises
+    ------
+    ValueError
+        If n_fr or n_en are not positive integer numbers or if eff_en or eff_fr are not positive float numbers.
+
+    """
+    if not isinstance(n_fr, int) or n_fr <= 0:
+        raise ValueError("n_fr: {0} must be an integer number greater of 0".format(n_fr))
+    
+    if not isinstance(n_en, int) or n_en <= 0:
+        raise ValueError("n_en: {0} must be an integer number greater of 0".format(n_en))
+    
+    if not isinstance(eff_en, float) or not isinstance(eff_fr, float) or eff_en < 0 or eff_fr < 0:
+        raise ValueError("eff_en: {0}, eff_er: {1} must be positive float number".format(eff_en, eff_fr))
+
+    num_ratio = n_fr / n_en
+    eff_ratio = ( eff_fr  + 0.0001 )/ ( eff_en  + 0.0001 )
+
+    if num_ratio > 0.98 and num_ratio < 1.02 and eff_ratio > 0.98 and eff_ratio < 1.02:
+        return 1 # parity
+
+    k_ratio = ( [ 4, 10, 0.2 ], [ 3, 1.9, 0.5 ], [ 2, 1.6, 0.33 ], [ 1, 1, 1 ] )
+
+    if num_ratio > 4: 
+        k_fr = 10
+        k_en = 0.2
+    
+    elif num_ratio < 0.25: 
+        k_fr = 0.2
+        k_en = 10
+        
+    else:
+        i = 0
+
+        while i < len(k_ratio):
+            
+            if num_ratio == k_ratio[i][0]:
+                k_fr = k_ratio[i][1]
+                k_en = k_ratio[i][2]
+                break
+            
+            if num_ratio < k_ratio[i][0] and num_ratio > k_ratio[i+1][0]:
+                k_fr = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_en = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                break
+
+            if num_ratio > ( 1 / k_ratio[i][0] ) and num_ratio < ( 1 / k_ratio[i+1][0] ):
+                k_fr = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_en = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                break
+            i += 1
+
+    min_perc_fr = ( 1 - eff_fr * k_fr ) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT ) # eff_fr = [0:1], k_fr = [0.2:10] --> min_perc_fr = [-9:0]
+    max_perc_fr = ( eff_en * k_en ) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT ) #    "       "     "         "    --> max_perc_fr = [0: 10]
+
+    # min_perc_fr, max_per_fr = [0: 1] and min_perc_fr <= max_per_fr
+    if min_perc_fr < 0: min_perc_fr = 0 
+    if max_perc_fr < 0: max_perc_fr = 0
+    if max_perc_fr > 1: max_perc_fr = 1
+    if min_perc_fr > 1: min_perc_fr = 1     
+    if max_perc_fr < min_perc_fr: max_perc_fr = min_perc_fr
+    
+    
+    min_perc_en = ( 1 - eff_en * k_en) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT )
+    max_perc_en = ( eff_fr * k_fr ) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT )
+
+    # verifica se è disponibile una funzione che limita tra 0 ed 1 i valori di una variabile, verifica anche se ne esiste una anche che normalizza (es: sigmoide) e che consente di definire le cifre decimali
+    if min_perc_en < 0: min_perc_en = 0
+    if min_perc_en > 1: min_perc_en = 1
+    if max_perc_en > 1: max_perc_en = 1
+    if max_perc_en < 0: max_perc_en = 0
+    if max_perc_en < min_perc_en: max_perc_en = min_perc_en
+    
+    damage_fr = random.uniform(min_perc_fr, max_perc_fr)
+    damage_en = random.uniform(min_perc_en, max_perc_en)
+
+    if damage_fr < LOW_LIMIT_DAMAGE and damage_en < LOW_LIMIT_DAMAGE: 
+        result = 1 # parity
+    else:        
+        result = damage_fr / damage_en 
+        # result = [0:n) 
+        # result = [0:0.1] -> absolute friendly victory (minimal losses).
+        # result = 0.5     -> friendly victory
+        # result = 1       -> parity (equal losses)
+        # result = 2       -> enemy victory  
+        # result = [10:n] -> absolute enemy victory (minimal losses).
+
+    return result
 
 
