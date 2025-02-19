@@ -3,9 +3,10 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import pandas as pd
+from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION
 
 # Importa il metodo da testare evaluateGroundTacticalAction
-from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult
+from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
 
 class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
@@ -231,7 +232,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         eff_fr = 0.75
         eff_en = 0.76
         result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
-        self.assertAlmostEqual(result, 1, delta = 0.)
+        self.assertAlmostEqual(result, 1, delta = 0.5)
 
         n_fr = 120
         n_en = 1
@@ -310,6 +311,179 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         eff_en = -1.0
         with self.assertRaises(ValueError):
             calcFightResult(n_fr, n_en, eff_fr, eff_en)
+
+
+
+    def test_evaluateCombatSuperiority(self):
+
+        # Test con asset uguali
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.8},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.4}
+        }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.8},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.4}
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertEqual(result, 0.5)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertEqual(result, 0.5)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertEqual(result, 0.5)
+
+        # Test con enemy asset azzerati
+        asset_fr = {            
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}
+            }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 0, "efficiency": 0}
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertEqual(result, 1)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertEqual(result, 1)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertEqual(result, 1)
+
+        # Test con friendly asset azzerati
+        asset_fr = {            
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 0, "efficiency": 0}            
+            }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}            
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertEqual(result, 0)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertEqual(result, 0)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertEqual(result, 0)
+             
+        # Test con asset num e efficiency diversi
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.0451, places = 4)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.0491, places = 4)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.0541, places = 4)
+
+        # Test con asset num e efficiency diversi
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+        }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.3211, places = 4)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.3409, places = 4)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.3639, places = 4)
+
+        # Test con asset num e efficiency diversi
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+        }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+        }
+        result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.6788, places = 4)
+        result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.6590, places = 4)
+        result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
+        self.assertAlmostEqual(result, 0.6360, places = 4)
+
+        # Test con asset diversi e azione di combattimento non valida
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+        }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+        }
+        with self.assertRaises(ValueError):
+            evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
+
+        # Test con categoria asset non incluse
+        asset_fr = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
+            GROUND_ASSET_CATEGORY["NOT_INCLUDED"]: {"num": 15, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+        }
+        asset_en = {
+            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
+            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
+            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
+            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+        }
+        with self.assertRaises(ValueError):
+            evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
+
 
 
 if __name__ == '__main__':

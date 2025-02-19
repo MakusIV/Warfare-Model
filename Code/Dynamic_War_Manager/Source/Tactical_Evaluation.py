@@ -346,8 +346,44 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     #                   GROUND_ASSET_CATEGORY.Armor: {num: 13, efficiency: 0.9},
     # }
 
+    """
+    Evaluate the combat superiority of two forces given the ground assets and the action performed.
+
+    Parameters
+    ----------
+    action : str
+        The action performed. Must be a string included in GROUND_ACTION.
+    asset_fr : dict
+        The assets of the first force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
+    asset_en : dict
+        The assets of the second force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
+
+    Returns
+    -------
+    float
+        The combat superiority of the first force. The result is a float number between 0 and 1.
+        - 0 means absolute enemy victory (minimal losses).
+        - 0.5 means parity (equal losses).
+        - 1 means absolute friendly victory (minimal losses).
+        
+        The combat superiority classes are as follows:
+        - VH = ( 0.7 - 1 ]
+        - H =  ( 0.55 - 0.7 ]
+        - M =  ( 0.45 - 0.55 ]
+        - L =  (1 - H]
+        - VL = (1 - VH]
+
+    Raises
+    ------
+    ValueError
+        If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
+
+    """
     if not isinstance(asset_fr, dict) or asset_fr.keys not in GROUND_ASSET_CATEGORY or not isinstance(asset_fr.values, dict):
         raise ValueError("asset_fr: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
+    
+    if not isinstance(asset_en, dict) or asset_en.keys not in GROUND_ASSET_CATEGORY or not isinstance(asset_fr.values, dict):
+        raise ValueError("asset_en: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
     
     if not isinstance(action, str) or action not in GROUND_ACTION:
         raise ValueError( "action: {0} {1} must be a string included in GROUND_ACTION".format( action, type(action) ) )  
@@ -356,9 +392,11 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     combat_pow_en = 0
 
     for cat in GROUND_ASSET_CATEGORY:
-        combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"])
-        combat_pow_en += EFFICACY[action][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]) 
+        combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+        combat_pow_en += EFFICACY[action][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
+    combat_superiority = combat_pow_fr / ( combat_pow_en + combat_pow_fr )
+    return combat_superiority
 
     
     
