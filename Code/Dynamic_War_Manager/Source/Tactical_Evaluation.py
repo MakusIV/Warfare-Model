@@ -18,9 +18,9 @@ LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFih
 DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
 
 EFFICACY = {
-    GROUND_ACTION.Attack: {GROUND_ASSET_CATEGORY.Tank: 5, GROUND_ASSET_CATEGORY.Armor: 3.5, GROUND_ASSET_CATEGORY.Motorized: 2, GROUND_ASSET_CATEGORY.Artillery_Semovent: 4, GROUND_ASSET_CATEGORY.Artillery_Fix: 3},
-    GROUND_ACTION.Defence: {GROUND_ASSET_CATEGORY.Tank: 4, GROUND_ASSET_CATEGORY.Armor: 3.2, GROUND_ASSET_CATEGORY.Motorized: 2, GROUND_ASSET_CATEGORY.Artillery_Semovent: 3, GROUND_ASSET_CATEGORY.Artillery_Fix: 5},
-    GROUND_ACTION.Maintain: {GROUND_ASSET_CATEGORY.Tank: 3, GROUND_ASSET_CATEGORY.Armor: 3.7, GROUND_ASSET_CATEGORY.Motorized: 4, GROUND_ASSET_CATEGORY.Artillery_Semovent: 2, GROUND_ASSET_CATEGORY.Artillery_Fix: 3},
+    GROUND_ACTION.Attack: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
+    GROUND_ACTION.Defence: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
+    GROUND_ACTION.Maintain: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     }
 def evaluate_ground_superiority(asset_force, enemy_asset_force): 
     
@@ -271,7 +271,7 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
     if num_ratio > 0.98 and num_ratio < 1.02 and eff_ratio > 0.98 and eff_ratio < 1.02:
         return 1 # parity
 
-    k_ratio = ( [ 4, 10, 0.2 ], [ 3, 1.9, 0.5 ], [ 2, 1.6, 0.33 ], [ 1, 1, 1 ] )
+    k_ratio = ( [ 4, 10, 0.2 ], [ 3, 1.9, 0.5 ], [ 2, 1.5, 0.66 ], [ 1, 1, 1 ] )
 
     if num_ratio > 4: 
         k_fr = 10
@@ -292,13 +292,14 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
                 break
             
             if num_ratio < k_ratio[i][0] and num_ratio > k_ratio[i+1][0]:
-                k_fr = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
-                k_en = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_fr = k_ratio[i][1] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_en = k_ratio[i][2] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
                 break
 
             if num_ratio > ( 1 / k_ratio[i][0] ) and num_ratio < ( 1 / k_ratio[i+1][0] ):
-                k_fr = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
-                k_en = (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_fr = k_ratio[i][1] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
+                k_en = k_ratio[i][2] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
+
                 break
             i += 1
 
@@ -342,8 +343,8 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
 
 def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> float:
     #{ }
-    # asset_fr(en): {   GROUND_ASSET_CATEGORY.Tank: {num: 23, efficiency: 0.5},
-    #                   GROUND_ASSET_CATEGORY.Armor: {num: 13, efficiency: 0.9},
+    # asset_fr(en): {   GROUND_ASSET_CATEGORY["Tank"]: {num: 23, efficiency: 0.5},
+    #                   GROUND_ASSET_CATEGORY["Armor"]: {num: 13, efficiency: 0.9},
     # }
 
     """
@@ -379,13 +380,13 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
         If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
 
     """
-    if not isinstance(asset_fr, dict) or asset_fr.keys not in GROUND_ASSET_CATEGORY or not isinstance(asset_fr.values, dict):
+    if not isinstance(asset_fr, dict) or asset_fr.keys not in GROUND_ASSET_CATEGORY.keys or not isinstance(asset_fr.values, dict):
         raise ValueError("asset_fr: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
     
-    if not isinstance(asset_en, dict) or asset_en.keys not in GROUND_ASSET_CATEGORY or not isinstance(asset_fr.values, dict):
+    if not isinstance(asset_en, dict) or asset_en.keys not in GROUND_ASSET_CATEGORY.keys or not isinstance(asset_fr.values, dict):
         raise ValueError("asset_en: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
     
-    if not isinstance(action, str) or action not in GROUND_ACTION:
+    if not isinstance(action, str) or action not in GROUND_ACTION.keys:
         raise ValueError( "action: {0} {1} must be a string included in GROUND_ACTION".format( action, type(action) ) )  
     
     combat_pow_fr = 0
