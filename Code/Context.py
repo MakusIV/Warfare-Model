@@ -12,15 +12,26 @@ from enum import Enum
 MAX_WORLD_DISTANCE = 1.2e+90
 DCS_DATA_DIRECTORY = "E:\Sviluppo\Warfare_Model\Code\Persistence\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
 
-# GROUND_ASSET_CATEGORY = ["Tank", "Armor", "Motorized", "Artillery", "SAM", "AAA", "EWR", "Command_&_Control"]
+GROUND_ASSET_CATEGORY = {
+     
+    "Tank": "Tank", 
+    "Armor": "Armor", 
+    "Motorized": "Motorized", 
+    "Artillery_Fix": "Artillery_Fix", 
+    "Artillery_Semovent": "Artillery_Semovent",
+    "SAM": "SAM", 
+    "AAA": "AAA", 
+    "EWR": "EWR", 
+    "Command_&_Control": "Command_&_Control"
+}
 
-class GROUND_ASSET_CATEGORY:
+#class GROUND_ASSET_CATEGORY:
 
-    Tank = "Tank",
-    Armor = "Armor",
-    Motorized = "Motorized",
-    Artillery_Fix = "Artillery_Fixed",
-    Artillery_Semovent = "Artillery_Semovent",
+    #Tank = "Tank",
+    #Armor = "Armor",
+    #Motorized = "Motorized",
+    #Artillery_Fix = "Artillery_Fixed",
+    #Artillery_Semovent = "Artillery_Semovent",
 
 class GROUND_ACTION:
 
@@ -30,11 +41,11 @@ class GROUND_ACTION:
 
 WEIGHT_FORCE_GROUND_ASSET = {
 
-    GROUND_ASSET_CATEGORY.Tank: 7,
-    GROUND_ASSET_CATEGORY.Armor: 5,
-    GROUND_ASSET_CATEGORY.Motorized: 3,
-    GROUND_ASSET_CATEGORY.Artillery_Fix: 4,
-    GROUND_ASSET_CATEGORY.Artillery_Semovent: 7
+    GROUND_ASSET_CATEGORY["Tank"]: 7,
+    GROUND_ASSET_CATEGORY["Armor"]: 5,
+    GROUND_ASSET_CATEGORY["Motorized"]: 3,
+    GROUND_ASSET_CATEGORY["Artillery_Fix"]: 4,
+    GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 7,
 }
 
 
