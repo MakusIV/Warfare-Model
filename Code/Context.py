@@ -33,11 +33,12 @@ GROUND_ASSET_CATEGORY = {
     #Artillery_Fix = "Artillery_Fixed",
     #Artillery_Semovent = "Artillery_Semovent",
 
-class GROUND_ACTION:
+GROUND_ACTION  = {
 
-    Attack = "Attack",
-    Defence = "Defence",
-    Maintain = "Maintain"
+    "Attack": "Attack",
+    "Defence": "Defence",
+    "Maintain": "Maintain"
+}
 
 WEIGHT_FORCE_GROUND_ASSET = {
 
