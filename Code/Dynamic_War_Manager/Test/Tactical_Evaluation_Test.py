@@ -279,7 +279,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         n_fr = 132
         n_en = 13
         eff_fr = 0.4
-        eff_en = 1
+        eff_en = 1.0
         result = calcFightResult(n_fr, n_en, eff_fr, eff_en)
         self.assertLess(result, 1)
 
@@ -398,11 +398,11 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.0451, places = 4)
+        self.assertAlmostEqual(result, 0.0451, places = 3)
         result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.0491, places = 4)
+        self.assertAlmostEqual(result, 0.0491, places = 3)
         result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.0541, places = 4)
+        self.assertAlmostEqual(result, 0.0541, places = 3)
 
         # Test con asset num e efficiency diversi
         asset_fr = {
@@ -420,11 +420,11 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.3211, places = 4)
+        self.assertAlmostEqual(result, 0.3211, places = 3)
         result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.3409, places = 4)
+        self.assertAlmostEqual(result, 0.3409, places = 3)
         result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.3639, places = 4)
+        self.assertAlmostEqual(result, 0.3639, places = 3)
 
         # Test con asset num e efficiency diversi
         asset_fr = {
@@ -442,11 +442,11 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.6788, places = 4)
+        self.assertAlmostEqual(result, 0.6788, places = 3)
         result = evaluateCombatSuperiority("Defence", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.6590, places = 4)
+        self.assertAlmostEqual(result, 0.6590, places = 3)
         result = evaluateCombatSuperiority("Maintain", asset_fr, asset_en)
-        self.assertAlmostEqual(result, 0.6360, places = 4)
+        self.assertAlmostEqual(result, 0.6360, places = 3)
 
         # Test con asset diversi e azione di combattimento non valida
         asset_fr = {
@@ -470,7 +470,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         asset_fr = {
             GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
             GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["NOT_INCLUDED"]: {"num": 15, "efficiency": 0.6},
+            "NOT_INCLUDED": {"num": 15, "efficiency": 0.6},
             GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
             GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
         }

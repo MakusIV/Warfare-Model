@@ -18,9 +18,9 @@ LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFih
 DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
 
 EFFICACY = {
-    GROUND_ACTION.Attack: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
-    GROUND_ACTION.Defence: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
-    GROUND_ACTION.Maintain: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
+    GROUND_ACTION["Attack"]: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
+    GROUND_ACTION["Defence"]: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
+    GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     }
 def evaluate_ground_superiority(asset_force, enemy_asset_force): 
     
@@ -380,19 +380,31 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
         If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
 
     """
-    if not isinstance(asset_fr, dict) or asset_fr.keys not in GROUND_ASSET_CATEGORY.keys or not isinstance(asset_fr.values, dict):
-        raise ValueError("asset_fr: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
+    if not isinstance(asset_fr, dict): 
+        raise ValueError("asset_fr: must be an dictionary")
     
-    if not isinstance(asset_en, dict) or asset_en.keys not in GROUND_ASSET_CATEGORY.keys or not isinstance(asset_fr.values, dict):
-        raise ValueError("asset_en: must be an dictionary with keys included in GROUND_ASSET_CATEGORY")
+    if not all(k in GROUND_ASSET_CATEGORY.keys() for k in asset_fr):
+        raise ValueError("asset_fr.keys must be included in GROUND_ASSET_CATEGORY")
+
+    if not all(isinstance(v, dict) for v in asset_fr.values()):    
+        raise ValueError("asset_fr.values must be an dictionary")
     
-    if not isinstance(action, str) or action not in GROUND_ACTION.keys:
+    if not isinstance(asset_en, dict): 
+        raise ValueError("asset_en: must be an dictionary")
+    
+    if not all(k in GROUND_ASSET_CATEGORY.keys() for k in asset_en):
+        raise ValueError("asset_en.keys must be included in GROUND_ASSET_CATEGORY")
+
+    if not all(isinstance(v, dict) for v in asset_en.values()):    
+        raise ValueError("asset_en.values must be an dictionary")    
+    
+    if not isinstance(action, str) or action not in GROUND_ACTION.keys():
         raise ValueError( "action: {0} {1} must be a string included in GROUND_ACTION".format( action, type(action) ) )  
     
     combat_pow_fr = 0
     combat_pow_en = 0
 
-    for cat in GROUND_ASSET_CATEGORY:
+    for cat in [GROUND_ASSET_CATEGORY["Tank"], GROUND_ASSET_CATEGORY["Armor"], GROUND_ASSET_CATEGORY["Motorized"], GROUND_ASSET_CATEGORY["Artillery_Fix"], GROUND_ASSET_CATEGORY["Artillery_Semovent"]]:
         combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
         combat_pow_en += EFFICACY[action][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
