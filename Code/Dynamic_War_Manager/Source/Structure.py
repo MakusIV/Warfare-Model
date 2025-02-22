@@ -1,3 +1,4 @@
+import random
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere
@@ -31,4 +32,37 @@ class Structure(Asset) :
                 raise Exception("Invalid parameters! Object not istantiate.")
 
     # methods
+    def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
+        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()""""
 
+        report = {
+            "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
+            "area": None,
+            "structure category": self.category, 
+            "criticality": 0.0,           
+            "asset": {
+                STRUCTURE_ASSET_CATEGORY["Bridge"]: {"Number": 0, "Efficiency": 0},
+                STRUCTURE_ASSET_CATEGORY["Hangar"]: {"Number": 0, "Efficiency": 0},
+                
+            }
+        }
+        
+        # calculate total number and efficiency for each assets category: Tank, Armor, Motorized, ...
+        for asset in self.assets:        
+            category = asset.category # Bridge, 
+            efficiency = asset.efficiency
+            report["asset"][category]["Number"] += 1
+            report["asset"][category]["Efficiency"] += efficiency
+
+        
+        # update efficiency and number for each category of asset
+        for category in STRUCTURE_ASSET_CATEGORY:
+ 
+            if request == "enemy_request": # if it's an enemy request update efficiency and number with random error                                
+                efficiency_error = random.choice([-1, 1]) * random.uniform(0, asset_Efficiency_Accuracy)
+                number_error = random.choice([-1, 1]) * random.uniform(0, asset_Number_Accuracy)
+                report["asset"][category]["Efficiency"] = report["asset"]["Efficiency"] * (1 + efficiency_error) / report["asset"]["Number"]
+                report["asset"][category]["Number"] = report["asset"]["Number"] * (1 + number_error)
+            
+
+        

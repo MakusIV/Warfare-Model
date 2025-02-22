@@ -2,7 +2,7 @@ import datetime
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere, random
 from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
-from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy # cambiare in Zone_Military_Evaluation
+from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticality # cambiare in Zone_Military_Evaluation
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
@@ -175,29 +175,29 @@ class Mil_Base(Block) :
         """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()""""
 
         report = {
-            "Name": self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
-            "Area": None,
-            "Military Category": self.category,            
-            
-            "Asset": {
-                GROUND_ASSET_CATEGORY["Tank"]: 0, 
-                GROUND_ASSET_CATEGORY["Armor"]: 0, 
-                GROUND_ASSET_CATEGORY["Motorized"]: 0, 
-                GROUND_ASSET_CATEGORY["Artillery_Fix"]: 0, 
-                GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 0, 
-                GROUND_ASSET_CATEGORY["Command_&_Control"]: 0, 
-                GROUND_ASSET_CATEGORY["SAM"]: 0, 
-                GROUND_ASSET_CATEGORY["AAA"]: 0,                    
-                GROUND_ASSET_CATEGORY["EWR"]: 0, 
-                AIR_ASSET_CATEGORY["Fighter"]: 0, 
-                AIR_ASSET_CATEGORY["Fighter_Bomber"]: 0, 
-                AIR_ASSET_CATEGORY["Attacker"]: 0, 
-                AIR_ASSET_CATEGORY["Bomber"]: 0, 
-                AIR_ASSET_CATEGORY["Heavy_Bomber"]: 0, 
-                AIR_ASSET_CATEGORY["Awacs"]: 0, 
-                AIR_ASSET_CATEGORY["Recon"]: 0, 
-                AIR_ASSET_CATEGORY["Transport"]: 0, 
-                AIR_ASSET_CATEGORY["Helicopter"]: 0,                                                
+            "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
+            "area": None,
+            "military category": self.category, 
+            "criticality": 0.0,           
+            "asset": {
+                GROUND_ASSET_CATEGORY["Tank"]: {"Number": 0, "Efficiency": 0},
+                GROUND_ASSET_CATEGORY["Armor"]: {"Number": 0, "Efficiency": 0},
+                GROUND_ASSET_CATEGORY["Motorized"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["Command_&_Control"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["SAM"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["AAA"]: {"Number": 0, "Efficiency": 0},                    
+                GROUND_ASSET_CATEGORY["EWR"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Fighter"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Fighter_Bomber"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Attacker"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Bomber"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Heavy_Bomber"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Awacs"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Recon"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Transport"]: {"Number": 0, "Efficiency": 0}, 
+                AIR_ASSET_CATEGORY["Helicopter"]: {"Number": 0, "Efficiency": 0},                                                
             }
         }
         
@@ -205,8 +205,8 @@ class Mil_Base(Block) :
         for asset in self.assets:        
             category = asset.category # Tank, Armor, Motorized, Artillery, SAM, AAA, Fighter, Fighter_Bomber, Attacker, Bomber, Heavy_Bomber, Awacs, Recon, Transport, Command_&_Control            
             efficiency = asset.efficiency
-            report["Asset"][category]["Number"] += 1
-            report["Asset"][category]["Efficiency"] += efficiency
+            report["asset"][category]["Number"] += 1
+            report["asset"][category]["Efficiency"] += efficiency
 
         
         # update efficiency and number for each category of asset
@@ -215,8 +215,8 @@ class Mil_Base(Block) :
             if request == "enemy_request": # if it's an enemy request update efficiency and number with random error                                
                 efficiency_error = random.choice([-1, 1]) * random.uniform(0, asset_Efficiency_Accuracy)
                 number_error = random.choice([-1, 1]) * random.uniform(0, asset_Number_Accuracy)
-                report["Asset"][category]["Efficiency"] = report["Asset"]["Efficiency"] * (1 + efficiency_error) / report["Asset"]["Number"]
-                report["Asset"][category]["Number"] = report["Asset"]["Number"] * (1 + number_error)
+                report["asset"][category]["Efficiency"] = report["asset"]["Efficiency"] * (1 + efficiency_error) / report["asset"]["Number"]
+                report["asset"][category]["Number"] = report["asset"]["Number"] * (1 + number_error)
             
 
         
@@ -227,23 +227,24 @@ class Mil_Base(Block) :
         """Return a tactical report of the enemy block in the region"""
 
         tactical_reports = {}
-        max_criticity = 0
+        
 
-        for enmy_block in self.region.getEnemyBlocks():
+        for enmy_block in self.region.getEnemyBlocks(self.getEnemySide()):
 
             report = enmy_block.getBlockInfo("enemy_request", self.assets_accuracy, self.assets_accuracy)
-            criticity = evaluateCriticity(report)
-            report.criticity = criticity
+            report["criticality"] = evaluateCriticality(report, self)            
             
             i = 0
             while i < len(tactical_reports):
                             
-                if criticity == tactical_reports[i].criticity: 
+                if report["criticality"] == tactical_reports[i].criticality: 
                     tactical_reports.insert(i, report)# verifica se scala i successivi
                     break
-                elif criticity < tactical_reports[i].criticity and criticity <= tactical_reports[i+1].criticity: 
+                elif report["criticality"] < tactical_reports[i].criticality and report["criticality"] <= tactical_reports[i+1].criticality: 
                     tactical_reports.insert(i+1, report)# verifica se scala i successivi
                     break
                 i += 1
+            
+            return tactical_reports
 
 
