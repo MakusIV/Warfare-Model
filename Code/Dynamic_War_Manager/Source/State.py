@@ -22,12 +22,14 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 class State:
 
-    def __init__(self, parent:Block): 
+    def __init__(self, parent:Block, n_mission: int|None, date_mission: str|None): 
         
         if not isinstance(parent, Block):
             raise TypeError("type not valid, Block Class expected")
 
         # property        
+        self._n_mission = n_mission
+        self._date_mission = date_mission
         self._damage = 0.0 # damage  - float := [0:1]
         self._state_value =  STATE.Inactive # Active, Inactive, Standby, Destroyed
         
@@ -35,7 +37,31 @@ class State:
         self._parent = parent
         parent.state = self 
 
+    @property        
+    def n_mission(self):
+        return self._n_missiona
+    
+    @n_mission.setter
+    def n_mission(self, n_mission):
+        
+        if not isinstance(n_mission, int):
+            raise TypeError("type not valid, int type expected")
+        
+        self._n_mission = n_mission
 
+
+
+    @property        
+    def data_mission(self):
+        return self._data_missiona
+    
+    @data_mission.setter
+    def data_mission(self, data_mission):
+        
+        if not isinstance(data_mission, str):
+            raise TypeError("type not valid, str type expected")
+        
+        self._data_mission = data_mission
 
     @property        
     def damage(self):

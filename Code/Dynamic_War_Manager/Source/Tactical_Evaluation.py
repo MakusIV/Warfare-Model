@@ -22,23 +22,6 @@ EFFICACY = {
     GROUND_ACTION["Defence"]: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
     GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     }
-def evaluate_ground_superiority(asset_force, enemy_asset_force): 
-    
-    # asset_force = {"n_tanks": int, "n_armors": int, "n_motorized": int, "n_artillery": int}
-    kt, ka, km, kar = Context.WEIGHT_FORCE_GROUND_ASSET["tank"], Context.WEIGHT_FORCE_GROUND_ASSET["armor"], Context.WEIGHT_FORCE_GROUND_ASSET["motorized"], Context.WEIGHT_FORCE_GROUND_ASSET["artillery"] 
-    ground_force = ( asset_force["tanks"]["n_tanks"] * kt + asset_force["armors"]["n_armors"] * ka + asset_force["motorized"]["n_motorized"] * km + asset_force["artillery"]["n_artillery"] * kar ) / (kt + ka + km + kar)
-    enemy_ground_force = ( enemy_asset_force["tanks"]["n_tanks"] * kt + enemy_asset_force["armors"]["n_armors"] * ka + enemy_asset_force["motorized"]["n_motorized"] * km + enemy_asset_force["artillery"]["n_artillery"] * kar ) / (kt + ka + km + kar)
-    
-    try:
-        ground_superiority = ground_force / enemy_ground_force
-    except ZeroDivisionError: 
-        print("division by zero: enemy_ground_force = 0/n tank: {0}, armor: {1}, motorized: {2}, artillery: {3}".format(enemy_asset_force["tanks"]["n_tanks"],  enemy_asset_force["armors"]["n_armors"], enemy_asset_force["motorized"]["n_motorized"], enemy_asset_force["artillery"]["n_artillery"]) )
-        return False, "MAINTAIN"
-
-    pass
-
-    return
-
 
 def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
 

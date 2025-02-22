@@ -443,4 +443,6 @@ class Block:
         # return ap
         pass
 
-   
+    def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
+        """ Defined in each subclass """
+        return self.name, self.id
