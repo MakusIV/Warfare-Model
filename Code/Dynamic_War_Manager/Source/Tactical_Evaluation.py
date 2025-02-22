@@ -8,6 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
+from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
 from Utility import get_membership_label
 import Context, random
 import skfuzzy as fuzz
@@ -393,6 +394,9 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
 
     combat_superiority = combat_pow_fr / ( combat_pow_en + combat_pow_fr )
     return combat_superiority
+
+
+def evaluateCriticality(report: dict, base: Mil_Base) -> float:    
 
     
     

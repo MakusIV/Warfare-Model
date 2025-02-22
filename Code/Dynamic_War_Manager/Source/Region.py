@@ -97,6 +97,16 @@ class Region:
             raise ValueError("Il blocco non esiste nella lista")
 
 
+    def getEnemyBlocks(self, enemy_side: str):
+        
+        """
+        Return a list of Blocks of the Region that have the same side as the enemy_side parameter
+        :param enemy_side: the side of the enemy
+        :return: a list of Blocks
+        """
+        enemy_blocks = [block for block in self._blocks if block.side == enemy_side]
+        return enemy_blocks
+
     def to_string(self):
         return 'Name: {0}  -  Id: {1}'.format(self.getName(), str(self._id))
     

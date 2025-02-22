@@ -446,3 +446,18 @@ class Block:
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Defined in each subclass """
         return self.name, self.id
+    
+    def getEnemySide(self):
+        """
+        Determine and return the side that is considered the enemy.
+
+        :return: A string representing the enemy side. Returns "Red" if the current side is "Blue",
+                returns "Blue" if the current side is "Red", and returns "Neutral" otherwise.
+        """
+
+        if self.side == "Blue":
+            return "Red"
+        elif self.side == "Red":
+            return "Blue"
+        else:
+            return "Neutral"

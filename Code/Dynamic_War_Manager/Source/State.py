@@ -52,16 +52,16 @@ class State:
 
 
     @property        
-    def data_mission(self):
-        return self._data_missiona
+    def date_mission(self):
+        return self._date_missiona
     
-    @data_mission.setter
-    def data_mission(self, data_mission):
+    @date_mission.setter
+    def data_mission(self, date_mission):
         
-        if not isinstance(data_mission, str):
+        if not isinstance(date_mission, str):
             raise TypeError("type not valid, str type expected")
         
-        self._data_mission = data_mission
+        self._date_mission = date_mission
 
     @property        
     def damage(self):
