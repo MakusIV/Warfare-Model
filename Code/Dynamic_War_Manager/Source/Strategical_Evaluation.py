@@ -9,10 +9,13 @@
 #VARIABLE = Literal["A", "B, "C"]
 
 from Code.Utility import get_membership_label
+from Code.Manager import regions
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
+
+from Dynamic_War_Manager.Source import Mil_Base
 
 
 
@@ -20,6 +23,15 @@ def getTacticalReport():
     """ request report to any Mil_Base"""
     """ scorre elenco Mil_Base:
             aggiunge alla lista di report il report corrente. La lista è ordinata per criticità"""
+    tactical_reports = {} # 
+
+    for region in regions:
+        for block in region.blocks:
+            
+            if isinstance(block, Mil_Base):
+                tactical_reports.append(region.name).append(block.name) = block.getTacticalReport()
+
+
     pass
 
 def evaluateTacticalReport(report_list):

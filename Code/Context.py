@@ -25,6 +25,20 @@ GROUND_ASSET_CATEGORY = {
     "Command_&_Control": "Command_&_Control"
 }
 
+
+AIR_ASSET_CATEGORY = {
+     
+    "Fighter": "Fighter", 
+    "Fighter_Bomber": "Fighter_Bomber", 
+    "Attacker": "Attacker", 
+    "Bomber": "Bomber", 
+    "Heavy_Bomber": "Heavy_Bomber",
+    "Awacs": "Awacs", 
+    "Recon": "Recon", 
+    "Transport": "Transport",
+    "Helicopter": "Helicopter"
+}
+
 #class GROUND_ASSET_CATEGORY:
 
     #Tank = "Tank",

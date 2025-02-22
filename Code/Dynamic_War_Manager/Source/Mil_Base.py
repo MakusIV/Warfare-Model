@@ -1,3 +1,4 @@
+import datetime
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere, random
 from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
@@ -6,7 +7,7 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_CATEGORY, GROUND_ASSET_CATEGORY
+from Context import STATE, MIL_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
@@ -170,19 +171,37 @@ class Mil_Base(Block) :
 
         pass
 
-    def getBaseInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
+    def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
+        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()""""
 
         report = {
-            "Name": self.name + datetime.now(),
+            "Name": self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
             "Area": None,
-            "Military Category": self.category,
+            "Military Category": self.category,            
             
-            
-            "Asset": {"Tank": 0, "Armor": 0, "Motorized": 0, "Artillery": 0, "SAM": 0, "AAA": 0, "Fighter": 0, "Fighter_Bomber": 0, "Attacker": 0, "Bomber": 0, "Heavy_Bomber": 0, "Awacs": 0, "Recon": 0, "Transport": 0, "Command_&_Control": 0},
-                  
-                  
-                  }
-
+            "Asset": {
+                GROUND_ASSET_CATEGORY["Tank"]: 0, 
+                GROUND_ASSET_CATEGORY["Armor"]: 0, 
+                GROUND_ASSET_CATEGORY["Motorized"]: 0, 
+                GROUND_ASSET_CATEGORY["Artillery_Fix"]: 0, 
+                GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 0, 
+                GROUND_ASSET_CATEGORY["Command_&_Control"]: 0, 
+                GROUND_ASSET_CATEGORY["SAM"]: 0, 
+                GROUND_ASSET_CATEGORY["AAA"]: 0,                    
+                GROUND_ASSET_CATEGORY["EWR"]: 0, 
+                AIR_ASSET_CATEGORY["Fighter"]: 0, 
+                AIR_ASSET_CATEGORY["Fighter_Bomber"]: 0, 
+                AIR_ASSET_CATEGORY["Attacker"]: 0, 
+                AIR_ASSET_CATEGORY["Bomber"]: 0, 
+                AIR_ASSET_CATEGORY["Heavy_Bomber"]: 0, 
+                AIR_ASSET_CATEGORY["Awacs"]: 0, 
+                AIR_ASSET_CATEGORY["Recon"]: 0, 
+                AIR_ASSET_CATEGORY["Transport"]: 0, 
+                AIR_ASSET_CATEGORY["Helicopter"]: 0,                                                
+            }
+        }
+        
+        # calculate total number and efficiency for each assets category: Tank, Armor, Motorized, ...
         for asset in self.assets:        
             category = asset.category # Tank, Armor, Motorized, Artillery, SAM, AAA, Fighter, Fighter_Bomber, Attacker, Bomber, Heavy_Bomber, Awacs, Recon, Transport, Command_&_Control            
             efficiency = asset.efficiency
@@ -190,19 +209,41 @@ class Mil_Base(Block) :
             report["Asset"][category]["Efficiency"] += efficiency
 
         
-
+        # update efficiency and number for each category of asset
         for category in GROUND_ASSET_CATEGORY:
-
-            if request == "enemy_request":                                
+ 
+            if request == "enemy_request": # if it's an enemy request update efficiency and number with random error                                
                 efficiency_error = random.choice([-1, 1]) * random.uniform(0, asset_Efficiency_Accuracy)
                 number_error = random.choice([-1, 1]) * random.uniform(0, asset_Number_Accuracy)
                 report["Asset"][category]["Efficiency"] = report["Asset"]["Efficiency"] * (1 + efficiency_error) / report["Asset"]["Number"]
                 report["Asset"][category]["Number"] = report["Asset"]["Number"] * (1 + number_error)
+            
 
         
 
             
 
     def getTacticalReport(self, intelligence_level) -> Dict:
-        """Return a tactical report of the
-         in base  a intelligence_level"""
+        """Return a tactical report of the enemy block in the region"""
+
+        tactical_reports = {}
+        max_criticity = 0
+
+        for enmy_block in self.region.getEnemyBlocks():
+
+            report = enmy_block.getBlockInfo("enemy_request", self.assets_accuracy, self.assets_accuracy)
+            criticity = evaluateCriticity(report)
+            report.criticity = criticity
+            
+            i = 0
+            while i < len(tactical_reports):
+                            
+                if criticity == tactical_reports[i].criticity: 
+                    tactical_reports.insert(i, report)# verifica se scala i successivi
+                    break
+                elif criticity < tactical_reports[i].criticity and criticity <= tactical_reports[i+1].criticity: 
+                    tactical_reports.insert(i+1, report)# verifica se scala i successivi
+                    break
+                i += 1
+
+

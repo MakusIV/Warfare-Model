@@ -7,17 +7,10 @@ Sequence of processes for evaluating DCS data (missions and status), recording s
 
 
 
-# scenario property
-blocks = {
-
-    "blue": {},
-    "red": {},
-    "neutral": {}
-
-    }
 
 
-regions = {
+
+regions = { #blocks in region
 
     "blue": {},
     "red": {},
