@@ -39,13 +39,19 @@ AIR_ASSET_CATEGORY = {
     "Helicopter": "Helicopter"
 }
 
-#class GROUND_ASSET_CATEGORY:
-
-    #Tank = "Tank",
-    #Armor = "Armor",
-    #Motorized = "Motorized",
-    #Artillery_Fix = "Artillery_Fixed",
-    #Artillery_Semovent = "Artillery_Semovent",
+STRUCTURE_ASSET_CATEGORY = {
+     
+    "Bridge": "Bridge", 
+    "Hangar": "Hangar",
+    "Depot": "Depot",
+    "Oil Tank": "Oil Tank",
+    "Farm": "Farm",
+    "Power Plant": "Power Plant",
+    "Station": "Station",
+    "Building": "Building",
+    "Factory": "Factory",
+    "Barrack": "Barrack"
+}   
 
 GROUND_ACTION  = {
 
