@@ -176,9 +176,19 @@ class Mil_Base(Block) :
 
         report = {
             "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
-            "area": None,
+            "radius area": 0.0,
+            "center area": 0.0,
             "military category": self.category, 
-            "criticality": 0.0,           
+            "air distance": 0.0,
+            "on road ground distance": 0.0,
+            "off road ground distance": 0.0,
+            "artillery range": 0.0,
+            "combat range": 0.0,
+            "AA range": 0.0,
+            "AA height": 0.0,
+            "criticality": 0.0,
+            "defence power": 0.0,
+            "attack power": 0.0,         
             "asset": {
                 GROUND_ASSET_CATEGORY["Tank"]: {"Number": 0, "Efficiency": 0},
                 GROUND_ASSET_CATEGORY["Armor"]: {"Number": 0, "Efficiency": 0},
