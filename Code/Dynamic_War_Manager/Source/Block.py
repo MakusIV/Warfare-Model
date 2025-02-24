@@ -5,15 +5,15 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, CATEGORY, MIL_CATEGORY, SIDE
+from Context import STATE, BLOCK_CATEGORY, SIDE
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
-from Dynamic_War_Manager.Source.Asset import Asset
-from Dynamic_War_Manager.Source.Region import Region
+
 
 
 if TYPE_CHECKING:
     from Dynamic_War_Manager.Source.Asset import Asset
+    from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
  
@@ -29,7 +29,7 @@ class Block:
             self._id = None # id self-assigned - type str
             self._description = description # block description - type str
             self._side = side # block side - type str
-            self._category = category # block category - type Literal
+            self._category = category # block category - type Literal 
             self._functionality = functionality # block functionality - type str
             self._value = value # block value - type int             
             self._events = List[Event] = [] # block event - list of Block event's          
@@ -400,7 +400,7 @@ class Block:
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and (not isinstance(category, Literal) or category not in [CATEGORY, MIL_CATEGORY]):                        
+        if category and (not isinstance(category, Literal) or category not in [BLOCK_CATEGORY]):                        
             return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
         if function and not isinstance(function, str):
             return (False, "Bad Arg: function must be a str")
@@ -419,7 +419,7 @@ class Block:
             
         return True
 
-    def efficiency(self): # sostituisce operational()
+    def getEfficiency(self): # sostituisce operational()
         """calculate efficiency from asset state, rcp, acp, .."""
         # efficiency = state * acp / rcp
         # return efficiency
@@ -437,7 +437,7 @@ class Block:
         # return tv
         pass
 
-    def position(self):
+    def getPosition(self):
         """calculate center point from assets position"""
         # ap = median(assetPosition) 
         # return ap

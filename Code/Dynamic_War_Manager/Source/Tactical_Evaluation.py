@@ -8,13 +8,20 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
 from Utility import get_membership_label
 import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
 from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION
+
+
+#from __future__ import annotations
+#from typing import TYPE_CHECKING
+#if TYPE_CHECKING:
+    #from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+
+
 LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFihtResult() restituiscono 1 (parity)ù
 DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
 
@@ -385,18 +392,47 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     if not isinstance(action, str) or action not in GROUND_ACTION.keys():
         raise ValueError( "action: {0} {1} must be a string included in GROUND_ACTION".format( action, type(action) ) )  
     
-    combat_pow_fr = 0
+    combat_pow_fr = 0    
     combat_pow_en = 0
+    combat_pow_en_alt = 0
+
 
     for cat in [GROUND_ASSET_CATEGORY["Tank"], GROUND_ASSET_CATEGORY["Armor"], GROUND_ASSET_CATEGORY["Motorized"], GROUND_ASSET_CATEGORY["Artillery_Fix"], GROUND_ASSET_CATEGORY["Artillery_Semovent"]]:
-        combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
-        combat_pow_en += EFFICACY[action][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+        
+        if action == GROUND_ACTION["Attack"]:            
+            combat_pow_en += EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en_alt += EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
+        elif action == GROUND_ACTION["Defence"] or action == GROUND_ACTION["Maintain"]:
+            combat_pow_en += EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+
+        combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+
+    if combat_pow_en < combat_pow_en_alt:
+        combat_pow_en = combat_pow_en_alt
+    
     combat_superiority = combat_pow_fr / ( combat_pow_en + combat_pow_fr )
     return combat_superiority
 
 
-def evaluateCriticality(report: dict, base: Mil_Base) -> float:    
+def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:   
+
+    attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
+    defence_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defence"], report_base, report_enemy)
+    #maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
+
+    criticality = { "action": None, "value": 0 }
+        
+
+    if attack_superiority > 0.55:
+        criticality["action"] = "attack"
+        criticality[ "value" ] = int (attack_superiority * 100 )
+
+    elif defence_superiority < 0.45:
+        criticality["action"] = "defence"
+        criticality[ "value" ] = int ( defence_superiority * 100 )
+    
+    return criticality
 
     
     

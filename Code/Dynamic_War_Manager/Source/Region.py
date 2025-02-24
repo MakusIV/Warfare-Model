@@ -6,7 +6,7 @@ from Dynamic_War_Manager.Source.Limes import Limes
 from Dynamic_War_Manager.Source.Payload import Payload
 from Dynamic_War_Manager.Source.Event import Event
 from LoggerClass import Logger
-from Context import STATE, CATEGORY, MIL_CATEGORY
+from Context import STATE, MIL_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 

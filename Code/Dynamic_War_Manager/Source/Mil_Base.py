@@ -1,8 +1,10 @@
 import datetime
+
+from numpy import median
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere, random
 from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
-from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticality # cambiare in Zone_Military_Evaluation
+from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticality # cambiare in Mil_Zone_Evaluation
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
@@ -43,7 +45,7 @@ class Mil_Base(Block) :
 
     
 
-    def checkParam(name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int) -> bool: # type: ignore
+    def checkParam(name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
         if not super().checkParam(name, description, side, category, function, value, position, acs, rcs, payload):
@@ -115,13 +117,13 @@ class Mil_Base(Block) :
         pass
     
 
-    def asset_status(self):
+    def assetStatus(self):
         """report info on any mil-base assets category (aircraft, vehicle, supply, ...)"""
         # as = .... 
         # return as
         pass
 
-    def threat_volume(self):
+    def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
         # tv = max(assetThreat_Volume) 
         # return tv
@@ -133,12 +135,12 @@ class Mil_Base(Block) :
         # return ap
         pass
 
-    def combat_state(self):
+    def combatState(self):
         """calculate front from state of assets"""
 
     
     def getRecon(self) -> Dict:
-        """Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
+        """Return a List of recon report of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
         e.g.:
         [1]:
             name_group: xxxx
@@ -162,17 +164,33 @@ class Mil_Base(Block) :
         recon_Asset_Efficiency = self.getReconEfficiency()
         asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
         asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
-        enemy_bases = self.region.front.getEnemyBases()
+        enemy_bases = self.region.getEnemyBlocks(self.getEnemySide())
+        report_base = self.getBlockInfo("friendly_request")          
+        recon_reports = { "attack": (), "defence": () }
         
-        for enemy_base in enemy_bases:
-            recon_info = enemy_base.getBaseInfo("enemy_request", asset_Number_Accuracy, asset_Efficiency_Accuracy)
-            # evaluate force ratio self/enemy
-            # elaborate recon_Report
+        for enmy_block in enemy_bases:
 
-        pass
+            report_enemy = enmy_block.getBlockInfo("enemy_request",  asset_Number_Accuracy, asset_Efficiency_Accuracy)            
+            criticality = evaluateCriticality(report_base, report_enemy)                                    
+            i = 0
+            previous_reports = recon_reports[criticality["action"]]
+
+            while i < len(previous_reports):
+                            
+                if criticality["value"] == previous_reports[i].criticality["value"]: 
+                    recon_reports[criticality["action"]].insert( i, report_enemy )# verifica se scala i successivi
+                    break
+                elif criticality["value"] < previous_reports[i].criticality["value"] and criticality["value"] <= previous_reports[i].criticality["value"]: 
+                    recon_reports[criticality["action"]].insert( i + 1, report_enemy )# verifica se scala i successivi
+                    break
+                i += 1
+            
+        return recon_reports
+       
+        
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
-        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()""""
+        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
 
         report = {
             "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
@@ -186,9 +204,7 @@ class Mil_Base(Block) :
             "combat range": 0.0,
             "AA range": 0.0,
             "AA height": 0.0,
-            "criticality": 0.0,
-            "defence power": 0.0,
-            "attack power": 0.0,         
+            "criticality": { "action": None, "value": 0 }, # action = ["attack", "defence"], value int [1-100]              
             "asset": {
                 GROUND_ASSET_CATEGORY["Tank"]: {"Number": 0, "Efficiency": 0},
                 GROUND_ASSET_CATEGORY["Armor"]: {"Number": 0, "Efficiency": 0},
@@ -214,7 +230,7 @@ class Mil_Base(Block) :
         # calculate total number and efficiency for each assets category: Tank, Armor, Motorized, ...
         for asset in self.assets:        
             category = asset.category # Tank, Armor, Motorized, Artillery, SAM, AAA, Fighter, Fighter_Bomber, Attacker, Bomber, Heavy_Bomber, Awacs, Recon, Transport, Command_&_Control            
-            efficiency = asset.efficiency
+            efficiency = asset.getEfficiency()
             report["asset"][category]["Number"] += 1
             report["asset"][category]["Efficiency"] += efficiency
 
@@ -227,34 +243,13 @@ class Mil_Base(Block) :
                 number_error = random.choice([-1, 1]) * random.uniform(0, asset_Number_Accuracy)
                 report["asset"][category]["Efficiency"] = report["asset"]["Efficiency"] * (1 + efficiency_error) / report["asset"]["Number"]
                 report["asset"][category]["Number"] = report["asset"]["Number"] * (1 + number_error)
+                    
+        return report
             
 
-        
+    def getReconEfficiency(self):
+        """Return the efficiency of the reconnaissance assets"""
 
-            
-
-    def getTacticalReport(self, intelligence_level) -> Dict:
-        """Return a tactical report of the enemy block in the region"""
-
-        tactical_reports = {}
-        
-
-        for enmy_block in self.region.getEnemyBlocks(self.getEnemySide()):
-
-            report = enmy_block.getBlockInfo("enemy_request", self.assets_accuracy, self.assets_accuracy)
-            report["criticality"] = evaluateCriticality(report, self)            
-            
-            i = 0
-            while i < len(tactical_reports):
-                            
-                if report["criticality"] == tactical_reports[i].criticality: 
-                    tactical_reports.insert(i, report)# verifica se scala i successivi
-                    break
-                elif report["criticality"] < tactical_reports[i].criticality and report["criticality"] <= tactical_reports[i+1].criticality: 
-                    tactical_reports.insert(i+1, report)# verifica se scala i successivi
-                    break
-                i += 1
-            
-            return tactical_reports
-
-
+        recognitors = [asset for asset in self.assets if asset.role == "Recon"]
+        efficiency = median(asset.getEfficiency() for asset in recognitors)
+        return efficiency
