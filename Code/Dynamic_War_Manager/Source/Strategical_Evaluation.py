@@ -8,8 +8,8 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-from Code.Utility import get_membership_label
-from Code.Manager import regions
+from Utility import get_membership_label
+from Manager import regions
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -29,7 +29,8 @@ def getTacticalReport():
         for block in region.blocks:
             
             if isinstance(block, Mil_Base):
-                tactical_reports.append(region.name).append(block.name) = block.getTacticalReport()
+                report = block.getTacticalReport()
+                tactical_reports[region.name][block.name] = report
 
 
     pass

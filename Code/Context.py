@@ -69,7 +69,25 @@ WEIGHT_FORCE_GROUND_ASSET = {
     GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 7,
 }
 
+BLOCK_CATEGORY = {
 
+    "Civilian": "Civilian",
+    "Military": "Military",
+}
+
+MIL_CATEGORY = {
+
+    "Airbase": "Airbase",
+    "Port": "Port",
+    "Heliport": "Heliport",
+    "Stronghold": "Stronghold", 
+    "Farp": "Farp",
+    "Regiment": "Regiment",
+    "Battallion": "Battallion",
+    "Company": "Company",
+    "Brigade": "Brigade",
+    "EWR": "EWR",    
+}
 
 class STATE(Enum):
     ACTIVE = "Active" 
@@ -106,18 +124,6 @@ class FOOD_CATEGORY(Enum):
     GOODS = "Goods"
     ENERGY = "Energy"
     GOODS_AND_ENERGY = "Goods & Energy"
-
-
-class MIL_CATEGORY(Enum): 
-    AIRBASE = "Airbase"
-    PORT = "Port"
-    STRONGHOLD = "Stronghold"
-    FARP = "Farp"
-    REGIMENT = "Regiment"
-    BATTALLION = "Battallion"
-    BRIGADE = "Brigade"
-    COMPANY = "Company"
-    EWR = "EWR"
 
 class COUNTRY(Enum): 
     GERMANY = "Germany"

@@ -15,7 +15,7 @@ from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, CATEGORY, MIL_CATEGORY, COUNTRY
+from Context import STATE, MIL_CATEGORY, COUNTRY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Region import Region
@@ -27,7 +27,7 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset(Block) :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, value: int|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None):      
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, value: int|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None):      
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
 
@@ -36,7 +36,7 @@ class Asset(Block) :
             self._cost: int|None = cost # asset cost - type int 
             self._crytical: bool|None = crytical 
             self._repair_time: int|None = repair_time
-            
+            self._role: str|None = None # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, ...
             
             
             self._unit_index: str|Dict = None # DCS group unit_index - index Dict            
@@ -67,7 +67,7 @@ class Asset(Block) :
             self._block: int|Block = block # asset block - component of Block - type Block asset not exist without block
            
             # check input parameters
-            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time, region, country )
+            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time, region, country, role )
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
@@ -114,6 +114,20 @@ class Asset(Block) :
         self._repair_time = repair_time
         return True
 
+    @property
+    def role(self) -> str: #override
+        return self._role    
+
+    @role.setter    
+    def role(self, role) -> bool: #override
+        
+        check_result = self.checkParam(role)
+
+        if not check_result[1]:
+            raise Exception(check_result[2])                
+        self._role = role
+        return True 
+    
     @property
     def country(self) -> str: #override      
         return self._country
@@ -191,7 +205,7 @@ class Asset(Block) :
         """Return a report of the asset: check """
         pass
 
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
         check_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)
@@ -217,6 +231,12 @@ class Asset(Block) :
         if cost and not isinstance(repair_time, int):
             return (False, "Bad Arg: cost must be a int")        
 
+        if role and not isinstance(role, str):  
+            return (False, "Bad Arg: role must be a str")
+        
+        if country and not isinstance(country, str):  
+            return (False, "Bad Arg: country must be a str")
+        
         return (True, "parameters ok")
     
     def destroy( self ):
@@ -232,7 +252,7 @@ class Asset(Block) :
         return True
 
 
-    def efficiency(self): # sostituisce operational()
+    def getEfficiency(self): # sostituisce operational()
         """calculate efficiency from asset state, rcp, acp, .."""
         # efficiency = state * acp / rcp
         # return efficiency
@@ -240,19 +260,19 @@ class Asset(Block) :
         
     
     
-    def asset_status(self):
+    def assetStatus(self):
         """calculate Asset_Status from asset Asset_Status"""
         # as = median(Asset_Status) 
         # return as
         pass
 
-    def threat_volume(self):
+    def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
         # tv = max(assetThreat_Volume) 
         # return tv
         pass
 
-    def calc_position(self):
+    def calcPosition(self):
         """calculate position from asset position"""
         # ap = median(assetPosition) 
         # return ap
@@ -266,12 +286,12 @@ class Asset(Block) :
     def assets(self, value):
             raise Exception("Metodo non implementato in questa classe")
 
-    def get_Asset(self, key): #overload
+    def getAsset(self, key): #overload
             raise Exception("Metodo non implementato in questa classe")
 
-    def set_Asset(self, key, value): #overload
+    def setAsset(self, key, value): #overload
             raise Exception("Metodo non implementato in questa classe")
 
-    def remove_Asset(self, key):#overload
+    def removeAsset(self, key):#overload
             raise Exception("Metodo non implementato in questa classe")
   
