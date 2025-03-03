@@ -419,18 +419,23 @@ def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:
 
     attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
     defence_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defence"], report_base, report_enemy)
-    #maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
+    maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
 
     criticality = { "action": None, "value": 0 }
         
 
     if attack_superiority > 0.55:
         criticality["action"] = "attack"
-        criticality[ "value" ] = int (attack_superiority * 100 )
+        criticality[ "value" ] = int (attack_superiority * 100 )        
 
-    elif defence_superiority < 0.45:
+    elif maintain_superiority > defence_superiority:
+        criticality["action"] = "maintain"
+        criticality[ "value" ] = int ( maintain_superiority * 100 )
+        
+    else:
         criticality["action"] = "defence"
         criticality[ "value" ] = int ( defence_superiority * 100 )
+
     
     return criticality
 
