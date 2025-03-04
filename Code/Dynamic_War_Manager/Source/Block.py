@@ -391,7 +391,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
+    def checkParam(self, name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
         if name and not isinstance(name, str):
@@ -417,7 +417,7 @@ class Block:
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
             
-        return True
+        return (True, "OK")
 
     def getEfficiency(self): # sostituisce operational()
         """calculate efficiency from asset state, rcp, acp, .."""
@@ -455,9 +455,9 @@ class Block:
                 returns "Blue" if the current side is "Red", and returns "Neutral" otherwise.
         """
 
-        if self.side == "Blue":
+        if self._side == "Blue":
             return "Red"
-        elif self.side == "Red":
+        elif self._side == "Red":
             return "Blue"
         else:
             return "Neutral"
