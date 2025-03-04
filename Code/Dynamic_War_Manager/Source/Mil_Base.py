@@ -186,8 +186,7 @@ class Mil_Base(Block) :
                 i += 1
             
         return recon_reports
-       
-        
+               
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
@@ -251,5 +250,5 @@ class Mil_Base(Block) :
         """Return the efficiency of the reconnaissance assets"""
 
         recognitors = [asset for asset in self.assets if asset.role == "Recon"]
-        efficiency = median(asset.getEfficiency() for asset in recognitors)
+        efficiency = median(asset.getEfficiency("hr_mil") for asset in recognitors)
         return efficiency

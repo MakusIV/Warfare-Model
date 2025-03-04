@@ -435,7 +435,6 @@ def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:
     else:
         criticality["action"] = "defence"
         criticality[ "value" ] = int ( defence_superiority * 100 )
-
     
     return criticality
 
