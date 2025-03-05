@@ -175,7 +175,7 @@ class Mil_Base(Block) :
             i = 0
             previous_reports = recon_reports[criticality["action"]]
 
-            while i < len(previous_reports):
+            while i <= len(previous_reports):
                             
                 if criticality["value"] == previous_reports[i].criticality["value"]: 
                     recon_reports[criticality["action"]].insert( i, report_enemy )# verifica se scala i successivi
