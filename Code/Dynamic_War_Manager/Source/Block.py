@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+
+from numpy import median
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
@@ -421,9 +423,8 @@ class Block:
 
     def getEfficiency(self): # sostituisce operational()
         """calculate efficiency from asset state, rcp, acp, .."""
-        # efficiency = state * acp / rcp
-        # return efficiency
-        pass
+        efficiency = median(asset.getEfficiency() for asset in self.assets) 
+        return efficiency
           
     def assetStatus(self):
         """calculate Asset_Status from asset Asset_Status"""
@@ -437,11 +438,13 @@ class Block:
         # return tv
         pass
 
-    def getPosition(self):
+    @property
+    def position(self):
         """calculate center point from assets position"""
-        # ap = median(assetPosition) 
-        # return ap
-        pass
+        pos = median(asset.position for asset in self.assets) 
+        return pos
+        
+    
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Defined in each subclass """

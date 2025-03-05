@@ -32,7 +32,7 @@ class Asset(Block) :
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
 
             # propriety             
-            self._position: int|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
+            self._position: Point|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
             self._cost: int|None = cost # asset cost - type int 
             self._crytical: bool|None = crytical 
             self._repair_time: int|None = repair_time
@@ -69,12 +69,12 @@ class Asset(Block) :
             self._block: int|Block = block # asset block - component of Block - type Block asset not exist without block
            
             # check input parameters
-            check_results =  self.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time, region, country, role, health )
+            check_results =  self.checkParam( name, description, category, functionality, position, volume, threat, crytical, repair_time, country, role, health )
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
 
-    # methods
+    # getter & setter methods
 
     @property
     def cost(self) -> int: #override      
@@ -460,45 +460,78 @@ class Asset(Block) :
         self._block = param
         return True
 
-    def checkParam(name: str, description: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> bool: # type: ignore
-        """Return True if type compliance of the parameters is verified"""   
-    
-        check_super_result = super().checkParam(name, description, category, function, value, position, acs, rcs, payload)
+    # use case methods
+    def checkParam(name: str, description: str, category: Literal, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int, unit_index: int, unit_name: str, unit_type: str, unit_unitId: int, unit_communication: bool, unit_lateActivation: bool, unit_start_time: int, unit_frequency: float, unit_x: float, unit_y: float, unit_alt: float, unit_alt_type: str, heading: int, unit_speed: float, unit_hardpoint_racks: int, unit_livery_id: int, unit_psi: float, unit_skill: str, unit_onboard_num: int, unit_payload: str|Dict, unit_callsign: str|Dict) -> bool: # type: ignore
+        """Return True if type compliance of the parameters is verified"""          
 
-        if not check_super_result[1]:
-            return (False, check_super_result[2])     
-        
         if position and not isinstance(position, Point):
-            return (False, "Bad Arg: position must be a Point object")
-        
+            return (False, "Bad Arg: position must be a Point object")        
         if block and not isinstance(block, Block):
-            return (False, "Bad Arg: block must be a Block object")
-        
+            return (False, "Bad Arg: block must be a Block object")        
         if volume and not isinstance(volume, Volume):
-            return (False, "Bad Arg: volume must be a Volume object")
-        
+            return (False, "Bad Arg: volume must be a Volume object")        
         if threat and not isinstance(threat, Threat):                        
-            return (False, "Bad Arg: threat must be a Threat object")   
-             
+            return (False, "Bad Arg: threat must be a Threat object")                
         if repair_time and not isinstance(repair_time, int):
-            return (False, "Bad Arg: repair_time must be a int")
-        
+            return (False, "Bad Arg: repair_time must be a int")        
         if cost and not isinstance(repair_time, int):
             return (False, "Bad Arg: cost must be a int")        
-
         if role and not isinstance(role, str):  
-            return (False, "Bad Arg: role must be a str")
-        
+            return (False, "Bad Arg: role must be a str")        
         if health and not isinstance(health, int):
             return (False, "Bad Arg: health must be a int")
-
         if country and not isinstance(country, str):  
-            return (False, "Bad Arg: country must be a str")
-        
+            return (False, "Bad Arg: country must be a str")        
+        if crytical and not isinstance(crytical, bool):
+            return (False, "Bad Arg: crytical must be a bool")        
+        if unit_index and not isinstance(unit_index, str):
+            return (False, "Bad Arg: unit_index must be a str")        
+        if unit_name and not isinstance(unit_name, str):
+            return (False, "Bad Arg: unit_name must be a str")        
+        if unit_type and not isinstance(unit_type, str):
+            return (False, "Bad Arg: unit_type must be a str")          
+        if unit_unitId and not isinstance(unit_unitId, int):
+            return (False, "Bad Arg: unit_unitId must be a int")        
+        if unit_communication and not isinstance(unit_communication, bool):
+            return (False, "Bad Arg: unit_communication must be a bool")        
+        if unit_lateActivation and not isinstance(unit_lateActivation, bool):
+            return (False, "Bad Arg: unit_lateActivation must be a bool")        
+        if unit_start_time and not isinstance(unit_start_time, int):
+            return (False, "Bad Arg: unit_start_time must be a int")        
+        if unit_frequency and not isinstance(unit_frequency, float):
+            return (False, "Bad Arg: unit_frequency must be a float")        
+        if unit_x and not isinstance(unit_x, float):
+            return (False, "Bad Arg: unit_x must be a float")        
+        if unit_y and not isinstance(unit_y, float):    
+            return (False, "Bad Arg: unit_y must be a float")        
+        if unit_alt and not isinstance(unit_alt, float):
+            return (False, "Bad Arg: unit_alt must be a float")        
+        if unit_alt_type and not isinstance(unit_alt_type, str):
+            return (False, "Bad Arg: unit_alt_type must be a str")                
+        if heading and not isinstance(heading, int):
+            return (False, "Bad Arg: heading must be a int")               
+        if unit_speed and not isinstance(unit_speed, float):
+            return (False, "Bad Arg: unit_speed must be a float")        
+        if unit_hardpoint_racks and not isinstance(unit_hardpoint_racks, int):
+            return (False, "Bad Arg: unit_hardpoint_racks must be a int")        
+        if unit_livery_id and not isinstance(unit_livery_id, int):
+            return (False, "Bad Arg: unit_livery_id must be a int")        
+        if unit_psi and not isinstance(unit_psi, float):
+            return (False, "Bad Arg: unit_psi must be a float")        
+        if unit_skill and not isinstance(unit_skill, str):
+            return (False, "Bad Arg: unit_skill must be a str")
+        if unit_onboard_num and not isinstance(unit_onboard_num, int):
+            return (False, "Bad Arg: unit_onboard_num must be a int")
+        if unit_payload and not isinstance(unit_payload, dict):
+            return (False, "Bad Arg: unit_payload must be a dict")
+        if unit_callsign and not isinstance(unit_callsign, dict):
+            return (False, "Bad Arg: unit_callsign must be a dict")
+    
         return (True, "OK")
     
-    def getEfficiency(self): # sostituisce operational()
-        """calculate efficiency from asset state, rcp, acp, .."""
+    @property
+    def efficiency(self):
+        """calculate efficiency from asset health, rcp, acp, .."""
         
         efficiency = 0
 
@@ -521,23 +554,26 @@ class Asset(Block) :
 
         return efficiency
              
+   
+    def threatVolume(self):
+        """calculate Threat_Volume from asset Threat_Volume"""
+        # tv = max(assetThreat_Volume) 
+        # pos = position
+        # evaluate complessive volume of threat from all threat sources
+        # return tv
+        pass
+
+        
+
+
+    # Method inherited from Block but not allowed for this class
+
     def getReport(self): #override
         raise Exception("Method not allowed for this class")
     
     def assetStatus(self):#override
         raise Exception("Method not allowed for this class")
 
-    def threatVolume(self):
-        """calculate Threat_Volume from asset Threat_Volume"""
-        # tv = max(assetThreat_Volume) 
-        # return tv
-        pass
-
-    def calcPosition(self):
-        """calculate position from asset position"""
-        # ap = median(assetPosition) 
-        # return ap
-        pass
 
     @property #override
     def assets(self):
