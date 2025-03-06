@@ -10,6 +10,9 @@ Sequence of processes for evaluating DCS data (missions and status), recording s
 
 
 
+from Dynamic_War_Manager.Source import Mil_Base
+import Context
+
 regions = { #blocks in region
 
     "blue": {},
@@ -55,7 +58,67 @@ pass
 # save mission result: saving the mission results for statistical use and analysis 
 pass
 
-# execute tactical blocks evaluation and planning: loop of report request to all blocks
+# execute tactical blocks evaluation and planning: loop of recon request to all blocks
+# recoinassance report request   
+recons = { "side": None, "mil_base": None, "id": None, "reports": None }
+
+for side in Context.SIDE:
+    recons["side"] = side
+    
+    for block in regions[side]:    
+
+        if isinstance(block, Mil_Base):
+            recons["mil_base"] = block.name
+            recons["id"] = block.id
+            recons["reports"] = block.getRecon()
+
+"""
+evaluate strategic directive: 
+    parameters:
+    zone 
+        level of air operation: 
+            interdiction (strategic strike): production, storage and transport of: goods, energy, hr, military, urban
+            ground support: ground attack operation, ground defence operation
+            naval support: naval attack operation, naval defence operation
+            air superiority: awacs, fighter sweep, 
+            air defence operation: intercept, patrol (goods, energy, hr, military, urban)
+            air escort: air strike mission, air transport mission, air recon mission, ground operation, naval operation 
+            air recon, 
+            air transport, 
+                
+        level of ground operation:
+            offensive: ground attack operation: production, storage and transport of: goods, energy, hr, military, urban,
+            defensive: ground defence operation, 
+            maintaing: ground patrol operation,
+            recon: ground recon operation: production, storage and transport of: goods, energy, hr, military, urban,
+            transport: ground transport operation: production, storage and transport of: goods, energy, hr, military, urban,
+            
+        level of naval operation:
+            offensive: naval attack operation,
+            defensive: naval defence operation,
+            maintaing: naval patrol operation,
+            transport: naval transport operation,
+            recon: naval recon operation,
+
+        level of goods: production, storage and transport
+
+        minimum level of goods
+
+        level of energy: production, storage and transport
+
+        minimum level of energy
+
+        level of human resource
+            civilian: hr
+            military: hc, hs, hb
+            
+        minimum level of human resource
+
+
+        
+
+   """     
+
 pass
 
 # execute strategical and tactical evaluation and planning: analysis of block reports and global situation (general status and intelligence) and block mission planning
