@@ -115,7 +115,20 @@ evaluate strategic directive:
         minimum level of human resource
 
 
-        
+    Il modello TLC introduce un "C2 Planner" (Pianificatore di Comando e Controllo) che simula l'esecuzione di piani operativi di manovra, 
+    valutando la probabilità di successo di un piano operativo e allocando risorse di terra e aeree per massimizzare la probabilità di raggiungere 
+    gli obiettivi prioritari.
+
+    Il documento descrive l'uso di algoritmi adattativi per l'allocazione delle risorse, come l'algoritmo Sequential Analytic Game Evaluation (SAGE), 
+    che consente di simulare decisioni basate su obiettivi e di adattare le strategie in risposta alle informazioni disponibili.
+
+    Questo approccio adattativo è fondamentale per rappresentare il valore dei sistemi di comando, controllo, comunicazioni, computer e intelligence (C4I) e 
+    per analizzare l'impatto delle decisioni sotto incertezza.
+
+    assegnazione riserve in relazione agli obiettivi prioritari
+    assegnazione risorse in relazione agli obiettivi prioritari
+
+     
 
    """     
 
