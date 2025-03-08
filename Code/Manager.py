@@ -128,8 +128,26 @@ evaluate strategic directive:
     assegnazione riserve in relazione agli obiettivi prioritari
     assegnazione risorse in relazione agli obiettivi prioritari
 
-     
 
+
+
+    Crea in DCS ed in WM percorsi spostamenti asset
+
+    Questi percorsi sono rappresentati dalle route e/o dagli oggetti DCS (cross point, stop point, ecc) utilizzati per identificare e localizzare gli 
+    elementi importanti del percorso di spostamento (incroci, ponti, ecc)   Nel WM devono essere utilizzati per definire un grafo con: 
+    
+    - Nodi: costituiti dagli waypoint DCS di una route: i waypoint dovrebbero essere definiti tra due punti dove la percorribilità è possibile e nel 
+    caso di offroad è in linea retta. Quindi è opportuno uilizzare anche degli oggetti statici DCS per ulteriore localizzazione e gestione del waypoint 
+    ed eventualmente anche dello stato (verifica se e come DCE gestisce lo stato delle infrastrutture predefinite nelle mappe DCS)
+
+    - Archi: il percorso definito tra due waypoint: questo percorso è caratterizzato da un livello di minaccia (aerea, terrestre), da un tempo di 
+    percorrenza, dal livello di pendenza e dalla tipologia di terreno che viene utilizzata in relazione per verificare difficoltà e possibilità di 
+    percorrenza di un mezzo specifico
+
+
+    
+
+    
    """     
 
 pass
