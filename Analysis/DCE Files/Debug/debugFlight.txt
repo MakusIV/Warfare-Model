@@ -1,0 +1,139 @@
+
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 1  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 2  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 1500  StartT: 1  EtaWPT: 1   // Player  Type: TakeOffParking      
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 3  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 4800  StartT: 1  EtaWPT: 4800   // Good  Type: TakeOffParking  SOL/VOL decale_A 4800    
+
+
+Pack: 2 Nb   2  FA-18C_hornet  Pack 2 - VMFA-312 - Intercept 1  CVN-74 John C. Stennis  CVN-74 John C. Stennis Interception  ETA -1  StartT: 0  EtaWPT: 0   // High  Type: Turning Point   VOL FLAG decale _B   
+
+
+Pack: 2 Nb   2  FA-18C_hornet  Pack 2 - VMFA-312 - Intercept 2  CVN-74 John C. Stennis  CVN-74 John C. Stennis Interception  ETA -1  StartT: 0  EtaWPT: 0   // High  Type: Turning Point   VOL FLAG decale _B   
+
+
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 1  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 0  StartT: 1  EtaWPT: 0   // Good  Type: Turning Point      
+
+
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 2  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 720  StartT: 5  EtaWPT: 740   // High  Type: TakeOffParking  SOL/VOL decale_A 720    
+
+
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 3  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 4340  StartT: 1  EtaWPT: 4340   // High  Type: TakeOffParking  SOL/VOL decale_A 4340 SOL/VOL decale_A   
+
+
+Pack: 4 Nb   2  FA-18C_hornet  Pack 4 - VMFA-312 - Strike 1  CVN-74 John C. Stennis  EWR 3 503  ETA 1440  StartT: 5  EtaWPT: 1450   // High  Type: TakeOffParking  SOL/VOL decale_A 1440    
+
+
+Pack: 4 Nb   2  FA-18C_hornet  Pack 4 - VFA-106 - SEAD 1  CVN-71 Theodore Roosevelt  EWR 3 503  ETA 1704  StartT: 1  EtaWPT: 1704   // High  Type: TakeOffParking  SOL/VOL decale_A 1704 SOL/VOL decale_A   
+
+
+Pack: 4 Nb   4  FA-18C_hornet  Pack 4 - VFA-106 - Escort 1  CVN-71 Theodore Roosevelt  EWR 3 503  ETA 1620  StartT: 1920  EtaWPT: 1692   // Excellent  Type: Turning Point   ATTENTION SECONDES a_activate_group 100034   
+
+
+Pack: 5 Nb   2  FA-18C_hornet  Pack 5 - VFA-106 - Strike 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA -241  StartT: 1  EtaWPT: -241   // High  Type: Turning Point      
+
+
+Pack: 5 Nb   2  FA-18C_hornet  Pack 5 - VFA-106 - SEAD 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA -265  StartT: 1  EtaWPT: -265   // High  Type: Turning Point      
+
+
+Pack: 5 Nb   2  F-14A-135-GR  Pack 5 - VF-101 - Escort 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA 0  StartT: 1  EtaWPT: 0   // Excellent  Type: Turning Point      
+
+
+Pack: 6 Nb   4  FA-18C_hornet  Pack 6 - VMFA-312 - Strike 1  CVN-74 John C. Stennis  SA-2 Guideline Site S1  ETA 1759  StartT: 1  EtaWPT: 1759   // High  Type: TakeOffParking  SOL/VOL decale_A 1759 SOL/VOL decale_A   
+
+
+Pack: 6 Nb   2  FA-18C_hornet  Pack 6 - VMFA-312 - SEAD 1  CVN-74 John C. Stennis  SA-2 Guideline Site S1  ETA 1735  StartT: 1  EtaWPT: 1735   // High  Type: TakeOffParking  SOL/VOL decale_A 1735 SOL/VOL decale_A   
+
+
+Pack: 6 Nb   2  F-14A-135-GR  Pack 6 - VF-101 - Escort 1  CVN-71 Theodore Roosevelt  SA-2 Guideline Site S1  ETA 2026  StartT: 1  EtaWPT: 2026   // High  Type: TakeOffParking  SOL/VOL decale_A 2026 SOL/VOL decale_A   
+
+
+Pack: 7 Nb   1  E-2C  Pack 7 - VAW-125 - AWACS 1  CVN-71 Theodore Roosevelt  Battle Group AEW  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+Pack: 7 Nb   1  E-2C  Pack 7 - VAW-125 - AWACS 2  CVN-71 Theodore Roosevelt  Battle Group AEW  ETA 720  StartT: 1020  EtaWPT: 859   // Good  Type: Turning Point   ATTENTION SECONDES a_activate_group 100058   
+
+
+Pack: 8 Nb   1  S-3B Tanker  Pack 8 - 174 ARW - Refueling 1  CVN-71 Theodore Roosevelt  Mission Support Tanker  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+Pack: 8 Nb   1  S-3B Tanker  Pack 8 - 174 ARW - Refueling 2  CVN-71 Theodore Roosevelt  Mission Support Tanker  ETA 1737  StartT: 2037  EtaWPT: 1737   // Good  Type: Turning Point   ATTENTION SECONDES a_activate_group 100062   
+
+
+Pack: 9 Nb   1  S-3B Tanker  Pack 9 - 175 ARW - Refueling 1  CVN-71 Theodore Roosevelt  Recovery Tanker  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+Pack: 9 Nb   1  S-3B Tanker  Pack 9 - 175 ARW - Refueling 2  CVN-71 Theodore Roosevelt  Recovery Tanker  ETA 8790  StartT: 1  EtaWPT: 8790   // High  Type: TakeOffParking  SOL/VOL decale_A 8790 SOL/VOL decale_A   
+
+
+Pack: 1 Nb   2  MiG-25PD  Pack 1 - 174.IAP-PVO - Intercept 1  Mozdok  Mozdok Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 1 Nb   2  MiG-25PD  Pack 1 - 174.IAP-PVO - Intercept 2  Mozdok  Mozdok Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 2 Nb   2  MiG-23MLD  Pack 2 - 3.IAP - Intercept 1  Kutaisi  Kutaisi Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 2 Nb   2  MiG-23MLD  Pack 2 - 3.IAP - Intercept 2  Kutaisi  Kutaisi Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 3 Nb   2  MiG-21Bis  Pack 3 - 28.IAP - Intercept 1  Gudauta  Gudauta Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 3 Nb   2  MiG-21Bis  Pack 3 - 28.IAP - Intercept 2  Gudauta  Gudauta Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+Pack: 4 Nb   3  MiG-21Bis  Pack 4 - 19.IAP - CAP 1  Batumi  CAP Red Georgia Center  ETA -600  StartT: 1  EtaWPT: -600   // Good  Type: Turning Point      
+
+
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 1  Tbilissi-Lochini  TF-71  ETA 1846  StartT: 1  EtaWPT: 1846   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 1846    
+
+
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 2  Tbilissi-Lochini  TF-71  ETA 1847  StartT: 1  EtaWPT: 1847   // High  Type: TakeOffParking  SOL/VOL decale_A 1847    
+
+
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 3  Tbilissi-Lochini  TF-71  ETA 1860  StartT: 1  EtaWPT: 1860   // High  Type: TakeOffParking  SOL/VOL decale_A 1860    
+
+
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 4  Tbilissi-Lochini  TF-71  ETA 1862  StartT: 1  EtaWPT: 1862   // High  Type: TakeOffParking  SOL/VOL decale_A 1862    
+
+
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 5  Tbilissi-Lochini  TF-71  ETA 1863  StartT: 1  EtaWPT: 1863   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 1863    
+
+
+Pack: 5 Nb   4  MiG-21Bis  Pack 5 - 28.IAP - Escort 1  Gudauta  TF-71  ETA 3314  StartT: 1  EtaWPT: 3314   // Good  Type: TakeOffParking  SOL/VOL decale_A 3314    
+
+
+Pack: 5 Nb   3  MiG-21Bis  Pack 5 - 28.IAP - Escort 2  Gudauta  TF-71  ETA 3406  StartT: 1  EtaWPT: 3406   // Good  Type: TakeOffParking  SOL/VOL decale_A 3406    
+
+
+Pack: 6 Nb   4  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 1  Kutaisi  TF-71  ETA 3502  StartT: 1  EtaWPT: 3502   // Good  Type: TakeOffParking  SOL/VOL decale_A 3502    
+
+
+Pack: 6 Nb   4  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 2  Kutaisi  TF-71  ETA 3505  StartT: 1  EtaWPT: 3505   // High  Type: TakeOffParking  SOL/VOL decale_A 3505    
+
+
+Pack: 6 Nb   2  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 3  Kutaisi  TF-71  ETA 3514  StartT: 1  EtaWPT: 3514   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 3514    
+
+
+Pack: 6 Nb   4  MiG-21Bis  Pack 6 - 19.IAP - Escort 1  Batumi  TF-71  ETA 3029  StartT: 1  EtaWPT: 3029   // Good  Type: TakeOffParking  SOL/VOL decale_A 3029    
+
+
+Pack: 7 Nb   4  Su-24M  Pack 7 - 559.BAP - Anti-ship Strike 1  Senaki-Kolkhi  TF-71  ETA 3465  StartT: 1  EtaWPT: 3465   // High  Type: TakeOffParking  SOL/VOL decale_A 3465    
+
+
+Pack: 7 Nb   4  Su-24M  Pack 7 - 559.BAP - Anti-ship Strike 2  Senaki-Kolkhi  TF-71  ETA 3469  StartT: 1  EtaWPT: 3469   // High  Type: TakeOffParking  SOL/VOL decale_A 3469    
+
+
+Pack: 8 Nb   1  Su-24MR  Pack 8 - 11.RAP - Reconnaissance 1  Maykop-Khanskaya  Recon TF South  ETA -340  StartT: 1  EtaWPT: -340   // High  Type: Turning Point      
+
+
+Pack: 9 Nb   1  Su-24MR  Pack 9 - 11.RAP - Reconnaissance 1  Maykop-Khanskaya  Recon TF Nord  ETA 2915  StartT: 1  EtaWPT: 2915   // Good  Type: TakeOffParking  SOL/VOL decale_A 2915    
+
