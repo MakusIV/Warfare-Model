@@ -1,0 +1,567 @@
+
+
+AtoFP FirstMsg Pack 1 - VF-101 - CAP 1
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 1  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 1 - VF-101 - CAP 2
+AtoFP passe 0A-a SinglePlayer ..NbPlanetDeck: 2
+AtoFP passe PlayerClient AddTimingDeckCata 1500
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 2  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 1500  StartT: 1  EtaWPT: 1   // Player  Type: TakeOffParking      
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+
+AtoFP FirstMsg Pack 1 - VF-101 - CAP 3
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 4800
+AtoFP passe CC SinglePlayer
+AtoFP passe DD camp.player.pack_n
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 1 Nb   2  F-14A-135-GR  Pack 1 - VF-101 - CAP 3  CVN-71 Theodore Roosevelt  Battle Group CAP  ETA 4800  StartT: 1  EtaWPT: 4800   // Good  Type: TakeOffParking  SOL/VOL decale_A 4800    
+
+
+
+AtoFP FirstMsg Pack 2 - VMFA-312 - Intercept 1
+AtoFP spawnOair AIR from:  IA intercept 3256
+AtoFP spawnOair AIR from:  IA intercept 3256
+AtoFP passe 1B modify_activate_group_time 503
+AtoFP passe activate 03
+Pack: 2 Nb   2  FA-18C_hornet  Pack 2 - VMFA-312 - Intercept 1  CVN-74 John C. Stennis  CVN-74 John C. Stennis Interception  ETA -1  StartT: 0  EtaWPT: 0   // High  Type: Turning Point   VOL FLAG decale _B   
+
+
+
+AtoFP FirstMsg Pack 2 - VMFA-312 - Intercept 2
+AtoFP spawnOair AIR from:  IA intercept 3256
+AtoFP spawnOair AIR from:  IA intercept 3256
+AtoFP passe 1B modify_activate_group_time 503
+AtoFP passe activate 03
+Pack: 2 Nb   2  FA-18C_hornet  Pack 2 - VMFA-312 - Intercept 2  CVN-74 John C. Stennis  CVN-74 John C. Stennis Interception  ETA -1  StartT: 0  EtaWPT: 0   // High  Type: Turning Point   VOL FLAG decale _B   
+
+
+
+AtoFP FirstMsg Pack 3 - VF-143 - CAP 1
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 1  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 0  StartT: 1  EtaWPT: 0   // Good  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 3 - VF-143 - CAP 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 740.65174111184
+AtoFP passe CC SinglePlayer
+AtoFP passe -- == SixPack == -- 
+AtoFP passe BBB2 AddTimingDeckCata 720 NbPlanetDeck: 4
+AtoFP passe FFa ETA mission_ini.startup_time_player + 200 & LimitedParkNb NbPlanetDeck: 4
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 2  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 720  StartT: 5  EtaWPT: 740   // High  Type: TakeOffParking  SOL/VOL decale_A 720    
+
+
+
+AtoFP FirstMsg Pack 3 - VF-143 - CAP 3
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 4340.6517411118
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 3 Nb   2  F-14A-135-GR  Pack 3 - VF-143 - CAP 3  CVN-74 John C. Stennis  Battle Group CAP 2  ETA 4340  StartT: 1  EtaWPT: 4340   // High  Type: TakeOffParking  SOL/VOL decale_A 4340 SOL/VOL decale_A   
+
+
+
+AtoFP FirstMsg Pack 4 - VMFA-312 - Strike 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 1450.7007521974
+AtoFP passe CC SinglePlayer
+AtoFP passe -- == SixPack == -- 
+AtoFP passe BBB2 AddTimingDeckCata 1440 NbPlanetDeck: 6
+AtoFP passe FFa ETA mission_ini.startup_time_player + 200 & LimitedParkNb NbPlanetDeck: 6
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+Pack: 4 Nb   2  FA-18C_hornet  Pack 4 - VMFA-312 - Strike 1  CVN-74 John C. Stennis  EWR 3 503  ETA 1440  StartT: 5  EtaWPT: 1450   // High  Type: TakeOffParking  SOL/VOL decale_A 1440    
+
+
+
+AtoFP FirstMsg Pack 4 - VFA-106 - SEAD 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 1704.3784143151
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 4 Nb   2  FA-18C_hornet  Pack 4 - VFA-106 - SEAD 1  CVN-71 Theodore Roosevelt  EWR 3 503  ETA 1704  StartT: 1  EtaWPT: 1704   // High  Type: TakeOffParking  SOL/VOL decale_A 1704 SOL/VOL decale_A   
+
+
+
+AtoFP FirstMsg Pack 4 - VFA-106 - Escort 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 1692.8461799911
+AtoFP passe CC SinglePlayer
+AtoFP passe -- == SixPack == -- 
+AtoFP passe BBB2 AddTimingDeckCata 1620 NbPlanetDeck: 10
+AtoFP passe FFa ETA mission_ini.startup_time_player + 200 & LimitedParkNb NbPlanetDeck: 10
+AtoFP passe FFb  NbPlanetDeck >= LimitedParkNb
+AtoFP spawnOair AIR from:  NbPlanetDeck >= db_airbases[flight[f].base].LimitedParkNb 3079
+AtoFP spawnOair AIR from:  NbPlanetDeck >= db_airbases[flight[f].base].LimitedParkNb 3079
+AtoFP SpawnOn passe activate 01
+AtoFP passe 1B modify_activate_group_time 503
+AtoFP passe 1Cc modify_activate_group_time find groupId 100034 trig_n: 23
+Pack: 4 Nb   4  FA-18C_hornet  Pack 4 - VFA-106 - Escort 1  CVN-71 Theodore Roosevelt  EWR 3 503  ETA 1620  StartT: 1920  EtaWPT: 1692   // Excellent  Type: Turning Point   ATTENTION SECONDES a_activate_group 100034   
+
+
+AtoFP delayed LANDING 
+
+AtoFP FirstMsg Pack 5 - VFA-106 - Strike 1
+Pack: 5 Nb   2  FA-18C_hornet  Pack 5 - VFA-106 - Strike 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA -241  StartT: 1  EtaWPT: -241   // High  Type: Turning Point      
+
+
+AtoFP delayed LANDING 
+
+AtoFP FirstMsg Pack 5 - VFA-106 - SEAD 1
+Pack: 5 Nb   2  FA-18C_hornet  Pack 5 - VFA-106 - SEAD 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA -265  StartT: 1  EtaWPT: -265   // High  Type: Turning Point      
+
+
+AtoFP delayed LANDING 
+
+AtoFP FirstMsg Pack 5 - VF-101 - Escort 1
+Pack: 5 Nb   2  F-14A-135-GR  Pack 5 - VF-101 - Escort 1  CVN-71 Theodore Roosevelt  EWR 1 501  ETA 0  StartT: 1  EtaWPT: 0   // Excellent  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 6 - VMFA-312 - Strike 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 1759.4972795789
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 6 Nb   4  FA-18C_hornet  Pack 6 - VMFA-312 - Strike 1  CVN-74 John C. Stennis  SA-2 Guideline Site S1  ETA 1759  StartT: 1  EtaWPT: 1759   // High  Type: TakeOffParking  SOL/VOL decale_A 1759 SOL/VOL decale_A   
+
+
+
+AtoFP FirstMsg Pack 6 - VMFA-312 - SEAD 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 1735.7111591325
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 6 Nb   2  FA-18C_hornet  Pack 6 - VMFA-312 - SEAD 1  CVN-74 John C. Stennis  SA-2 Guideline Site S1  ETA 1735  StartT: 1  EtaWPT: 1735   // High  Type: TakeOffParking  SOL/VOL decale_A 1735 SOL/VOL decale_A   
+
+
+
+AtoFP FirstMsg Pack 6 - VF-101 - Escort 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 2026.186507986
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 6 Nb   2  F-14A-135-GR  Pack 6 - VF-101 - Escort 1  CVN-71 Theodore Roosevelt  SA-2 Guideline Site S1  ETA 2026  StartT: 1  EtaWPT: 2026   // High  Type: TakeOffParking  SOL/VOL decale_A 2026 SOL/VOL decale_A   
+
+
+AtoFP delayed LANDING 
+
+AtoFP FirstMsg Pack 7 - VAW-125 - AWACS 1
+Pack: 7 Nb   1  E-2C  Pack 7 - VAW-125 - AWACS 1  CVN-71 Theodore Roosevelt  Battle Group AEW  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 7 - VAW-125 - AWACS 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 859.11820157222
+AtoFP passe CC SinglePlayer
+AtoFP passe -- == SixPack == -- 
+AtoFP passe BBB2 AddTimingDeckCata 720 NbPlanetDeck: 11
+AtoFP passe FFa ETA mission_ini.startup_time_player + 200 & LimitedParkNb NbPlanetDeck: 11
+AtoFP passe FFb  NbPlanetDeck >= LimitedParkNb
+AtoFP spawnOair AIR from:  NbPlanetDeck >= db_airbases[flight[f].base].LimitedParkNb 3079
+AtoFP spawnOair AIR from:  NbPlanetDeck >= db_airbases[flight[f].base].LimitedParkNb 3079
+AtoFP SpawnOn passe activate 01
+AtoFP passe 1B modify_activate_group_time 503
+AtoFP passe 1Cc modify_activate_group_time find groupId 100058 trig_n: 30
+Pack: 7 Nb   1  E-2C  Pack 7 - VAW-125 - AWACS 2  CVN-71 Theodore Roosevelt  Battle Group AEW  ETA 720  StartT: 1020  EtaWPT: 859   // Good  Type: Turning Point   ATTENTION SECONDES a_activate_group 100058   
+
+
+
+AtoFP FirstMsg Pack 8 - 174 ARW - Refueling 1
+Pack: 8 Nb   1  S-3B Tanker  Pack 8 - 174 ARW - Refueling 1  CVN-71 Theodore Roosevelt  Mission Support Tanker  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 8 - 174 ARW - Refueling 2
+AtoFP passe AA [ETA] > 0 true
+AtoFP passe BB unitname+FARP 1737.0090381045
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe LLLa LimitedParkTiming OR BaseAirStart 
+AtoFP spawnOair AIR from:  LimitedParkTiming or BaseAirStart 3107
+AtoFP spawnOair AIR from:  LimitedParkTiming or BaseAirStart 3107
+AtoFP SpawnOn passe activate 01
+AtoFP passe 1B modify_activate_group_time 503
+AtoFP passe 1Cc modify_activate_group_time find groupId 100062 trig_n: 31
+Pack: 8 Nb   1  S-3B Tanker  Pack 8 - 174 ARW - Refueling 2  CVN-71 Theodore Roosevelt  Mission Support Tanker  ETA 1737  StartT: 2037  EtaWPT: 1737   // Good  Type: Turning Point   ATTENTION SECONDES a_activate_group 100062   
+
+
+
+AtoFP FirstMsg Pack 9 - 175 ARW - Refueling 1
+Pack: 9 Nb   1  S-3B Tanker  Pack 9 - 175 ARW - Refueling 1  CVN-71 Theodore Roosevelt  Recovery Tanker  ETA 0  StartT: 1  EtaWPT: 0   // High  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 9 - 175 ARW - Refueling 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe BB unitname+FARP 8790.3507148799
+AtoFP passe CC SinglePlayer
+AtoFP passe FFd  not FlagInsertSixpack 
+AtoFP passe 1B activate_group_time_after 3123
+AtoFP passe 1C Start_set_ai_task 3124
+AtoFP passe GGa  ~= Turning Point and not FlagInsertSixpack
+Pack: 9 Nb   1  S-3B Tanker  Pack 9 - 175 ARW - Refueling 2  CVN-71 Theodore Roosevelt  Recovery Tanker  ETA 8790  StartT: 1  EtaWPT: 8790   // High  Type: TakeOffParking  SOL/VOL decale_A 8790 SOL/VOL decale_A   
+
+
+
+AtoFP FirstMsg Pack 1 - 174.IAP-PVO - Intercept 1
+Pack: 1 Nb   2  MiG-25PD  Pack 1 - 174.IAP-PVO - Intercept 1  Mozdok  Mozdok Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 1 - 174.IAP-PVO - Intercept 2
+Pack: 1 Nb   2  MiG-25PD  Pack 1 - 174.IAP-PVO - Intercept 2  Mozdok  Mozdok Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 2 - 3.IAP - Intercept 1
+Pack: 2 Nb   2  MiG-23MLD  Pack 2 - 3.IAP - Intercept 1  Kutaisi  Kutaisi Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 2 - 3.IAP - Intercept 2
+Pack: 2 Nb   2  MiG-23MLD  Pack 2 - 3.IAP - Intercept 2  Kutaisi  Kutaisi Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 3 - 28.IAP - Intercept 1
+Pack: 3 Nb   2  MiG-21Bis  Pack 3 - 28.IAP - Intercept 1  Gudauta  Gudauta Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // High  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 3 - 28.IAP - Intercept 2
+Pack: 3 Nb   2  MiG-21Bis  Pack 3 - 28.IAP - Intercept 2  Gudauta  Gudauta Interception 1  ETA -1  StartT: 1  EtaWPT: 0   // Good  Type: TakeOffParking   |VOL decale_B    
+
+
+
+AtoFP FirstMsg Pack 4 - 19.IAP - CAP 1
+Pack: 4 Nb   3  MiG-21Bis  Pack 4 - 19.IAP - CAP 1  Batumi  CAP Red Georgia Center  ETA -600  StartT: 1  EtaWPT: -600   // Good  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 5 - 79.TBAP - Anti-ship Strike 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 1  Tbilissi-Lochini  TF-71  ETA 1846  StartT: 1  EtaWPT: 1846   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 1846    
+
+
+
+AtoFP FirstMsg Pack 5 - 79.TBAP - Anti-ship Strike 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 2  Tbilissi-Lochini  TF-71  ETA 1847  StartT: 1  EtaWPT: 1847   // High  Type: TakeOffParking  SOL/VOL decale_A 1847    
+
+
+
+AtoFP FirstMsg Pack 5 - 79.TBAP - Anti-ship Strike 3
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 3  Tbilissi-Lochini  TF-71  ETA 1860  StartT: 1  EtaWPT: 1860   // High  Type: TakeOffParking  SOL/VOL decale_A 1860    
+
+
+
+AtoFP FirstMsg Pack 5 - 79.TBAP - Anti-ship Strike 4
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 4  Tbilissi-Lochini  TF-71  ETA 1862  StartT: 1  EtaWPT: 1862   // High  Type: TakeOffParking  SOL/VOL decale_A 1862    
+
+
+
+AtoFP FirstMsg Pack 5 - 79.TBAP - Anti-ship Strike 5
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   1  Tu-142  Pack 5 - 79.TBAP - Anti-ship Strike 5  Tbilissi-Lochini  TF-71  ETA 1863  StartT: 1  EtaWPT: 1863   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 1863    
+
+
+
+AtoFP FirstMsg Pack 5 - 28.IAP - Escort 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   4  MiG-21Bis  Pack 5 - 28.IAP - Escort 1  Gudauta  TF-71  ETA 3314  StartT: 1  EtaWPT: 3314   // Good  Type: TakeOffParking  SOL/VOL decale_A 3314    
+
+
+
+AtoFP FirstMsg Pack 5 - 28.IAP - Escort 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 5 Nb   3  MiG-21Bis  Pack 5 - 28.IAP - Escort 2  Gudauta  TF-71  ETA 3406  StartT: 1  EtaWPT: 3406   // Good  Type: TakeOffParking  SOL/VOL decale_A 3406    
+
+
+
+AtoFP FirstMsg Pack 6 - 959.BAP - Anti-ship Strike 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 6 Nb   4  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 1  Kutaisi  TF-71  ETA 3502  StartT: 1  EtaWPT: 3502   // Good  Type: TakeOffParking  SOL/VOL decale_A 3502    
+
+
+
+AtoFP FirstMsg Pack 6 - 959.BAP - Anti-ship Strike 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 6 Nb   4  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 2  Kutaisi  TF-71  ETA 3505  StartT: 1  EtaWPT: 3505   // High  Type: TakeOffParking  SOL/VOL decale_A 3505    
+
+
+
+AtoFP FirstMsg Pack 6 - 959.BAP - Anti-ship Strike 3
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 6 Nb   2  Su-24M  Pack 6 - 959.BAP - Anti-ship Strike 3  Kutaisi  TF-71  ETA 3514  StartT: 1  EtaWPT: 3514   // Excellent  Type: TakeOffParking  SOL/VOL decale_A 3514    
+
+
+
+AtoFP FirstMsg Pack 6 - 19.IAP - Escort 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 6 Nb   4  MiG-21Bis  Pack 6 - 19.IAP - Escort 1  Batumi  TF-71  ETA 3029  StartT: 1  EtaWPT: 3029   // Good  Type: TakeOffParking  SOL/VOL decale_A 3029    
+
+
+
+AtoFP FirstMsg Pack 7 - 559.BAP - Anti-ship Strike 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 7 Nb   4  Su-24M  Pack 7 - 559.BAP - Anti-ship Strike 1  Senaki-Kolkhi  TF-71  ETA 3465  StartT: 1  EtaWPT: 3465   // High  Type: TakeOffParking  SOL/VOL decale_A 3465    
+
+
+
+AtoFP FirstMsg Pack 7 - 559.BAP - Anti-ship Strike 2
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 7 Nb   4  Su-24M  Pack 7 - 559.BAP - Anti-ship Strike 2  Senaki-Kolkhi  TF-71  ETA 3469  StartT: 1  EtaWPT: 3469   // High  Type: TakeOffParking  SOL/VOL decale_A 3469    
+
+
+
+AtoFP FirstMsg Pack 8 - 11.RAP - Reconnaissance 1
+Pack: 8 Nb   1  Su-24MR  Pack 8 - 11.RAP - Reconnaissance 1  Maykop-Khanskaya  Recon TF South  ETA -340  StartT: 1  EtaWPT: -340   // High  Type: Turning Point      
+
+
+
+AtoFP FirstMsg Pack 9 - 11.RAP - Reconnaissance 1
+AtoFP passe AA [ETA] > 0 false
+AtoFP passe II SUR PISTE DUR
+AtoFP passe 1C Start_set_ai_task 3192
+Pack: 9 Nb   1  Su-24MR  Pack 9 - 11.RAP - Reconnaissance 1  Maykop-Khanskaya  Recon TF Nord  ETA 2915  StartT: 1  EtaWPT: 2915   // Good  Type: TakeOffParking  SOL/VOL decale_A 2915    
+
+logExp  
+ _affiche(titre) SixPack
+ _affiche(a c)           1 number
+ _affiche(d)                2
+ _affiche(a c)           1 time
+ _affiche(d)                1500
+ _affiche(a c)           1 LimitedParkNb
+ _affiche(d)                9
+ _affiche(a c)           1 client
+ _affiche(d)                true
+ _affiche(a c)           1 groupName
+ _affiche(d)                Pack 1 - VF-101 - CAP 2
+
+n: 1
+AtoFP passe 1B modify_activate_group_time 3844
+AtoFp SixPack Find Pack 1 - VF-101 - CAP 2logExp  
+ _affiche(titre) SixPack
+ _affiche(a c)           1 number
+ _affiche(d)                2
+ _affiche(a c)           1 type
+ _affiche(d)                F-14A-135-GR
+ _affiche(a c)           1 time
+ _affiche(d)                720
+ _affiche(a c)           1 LimitedParkNb
+ _affiche(d)                10
+ _affiche(a c)           1 groupName
+ _affiche(d)                Pack 3 - VF-143 - CAP 2
+ _affiche(a c)           2 number
+ _affiche(d)                2
+ _affiche(a c)           2 type
+ _affiche(d)                FA-18C_hornet
+ _affiche(a c)           2 time
+ _affiche(d)                1440
+ _affiche(a c)           2 LimitedParkNb
+ _affiche(d)                10
+ _affiche(a c)           2 groupName
+ _affiche(d)                Pack 4 - VMFA-312 - Strike 1
+
+n: 1
+AtoFP passe 1B modify_activate_group_time 3844
+AtoFP passe 1Cc modify_activate_group_time find groupId 100020 trig_n: 15
+AtoFp SixPack Find Pack 3 - VF-143 - CAP 2logExp  
+ _affiche(titre) testDeckPlace
+ _affiche(a c)           CVN-71 Theodore Roosevelt 1
+ _affiche(e f)                          number 2
+ _affiche(e f)                          groupName Pack 1 - VF-101 - CAP 3
+ _affiche(e f)                          time 4800
+ _affiche(e f)                          LimitedParkNb 9
+ _affiche(a c)           CVN-71 Theodore Roosevelt 2
+ _affiche(e f)                          number 2
+ _affiche(e f)                          groupName Pack 4 - VFA-106 - SEAD 1
+ _affiche(e f)                          time 1704.3784143151
+ _affiche(e f)                          LimitedParkNb 9
+ _affiche(a c)           CVN-71 Theodore Roosevelt 3
+ _affiche(e f)                          number 2
+ _affiche(e f)                          groupName Pack 6 - VF-101 - Escort 1
+ _affiche(e f)                          time 2026.186507986
+ _affiche(e f)                          LimitedParkNb 9
+ _affiche(a c)           CVN-71 Theodore Roosevelt 4
+ _affiche(e f)                          number 1
+ _affiche(e f)                          groupName Pack 9 - 175 ARW - Refueling 2
+ _affiche(e f)                          time 8790.3507148799
+ _affiche(e f)                          LimitedParkNb 9
+ _affiche(a c)           CVN-74 John C. Stennis 1
+ _affiche(e f)                          number 2
+ _affiche(e f)                          groupName Pack 3 - VF-143 - CAP 3
+ _affiche(e f)                          time 4340.6517411118
+ _affiche(e f)                          LimitedParkNb 10
+ _affiche(a c)           CVN-74 John C. Stennis 2
+ _affiche(e f)                          number 4
+ _affiche(e f)                          groupName Pack 6 - VMFA-312 - Strike 1
+ _affiche(e f)                          time 1759.4972795789
+ _affiche(e f)                          LimitedParkNb 10
+ _affiche(a c)           CVN-74 John C. Stennis 3
+ _affiche(e f)                          number 2
+ _affiche(e f)                          groupName Pack 6 - VMFA-312 - SEAD 1
+ _affiche(e f)                          time 1735.7111591325
+ _affiche(e f)                          LimitedParkNb 10
+logExp  
+ _affiche(titre) testDeckPlace deck
+ _affiche(a c)           1 number
+ _affiche(d)                2
+ _affiche(a c)           1 groupName
+ _affiche(d)                Pack 4 - VFA-106 - SEAD 1
+ _affiche(a c)           1 time
+ _affiche(d)                1704.3784143151
+ _affiche(a c)           1 LimitedParkNb
+ _affiche(d)                9
+ _affiche(a c)           2 number
+ _affiche(d)                2
+ _affiche(a c)           2 groupName
+ _affiche(d)                Pack 6 - VF-101 - Escort 1
+ _affiche(a c)           2 time
+ _affiche(d)                2026.186507986
+ _affiche(a c)           2 LimitedParkNb
+ _affiche(d)                9
+ _affiche(a c)           3 number
+ _affiche(d)                2
+ _affiche(a c)           3 groupName
+ _affiche(d)                Pack 1 - VF-101 - CAP 3
+ _affiche(a c)           3 time
+ _affiche(d)                4800
+ _affiche(a c)           3 LimitedParkNb
+ _affiche(d)                9
+ _affiche(a c)           4 number
+ _affiche(d)                1
+ _affiche(a c)           4 groupName
+ _affiche(d)                Pack 9 - 175 ARW - Refueling 2
+ _affiche(a c)           4 time
+ _affiche(d)                8790.3507148799
+ _affiche(a c)           4 LimitedParkNb
+ _affiche(d)                9
+
+AtoFp DeckWiner Pack 4 - VFA-106 - SEAD 1
+AtoFp DeckWiner 2 |LimitedDeckNb: -6
+AtoFp testSomme 2
+AtoFp DeckWiner Pack 6 - VF-101 - Escort 1
+AtoFp DeckWiner 2 |LimitedDeckNb: -6
+AtoFp testSomme 4
+AtoFp DeckWiner Pack 1 - VF-101 - CAP 3
+AtoFp DeckWiner 2 |LimitedDeckNb: -6
+AtoFp testSomme 6
+AtoFp DeckWiner Pack 9 - 175 ARW - Refueling 2
+AtoFp DeckWiner 1 |LimitedDeckNb: -6
+AtoFp testSomme 7logExp  
+ _affiche(titre) testDeckPlace deck
+ _affiche(a c)           1 number
+ _affiche(d)                2
+ _affiche(a c)           1 groupName
+ _affiche(d)                Pack 6 - VMFA-312 - SEAD 1
+ _affiche(a c)           1 time
+ _affiche(d)                1735.7111591325
+ _affiche(a c)           1 LimitedParkNb
+ _affiche(d)                10
+ _affiche(a c)           2 number
+ _affiche(d)                4
+ _affiche(a c)           2 groupName
+ _affiche(d)                Pack 6 - VMFA-312 - Strike 1
+ _affiche(a c)           2 time
+ _affiche(d)                1759.4972795789
+ _affiche(a c)           2 LimitedParkNb
+ _affiche(d)                10
+ _affiche(a c)           3 number
+ _affiche(d)                2
+ _affiche(a c)           3 groupName
+ _affiche(d)                Pack 3 - VF-143 - CAP 3
+ _affiche(a c)           3 time
+ _affiche(d)                4340.6517411118
+ _affiche(a c)           3 LimitedParkNb
+ _affiche(d)                10
+
+AtoFp DeckWiner Pack 6 - VMFA-312 - SEAD 1
+AtoFp DeckWiner 2 |LimitedDeckNb: -5
+AtoFp testSomme 2
+AtoFp DeckWiner Pack 6 - VMFA-312 - Strike 1
+AtoFp DeckWiner 4 |LimitedDeckNb: -5
+AtoFp testSomme 6
+AtoFp DeckWiner Pack 3 - VF-143 - CAP 3
+AtoFp DeckWiner 2 |LimitedDeckNb: -5
+AtoFp testSomme 8
+AtoFP startup_time_player: 00:25
+AtoFP NowTime: 04:51
+CVN-71 Theodore Roosevelt Takeoff time on the platform at ...
+ 05:14 - Pack 1 - 2 F-14A-135-GR - VF-101 - CAP 2 - Player
+
+ 05:18 - Pack 4 - 2 FA-18C_hornet - VFA-106 - SEAD 1.
+
+ 05:23 - Pack 6 - 2 F-14A-135-GR - VF-101 - Escort 1.
+
+ 06:09 - Pack 1 - 2 F-14A-135-GR - VF-101 - CAP 3.
+
+ 07:16 - Pack 9 - 1 S-3B Tanker - 175 ARW - Refueling 2.
+
+CVN-74 John C. Stennis Takeoff time on the platform at ...
+ 05:01 - Pack 3 - 2 F-14A-135-GR - VF-143 - CAP 2.
+
+ 05:13 - Pack 4 - 2 FA-18C_hornet - VMFA-312 - Strike 1.
+
+ 05:18 - Pack 6 - 2 FA-18C_hornet - VMFA-312 - SEAD 1.
+
+ 05:19 - Pack 6 - 4 FA-18C_hornet - VMFA-312 - Strike 1.
+
+ 06:02 - Pack 3 - 2 F-14A-135-GR - VF-143 - CAP 3.
