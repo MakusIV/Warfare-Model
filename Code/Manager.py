@@ -11,7 +11,7 @@ Sequence of processes for evaluating DCS data (missions and status), recording s
 
 
 from Dynamic_War_Manager.Source import Mil_Base
-import Context
+import Context 
 
 regions = { #blocks in region
 
@@ -145,7 +145,7 @@ evaluate strategic directive:
     percorrenza di un mezzo specifico
 
 
-    
+
 
     
    """     
