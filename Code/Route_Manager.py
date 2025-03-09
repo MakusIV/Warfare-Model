@@ -13,6 +13,13 @@ class Waypoint:
         self.y = y
         self.z = z # Altitude
         self.state = state  # Es: 'active', 'blocked', 'inactive'
+
+    def distance_to(self, other):
+        """Calcola la distanza 3D tra questo waypoint e un altro"""
+        dx = other.x - self.x
+        dy = other.y - self.y
+        dz = other.z - self.z
+        return (dx**2 + dy**2 + dz**2) ** 0.5, dx, dy, dz
         
     def __repr__(self):
         return f"Waypoint({self.name}, ({self.x}, {self.y}, {self.z}), {self.state})"
@@ -28,12 +35,9 @@ class Edge:
         self.distance = self._calculate_distance()
 
     def _calculate_distance(self):
-        dx = self.end.x - self.start.x
-        dy = self.end.y - self.start.y
-        dz = self.end.z - self.start.z
         
         # Calcolo distanza euclidea standard
-        base_distance = (dx**2 + dy**2 + dz**2) ** 0.5
+        base_distance, dx, dy, dz = self.start.distance_to(self.end)
         
         if self.path_type == 'onroad':
             max_slope = 10  # Pendenza massima consentita per le strade (10%)
@@ -42,8 +46,11 @@ class Edge:
             horizontal = (dx**2 + dy**2) ** 0.5
             if horizontal == 0:
                 return float('inf')  # Evita divisione per zero
-            
+                        
             actual_slope = (abs(dz) / horizontal) * 100  # Pendenza percentuale
+            
+            if self.slope > actual_slope:
+                actual_slope = self.slope
 
             # Se la pendenza supera il massimo consentito
             if actual_slope > max_slope:
