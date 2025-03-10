@@ -164,11 +164,11 @@ class Mil_Base(Block) :
         recon_Asset_Efficiency = self.getReconEfficiency()
         asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
         asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
-        enemy_bases = self.region.getEnemyBlocks(self.getEnemySide())
+        enemy_blocks = self.region.getEnemyBlocks(self.getEnemySide())
         report_base = self.getBlockInfo("friendly_request")          
         recon_reports = { "attack": (), "defence": () }
         
-        for enmy_block in enemy_bases:
+        for enmy_block in enemy_blocks:
 
             report_enemy = enmy_block.getBlockInfo("enemy_request",  asset_Number_Accuracy, asset_Efficiency_Accuracy)            
             criticality = evaluateCriticality(report_base, report_enemy)                                    

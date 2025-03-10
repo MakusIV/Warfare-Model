@@ -193,11 +193,11 @@ class TestNavigationSystem(unittest.TestCase):
             Edge(wpC, wpE, 30, 'onroad', 55)   # Collegamento cruciale
         ]
 
-        # route         timing          danger  min timing  min danger
+        # route         timing          danger  min 0.5danger+0.5timing  min timing  min danger  
         # A-B-C-D-E-F	13.2635628253	190
         # A-B-C-D-F	    8.2588625892	125
         # A-B-C-F	    12.6912280564	139
-        # A-B-D-F	    3.5167140057	75          *           *
+        # A-B-D-F	    3.5167140057	75              *                   *           *           
         # A-B-E-F	    6.7884615385	125
         # A-B-C-E-F	    9.1987933173	135
         # A-D-F	        4.8330672202	85
@@ -223,6 +223,7 @@ class TestNavigationSystem(unittest.TestCase):
         self.assertEqual(fast_path, expected_fast_path,
                        "Percorso più veloce non corretto")
 
+        # Test 2 bis: Percorso più 0.5 veloce + 0.5 safe (considerando distanze reali e velocità)
         path1 = self.nav_graph.find_min_danger_fastest_path(wpA, wpF, perc_danger=0.5, perc_time=0.5)
         expected_path1 = [wpA, wpB, wpD, wpF]
         self.assertEqual(path1, expected_path1, "Percorso misto non corretto")
