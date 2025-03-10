@@ -2,6 +2,7 @@
 Module Route_Manager
 
 Class and methds for managing the route of the vehicles, helicopters and aircraft in the simulation
+
 """
 
 from heapq import heappop, heappush
@@ -14,54 +15,55 @@ class Waypoint:
         self.z = z # Altitude
         self.state = state  # Es: 'active', 'blocked', 'inactive'
 
-    def distance_to(self, other):
+    def distance_to(self, other, type = '3D'):
         """Calcola la distanza 3D tra questo waypoint e un altro"""
         dx = other.x - self.x
         dy = other.y - self.y
         dz = other.z - self.z
-        return (dx**2 + dy**2 + dz**2) ** 0.5, dx, dy, dz
+        distance = (dx**2 + dy**2 + dz**2) ** 0.5
+        
+        if type == '2D':
+            distance = (dx**2 + dy**2) ** 0.5
+
+        return distance, dz
         
     def __repr__(self):
         return f"Waypoint({self.name}, ({self.x}, {self.y}, {self.z}), {self.state})"
 
 class Edge:
-    def __init__(self, start, end, danger_level, path_type, slope, max_speed):
+    def __init__(self, start, end, danger_level, path_type, max_speed):
         self.start = start
         self.end = end
         self.danger_level = danger_level
-        self.path_type = path_type # 'onroad', 'offroad', 'air'
-        self.slope = slope # percentuale
+        self.path_type = path_type # 'onroad', 'offroad', 'air', "water"
         self.max_speed = max_speed
         self.distance = self._calculate_distance()
 
     def _calculate_distance(self):
         
         # Calcolo distanza euclidea standard
-        base_distance, dx, dy, dz = self.start.distance_to(self.end)
+        distance, dz = self.start.distance_to(self.end, "3D")
         
-        if self.path_type == 'onroad':
-            max_slope = 10  # Pendenza massima consentita per le strade (10%)
-            
-            # Calcolo componente orizzontale e pendenza effettiva
-            horizontal = (dx**2 + dy**2) ** 0.5
-            if horizontal == 0:
-                return float('inf')  # Evita divisione per zero
-                        
-            actual_slope = (abs(dz) / horizontal) * 100  # Pendenza percentuale
-            
-            if self.slope > actual_slope:
-                actual_slope = self.slope
+        if self.path_type == 'onroad' or self.path_type == 'offroad' or self.path_type == 'water':
+            distance, dz = self.start.distance_to(self.end, "2D")
 
-            # Se la pendenza supera il massimo consentito
-            if actual_slope > max_slope:
-                # Calcola la nuova lunghezza orizzontale necessaria
-                required_horizontal = (abs(dz) * 100) / max_slope
+            if self.path_type == 'onroad':
+                max_slope = 10  # Pendenza massima consentita per le strade (10%)
+                                                
+                if distance == 0:
+                    return float('inf')  # Evita divisione per zero
+                            
+                actual_slope = (abs(dz) / distance) * 100  # Pendenza percentuale            
+
+                # Se la pendenza supera il massimo consentito
+                if actual_slope > max_slope:
+                    # Calcola la nuova lunghezza orizzontale necessaria
+                    required_distance = (abs(dz) * 100) / max_slope
+                    
+                    # Calcola la nuova distanza 3D complessiva
+                    distance = (required_distance**2 + dz**2) ** 0.5
                 
-                # Calcola la nuova distanza 3D complessiva
-                new_distance = (required_horizontal**2 + dz**2) ** 0.5
-                return new_distance
-        
-        return base_distance
+        return distance
     
     def __repr__(self):
         return f"Edge({self.start.name} -> {self.end.name}, Dist: {self.distance:.2f}m, Slope: {self.slope}%)"
