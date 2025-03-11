@@ -40,6 +40,27 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
     # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
     # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
     # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
+    """
+    Evaluate and determine the best tactical action based on input parameters.
+
+    This function uses fuzzy logic to assess the ground superiority, fight load ratio, 
+    dynamic increment, and combat load sustainability to determine the most suitable 
+    tactical action. The output is a string label and a numeric value representing the 
+    suggested action.
+
+    Parameters:
+    ground_superiority (float): Ratio of friendly ground force effectiveness to enemy ground force. 
+                                Values > 1 indicate an advantage.
+    fight_load_ratio (float):   Ratio of combat losses to enemy losses. Values < 1 indicate an advantage.
+    dynamic_increment (float):  Ratio of fight load ratio to its mean. Values >> 1 indicate a combat success increment.
+    combat_load_sustainability (float): Ratio of stored and produced assets to enemy's 
+                                        corresponding values. Values > 1 indicate an advantage.
+
+    Returns:
+    tuple: A string indicating the suggested action ('RETRAIT', 'DEFENCE', 'MAINTAIN', 'ATTACK') 
+           and a numeric value representing the action's strength.
+    """
+
     gs = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'gs')  # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
     flr = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'flr')  # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
     dyn_inc = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'dyn_inc')  # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
@@ -417,6 +438,29 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
 
 def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:   
 
+    """
+    Evaluate the criticality of two forces given the ground assets and the action performed.
+
+    Parameters
+    ----------
+    report_base : dict
+        The assets of the first force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
+    report_enemy : dict
+        The assets of the second force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
+
+    Returns
+    -------
+    float
+        The criticality of the first force. The result is a float number between 0 and 100.
+        - 0 means absolute enemy victory (minimal losses).
+        - 100 means absolute friendly victory (minimal losses).
+
+    Raises
+    ------
+    ValueError
+        If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
+
+    """
     attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
     defence_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defence"], report_base, report_enemy)
     maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)

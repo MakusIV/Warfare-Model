@@ -19,6 +19,189 @@ from Dynamic_War_Manager.Source import Mil_Base
 
 
 
+
+
+
+class ConflictGraph:
+    def __init__(self):
+        self.blocks = {}
+        self.path_cache = {}
+    
+    def add_block(self, block: Block):
+        self.blocks[block.id] = block
+    
+    def calculate_combat_power(self, start: Block) -> float:
+        visited = set()
+        total_power = 0.0
+        
+        def dfs(node: Block):
+            nonlocal total_power
+            if node.id in visited:
+                return
+            visited.add(node.id)
+            
+            if node.type == 'militare' and node.faction == start.faction:
+                total_power += node.combat_power
+                
+            for connection in node.connections:
+                dfs(connection[0])
+        
+        dfs(start)
+        return total_power
+
+class PrioritySystem:
+    STRATEGIC_MULTIPLIER = 2.0
+    
+    def __init__(self, graph: ConflictGraph):
+        self.graph = graph
+        self.dijkstra = DijkstraModule()  # Supposto già implementato
+    
+    def generate_reports(self, faction: str) -> List[Report]:
+        reports = []
+        friendly_blocks = [b for b in self.graph.blocks.values() if b.faction == faction]
+        enemy_blocks = [b for b in self.graph.blocks.values() if b.faction != faction]
+        
+        for friend in friendly_blocks:
+            for enemy in enemy_blocks:
+                if self._is_reachable(friend, enemy):
+                    friend_power = self.graph.calculate_combat_power(friend)
+                    enemy_power = self.graph.calculate_combat_power(enemy)
+                    
+                    if friend_power > enemy_power:
+                        action = 'attack'
+                        crit = friend_power - enemy_power
+                    else:
+                        action = 'defend'
+                        crit = enemy_power - friend_power
+                    
+                    reports.append(Report(friend, enemy, action, crit))
+        return reports
+    
+    def _is_reachable(self, source: Block, target: Block) -> bool:
+        # Utilizza il modulo Dijkstra per verificare la raggiungibilità
+        return self.dijkstra.shortest_path(source.id, target.id) is not None
+    
+    def prioritize_actions(self, reports: List[Report]) -> List[Report]:
+        for report in reports:
+            if report.action == 'defend' and report.source.is_strategic:
+                report.adjusted_criticality *= self.STRATEGIC_MULTIPLIER
+            elif report.action == 'attack' and report.target.is_strategic:
+                report.adjusted_criticality *= 1.5  # Bonus per attacchi a target strategici
+        
+        # Usa una max-heap per ordinare per criticità
+        heap = []
+        for report in reports:
+            heapq.heappush(heap, (-report.adjusted_criticality, report))
+        
+        return [heapq.heappop(heap)[1] for _ in range(len(heap))]
+
+# Esempio di utilizzo
+if __name__ == "__main__":
+    # Creazione grafo
+    graph = ConflictGraph()
+    
+    # Blocchi amici
+    friend_factory = Block(1, 'produzione', 'amici', is_strategic=True)
+    friend_base = Block(2, 'militare', 'amici', combat_power=100)
+    friend_storage = Block(3, 'stoccaggio', 'amici', is_strategic=True)
+    
+    # Blocchi nemici
+    enemy_base = Block(4, 'militare', 'nemici', combat_power=80)
+    enemy_radar = Block(5, 'infrastruttura', 'nemici', is_strategic=True)
+    
+    # Collegamenti
+    friend_factory.add_connection(friend_base, 'strada', 1.0)
+    friend_base.add_connection(enemy_base, 'aereo', 5.0)
+    friend_storage.add_connection(friend_base, 'strada', 2.0)
+    
+    # Aggiunta al grafo
+    for b in [friend_factory, friend_base, friend_storage, enemy_base, enemy_radar]:
+        graph.add_block(b)
+    
+    # Sistema di priorità
+    ps = PrioritySystem(graph)
+    reports = ps.generate_reports('amici')
+    prioritized = ps.prioritize_actions(reports)
+    
+    # Stampa risultati
+    print("Priorità delle azioni:")
+    for i, action in enumerate(prioritized, 1):
+        print(f"{i}. {action.action.upper()} - {action.source.type} -> {action.target.type}")
+        print(f"   Criticità: {action.adjusted_criticality:.1f}\n")
+
+
+"""
+Caratteristiche principali:
+
+    Struttura dati:
+
+    Block rappresenta ogni unità con attributi e connessioni
+
+    ConflictGraph gestisce la topologia della mappa
+
+    Report contiene le proposte di azione
+
+    Calcolo priorità:
+
+    Considera sia la criticità base che l'importanza strategica
+
+    Applica moltiplicatori per obiettivi strategici
+
+    Usa una max-heap per l'ordinamento efficiente
+
+    Logica avanzata:
+
+    Calcolo ricorsivo della potenza militare aggregata
+
+    Verifica raggiungibilità tramite modulo Dijkstra
+
+    Bonus differenziati per attacchi/defense strategiche
+
+    Estendibilità:
+
+    Facile aggiungere nuovi tipi di blocchi
+
+    Parametri configurabili (moltiplicatori strategici)
+
+    Logica di calcolo criticità separata
+
+Componenti da implementare:
+
+    Modulo Dijkstra:
+
+python
+Copy
+
+class DijkstraModule:
+    def shortest_path(self, start_id: int, end_id: int) -> List[int]:
+        # Implementazione algoritmo Dijkstra
+        # Restituisce il percorso ottimale o None
+        pass
+
+    Ottimizzazioni:
+
+    Caching dei percorsi calcolati
+
+    Precalcolo delle potenze militari
+
+    Aggiornamenti incrementali per mappe dinamiche
+
+Questo sistema fornisce una base solida per:
+
+    Gestire scenari complessi con molte unità
+
+    Adattarsi a diverse strategie militari
+
+    Integrare nuove regole di priorità
+
+    Bilanciare offensive e difensive in modo dinamico
+"""
+
+
+
+
+
+
 def getTacticalReport():
     """ request report to any Mil_Base"""
     """ scorre elenco Mil_Base:
