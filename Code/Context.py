@@ -19,7 +19,9 @@ GROUND_ASSET_CATEGORY = {
     "Motorized": "Motorized", 
     "Artillery_Fix": "Artillery_Fix", 
     "Artillery_Semovent": "Artillery_Semovent",
-    "SAM": "SAM", 
+    "SAM Big": "SAM Big", 
+    "SAM Med": "SAM Med",
+    "SAM Small": "SAM Small",
     "AAA": "AAA", 
     "EWR": "EWR", 
     "Command_&_Control": "Command_&_Control"
@@ -77,16 +79,15 @@ BLOCK_CATEGORY = {
 
 MIL_CATEGORY = {
 
-    "Airbase": "Airbase",
-    "Port": "Port",
-    "Heliport": "Heliport",
-    "Stronghold": "Stronghold", 
-    "Farp": "Farp",
-    "Regiment": "Regiment",
-    "Battallion": "Battallion",
-    "Company": "Company",
-    "Brigade": "Brigade",
-    "EWR": "EWR",    
+    "Ground Base": ("Stronghold",  "Farp", "Regiment", "Battallion", "Company", "Brigade", "Division"),
+
+    "Air Base": {"Airbase", "Heliport"},
+
+    "Naval Base": {"Port", "Shipyard"},    
+    
+    "EWR": ("EWR"),   
+
+    "C&C": ("C2", "C4") 
 }
 
 class STATE(Enum):

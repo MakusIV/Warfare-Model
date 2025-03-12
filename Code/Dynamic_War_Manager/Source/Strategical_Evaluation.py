@@ -16,11 +16,16 @@ from skfuzzy import control as ctrl
 import numpy as np
 
 from Dynamic_War_Manager.Source import Mil_Base
+from Context import MIL_CATEGORY
 
 
 
+""" 
+NO, DEVE VALUTARE LE AZIONI CONSIDERANDO TRE GRAFI: QUELLO DEL CONFLITTO COSTITUITO DA BASI_MIL AMICHE E NEMICHE, QUELLO LOGISTICO
+E QUELLO DELLA DIFESA DELLE INFRASTRUTTURE STRATEGICHE. 
 
 
+"""
 
 class ConflictGraph:
     def __init__(self):
@@ -211,12 +216,12 @@ def getTacticalReport():
     for region in regions:
         for block in region.blocks:
             
-            if isinstance(block, Mil_Base):
+            #tactical reports only from ground bases and air bases
+            if isinstance(block, Mil_Base) and ( block.mil_category in [ MIL_CATEGORY["Ground Base"], MIL_CATEGORY["Air Base"] ] ):
                 report = block.getTacticalReport()
                 tactical_reports[region.name][block.name] = report
 
-
-    pass
+    return tactical_reports
 
 def evaluateTacticalReport(report_list):
     """Evaluate priority of tactical reports and resource request. List ordered by priority."""

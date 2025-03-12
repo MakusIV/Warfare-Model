@@ -484,7 +484,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         with self.assertRaises(ValueError):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
 
-
+# test_evaluateCriticality
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,10 +1,11 @@
 import datetime
 
 from numpy import median
+from heapq import heappop, heappush
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere, random
 from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
-from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticality # cambiare in Mil_Zone_Evaluation
+from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticalityGroundEnemy, evaluateCriticalityAirDefence # cambiare in Mil_Zone_Evaluation
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
@@ -23,7 +24,7 @@ logger = Logger(module_name = __name__, class_name = 'Mil_Base')
 # ASSET
 class Mil_Base(Block) :    
 
-    def __init__(self, block: Block, name: str|None, side: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):   
+    def __init__(self, block: Block, mil_category: str, name: str|None, side: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):   
             
             super().__init__(name, description, side, category, functionality, value, acp, rcp, payload)
 
@@ -39,17 +40,42 @@ class Mil_Base(Block) :
                 self._name = "Mil_Base." + name
 
             self._id = Utility.setId(self._name)
+
+            self._mil_category = mil_category
+
+            # check input parameters            
+            check_results =  self.checkParam( mil_category )            
+            
+            if not check_results[1]:
+                raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
                        
 
     # methods
 
+    @property
+    def mil_category(self):
+        return self._mil_category
+    
+    @mil_category.setter
+    def mil_category(self, value):
+         
+        check_result = self.checkParam(name = value)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._mil_category = value
+        return True
     
 
-    def checkParam(name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acs: Payload, rcs: Payload, payload: Payload, volume: Volume, threat: Threat, crytical: bool, repair_time: int) -> bool: # type: ignore
+    def checkParam(mil_category: str) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
-        if not super().checkParam(name, description, side, category, function, value, position, acs, rcs, payload):
-            return False     
+        #if not super().checkParam(name, description, side, category, function, value, position, acs, rcs, payload):
+            #return False     # non serve dovrebbe essere già verificata nella costruzione di Block
+
+        if not isinstance(mil_category, str) and mil_category not in MIL_CATEGORY:
+            return (False, f"Bad argument: mil_category {0} must be a MIL_CATEGORY string: {1}".format(mil_category, str([cat for cat in MIL_CATEGORY])))
         
         return True
     
@@ -140,54 +166,50 @@ class Mil_Base(Block) :
 
     
     def getRecon(self) -> Dict:
-        """Return a List of recon report of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply:
-        e.g.:
-        [1]:
-            name_group: xxxx
-            type: Armor Brigade
-            comand&control: n, efficiency
-            tank: n, efficiency
-            armor: n, efficiency
-            motorized: n, efficiency
-            artillery: n, efficiency
-            sam: n, efficiency, class: low
-            aaa: n, efficiency
-            storage: n, efficiency
-            supply line: n, efficiency
-            combat_range: x 
-            distance: y # calcolata in base a roads (lì'offroads può essere considerato solo per brevissime distanze)
-            estimated_running_time: (hour, mission) #
-
-        
+       
         """
-        success_Mission_Recon_Ratio = evaluateRecoMissionRatio(self.side, self.region.name)
-        recon_Asset_Efficiency = self.getReconEfficiency()
-        asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
-        asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency)
-        enemy_blocks = self.region.getEnemyBlocks(self.getEnemySide())
-        report_base = self.getBlockInfo("friendly_request")          
-        recon_reports = { "attack": (), "defence": () }
-        
+        Create a recognition report for the enemy blocks in the region. The report is a dictionary with keys 'attack', 'defence', 'retrait', 'maintain' containing report from asset's recognition info.
+
+        Returns:
+            Dict: a dictionary with keys 'attack', 'defence', 'retrait', 'maintain' containing sorted recognition reports from enemy blocks in the region. The reports are sorted by criticality in descending order.
+        """
+    
+        success_Mission_Recon_Ratio = evaluateRecoMissionRatio(self.side, self.region.name) # success of reconnaissance mission
+        recon_Asset_Efficiency = self.getReconEfficiency() # efficiency of reconnaissance assets
+        asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset number
+        asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset efficiency
+        enemy_blocks = self.region.getEnemyBlocks(self.getEnemySide()) # get enemy blocks in the region
+        report_base = self.getBlockInfo("friendly_request") # get this base report          
+        recon_reports = { "id_base": self.id, "name_base": self.name, "attack": (), "defence": (), "retrait": (), "maintain": ()} # dictionary of reports
+        report_queue = []    # priority queue (heapq) for managing reports by criticality
+
         for enmy_block in enemy_blocks:
 
             report_enemy = enmy_block.getBlockInfo("enemy_request",  asset_Number_Accuracy, asset_Efficiency_Accuracy)            
-            criticality = evaluateCriticality(report_base, report_enemy)                                    
-            i = 0
-            previous_reports = recon_reports[criticality["action"]]
-
-            while i < len(previous_reports):# prima posizone index = 0
-                            
-                if criticality["value"] == previous_reports[i].criticality["value"]: 
-                    recon_reports[criticality["action"]].insert( i, report_enemy )# verifica se scala i successivi
-                    break
-                elif criticality["value"] < previous_reports[i].criticality["value"] and criticality["value"] <= previous_reports[i].criticality["value"]: 
-                    recon_reports[criticality["action"]].insert( i + 1, report_enemy )# verifica se scala i successivi
-                    break
-                i += 1
             
+            if self.mil_category in MIL_CATEGORY["Ground Base"]:
+
+                criticality = evaluateCriticalityGroundEnemy(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base                          
+                
+
+            elif self.mil_category in MIL_CATEGORY["Air Base"]:
+
+                criticality = evaluateCriticalityAirDefence(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base
+
+            else:
+                raise Exception( "Bad argument: mil_category {0} must be a MIL_CATEGORY[/'Ground Base/'] or MIL_CATEGORY[/'Air Base/'] string: {1}".format(self.mil_category, str( [cat for cat in [MIL_CATEGORY["Ground Base"], MIL_CATEGORY["Air Base"]]]) ))
+
+            heappush(report_queue, (-criticality, report_enemy)) # Use negative criticality for max-heap behavior
+
+        sorted_reports =  [heappop(report_queue)[1] for _ in range(len(report_queue))] # sort reports by criticality
+        
+        for report in sorted_reports: # create sorted reports dictionary (max criticality at end dictionary)
+            action = report["criticality"]["action"]
+            recon_reports[action].append(report)
+
         return recon_reports
                
-
+    
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
 
@@ -211,7 +233,9 @@ class Mil_Base(Block) :
                 GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"Number": 0, "Efficiency": 0}, 
                 GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"Number": 0, "Efficiency": 0}, 
                 GROUND_ASSET_CATEGORY["Command_&_Control"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["SAM"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["SAM Big"]: {"Number": 0, "Efficiency": 0}, 
+                GROUND_ASSET_CATEGORY["SAM Med"]: {"Number": 0, "Efficiency": 0},
+                GROUND_ASSET_CATEGORY["SAM Small"]: {"Number": 0, "Efficiency": 0},
                 GROUND_ASSET_CATEGORY["AAA"]: {"Number": 0, "Efficiency": 0},                    
                 GROUND_ASSET_CATEGORY["EWR"]: {"Number": 0, "Efficiency": 0}, 
                 AIR_ASSET_CATEGORY["Fighter"]: {"Number": 0, "Efficiency": 0}, 
