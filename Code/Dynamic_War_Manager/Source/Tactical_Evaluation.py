@@ -14,7 +14,7 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
 from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION
-
+from Context import MIL_CATEGORY
 
 #from __future__ import annotations
 #from typing import TYPE_CHECKING
@@ -383,8 +383,8 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
         - VH = ( 0.7 - 1 ]
         - H =  ( 0.55 - 0.7 ]
         - M =  ( 0.45 - 0.55 ]
-        - L =  (1 - H]
-        - VL = (1 - VH]
+        - L =  (0.45 - 0.3]
+        - VL = (0.3 - 0]
 
     Raises
     ------
@@ -436,7 +436,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     return combat_superiority
 
 
-def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:   
+def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> float:   
 
     """
     Evaluate the criticality of two forces given the ground assets and the action performed.
@@ -472,17 +472,25 @@ def evaluateCriticality(report_base: dict, report_enemy: dict) -> float:
         criticality["action"] = "attack"
         criticality[ "value" ] = int (attack_superiority * 100 )        
 
-    elif maintain_superiority > defence_superiority:
+    elif maintain_superiority > 0.45 and maintain_superiority > defence_superiority:
         criticality["action"] = "maintain"
         criticality[ "value" ] = int ( maintain_superiority * 100 )
         
-    else:
+    elif defence_superiority > 0.40:
         criticality["action"] = "defence"
+        criticality[ "value" ] = int ( defence_superiority * 100 )
+    
+    else:
+        criticality["action"] = "retrait"
         criticality[ "value" ] = int ( defence_superiority * 100 )
     
     return criticality
 
     
+    def evaluateCriticalityAirDefence(report_base: dict, report_enemy: dict) -> float: 
+
+        # evaluate enemy air defence for an possible air attack
+        pass
     
     
 
