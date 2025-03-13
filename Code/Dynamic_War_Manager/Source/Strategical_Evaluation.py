@@ -9,6 +9,8 @@
 #VARIABLE = Literal["A", "B, "C"]
 
 from Utility import get_membership_label
+from Block import Block
+from Region import Region
 from Manager import regions
 import Context
 import skfuzzy as fuzz
@@ -238,11 +240,33 @@ def evaluateDefencePriorityZone(infrastructure_list):
 def evaluateResourceRequest(report):
     pass
 
-def evaluateTargetPriority(target_list):
+def evaluateTargetPriority(target_list: list):
     """Evaluate priority of targets and resource request. List ordered by priority """
     pass
 
-def evaluateRecoMissionRatio(side: str, region_name: str|None ):
-    """ evaluate ratio of success of reconnaissance mission"""
-
+def evaluateTotalProduction(type:str, side:str): # type: goods, energy, human resource
+    # side.sum( block_prod.production() )
     pass
+
+def evaluateStrategicalPriority(block: Block): 
+    pass
+
+def evaluateTotalTransport(type:str, side:str): # type: goods, energy, human resource
+    # side.sum( block_trans.production() )
+    pass
+
+def evaluateLogisticLineTransport(type:str, trans_from_request, trans_to_request): # type: goods, energy, human resource
+    # side.sum( block_prod.production() )
+    pass
+
+def evaluateTotalStorage(type:str, side:str): # type: goods, energy, human resource
+    # side.sum( block_storage.production() )
+    pass
+
+def calcCombatPowerCentrum(side: str, region: Region):# type: goods, energy, human resource    
+    pass
+
+
+
+
+
