@@ -1,0 +1,9 @@
+numpy
+scipy
+scikit-fuzzy
+sympy
+lupa
+packaging
+networkx
+pandas
+matplotlib
