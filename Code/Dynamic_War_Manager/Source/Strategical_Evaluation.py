@@ -209,7 +209,7 @@ Questo sistema fornisce una base solida per:
 
 
 
-def getTacticalReport():
+def getTacticalReport() -> dict:
     """ request report to any Mil_Base"""
     """ scorre elenco Mil_Base:
             aggiunge alla lista di report il report corrente. La lista è ordinata per criticità"""
@@ -225,16 +225,30 @@ def getTacticalReport():
 
     return tactical_reports
 
-def evaluateTacticalReport(report_list):
+def evaluateTacticalReport(report_list: dict) -> dict:
     """Evaluate priority of tactical reports and resource request. List ordered by priority."""
     # High probaility of attack (our asset is very weak respect wenemy force)
     # asset is very important 
-
     pass
 
-def evaluateDefencePriorityZone(infrastructure_list):
-    """ Evaluate priority of strategic zone (Production Zone, Transport Line, Storage Zone ecc, Mil_Base) and resource request. List ordered by priority."""
+def evaluateDefencePriorityZone(strategic_priority_list: dict) -> dict: #defence_priority_list
+    """ Evaluate priority of strategic zone (Production Zone, Transport Line, Storage Zone ecc, Mil_Base) and resource request. List ordered by priority.
+    
+    strategic_infrastructure_list: block (name (id), position, area), type (production, transport, storage, mil_base, urban), importance (VH, H, M, L, VL) sorted by importance
+
+
+    """
+    
     # High probaility of attack (our asset is very weak respect wenemy force)
+    # return defence_priority_list # sorted by priority
+    pass
+
+def definePriorityPatrolZone(defence_priority_list, fighter_zone_cover) -> dict:
+    """ Define the priority patrol zone list for fighter aircrafts. 
+        define patrol zone as set of near block covered by single patrol mission.
+
+    """
+    # return priorityPatrolZoneList
     pass
 
 def evaluateResourceRequest(report):
