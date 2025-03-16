@@ -1,6 +1,12 @@
+from Code import Context
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from Dynamic_War_Manager.Source.Block import Block
+from Dynamic_War_Manager.Source.Block import Mil_Base
+from Dynamic_War_Manager.Source.Block import Urban
+from Dynamic_War_Manager.Source.Block import Production
+from Dynamic_War_Manager.Source.Block import Storage
+from Dynamic_War_Manager.Source.Block import Transport
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Limes import Limes
 from Dynamic_War_Manager.Source.Payload import Payload
@@ -20,8 +26,11 @@ class Region:
             
         
         # check input parameters
-        if not self.checkParam( name, description, blocks, limes ):
-            raise TypeError("Bad Arg, object not istantiate - name ({0}) must be a str, description ({1}) must be a str, blocks ({2}) must be a list of Block object and limes must be a list of Limes object ({3}): ".format(type(name), type(description), type(blocks), type(limes)))
+        check_results = self.checkParam( name, description, blocks, limes )
+        
+        if not check_results:
+            raise TypeError("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
+            
 
         # propriety
         self._name = name # block name - type str
@@ -126,17 +135,18 @@ class Region:
 
     def checkParam(self, name: str, description: str, blocks: List[Block], limes: List[Limes]) -> bool:
         """Return True if type compliance of the parameters is verified"""   
-                   
-        if name and not isinstance(name, str):
-            return False
-        if description and not isinstance(description, str):
-            return False
 
+        if name and not isinstance(name, str):
+            return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
+        
+        if description and not isinstance(description, str):
+            return (False, "Bad Arg: description must be a str")
+        
         if blocks and self.checkListOfObjects(classType = Block, objects = blocks):
-            return False 
-            
+            return (False, "Bad Arg: blocks must be a list of Block object")
+        
         if limes and not self.checkListOfObjects(classType = Limes, objects = limes):
-            return False #raise TypeError("Bad Arg: {0} limes must be a list of Limes object".format(type(limes)))
+            return (False, "Bad Arg: limes must be a list of Limes object")
                 
         return True
     
@@ -146,11 +156,78 @@ class Region:
         # return morale
         pass
             
-    def block_status(self, blockType: str):
+    def block_status(self, blockCategory: str):
         """report info on specific block type(Mil, Urban, Production, Storage, Transport)"""
         # as = .... 
         # return as
         pass
 
+    def getBlocks(self, blockCategory: str, side: str) -> List[Block]:
+        """ Return a list of blocks of a specific category and side"""
+
+        if blockCategory not in Context.BLOCK_CATEGORY:
+            raise ValueError(f"Invalid block category {0}. block category must be: {1}".format(blockCategory, Context.BLOCK_CATEGORY))
+        
+        if blockCategory == "Logistic":
+            return [block for block in self._blocks if any(isinstance(block, Production), isinstance(block, Storage), isinstance(block, Transport)) and block.side == side]
+        
+        if blockCategory == "Civilian":
+            return [block for block in self._blocks if isinstance(block, Urban) and block.side == side]
+        
+        if blockCategory == "Military":
+            return [block for block in self._blocks if isinstance(block, Mil_Base) and block.side == side]
 
 
+    def calcRegionStrategicLogisticCenter(self, side: str): # inserire in region?
+        
+        logistic_blocks = self.getBlocks("Logistic", side)
+        
+        # escludo le mil_base in quanto tot_RSP è utilizzato per valutare la copertura da richiedere alle mil_base per la protezione di questi blocchi    
+        n = len(logistic_blocks)
+        tot_RSP, tp = 0, 0 # tot_RSP: summmatory of strategic logistic block priority
+
+        for block in logistic_blocks:
+            tot_RSP += block.priority 
+            tp += block.position * block.priority 
+        
+        r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
+        return r_SLP
+    
+    def calcRegionCombatPowerCenter(self, side: str): # inserire in region?
+        
+        military_blocks = self.getBlocks("Military", side)
+                
+        n = len(military_blocks)
+        tot_CP, tp = 0, 0 # tot_CP: summmatory of strategic block combat power
+
+        for block in military_blocks:
+            tot_CP += block.combat_power
+            tp += block.position * block.combat_power 
+        
+        r_CPP = tp / (n * tot_CP) # r_CPP: region strategic combat power center position for side blocks
+        return r_CPP
+
+
+    def calcRegionTotalProduction(self, side: str, type: str):
+        """ Return the total production of a specific type of goods, energy, human resource"""
+        # side.sum( block_prod.production() )
+        pass
+
+    def calcRegionTotalCombatPower(self, side: str):
+        """ Return the total combat power of the Region"""
+        # side.sum( block.combat_power() )
+        pass
+
+    def calcRegionTotalStorage(self, side: str, type: str):
+        """ Return the total storage of the Region"""
+        # side.sum( block.storage() )
+        pass
+
+    def calcRegionTotalConsumed(self, side: str, type: str):
+        """ Return the total consumed of the Region"""
+        # side.sum( block.consumed() )
+        pass        
+
+    def calcRegionTotalTransport(self, side: str, type: str):
+        """ Return the total transport of the Region"""
+        # side.sum( block.transport() )

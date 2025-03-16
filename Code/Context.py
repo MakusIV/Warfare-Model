@@ -74,6 +74,7 @@ WEIGHT_FORCE_GROUND_ASSET = {
 BLOCK_CATEGORY = {
 
     "Civilian": "Civilian",
+    "Logistic": "Logistic",    
     "Military": "Military",
 }
 

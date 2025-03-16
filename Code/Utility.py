@@ -317,7 +317,14 @@ def calcProbability( probability ):
     num = random.uniform(0, 1)
     return num < probability
     
-
+def enemySide(side):
+    """Return enemy side"""
+    if side == 'Blue':
+        return 'Red'
+    elif side == 'Red':
+        return 'Blue'
+    else:
+        return "Neutral"
 
 
 # FUZZY LOGIC METHODS
