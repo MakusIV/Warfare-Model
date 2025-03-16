@@ -440,11 +440,15 @@ class Block:
 
     @property
     def position(self):
-        """calculate center point from assets position"""
-        pos = median(asset.position for asset in self.assets) 
-        return pos
-        
+        """calculate center point from assets position"""        
+        return median(asset.position for asset in self.assets) 
     
+    @property
+    def morale(self):     
+        return median(asset.morale for asset in self.assets)
+        
+    def efficiency(self):    
+        return median(asset.efficiency for asset in self.assets)
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Defined in each subclass """
@@ -464,3 +468,43 @@ class Block:
             return "Blue"
         else:
             return "Neutral"
+
+    def balance_trade(self):        
+        goods = None, energy = None, hr = None, hc = None, hs = None, hb = None
+        
+        if self.rcp.goods > 0:
+            goods = self.acp.goods / self.rcp.goods
+        
+        if self.rcp.energy > 0:
+            energy = self.acp.energy / self.rcp.energy
+
+        if self.rcp.hr > 0:
+            hr = self.acp.hr / self.rcp.hr
+
+        if self.rcp.hc > 0:
+            hc = self.acp.hc / self.rcp.hc
+
+        if self.rcp.hs > 0:
+            hs = self.acp.hs / self.rcp.hs
+
+        if self.rcp.hb > 0:
+            hb = self.acp.hb / self.rcp.hb
+
+        variables =  [goods, energy, hr, hc, hs, hb]
+
+        balances = [v for v in variables if v is not None]        
+        balance = sum(balances) / len(balances)
+
+        return balance
+
+
+        
+        
+
+        if valid_variables:
+            balance = sum(valid_variables) / len(valid_variables)
+        else:
+            balance = None  # O un valore predefinito, ad esempio 0
+        
+        return balance
+        

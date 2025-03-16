@@ -590,5 +590,31 @@ class Asset(Block) :
             raise Exception("Method not allowed for this class")
 
     def removeAsset(self, key):#override
-            raise Exception("Method not allowed for this class")
+        raise Exception("Method not allowed for this class")
   
+    def getBlocks(self, blockCategory: str, side: str): #override
+        raise Exception("Method not allowed for this class")
+           
+    @property
+    def morale(self):
+        # dipende da tipo di asset, dal rapporto tra goods, energy e hr request e fornite
+        
+        efficiency = self.efficiency
+        
+        if efficiency > 0.7:
+            return 1
+
+        elif efficiency >= 0.5:
+            return 0.7 
+
+        elif efficiency >= 0.3:
+            return 0.3
+        
+        else:
+            return 0.1
+        
+
+    @property
+    def efficiency(self):
+        return self.balance_trade * self.state.damage
+    

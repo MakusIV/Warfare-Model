@@ -80,11 +80,7 @@ class Mil_Base(Block) :
         return True
     
     
-    def efficiency(self): # sostituisce operational()
-        """calculate efficiency from asset state, rcp, acp, .."""
-        # efficiency = state * acp / rcp
-        # return efficiency
-        pass
+    
         
 
     def airDefence(self):
@@ -114,20 +110,6 @@ class Mil_Base(Block) :
     def defenceAAVolume(self):
         """return defense volume from asset"""    
         pass
-
-
-    def position(self):
-        """calculate position from asset position"""
-        # ap = median(assetPosition) 
-        # return ap
-        pass
-
-
-    def morale(self): # sostituisce operational()
-        """calculate morale from region's members"""
-        # morale = median(block.morale for block in blocks)
-        # return morale
-        pass
         
 
     def intelligence(self):
@@ -142,12 +124,6 @@ class Mil_Base(Block) :
         # return Dict{evaluate.enemy.asset.position, evaluate.enemy.asset.category, evaluate.enemy.asset.class, evaluate.enemy.asset.type, evaluate.enemy.asset.status, evaluate.enemy.asset.qty, evaluate.enemy.asset.efficiency}
         pass
     
-
-    def assetStatus(self):
-        """report info on any mil-base assets category (aircraft, vehicle, supply, ...)"""
-        # as = .... 
-        # return as
-        pass
 
     def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""

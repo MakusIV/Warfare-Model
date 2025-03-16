@@ -11,7 +11,8 @@
 from Utility import get_membership_label
 from Block import Block
 from Region import Region
-from Manager import regions
+
+from Code.CommandAndControl import regions
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -209,17 +210,18 @@ Questo sistema fornisce una base solida per:
 
 
 
-def getTacticalReport() -> dict:
+def getTacticalReport(side: str) -> dict:
     """ request report to any Mil_Base"""
     """ scorre elenco Mil_Base:
             aggiunge alla lista di report il report corrente. La lista è ordinata per criticità"""
     tactical_reports = {} # 
 
     for region in regions:
-        for block in region.blocks:
-            
+        military_blocks = region.getBlocks(blockCategory = "Military", side = side)
+
+        for block in military_blocks:            
             #tactical reports only from ground bases and air bases
-            if isinstance(block, Mil_Base) and ( block.mil_category in [ MIL_CATEGORY["Ground Base"], MIL_CATEGORY["Air Base"] ] ):
+            if isinstance(block, Mil_Base):
                 report = block.getTacticalReport()
                 tactical_reports[region.name][block.name] = report
 
@@ -238,7 +240,7 @@ def evaluateDefencePriorityZone(strategic_priority_list: dict) -> dict: #defence
 
 
     """
-    
+
     # High probaility of attack (our asset is very weak respect wenemy force)
     # return defence_priority_list # sorted by priority
     pass
@@ -258,14 +260,20 @@ def evaluateTargetPriority(target_list: list):
     """Evaluate priority of targets and resource request. List ordered by priority """
     pass
 
+
 def evaluateTotalProduction(type:str, side:str): # type: goods, energy, human resource
+    
+    for region in regions:
+        region.calcRegionTotalProduction(side, type)
     # side.sum( block_prod.production() )
     pass
 
-def evaluateStrategicalPriority(block: Block): 
+def evaluateStrategicPriority(block: Block): 
     pass
 
 def evaluateTotalTransport(type:str, side:str): # type: goods, energy, human resource
+
+
     # side.sum( block_trans.production() )
     pass
 
