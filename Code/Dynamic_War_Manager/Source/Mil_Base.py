@@ -10,12 +10,13 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY
+from Context import STATE, MIL_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, COMBAT_EFFICACY, GROUND_ACTION
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Region import Region
 from Dynamic_War_Manager.Source.Volume import Volume
+from Dynamic_War_Manager.Source.Vehicle import Vehicle
 
 
 # LOGGING -- 
@@ -82,6 +83,22 @@ class Mil_Base(Block) :
     
     
         
+    def groundCombatPower(self, action: str)-> float:
+
+        if action not in GROUND_ACTION:
+            raise Exception(f"action {0} must be: {1}".format(action, GROUND_ACTION))            
+
+        ground_combat_pow = 0    
+        
+        for asset in self.assets:
+
+             if isinstance(asset, Vehicle):
+                asset_class = Utility.getClassName(asset) # asset_class = Armored, Tank, Motorized, Artillery_Semovent, Artillery_Fixed
+                ground_combat_pow += COMBAT_EFFICACY[action][asset_class] * asset[asset_class]["efficiency"]
+
+        return ground_combat_pow
+
+
 
     def airDefence(self):
         """calculate air defense Volume from asset air defense volume"""

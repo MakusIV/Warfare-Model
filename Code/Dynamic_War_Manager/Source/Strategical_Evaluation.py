@@ -12,7 +12,7 @@ from Utility import get_membership_label
 from Block import Block
 from Region import Region
 
-from Code.CommandAndControl import regions
+from Code.CommandControl import regions
 import Context
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl

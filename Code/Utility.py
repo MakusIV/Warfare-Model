@@ -800,3 +800,7 @@ def calc_Threat_Level(pointDistance2D: float, threatRadius: float, pointHeight: 
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
+
+
+def getClassName(obj):
+    return obj.__class__.__name__

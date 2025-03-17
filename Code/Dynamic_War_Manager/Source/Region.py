@@ -207,27 +207,68 @@ class Region:
         r_CPP = tp / (n * tot_CP) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP
 
-
-    def calcRegionTotalProduction(self, side: str, type: str):
+    def calcRegionProduction(self, side: str):
         """ Return the total production of a specific type of goods, energy, human resource"""
-        # side.sum( block_prod.production() )
-        pass
+        # per le hc, hs, hb devi prevedere delle scuole di formazione militare di class Production ed eventualmente category Military
+        block_list = [block for block in self.blocks if block.side == side and isinstance(block, Production)]        
+        tot_production = Payload()
 
-    def calcRegionTotalCombatPower(self, side: str):
+        for block in block_list:
+            tot_production.energy += block.payload.energy
+            tot_production.goods += block.payload.goods
+            tot_production.hr += block.payload.hr
+            tot_production.hc += block.payload.hc
+            tot_production.hs += block.payload.hs
+            tot_production.hb += block.payload.hb
+
+        return tot_production
+
+    def calcRegionGroundCombatPower(self, side: str):
         """ Return the total combat power of the Region"""
-        # side.sum( block.combat_power() )
-        pass
+        block_list = [block for block in self.blocks if block.side == side and isinstance(block, Mil_Base)]        
+        combat_power = 0
 
-    def calcRegionTotalStorage(self, side: str, type: str):
+        for block in block_list:
+            combat_power += block.groundCombatPower
+
+        return combat_power
+
+    def calcRegionStorage(self, side: str, type: str):
         """ Return the total storage of the Region"""
         # side.sum( block.storage() )
         pass
 
-    def calcRegionTotalConsumed(self, side: str, type: str):
-        """ Return the total consumed of the Region"""
-        # side.sum( block.consumed() )
-        pass        
+    def calcRegionGoodsRequest(self, side: str, category: str|None):
+        """ Return the total consumed of the Region"""        
+        block_list = None
+            
+        if category == Context.BLOCK_CATEGORY["Military"]:
+            block_list = [block for block in self.blocks if block.side == side and isinstance(block, Mil_Base) or block.isMilitary]
+        elif category == Context.BLOCK_CATEGORY["Logistic"]:
+            block_list = [block for block in self.blocks if block.side == side and block.is]
+        elif category == Context.BLOCK_CATEGORY["Civilian"]:
+            block_list = [block for block in self.blocks if block.side == side and isinstance(block, Urban)]        
+        elif category in Context.BLOCK_CLASS:
+            block_list = [block for block in self.blocks if block.side == side and isinstance(block, category)]        
+        elif category == "All":
+            block_list = self.blocks
+        else:
+            raise Exception(f"category {0} must be: {1}".format(category, [Context.BLOCK_CATEGORY, Context.BLOCK_CLASS]))
+
+        tot_request = Payload()
+
+        for block in block_list:
+            tot_request.energy += block.rcp.energy
+            tot_request.goods += block.rcp.goods
+            tot_request.hr += block.rcp.hr
+            tot_request.hc += block.rcp.hc
+            tot_request.hs += block.rcp.hs
+            tot_request.hb += block.rcp.hb
+
+        return tot_request
+        
 
     def calcRegionTotalTransport(self, side: str, type: str):
         """ Return the total transport of the Region"""
         # side.sum( block.transport() )
+        pass

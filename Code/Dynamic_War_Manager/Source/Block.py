@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+from Code import Context
 from numpy import median
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
@@ -16,6 +17,11 @@ from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 if TYPE_CHECKING:
     from Dynamic_War_Manager.Source.Asset import Asset
     from Dynamic_War_Manager.Source.Region import Region
+    from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+    from Dynamic_War_Manager.Source.Production import Production
+    from Dynamic_War_Manager.Source.Storage import Storage
+    from Dynamic_War_Manager.Source.Transport import Transport
+    from Dynamic_War_Manager.Source.Urban import Urban
 
 # LOGGING --
  
@@ -36,11 +42,13 @@ class Block:
             self._value = value # block value - type int             
             self._events = List[Event] = [] # block event - list of Block event's          
 
-            # Association    
+              
             self._state = State(self) # block state- component of Block - type State  
             self._acp = acp # assigned consume profile - component of Block - type Payload -
             self._rcp = rcp # requested consume profile - component of Block - type Payload            
             self._payload = payload # block payload - component of Block - type Payload
+
+            # Association  
             self._assets = Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
 
@@ -288,6 +296,26 @@ class Block:
     def rcp(self) -> Payload:
         return self._rcp
 
+    def loadRcp(self) -> Payload:
+        
+        """ load self.rcp value from asset.rcp"""
+
+        self.rcp.energy = 0
+        self.rcp.goods = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+
+        for asset in self.assets:
+            self.rcp.energy += asset.rcp.energy
+            self.rcp.goods += asset.rcp.goods
+            self.rcp.hr += asset.rcp.hr
+            self.rcp.hr += asset.rcp.hc
+            self.rcp.hr += asset.rcp.hs
+            self.rcp.hr += asset.rcp.hb
+        
+        return True
 
     @rcp.setter
     def rcp(self, param: Payload) -> bool:
@@ -454,23 +482,17 @@ class Block:
         """ Defined in each subclass """
         return self.name, self.id
     
-    def getEnemySide(self):
+    def enemySide(self):
         """
         Determine and return the side that is considered the enemy.
-
-        :return: A string representing the enemy side. Returns "Red" if the current side is "Blue",
-                returns "Blue" if the current side is "Red", and returns "Neutral" otherwise.
         """
-
-        if self._side == "Blue":
-            return "Red"
-        elif self._side == "Red":
-            return "Blue"
-        else:
-            return "Neutral"
+        return Utility.enemySide(self.side)
+            
 
     def balance_trade(self):        
+
         goods = None, energy = None, hr = None, hc = None, hs = None, hb = None
+        self.loadRcp # update rcp value        
         
         if self.rcp.goods > 0:
             goods = self.acp.goods / self.rcp.goods
@@ -497,14 +519,12 @@ class Block:
 
         return balance
 
-
-        
-        
-
-        if valid_variables:
-            balance = sum(valid_variables) / len(valid_variables)
-        else:
-            balance = None  # O un valore predefinito, ad esempio 0
-        
-        return balance
+    def isMilitary(self):
+        return (self.category == "Military") or isinstance(self, Mil_Base)
+    
+    def isLogistic(self):
+        return any[isinstance(self, Context.BLOCK_CLASS["Production"]), isinstance(self, Context.BLOCK_CLASS["Storage"]), isinstance(self, Context.BLOCK_CLASS["Transport"])]
+    
+    def isCivilian(self):
+        return isinstance(self, Urban)
         

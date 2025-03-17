@@ -618,3 +618,6 @@ class Asset(Block) :
     def efficiency(self):
         return self.balance_trade * self.state.damage
     
+
+    
+    
