@@ -76,6 +76,16 @@ BLOCK_CATEGORY = {
     "Civilian": "Civilian",
     "Logistic": "Logistic",    
     "Military": "Military",
+    "All": "All",
+}
+
+BLOCK_CLASS = {
+
+    "Production": "Production",
+    "Storage": "Storage",    
+    "Transport": "Transport",
+    "Mil_Base": "Mil_Base",
+    "All": "All",
 }
 
 MIL_CATEGORY = {
@@ -90,6 +100,12 @@ MIL_CATEGORY = {
 
     "C&C": ("C2", "C4") 
 }
+
+COMBAT_EFFICACY = {
+    GROUND_ACTION["Attack"]: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
+    GROUND_ACTION["Defence"]: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
+    GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
+    }
 
 class STATE(Enum):
     ACTIVE = "Active" 

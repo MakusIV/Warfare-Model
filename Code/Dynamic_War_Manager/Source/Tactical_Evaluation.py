@@ -13,8 +13,8 @@ import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION
-from Context import MIL_CATEGORY
+from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, COMBAT_EFFICACY, MIL_CATEGORY
+
 
 #from __future__ import annotations
 #from typing import TYPE_CHECKING
@@ -24,12 +24,6 @@ from Context import MIL_CATEGORY
 
 LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFihtResult() restituiscono 1 (parity)ù
 DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
-
-EFFICACY = {
-    GROUND_ACTION["Attack"]: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
-    GROUND_ACTION["Defence"]: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
-    GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
-    }
 
 def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
 
@@ -417,17 +411,17 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     combat_pow_en = 0
     combat_pow_en_alt = 0
 
-
+    
     for cat in [GROUND_ASSET_CATEGORY["Tank"], GROUND_ASSET_CATEGORY["Armor"], GROUND_ASSET_CATEGORY["Motorized"], GROUND_ASSET_CATEGORY["Artillery_Fix"], GROUND_ASSET_CATEGORY["Artillery_Semovent"]]:
         
         if action == GROUND_ACTION["Attack"]:            
-            combat_pow_en += EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
-            combat_pow_en_alt += EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en += COMBAT_EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en_alt += COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
         elif action == GROUND_ACTION["Defence"] or action == GROUND_ACTION["Maintain"]:
-            combat_pow_en += EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+            combat_pow_en += COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
 
-        combat_pow_fr += EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+        combat_pow_fr += COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
 
     if combat_pow_en < combat_pow_en_alt:
         combat_pow_en = combat_pow_en_alt
@@ -461,6 +455,10 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
 
     """
+
+    #devi estrarre dai report asset_fr e asset_enmy
+    # devi classificare
+
     attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
     defence_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defence"], report_base, report_enemy)
     maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
