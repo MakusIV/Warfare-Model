@@ -549,7 +549,7 @@ class Asset :
             return (False, "Bad Arg: unit_skill must be a str")
         if data["unit_onboard_num"]  and not isinstance(data["unit_onboard_num"], int):
             return (False, "Bad Arg: unit_onboard_num must be a int")
-        if data["unit_payload"]  and not isinstance(data["unit_payload", dict):
+        if data["unit_payload"]  and not isinstance(data["unit_payload"], dict):
             return (False, "Bad Arg: unit_payload must be a dict")
         if data["unit_callsign"]  and not isinstance(data["unit_callsign"], dict):
             return (False, "Bad Arg: unit_callsign must be a dict")
@@ -562,54 +562,8 @@ class Asset :
         # evaluate complessive volume of threat from all threat sources
         # return tv
         pass
-
-    # Method inherited from Block but not allowed for this class
-
-    def getReport(self): #override
-        raise Exception("Method not allowed for this class")
     
-    def assetStatus(self):#override
-        raise Exception("Method not allowed for this class")
-
-    @property #override
-    def assets(self):
-        raise Exception("Method not allowed for this class")
-     
-    @assets.setter #override
-    def assets(self, value):
-            raise Exception("Method not allowed for this class")
-
-    def getAsset(self, key): #override
-            raise Exception("Method not allowed for this class")
-
-    def setAsset(self, key, value): #override
-            raise Exception("Method not allowed for this class")
-
-    def removeAsset(self, key):#override
-        raise Exception("Method not allowed for this class")
-  
-    def getBlocks(self, blockCategory: str, side: str): #override
-        raise Exception("Method not allowed for this class")
-           
-    @property
-    def morale(self):
-        # dipende da tipo di asset, dal rapporto tra goods, energy e hr request e fornite
-        
-        efficiency = self.efficiency
-        
-        if efficiency > 0.7:
-            return 1
-
-        elif efficiency >= 0.5:
-            return 0.7 
-
-        elif efficiency >= 0.3:
-            return 0.3
-        
-        else:
-            return 0.1
-        
-
+   
     @property
     def efficiency(self):
         return self.balance_trade * self.state.damage
