@@ -68,7 +68,6 @@ class Mil_Base(Block) :
         self._mil_category = value
         return True
     
-
     def checkParam(mil_category: str) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""   
     
@@ -79,9 +78,6 @@ class Mil_Base(Block) :
             return (False, f"Bad argument: mil_category {0} must be a MIL_CATEGORY string: {1}".format(mil_category, str([cat for cat in MIL_BASE_CATEGORY])))
         
         return True
-    
-    
-    
         
     def groundCombatPower(self, action: str)-> float:
 
@@ -98,8 +94,6 @@ class Mil_Base(Block) :
 
         return ground_combat_pow
 
-
-
     def airDefence(self):
         """calculate air defense Volume from asset air defense volume"""
         # adsVolume = asset.air_defense from asset in self.assets 
@@ -111,8 +105,6 @@ class Mil_Base(Block) :
         """calculate combat range from asset position"""    
         # return combatVolume(type=type).range(height=height)         
         pass
-
-    
 
     def defenseAARange(self, height: int = 0):
         """calculate combat range from assets"""    
@@ -127,7 +119,6 @@ class Mil_Base(Block) :
     def defenceAAVolume(self):
         """return defense volume from asset"""    
         pass
-        
 
     def intelligence(self):
         """calculate intelligence level"""
@@ -139,8 +130,7 @@ class Mil_Base(Block) :
         """calculate recognition report"""
         # f(intelligenze, evaluate neightroom, front)
         # return Dict{evaluate.enemy.asset.position, evaluate.enemy.asset.category, evaluate.enemy.asset.class, evaluate.enemy.asset.type, evaluate.enemy.asset.status, evaluate.enemy.asset.qty, evaluate.enemy.asset.efficiency}
-        pass
-    
+        pass    
 
     def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
@@ -156,7 +146,6 @@ class Mil_Base(Block) :
 
     def combatState(self):
         """calculate front from state of assets"""
-
     
     def getRecon(self) -> Dict:
        
@@ -201,8 +190,7 @@ class Mil_Base(Block) :
             recon_reports[action].append(report)
 
         return recon_reports
-               
-    
+                   
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
 
@@ -262,10 +250,17 @@ class Mil_Base(Block) :
                     
         return report
             
-
     def getReconEfficiency(self):
         """Return the efficiency of the reconnaissance assets"""
 
         recognitors = [asset for asset in self.assets if asset.role == "Recon"]
         efficiency = median(asset.getEfficiency("hr_mil") for asset in recognitors)
         return efficiency
+
+    @property
+    def morale(self): # override Block.morale    
+        efficiency = self.efficiency
+        balance_trade = self.balance_trade
+        mission_success_rate = self.mission_success_rate
+        return efficiency * balance_trade * mission_success_rate
+    

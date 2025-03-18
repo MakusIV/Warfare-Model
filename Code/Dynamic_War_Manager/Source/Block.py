@@ -412,18 +412,7 @@ class Block:
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
             
-        return (True, "OK")
-
-    def getEfficiency(self): # sostituisce operational()
-        """calculate efficiency from asset state, rcp, acp, .."""
-        efficiency = median(asset.getEfficiency() for asset in self.assets) 
-        return efficiency
-          
-    def assetStatus(self):
-        """calculate Asset_Status from asset Asset_Status"""
-        # as = median(Asset_Status) 
-        # return as
-        pass
+        return (True, "OK")      
 
     def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
@@ -438,8 +427,11 @@ class Block:
     
     @property
     def morale(self):     
-        return median(asset.morale for asset in self.assets)
+        efficiency = self.efficiency
+        balance_trade = self.balance_trade
+        return efficiency * balance_trade
         
+    @property
     def efficiency(self):    
         return median(asset.efficiency for asset in self.assets)
 
@@ -453,10 +445,10 @@ class Block:
         """
         return Utility.enemySide(self.side)
             
-
+    @property
     def balance_trade(self):        
         
-        ballance = 0
+        balance = 0
         
         for asset in self.assets:
             balance += asset.balance_trade
