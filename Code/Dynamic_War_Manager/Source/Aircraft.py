@@ -5,7 +5,7 @@ from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, CATEGORY, MIL_CATEGORY
+from Context import STATE, AIR_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
@@ -32,3 +32,32 @@ class Aircraft(Mobile) :
 
     # methods
 
+    def isFighter(self):
+        return self.category == AIR_ASSET_CATEGORY["Fighter"]
+    
+    def isFighterBomber(self):
+        return self.category == AIR_ASSET_CATEGORY["Fighter_Bomber"]
+    
+    def isAttacker(self):
+        return self.category == AIR_ASSET_CATEGORY["Attacker"]
+    
+    def isBomber(self):
+        return self.category == AIR_ASSET_CATEGORY["Bomber"]
+    
+    def isHeavyBomber(self):
+        return self.category == AIR_ASSET_CATEGORY["Heavy_Bomber"]
+    
+    def isAwacs(self):
+        return self.category == AIR_ASSET_CATEGORY["Awacs"]
+    
+    def isRecon(self):
+        return self.category == AIR_ASSET_CATEGORY["Recon"]
+    
+    def isTransport(self):
+        return self.category == AIR_ASSET_CATEGORY["Transport"]
+    
+    def isHelicopter(self):
+        return self.category == AIR_ASSET_CATEGORY["Helicopter"]
+    
+
+    

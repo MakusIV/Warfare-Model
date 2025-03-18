@@ -88,7 +88,7 @@ BLOCK_CLASS = {
     "All": "All",
 }
 
-MIL_CATEGORY = {
+MIL_BASE_CATEGORY = {
 
     "Ground Base": ("Stronghold",  "Farp", "Regiment", "Battallion", "Company", "Brigade", "Division"),
 

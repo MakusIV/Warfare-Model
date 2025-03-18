@@ -10,7 +10,7 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, COMBAT_EFFICACY, GROUND_ACTION
+from Context import STATE, MIL_BASE_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, COMBAT_EFFICACY, GROUND_ACTION
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
@@ -75,8 +75,8 @@ class Mil_Base(Block) :
         #if not super().checkParam(name, description, side, category, function, value, position, acs, rcs, payload):
             #return False     # non serve dovrebbe essere già verificata nella costruzione di Block
 
-        if not isinstance(mil_category, str) and mil_category not in MIL_CATEGORY:
-            return (False, f"Bad argument: mil_category {0} must be a MIL_CATEGORY string: {1}".format(mil_category, str([cat for cat in MIL_CATEGORY])))
+        if not isinstance(mil_category, str) and mil_category not in MIL_BASE_CATEGORY:
+            return (False, f"Bad argument: mil_category {0} must be a MIL_CATEGORY string: {1}".format(mil_category, str([cat for cat in MIL_BASE_CATEGORY])))
         
         return True
     
@@ -180,17 +180,17 @@ class Mil_Base(Block) :
 
             report_enemy = enmy_block.getBlockInfo("enemy_request",  asset_Number_Accuracy, asset_Efficiency_Accuracy)            
             
-            if self.mil_category in MIL_CATEGORY["Ground Base"]:
+            if self.mil_category in MIL_BASE_CATEGORY["Ground Base"]:
 
                 criticality = evaluateCriticalityGroundEnemy(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base                          
                 
 
-            elif self.mil_category in MIL_CATEGORY["Air Base"]:
+            elif self.mil_category in MIL_BASE_CATEGORY["Air Base"]:
 
                 criticality = evaluateCriticalityAirDefence(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base
 
             else:
-                raise Exception( "Bad argument: mil_category {0} must be a MIL_CATEGORY[/'Ground Base/'] or MIL_CATEGORY[/'Air Base/'] string: {1}".format(self.mil_category, str( [cat for cat in [MIL_CATEGORY["Ground Base"], MIL_CATEGORY["Air Base"]]]) ))
+                raise Exception( "Bad argument: mil_category {0} must be a MIL_CATEGORY[/'Ground Base/'] or MIL_CATEGORY[/'Air Base/'] string: {1}".format(self.mil_category, str( [cat for cat in [MIL_BASE_CATEGORY["Ground Base"], MIL_BASE_CATEGORY["Air Base"]]]) ))
 
             heappush(report_queue, (-criticality, report_enemy)) # Use negative criticality for max-heap behavior
 
