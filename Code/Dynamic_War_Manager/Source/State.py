@@ -13,7 +13,7 @@
 
 from LoggerClass import Logger
 from Context import STATE
-import Dynamic_War_Manager.Source.Block as Block
+from Asset import Asset
 import Utility
 
 # LOGGING --
@@ -22,10 +22,10 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 class State:
 
-    def __init__(self, parent:Block, n_mission: int|None, date_mission: str|None): 
+    def __init__(self, parent: Asset|None, n_mission: int|None, date_mission: str|None): 
         
-        if not isinstance(parent, Block):
-            raise TypeError("type not valid, Block Class expected")
+        if not isinstance(parent, Asset):
+            raise TypeError("type not valid, Asset Class expected")
 
         # property        
         self._n_mission = n_mission
@@ -85,8 +85,8 @@ class State:
         if not isinstance(state_value, str):
             raise TypeError("type not valid, str type expected")
         
-        elif state_value not in [STATE]:
-            value = [v for v in STATE]
+        elif state_value not in STATE.keys:
+            value = [v for v in STATE.keys]
             str_value = ', '.join(value)
             raise ValueError("value not valid: " + state_value + ". Value expected: \n" + str_value)
         
@@ -99,32 +99,20 @@ class State:
    
     @property        
     def parent(self):
-        """Get the parent Block associated with this State.
-
-        Raises:
-            ValueError: If the parent is not defined.
-
-        Returns:
-            Block: The parent Block object.
-        """
-
-        if not self._parent:
-            raise ValueError("parent not defined")
-        
         return self._parent
     
     @parent.setter
     def parent(self, parent):
         
         """
-        Set the parent Block associated with this State.
+        Set the parent Asset associated with this State.
 
         Raises:
             TypeError: If the parent is not an instance of Block.
             ValueError: If the parent already has a State defined.
 
         """
-        if not isinstance(parent, Block):
+        if not isinstance(parent, Asset):
                 raise TypeError("type not valid, Block Class expected")
         
         if parent.state:

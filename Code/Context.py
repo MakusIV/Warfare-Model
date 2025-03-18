@@ -107,11 +107,9 @@ COMBAT_EFFICACY = {
     GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     }
 
-class STATE(Enum):
-    ACTIVE = "Active" 
-    INACTIVE = "Inactive" 
-    STANDBY = "Standby" 
-    DESTROYED = "Destroyed"
+
+STATE = {"Standby": True , "Destroyed": True, "Damaged": True}
+
 
 
 class SHAPE3D(Enum): 
