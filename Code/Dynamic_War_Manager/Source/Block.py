@@ -14,7 +14,7 @@ from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:    
     from Dynamic_War_Manager.Source.Asset import Asset
     from Dynamic_War_Manager.Source.Region import Region
     from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
@@ -30,7 +30,7 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK
 class Block:    
 
-    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):
+    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, functionality: str|None, value: int|None, region: Region|None):
 
             # propriety
             self._name = name # block name - type str
@@ -43,11 +43,6 @@ class Block:
             self._events = List[Event] = [] # block event - list of Block event's          
 
               
-            self._state = State(self) # block state- component of Block - type State  
-            self._acp = acp # assigned consume profile - component of Block - type Payload -
-            self._rcp = rcp # requested consume profile - component of Block - type Payload            
-            self._payload = payload # block payload - component of Block - type Payload
-
             # Association  
             self._assets = Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
@@ -60,20 +55,11 @@ class Block:
                 self._name = "Block." + name
 
             self._id = Utility.setId(self._name)
-
-            if not acp:
-                acp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-            
-            if not rcp:
-                rcp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
-            if not payload:
-                payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
-
+           
             if not side:
                 side = "Neutral"
             # check input parameters            
-            check_results =  self.checkParam( name, description, side, category, functionality, value, acp, rcp, payload, region )            
+            check_results =  self.checkParam( name, description, side, category, functionality, value, region )            
             
             if not check_results[1]:
                 raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
@@ -248,77 +234,44 @@ class Block:
         raise ValueError("cost not modifiable for Block")
     
 
+    def updatePayload(self, destination: str):
+        
+        req = Payload
 
-    @property
-    def state(self):
+        for asset in self.assets:
 
-        if not self._state:
-           raise ValueError("state not defined")
-                
-        return self._state
-    
-    # questo metodo non serve in quanto la costruzione di state presuppone una istanza di Block. Questa funzione verifica solo se l'associazioneè presente
-    @state.setter
-    def state(self, state) -> bool:
+            if destination == "acp":
+                dest = asset.acp
+            elif destination == "rcp":
+                dest = asset.rcp
+            elif destination == "payload":
+                dest = asset.payload
+            else:
+                raise Exception(f"destination {0} mus be a string: acp, or payload".format(destination))
 
-        if not not isinstance(state, State):
-            raise TypeError("Invalid parameters! Type not valid, State Class expected")
+            req.energy += dest.energy
+            req.goods += dest.goods
+            req.hr += dest.hr
+            req.hc += dest.hc
+            req.hs += dest.hs
+            req.hb += dest.hb
 
-        else:
-            if not self._state or self._state != state: 
-                raise ValueError("Invalid construction of state: parent association not defined during construction")
+        return req
 
-        return True
 
     
     @property
     def acp(self) -> Payload:
-        return self._acp
-
-
-    @acp.setter
-    def acp(self, param: Payload) -> bool:
-
-        check_result = self.checkParam(acp = param)
+        # restituisce acp calcolato in base agli assets
+        return self.updatePayload(destination = "acp")
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
 
-        else:
-            self._acp = param
-            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
-            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
-
-        return True
-    
 
     @property
     def rcp(self) -> Payload:
-        return self._rcp
+        # restituisce rcp calcolato in base agli assets
+        return self.updatePayload(destination = "rcp")
 
-    def loadRcp(self) -> Payload:
-        
-        """ load self.rcp value from asset.rcp"""
-
-        self.rcp.energy = 0
-        self.rcp.goods = 0
-        self.rcp.hr = 0
-        self.rcp.hr = 0
-        self.rcp.hr = 0
-        self.rcp.hr = 0
-
-        for asset in self.assets:
-            self.rcp.energy += asset.rcp.energy
-            self.rcp.goods += asset.rcp.goods
-            self.rcp.hr += asset.rcp.hr
-            self.rcp.hr += asset.rcp.hc
-            self.rcp.hr += asset.rcp.hs
-            self.rcp.hr += asset.rcp.hb
-        
-        return True
-
-    @rcp.setter
-    def rcp(self, param: Payload) -> bool:
 
         check_result = self.checkParam(rcp = param)
         
@@ -330,15 +283,15 @@ class Block:
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
         return True
+    
 
 
     @property
     def payload(self) -> Payload:
-        return self._payload
+        # restituisce payload calcolato in base agli assets
+        return self.updatePayload(destination = "payload")
 
-
-    @payload.setter
-    def payload(self, param: Payload) -> bool:
+    
 
         check_result = self.checkParam(payload = param)
         
@@ -350,7 +303,36 @@ class Block:
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
         return True
-    
+    @property
+    def state(self):
+
+        state = State
+        pre = True
+        n_mission = None
+        date_mission = None
+
+        for asset in self.assets:
+            
+            if pre:
+                n_mission = asset.state.n_mmission
+                date_mission = asset.date_mission
+                pre = False
+            else:
+                if n_mission != asset.state.n_mmission:
+                    raise Exception(f"asset {0} {1} has different state.n_mission {2} from previous asset: {3}".format(asset.id, asset.name, asset.state.n_mmission, n_mission))
+                if date_mission != asset.state.date_mmission:
+                    raise Exception(f"asset {0} {1} has different state.date_mission {2} from previous asset: {3}".format(asset.id, asset.name, asset.state.date_mmission, date_mission))
+
+            state.damage += asset.state.damage
+        
+        state.n_mission = n_mission
+        state.date_mission = date_mission
+        state.damage /= len(self.assets) # la media dovrebbe essere pesata in funzine dell'importanza dell'asset
+
+        return state
+
+
+
     @property
     def assets(self):
         return self._assets
@@ -438,12 +420,6 @@ class Block:
             return (False, "Bad Arg: value must be a int")
         if position and not isinstance(position, Point):
             return (False, "Bad Arg: position must be a Point object")
-        if acp and not isinstance(acp, Payload):
-            return (False, "Bad Arg: acp must be a Payload object")        
-        if rcp and not isinstance(rcp, Payload):
-            return (False, "Bad Arg: rcp must be a Payload object")        
-        if payload and not isinstance(payload, Payload):
-            return (False, "Bad Arg: payload must be a Payload object")
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
             

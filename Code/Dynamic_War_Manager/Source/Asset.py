@@ -25,19 +25,24 @@ from Dynamic_War_Manager.Source.Region import Region
 logger = Logger(module_name = __name__, class_name = 'Asset')
 
 # ASSET
-class Asset(Block) :    
+class Asset :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, value: int|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, health: int|None = None, unit_index: str|Dict = None, unit_name: str|None = None, unit_type: str|None = None, unit_unitId: int|None = None, unit_communication: bool|None = None, unit_lateActivation: bool|None = None, unit_start_time: int|None = None, unit_frequency: float|None = None, unit_x: float|None = None, unit_y: float|None = None, unit_alt: float|None = None, unit_alt_type: str|None = None, heading: int|None = None, unit_speed: float|None = None, unit_hardpoint_racks: int|None = None, unit_livery_id: int|None = None, unit_psi: float|None = None, unit_skill: str|None = None, unit_onboard_num: int|None = None, unit_payload: str|Dict = None, unit_callsign: str|Dict = None): # type: ignore   
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, health: int|None = None, unit_index: str|Dict = None, unit_name: str|None = None, unit_type: str|None = None, unit_unitId: int|None = None, unit_communication: bool|None = None, unit_lateActivation: bool|None = None, unit_start_time: int|None = None, unit_frequency: float|None = None, unit_x: float|None = None, unit_y: float|None = None, unit_alt: float|None = None, unit_alt_type: str|None = None, heading: int|None = None, unit_speed: float|None = None, unit_hardpoint_racks: int|None = None, unit_livery_id: int|None = None, unit_psi: float|None = None, unit_skill: str|None = None, unit_onboard_num: int|None = None, unit_payload: str|Dict = None, unit_callsign: str|Dict = None): # type: ignore   
             
-            super().__init__(name, description, category, functionality, value, acp, rcp, payload, region)
-
-            # propriety             
+            
+            # propriety     
+            self._name = name # asset name - type str
+            self._id = Utility.setId(self._name) # id self-assigned - type str
+            self._description = description # asset description - type str
+            self._side = block.side # asset side - type str
+            self._category = category # asset category - type Literal 
+            self._functionality = functionality # asset functionality - type str        
             self._position: Point|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
             self._cost: int|None = cost # asset cost - type int 
             self._crytical: bool|None = crytical 
             self._repair_time: int|None = repair_time
             self._role: str|None = role # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, storage (energy, goods, ..)
-            
+            self._state = State(self) # asset state- component of Asset - type State  
             
             self._unit_index: str|Dict|None = unit_index # DCS group unit_index - index Dict            
             self._unit_name: str|None = unit_name # DCS unit group name - str
@@ -69,12 +74,122 @@ class Asset(Block) :
             self._block: int|Block = block # asset block - component of Block - type Block asset not exist without block
            
             # check input parameters
+
+            if not acp:
+                acp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
+            
+            if not rcp:
+                rcp = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
+
+            if not payload:
+                payload = Payload(goods=0,energy=0,hr=0, hc=0, hrp=0, hcp=0)
+
+            if not side:
+                side = "Neutral"
             check_results =  self.checkParam( name, description, category, functionality, position, volume, threat, crytical, repair_time, country, role, health )
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
 
     # getter & setter methods
+
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, param):
+
+        check_result = self.checkParam(name = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._name = param  
+        return True
+            
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, param):
+
+        check_result = self.checkParam(id = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._id = str(param)
+            
+        return True
+    
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, param):
+
+        check_result = self.checkParam(description = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._description = param       
+            
+        return True
+    
+    @property
+    def side(self):
+        return self._side
+
+    @side.setter
+    def side(self, param):
+        
+        check_result = self.checkParam(description = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        
+        self._description = param       
+            
+        return True
+
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, param):
+
+        check_result = self.checkParam(category = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._category = param
+
+        return True
+    
+    @property
+    def functionality(self):
+        return self._functionality
+
+    @functionality.setter
+    def functionality(self, param):
+
+        check_result = self.checkParam(functionality = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+
+        self._functionality = param  
+            
+        return True
 
     @property
     def cost(self) -> int: #override      
@@ -101,7 +216,6 @@ class Asset(Block) :
             raise Exception(check_result[2])                        
         self._unit_health = health
         return True
-
 
     @property
     def crytical(self) -> int: #override      
@@ -171,6 +285,106 @@ class Asset(Block) :
             raise Exception(check_result[2])                
         self._position = param
         return True
+
+    @property
+    def state(self):
+
+        if not self._state:
+           raise ValueError("state not defined")
+                
+        return self._state
+    
+    # questo metodo non serve in quanto la costruzione di state presuppone una istanza di Asset. Questa funzione verifica solo se l'associazioneè presente
+    @state.setter
+    def state(self, state) -> bool:
+
+        if not not isinstance(state, State):
+            raise TypeError("Invalid parameters! Type not valid, State Class expected")
+
+        else:
+            if not self._state or self._state != state: 
+                raise ValueError("Invalid construction of state: parent association not defined during construction")
+
+        return True
+
+    
+    @property
+    def acp(self) -> Payload:
+        return self._acp
+
+
+    @acp.setter
+    def acp(self, param: Payload) -> bool:
+
+        check_result = self.checkParam(acp = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        else:
+            self._acp = param
+            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
+            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
+
+        return True
+    
+
+    @property
+    def rcp(self) -> Payload:
+        return self._rcp
+
+    def loadRcp(self) -> Payload:
+        
+        """ load self.rcp value from asset.rcp"""
+
+        self.rcp.energy = 0
+        self.rcp.goods = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+        self.rcp.hr = 0
+
+        for asset in self.assets:
+            self.rcp.energy += asset.rcp.energy
+            self.rcp.goods += asset.rcp.goods
+            self.rcp.hr += asset.rcp.hr
+            self.rcp.hr += asset.rcp.hc
+            self.rcp.hr += asset.rcp.hs
+            self.rcp.hr += asset.rcp.hb
+        
+        return True
+
+    @rcp.setter
+    def rcp(self, param: Payload) -> bool:
+
+        check_result = self.checkParam(rcp = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+        else:
+            self._rcp = param           
+            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
+            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
+
+        return True
+
+    @property
+    def payload(self) -> Payload:
+        return self._payload
+
+    @payload.setter
+    def payload(self, param: Payload) -> bool:
+
+        check_result = self.checkParam(payload = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+        else:
+            self._payload = param             
+            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
+            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
+
+        return True    
 
     @property
     def unit_index(self):
@@ -463,7 +677,16 @@ class Asset(Block) :
     # use case methods
     def checkParam(name: str, description: str, category: Literal, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int, unit_index: int, unit_name: str, unit_type: str, unit_unitId: int, unit_communication: bool, unit_lateActivation: bool, unit_start_time: int, unit_frequency: float, unit_x: float, unit_y: float, unit_alt: float, unit_alt_type: str, heading: int, unit_speed: float, unit_hardpoint_racks: int, unit_livery_id: int, unit_psi: float, unit_skill: str, unit_onboard_num: int, unit_payload: str|Dict, unit_callsign: str|Dict) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""          
-
+        if name and not isinstance(name, str):
+            return (False, "Bad Arg: name must be a str")
+        if description and not isinstance(description, str):
+            return (False, "Bad Arg: description must be a str")
+        if side and (not isinstance(side, str) or side not in SIDE):
+            return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
+        if category and (not isinstance(category, Literal) or category not in [BLOCK_CATEGORY]):                        
+            return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
+        if function and not isinstance(function, str):
+            return (False, "Bad Arg: function must be a str")       
         if position and not isinstance(position, Point):
             return (False, "Bad Arg: position must be a Point object")        
         if block and not isinstance(block, Block):
