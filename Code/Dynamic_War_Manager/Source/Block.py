@@ -292,17 +292,6 @@ class Block:
         return self.updatePayload(destination = "payload")
 
     
-
-        check_result = self.checkParam(payload = param)
-        
-        if not check_result[1]:
-            raise Exception(check_result[2])    
-        else:
-            self._payload = param             
-            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
-            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
-
-        return True
     @property
     def state(self):
 
@@ -466,34 +455,13 @@ class Block:
             
 
     def balance_trade(self):        
-
-        goods = None, energy = None, hr = None, hc = None, hs = None, hb = None
-        self.loadRcp # update rcp value        
         
-        if self.rcp.goods > 0:
-            goods = self.acp.goods / self.rcp.goods
+        ballance = 0
         
-        if self.rcp.energy > 0:
-            energy = self.acp.energy / self.rcp.energy
+        for asset in self.assets:
+            balance += asset.balance_trade
 
-        if self.rcp.hr > 0:
-            hr = self.acp.hr / self.rcp.hr
-
-        if self.rcp.hc > 0:
-            hc = self.acp.hc / self.rcp.hc
-
-        if self.rcp.hs > 0:
-            hs = self.acp.hs / self.rcp.hs
-
-        if self.rcp.hb > 0:
-            hb = self.acp.hb / self.rcp.hb
-
-        variables =  [goods, energy, hr, hc, hs, hb]
-
-        balances = [v for v in variables if v is not None]        
-        balance = sum(balances) / len(balances)
-
-        return balance
+        return balance/len(self.assets)
 
     def isMilitary(self):
         return (self.category == "Military") or isinstance(self, Mil_Base)

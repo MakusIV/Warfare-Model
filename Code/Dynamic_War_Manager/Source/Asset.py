@@ -15,7 +15,7 @@ from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_CATEGORY, COUNTRY
+from Context import STATE, MIL_BASE_CATEGORY, COUNTRY, STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Region import Region
@@ -86,7 +86,8 @@ class Asset :
 
             if not side:
                 side = "Neutral"
-            check_results =  self.checkParam( name, description, category, functionality, position, volume, threat, crytical, repair_time, country, role, health )
+
+            check_results =  self.checkParam( name, description, category, side, functionality, position, volume, threat, crytical, repair_time, country, role, health )
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
@@ -675,7 +676,7 @@ class Asset :
         return True
 
     # use case methods
-    def checkParam(name: str, description: str, category: Literal, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int, unit_index: int, unit_name: str, unit_type: str, unit_unitId: int, unit_communication: bool, unit_lateActivation: bool, unit_start_time: int, unit_frequency: float, unit_x: float, unit_y: float, unit_alt: float, unit_alt_type: str, heading: int, unit_speed: float, unit_hardpoint_racks: int, unit_livery_id: int, unit_psi: float, unit_skill: str, unit_onboard_num: int, unit_payload: str|Dict, unit_callsign: str|Dict) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int, unit_index: int, unit_name: str, unit_type: str, unit_unitId: int, unit_communication: bool, unit_lateActivation: bool, unit_start_time: int, unit_frequency: float, unit_x: float, unit_y: float, unit_alt: float, unit_alt_type: str, heading: int, unit_speed: float, unit_hardpoint_racks: int, unit_livery_id: int, unit_psi: float, unit_skill: str, unit_onboard_num: int, unit_payload: str|Dict, unit_callsign: str|Dict) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
@@ -683,8 +684,8 @@ class Asset :
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and (not isinstance(category, Literal) or category not in [BLOCK_CATEGORY]):                        
-            return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
+        if category and (not isinstance(category, str) or category not in [GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]):                        
+            return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")        
         if function and not isinstance(function, str):
             return (False, "Bad Arg: function must be a str")       
         if position and not isinstance(position, Point):
@@ -751,32 +752,6 @@ class Asset :
             return (False, "Bad Arg: unit_callsign must be a dict")
     
         return (True, "OK")
-    
-    @property
-    def efficiency(self):
-        """calculate efficiency from asset health, rcp, acp, .."""
-        
-        efficiency = 0
-
-        if self.rcp.energy != 0 and ( self.role == "storage_energy" or self.role == "production_energy" or self.role == "transport_energy" ):
-            efficiency = self.acp.energy / self.rcp.energy
-            
-        elif self.rcp.goods != 0 and ( self.role == "storage_goods" or self.role == "production_goods" or self.role == "transport_goods" ):
-            efficiency = self.acp.goods / self.rcp.goods
-
-        elif ( self.rcp.hc != 0 and self.rcp.hs != 0 and self.rcp.hb != 0 ) and ( self.role == "formation_hr_mil" or self.role == "transport_hr_mil" ):
-            efficiency = ( self.acp.hc + self.acp.hs + self.acp.hb ) / ( self.rcp.hc + self.rcp.hs + self.rcp.hb )
-
-        elif self.rcp.hr != 0 and ( self.role == "formation_hr_civ" or self.role == "transport_hr_civ" ):
-            efficiency = self.acp.hr / self.rcp.hr
-
-        else:
-            raise Exception("unexpected role ( {0} ) or zero rcp values ( energy: {1} goods: {2} hc: {3} hs: {4} hb: {5} hr: {6} )".format( self.role, self.rcp.energy, self.rcp.goods, self.rcp.hc, self.rcp.hs, self.rcp.hb, self.rcp.hr ) )
-        
-        efficiency = self._unit_health * efficiency 
-
-        return efficiency
-             
    
     def threatVolume(self):
         """calculate Threat_Volume from asset Threat_Volume"""
@@ -786,9 +761,6 @@ class Asset :
         # return tv
         pass
 
-        
-
-
     # Method inherited from Block but not allowed for this class
 
     def getReport(self): #override
@@ -796,7 +768,6 @@ class Asset :
     
     def assetStatus(self):#override
         raise Exception("Method not allowed for this class")
-
 
     @property #override
     def assets(self):
@@ -842,5 +813,43 @@ class Asset :
         return self.balance_trade * self.state.damage
     
 
+    
+    def balance_trade(self) -> float:        
+
+        goods = None, energy = None, hr = None, hc = None, hs = None, hb = None              
+        
+        if self.rcp.goods > 0:
+            goods = self.acp.goods / self.rcp.goods
+        
+        if self.rcp.energy > 0:
+            energy = self.acp.energy / self.rcp.energy
+
+        if self.rcp.hr > 0:
+            hr = self.acp.hr / self.rcp.hr
+
+        if self.rcp.hc > 0:
+            hc = self.acp.hc / self.rcp.hc
+
+        if self.rcp.hs > 0:
+            hs = self.acp.hs / self.rcp.hs
+
+        if self.rcp.hb > 0:
+            hb = self.acp.hb / self.rcp.hb
+
+        variables =  [goods, energy, hr, hc, hs, hb]
+
+        balances = [v for v in variables if v is not None]        
+        balance = sum(balances) / len(balances)
+
+        return balance
+
+    def isMilitary(self):
+        return self.block.isMilitary
+    
+    def isLogistic(self):
+        return self.block.isLogistic
+    
+    def isCivilian(self):
+        return self.block.isCivilian
     
     

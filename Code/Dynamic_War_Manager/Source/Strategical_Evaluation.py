@@ -19,7 +19,7 @@ from skfuzzy import control as ctrl
 import numpy as np
 
 from Dynamic_War_Manager.Source import Mil_Base
-from Context import MIL_CATEGORY
+from Context import MIL_BASE_CATEGORY
 
 
 

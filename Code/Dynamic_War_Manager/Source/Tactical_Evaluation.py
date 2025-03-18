@@ -13,7 +13,7 @@ import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, COMBAT_EFFICACY, MIL_CATEGORY
+from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, COMBAT_EFFICACY, MIL_BASE_CATEGORY
 
 
 #from __future__ import annotations
