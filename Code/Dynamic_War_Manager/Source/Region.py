@@ -20,6 +20,8 @@ from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
  
 logger = Logger(module_name = __name__, class_name = 'Region')
 
+# NOTA: valuda un preload di Block, Asset, della regioneecc:  
+
 class Region:    
 
     def __init__(self, name: str, description: str, blocks: List[Block] = None, limes: List[Limes]=None):
@@ -37,7 +39,11 @@ class Region:
         self._description = description # block description - type str               
         self._limes = limes # list of limes of the Region - type List[Limes]
 
-        # Association                
+        # Association             
+        if blocks:
+            for block in blocks:
+                block.region(self)
+
         self._blocks = blocks # list of Block members of Region - type List[Block]
         # NOTA: I BLOCKS CONSENTITI SONO MIL_ZONE, STORAGE
                     
@@ -83,7 +89,8 @@ class Region:
 
     def addBlock(self, block):
         if isinstance(block, Block):
-            self._events.append(block)
+            block.region(self)
+            self._blocks.append(block)
         else:
             raise ValueError("Il valore deve essere un oggetto di tipo Block")
 
@@ -100,11 +107,11 @@ class Region:
             raise IndexError("Indice fuori range")
 
     def removeBlock(self, block):
-        if block in self._blocks:
+        if isinstance(block , Block) and block in self._blocks and block.region == self:
+            block.region(None)
             self._blocks.remove(block)
         else:
             raise ValueError("Il blocco non esiste nella lista")
-
 
     def getEnemyBlocks(self, enemy_side: str):
         
@@ -122,7 +129,6 @@ class Region:
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
         return type(object) == type(self)
-        
 
     def checkClassList(self, objects):
         """Return True if objectsobject is a list of Block object otherwise False"""
@@ -132,7 +138,6 @@ class Region:
         """ Return True if objects is a list of classType object otherwise False"""
         return isinstance(objects, List) and not all(isinstance(obj, classType) for obj in objects )
     
-
     def checkParam(self, name: str, description: str, blocks: List[Block], limes: List[Limes]) -> bool:
         """Return True if type compliance of the parameters is verified"""   
 
@@ -150,12 +155,6 @@ class Region:
                 
         return True
     
-    def morale(self): # sostituisce operational()
-        """calculate morale from region's members"""
-        # morale = median(block.morale for block in blocks)
-        # return morale
-        pass
-            
     def block_status(self, blockCategory: str):
         """report info on specific block type(Mil, Urban, Production, Storage, Transport)"""
         # as = .... 
@@ -176,7 +175,6 @@ class Region:
         
         if blockCategory == "Military":
             return [block for block in self._blocks if isinstance(block, Mil_Base) and block.side == side]
-
 
     def calcRegionStrategicLogisticCenter(self, side: str): # inserire in region?
         
@@ -223,13 +221,13 @@ class Region:
 
         return tot_production
 
-    def calcRegionGroundCombatPower(self, side: str):
+    def calcRegionGroundCombatPower(self, side: str, action: str):
         """ Return the total combat power of the Region"""
         block_list = [block for block in self.blocks if block.side == side and isinstance(block, Mil_Base)]        
         combat_power = 0
 
         for block in block_list:
-            combat_power += block.groundCombatPower
+            combat_power += block.groundCombatPower(action)
 
         return combat_power
 
@@ -272,3 +270,24 @@ class Region:
         """ Return the total transport of the Region"""
         # side.sum( block.transport() )
         pass
+
+    @property
+    def morale(self, side: str):
+        morale = 0
+        block_list = [block for block in self.blocks if block.side == side]
+
+        for block in block_list:
+            morale += block.morale
+
+        return morale / len(self.blocks)
+
+    @property
+    def moraleMilitary(self, side: str):
+        morale = 0
+
+        block_list = [block for block in self.blocks if block.isMilitary and block.side == side]
+
+        for block in block_list:
+            morale += block.morale
+
+        return morale / len(self.blocks)

@@ -62,6 +62,18 @@ GROUND_ACTION  = {
     "Maintain": "Maintain"
 }
 
+AIR_ACTION  = {
+
+    "Escort": "Escort",
+    "Sweep": "Sweep",
+    "Patrol": "Patrol",
+    "Intercept": "Intercept",
+    "Strike": "Strike",
+    "PinPointStrike": "PinPointStrike",
+    "Sead": "Sead",
+}
+
+
 WEIGHT_FORCE_GROUND_ASSET = {
 
     GROUND_ASSET_CATEGORY["Tank"]: 7,
@@ -85,6 +97,7 @@ BLOCK_CLASS = {
     "Storage": "Storage",    
     "Transport": "Transport",
     "Mil_Base": "Mil_Base",
+    "Urban": "Urban",
     "All": "All",
 }
 
@@ -101,15 +114,47 @@ MIL_BASE_CATEGORY = {
     "C&C": ("C2", "C4") 
 }
 
-COMBAT_EFFICACY = {
+GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION["Attack"]: {GROUND_ASSET_CATEGORY["Tank"]: 5, GROUND_ASSET_CATEGORY["Armor"]: 3.5, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 4, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     GROUND_ACTION["Defence"]: {GROUND_ASSET_CATEGORY["Tank"]: 4, GROUND_ASSET_CATEGORY["Armor"]: 3.2, GROUND_ASSET_CATEGORY["Motorized"]: 2, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 3, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 5},
     GROUND_ACTION["Maintain"]: {GROUND_ASSET_CATEGORY["Tank"]: 3, GROUND_ASSET_CATEGORY["Armor"]: 3.7, GROUND_ASSET_CATEGORY["Motorized"]: 4, GROUND_ASSET_CATEGORY["Artillery_Semovent"]: 2, GROUND_ASSET_CATEGORY["Artillery_Fix"]: 3},
     }
 
 
+
 STATE = {"Standby": True , "Destroyed": True, "Damaged": True}
 
+
+AIR_TASK = {
+    
+    "CAP": "CAP",  
+    "Fighter Sweep": "Fighter Sweep"  ,
+    "Intercept": "Intercept",
+    "Escort": "Escort",
+    "Recon": "Recon",
+    "CAS": "CAS",
+    "Strike": "Strike",
+    "Pinpoint Strike": "Pinpoint Strike",
+    "SEAD": "SEAD",
+} 
+
+AIRCRAFT_TYPE = {# necessario?
+
+    "F-4E": "F-4E",
+    "Mig-21": "Mig-21bis",
+    "F-14A": "F-14AgM",
+    "F-14B": "F-14B4",
+
+
+}
+
+#[action][asset.type]
+AIR_COMBAT_EFFICACY = {
+    
+    "F-15": {AIR_TASK["CAP"]: 8, AIR_TASK["Fighter Sweep"]: 8, AIR_TASK["Intercept"]: 7, AIR_TASK["Escort"]: 8, AIR_TASK["Recon"]: 5, AIR_TASK["CAS"]: 4, AIR_TASK["Strike"]: 4, AIR_TASK["Pinpoint Strike"]: 4, AIR_TASK["SEAD"]: 2},
+    "F-4E": {AIR_TASK["CAP"]: 6, AIR_TASK["Fighter Sweep"]: 6, AIR_TASK["Intercept"]: 6, AIR_TASK["Escort"]: 6, AIR_TASK["Recon"]: 7, AIR_TASK["CAS"]: 8, AIR_TASK["Strike"]: 8, AIR_TASK["Pinpoint Strike"]: 7, AIR_TASK["SEAD"]: 6}
+
+}
 
 
 class SHAPE3D(Enum): 
@@ -165,15 +210,6 @@ class SKILL(Enum):
     HIGH = "High"
     EXCELLENT = "Excellent"
     
-class TASK(Enum): 
-    CAS = "CAS"
-    PATROL = "Patrol"
-    CAP = "CAP"    
-    STRIKE = "Strike"
-    INTERCEPT = "Intercept"
-    ESCORT = "Escort"
-    RECON = "Recon"
-    ATTACK = "Attack"
 
 class GROUP_CATEGORY(Enum): 
     HELICOPTER = "helicopter"

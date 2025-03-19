@@ -13,7 +13,7 @@ import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, COMBAT_EFFICACY, MIL_BASE_CATEGORY
+from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY, MIL_BASE_CATEGORY
 
 
 #from __future__ import annotations
@@ -415,13 +415,13 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     for cat in [GROUND_ASSET_CATEGORY["Tank"], GROUND_ASSET_CATEGORY["Armor"], GROUND_ASSET_CATEGORY["Motorized"], GROUND_ASSET_CATEGORY["Artillery_Fix"], GROUND_ASSET_CATEGORY["Artillery_Semovent"]]:
         
         if action == GROUND_ACTION["Attack"]:            
-            combat_pow_en += COMBAT_EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
-            combat_pow_en_alt += COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en_alt += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
         elif action == GROUND_ACTION["Defence"] or action == GROUND_ACTION["Maintain"]:
-            combat_pow_en += COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
 
-        combat_pow_fr += COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+        combat_pow_fr += GROUND_COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
 
     if combat_pow_en < combat_pow_en_alt:
         combat_pow_en = combat_pow_en_alt
