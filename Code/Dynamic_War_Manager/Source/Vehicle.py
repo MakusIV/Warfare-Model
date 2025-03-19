@@ -5,7 +5,7 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, GROUND_ASSET_CATEGORY
+from Context import STATE, GROUND_ASSET_CATEGORY, GROUND_COMBAT_EFFICACY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 
@@ -74,3 +74,8 @@ class Vehicle(Mobile) :
     def isCommandControl(self):
         return self.category == GROUND_ASSET_CATEGORY["Command_&_Control"]
     
+
+
+    @property
+    def combatPower(self, action):
+        return GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency

@@ -18,9 +18,9 @@ import Utility
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'State')
+logger = Logger(module_name = __name__, class_name = 'Campaign_State)
 
-class State:
+class Campaign_State:
 
     def __init__(self, parent: Asset|None, n_mission: int|None, date_mission: str|None): 
         
@@ -30,8 +30,14 @@ class State:
         # property        
         self._n_mission = n_mission
         self._date_mission = date_mission
-        self._damage = 0.0 # damage  - float := [0:1]
-        self._state_value =  STATE.Inactive # Active, Inactive, Standby, Destroyed
+        self._global_success_mission_ratio = {"Red": {"Air": None,"Groud": None, "Sea": None},
+                                              "Blue": {"Air": None,"Groud": None, "Sea": None},}
+        self._global_damaged_asset_ratio = {"Red": {"Air": None,"Groud": None, "Sea": None},
+                                              "Blue": {"Air": None,"Groud": None, "Sea": None},}
+        
+        
+        #self._damage = 0.0 # damage  - float := [0:1]
+        #self._state_value =  STATE.Inactive # Active, Inactive, Standby, Destroyed
         
         # association
         self._parent = parent

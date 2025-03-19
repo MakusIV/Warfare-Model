@@ -5,7 +5,7 @@ from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, AIR_ASSET_CATEGORY
+from Context import STATE, AIR_ASSET_CATEGORY, AIR_COMBAT_EFFICACY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
@@ -31,6 +31,11 @@ class Aircraft(Mobile) :
                 raise Exception("Invalid parameters! Object not istantiate.")
 
     # methods
+
+    @property
+    def combatPower(self, task):
+        return AIR_COMBAT_EFFICACY[self.asset_type][task] * self.efficiency
+
 
     def isFighter(self):
         return self.category == AIR_ASSET_CATEGORY["Fighter"]

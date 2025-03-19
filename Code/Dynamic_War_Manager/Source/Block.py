@@ -294,31 +294,18 @@ class Block:
     
     @property
     def state(self):
-
         state = State
         pre = True
         n_mission = None
         date_mission = None
 
-        for asset in self.assets:
-            
-            if pre:
-                n_mission = asset.state.n_mmission
-                date_mission = asset.date_mission
-                pre = False
-            else:
-                if n_mission != asset.state.n_mmission:
-                    raise Exception(f"asset {0} {1} has different state.n_mission {2} from previous asset: {3}".format(asset.id, asset.name, asset.state.n_mmission, n_mission))
-                if date_mission != asset.state.date_mmission:
-                    raise Exception(f"asset {0} {1} has different state.date_mission {2} from previous asset: {3}".format(asset.id, asset.name, asset.state.date_mmission, date_mission))
-
+        for asset in self.assets:                        
             state.damage += asset.state.damage
         
         state.n_mission = n_mission
         state.date_mission = date_mission
         state.damage /= len(self.assets) # la media dovrebbe essere pesata in funzine dell'importanza dell'asset
-
-        return state
+        return {"name": self._name, "id": self.id, "category": self._category, "role": self._role, "health": self._health, "efficiency": self.efficiency, "balance_trade": self.balance_trade, "position": self._position}
 
 
 

@@ -27,7 +27,7 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None): # type: ignore   
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None): # type: ignore   
             
             
             # propriety
@@ -37,14 +37,14 @@ class Asset :
             self._description = description # asset description - type str
             self._side = block.side # asset side - type str
             self._category = category # asset category - type Literal 
+            self._asset_type = asset_type
             self._functionality = functionality # asset functionality - type str  
             self._health = int|None      
             self._position: Point|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
             self._cost: int|None = cost # asset cost - type int 
             self._crytical: bool|None = crytical 
             self._repair_time: int|None = repair_time
-            self._role: str|None = role # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, storage (energy, goods, ..)
-            self._state = State(self) # asset state- component of Asset - type State              
+            self._role: str|None = role # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, storage (energy, goods, ..)                          
             self._dcs_unit_data = dcs_unit_data
             """
 
@@ -105,7 +105,7 @@ class Asset :
             if not side:
                 side = "Neutral"
 
-            check_results =  self.checkParam( name, description, category, side, functionality, position, volume, threat, crytical, repair_time, country, role )
+            check_results =  self.checkParam( name, description, category, asset_type, side, functionality, position, volume, threat, crytical, repair_time, country, role )
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
@@ -289,6 +289,20 @@ class Asset :
         return True 
     
     @property
+    def asset_type(self) -> str: 
+        return self._asset_type    
+
+    @asset_type.setter    
+    def asset_type(self, asset_type) -> bool: #override
+        
+        check_result = self.checkParam(asset_type)
+
+        if not check_result[1]:
+            raise Exception(check_result[2])                
+        self._asset_type = asset_type
+        return True 
+    
+    @property
     def country(self) -> str: #override      
         return self._country
     
@@ -317,25 +331,9 @@ class Asset :
         return True
 
     @property
-    def state(self):
-
-        if not self._state:
-           raise ValueError("state not defined")
-                
-        return self._state
+    def state(self):                
+        return {"name": self._name, "id": self.id, "category": self._category, "role": self._role, "health": self._health, "efficiency": self.efficiency, "balance_trade": self.balance_trade, "position": self._position}
     
-    # questo metodo non serve in quanto la costruzione di state presuppone una istanza di Asset. Questa funzione verifica solo se l'associazioneè presente
-    @state.setter
-    def state(self, state) -> bool:
-
-        if not not isinstance(state, State):
-            raise TypeError("Invalid parameters! Type not valid, State Class expected")
-
-        else:
-            if not self._state or self._state != state: 
-                raise ValueError("Invalid construction of state: parent association not defined during construction")
-
-        return True
 
     @property
     def efficiency(self):
@@ -475,7 +473,7 @@ class Asset :
         return True
 
     # use case methods
-    def checkParam(name: str, description: str, category: str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: str, asset_type:str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> bool: # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
@@ -483,6 +481,8 @@ class Asset :
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
+        if asset_type and (not isinstance(asset_type, str)):            
+            return (False, "Bad Arg: asset_type must be a str")
         if category and (not isinstance(category, str) or category not in [GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]):                        
             return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")        
         if function and not isinstance(function, str):
@@ -567,37 +567,6 @@ class Asset :
     @property
     def efficiency(self):
         return self.balance_trade * self.state.damage
-    
-
-    
-    def balance_trade(self) -> float:        
-
-        goods = None, energy = None, hr = None, hc = None, hs = None, hb = None              
-        
-        if self.rcp.goods > 0:
-            goods = self.acp.goods / self.rcp.goods
-        
-        if self.rcp.energy > 0:
-            energy = self.acp.energy / self.rcp.energy
-
-        if self.rcp.hr > 0:
-            hr = self.acp.hr / self.rcp.hr
-
-        if self.rcp.hc > 0:
-            hc = self.acp.hc / self.rcp.hc
-
-        if self.rcp.hs > 0:
-            hs = self.acp.hs / self.rcp.hs
-
-        if self.rcp.hb > 0:
-            hb = self.acp.hb / self.rcp.hb
-
-        variables =  [goods, energy, hr, hc, hs, hb]
-
-        balances = [v for v in variables if v is not None]        
-        balance = sum(balances) / len(balances)
-
-        return balance
 
     def isMilitary(self):
         return self.block.isMilitary
