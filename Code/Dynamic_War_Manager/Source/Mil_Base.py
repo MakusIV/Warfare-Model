@@ -280,3 +280,16 @@ class Mil_Base(Block) :
         mission_success_rate = self.mission_success_rate
         return efficiency * balance_trade * mission_success_rate
     
+    def isAirbase(self):
+        return self._mil_category in MIL_BASE_CATEGORY["Air Base"]
+    
+    def isGroundBase(self):        
+        return self._mil_category in MIL_BASE_CATEGORY["Ground Base"]
+    
+
+    def artilleryInRange(self, edge):
+
+        artilleryInrange = bool
+        in_range_level = float
+
+        return artilleryInrange, in_range_level

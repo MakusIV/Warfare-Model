@@ -14,6 +14,12 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
 from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY, MIL_BASE_CATEGORY
+from Waypoint import Waypoint
+from Edge import Edge
+from Route import Route
+import statistics as stat
+
+
 
 
 #from __future__ import annotations
@@ -491,6 +497,42 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         pass
     
     
+def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed: float, tot_time_route: float) -> dict:
+    # waypoints
+    air_danger, ground_intercept_danger, artillery_danger = 0, 0, 0
+    n_waypoints = len(route.waypoints)
+    i = 0
+    route_travel_time = route.travelTime
+    danger = dict
+    danger = {"air_attack": list, "ground_attack": list, "artillery_range": list}
+
+    for k, v_edge in Route.edges:
+        travel_time = v_edge.calcTravelTime()
+
+        for k_base, v_base in enemy_bases:
+
+            attack_time = v_base.time2attack(v_edge) # air base -> flight time, gorund base -> time to intercept
+            level = travel_time / attack_time
+            
+            if v_base.isAirbase and attack_time < 0.5 * route_travel_time:                    
+                    danger["air_attack"].append(level)
+                
+            if v_base.isGroundBase and attack_time < 0.7 * route_travel_time:
+                danger["ground_attack"].append(level)
+                
+                artilleryInRange, in_range_level = v_base.artilleryInRange(v_edge)
+
+                if artilleryInRange:
+                    danger["artillery_range"].append(in_range_level)
+
+
+    danger_level_air_attack = stat.pstdev(danger["air_attack"])
+    danger_level_ground_attack = stat.pstdev(danger["ground_attack"])
+    danger_level_artillery_range = stat.pstdev(danger["artillery_range"])
+
+    return danger_level_air_attack, danger_level_ground_attack, danger_level_artillery_range
+                    
+
 
 
     
