@@ -123,7 +123,7 @@ class Block:
     @side.setter
     def side(self, param):
         
-        check_result = self.checkParam(description = param)
+        check_result = self.checkParam(side = param)
         
         if not check_result[1]:
             raise Exception(check_result[2])    
@@ -359,7 +359,7 @@ class Block:
         
         if not check_result[1]:
             raise Exception(check_result[2])    
-        
+                
         self._region = param       
             
         return True
@@ -379,7 +379,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> bool: # type: ignore
+    def checkParam(self, name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
         if name and not isinstance(name, str):

@@ -227,7 +227,7 @@ class Asset :
 
     @cost.setter
     def cost(self, cost) -> bool: #override
-        check_result = self.checkParam(cost)
+        check_result = self.checkParam(cost = cost)
         
         if not check_result[1]:
             raise Exception(check_result[2])                        
@@ -240,7 +240,7 @@ class Asset :
 
     @health.setter
     def health(self, health) -> bool: #override
-        check_result = self.checkParam(health)
+        check_result = self.checkParam(health = health)
         
         if not check_result[1]:
             raise Exception(check_result[2])                        
@@ -253,7 +253,7 @@ class Asset :
 
     @crytical.setter
     def crytical(self, crytical) -> bool: #override
-        check_result = self.checkParam(crytical)
+        check_result = self.checkParam(crytical = crytical)
         
         if not check_result[1]:
             raise Exception(check_result[2])                
@@ -267,7 +267,7 @@ class Asset :
     @repair_time.setter
     def repair_time(self, repair_time) -> bool: #override
         
-        check_result = self.checkParam(repair_time)
+        check_result = self.checkParam(repair_time = repair_time)
 
         if not check_result[1]:
             raise Exception(check_result[2])                
@@ -281,7 +281,7 @@ class Asset :
     @role.setter    
     def role(self, role) -> bool: #override
         
-        check_result = self.checkParam(role)
+        check_result = self.checkParam(role = role)
 
         if not check_result[1]:
             raise Exception(check_result[2])                
@@ -295,7 +295,7 @@ class Asset :
     @asset_type.setter    
     def asset_type(self, asset_type) -> bool: #override
         
-        check_result = self.checkParam(asset_type)
+        check_result = self.checkParam(asset_type = asset_type)
 
         if not check_result[1]:
             raise Exception(check_result[2])                
@@ -473,7 +473,7 @@ class Asset :
         return True
 
     # use case methods
-    def checkParam(name: str, description: str, category: str, asset_type:str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> bool: # type: ignore
+    def checkParam(name: str, description: str, category: str, asset_type:str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
