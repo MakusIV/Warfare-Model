@@ -5,16 +5,16 @@ from Dynamic_War_Manager.Source.State import State
 from Code.LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, AIR_ASSET_CATEGORY, AIR_COMBAT_EFFICACY
+from Context import NAVAL_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft')
+logger = Logger(module_name = __name__, class_name = 'Ship')
 
 # ASSET
-class Aircraft(Mobile) :    
+class Ship(Mobile) :    
 
     def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0):   
             
@@ -32,35 +32,18 @@ class Aircraft(Mobile) :
 
     @property
     def combatPower(self, task):
-        return AIR_COMBAT_EFFICACY[self.asset_type][task] * self.efficiency
+        pass
 
 
-    def isFighter(self):
-        return self.category == AIR_ASSET_CATEGORY["Fighter"]
+    def isDestroyer(self):
+        return self.category == NAVAL_ASSET_CATEGORY["Destroyer"]
     
-    def isFighterBomber(self):
-        return self.category == AIR_ASSET_CATEGORY["Fighter_Bomber"]
-    
-    def isAttacker(self):
-        return self.category == AIR_ASSET_CATEGORY["Attacker"]
-    
-    def isBomber(self):
-        return self.category == AIR_ASSET_CATEGORY["Bomber"]
-    
-    def isHeavyBomber(self):
-        return self.category == AIR_ASSET_CATEGORY["Heavy_Bomber"]
-    
-    def isAwacs(self):
-        return self.category == AIR_ASSET_CATEGORY["Awacs"]
-    
-    def isRecon(self):
-        return self.category == AIR_ASSET_CATEGORY["Recon"]
-    
+    def isCarrier(self):
+        return self.category == NAVAL_ASSET_CATEGORY["Carrier"]
+       
     def isTransport(self):
-        return self.category == AIR_ASSET_CATEGORY["Transport"]
+        return self.category == NAVAL_ASSET_CATEGORY["Transport"]
     
-    def isHelicopter(self):
-        return self.category == AIR_ASSET_CATEGORY["Helicopter"]
     
 
     

@@ -17,7 +17,7 @@ from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
 from Waypoint import Waypoint
 from Edge import Edge
 from Route import Route
-import statistics as stat
+
 
 
 
@@ -510,25 +510,22 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
         travel_time = v_edge.calcTravelTime()
 
         for k_base, v_base in enemy_bases:
-
             attack_time = v_base.time2attack(v_edge) # air base -> flight time, gorund base -> time to intercept
-            level = travel_time / attack_time
+            danger_level = travel_time * v_base.efficiency/ attack_time
             
             if v_base.isAirbase and attack_time < 0.5 * route_travel_time:                    
-                    danger["air_attack"].append(level)
+                danger["air_attack"].append(danger_level)
                 
             if v_base.isGroundBase and attack_time < 0.7 * route_travel_time:
-                danger["ground_attack"].append(level)
-                
+                danger["ground_attack"].append(danger_level)                
                 artilleryInRange, in_range_level = v_base.artilleryInRange(v_edge)
 
                 if artilleryInRange:
-                    danger["artillery_range"].append(in_range_level)
+                    danger["artillery_range"].append(in_range_level)                    
 
-
-    danger_level_air_attack = stat.pstdev(danger["air_attack"])
-    danger_level_ground_attack = stat.pstdev(danger["ground_attack"])
-    danger_level_artillery_range = stat.pstdev(danger["artillery_range"])
+    danger_level_air_attack = np.mean(danger["air_attack"]) * max(danger["air_attack"])# mean * max:  (2, 0.1, 0.2) -> 0.8 * 2 =1.6,  (0.8, 0.8, 0.8) -> 0.8 * 0.8 = 0.16
+    danger_level_ground_attack = np.mean(danger["ground_attack"]) * max(danger["ground_attack"])
+    danger_level_artillery_range = np.mean(danger["artillery_range"]) * max(danger["artillery_range"])
 
     return danger_level_air_attack, danger_level_ground_attack, danger_level_artillery_range
                     
