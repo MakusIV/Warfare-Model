@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from Code import Context
-from numpy import median
+from numpy import mean
 import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
@@ -410,7 +410,7 @@ class Block:
     @property
     def position(self):
         """calculate center point from assets position"""        
-        return median(asset.position for asset in self.assets) 
+        return mean(asset.position for asset in self.assets) 
     
     @property
     def morale(self):     
@@ -420,7 +420,7 @@ class Block:
         
     @property
     def efficiency(self):    
-        return median(asset.efficiency for asset in self.assets)
+        return mean(asset.efficiency for asset in self.assets)
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Defined in each subclass """

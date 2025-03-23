@@ -45,6 +45,14 @@ AIR_ASSET_CATEGORY = {
     "Helicopter": "Helicopter"
 }
 
+NAVAL_ASSET_CATEGORY = {
+     
+    "Destroyer": "Destroyer", 
+    "Carrier": "Carrier", 
+    "Submarine": "Submarine",
+    "Transport": "Transport",    
+}
+
 STRUCTURE_ASSET_CATEGORY = {
      
     "Bridge": "Bridge", 

@@ -16,22 +16,44 @@ logger = Logger(module_name = __name__, class_name = 'Mobile')
 # ASSET
 class Mobile(Asset) :    
 
-    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0):   
+    def __init__(self, block: Block, name: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, max_speed: float|None):   
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time) 
 
             # propriety   
-            self._position = position          
+            self._max_speed = max_speed
             
     
             # Association    
             
             
             # check input parameters
-            if not super.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time ):    
-                raise Exception("Invalid parameters! Object not istantiate.")
-
+            
     # methods
+
+    @property
+    def max_speed(self):
+        return self._max_speed
+
+    @max_speed.setter
+    def max_speed(self, param):
+
+        check_result = self.checkParam(max_speed = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._max_speed = param  
+        return True
+
+
+
+    def checkParam(max_speed: float) -> (bool, str): # type: ignore
+        """Return True if type compliance of the parameters is verified"""          
+        if max_speed and not isinstance(max_speed, float):
+            return (False, "Bad Arg: max_speed must be a float")
+    
+        return (True, "OK")
 
     def attackRange(self):
          #return value

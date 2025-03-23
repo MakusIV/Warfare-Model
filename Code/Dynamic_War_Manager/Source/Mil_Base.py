@@ -17,7 +17,9 @@ from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Region import Region
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Vehicle import Vehicle
-from Dynamic_War_Manager.Source.Aircraft import Aircraft
+from Aircraft import Aircraft
+from Ship import Ship
+from Edge import Edge
 
 
 # LOGGING -- 
@@ -117,7 +119,7 @@ class Mil_Base(Block) :
         # return adsVolume, adMax
         pass
 
-    def combatRange(self, type: str = Artillery, height: int = 0):
+    def combatRange(self, type: str = "Artillery", height: int = 0):
         """calculate combat range from asset position"""    
         # return combatVolume(type=type).range(height=height)         
         pass
@@ -127,7 +129,7 @@ class Mil_Base(Block) :
         # return defenceAAVolume().range(height=height)         
         pass
 
-    def combatVolume(self, type: str = Artillery):
+    def combatVolume(self, type: str = "Artillery"):
         """calculate combat volume from asset"""
         # distinguere tra arty, mech, motorized, 
         pass
@@ -287,9 +289,69 @@ class Mil_Base(Block) :
         return self._mil_category in MIL_BASE_CATEGORY["Ground Base"]
     
 
-    def artilleryInRange(self, edge):
+    def artilleryInRange(self, target: Point|Edge|None):
 
-        artilleryInrange = bool
-        in_range_level = float
+        artilleryInrange = False
+        in_range_level = None
+
+        max_artillery_range = 0
+        target_distance = float('inf')
+
+        if isinstance(target, Edge):            
+            target_distance = target.minDistance(self._position)
+
+        elif isinstance(target, Point):
+            target_distance = target.distance(self._positin) # verifica se distingue tra 2D e 3D
+        
+        else:
+            raise TypeError(f"target{target} is not a Point or Edge object")
+        
+
+        if self.isGroundBase or self.isNavalGroup:
+        
+            for asset in self.assets:                
+                ground = isinstance(asset, Vehicle) and ( asset.isTank or asset.isArtillery ) 
+                sea = isinstance(asset, Ship) and ( asset.isDestroyer ) 
+                    
+                if ( ground or sea) and asset.max_artillery_range > max_artillery_range:
+                    max_artillery_range = asset.max_artillery_range
+
+        if max_artillery_range > target_distance:
+            artilleryInrange = True
+            in_range_level = max_artillery_range / target_distance
 
         return artilleryInrange, in_range_level
+    
+
+    def time2attack(self, target: Point|Edge|None):
+        max_speed = 0
+        target_distance = 0
+
+        if isinstance(target, Edge):            
+            target_distance = target.minDistance(self._position)
+
+        elif isinstance(target, Point):
+            target_distance = target.distance(self._positin) # verifica se distingue tra 2D e 3D
+        
+        else:
+            raise TypeError(f"target{target} is not a Point or Edge object")
+        
+
+        if self.isAirbase or self.isGroundBase or self.isNavalGroup:
+        
+            for asset in self.assets:
+                air = isinstance(asset, Aircraft) and ( asset.isAttacker or asset.isBomber or asset.isFighterBomber )
+                ground = isinstance(asset, Vehicle) and ( asset.isTank or asset.isArmor or asset.isMotorized ) 
+                sea = isinstance(asset, Ship) and ( asset.isDestroyer or asset.isCarrier asset.isSubmarine) 
+                    
+                if ( air or ground or sea) and asset.max_speed > max_speed:
+                    max_speed = asset.max_speed
+
+
+        if max_speed > 0 and target_distance > 0:
+            return target_distance / max_speed
+        else:
+            return float('inf')
+                
+            
+                
