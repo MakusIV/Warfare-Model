@@ -44,6 +44,9 @@ class Ship(Mobile) :
     def isTransport(self):
         return self.category == NAVAL_ASSET_CATEGORY["Transport"]
     
+    def isSubmarine(self):
+        return self.category == NAVAL_ASSET_CATEGORY["Submarine"]
+    
     
 
     

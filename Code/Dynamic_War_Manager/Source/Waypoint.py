@@ -1,5 +1,5 @@
 from Dynamic_War_Manager.Source.Asset import Asset
-from sympy import Point3D
+from sympy import Point3D, Point2D
 from LoggerClass import Logger
 
 # LOGGING --
@@ -83,8 +83,24 @@ class Waypoint:
         self._point = param
         return True
 
-    def distanceFrom(self, point: Point3D) -> list:        
-        return (    ( (self._point.x - point.x)**2 + (self._point.x - point.x)**2 ) ** 0.5  ,  self.point.distance(point) )
+
+    @property
+    def point2d(self):
+        return Point2D(self._point.x, self._point.x)
+
+    def distanceFrom(self, point: Point2D|Point3D) -> list:        
+
+        if isinstance(point, Point2D):
+            return  ( (self._point.x - point.x)**2 + (self._point.x - point.x)**2 ) ** 0.5
+        
+        elif isinstance( point, Point3D):
+            return self.point.distance(point)
+        
+        elif isinstance( point, Waypoint):
+            return self.point.distance(point.point)
+        
+        else:
+            raise TypeError(f"point {type(point)} must be Point2D, Point3D or Waypoint")
     
 
     

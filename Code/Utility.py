@@ -9,7 +9,7 @@ import hashlib
 import uuid
 from Sphere import Sphere
 from Hemisphere import Hemisphere
-from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point3D, Point2D, Line3D, symbols, solve, Eq, sqrt, And
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
@@ -804,3 +804,87 @@ def calc_Threat_Level(pointDistance2D: float, threatRadius: float, pointHeight: 
 
 def getClassName(obj):
     return obj.__class__.__name__
+
+
+def mean_point(points: Point) -> Point:
+    if not points:
+        raise ValueError("La lista dei punti non può essere vuota")
+
+    if isinstance(points[0], Point3D):
+        x_mean = np.mean([point.x for point in points])
+        y_mean = np.mean([point.y for point in points])
+        z_mean = np.mean([point.z for point in points])
+        return Point3D(x_mean, y_mean, z_mean)
+    elif isinstance(points[0], Point2D):
+        x_mean = np.mean([point.x for point in points])
+        y_mean = np.mean([point.y for point in points])
+        return Point(x_mean, y_mean)
+    else:
+        raise TypeError("I punti devono essere istanze di Point2D o Point3D")
+
+def evaluateMorale(success_ratio: float, efficiency: float):
+    """
+    Calculate Morale using Fuzzy Logic
+
+    input param:     
+    success_ratio: success ratio of the activity block: Mil_Base -> mission_success_ratio, Production, Storage, Transport, Urban succes_ratio = = random_anomaly (anomalie di produzione, trasporto ecc generate casualmente in funzione del livello di goods (ricambi):  random(0, rcp_goods / acp _goods))
+    
+    return (string): ['L', 'M', 'H', 'VH'] 
+
+    TEST:
+    """
+
+    if success_ratio <= 0 or efficiency <= 0:
+        raise ValueError("Input values must be positive and non-zero.")
+            
+    # Variabili di input
+    kd = ctrl.Antecedent(np.arange(0, 1.01, 0.01), 'kd')  # kd = success_ratio_set Valori continui [0, 1]
+    kh = ctrl.Antecedent(np.arange(0, 1.01, 0.01), 'kh')  # kh = efficiency set Valori continui [0, 1]
+
+    # Variabile di output
+    t_l_p = ctrl.Consequent(np.arange(0, 1.01, 0.01), 't_l_p')  # morale set Valori continui [0, 1]
+
+    # Funzioni di appartenenza
+    kd['L'] = fuzz.trapmf(kd.universe, [0.0, 0.0, 0.5, 1.0])
+    kd['M'] = fuzz.trapmf(kd.universe, [0.75, 1.0, 1.25, 2])
+    kd['H'] = fuzz.trapmf(kd.universe, [1.25, 2, 10, 10])
+
+    kh['L'] = fuzz.trapmf(kh.universe, [0.0, 0.0, 0.5, 0.55])
+    kh['M'] = fuzz.trapmf(kh.universe, [0.5, 0.66, 0.75, 0.85])
+    kh['H'] = fuzz.trapmf(kh.universe, [0.66, 0.85, 1.0, 1.0])
+    
+    
+    t_l_p.automf(names=['L', 'M', 'H'])
+
+    # Definizione delle regole
+    rules = [
+    
+        ctrl.Rule(kd['H'] & kh['H'], t_l_p['H']),
+        ctrl.Rule(kd['H'] & kh['M'], t_l_p['H']),
+        ctrl.Rule(kd['H'] & kh['L'], t_l_p['M']),    
+        ctrl.Rule(kd['M'] & kh['H'], t_l_p['H']),
+        ctrl.Rule(kd['M'] & kh['M'], t_l_p['M']),
+        ctrl.Rule(kd['M'] & kh['L'], t_l_p['L']),
+        ctrl.Rule(kd['L'] & kh['H'], t_l_p['M']),
+        ctrl.Rule(kd['L'] & kh['M'], t_l_p['L']),
+        ctrl.Rule(kd['L'] & kh['L'], t_l_p['L']),
+    ]
+
+
+    # Aggiunta delle regole al sistema di controllo
+    t_l_p_ctrl = ctrl.ControlSystem(rules)
+    t_l_p_sim = ctrl.ControlSystemSimulation(t_l_p_ctrl)
+
+    # Esempio di input e calcolo
+    t_l_p_sim.input['kd'] = success_ratio #0.95
+    t_l_p_sim.input['kh'] = efficiency #0.9
+
+    # Calcolo dell'output
+    t_l_p_sim.compute()
+    output_numeric = t_l_p_sim.output['t_l_p']
+
+    output_string = get_membership_label(output_numeric, t_l_p)
+
+    return output_string, output_numeric
+    #print("Valore numerico di t_l_p:", output_numeric)
+    #print("Valore stringa di t_l_p:", output_string)

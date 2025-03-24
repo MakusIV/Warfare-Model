@@ -16,11 +16,13 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle')
 # ASSET
 class Vehicle(Mobile) :    
 
-    def __init__(self, block: Block, name: str = None, description: str = None, category: str = None, functionality: str = None, value: int = None, cost: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point = None, volume: Volume = None, threat: Threat = None, crytical: bool = False, repair_time: int = 0):   
+    def __init__(self, block: Block, category: str, name: str|None, description: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, speed: float|None) :   
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time) 
 
             # propriety             
+    
+    
             
     
             # Association    
@@ -79,3 +81,4 @@ class Vehicle(Mobile) :
     @property
     def combatPower(self, action):
         return GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
+    

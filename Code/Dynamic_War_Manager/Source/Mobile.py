@@ -16,12 +16,13 @@ logger = Logger(module_name = __name__, class_name = 'Mobile')
 # ASSET
 class Mobile(Asset) :    
 
-    def __init__(self, block: Block, name: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, max_speed: float|None):   
+    def __init__(self, block: Block, name: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, speed: float|None, artillery_range: float|None)):   
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time) 
 
             # propriety   
-            self._max_speed = max_speed
+            self._speed = speed
+            self._artillery_range = artillery_range
             
     
             # Association    
@@ -32,26 +33,45 @@ class Mobile(Asset) :
     # methods
 
     @property
-    def max_speed(self):
-        return self._max_speed
+    def speed(self):
+        return self._speed
 
-    @max_speed.setter
-    def max_speed(self, param):
+    @speed.setter
+    def speed(self, param):
 
-        check_result = self.checkParam(max_speed = param)
+        check_result = self.checkParam(speed = param)
         
         if not check_result[1]:
             raise Exception(check_result[2])    
 
-        self._max_speed = param  
+        self._speed = param  
+        return True
+    
+
+    @property
+    def artillery_range(self):
+        return self._artillery_range
+
+    @artillery_range.setter
+    def artillery_range(self, param):
+
+        check_result = self.checkParam(artillery_range = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._artillery_range = param  
         return True
 
 
 
-    def checkParam(max_speed: float) -> (bool, str): # type: ignore
+    def checkParam(speed: float, artillery_range: float) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
-        if max_speed and not isinstance(max_speed, float):
-            return (False, "Bad Arg: max_speed must be a float")
+        if speed and not isinstance(speed, float):
+            return (False, "Bad Arg: speed must be a float")
+        
+        if artillery_range and not isinstance(artillery_range, float):
+            return (False, "Bad Arg: artillery_range must be a float")
     
         return (True, "OK")
 

@@ -1,7 +1,7 @@
 from Asset import Asset
 from Waypoint import Waypoint
 from Context import PATH_TYPE
-from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point3D, Line3D, Line2D, symbols, solve, Eq, sqrt, And
 from LoggerClass import Logger
 
 # LOGGING --
@@ -21,6 +21,7 @@ class Edge:
             self._danger_level = danger_level
             self._speed = speed
             self._line = Line3D(wpA, wpB)
+            self._line2d = Line2D(wpA.point2d, wpB.point2d)
             self._lenght = self.calcLenght(self) # distance2D if path_type = [onroad, offroad, water] or distance 3D if path_type = air
             self._travel_time = self.calcTravelTime(self) 
                 
@@ -144,14 +145,8 @@ class Edge:
 
 
     def calcLenght(self):
-
-        len2D, len3D = self._wpA.distanceFrom(self, self._wpB)
-
-        if self._path_type == "air":
-            return len3D
-
-        else:
-            return len2D
+            return self._wpA.distanceFrom(self._wpB)
+        
 
     def calcTravelTime(self):
 
@@ -162,31 +157,42 @@ class Edge:
 
         
 
-    def minDistance(self, point: Point3D):# distance 3D
-        return self._line.distance(point)
+    def minDistance(self, point: Point):# distance 3D
+
+        if isinstance(point, Point3D):
+            return self._line.distance(point)
+        else:
+            return self._line2d.distance(point)
         
 
-    def intersectPoint(self, line: Line) -> Point3D: # poni z = 0 per calcolo 2D
+    def intersectPoint(self, line: Line) -> Point: # poni z = 0 per calcolo 2D
+        """
+        Calcola il punto di intersezione tra self e la retta costituita dalla distanza minima tra self e line.
+
+        Parameters
+        ----------
+        line : Line o Line3D
+            La linea con cui calcolare l'intersezione.
+
+        Returns
+        -------
+        Point o Point3D
+            Il punto di intersezione.
+        """
+        intersection = None
 
         if self._path_type == "air" and isinstance(line, Line3D):
-            pass
+            intersection = self._line.intersection(line)
+            self._line.intersect
 
+        elif isinstance(line, Line2D):
+            intersection = self._line.intersection(line)
+
+        if intersection:
+            return intersection[0]
         else:
-            pass
+            return None
 
-        pass
-
-    def nearPoint(self, point: Point, tolerance: float): # poni z = 0 per calcolo 2D
-
-        if self._path_type == "air" and isinstance(point, Point3D):
-            pass
-
-        else:
-            pass
-
-        pass
-
-
-
-                
+        
+ 
         

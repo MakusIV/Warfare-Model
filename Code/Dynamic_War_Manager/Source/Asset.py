@@ -337,7 +337,7 @@ class Asset :
 
     @property
     def efficiency(self):
-        return self.balance_trade * self.health
+        return self.balance_trade * self._health
 
     @property
     def balance_trade(self) -> float:        
@@ -564,10 +564,6 @@ class Asset :
         pass
     
    
-    @property
-    def efficiency(self):
-        return self.balance_trade * self.state.damage
-
     def isMilitary(self):
         return self.block.isMilitary
     
