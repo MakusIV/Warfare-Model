@@ -274,19 +274,15 @@ class Mil_Base(Block) :
         recognitors = [asset for asset in self.assets if asset.role == "Recon"]
         efficiency = median(asset.getEfficiency("hr_mil") for asset in recognitors)
         return efficiency
-
-    @property
-    def morale(self): # override Block.morale    
-        efficiency = self.efficiency
-        balance_trade = self.balance_trade
-        mission_success_rate = self.mission_success_rate
-        return efficiency * balance_trade * mission_success_rate
     
     def isAirbase(self):
         return self._mil_category in MIL_BASE_CATEGORY["Air Base"]
     
     def isGroundBase(self):        
         return self._mil_category in MIL_BASE_CATEGORY["Ground Base"]
+    
+    def isNavalGroup(self):        
+        return self._mil_category in MIL_BASE_CATEGORY["Naval Base"]
     
 
     def artilleryInRange(self, target: Point|Edge|None):
@@ -313,8 +309,8 @@ class Mil_Base(Block) :
                 ground = isinstance(asset, Vehicle) and ( asset.isTank or asset.isArtillery ) 
                 sea = isinstance(asset, Ship) and ( asset.isDestroyer ) 
                     
-                if ( ground or sea) and asset.max_artillery_range > max_artillery_range:
-                    max_artillery_range = asset.max_artillery_range
+                if ( ground or sea) and asset.artillery_range > max_artillery_range:
+                    max_artillery_range = asset.artillery_range
 
         if max_artillery_range > target_distance:
             artilleryInrange = True
@@ -323,33 +319,33 @@ class Mil_Base(Block) :
         return artilleryInrange, in_range_level
     
 
-    def time2attack(self, target: Point|Edge|None):
-        max_speed = 0
+    def time2attack(self, target_position: Point|Edge|None):
+        speed = 0
         target_distance = 0
 
-        if isinstance(target, Edge):            
-            target_distance = target.minDistance(self._position)
+        if isinstance(target_position, Edge):            
+            target_distance = target_position.minDistance(self.position)
 
-        elif isinstance(target, Point):
-            target_distance = target.distance(self._positin) # verifica se distingue tra 2D e 3D
+        elif isinstance(target_position, Point):
+            target_distance = target_position.distance(self.position)
         
         else:
-            raise TypeError(f"target{target} is not a Point or Edge object")
+            raise TypeError(f"target{target_position} is not a Point or Edge object")
         
 
         if self.isAirbase or self.isGroundBase or self.isNavalGroup:
         
             for asset in self.assets:
-                air = isinstance(asset, Aircraft) and ( asset.isAttacker or asset.isBomber or asset.isFighterBomber )
-                ground = isinstance(asset, Vehicle) and ( asset.isTank or asset.isArmor or asset.isMotorized ) 
-                sea = isinstance(asset, Ship) and ( asset.isDestroyer or asset.isCarrier asset.isSubmarine) 
+                air = isinstance( asset, Aircraft ) and ( asset.isAttacker or asset.isBomber or asset.isFighterBomber )
+                ground = isinstance( asset, Vehicle ) and ( asset.isTank or asset.isArmor or asset.isMotorized ) 
+                sea = isinstance( asset, Ship ) and ( asset.isDestroyer or asset.isCarrier or asset.isSubmarine ) 
                     
-                if ( air or ground or sea) and asset.max_speed > max_speed:
-                    max_speed = asset.max_speed
+                if ( air or ground or sea) and asset.speed > speed:
+                    speed = asset.max_speed
 
 
-        if max_speed > 0 and target_distance > 0:
-            return target_distance / max_speed
+        if speed > 0 and target_distance > 0:
+            return target_distance / speed
         else:
             return float('inf')
                 

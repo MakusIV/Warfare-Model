@@ -119,7 +119,7 @@ MIL_BASE_CATEGORY = {
 
     "Air Base": {"Airbase", "Heliport"},
 
-    "Naval Base": {"Port", "Shipyard"},    
+    "Naval Base": {"Port", "Shipyard", "Naval Group"},    
     
     "EWR": ("EWR"),   
 

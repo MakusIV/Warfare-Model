@@ -34,6 +34,7 @@ class Campaign_State:
                                               "Blue": {"Air": None,"Groud": None, "Sea": None},}
         self._global_damaged_asset_ratio = {"Red": {"Air": None,"Groud": None, "Sea": None},
                                               "Blue": {"Air": None,"Groud": None, "Sea": None},}
+        self._success_ratio = {} # ("Block_ID", "Block_Name"): float) # per mil: mission_success_ratio, per prod, storage, transport = random_anomaly (anomalie di produzione, trasporto ecc generate casualmente in funzione del livello di goods (ricambi):  random(0, rcp_goods / acp _goods))
         
         
         #self._damage = 0.0 # damage  - float := [0:1]

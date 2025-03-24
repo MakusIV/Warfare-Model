@@ -523,7 +523,7 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
                 if artilleryInRange:
                     danger["artillery_range"].append(in_range_level)                    
 
-    danger_level_air_attack = np.mean(danger["air_attack"]) * max(danger["air_attack"])# mean * max:  (2, 0.1, 0.2) -> 0.8 * 2 =1.6,  (0.8, 0.8, 0.8) -> 0.8 * 0.8 = 0.16
+    danger_level_air_attack = np.mean(danger["air_attack"]) * max(danger["air_attack"])# mean * max:  (2, 0.1, 0.2) -> 0.8 * 2 =1.6,  (0.8, 0.8, 0.8) -> 0.8 * 0.8 = 0.64
     danger_level_ground_attack = np.mean(danger["ground_attack"]) * max(danger["ground_attack"])
     danger_level_artillery_range = np.mean(danger["artillery_range"]) * max(danger["artillery_range"])
 

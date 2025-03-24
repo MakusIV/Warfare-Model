@@ -273,18 +273,6 @@ class Block:
         return self.updatePayload(destination = "rcp")
 
 
-        check_result = self.checkParam(rcp = param)
-        
-        if not check_result[1]:
-            raise Exception(check_result[2])    
-        else:
-            self._rcp = param           
-            # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
-            # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
-
-        return True
-    
-
 
     @property
     def payload(self) -> Payload:
@@ -410,13 +398,11 @@ class Block:
     @property
     def position(self):
         """calculate center point from assets position"""        
-        return mean(asset.position for asset in self.assets) 
+        return Utility.mean_point([asset.position for asset in self.assets]) 
     
     @property
-    def morale(self):     
-        efficiency = self.efficiency
-        balance_trade = self.balance_trade
-        return efficiency * balance_trade
+    def morale(self):             
+        return Utility.evaluateMorale(State.success_ratio[self], self.efficiency) # mission success ratio recordered for this object
         
     @property
     def efficiency(self):    
