@@ -45,14 +45,10 @@ class Edge:
     def calculate_danger(self, threats):
         danger = 0.0
         for threat in threats:
-            if self.intersects_threat(threat):
-                t1, t2 = self.calculate_intersection_params(threat)
-                valid_t = sorted([t for t in [t1, t2] if 0 <= t <= 1])
-                
-                if len(valid_t) < 2:
-                    continue  # Solo tocco superficiale
-                    
-                exposure_length = (valid_t[1] - valid_t[0]) * self.length
+            result, intersections = self.intersects_threat(threat)
+
+            if result:                                                    
+                exposure_length = (intersections[1] - intersections[0]) * self.length
                 exposure_time = exposure_length / self.speed
                 danger += threat.danger_level * exposure_time
                 
@@ -60,7 +56,8 @@ class Edge:
     
 
     def point_in_cylinder(self, point, threat):
-        return (point.distance_2d(threat.cylinder.center) <= threat.cylinder.radius and threat.min_altitude <= point.z <= threat.cylinder.height)
+        distance_2d = point.distance(Point3D(threat.cylinder.center.x, threat.cylinder.center.y, point.z))
+        return (distance_2d <= threat.cylinder.radius and threat.min_altitude <= point.z <= threat.cylinder.height)
 
     
     def intersects_threat(self, threat):        
@@ -100,19 +97,24 @@ class Edge:
         
         discriminant = b**2 - 4*a*c
         if discriminant < 0:
-            return False
+            return False, None
         
         sqrt_disc = math.sqrt(discriminant)
         t1 = (-b + sqrt_disc) / (2*a)
         t2 = (-b - sqrt_disc) / (2*a)
         
-        for t in [t1, t2]:
-            if 0 <= t <= 1:
-                z = self.wpA.point.z + t*dz
-                if threat.min_altitude <= z <= threat.cylinder.height:
-                    return True
+        valid_t = sorted([t for t in [t1, t2] if 0 <= t <= 1])
+                
+        if len(valid_t) < 2:
+            return False, None  # Solo tocco superficiale
+
+        #for t in [t1, t2]:
+        #    if 0 <= t <= 1:
+        #        z = self.wpA.point.z + t*dz
+        #        if threat.min_altitude <= z <= threat.cylinder.height:
+        #            return True
         
-        return False
+        return True, valid_t
     
     def calculate_exposure(self, threat):
         direction = self.wpB.point - self.wpA.point

@@ -28,6 +28,55 @@ params = {
     'altitude_min': 1
 }
 
+def plot_2d_threats(threats):
+    plt.figure(figsize=(10, 8))
+    
+    # Plot minacce
+    colors = ['red', 'orange', 'yellow', 'purple']
+    for i, threat in enumerate(threats):
+        circle = plt.Circle((threat.cylinder.center.x, threat.cylinder.center.y), 
+                          threat.cylinder.radius, color=colors[i], alpha=0.3,
+                          label=f'ThreatAA_{i+1}')
+        plt.gca().add_patch(circle)
+        
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    plt.title('2D Route Map')
+    plt.legend()
+    plt.grid(True)
+    plt.axis('equal')
+    plt.show()
+
+def plot_3d_threats(threats):
+    fig = plt.figure(figsize=(12, 10))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Plot minacce
+    for i, threat in enumerate(threats):
+        x = threat.cylinder.center.x
+        y = threat.cylinder.center.y
+        z = 0
+        height = threat.cylinder.height
+        
+        # Base del cilindro
+        theta = np.linspace(0, 2*np.pi, 100)
+        x_c = x + threat.cylinder.radius * np.cos(theta)
+        y_c = y + threat.cylinder.radius * np.sin(theta)
+        ax.plot(x_c, y_c, z, color='r', alpha=0.3)
+        
+        # Superficie laterale
+        z_c = np.linspace(z, height, 10)
+        theta, z_c = np.meshgrid(theta, z_c)
+        x_c = x + threat.cylinder.radius * np.cos(theta)
+        y_c = y + threat.cylinder.radius * np.sin(theta)
+        ax.plot_surface(x_c, y_c, z_c, color='r', alpha=0.1)
+    
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Altitude')
+    ax.set_title('3D Route Visualization')
+    plt.show()
+
 def plot_2d_route(route, threats):
     plt.figure(figsize=(10, 8))
     
@@ -90,10 +139,16 @@ def plot_3d_route(route, threats):
     ax.set_title('3D Route Visualization')
     plt.show()
 
+
+
+
+
+
 @pytest.mark.parametrize("start,end", [
     ((3,0,5), (8,10,5)),
     ((3,0,5), (4,3,2))
 ])
+
 def test_route_creation(start, end):
     # Creazione waypoint
     start_wp = Waypoint("START", Point3D(*start))
@@ -101,6 +156,9 @@ def test_route_creation(start, end):
     grid_step = 1
     grid_alt_step = 1
     
+
+    plot_2d_threats(threats)
+    #plot_3d_threats(threats)
     # Creazione rotta
     route = createRoute(start_wp, end_wp, threats, grid_step, grid_alt_step, **params)
 
