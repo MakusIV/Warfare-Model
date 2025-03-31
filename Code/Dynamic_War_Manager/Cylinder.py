@@ -31,6 +31,7 @@ from typing import Tuple, Optional
 
 
 class CylinderClaude:
+
     def __init__(self, center: Point3D, radius: float, height: float):
         # Center si riferisce alla base del cilindro
         self.center = center
@@ -144,6 +145,7 @@ class CylinderClaude:
         return Line3D(point, tan_point1), Line3D(point, tan_point2)
     
     def getIntersection(self, edge: Segment3D) -> tuple:
+    
         """
         Calcola l'intersezione tra un segmento e il cilindro
         
@@ -155,6 +157,7 @@ class CylinderClaude:
                 - Boolean: True se il segmento interseca il cilindro in due punti
                 - Segment3D/None: Segmento definito dai punti di intersezione o None
         """
+        DEBUG = False
         p1, p2 = edge.points
         
         # Convertiamo in coordinate numpy per semplificare i calcoli
@@ -163,69 +166,104 @@ class CylinderClaude:
         base_center_np = np.array([float(self.bottom_center.x), float(self.bottom_center.y), float(self.bottom_center.z)])
         
         # Direzione del segmento
-        direction = p2_np - p1_np
-        direction_len = np.linalg.norm(direction)
-        if direction_len < 1e-10:
+        v = p2_np - p1_np
+        v_length = np.linalg.norm(v)
+        
+        if DEBUG: print(f"getIntersection - p1: {p1_np}, p2: {p2_np}, base: {base_center_np}, dir: {v}, dir_len: {v_length}")
+        
+        if v_length < 1e-10:
             # Il segmento è un punto
             return False, None
-            
-        direction = direction / direction_len
         
-        # Calcoliamo le intersezioni con il cilindro infinito
-        # Equazione: || (p1 + t*direction - base_center)_xy ||^2 = r^2
-        # Dove _xy indica la proiezione sui primi due componenti
+        # Calcolo dell'intersezione con la superficie laterale del cilindro
+        # Definiamo l'asse del cilindro come una linea da base_center a top_center
+        # Poiché l'asse è parallelo all'asse Z, possiamo semplificare
         
-        # Vettore dal punto P1 al centro della base
-        oc = p1_np - base_center_np
+        # Proiettiamo tutto sul piano XY
+        cylinder_center_xy = np.array([base_center_np[0], base_center_np[1]])
+        p1_xy = np.array([p1_np[0], p1_np[1]])
+        p2_xy = np.array([p2_np[0], p2_np[1]])
+        v_xy = p2_xy - p1_xy
         
-        # Coefficienti dell'equazione quadratica at^2 + bt + c = 0
-        a = direction[0]**2 + direction[1]**2
-        b = 2 * (oc[0] * direction[0] + oc[1] * direction[1])
-        c = oc[0]**2 + oc[1]**2 - self.radius**2
+        # Risolviamo l'equazione quadratica per le intersezioni
+        # || p1_xy + t*v_xy - cylinder_center_xy ||^2 = radius^2
         
-        # Discriminante
+        w = p1_xy - cylinder_center_xy
+        
+        a = np.dot(v_xy, v_xy)
+        b = 2 * np.dot(w, v_xy)
+        c = np.dot(w, w) - self.radius**2
+        
         discriminant = b**2 - 4*a*c
         
-        if discriminant < 0:
-            # Nessuna intersezione con il cilindro infinito
+        if abs(a) < 1e-10:
+            # Il segmento è parallelo all'asse Z
+            # [logica per questo caso]
             return False, None
-            
-        # Calcola le due soluzioni
-        t1 = (-b - math.sqrt(discriminant)) / (2*a)
-        t2 = (-b + math.sqrt(discriminant)) / (2*a)
         
-        # Ordina i valori t
-        if t1 > t2:
-            t1, t2 = t2, t1
-            
-        # Controlla se le intersezioni sono all'interno del segmento [0, 1]
-        # e entro l'altezza del cilindro
-        intersections = []
+        if discriminant < 0:
+            # Nessuna intersezione
+            return False, None
+        
+        # Calcolo dei valori t per le intersezioni
+        sqrt_disc = math.sqrt(discriminant)
+        t1 = (-b - sqrt_disc) / (2*a)
+        t2 = (-b + sqrt_disc) / (2*a)
+        
+        if DEBUG: print(f"getIntersection - v_xy: {v_xy}, w: {w}, a: {a}, b: {b}, c: {c}, discri: {discriminant}, t1: {t1}, t2: {t2}")
+        
+        # Filtra le intersezioni che sono sul segmento [0, 1]
+        # e all'interno dell'altezza del cilindro
+        valid_intersections = []
         
         for t in [t1, t2]:
-            if 0 <= t <= 1:  # Punto all'interno del segmento
-                intersection_point_np = p1_np + t * (p2_np - p1_np)
-                # Controlla se il punto è entro l'altezza del cilindro
-                if self.bottom_center.z <= intersection_point_np[2] <= self.top_center.z:
-                    point = Point3D(intersection_point_np[0], intersection_point_np[1], intersection_point_np[2])
-                    intersections.append(point)
+            if 0 <= t <= 1:
+                point_3d = p1_np + t * v
+                if DEBUG: print(f"getIntersection - t: {t}, point_3d: {point_3d}")
+                if base_center_np[2] <= point_3d[2] <= base_center_np[2] + (self.top_center.z - self.bottom_center.z):
+                    valid_intersections.append(Point3D(point_3d[0], point_3d[1], point_3d[2]))
         
-        if len(intersections) == 0:
-            # Nessuna intersezione con il cilindro finito
+        if not valid_intersections:
             return False, None
-        elif len(intersections) == 1:
-            # Una sola intersezione, dobbiamo determinare quale estremo è interno
+        elif len(valid_intersections) == 1:
+            # Un solo punto di intersezione
             if self.innerPoint(p1):
-                return False, Segment3D(intersections[0], p1)
+                return False, Segment3D(valid_intersections[0], p1)
             elif self.innerPoint(p2):
-                return False, Segment3D(intersections[0], p2)
+                return False, Segment3D(valid_intersections[0], p2)
             else:
-                # Caso particolare: solo un'intersezione ma entrambi gli estremi sono esterni
-                # Potrebbe essere una tangente
-                return False, Segment3D(intersections[0], intersections[0])
+                return False, Segment3D(valid_intersections[0], valid_intersections[0])
         else:
-            # Due intersezioni
-            return True, Segment3D(intersections[0], intersections[1])
+            # Due punti di intersezione
+            return True, Segment3D(valid_intersections[0], valid_intersections[1])
+
+    def get_direction_vector(self, line):
+        """Restituisce il vettore direzionale di una Line3D come un oggetto Matrix."""
+        return Matrix([line.p2.x - line.p1.x, line.p2.y - line.p1.y, line.p2.z - line.p1.z])
+
+
+    def are_parallel(self, line1: Line3D, line2: Line3D, tolerance=1e-6):
+        # Ottieni i vettori direzionali delle linee
+        dir1 = self.get_direction_vector(line1)
+        dir2 = self.get_direction_vector(line2)
+
+        # Calcola il prodotto vettoriale
+        cross_product = dir1.cross(dir2)
+        
+        # Verifica se il prodotto vettoriale è vicino a zero
+        return cross_product.norm() < tolerance
+
+
+    def are_perpendicular(self, line1: Line3D, line2: Line3D, tolerance=1e-6):
+        # Ottieni i vettori direzionali delle linee
+        dir1 = self.get_direction_vector(line1)
+        dir2 = self.get_direction_vector(line2)
+        
+        # Calcola il prodotto scalare
+        dot_product = dir1.dot(dir2)
+        
+        # Verifica se il prodotto scalare è vicino a zero
+        return abs(dot_product) < tolerance
     
     def getExtendedPoints(self, edge: Segment3D, tolerance=1e-6) -> tuple:
         """
@@ -238,9 +276,12 @@ class CylinderClaude:
         Returns:
             tuple(Point3D, Point3D) - I punti di intersezione delle tangenti
         """
+        DEBUG = False
         # Verifica prima se c'è un'intersezione
         intersects, intersect_segment = self.getIntersection(edge)
         
+        if DEBUG: print(f"getExtendedPoints - intersects: {intersects}, intersect_segment: {intersect_segment}")
+
         if not intersects or intersect_segment is None:
             return None, None
             
@@ -266,6 +307,8 @@ class CylinderClaude:
             
         # Calcola la distanza tra i punti di intersezione
         distance = left_int.distance(right_int)
+
+        if DEBUG: print(f"getExtendedPoints - left_int: {left_int}, right_int: {right_int}, distance: {distance}")
         
         if distance < tolerance:
             # Se i punti sono molto vicini, restituisci il punto medio
@@ -278,13 +321,30 @@ class CylinderClaude:
         left_tangents = self.getTangents(p1)
         right_tangents = self.getTangents(p2)
         
+        if DEBUG: print(f"getExtendedPoints - left_tangents: {left_tangents}, right_tangents: {right_tangents}")
+
         # Da qui dovremmo calcolare l'intersezione delle tangenti
         # Dobbiamo identificare quali sono le tangenti "a sinistra" e "a destra"
         
         # Assumiamo che le tangenti siano ordinate in modo che la prima sia "a sinistra"
         # e la seconda sia "a destra" rispetto al segmento
-        left_point = self._find_intersection_point(left_tangents[0], right_tangents[0])
-        right_point = self._find_intersection_point(left_tangents[1], right_tangents[1])
+        
+    
+        left_point = self._find_intersection_point( left_tangents[0], right_tangents[0] )        
+        right_point = self._find_intersection_point(right_tangents[1], left_tangents[1] )
+
+        left_point_B = self._find_intersection_point( left_tangents[0], right_tangents[1] )        
+        right_point_B = self._find_intersection_point(right_tangents[0], left_tangents[1] )
+
+        if DEBUG: print(f"getExtendedPoints - left_point: {left_point}, right_point: {right_point}, left_point_B: {left_point_B}, right_point_B: {right_point_B}")
+
+        if left_point.distance(self.center) > left_point_B.distance(self.center):            
+            left_point = left_point_B
+            right_point = right_point_B
+        
+        
+
+        if DEBUG: print(f"getExtendedPoints - left_point: {left_point}, right_point: {right_point}")
         
         return left_point, right_point
     
@@ -292,7 +352,11 @@ class CylinderClaude:
         """
         Trova il punto di intersezione tra due linee, se esiste
         """
+        DEBUG = False      
+        
         inters = intersection(line1, line2)
+        if DEBUG: print(f"_find_intersection_point - inters: {inters}")
+
         if inters:
             for point in inters:
                 if isinstance(point, Point3D):
@@ -300,8 +364,8 @@ class CylinderClaude:
         
         # Se non c'è intersezione, le linee sono parallele o sghembe
         # In questo caso, troviamo il punto più vicino tra le due linee
-        p1, v1 = line1.p1, (line1.p2 - line1.p1).normalized()
-        p2, v2 = line2.p1, (line2.p2 - line2.p1).normalized()
+        p1, v1 = line1.p1, Matrix(line1.p2 - line1.p1).normalized()
+        p2, v2 = line2.p1, Matrix(line2.p2 - line2.p1).normalized()
         
         # Vettore che connette i punti sulle due linee
         w0 = p1 - p2
@@ -334,6 +398,7 @@ class CylinderClaude:
                           (point1.y + point2.y) / 2, 
                           (point1.z + point2.z) / 2)
         
+        if DEBUG: print(f"_find_intersection_point - w0: {w0}, denom: {denom}, point1: {point1}, point2: {point2}, mid_point: {mid_point}")
         return mid_point
 
 
@@ -899,7 +964,7 @@ class CylinderDeepSeek:
             return False, None
         else:
             return False, None
-
+        
     def getExtendedPoints(self, edge: Segment3D, tolleranza: float = 1e-6) -> Tuple[Optional[Point3D], Optional[Point3D]]:
         # Verifica se gli estremi sono interni
         if self.innerPoint(edge.p1) or self.innerPoint(edge.p2):
