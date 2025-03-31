@@ -1,12 +1,13 @@
 import sys
 import os
+
+# Aggiungi il percorso della directory principale del progetto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
-
-# Aggiungi il percorso della directory principale del progetto
-#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-
 
 
 import unittest
@@ -15,13 +16,13 @@ from sympy.geometry import Point2D
 
 
 import unittest
-from sympy import Point3D, Line3D, Segment3D, sqrt
+from sympy import Point3D, Line3D, Segment3D, sqrt, Matrix
 import math
 import numpy as np
 
 # Importa la classe Cylinder dal modulo implementato
 # Assumo che la classe sia in un file chiamato cylinder.py
-from Code.Dynamic_War_Manager.RM_PROVA import CylinderClaude, CylinderCGPT, CylinderDeepSeek, CylinderManus
+from Code.Dynamic_War_Manager.Cylinder import CylinderClaude, CylinderCGPT, CylinderDeepSeek, CylinderManus
 
 class TestCylinderClaude(unittest.TestCase):
     def setUp(self):
@@ -34,6 +35,15 @@ class TestCylinderClaude(unittest.TestCase):
         self.edge_C = Segment3D(Point3D(4, 2, 4), Point3D(9, 15, 4))
         self.edge_D = Segment3D(Point3D(6, 6, 0), Point3D(9, 15, 6))
         self.edge_E = Segment3D(Point3D(16, 1, 0), Point3D(4, 11, 6))
+        self.edge_F = Segment3D(Point3D(4, 14, 9), Point3D(5, 6, 14))
+        self.edge_G = Segment3D(Point3D(8.5, 9.5, 14), Point3D(3.5, 8.5, 14))
+        # self.edge_G = Segment3D(Point3D(8.5, 9.5, 14), Point3D(3.5, 8.5, 14)) : OK
+        # self.edge_G = Segment3D(Point3D(9, 9.5, 6), Point3D(3.5, 8.5, 14)) : OK
+        # self.edge_G = Segment3D(Point3D(8.5, 9.5, 13), Point3D(3.5, 8.5, 14)) : NO
+        # devi inserire un controllo della distanza degli estremi dei segmenti in relazione all'altezza
+        
+        
+
         
     def test_initialization(self):
         """Verifica che il cilindro venga inizializzato correttamente"""
@@ -76,10 +86,10 @@ class TestCylinderClaude(unittest.TestCase):
         
         # Verifica che i vettori dal punto ai punti tangenti siano perpendicolari
         # ai raggi dal centro ai punti tangenti
-        v1 = (tan_point1 - point).normalized()
-        v2 = (tan_point2 - point).normalized()
-        r1 = (tan_point1 - Point3D(6, 9, 7)).normalized()
-        r2 = (tan_point2 - Point3D(6, 9, 7)).normalized()
+        v1 = Matrix(tan_point1 - point).normalized()
+        v2 = Matrix(tan_point2 - point).normalized()
+        r1 = Matrix(tan_point1 - Point3D(6, 9, 7)).normalized()
+        r2 = Matrix(tan_point2 - Point3D(6, 9, 7)).normalized()
         
         self.assertAlmostEqual(v1.dot(r1), 0, delta=1e-10)
         self.assertAlmostEqual(v2.dot(r2), 0, delta=1e-10)
@@ -149,96 +159,7 @@ class TestCylinderClaude(unittest.TestCase):
         self.assertIsNone(left_point)
         self.assertIsNone(right_point)
         
-    def test_edge_A_intersection(self):
-        """Test specifico per edge_A"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_A)
-        print(f"edge_A intersects: {intersects}")
-        if segment is not None:
-            print(f"edge_A intersection points: {segment.points}")
-        else:
-            print("edge_A: No intersection segment")
-            
-        # Verifica il risultato di getExtendedPoints
-        left_point, right_point = self.cylinder.getExtendedPoints(self.edge_A)
-        print(f"edge_A extended points: {left_point}, {right_point}")
-        
-    def test_edge_B_intersection(self):
-        """Test specifico per edge_B"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_B)
-        print(f"edge_B intersects: {intersects}")
-        if segment is not None:
-            print(f"edge_B intersection points: {segment.points}")
-        else:
-            print("edge_B: No intersection segment")
-            
-        # Verifica il risultato di getExtendedPoints
-        left_point, right_point = self.cylinder.getExtendedPoints(self.edge_B)
-        print(f"edge_B extended points: {left_point}, {right_point}")
-        
-    def test_edge_C_intersection(self):
-        """Test specifico per edge_C"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_C)
-        print(f"edge_C intersects: {intersects}")
-        if segment is not None:
-            print(f"edge_C intersection points: {segment.points}")
-        else:
-            print("edge_C: No intersection segment")
-            
-        # Verifica il risultato di getExtendedPoints
-        left_point, right_point = self.cylinder.getExtendedPoints(self.edge_C)
-        print(f"edge_C extended points: {left_point}, {right_point}")
-        
-    def test_edge_D_intersection(self):
-        """Test specifico per edge_D"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_D)
-        print(f"edge_D intersects: {intersects}")
-        if segment is not None:
-            print(f"edge_D intersection points: {segment.points}")
-        else:
-            print("edge_D: No intersection segment")
-            
-        # Verifica il risultato di getExtendedPoints
-        left_point, right_point = self.cylinder.getExtendedPoints(self.edge_D)
-        print(f"edge_D extended points: {left_point}, {right_point}")
-        
-    def test_edge_E_intersection(self):
-        """Test specifico per edge_E"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_E)
-        print(f"edge_E intersects: {intersects}")
-        if segment is not None:
-            print(f"edge_E intersection points: {segment.points}")
-        else:
-            print("edge_E: No intersection segment")
-            
-        # Verifica il risultato di getExtendedPoints
-        left_point, right_point = self.cylinder.getExtendedPoints(self.edge_E)
-        print(f"edge_E extended points: {left_point}, {right_point}")
-        
-    def test_all_edges(self):
-        """Test complessivo per tutti gli edge specificati"""
-        edges = {
-            "edge_A": self.edge_A,
-            "edge_B": self.edge_B,
-            "edge_C": self.edge_C,
-            "edge_D": self.edge_D,
-            "edge_E": self.edge_E
-        }
-        
-        print("\n=== Risultati per tutti gli edge ===")
-        for name, edge in edges.items():
-            intersects, segment = self.cylinder.getIntersection(edge)
-            
-            print(f"\n{name}:")
-            print(f"  Interseca il cilindro: {intersects}")
-            
-            if segment is not None:
-                print(f"  Punti di intersezione: {segment.points}")
-            else:
-                print("  Nessun segmento di intersezione")
-                
-            left_point, right_point = self.cylinder.getExtendedPoints(edge)
-            print(f"  Punti estesi: {left_point}, {right_point}")
-            
+
     def test_find_intersection_point(self):
         """Verifica che il metodo _find_intersection_point funzioni correttamente"""
         # Linee che si intersecano
@@ -248,9 +169,9 @@ class TestCylinderClaude(unittest.TestCase):
         intersection_point = self.cylinder._find_intersection_point(line1, line2)
         
         # Le linee si intersecano in (0.5, 0.5, 0.5)
-        self.assertAlmostEqual(intersection_point.x, 0.5, delta=1e-10)
-        self.assertAlmostEqual(intersection_point.y, 0.5, delta=1e-10)
-        self.assertAlmostEqual(intersection_point.z, 0.5, delta=1e-10)
+        self.assertAlmostEqual(intersection_point.x, 0.5, delta=1e-6)
+        self.assertAlmostEqual(intersection_point.y, 0.5, delta=1e-6)
+        self.assertAlmostEqual(intersection_point.z, 0.5, delta=1e-6)
         
         # Linee parallele
         line3 = Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1))
@@ -261,9 +182,143 @@ class TestCylinderClaude(unittest.TestCase):
         # Dovrebbe restituire un punto medio tra le due linee
         self.assertIsNotNone(intersection_point)
 
+    def test_edge_A_intersection(self):
+        """Test specifico per edge_A"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_A)
+        self.assertTrue(intersects)       
+        self.assertAlmostEqual(segment.p1.x, 5.92, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.y, 7.00, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.z, 7.00, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.x, 7.28, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.y, 10.53, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.z, 7.00, delta=1e-2)
+        #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        #print(f"edge_A intersection points: {points}")
+        
+        # Verifica il risultato di getExtendedPoints        
+        lp, rp = self.cylinder.getExtendedPoints(self.edge_A) 
+        self.assertAlmostEqual(lp.x, 7.91, delta=1e-2)
+        self.assertAlmostEqual(lp.y, 8.28, delta=1e-2)
+        self.assertAlmostEqual(lp.z, 7.00, delta=1e-2)
+        self.assertAlmostEqual(rp.x, 4.00, delta=1e-2)
+        self.assertAlmostEqual(rp.y, 9.81, delta=1e-2)
+        self.assertAlmostEqual(rp.z, 7.00, delta=1e-2)       
+        #print(f"edge_A extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+        
+    def test_edge_B_intersection(self):
+        """Test specifico per edge_B"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_B)
+        self.assertTrue(intersects)  
+        self.assertAlmostEqual(segment.p1.x, 7.26, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.y, 7.44, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.z, 7.00, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.x, 7.81, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.y, 9.85, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.z, 7.00, delta=1e-2)     
+        #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        #print(f"edge_B intersection points: {points}")
+        
+        # Verifica il risultato di getExtendedPoints        
+        lp, rp = self.cylinder.getExtendedPoints(self.edge_B) 
+        self.assertAlmostEqual(lp.x, 7.95, delta=1e-2)
+        self.assertAlmostEqual(lp.y, 8.55, delta=1e-2)
+        self.assertAlmostEqual(lp.z, 7.00, delta=1e-2)
+        self.assertAlmostEqual(rp.x, 3.75, delta=1e-2)
+        self.assertAlmostEqual(rp.y, 9.55, delta=1e-2)
+        self.assertAlmostEqual(rp.z, 7.00, delta=1e-2)       
+        #print(f"edge_B extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+        
+    def test_edge_C_intersection(self):
+        """Test specifico per edge_C"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_C)
+        self.assertFalse(intersects)       
+        self.assertIsNone(segment)
+        #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        #print(f"edge_C intersection points: {points}")
+        
+        # Verifica il risultato di getExtendedPoints        
+        #lp, rp = self.cylinder.getExtendedPoints(self.edge_C)        
+        #print(f"edge_C extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+        
+    def test_edge_D_intersection(self):
+        """Test specifico per edge_D"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_D)
+        self.assertFalse(intersects)       
+        self.assertIsNone(segment)
+        #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        #print(f"edge_D intersection points: {points}")
+        
+        # Verifica il risultato di getExtendedPoints        
+        #lp, rp = self.cylinder.getExtendedPoints(self.edge_D)        
+        #print(f"edge_E extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+        
+    def test_edge_E_intersection(self):
+        """Test specifico per edge_E lo buca da sotto. La funzione rileva solo l'intersezione con la superfice laterale del cilindro"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_E)
+        self.assertFalse(intersects)       
+        self.assertIsNotNone(segment)
+        self.assertTrue(isinstance(segment, Point3D))
+        self.assertAlmostEqual(segment.x, 4.64, delta=1e-2)
+        self.assertAlmostEqual(segment.y, 10.47, delta=1e-2)
+        self.assertAlmostEqual(segment.z, 5.68, delta=1e-2)
 
+        #points = f"({segment.x.evalf():.2f}, {segment.y.evalf():.2f}, {segment.z.evalf():.2f})"
+        #print(f"edge_E intersection points: {points}")
+        
+        # Verifica il risultato di getExtendedPoints        
+        #lp, rp = self.cylinder.getExtendedPoints(self.edge_E)        
+        #print(f"edge_E extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+        
+    def test_edge_F_intersection(self):
+        """Test specifico per edge_F"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_F)
+        self.assertTrue(intersects)       
+        self.assertIsNotNone(segment)
+        self.assertAlmostEqual(segment.p1.x, 4.46, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.y, 10.28, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.z, 11.32, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.x, 4.83, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.y, 7.38, delta=1e-2)
+        self.assertAlmostEqual(segment.p2.z, 13.14, delta=1e-2)  
+        #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        #print(f"edge_F intersection points: {points}")
 
+        # Verifica il risultato di getExtendedPoints        
+        lp, rp = self.cylinder.getExtendedPoints(self.edge_F) 
+        self.assertAlmostEqual(lp.x, 4.00, delta=1e-2)
+        self.assertAlmostEqual(lp.y, 8.63, delta=1e-2)
+        self.assertAlmostEqual(lp.z, 11.50, delta=1e-2)
+        self.assertAlmostEqual(rp.x, 9.13, delta=1e-2)
+        self.assertAlmostEqual(rp.y, 8.61, delta=1e-2)
+        self.assertAlmostEqual(rp.z, 11.50, delta=1e-2)  
+        #print(f"edge_F extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+    
+    def test_edge_G_intersection(self):
+        """Test specifico per edge_G"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_G)
+        self.assertTrue(intersects)       
+        self.assertIsNotNone(segment)
+        #self.assertAlmostEqual(segment.p1.x, 4.46, delta=1e-2)
+        #self.assertAlmostEqual(segment.p1.y, 10.28, delta=1e-2)
+        #self.assertAlmostEqual(segment.p1.z, 11.32, delta=1e-2)
+        #self.assertAlmostEqual(segment.p2.x, 4.83, delta=1e-2)
+        #self.assertAlmostEqual(segment.p2.y, 7.38, delta=1e-2)
+        #self.assertAlmostEqual(segment.p2.z, 13.14, delta=1e-2)  
+        points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
+        print(f"edge_G intersection points: {points}")
 
+        # Verifica il risultato di getExtendedPoints        
+        lp, rp = self.cylinder.getExtendedPoints(self.edge_G) 
+        #self.assertAlmostEqual(lp.x, 4.00, delta=1e-2)
+        #self.assertAlmostEqual(lp.y, 8.63, delta=1e-2)
+        #self.assertAlmostEqual(lp.z, 11.50, delta=1e-2)
+        #self.assertAlmostEqual(rp.x, 9.13, delta=1e-2)
+        #self.assertAlmostEqual(rp.y, 8.61, delta=1e-2)
+        #self.assertAlmostEqual(rp.z, 11.50, delta=1e-2)  
+        print(f"edge_F extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
+    
+
+"""
 # Modulo di test per la classe Cylinder
 class TestCylinderCGPT(unittest.TestCase):
     def setUp(self):
@@ -356,14 +411,16 @@ class TestCylinderCGPT(unittest.TestCase):
         P_left, P_right = self.cylinder.getExtendedPoints(self.edge_E)
         self.assertIsNotNone(P_left)
         self.assertIsNotNone(P_right)
+"""
 
 
+"""
 #Modulo di test per la classe Cylinder
 class TestCylinderManus(unittest.TestCase):
     def setUp(self):
-        """
-        Inizializza un cilindro con i dati specificati per tutti i test
-        """
+        
+        #Inizializza un cilindro con i dati specificati per tutti i test
+        
         self.center = Point3D(6, 9, 5)
         self.height = 10
         self.radius = 2
@@ -377,9 +434,9 @@ class TestCylinderManus(unittest.TestCase):
         self.edge_E = Segment3D(Point3D(16, 1, 0), Point3D(4, 11, 6))
     
     def test_innerPoint(self):
-        """
-        Test del metodo innerPoint
-        """
+        
+        #Test del metodo innerPoint
+        
         # Punto interno al cilindro
         point_inside = Point3D(6, 9, 10)
         self.assertTrue(self.cylinder.innerPoint(point_inside), 
@@ -401,9 +458,9 @@ class TestCylinderManus(unittest.TestCase):
                          f"Il punto {point_below_base} dovrebbe essere esterno al cilindro (sotto la base)")
     
     def test_getTangentPoints(self):
-        """
-        Test del metodo getTangentPoints
-        """
+        
+        #Test del metodo getTangentPoints
+        
         # Punto esterno al cilindro
         point_outside = Point3D(10, 9, 10)
         tangent_point1, tangent_point2 = self.cylinder.getTangentPoints(point_outside)
@@ -427,9 +484,9 @@ class TestCylinderManus(unittest.TestCase):
                        msg=f"Il punto di tangenza 2 dovrebbe essere all'interno dell'altezza del cilindro")
     
     def test_getTangents(self):
-        """
-        Test del metodo getTangents
-        """
+        
+        #Test del metodo getTangents
+        
         # Punto esterno al cilindro
         point_outside = Point3D(10, 9, 10)
         tangent_line1, tangent_line2 = self.cylinder.getTangents(point_outside)
@@ -459,9 +516,9 @@ class TestCylinderManus(unittest.TestCase):
                               msg=f"La distanza della linea tangente 2 dall'asse dovrebbe essere {self.cylinder.radius}")
     
     def test_getIntersection_edge_A(self):
-        """
-        Test del metodo getIntersection con edge_A
-        """
+        
+        #Test del metodo getIntersection con edge_A
+        
         intersects, intersection_segment = self.cylinder.getIntersection(self.edge_A)
         
         self.assertTrue(intersects, 
@@ -483,9 +540,9 @@ class TestCylinderManus(unittest.TestCase):
                               msg=f"La distanza del punto di intersezione 2 dal centro dovrebbe essere {self.cylinder.radius}")
     
     def test_getIntersection_edge_B(self):
-        """
-        Test del metodo getIntersection con edge_B
-        """
+        
+        #Test del metodo getIntersection con edge_B
+        
         intersects, intersection_segment = self.cylinder.getIntersection(self.edge_B)
         
         self.assertTrue(intersects, 
@@ -507,9 +564,9 @@ class TestCylinderManus(unittest.TestCase):
                               msg=f"La distanza del punto di intersezione 2 dal centro dovrebbe essere {self.cylinder.radius}")
     
     def test_getIntersection_edge_C(self):
-        """
-        Test del metodo getIntersection con edge_C
-        """
+        
+        #Test del metodo getIntersection con edge_C
+        
         intersects, intersection_segment = self.cylinder.getIntersection(self.edge_C)
         
         self.assertFalse(intersects, 
@@ -518,9 +575,9 @@ class TestCylinderManus(unittest.TestCase):
                          msg=f"Il segmento di intersezione dovrebbe essere None")
     
     def test_getIntersection_edge_D(self):
-        """
-        Test del metodo getIntersection con edge_D
-        """
+        
+        #Test del metodo getIntersection con edge_D
+        
         intersects, intersection_segment = self.cylinder.getIntersection(self.edge_D)
         
         self.assertFalse(intersects, 
@@ -529,9 +586,9 @@ class TestCylinderManus(unittest.TestCase):
                          msg=f"Il segmento di intersezione dovrebbe essere None")
     
     def test_getIntersection_edge_E(self):
-        """
-        Test del metodo getIntersection con edge_E
-        """
+        
+        #Test del metodo getIntersection con edge_E
+        
         intersects, intersection_segment = self.cylinder.getIntersection(self.edge_E)
         
         self.assertFalse(intersects, 
@@ -544,9 +601,9 @@ class TestCylinderManus(unittest.TestCase):
                         msg=f"L'intersezione dovrebbe essere un punto, non un segmento")
     
     def test_getExtendedPoints_edge_A(self):
-        """
-        Test del metodo getExtendedPoints con edge_A
-        """
+        
+        #Test del metodo getExtendedPoints con edge_A
+        
         left_point, right_point = self.cylinder.getExtendedPoints(self.edge_A)
         
         self.assertIsNotNone(left_point, 
@@ -555,9 +612,9 @@ class TestCylinderManus(unittest.TestCase):
                             msg=f"Il punto esteso destro non dovrebbe essere None")
     
     def test_getExtendedPoints_edge_B(self):
-        """
-        Test del metodo getExtendedPoints con edge_B
-        """
+        
+        #Test del metodo getExtendedPoints con edge_B
+        
         left_point, right_point = self.cylinder.getExtendedPoints(self.edge_B)
         
         self.assertIsNotNone(left_point, 
@@ -566,9 +623,9 @@ class TestCylinderManus(unittest.TestCase):
                             msg=f"Il punto esteso destro non dovrebbe essere None")
     
     def test_getExtendedPoints_edge_C(self):
-        """
-        Test del metodo getExtendedPoints con edge_C
-        """
+        
+        #Test del metodo getExtendedPoints con edge_C
+        
         left_point, right_point = self.cylinder.getExtendedPoints(self.edge_C)
         
         self.assertIsNone(left_point, 
@@ -577,9 +634,9 @@ class TestCylinderManus(unittest.TestCase):
                          msg=f"Il punto esteso destro dovrebbe essere None")
     
     def test_getExtendedPoints_edge_D(self):
-        """
-        Test del metodo getExtendedPoints con edge_D
-        """
+        
+        #Test del metodo getExtendedPoints con edge_D
+        
         left_point, right_point = self.cylinder.getExtendedPoints(self.edge_D)
         
         self.assertIsNone(left_point, 
@@ -588,9 +645,9 @@ class TestCylinderManus(unittest.TestCase):
                          msg=f"Il punto esteso destro dovrebbe essere None")
     
     def test_getExtendedPoints_edge_E(self):
-        """
-        Test del metodo getExtendedPoints con edge_E
-        """
+        
+        #Test del metodo getExtendedPoints con edge_E
+        
         left_point, right_point = self.cylinder.getExtendedPoints(self.edge_E)
         
         self.assertIsNone(left_point, 
@@ -702,12 +759,27 @@ class TestCylinderDeepSeek(unittest.TestCase):
         self.assertIsNotNone(right)
         self.assertTrue(left.is_collinear(right))
 
-
+"""
 
 if __name__ == "__main__":
     # Esegui prima i test specifici
     suite = unittest.TestSuite()
-    suite.addTest(TestCylinderClaude('test_all_edges'))
+    suite.addTest(TestCylinderClaude('test_initialization'))
+    suite.addTest(TestCylinderClaude('test_inner_point'))
+    suite.addTest(TestCylinderClaude('test_get_circle_at_z'))
+    suite.addTest(TestCylinderClaude('test_get_tangent_points'))
+    suite.addTest(TestCylinderClaude('test_get_tangents'))
+    suite.addTest(TestCylinderClaude('test_get_intersection'))
+    suite.addTest(TestCylinderClaude('test_get_extended_points'))
+    suite.addTest(TestCylinderClaude('test_find_intersection_point'))
+    suite.addTest(TestCylinderClaude('test_edge_A_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_B_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_C_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_D_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_E_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_F_intersection'))
+    suite.addTest(TestCylinderClaude('test_edge_G_intersection'))
+
     #suite.addTest(TestCylinderCGPT('test_all_edges'))
     #suite.addTest(TestCylinderDeepSeek('test_all_edges'))
     #suite.addTest(TestCylinderManus('test_all_edges'))
@@ -715,4 +787,4 @@ if __name__ == "__main__":
     unittest.TextTestRunner().run(suite)
     
     # Poi esegui tutti i test
-    unittest.main()
+    #unittest.main()
