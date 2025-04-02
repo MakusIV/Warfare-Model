@@ -18,12 +18,12 @@ import numpy as np
 
 # Importa la classe Cylinder dal modulo implementato
 # Assumo che la classe sia in un file chiamato cylinder.py
-from Code.Dynamic_War_Manager.Cylinder import CylinderClaude
+from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 class TestCylinderClaude(unittest.TestCase):
     def setUp(self):
         # Crea un'istanza di Cylinder per i test
-        self.cylinder = CylinderClaude(Point3D(6, 9, 5), 2, 10)
+        self.cylinder = Cylinder(Point3D(6, 9, 5), 2, 10)
         
         # Crea i segmenti per i test specifici
         self.edge_A = Segment3D(Point3D(4, 2, 7), Point3D(9, 15, 7)) # interseca
@@ -326,7 +326,7 @@ def measure_time(func, *args, iterations=10000, **kwargs):
 # Funzione per eseguire i test di performance sui metodi della classe Cylinder
 def performance_test():
     # Inizializzazione di un cilindro e degli input di test
-    cylinder = CylinderClaude(Point3D(6, 9, 5), 2, 10)
+    cylinder = Cylinder(Point3D(6, 9, 5), 2, 10)
     # Punto per innerPoint e getTangentPoints/getTangents
     test_point_out = Point3D(10, 9, 7)  # punto esterno in pianta
     test_point_in  = Point3D(6, 9, 7)    # punto interno per innerPoint
@@ -396,7 +396,7 @@ if __name__ == "__main__":
     suite.addTest(TestCylinderClaude('test_edge_G_intersection'))
 
 
-    #unittest.TextTestRunner().run(suite)
+    unittest.TextTestRunner().run(suite)
     
     #esegue solo i test di performance
     performance_test()
