@@ -1,24 +1,32 @@
 import heapq
 import math
-from sympy import Point3D, Point2D, Line3D, Line2D, Circle
+from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
 from collections import defaultdict
+from Code.Dynamic_War_Manager.Cylinder import Cylinder
+
+
+class ThreatAA:
+    def __init__(self, danger_level, min_altitude: float, cylinder: Cylinder):
+        self.danger_level = danger_level
+        self.min_altitude = min_altitude
+        self.cylinder = cylinder
+
+        def edgeInRange(self, edge):
+            segment = Segment3D(edge.wpA.point, edge.wpB.point)
+            return cylinder.getIntersection(segment)
+            
+
 
 class Waypoint:
-    def __init__(self, name, point):
-        self._name = name
-        self._point = point
+    def __init__(self, name: str, point: Point3D, id: str|None):
+        self.id = id
+        self.name = name
+        self.point = point
+        self.point2d = Point2D(point.x, point.y)
 
-    @property
-    def name(self):
-        return self._name
-    
-    @property
-    def point(self):
-        return self._point
-    
-    def point2d(self):
-        return Point2D(self.point.x, self.point.y)
+        if not id:
+            self.id = name
     
     
     def __lt__(self, other):
@@ -33,14 +41,24 @@ class Waypoint:
     def __hash__(self):
         return hash((self.point.x, self.point.y, self.point.z))
 
+
+
+
 class Edge:
-    def __init__(self, wpA, wpB, speed, threats):
-        self._wpA = wpA
-        self._wpB = wpB
-        self._speed = speed
-        self._length = wpA.point.distance(wpB.point)
-        self._danger = self.calculate_danger(threats)
     
+    
+    def __init__(self, wpA: Waypoint, wpB: Waypoint, speed: float):
+        self.name = f"{wpA.name}_{wpB.name}"
+        self.wpA = wpA
+        self.wpB = wpB
+        self.speed = speed
+        self.length = wpA.point.distance(wpB.point)
+        self.danger = 0
+
+    def getSegmet3D(self):
+        return Segment3D(self.wpA.point, self.wpB.point)
+    
+   
 
     def calculate_danger(self, threats):
         danger = 0.0
@@ -53,12 +71,7 @@ class Edge:
                 danger += threat.danger_level * exposure_time
                 
         return danger
-    
-
-    def point_in_cylinder(self, point, threat):
-        distance_2d = point.distance(Point3D(threat.cylinder.center.x, threat.cylinder.center.y, point.z))
-        return (distance_2d <= threat.cylinder.radius and threat.min_altitude <= point.z <= threat.cylinder.height)
-
+        
     
     def intersects_threat(self, threat):        
 
@@ -139,171 +152,7 @@ class Edge:
         
         return (min(valid_t), max(valid_t))
     
-    @property
-    def wpA(self):
-        return self._wpA
     
-    @property
-    def wpB(self):
-        return self._wpB
-    
-    @property
-    def speed(self):
-        return self._speed
-    
-    @property
-    def length(self):
-        return self._length
-    
-    @property
-    def danger(self):
-        return self._danger
-
-class RoutePlanner:
-    def __init__(self, start, end, threats, params, grid_step, grid_alt_step):
-        self.start = start
-        self.end = end
-        self.threats = threats
-        self.params = params
-        self.grid_step = grid_step #5000  # 5km grid resolution
-        self.grid_alt_step = grid_alt_step  #1000  # 1km vertical resolution
-        self.grid = self.generate_grid()
-    
-    def generate_grid(self):
-        grid = []
-        x_range = range(self.start.point.x - 2, self.start.point.x + 3)
-        y_range = range(self.start.point.y - 2, self.start.point.y + 3)
-        
-        for x in x_range:
-            for y in y_range:
-                for z in range(self.params['altitude_min'], 
-                            self.params['altitude_max'] + 1):
-                    if (x, y) != (self.start.point.x, self.start.point.y):
-                        grid.append(Waypoint(f"wp_{x}_{y}_{z}", Point3D(x, y, z)))
-        
-        grid.append(self.end)
-        return grid
-
-
-    def find_neighbors(self, waypoint):
-        neighbors = []
-        step = 1
-        directions = [
-            (self.grid_step, 0, 0),
-            (-self.grid_step, 0, 0),
-            (0, self.grid_step, 0),
-            (0, -self.grid_step, 0),
-            (0, 0, self.grid_step),
-            (0, 0, -self.grid_step)
-        ]
-        
-        for dx, dy, dz in directions:
-            new_point = Point3D(
-                waypoint.point.x + dx,
-                waypoint.point.y + dy,
-                waypoint.point.z + dz
-            )
-            
-            # Filtra movimenti puramente verticali nello stesso punto 2D
-            if (dx == 0 and dy == 0) and (dz != 0):
-                continue
-                
-            if (self.params['altitude_min'] <= new_point.z <= 
-                self.params['altitude_max']):
-                neighbors.append(Waypoint(f"wp_{new_point.x}_{new_point.y}_{new_point.z}", new_point))
-        
-        return neighbors
-    
-    def a_star(self):
-        open_set = []
-        heapq.heappush(open_set, (0, self.start))
-        
-        came_from = {}
-        g_score = defaultdict(lambda: float('inf'))
-        g_score[self.start] = 0
-        
-        f_score = defaultdict(lambda: float('inf'))
-        f_score[self.start] = self.heuristic(self.start)
-        
-        while open_set:
-            current = heapq.heappop(open_set)[1]
-
-            # DEBUG 2: Stampa informazioni sui vicini
-            neighbors = self.find_neighbors(current)
-            print(f"\nNodo corrente: {current.point}")
-            print(f"Vicini trovati ({len(neighbors)}):")
-            for n in neighbors:
-                print(f"- {n.point}")
-            # ---------------------------------
-            
-           
-            if current.point == self.end.point:  # Confronto per coordinate
-                return self.reconstruct_path(came_from, current)
-            
-            for neighbor in self.find_neighbors(current):
-                edge = Edge(current, neighbor, self.params['speed_max'], self.threats)
-                
-                if edge.length > self.params['range_max']:
-                    continue
-                
-                tentative_g_score = g_score[current] + edge.danger
-                
-                if tentative_g_score < g_score[neighbor]:
-                    came_from[neighbor] = current
-                    g_score[neighbor] = tentative_g_score
-                    f_score[neighbor] = tentative_g_score + self.heuristic(neighbor)
-                    heapq.heappush(open_set, (f_score[neighbor], neighbor))
-        
-        return None
-    
-    def heuristic(self, waypoint):
-        return waypoint.point.distance(self.end.point) / self.params['speed_max']
-    
-    def reconstruct_path(self, came_from, current):
-        path = [current]
-        while current in came_from:
-            current = came_from[current]
-            path.append(current)
-        return path[::-1]
-
-class ThreatAA:
-    def __init__(self, danger_level, min_altitude, cylinder):
-        self.danger_level = danger_level
-        self.min_altitude = min_altitude
-        self.cylinder = cylinder
-
-class Cylinder:
-    def __init__(self, center, radius, height):
-        
-        if not isinstance(center, Point2D):
-            center = Point2D(center[0], center[1])  # Conversione esplicita
-        
-        self.center = center
-        self.radius = radius
-        self.height = height
-
-def createRoute(start, end, threats, grid_step, grid_alt_step, range_max, speed_max, altitude_max, altitude_min):
-    params = {
-        'range_max': range_max,
-        'speed_max': speed_max,
-        'altitude_max': altitude_max,
-        'altitude_min': altitude_min
-    }
-    
-    planner = RoutePlanner(start, end, threats, params, grid_step, grid_alt_step)
-    path = planner.a_star()
-    
-    if not path:
-        return None
-    
-    route = Route("optimized_route")
-    for i in range(len(path)-1):
-        edge = Edge(path[i], path[i+1], speed_max, threats)
-        route.add_edge(edge)
-
-
-    return route
-
 class Route:
 
     def __init__(self, name):
@@ -328,3 +177,120 @@ class Route:
         return path
 
 
+
+class RoutePlanner:
+
+    def __init__(self, start, end, threats, params, grid_step, grid_alt_step):
+        self.start = start
+        self.end = end
+        self.threats = threats
+        self.params = params
+        self.grid_step = grid_step #5000  # 5km grid resolution
+        self.grid_alt_step = grid_alt_step  #1000  # 1km vertical resolution
+        self.grid = self.generate_grid()
+    
+    def generate_grid(self):
+        grid = []
+        x_range = range(self.start.point.x - 2, self.start.point.x + 3)
+        y_range = range(self.start.point.y - 2, self.start.point.y + 3)
+        
+        for x in x_range:
+            for y in y_range:
+                for z in range(self.params['altitude_min'], 
+                            self.params['altitude_max'] + 1):
+                    if (x, y) != (self.start.point.x, self.start.point.y):
+                        grid.append(Waypoint(f"wp_{x}_{y}_{z}", Point3D(x, y, z)))
+        
+        grid.append(self.end)
+        return grid    
+    
+    def heuristic(self, waypoint):
+        return waypoint.point.distance(self.end.point) / self.params['speed_max']
+    
+    def reconstruct_path(self, came_from, current):
+        path = [current]
+        while current in came_from:
+            current = came_from[current]
+            path.append(current)
+        return path[::-1]
+
+    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float):      
+
+      
+        p1 = start
+        p2 = end
+        end = end
+        path = dict(Route)
+
+        # Calcola il percorso senza minacce
+        self.calcPathWithoutThreat(p1, p2, end, threats, n_waypoint = 0, n_path = 0, path = {str(0): ()}, aircraft_altitude_min = aircraft_altitude_min , aircraft_altitude_max = aircraft_altitude_max, aircraft_speed_max = aircraft_speed_max, aircraft_speed = aircraft_speed, aircraft_range_max = aircraft_range_max)  
+
+        if path.count > 0 and path[0] != None:
+            return path
+        
+        # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce                
+        path = self.calcPathWithThreat(p1, p2, end, threats, n_waypoint = 0, n_path = 0, path = (), aircraft_altitude_min = aircraft_altitude_min , aircraft_altitude_max = aircraft_altitude_max, aircraft_speed_max = aircraft_speed_max, aircraft_speed = aircraft_speed, aircraft_range_max = aircraft_range_max)
+
+        return path
+
+
+    def nearThreatIntersecate(self, edge: Edge, threats: list[ThreatAA]):
+        threat_distance = float('inf') # distanza da edge.wpa a threat.center
+        near_threat = None
+
+        for threat in threats:
+            threatInrange, intersection = threat.edgeInRange(edge)
+            
+            if threatInrange:
+                wpA_Intersection_distance = edge.wpA.point.distance(intersection[0]) # distanza dalla circonferenza della threat
+                
+                if wpA_Intersection_distance < threat_distance:
+                    threat_distance = wpA_Intersection_distance
+                    near_threat = threat
+
+        return near_threat
+
+
+    def calcPathWithoutThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_waypoint: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float):  
+        start = Waypoint(f"wp_{n_waypoint}", start)
+        edge = Edge(p1, p2, speed = aircraft_speed)
+        threat_intersect = self.nearThreatIntersecate(edge, threats)
+
+        if not threat_intersect:
+            path[str(n_path)].append(edge)
+            
+            if p2 == end:
+                return path
+            else:
+
+        pass
+
+    def calcPathWithThreat(self, start: Point3D, end: Point3D, threats: list[ThreatAA], n_path: int, path: dict, altitude_min: float, altitude_max: float):
+        pass
+
+
+
+
+def createRoute(start, end, threats, grid_step, grid_alt_step, range_max, speed_max, altitude_max, altitude_min):
+    params = {
+        'range_max': range_max,
+        'speed_max': speed_max,
+        'altitude_max': altitude_max,
+        'altitude_min': altitude_min
+    }
+    
+    planner = RoutePlanner(start, end, threats, params, grid_step, grid_alt_step)
+    path = planner.a_star()
+    
+    if not path:
+        return None
+    
+    route = Route("optimized_route")
+    for i in range(len(path)-1):
+        edge = Edge(path[i], path[i+1], speed_max, threats)
+        route.add_edge(edge)
+
+
+    return route
+
+c

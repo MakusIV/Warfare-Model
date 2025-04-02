@@ -30,7 +30,7 @@ from typing import Tuple, Optional
 
 
 
-class CylinderClaude:
+class Cylinder:
 
     def __init__(self, center: Point3D, radius: float, height: float):
         # Center si riferisce alla base del cilindro
