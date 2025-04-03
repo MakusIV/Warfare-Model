@@ -44,7 +44,27 @@ class Cylinder:
         # Definiamo i piani superiore e inferiore del cilindro
         self.bottom_center = center  # La base coincide con center
         self.top_center = Point3D(center.x, center.y, center.z + height)
+
+    def distanceFromCirconference(self, point: Point3D):
+        z = point.z
+        center, radius = self._get_circle_at_z(z)
+        return point.distance(center) - radius
+
+    def distanceFromCenter(self, point: Point3D):
+        z = point.z
+        center, _ = self._get_circle_at_z(z)
+        return point.distance(center)
+
+    def centerProximity(self, point: Point3D) -> float: # 1: external point or point on circonference, 0: point == center
+
+        if not self.innerPoint(point):
+            return 0
         
+        z = point.z
+        center, radius = self._get_circle_at_z(z)        
+        proximity = point.distance(center) / radius
+
+
     def innerPoint(self, point: Point3D) -> bool:
         """
         Verifica se un punto è interno al cilindro

@@ -7,18 +7,26 @@ from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 
 class ThreatAA:
+    
     def __init__(self, danger_level, min_altitude: float, cylinder: Cylinder):
         self.danger_level = danger_level
-        self.min_altitude = min_altitude
+        self.min_altitude = cylinder.center.z
+        self.max_altitude = cylinder.bottom_center.z
         self.cylinder = cylinder
 
-        def edgeInRange(self, edge):
-            segment = Segment3D(edge.wpA.point, edge.wpB.point)
-            return cylinder.getIntersection(segment)
+    def edgeIntersect(self, edge):
+        segment = Segment3D(edge.wpA.point, edge.wpB.point)        
+        return self.cylinder.getIntersection(segment)
+    
+    def innerPoint(self, point:Point3D, tolerance: float):
             
-
+        if self.cylinder.innerPoint(point):
+            return True
+        return False
+          
 
 class Waypoint:
+    
     def __init__(self, name: str, point: Point3D, id: str|None):
         self.id = id
         self.name = name
@@ -42,13 +50,11 @@ class Waypoint:
         return hash((self.point.x, self.point.y, self.point.z))
 
 
-
-
 class Edge:
     
     
-    def __init__(self, wpA: Waypoint, wpB: Waypoint, speed: float):
-        self.name = f"{wpA.name}_{wpB.name}"
+    def __init__(self, name: str, wpA: Waypoint, wpB: Waypoint, speed: float):
+        self.name = name # name = "P: num path - E: num edge "
         self.wpA = wpA
         self.wpB = wpB
         self.speed = speed
@@ -214,83 +220,147 @@ class RoutePlanner:
             path.append(current)
         return path[::-1]
 
-    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float):      
+    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str = "no_change"):      
 
+
+        # change_alt_option: str = "no_change", "change_down", "change_up"
+        # ricorda in threats devono essere escluse le threat che includono i 
       
         p1 = start
         p2 = end
-        end = end
-        path = dict(Route)
+        end = end        
+        n_edge = 0, 
+        n_path = 0
+        found_path = False
+        path = {str(0): ()} #dict(Route)
+    
 
-        # Calcola il percorso senza minacce
-        self.calcPathWithoutThreat(p1, p2, end, threats, n_waypoint = 0, n_path = 0, path = {str(0): ()}, aircraft_altitude_min = aircraft_altitude_min , aircraft_altitude_max = aircraft_altitude_max, aircraft_speed_max = aircraft_speed_max, aircraft_speed = aircraft_speed, aircraft_range_max = aircraft_range_max)  
+        # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
+        self.excludeThreat(threats, start)
+        self.excludeThreat(threats, end)
 
-        if path.count > 0 and path[0] != None:
+        # Calcola il percorso senza minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)
+        found_path = self.calcPathWithoutThreat(p1, p2, end, threats, n_edge, n_path, path, aircraft_altitude_min , aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)  
+
+        if found_path:
             return path
         
-        # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce                
-        path = self.calcPathWithThreat(p1, p2, end, threats, n_waypoint = 0, n_path = 0, path = (), aircraft_altitude_min = aircraft_altitude_min , aircraft_altitude_max = aircraft_altitude_max, aircraft_speed_max = aircraft_speed_max, aircraft_speed = aircraft_speed, aircraft_range_max = aircraft_range_max)
+        # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)                
+        found_path = self.calcPathWithThreat(p1, p2, end, threats, n_edge, n_path, path, aircraft_altitude_min , aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
 
-        return path
+        if found_path:
+            return path
+        
+        return None
+
+    def excludeThreat(self, threats: list[ThreatAA], point: Point3D):
+        
+        for threat in threats:
+            
+            if threat.innerPoint(point):
+                threats.remove(threat)
+                
+        return True 
 
 
-    def nearThreatIntersecate(self, edge: Edge, threats: list[ThreatAA]):
+    def firstThreatIntersected(self, edge: Edge, threats: list[ThreatAA]) -> ThreatAA:
+        DEBUG = False
         threat_distance = float('inf') # distanza da edge.wpa a threat.center
-        near_threat = None
+        first_threat = None
 
         for threat in threats:
-            threatInrange, intersection = threat.edgeInRange(edge)
+            threatInrange, intersection = threat.edgeIntersect(edge)
             
             if threatInrange:
                 wpA_Intersection_distance = edge.wpA.point.distance(intersection[0]) # distanza dalla circonferenza della threat
                 
                 if wpA_Intersection_distance < threat_distance:
                     threat_distance = wpA_Intersection_distance
-                    near_threat = threat
+                    first_threat = threat                    
+                    if DEBUG: print(f"Found threat intersection at lesser distance: threat: {threat}, threat_distance: {threat_distance}")        
 
-        return near_threat
+        return first_threat
 
 
-    def calcPathWithoutThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_waypoint: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float):  
-        start = Waypoint(f"wp_{n_waypoint}", start)
-        edge = Edge(p1, p2, speed = aircraft_speed)
-        threat_intersect = self.nearThreatIntersecate(edge, threats)
+    def calcPathWithoutThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str) -> bool:  
+        DEBUG = False
+        wp_A = Waypoint(f"wp_A{n_edge}", p1)
+        wp_B = Waypoint(f"wp_B{n_edge}", p2)
+        edge = Edge(f"P:{n_path}-E:{n_edge}", wp_A, wp_B, speed = aircraft_speed)
+        threat_intersect = self.firstThreatIntersected(edge, threats)        
 
-        if not threat_intersect:
-            path[str(n_path)].append(edge)
+        if DEBUG: print(f"n_path: {n_path}, n_edge: {n_edge}, wp_A: {wp_A}, wp_B: {wp_B}, threat_intersect: {threat_intersect}")
+
+        if not threat_intersect: # nessuna minaccia interseca l'edge p1-p2
+            path[str(n_path)].append(edge) # l'edge viene aggiunto al percorso
+            if DEBUG: print(f"no threat intersect, path: {path}")
             
-            if p2 == end:
-                return path
+            if p2 == end: # se p2 coincide con la fine del percorso il calcolo del percorso termina
+                return True #path
+            
+            else: # se p2 non coincide con la fine del percorso, chiama ricorsvamente la funzione considerando p2 come nuovo punto di partenza, end il punto p2 ed incrementando di 1 n_edge
+                self.calcPathWithoutThreat(p2, end, end, threats, n_edge + 1, n_path, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)        
+        
+        elif ( aircraft_altitude_max > threat_intersect.max_altitude + 1 or aircraft_altitude_min < threat_intersect.min_altitude -1 ) and change_alt_option != "no_change": # l'aereo può passare sopra o sotto la minaccia
+            intersected, segm = threat_intersect.cylinder.getIntersection(edge.getSegmet3D()) # determina il segmento di intersezione dell'edge con la minaccia
+            
+            if not intersected:
+                raise Exception(f"Unexpected value intersected is {intersected} but must be True - threat_intersect: {threat_intersect}, n_path: {n_path}, n_edge: {n_edge}")
+            
+            new_p1 = segm[0].point # crea un nuovo punto considerando il punto d'intersezione del cilindro 
+
+            if change_alt_option == "change_up":
+                new_p1.z = threat_intersect.max_altitude + 1 # imposta la coordinata z del nuovo punto con l'altezza massima della della minaccia +1            
+            
+            elif change_alt_option == "change_down":
+                new_p1.z = threat_intersect.min_altitude - 1 # imposta la coordinata z del nuovo punto con l'altezza minima della della minaccia - 1            
+            
             else:
+                raise ValueError(f"Unexpected value of change_alt_option: {change_alt_option}. change_alt_option must be: /'no_change'', /'change_up' or /'change_down'")
+                        
+            wp_B = Waypoint(f"wp_B{n_edge}", new_p1 ) # crea un nuovo waypoint B con il nuovo punto
+            edge = Edge(f"P:{n_path}-E:{n_edge}", wp_A, wp_B, speed = aircraft_speed) # aggiorna il l'edge con il waypoint precedente (wp_A) ed il nuovo waypoint (wp_B)
+            path[str(n_path)].append(edge) # l'edge viene aggiunto al percorso
+            
+            if DEBUG: print(f"l'aereo può passare sopra o sotto la minaccia, aggiornamento wp_B: {wp_B}, edge: {edge} e inserimento nel path: {path}")
+            
+            # chiama ricorsivemente lil metodo per proseguire il calcolo del percorso dal nuovo punto al punto p2
+            self.calcPathWithoutThreat(new_p1, p2, end, threats, n_edge + 1, n_path, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
 
+
+        else: # l'aereo non può passare sotto o sopra la minaccia
+            # determina i due punti esterni alla minaccia. NOTA: la tolleranza di 0.001 è solo se i test di unità li imposti con mappe limitate da 0 a 10.
+            ext_p1, ext_p2 = threat_intersect.cylinder.getExtendedPoints(edge.getSegmet3D(), 0.001) 
+            
+            # valutazione primo path con ext_p1 (il primo path si considera come prosecuzione del path già considerato)
+            wp_B = Waypoint(f"wp_B{n_edge}", ext_p1 ) # crea un nuovo waypoint B con il nuovo punto ext_p1
+            edge = Edge(f"P:{n_path}-E:{n_edge}", wp_A, wp_B, speed = aircraft_speed) # aggiorna il l'edge con il waypoint precedente (wp_A) ed il nuovo waypoint (wp_B)
+
+            if DEBUG: print(f"l'aereo non può passare sopra o sotto la minaccia:\n  - Calcolo aggiornamento percorso base: wp_B: {wp_B}, edge: {edge}")
+
+            # ricalcola il percorso per considerare che l'edge aggiornato potrebbe comunque intersecare una minaccia diversa
+            self.calcPathWithoutThreat(p1, ext_p1, end, threats, n_edge, n_path, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
+            
+            # valutazione secondo path con ext_p1 (costituisce un nuovo path)
+            wp_B = Waypoint(f"wp_B{n_edge}", ext_p2 ) # crea un nuovo waypoint B con il nuovo punto ext_p2
+            edge = Edge(f"P:{n_path + 1}-E:{n_edge}", wp_A, wp_B, speed = aircraft_speed) # aggiorna il l'edge con il waypoint precedente (wp_A) ed il nuovo waypoint (wp_B)
+
+            if DEBUG: print(f"  - Calcolo nuovo percorso n_path{n_path + 1}, wp_B: {wp_B}, edge: {edge}")
+
+            # ricalcola il percorso aggiungendo un nuovo path, per considerare che l'edge aggiornato potrebbe comunque intersecare una minaccia diversa
+            self.calcPathWithoutThreat(p1, ext_p2, end, threats, n_edge, n_path + 1, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
+
+    def calcPathWithThreat(self, start: Point3D, end: Point3D, threats: list[ThreatAA], n_path: int, path: dict, altitude_min: float, altitude_max: float, change_alt_option: str) -> bool:
         pass
 
-    def calcPathWithThreat(self, start: Point3D, end: Point3D, threats: list[ThreatAA], n_path: int, path: dict, altitude_min: float, altitude_max: float):
+
+
+
+def calcCrossSegment(aircraft_speed: float, aircraft_altitude: float, missile_speed: float, threat_center: Point3D , threat_radius: float, time_to_inversion: float, time_sam_launch: float, segment: Segment3D):
+    a = threat_radius / aircraft_speed
+    d = 1/missile_speed + 1/aircraft_speed
+    lm = (a + time_to_inversion + time_sam_launch) / d
+    max_time_to_escape =  lm / missile_speed 
+
+    if segment.lenght /aircraft_speed > max_time_to_escape:
         pass
-
-
-
-
-def createRoute(start, end, threats, grid_step, grid_alt_step, range_max, speed_max, altitude_max, altitude_min):
-    params = {
-        'range_max': range_max,
-        'speed_max': speed_max,
-        'altitude_max': altitude_max,
-        'altitude_min': altitude_min
-    }
-    
-    planner = RoutePlanner(start, end, threats, params, grid_step, grid_alt_step)
-    path = planner.a_star()
-    
-    if not path:
-        return None
-    
-    route = Route("optimized_route")
-    for i in range(len(path)-1):
-        edge = Edge(path[i], path[i+1], speed_max, threats)
-        route.add_edge(edge)
-
-
-    return route
-
-c
