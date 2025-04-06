@@ -350,17 +350,39 @@ class RoutePlanner:
             # ricalcola il percorso aggiungendo un nuovo path, per considerare che l'edge aggiornato potrebbe comunque intersecare una minaccia diversa
             self.calcPathWithoutThreat(p1, ext_p2, end, threats, n_edge, n_path + 1, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
 
-    def calcPathWithThreat(self, start: Point3D, end: Point3D, threats: list[ThreatAA], n_path: int, path: dict, altitude_min: float, altitude_max: float, change_alt_option: str) -> bool:
+    def calcPathWithThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str) -> bool:
+
+        
         pass
 
 
 
 
-def calcCrossSegment(aircraft_speed: float, aircraft_altitude: float, missile_speed: float, threat_center: Point3D , threat_radius: float, time_to_inversion: float, time_sam_launch: float, segment: Segment3D):
-    a = threat_radius / aircraft_speed
-    d = 1/missile_speed + 1/aircraft_speed
-    lm = (a + time_to_inversion + time_sam_launch) / d
-    max_time_to_escape =  lm / missile_speed 
+def calcMaxLenghtCrossSegment(aircraft_speed: float, aircraft_altitude: float, missile_speed: float, threat_center: Point3D , threat_radius: float, time_to_inversion: float, time_sam_launch: float, segment: Segment3D) -> float:
+    
+    a= 1/aircraft_speed 
+    b = 0.5/missile_speed 
+    c = -(threat_radius + aircraft_altitude*aircraft_altitude) / aircraft_speed
+    delta = b**2 - 4*a*c
+    
+    if delta < 0:
+        return 0
+    
+    sqrt_delta = math.sqrt(delta)
+    lm1 = (-b + sqrt_delta) / (2*a)
+    lm2 = (-b - sqrt_delta) / (2*a)
+    
+    if lm1 < 0 and lm2 < 0:
+        return 0
+    
+    if lm1>lm2:
+        lm = lm1
+    else:
+        lm = lm2
+    
 
-    if segment.lenght /aircraft_speed > max_time_to_escape:
-        pass
+    time_max_in_threat_zone = lm * missile_speed
+    max_segmanet_lenght_in_threat_zone = ( time_max_in_threat_zone + time_to_inversion + time_sam_launch) * aircraft_speed
+
+
+    return max_segmanet_lenght_in_threat_zone
