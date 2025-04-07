@@ -178,7 +178,7 @@ class Cylinder:
         tan_point1, tan_point2 = self.getTangentPoints(point)
         return Line2D(point, tan_point1), Line2D(point, tan_point2)
     
-    def getIntersection(self, edge: Segment3D) -> tuple:
+    def getIntersection(self, edge: Segment3D, tolerance: float) -> tuple:
     
         """
         Calcola l'intersezione tra un segmento e il cilindro
@@ -205,8 +205,8 @@ class Cylinder:
         
         if DEBUG: print(f"getIntersection - p1: {p1_np}, p2: {p2_np}, base: {base_center_np}, dir: {v}, dir_len: {v_length}")
         
-        if v_length < 1e-10:
-            # Il segmento è un punto
+        if v_length < tolerance:
+            # Il segmento è troppo corto per essere considerato
             return False, None
         
         # Calcolo dell'intersezione con la superficie laterale del cilindro
@@ -313,7 +313,7 @@ class Cylinder:
         """
         DEBUG = False
         # Verifica prima se c'è un'intersezione
-        intersects, intersect_segment = self.getIntersection(edge)
+        intersects, intersect_segment = self.getIntersection(edge, tolerance = 0.1)
         
         if DEBUG: print(f"getExtendedPoints - intersects: {intersects}, intersect_segment: {intersect_segment}")
 
