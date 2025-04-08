@@ -456,6 +456,8 @@ class Cylinder:
 
 
 
+
+
         # Verifica se gli estremi sono interni
         if self.innerPoint(edge.p1) or self.innerPoint(edge.p2):
             return (None, None)
@@ -532,3 +534,193 @@ class Cylinder:
         punto_dx = intersezione_3d(l_dx_p1, l_dx_p2)
 
         return (punto_sx, punto_dx)
+    
+
+
+
+    def find_chord_coordinates(self, R, center, A, B, L):
+        """
+        Calcola le coordinate degli estremi di una corda CD di lunghezza L
+        che sia la più vicina possibile alla corda AB sulla circonferenza.
+        
+        Parametri:
+        - R: raggio della circonferenza
+        - center: tupla (x,y) delle coordinate del centro
+        - A: tupla (x,y) delle coordinate del punto A
+        - B: tupla (x,y) delle coordinate del punto B
+        - L: lunghezza desiderata della corda CD
+        
+        Returns:
+        - (C, D): tupla contenente le coordinate di C e D
+        """
+        # Estrai le coordinate
+        x_c, y_c = center
+        x_A, y_A = A
+        x_B, y_B = B
+        
+        # Verifica che A e B siano sulla circonferenza
+        dist_A = math.sqrt((x_A - x_c)**2 + (y_A - y_c)**2)
+        dist_B = math.sqrt((x_B - x_c)**2 + (y_B - y_c)**2)
+        
+        if abs(dist_A - R) > 1e-10 or abs(dist_B - R) > 1e-10:
+            raise ValueError("I punti A e B devono essere sulla circonferenza")
+        
+        # Verifica che L sia una lunghezza valida per una corda (L ≤ 2R)
+        if L > 2*R:
+            raise ValueError(f"La lunghezza L della corda non può superare il diametro (2R = {2*R})")
+        
+        # Calcola il punto medio della corda AB
+        mid_AB = ((x_A + x_B)/2, (y_A + y_B)/2)
+        
+        # Calcola il vettore dal centro al punto medio di AB
+        vec_c_mid = (mid_AB[0] - x_c, mid_AB[1] - y_c)
+        
+        # Normalizza il vettore
+        norm = math.sqrt(vec_c_mid[0]**2 + vec_c_mid[1]**2)
+        if norm < 1e-10:  # Se AB passa per il centro
+            # In questo caso, qualsiasi corda perpendicolare ad AB può essere la risposta
+            # Prendiamo un vettore perpendicolare arbitrario
+            vec_dir = (1, 0) if abs(x_B - x_A) < 1e-10 else (-vec_c_mid[1]/norm, vec_c_mid[0]/norm)
+        else:
+            # Direzione normalizzata dal centro verso il punto medio di AB
+            vec_dir = (vec_c_mid[0]/norm, vec_c_mid[1]/norm)
+        
+        # Calcola la distanza dal centro al punto medio della corda CD
+        # Usando la formula: d = sqrt(R^2 - (L/2)^2)
+        d = math.sqrt(R**2 - (L/2)**2)
+        
+        # Calcola il punto medio della corda CD
+        mid_CD = (x_c + d * vec_dir[0], y_c + d * vec_dir[1])
+        
+        # Calcola il vettore perpendicolare alla direzione centro-medio
+        perp_vec = (-vec_dir[1], vec_dir[0])
+        
+        # Calcola le coordinate di C e D
+        half_L = L / 2
+        C = (mid_CD[0] - half_L * perp_vec[0], mid_CD[1] - half_L * perp_vec[1])
+        D = (mid_CD[0] + half_L * perp_vec[0], mid_CD[1] + half_L * perp_vec[1])
+        
+        # Verifica che C e D siano sulla circonferenza
+        dist_C = math.sqrt((C[0] - x_c)**2 + (C[1] - y_c)**2)
+        dist_D = math.sqrt((D[0] - x_c)**2 + (D[1] - y_c)**2)
+        
+        if abs(dist_C - R) > 1e-10 or abs(dist_D - R) > 1e-10:
+            print(f"Attenzione: i punti calcolati potrebbero non essere esattamente sulla circonferenza")
+            print(f"Distanza C dal centro: {dist_C}, differenza con R: {abs(dist_C - R)}")
+            print(f"Distanza D dal centro: {dist_D}, differenza con R: {abs(dist_D - R)}")
+        
+        return (C, D)
+
+    # da utilizzare se sivuole considerare anche il caso di un segmento con un estremo interno al cilindro (unica intersezione)
+    def find_chord_endpoint(self, R, center, A, B, L):
+        """
+        Calcola le coordinate del punto D tale che la corda ID abbia lunghezza L,
+        dove I è il punto di intersezione tra il segmento AB e la circonferenza.
+        
+        Parametri:
+        - R: raggio della circonferenza
+        - center: tupla (x,y) delle coordinate del centro
+        - A: tupla (x,y) delle coordinate del punto A
+        - B: tupla (x,y) delle coordinate del punto B
+        - L: lunghezza desiderata della corda ID
+        
+        Returns:
+        - (I, D): tupla contenente le coordinate di I e le due possibili soluzioni per D
+        """
+        x_c, y_c = center
+        x_A, y_A = A
+        x_B, y_B = B
+        
+        # Verifica che la lunghezza della corda L sia valida
+        if L > 2*R:
+            raise ValueError(f"La lunghezza L della corda non può superare il diametro (2R = {2*R})")
+        
+        # Calcolo del vettore direzionale AB
+        dir_AB = (x_B - x_A, y_B - y_A)
+        len_AB = math.sqrt(dir_AB[0]**2 + dir_AB[1]**2)
+        
+        if len_AB < 1e-10:
+            raise ValueError("I punti A e B devono essere distinti")
+        
+        # Normalizzo il vettore
+        dir_AB = (dir_AB[0]/len_AB, dir_AB[1]/len_AB)
+        
+        # Risolvo il sistema per trovare l'intersezione della retta AB con la circonferenza
+        # Equazione parametrica della retta: P(t) = A + t * dir_AB
+        # Sostituzione nell'equazione della circonferenza: |P(t) - center|^2 = R^2
+        
+        # Sviluppo l'equazione quadratica at^2 + bt + c = 0
+        a = dir_AB[0]**2 + dir_AB[1]**2  # sempre uguale a 1 perché dir_AB è normalizzato
+        b = 2 * ((x_A - x_c) * dir_AB[0] + (y_A - y_c) * dir_AB[1])
+        c = (x_A - x_c)**2 + (y_A - y_c)**2 - R**2
+        
+        # Calcolo il discriminante
+        discriminant = b**2 - 4*a*c
+        
+        if discriminant < 0:
+            raise ValueError("La retta AB non interseca la circonferenza")
+        
+        # Se ci sono due intersezioni, prendo quella che cade sul segmento AB
+        t1 = (-b + math.sqrt(discriminant)) / (2*a)
+        t2 = (-b - math.sqrt(discriminant)) / (2*a)
+        
+        # Calcolo i punti di intersezione
+        P1 = (x_A + t1 * dir_AB[0], y_A + t1 * dir_AB[1])
+        P2 = (x_A + t2 * dir_AB[0], y_A + t2 * dir_AB[1])
+        
+        # Determino quale dei due punti (se esiste) è sull'effettivo segmento AB
+        I = None
+        if 0 <= t1 <= len_AB:
+            I = P1
+        if 0 <= t2 <= len_AB:
+            if I is None or t2 < t1:  # Se ci sono due punti validi, prendo il più vicino ad A
+                I = P2
+        
+        if I is None:
+            raise ValueError("Il segmento AB non interseca la circonferenza")
+        
+        # Verifica che I sia sulla circonferenza
+        dist_I = math.sqrt((I[0] - x_c)**2 + (I[1] - y_c)**2)
+        if abs(dist_I - R) > 1e-10:
+            print(f"Avviso: il punto I calcolato non è esattamente sulla circonferenza")
+        
+        # Ora dobbiamo trovare il punto D sulla circonferenza tale che |ID| = L
+        
+        # Angolo al centro sotteso dalla corda di lunghezza L
+        theta = 2 * math.asin(L / (2 * R))
+        
+        # Vettore dal centro all'intersezione I
+        CI = (I[0] - x_c, I[1] - y_c)
+        len_CI = math.sqrt(CI[0]**2 + CI[1]**2)  # Dovrebbe essere R
+        CI_norm = (CI[0]/len_CI, CI[1]/len_CI)  # Normalizzo
+        
+        # Ruoto CI_norm di theta in entrambe le direzioni
+        rot1 = rotate_vector(CI_norm, theta)
+        rot2 = rotate_vector(CI_norm, -theta)
+        
+        # Calcolo i due possibili punti D
+        D1 = (x_c + R * rot1[0], y_c + R * rot1[1])
+        D2 = (x_c + R * rot2[0], y_c + R * rot2[1])
+        
+        # Verifica lunghezza della corda ID
+        len_ID1 = math.sqrt((D1[0] - I[0])**2 + (D1[1] - I[1])**2)
+        len_ID2 = math.sqrt((D2[0] - I[0])**2 + (D2[1] - I[1])**2)
+        
+        # Controllo della precisione
+        if abs(len_ID1 - L) > 1e-10 or abs(len_ID2 - L) > 1e-10:
+            print(f"Avviso: le corde calcolate potrebbero non avere esattamente lunghezza L")
+            print(f"Lunghezza ID1: {len_ID1}, differenza con L: {abs(len_ID1 - L)}")
+            print(f"Lunghezza ID2: {len_ID2}, differenza con L: {abs(len_ID2 - L)}")
+        
+        return I, (D1, D2)
+
+
+def rotate_vector(v, angle):
+        """
+        Ruota un vettore 2D di un dato angolo (in radianti)
+        """
+        cos_ang = math.cos(angle)
+        sin_ang = math.sin(angle)
+        return (v[0] * cos_ang - v[1] * sin_ang, 
+                v[0] * sin_ang + v[1] * cos_ang)
+
