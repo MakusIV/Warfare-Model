@@ -299,10 +299,10 @@ class Cylinder:
         # Verifica se il prodotto scalare è vicino a zero
         return abs(dot_product) < tolerance
     
-    def getExtendedPoints(self, edge: Segment3D, tolerance=1e-6) -> tuple:
+    def getExtendedPoints(self, edge: Segment3D, tolerance = 1e-6) -> tuple:
         """
-        Calcola i punti estesi relativi all'intersezione del segmento col cilindro. I punti estesi sonocostituiti dai punti d'intersezione delle tangenti al cilindro la cui origine sono  gli estremi del segmento.
-        Qestu punti estesi sono definiti ad una quota z intermedia tra le quote z degli estremi del segmento
+        Calcola i punti estesi relativi all'intersezione del segmento col cilindro. I punti estesi sonocostituiti dai punti d'intersezione delle tangenti al cilindro le cui origini sono  gli estremi del segmento.
+        Qesti punti estesi sono definiti ad una quota z intermedia tra le quote z degli estremi del segmento
         
         Args:
             edge: Segment3D - Il segmento da analizzare
@@ -313,7 +313,7 @@ class Cylinder:
         """
         DEBUG = False
         # Verifica prima se c'è un'intersezione
-        intersects, intersect_segment = self.getIntersection(edge, tolerance = 0.1)
+        intersects, intersect_segment = self.getIntersection(edge, tolerance = 0.1)# nella mappa reale puoi aumentare tolerance es: 10 metri
         
         if DEBUG: print(f"getExtendedPoints - intersects: {intersects}, intersect_segment: {intersect_segment}")
 
