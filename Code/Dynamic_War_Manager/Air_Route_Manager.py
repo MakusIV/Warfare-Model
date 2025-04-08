@@ -3,29 +3,65 @@ import math
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
 from collections import defaultdict
+from typing import List, Dict, Optional, Tuple
+from dataclasses import dataclass
 from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 
-MIN_LENGHT_SEGMENT = 0.1 # minimum length of segment to consider it as valid intersection
+MIN_LENGTH_SEGMENT = 0.1 # minimum length of segment to consider it as valid intersection
 
 class ThreatAA:
     
-    def __init__(self, danger_level, missile_speed: float, cylinder: Cylinder):
+    def __init__(self, danger_level, missile_speed: float, min_fire_time: float, cylinder: Cylinder):
         self.danger_level = danger_level
         self.missile_speed = missile_speed
+        self.min_fire_time = min_fire_time
         self.min_altitude = cylinder.center.z
         self.max_altitude = cylinder.bottom_center.z
         self.cylinder = cylinder
 
     def edgeIntersect(self, edge):
         segment = Segment3D(edge.wpA.point, edge.wpB.point)        
-        return self.cylinder.getIntersection(segment, tolerance = MIN_LENGHT_SEGMENT)
+        return self.cylinder.getIntersection(segment, tolerance = MIN_LENGTH_SEGMENT)
     
     def innerPoint(self, point:Point3D, tolerance: float):
             
         if self.cylinder.innerPoint(point):
             return True
         return False
+
+    def calcMaxLenghtCrossSegment(self, aircraft_speed: float, aircraft_altitude: float, time_to_inversion: float, segment: Segment3D) -> float:
+    
+        a = 1 / aircraft_speed 
+        b = 0.5 / self.missile_speed 
+        c = -(self.threat_radius + aircraft_altitude * aircraft_altitude) / aircraft_speed
+        delta = b**2 - 4*a*c
+        
+        if delta < 0:
+            return 0
+        
+        sqrt_delta = math.sqrt(delta)
+        lm1 = (-b + sqrt_delta) / (2*a)
+        lm2 = (-b - sqrt_delta) / (2*a)
+        
+        if lm1 <= 0 and lm2 <= 0:
+            return 0
+        
+        if lm1>lm2:
+            lm = lm1
+            
+        else:
+            lm = lm2
+        
+
+        time_max_in_threat_zone = lm * self.missile_speed
+        max_segmanet_lenght_in_threat_zone = ( time_max_in_threat_zone + time_to_inversion +self.min_fire_time) * aircraft_speed
+
+
+        return max_segmanet_lenght_in_threat_zone
+
+
+
           
 
 class Waypoint:
@@ -64,7 +100,7 @@ class Edge:
         self.length = wpA.point.distance(wpB.point)
         self.danger = 0
 
-    def getSegmet3D(self):
+    def getSegment3D(self):
         return Segment3D(self.wpA.point, self.wpB.point)
     
    
@@ -186,45 +222,110 @@ class Route:
         return path
 
 
+# ottimizzazione deepseek
+@dataclass
+class Path:
+    """Rappresenta un singolo percorso composto da una sequenza di edge."""
+    edges: List['Edge']
+    completed: bool = False
+    
+    def __post_init__(self):
+        self._calculate_metrics()
+    
+    def _calculate_metrics(self):
+        """Calcola le metriche aggregate del percorso."""
+        self.total_length = sum(edge.length for edge in self.edges)
+        self.total_danger = sum(edge.danger for edge in self.edges)
+        self.waypoints = self._get_waypoints()
+    
+    def _get_waypoints(self) -> List[Waypoint]:
+        """Restituisce la sequenza ordinata di waypoint del percorso."""
+        if not self.edges:
+            return []
+            
+        waypoints = [self.edges[0].wpA]
+        for edge in self.edges:
+            waypoints.append(edge.wpB)
+        return waypoints
+    
+    def add_edge(self, edge: 'Edge'):
+        """Aggiunge un edge al percorso e aggiorna le metriche."""
+        self.edges.append(edge)
+        self._calculate_metrics()
+    
+    def to_dict(self) -> Dict:
+        """Converte il percorso in un dizionario per serializzazione."""
+        return {
+            'edges': [edge.to_dict() for edge in self.edges],
+            'total_length': self.total_length,
+            'total_danger': self.total_danger,
+            'completed': self.completed
+        }
+
+class PathCollection:
+    """Collezione di percorsi alternativi con metodi di utilità."""
+    def __init__(self):
+        self.paths: List[Path] = []
+        self._active_path_indices = set()
+    
+    def add_path(self, initial_edges: Optional[List['Edge']] = None) -> int:
+        """
+        Aggiunge un nuovo percorso alla collezione.
+        Restituisce l'ID del percorso creato.
+        """
+        path_id = len(self.paths)
+        new_path = Path(initial_edges or [])
+        self.paths.append(new_path)
+        self._active_path_indices.add(path_id)
+        return path_id
+    
+    def get_path(self, path_id: int) -> Path:
+        """Restituisce il percorso con l'ID specificato."""
+        if path_id < 0 or path_id >= len(self.paths):
+            raise IndexError(f"Invalid path ID: {path_id}")
+        return self.paths[path_id]
+    
+    def mark_path_completed(self, path_id: int):
+        """Segna un percorso come completato con successo."""
+        if path_id in self._active_path_indices:
+            self._active_path_indices.remove(path_id)
+            self.paths[path_id].completed = True
+    
+    def get_active_paths(self) -> List[Path]:
+        """Restituisce una lista dei percorsi ancora attivi."""
+        return [self.paths[i] for i in sorted(self._active_path_indices)]
+    
+    def get_best_path(self) -> Optional[Path]:
+        """Restituisce il percorso migliore basato su lunghezza e pericolo."""
+        if not self.paths:
+            return None
+            
+        # Filtra solo i percorsi completati
+        completed_paths = [p for p in self.paths if p.completed]
+        if not completed_paths:
+            return None
+            
+        # Trova il percorso con il miglior compromesso lunghezza-pericolo
+        return min(completed_paths, key=lambda p: (p.total_length, p.total_danger))
+    
+    def to_dict(self) -> Dict:
+        """Converte l'intera collezione in un dizionario."""
+        return {
+            'paths': [path.to_dict() for path in self.paths],
+            'active_paths': list(sorted(self._active_path_indices))
+        }
+
+
 
 class RoutePlanner:
 
-    def __init__(self, start, end, threats, params, grid_step, grid_alt_step):
+    def __init__(self, start, end, threats):
         self.start = start
         self.end = end
         self.threats = threats
-        self.params = params
-        self.grid_step = grid_step #5000  # 5km grid resolution
-        self.grid_alt_step = grid_alt_step  #1000  # 1km vertical resolution
-        self.grid = self.generate_grid()
-    
-    def generate_grid(self):
-        grid = []
-        x_range = range(self.start.point.x - 2, self.start.point.x + 3)
-        y_range = range(self.start.point.y - 2, self.start.point.y + 3)
         
-        for x in x_range:
-            for y in y_range:
-                for z in range(self.params['altitude_min'], 
-                            self.params['altitude_max'] + 1):
-                    if (x, y) != (self.start.point.x, self.start.point.y):
-                        grid.append(Waypoint(f"wp_{x}_{y}_{z}", Point3D(x, y, z)))
         
-        grid.append(self.end)
-        return grid    
-    
-    def heuristic(self, waypoint):
-        return waypoint.point.distance(self.end.point) / self.params['speed_max']
-    
-    def reconstruct_path(self, came_from, current):
-        path = [current]
-        while current in came_from:
-            current = came_from[current]
-            path.append(current)
-        return path[::-1]
-
     def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str = "no_change"):      
-
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # ricorda in threats devono essere escluse le threat che includono i 
@@ -236,11 +337,42 @@ class RoutePlanner:
         n_path = 0
         found_path = False
         path = {str(0): ()} #dict(Route)
-    
 
-        # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
-        self.excludeThreat(threats, start)
-        self.excludeThreat(threats, end)
+        # Inizializzazione
+        path_collection = PathCollection()
+        initial_path_id = path_collection.add_path()
+
+        # Chiamata alla funzione
+        success = self.calcPathWithoutThreat(
+            start, 
+            end, 
+            end,
+            threats,
+            n_edge = 0,
+            path_collection = path_collection,
+            path_id = initial_path_id,
+            aircraft_altitude_min = aircraft_altitude_min,
+            aircraft_altitude_max = aircraft_altitude_max,
+            aircraft_speed_max = aircraft_speed_max,
+            aircraft_speed = aircraft_speed,
+            aircraft_range_max = aircraft_range_max,
+            change_alt_option="change",
+            debug = True
+        )
+
+        # nella unzione best path oltre che valutare la lunghezza devi valutare anche il pericolo: 0.7 * danger + 0.3 * length
+
+        # Ottenere risultati
+        best_path = path_collection.get_best_path()
+        if best_path:
+            print(f"Best path length: {best_path.total_length}, danger: {best_path.total_danger}")
+            for edge in best_path.edges:
+                print(f"Edge from {edge.wpA.point} to {edge.wpB.point}")
+            
+
+                # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
+                self.excludeThreat(threats, start)
+                self.excludeThreat(threats, end)
 
         # Calcola il percorso senza minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)
         found_path = self.calcPathWithoutThreat(p1, p2, end, threats, n_edge, n_path, path, aircraft_altitude_min , aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)  
@@ -290,8 +422,416 @@ class RoutePlanner:
 
         return first_threat
 
-    
-    def calcPathWithoutThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str) -> bool:  
+    # ottimizzazione deepseek
+
+    def calcPathWithoutThreat(
+        self,
+        p1: Point3D,
+        p2: Point3D,
+        end: Point3D,
+        threats: List[ThreatAA],
+        n_edge: int,
+        path_collection: PathCollection,
+        path_id: int,
+        aircraft_altitude_min: float,
+        aircraft_altitude_max: float,
+        aircraft_speed_max: float,
+        aircraft_speed: float,
+        aircraft_range_max: float,
+        change_alt_option: str,
+        max_recursion: int = 100,
+        debug: bool = False
+    ) -> bool:
+        """
+        Calcola un percorso evitando minacce usando una strategia ricorsiva.
+        
+        Args:
+            p1: Punto di partenza corrente
+            p2: Punto di arrivo corrente
+            end: Punto finale del percorso
+            threats: Lista di minacce da evitare
+            n_edge: Contatore di edge nel percorso corrente
+            path_collection: Collezione di tutti i percorsi
+            path_id: ID del percorso corrente
+            aircraft_*: Parametri delle prestazioni dell'aereo
+            change_alt_option: Strategia per il cambio di quota
+            max_recursion: Limite di sicurezza per la ricorsione
+            debug: Flag per abilitare i log di debug
+            
+        Returns:
+            True se è stato trovato almeno un percorso valido, False altrimenti
+        """
+        if max_recursion <= 0:
+            if debug:
+                print(f"Max recursion depth reached for path {path_id}")
+            return False
+
+        current_path = path_collection.get_path(path_id)
+        wp_A = Waypoint(f"wp_A{path_id}_{n_edge}", p1)
+        wp_B = Waypoint(f"wp_B{path_id}_{n_edge}", p2)
+        edge = Edge(f"P:{path_id}-E:{n_edge}", wp_A, wp_B, aircraft_speed)
+
+        if debug:
+            print(f"\nProcessing path {path_id}, edge {n_edge}: {wp_A} -> {wp_B}")
+
+        # Verifica intersezioni con minacce
+        threat_intersect = self.firstThreatIntersected(edge, threats)
+
+        if not threat_intersect:
+            current_path.add_edge(edge)
+            if debug:
+                print(f"No threats found. Added edge to path {path_id}")
+
+            if p2 == end:
+                path_collection.mark_path_completed(path_id)
+                if debug:
+                    print(f"Path {path_id} completed successfully!")
+                return True
+
+            return self.calcPathWithoutThreat(
+                p2, end, end, threats, n_edge + 1, path_collection, path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                change_alt_option, max_recursion - 1, debug
+            )
+
+        # Gestione alternativa (cambio quota o percorso alternativo)
+        return self._handle_threat_avoidance(
+            edge, threat_intersect, p1, p2, end, threats, n_edge,
+            path_collection, path_id,
+            aircraft_altitude_min, aircraft_altitude_max,
+            aircraft_speed_max, aircraft_speed, aircraft_range_max, None,
+            change_alt_option, max_recursion - 1, "calcPathWithoutThreat", debug
+        )        
+
+    def calcPathWithThreat(
+        self,
+        p1: Point3D,
+        p2: Point3D,
+        end: Point3D,
+        threats: List[ThreatAA],
+        n_edge: int,
+        path_collection: PathCollection,
+        path_id: int,
+        aircraft_altitude_min: float,
+        aircraft_altitude_max: float,
+        aircraft_speed_max: float,
+        aircraft_speed: float,
+        aircraft_range_max: float,
+        time_to_inversion: float,
+        change_alt_option: str,
+        max_recursion: int = 100,
+        debug: bool = False
+    ) -> bool:
+        """
+        Calcola un percorso considerando l'attraversamento controllato delle minacce.
+        
+        Args:
+            p1: Punto di partenza corrente
+            p2: Punto di arrivo corrente
+            end: Punto finale del percorso
+            threats: Lista di minacce da valutare
+            n_edge: Contatore di edge nel percorso corrente
+            path_collection: Collezione di tutti i percorsi
+            path_id: ID del percorso corrente
+            aircraft_*: Parametri delle prestazioni dell'aereo
+            change_alt_option: Strategia per il cambio di quota
+            max_recursion: Limite di sicurezza per la ricorsione
+            debug: Flag per abilitare i log di debug
+            
+        Returns:
+            True se è stato trovato almeno un percorso valido, False altrimenti
+        """
+        if max_recursion <= 0:
+            if debug:
+                print(f"Max recursion depth reached for path {path_id}")
+            return False
+
+        current_path = path_collection.get_path(path_id)
+        wp_A = Waypoint(f"wp_A{path_id}_{n_edge}", p1)
+        wp_B = Waypoint(f"wp_B{path_id}_{n_edge}", p2)
+        edge = Edge(f"P:{path_id}-E:{n_edge}", wp_A, wp_B, aircraft_speed)
+
+        if debug:
+            print(f"\nProcessing path {path_id}, edge {n_edge}: {wp_A} -> {wp_B}")
+
+        # Verifica intersezioni con minacce
+        threat_intersect = self.firstThreatIntersected(edge, threats)
+
+        if not threat_intersect:
+            current_path.add_edge(edge)
+            if debug:
+                print(f"No threats found. Added edge to path {path_id}")
+
+            if p2 == end:
+                path_collection.mark_path_completed(path_id)
+                if debug:
+                    print(f"Path {path_id} completed successfully!")
+                return True
+
+            return self.calcPathWithThreat(
+                p2, end, end, threats, n_edge + 1, path_collection, path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                change_alt_option, max_recursion - 1, debug
+            )
+
+        # Calcola la massima lunghezza di attraversamento sicuro
+        max_length = threat_intersect.calcMaxLenghtCrossSegment(
+            aircraft_speed,
+            aircraft_altitude_max,            
+            time_to_inversion,
+            threat_intersect.min_fire_time,
+            edge.getSegment3D()
+        )
+
+        # Verifica se possiamo attraversare la minaccia in sicurezza
+        if max_length > MIN_LENGTH_SEGMENT:
+            return self._handle_threat_crossing(
+                edge, threat_intersect, p2, end, threats, n_edge,
+                path_collection, path_id, max_length,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                change_alt_option, max_recursion - 1, debug
+            )
+
+        # Gestione alternativa (cambio quota o percorso alternativo)
+        return self._handle_threat_avoidance(
+            edge, threat_intersect, p1, p2, end, threats, n_edge,
+            path_collection, path_id,
+            aircraft_altitude_min, aircraft_altitude_max,
+            aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+            change_alt_option, max_recursion - 1, "calcPathWithThreat", debug
+        )
+
+    def _handle_threat_crossing(
+        self,
+        edge: Edge,
+        threat: ThreatAA,
+        p2: Point3D,
+        end: Point3D,
+        threats: List[ThreatAA],
+        n_edge: int,
+        path_collection: PathCollection,
+        path_id: int,
+        max_length: float,
+        aircraft_altitude_min: float,
+        aircraft_altitude_max: float,
+        aircraft_speed_max: float,
+        aircraft_speed: float,
+        aircraft_range_max: float,
+        change_alt_option: str,
+        max_recursion: int,
+        debug: bool
+    ) -> bool:
+        """Gestisce l'attraversamento sicuro di una minaccia."""
+        if debug:
+            print(f"Attempting to cross threat at {threat.cylinder.center} with max length {max_length}")
+
+        # Trova i punti di attraversamento ottimali
+        c, d = threat.cylinder.find_chord_coordinates(
+            threat.cylinder.radius,
+            threat.cylinder.center,
+            edge.wpA.point2d(),
+            edge.wpB.point2d(),
+            max_length
+        )
+
+        # Crea i waypoint di attraversamento
+        wp_c = Waypoint(f"wp_{path_id}_{n_edge}_cross1", Point3D(c.x, c.y, edge.wpA.point.z))
+        wp_d = Waypoint(f"wp_{path_id}_{n_edge}_cross2", Point3D(d.x, d.y, edge.wpA.point.z))
+
+        # Edge fino al punto di ingresso
+        edge_to_c = Edge(
+            f"P:{path_id}-E:{n_edge}_pre",
+            edge.wpA,
+            wp_c,
+            edge.speed
+        )
+        path_collection.get_path(path_id).add_edge(edge_to_c)
+
+        # Edge attraverso la minaccia
+        edge_through = Edge(
+            f"P:{path_id}-E:{n_edge}_through",
+            wp_c,
+            wp_d,
+            edge.speed
+        )
+        path_collection.get_path(path_id).add_edge(edge_through)
+
+        # Prosegui dal punto di uscita
+        return self.calcPathWithThreat(
+            Point3D(d.x, d.y, edge.wpA.point.z),  # Punto d
+            p2, end, threats, n_edge + 1, path_collection, path_id,
+            aircraft_altitude_min, aircraft_altitude_max,
+            aircraft_speed_max, aircraft_speed, aircraft_range_max,
+            change_alt_option, max_recursion, debug
+        )
+
+    def _handle_threat_avoidance(
+        self,
+        edge: Edge,
+        threat: ThreatAA,
+        p1: Point3D,
+        p2: Point3D,
+        end: Point3D,
+        threats: List[ThreatAA],
+        n_edge: int,
+        path_collection: PathCollection,
+        path_id: int,
+        aircraft_altitude_min: float,
+        aircraft_altitude_max: float,
+        aircraft_speed_max: float,
+        aircraft_speed: float,
+        aircraft_range_max: float,
+        time_to_inversion: float, 
+        change_alt_option: str,
+        max_recursion: int,
+        caller: str,
+        debug: bool
+    ) -> bool:
+        """Gestisce l'evitamento della minaccia con cambio quota o percorsi alternativi."""
+        # Verifica se possiamo cambiare quota
+        can_change_altitude = (
+            (aircraft_altitude_max > threat.max_altitude or 
+            aircraft_altitude_min < threat.min_altitude) and
+            change_alt_option != "no_change"
+        )
+
+        if can_change_altitude:
+            if debug:
+                print(f"Attempting altitude change for threat at {threat.cylinder.center}")
+
+            intersected, segm = threat.cylinder.getIntersection(
+                edge.getSegment3D(), tolerance = MIN_LENGTH_SEGMENT
+            )
+            
+            if not intersected:
+                if debug:
+                    print("Unexpected: no intersection found where threat was detected")
+                return False
+
+            new_p1 = segm[0].point
+            if change_alt_option == "change_up":
+                new_p1.z = threat.max_altitude + 1
+                if debug:
+                    print(f"Changing altitude UP to {new_p1.z}")
+            else:
+                new_p1.z = threat.min_altitude - 1
+                if debug:
+                    print(f"Changing altitude DOWN to {new_p1.z}")
+
+            # Crea nuovo edge con punto modificato
+            new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1)
+            new_edge = Edge(
+                f"P:{path_id}-E:{n_edge}_alt", 
+                edge.wpA, 
+                new_wp_B, 
+                aircraft_speed
+            )
+            path_collection.get_path(path_id).add_edge(new_edge)
+
+            if caller == "calcPathWithThreat":
+                
+                return self.calcPathWithThreat(
+                    new_p1, p2, end, threats, n_edge + 1, path_collection, path_id,
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion, 
+                    change_alt_option, max_recursion, debug
+                )
+            elif caller == "calcPathWithoutThreat":
+
+                return self.calcPathWithoutThreat(
+                    new_p1, p2, end, threats, n_edge + 1, path_collection, path_id,
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    change_alt_option, max_recursion, debug
+                )
+            else:
+                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+
+        # Se non possiamo cambiare quota, troviamo percorsi alternativi
+        ext_p1, ext_p2 = threat.cylinder.getExtendedPoints(
+            edge.getSegment3D(), tolerance=0.001
+        )
+        
+        if not ext_p1 or not ext_p2:
+            if debug:
+                print("Could not find extended points around threat")
+            return False
+
+        # Percorso alternativo 1 (ext_p1)
+        if debug:
+            print(f"Creating alternative path through {ext_p1}")
+
+        new_edge1 = Edge(
+            f"P:{path_id}-E:{n_edge}_alt1",
+            edge.wpA,
+            Waypoint(f"wp_B{path_id}_{n_edge}_alt1", ext_p1),
+            aircraft_speed
+        )
+        path_collection.get_path(path_id).add_edge(new_edge1)
+        
+
+        if caller == "calcPathWithThreat":
+                
+            result1 = self.calcPathWithThreat(
+                p1, ext_p1, end, threats, n_edge, path_collection, path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                change_alt_option, max_recursion, debug
+            )
+        elif caller == "calcPathWithoutThreat":
+
+            result1 = self.calcPathWithoutThreat(
+                p1, ext_p1, end, threats, n_edge, path_collection, path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                change_alt_option, max_recursion, debug
+            )
+        else:
+            raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+
+
+        # Percorso alternativo 2 (ext_p2)
+        if debug:
+            print(f"Creating alternative path through {ext_p2}")
+
+        new_path_id = path_collection.add_path(path_collection.get_path(path_id).edges[:-1])
+        new_edge2 = Edge(
+            f"P:{new_path_id}-E:{n_edge}_alt2",
+            edge.wpA,
+            Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2),
+            aircraft_speed
+        )
+        path_collection.get_path(new_path_id).add_edge(new_edge2)
+
+
+        if caller == "calcPathWithThreat":
+                
+            result2 = self.calcPathWithThreat(
+                p1, ext_p2, end, threats, n_edge, path_collection, new_path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                change_alt_option, max_recursion, debug
+            )
+        elif caller == "calcPathWithoutThreat":
+
+            result2 = self.calcPathWithoutThreat(
+                p1, ext_p2, end, threats, n_edge, path_collection, new_path_id,
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                change_alt_option, max_recursion, debug
+            )
+        else:
+            raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+
+        return result1 or result2
+
+        
+
+    #deprecated ?    
+    def OLDcalcPathWithoutThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str) -> bool:  
         DEBUG = False
         wp_A = Waypoint(f"wp_A{n_edge}", p1)
         wp_B = Waypoint(f"wp_B{n_edge}", p2)
@@ -310,8 +850,8 @@ class RoutePlanner:
             else: # se p2 non coincide con la fine del percorso, chiama ricorsvamente la funzione considerando p2 come nuovo punto di partenza, end il punto p2 ed incrementando di 1 n_edge
                 self.calcPathWithoutThreat(p2, end, end, threats, n_edge + 1, n_path, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)        
         
-        elif aircraft_altitude_max > threat_intersect.max_altitude or aircraft_altitude_min < threat_intersect.min_altitude and change_alt_option != "no_change": # l'aereo può passare sopra o sotto la minaccia
-            intersected, segm = threat_intersect.cylinder.getIntersection(edge.getSegmet3D(), tolerance = MIN_LENGHT_SEGMENT) # determina il segmento di intersezione dell'edge con la minaccia
+        elif ( aircraft_altitude_max > threat_intersect.max_altitude or aircraft_altitude_min < threat_intersect.min_altitude ) and change_alt_option != "no_change": # l'aereo può passare sopra o sotto la minaccia
+            intersected, segm = threat_intersect.cylinder.getIntersection(edge.getSegmet3D(), tolerance = MIN_LENGTH_SEGMENT) # determina il segmento di intersezione dell'edge con la minaccia
             
             if not intersected:
                 raise Exception(f"Unexpected value intersected is {intersected} but must be True - threat_intersect: {threat_intersect}, n_path: {n_path}, n_edge: {n_edge}")
@@ -362,8 +902,8 @@ class RoutePlanner:
 
             # ricalcola il percorso aggiungendo un nuovo path, per considerare che l'edge aggiornato potrebbe comunque intersecare una minaccia diversa
             self.calcPathWithoutThreat(p1, ext_p2, end, threats, n_edge, n_path + 1, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
-
-    def calcPathWithThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, change_alt_option: str) -> bool:
+    #deprecated ?
+    def OLDcalcPathWithThreat(self, p1: Point3D, p2: Point3D, end: Point3D, threats: list[ThreatAA], n_edge: int, n_path: int, path: list[Route], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, time_to_inversion: float, change_alt_option: str) -> bool:
         DEBUG = False
         wp_A = Waypoint(f"wp_A{n_edge}", p1)
         wp_B = Waypoint(f"wp_B{n_edge}", p2)
@@ -382,8 +922,8 @@ class RoutePlanner:
             else: # se p2 non coincide con la fine del percorso, chiama ricorsvamente la funzione considerando p2 come nuovo punto di partenza, end il punto p2 ed incrementando di 1 n_edge
                 self.calcPathWithThreat(p2, end, end, threats, n_edge + 1, n_path, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)        
         
-        elif aircraft_altitude_max > threat_intersect.max_altitude or aircraft_altitude_min < threat_intersect.min_altitude and change_alt_option != "no_change": # l'aereo può passare sopra o sotto la minaccia
-            intersected, segm = threat_intersect.cylinder.getIntersection(edge.getSegmet3D(), tolerance = MIN_LENGHT_SEGMENT) # determina il segmento di intersezione dell'edge con la minaccia
+        elif ( aircraft_altitude_max > threat_intersect.max_altitude or aircraft_altitude_min < threat_intersect.min_altitude ) and change_alt_option != "no_change": # l'aereo può passare sopra o sotto la minaccia
+            intersected, segm = threat_intersect.cylinder.getIntersection(edge.getSegment3D(), tolerance = MIN_LENGTH_SEGMENT) # determina il segmento di intersezione dell'edge con la minaccia
             
             if not intersected:
                 raise Exception(f"Unexpected value intersected is {intersected} but must be True - threat_intersect: {threat_intersect}, n_path: {n_path}, n_edge: {n_edge}")
@@ -412,8 +952,8 @@ class RoutePlanner:
         else: # l'aereo non può passare sotto o sopra la minaccia        
 
             # determina i due punti esterni alla minaccia. NOTA: la tolleranza di 0.001 è solo se i test di unità li imposti con mappe limitate da 0 a 10.
-            max_lenght = calcMaxLenghtCrossSegment(aircraft_speed, aircraft_altitude_max, threat_intersect.missile_speed, threat_intersect.cylinder.center, threat_intersect.cylinder.radius, threat_intersect.cylinder.time_to_inversion, threat_intersect.cylinder.time_sam_launch, edge.getSegmet3D()) # calcola la lunghezza massima del segmento che può attraversare la minaccia    
-            valid_intersection, segment = threat_intersect.cylinder.getIntersection(edge.getSegmet3D(), tolerance = max_lenght) # determina il segmento di intersezione dell'edge con la minaccia            
+            max_lenght = threat_intersect.calcMaxLenghtCrossSegment(aircraft_speed, aircraft_altitude_max, time_to_inversion, edge.getSegment3D()) # calcola la lunghezza massima del segmento che può attraversare la minaccia    
+            valid_intersection, segment = threat_intersect.cylinder.getIntersection(edge.getSegment3D(), tolerance = max_lenght) # determina il segmento di intersezione dell'edge con la minaccia            
 
             if DEBUG: print(f"l'aereo non può passare sopra o sotto la minaccia: aircraft_altitude max, min ({aircraft_altitude_max, aircraft_altitude_min}), threat max, min altitude ({threat_intersect.max_altitude, threat_intersect.min_altitude}).\n Lunghezza massima attraversmaneto {max_lenght}")
             
@@ -433,7 +973,7 @@ class RoutePlanner:
                 else: # segmento con solo un punto di intersezione
                     raise Exception(f"segment with only one intersection point: {segment}, path: {n_path}: {path}")
                     # TODO: gestire il caso di un segmento con un estremo interno alla threat (unica intersezione). Da valutare per un utilizzo che preveda edge con un estremo interno alla threat
-                    I, D1, D2 = self.find_chord_endpoint(threat_intersect.cylinder.radius, threat_intersect.cylinder.center, edge.wpA.point2d(), edge.wpB.point2d(), max_lenght) # calcola i punti C e D della corda CD che è la più vicina possibile alla corda AB sulla circonferenza                    
+                    I, D1, D2 = threat_intersect.cylinder.find_chord_endpoint(threat_intersect.cylinder.radius, threat_intersect.cylinder.center, edge.wpA.point2d(), edge.wpB.point2d(), max_lenght) # calcola i punti C e D della corda CD che è la più vicina possibile alla corda AB sulla circonferenza                    
                     intersection = segment[0].point
                     if (I - intersection).length() > le-1:# I e intersection devono essere coincidenti
                         raise Exception(f"Incongruent intersection calculus from find_chord_endpoint: intersection({I}) and threat_intersect.cylinder.getIntersection: intersection({intersection}) - segment: {segment}, path: {n_path}: {path}")
@@ -458,7 +998,7 @@ class RoutePlanner:
                     self.calcPathWithThreat(D2,end, end, threats, n_edge + 2, n_path + 1, path, aircraft_altitude_min, aircraft_altitude_max, aircraft_speed_max, aircraft_speed, aircraft_range_max, change_alt_option)
 
             #edge attraversa la threat definendo un segmento di intersezione        
-            c, d = find_chord_coordinates(threat_intersect.cylinder.radius, threat_intersect.cylinder.center, edge.wpA.point2d(), edge.wpB.point2d(), max_lenght) # calcola i punti C e D della corda CD che è la più vicina possibile alla corda AB sulla circonferenza                        
+            c, d = threat_intersect.cylinder.find_chord_coordinates(threat_intersect.cylinder.radius, threat_intersect.cylinder.center, edge.wpA.point2d(), edge.wpB.point2d(), max_lenght) # calcola i punti C e D della corda CD che è la più vicina possibile alla corda AB sulla circonferenza                        
             wp_B = Waypoint( f"wp_B{n_edge}", c ) # crea un nuovo waypoint B con il nuovo punto c
             edge = Edge(f"P:{n_path}-E:{n_edge}", wp_A, wp_B, speed = aircraft_speed) # aggiorna il l'edge con il waypoint precedente (wp_A) ed il nuovo waypoint (wp_B)            
             path[str(n_path)].append(edge) # l'edge viene aggiunto al percorso
@@ -478,221 +1018,3 @@ class RoutePlanner:
         return False
 
 
-
-
-def calcMaxLenghtCrossSegment(aircraft_speed: float, aircraft_altitude: float, missile_speed: float, threat_center: Point3D , threat_radius: float, time_to_inversion: float, time_sam_launch: float, segment: Segment3D) -> float:
-    
-    a= 1/aircraft_speed 
-    b = 0.5/missile_speed 
-    c = -(threat_radius + aircraft_altitude*aircraft_altitude) / aircraft_speed
-    delta = b**2 - 4*a*c
-    
-    if delta < 0:
-        return 0
-    
-    sqrt_delta = math.sqrt(delta)
-    lm1 = (-b + sqrt_delta) / (2*a)
-    lm2 = (-b - sqrt_delta) / (2*a)
-    
-    if lm1 <= 0 and lm2 <= 0:
-        return 0
-    
-    if lm1>lm2:
-        lm = lm1
-        
-    else:
-        lm = lm2
-    
-
-    time_max_in_threat_zone = lm * missile_speed
-    max_segmanet_lenght_in_threat_zone = ( time_max_in_threat_zone + time_to_inversion + time_sam_launch) * aircraft_speed
-
-
-    return max_segmanet_lenght_in_threat_zone
-
-
-def find_chord_coordinates(self, R, center, A, B, L):
-    """
-    Calcola le coordinate degli estremi di una corda CD di lunghezza L
-    che sia la più vicina possibile alla corda AB sulla circonferenza.
-    
-    Parametri:
-    - R: raggio della circonferenza
-    - center: tupla (x,y) delle coordinate del centro
-    - A: tupla (x,y) delle coordinate del punto A
-    - B: tupla (x,y) delle coordinate del punto B
-    - L: lunghezza desiderata della corda CD
-    
-    Returns:
-    - (C, D): tupla contenente le coordinate di C e D
-    """
-    # Estrai le coordinate
-    x_c, y_c = center
-    x_A, y_A = A
-    x_B, y_B = B
-    
-    # Verifica che A e B siano sulla circonferenza
-    dist_A = math.sqrt((x_A - x_c)**2 + (y_A - y_c)**2)
-    dist_B = math.sqrt((x_B - x_c)**2 + (y_B - y_c)**2)
-    
-    if abs(dist_A - R) > 1e-10 or abs(dist_B - R) > 1e-10:
-        raise ValueError("I punti A e B devono essere sulla circonferenza")
-    
-    # Verifica che L sia una lunghezza valida per una corda (L ≤ 2R)
-    if L > 2*R:
-        raise ValueError(f"La lunghezza L della corda non può superare il diametro (2R = {2*R})")
-    
-    # Calcola il punto medio della corda AB
-    mid_AB = ((x_A + x_B)/2, (y_A + y_B)/2)
-    
-    # Calcola il vettore dal centro al punto medio di AB
-    vec_c_mid = (mid_AB[0] - x_c, mid_AB[1] - y_c)
-    
-    # Normalizza il vettore
-    norm = math.sqrt(vec_c_mid[0]**2 + vec_c_mid[1]**2)
-    if norm < 1e-10:  # Se AB passa per il centro
-        # In questo caso, qualsiasi corda perpendicolare ad AB può essere la risposta
-        # Prendiamo un vettore perpendicolare arbitrario
-        vec_dir = (1, 0) if abs(x_B - x_A) < 1e-10 else (-vec_c_mid[1]/norm, vec_c_mid[0]/norm)
-    else:
-        # Direzione normalizzata dal centro verso il punto medio di AB
-        vec_dir = (vec_c_mid[0]/norm, vec_c_mid[1]/norm)
-    
-    # Calcola la distanza dal centro al punto medio della corda CD
-    # Usando la formula: d = sqrt(R^2 - (L/2)^2)
-    d = math.sqrt(R**2 - (L/2)**2)
-    
-    # Calcola il punto medio della corda CD
-    mid_CD = (x_c + d * vec_dir[0], y_c + d * vec_dir[1])
-    
-    # Calcola il vettore perpendicolare alla direzione centro-medio
-    perp_vec = (-vec_dir[1], vec_dir[0])
-    
-    # Calcola le coordinate di C e D
-    half_L = L / 2
-    C = (mid_CD[0] - half_L * perp_vec[0], mid_CD[1] - half_L * perp_vec[1])
-    D = (mid_CD[0] + half_L * perp_vec[0], mid_CD[1] + half_L * perp_vec[1])
-    
-    # Verifica che C e D siano sulla circonferenza
-    dist_C = math.sqrt((C[0] - x_c)**2 + (C[1] - y_c)**2)
-    dist_D = math.sqrt((D[0] - x_c)**2 + (D[1] - y_c)**2)
-    
-    if abs(dist_C - R) > 1e-10 or abs(dist_D - R) > 1e-10:
-        print(f"Attenzione: i punti calcolati potrebbero non essere esattamente sulla circonferenza")
-        print(f"Distanza C dal centro: {dist_C}, differenza con R: {abs(dist_C - R)}")
-        print(f"Distanza D dal centro: {dist_D}, differenza con R: {abs(dist_D - R)}")
-    
-    return (C, D)
-
-# da utilizzare se sivuole considerare anche il caso di un segmento con un estremo interno alla threat (unica intersezione)
-def find_chord_endpoint(self, R, center, A, B, L):
-    """
-    Calcola le coordinate del punto D tale che la corda ID abbia lunghezza L,
-    dove I è il punto di intersezione tra il segmento AB e la circonferenza.
-    
-    Parametri:
-    - R: raggio della circonferenza
-    - center: tupla (x,y) delle coordinate del centro
-    - A: tupla (x,y) delle coordinate del punto A
-    - B: tupla (x,y) delle coordinate del punto B
-    - L: lunghezza desiderata della corda ID
-    
-    Returns:
-    - (I, D): tupla contenente le coordinate di I e le due possibili soluzioni per D
-    """
-    x_c, y_c = center
-    x_A, y_A = A
-    x_B, y_B = B
-    
-    # Verifica che la lunghezza della corda L sia valida
-    if L > 2*R:
-        raise ValueError(f"La lunghezza L della corda non può superare il diametro (2R = {2*R})")
-    
-    # Calcolo del vettore direzionale AB
-    dir_AB = (x_B - x_A, y_B - y_A)
-    len_AB = math.sqrt(dir_AB[0]**2 + dir_AB[1]**2)
-    
-    if len_AB < 1e-10:
-        raise ValueError("I punti A e B devono essere distinti")
-    
-    # Normalizzo il vettore
-    dir_AB = (dir_AB[0]/len_AB, dir_AB[1]/len_AB)
-    
-    # Risolvo il sistema per trovare l'intersezione della retta AB con la circonferenza
-    # Equazione parametrica della retta: P(t) = A + t * dir_AB
-    # Sostituzione nell'equazione della circonferenza: |P(t) - center|^2 = R^2
-    
-    # Sviluppo l'equazione quadratica at^2 + bt + c = 0
-    a = dir_AB[0]**2 + dir_AB[1]**2  # sempre uguale a 1 perché dir_AB è normalizzato
-    b = 2 * ((x_A - x_c) * dir_AB[0] + (y_A - y_c) * dir_AB[1])
-    c = (x_A - x_c)**2 + (y_A - y_c)**2 - R**2
-    
-    # Calcolo il discriminante
-    discriminant = b**2 - 4*a*c
-    
-    if discriminant < 0:
-        raise ValueError("La retta AB non interseca la circonferenza")
-    
-    # Se ci sono due intersezioni, prendo quella che cade sul segmento AB
-    t1 = (-b + math.sqrt(discriminant)) / (2*a)
-    t2 = (-b - math.sqrt(discriminant)) / (2*a)
-    
-    # Calcolo i punti di intersezione
-    P1 = (x_A + t1 * dir_AB[0], y_A + t1 * dir_AB[1])
-    P2 = (x_A + t2 * dir_AB[0], y_A + t2 * dir_AB[1])
-    
-    # Determino quale dei due punti (se esiste) è sull'effettivo segmento AB
-    I = None
-    if 0 <= t1 <= len_AB:
-        I = P1
-    if 0 <= t2 <= len_AB:
-        if I is None or t2 < t1:  # Se ci sono due punti validi, prendo il più vicino ad A
-            I = P2
-    
-    if I is None:
-        raise ValueError("Il segmento AB non interseca la circonferenza")
-    
-    # Verifica che I sia sulla circonferenza
-    dist_I = math.sqrt((I[0] - x_c)**2 + (I[1] - y_c)**2)
-    if abs(dist_I - R) > 1e-10:
-        print(f"Avviso: il punto I calcolato non è esattamente sulla circonferenza")
-    
-    # Ora dobbiamo trovare il punto D sulla circonferenza tale che |ID| = L
-    
-    # Angolo al centro sotteso dalla corda di lunghezza L
-    theta = 2 * math.asin(L / (2 * R))
-    
-    # Vettore dal centro all'intersezione I
-    CI = (I[0] - x_c, I[1] - y_c)
-    len_CI = math.sqrt(CI[0]**2 + CI[1]**2)  # Dovrebbe essere R
-    CI_norm = (CI[0]/len_CI, CI[1]/len_CI)  # Normalizzo
-    
-    # Ruoto CI_norm di theta in entrambe le direzioni
-    rot1 = rotate_vector(CI_norm, theta)
-    rot2 = rotate_vector(CI_norm, -theta)
-    
-    # Calcolo i due possibili punti D
-    D1 = (x_c + R * rot1[0], y_c + R * rot1[1])
-    D2 = (x_c + R * rot2[0], y_c + R * rot2[1])
-    
-    # Verifica lunghezza della corda ID
-    len_ID1 = math.sqrt((D1[0] - I[0])**2 + (D1[1] - I[1])**2)
-    len_ID2 = math.sqrt((D2[0] - I[0])**2 + (D2[1] - I[1])**2)
-    
-    # Controllo della precisione
-    if abs(len_ID1 - L) > 1e-10 or abs(len_ID2 - L) > 1e-10:
-        print(f"Avviso: le corde calcolate potrebbero non avere esattamente lunghezza L")
-        print(f"Lunghezza ID1: {len_ID1}, differenza con L: {abs(len_ID1 - L)}")
-        print(f"Lunghezza ID2: {len_ID2}, differenza con L: {abs(len_ID2 - L)}")
-    
-    return I, (D1, D2)
-
-
-def rotate_vector(v, angle):
-    """
-    Ruota un vettore 2D di un dato angolo (in radianti)
-    """
-    cos_ang = math.cos(angle)
-    sin_ang = math.sin(angle)
-    return (v[0] * cos_ang - v[1] * sin_ang, 
-            v[0] * sin_ang + v[1] * cos_ang)
