@@ -59,10 +59,7 @@ class ThreatAA:
 
 
         return max_segmanet_lenght_in_threat_zone
-
-
-
-          
+     
 
 class Waypoint:
     

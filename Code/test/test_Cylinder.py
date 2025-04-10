@@ -21,6 +21,7 @@ import numpy as np
 from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 class TestCylinderClaude(unittest.TestCase):
+    
     def setUp(self):
         # Crea un'istanza di Cylinder per i test
         self.cylinder = Cylinder(Point3D(6, 9, 5), 2, 10)
