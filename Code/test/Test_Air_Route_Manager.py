@@ -78,7 +78,8 @@ class GPT_TestModule(unittest.TestCase):
         pc = PathCollection()
         path_id = pc.add_path([edge1])
         pc.get_path(path_id).add_edge(edge2)
-        best = pc.get_best_path()
+        pc.mark_path_completed(path_id)
+        best = pc.get_best_path(max_range = 100000)
         self.assertIsNotNone(best)
         self.assertAlmostEqual(float(best.total_length), 10.0)
 
@@ -95,9 +96,10 @@ class GPT_TestModule(unittest.TestCase):
         route = planner.calcRoute(self.start_point, self.end_point, threats,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, change_alt_option="no_change")
+                                  aircraft_range_max=1000, aircraft_time_to_inversion=20, 
+                                  change_alt_option="no_change")
         self.assertIsNotNone(route)
-        self.assertLess(sum(edge.length for edge in route.edges), 1000)
+        self.assertLess(sum(edge.length for edge in route.edges.values()), 1000)
 
     def test_route_planner_calcRoute_with_threat(self):
         threats = [self.threat]
@@ -105,7 +107,8 @@ class GPT_TestModule(unittest.TestCase):
         route = planner.calcRoute(self.start_point, self.end_point, threats,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, change_alt_option="change_up")
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  change_alt_option="change_up")
         self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
 
@@ -403,14 +406,14 @@ class TestPathCollection(unittest.TestCase):
         path_id2 = collection.add_path([self.edge1, self.edge2])  # Length: 5+~5.7, Danger: 2+3=5
         
         # Initially no completed paths
-        self.assertIsNone(collection.get_best_path())
+        self.assertIsNone(collection.get_best_path(max_range=100000))
         
         # Mark both as completed
         collection.mark_path_completed(path_id1)
         collection.mark_path_completed(path_id2)
         
         # First path should be best (shorter and less dangerous)
-        best_path = collection.get_best_path()
+        best_path = collection.get_best_path(max_range=100000)
         self.assertEqual(best_path, collection.paths[path_id1])
 
 
