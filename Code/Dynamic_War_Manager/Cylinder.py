@@ -3,22 +3,10 @@ from sympy import Point3D, Line3D, Segment3D
 import math
 
 
-#Manus
-from sympy import Point2D, Line2D, Point3D, Line3D, Segment3D, sqrt, solve, symbols, Eq, Matrix
-from sympy.geometry import Circle, Point, Line
-import numpy as np
-
-# Claude
-from sympy import Point3D, Line3D, Segment3D, Plane, Circle, Ray3D
+from sympy import  Point2D, Line2D, Point3D, Line3D, Segment3D, Point, Line, Plane, Circle, Ray3D, Matrix
 from sympy.geometry import intersection
 import math
 import numpy as np
-
-#Deepseek
-from sympy import Point3D, Segment3D, Line3D, Circle, Point, solve, Eq, sqrt, symbols, simplify, geometry
-from sympy.abc import t
-from typing import Tuple, Optional
-
 
 
 # innerPoint: Claude, ChatGPT (utilizza math), DeepSeek, Manus kverifica velocità esecuzine
@@ -535,8 +523,6 @@ class Cylinder:
 
         return (punto_sx, punto_dx)
     
-
-
 
     def find_chord_coordinates(self, R, center, A, B, L):
         """
