@@ -34,10 +34,7 @@ class TestCylinderClaude(unittest.TestCase):
         self.edge_E = Segment3D(Point3D(16, 1, 0), Point3D(4, 11, 6)) # interseca solo in un punto, l'altro passa attraverso la superficie inferiore
         self.edge_F = Segment3D(Point3D(4, 14, 9), Point3D(5, 6, 14)) # interseca
         self.edge_G = Segment3D(Point3D(8, 9.1, 5), Point3D(4, 8.9, 15))  # interseca
-        # self.edge_G = Segment3D(Point3D(8.5, 9.5, 14), Point3D(3.5, 8.5, 14)) : OK
-        # self.edge_G = Segment3D(Point3D(9, 9.5, 6), Point3D(3.5, 8.5, 14)) : OK
-        # self.edge_G = Segment3D(Point3D(8.5, 9.5, 13), Point3D(3.5, 8.5, 14)) : NO
-        # devi inserire un controllo della distanza degli estremi dei segmenti in relazione all'altezza
+        
 
         
 
