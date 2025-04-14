@@ -767,7 +767,7 @@ class RoutePlanner:
                 if debug:
                     print(f"Changing altitude UP to {new_p1.z}")
             else:
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude - 1)
+                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude - 1)
                 if debug:
                     print(f"Changing altitude DOWN to {new_p1.z}")
 

@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 
 from Code.Dynamic_War_Manager.Air_Route_Manager import *
 
+
 ######################### ChatGPT #########################
 
 
@@ -101,7 +102,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         self.assertLess(sum(edge.length for edge in route.edges.values()), 1000)
 
-    def test_route_planner_calcRoute_with_threat(self):
+    def test_route_planner_calcRoute_with_threat_escape_up(self):
         threats = [self.threat]
         planner = RoutePlanner(self.start_point, self.end_point, threats)
         route = planner.calcRoute(self.start_point, self.end_point, threats,
@@ -112,6 +113,46 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
 
+    def test_route_planner_calcRoute_with_threat_escape_down(self):
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(22, 25, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, cylinder = cylinder)
+        threats = [threat]
+
+        threats = [self.threat]
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  change_alt_option="change_down")
+        self.assertIsNotNone(route)
+        self.assertGreater(len(route.edges), 1)
+
+    def test_route_planner_calcRoute_with_threat_escape_lateral(self):
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(22, 25, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, cylinder = cylinder)
+        threats = [threat]
+
+        threats = [self.threat]
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  change_alt_option="no_change")
+        self.assertIsNotNone(route)
+        self.assertGreater(len(route.edges), 1)
+
 
 ######################### Claude Sonnet 3.7.2024 #########################
 
@@ -119,6 +160,7 @@ from unittest.mock import MagicMock, patch
 import math
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
+from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 # Assuming we have access to the module with the classes
 # from your_module import ThreatAA, Waypoint, Edge, Route, Path, PathCollection, RoutePlanner, Cylinder
@@ -156,7 +198,7 @@ class MockCylinder:
 class TestThreatAA(unittest.TestCase):
     def setUp(self):
         self.center = Point3D(0, 0, 100)
-        self.cylinder = MockCylinder(self.center, 10, 20)
+        self.cylinder = Cylinder(self.center, 10, 20) #MockCylinder(self.center, 10, 20)
         self.threat = ThreatAA(5, 500, 2, self.cylinder)
         
         # Create test waypoints and edges
@@ -244,7 +286,7 @@ class TestEdge(unittest.TestCase):
         
         # Create a mock threat
         center = Point3D(1.5, 2, 0)
-        cylinder = MockCylinder(center, 1, 5)
+        cylinder = Cylinder(center, 1, 5)
         self.threat = ThreatAA(10, 500, 2, cylinder)
     
     def test_init(self):
@@ -425,7 +467,7 @@ class TestRoutePlanner(unittest.TestCase):
         
         # Create a threat
         center = Point3D(50, 50, 100)
-        cylinder = MockCylinder(center, 20, 30)
+        cylinder = Cylinder(center, 20, 30)
         self.threat = ThreatAA(5, 500, 2, cylinder)
         
         # Create the route planner
@@ -723,7 +765,9 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_path_and_collection'))
         suite.addTest(GPT_TestModule('test_threat_calcMaxLenghtCrossSegment'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_no_threats'))
-        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_up'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_down'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_lateral'))
 
 
     # Claude test
