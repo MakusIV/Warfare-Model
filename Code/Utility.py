@@ -3,12 +3,11 @@
 import random 
 import logging
 import os
-import Context
 import math
 import hashlib
 import uuid
-from Sphere import Sphere
-from Hemisphere import Hemisphere
+from Code.Sphere import Sphere
+from Code.Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Point2D, Line3D, symbols, solve, Eq, sqrt, And
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -888,3 +887,7 @@ def evaluateMorale(success_ratio: float, efficiency: float):
     return output_string, output_numeric
     #print("Valore numerico di t_l_p:", output_numeric)
     #print("Valore stringa di t_l_p:", output_string)
+
+
+def getFormattedPoint(point, decimal_places=2):
+    return tuple(f"{float(coord):.2f}" for coord in point)

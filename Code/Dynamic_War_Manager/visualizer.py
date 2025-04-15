@@ -30,6 +30,7 @@ class Path3D:
         return self.points
 
 
+
 class Space:
     def __init__(self, space_x, space_y, space_z):
         self.origin = (0, 0, 0)
@@ -121,6 +122,8 @@ class Space:
         ax2d.set_aspect('equal', adjustable='box')
 
         plt.show()
+
+   
 
 if __name__ == "__main__":
 

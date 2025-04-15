@@ -12,6 +12,7 @@ from dataclasses import dataclass
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from Code.Dynamic_War_Manager.Cylinder import Cylinder
+from Code.Utility import getFormattedPoint
 
 
 
@@ -250,6 +251,10 @@ class Route:
 
         return path
 
+    def getPoints(self):
+        waypoints = self.getWaypoints()
+        points = [wp.point for wp in waypoints]
+        return points   
 
 # ottimizzazione deepseek
 @dataclass
@@ -370,14 +375,9 @@ class RoutePlanner:
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # ricorda in threats devono essere escluse le threat che includono i 
-      
-        p1 = start
-        p2 = end
-        end = end        
-        n_edge = 0, 
-        n_path = 0
+                          
         found_path = False
-        #path = {str(0): ()} #dict(Route)
+        
 
         # Inizializzazione
         path_collection = PathCollection()
@@ -435,10 +435,10 @@ class RoutePlanner:
 
             best_path = path_collection.get_best_path(aircraft_range_max)       
 
-            print(f"Best path length: {best_path.total_length}, danger: {best_path.total_danger}")
+            print(f"Best path length: {best_path.total_length:.2f}, danger: {best_path.total_danger:.2f}")
 
             for edge in best_path.edges:
-                print(f"Edge from {edge.wpA.point} to {edge.wpB.point}")
+                print(f"Edge from {getFormattedPoint(edge.wpA.point)} to {getFormattedPoint(edge.wpB.point)}")
                 
             return best_path.to_route()
         
@@ -455,7 +455,7 @@ class RoutePlanner:
 
 
     def firstThreatIntersected(self, edge: Edge, threats: list[ThreatAA]) -> ThreatAA:
-        DEBUG = False
+        DEBUG = True
         threat_distance = float('inf') # distanza da edge.wpa a threat.center
         first_threat = None
 
@@ -468,7 +468,7 @@ class RoutePlanner:
                 if wpA_Intersection_distance < threat_distance:
                     threat_distance = wpA_Intersection_distance
                     first_threat = threat                    
-                    if DEBUG: print(f"Found threat intersection at lesser distance: threat: {threat}, threat_distance: {threat_distance}")        
+                    if DEBUG: print(f"Found threat intersection at lesser distance: threat: {threat}, threat_distance: {threat_distance:.2f}")        
 
         return first_threat
 
@@ -676,7 +676,7 @@ class RoutePlanner:
     ) -> bool:
         """Gestisce l'attraversamento sicuro di una minaccia."""
         if debug:
-            print(f"Attempting to cross threat at {threat.cylinder.center} with max length {max_length}")
+            print(f"Attempting to cross threat at {threat.cylinder.center} with max length {max_length: .2f}")
 
         # Trova i punti di attraversamento ottimali
         c, d = threat.cylinder.find_chord_coordinates(
@@ -743,14 +743,14 @@ class RoutePlanner:
         """Gestisce l'evitamento della minaccia con cambio quota o percorsi alternativi."""
         # Verifica se possiamo cambiare quota
         can_change_altitude = (
-            (aircraft_altitude_max > threat.max_altitude or 
-            aircraft_altitude_min < threat.min_altitude) and
+            (aircraft_altitude_max > threat.max_altitude * 1.01 or 
+            aircraft_altitude_min < threat.min_altitude * 0.99 ) and
             change_alt_option != "no_change"
         )
 
         if can_change_altitude:
             if debug:
-                print(f"Attempting altitude change for threat at {threat.cylinder.center}")
+                print(f"Attempting altitude change for threat at {threat.cylinder.bottom_center}")
 
             intersected, segm = threat.cylinder.getIntersection(
                 edge.getSegment3D(), tolerance = MIN_LENGTH_SEGMENT
@@ -763,13 +763,13 @@ class RoutePlanner:
 
             new_p1 = segm.p1
             if change_alt_option == "change_up":
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude + 1)
+                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude * 1.01)
                 if debug:
-                    print(f"Changing altitude UP to {new_p1.z}")
+                    print(f"Changing altitude UP to {new_p1.z:.2f}")
             else:
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude - 1)
+                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude * 0.99)
                 if debug:
-                    print(f"Changing altitude DOWN to {new_p1.z}")
+                    print(f"Changing altitude DOWN to {new_p1.z:.2f}")
 
             # Crea nuovo edge con punto modificato
             new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1, None) 
@@ -800,8 +800,9 @@ class RoutePlanner:
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
 
-        # Se non possiamo cambiare quota, troviamo percorsi alternativi
-        ext_p1, ext_p2 = threat.cylinder.getExtendedPoints(
+        # Se non possiamo cambiare quota, troviamo percorsi alternativi calcolando gli extended points per una circonferenza leggermente più grande della threat
+        extended_cylinder = Cylinder(threat.cylinder.center, threat.cylinder.radius * 1.03, threat.cylinder.height)
+        ext_p1, ext_p2 = extended_cylinder.getExtendedPoints(
             edge.getSegment3D(), tolerance=0.001
         )
         
@@ -812,7 +813,7 @@ class RoutePlanner:
 
         # Percorso alternativo 1 (ext_p1)
         if debug:
-            print(f"Creating alternative path through {ext_p1}")
+            print(f"Creating alternative path through {getFormattedPoint(ext_p1)}")
 
         new_edge1 = Edge(
             f"P:{path_id}-E:{n_edge}_alt1",
@@ -845,7 +846,7 @@ class RoutePlanner:
 
         # Percorso alternativo 2 (ext_p2)
         if debug:
-            print(f"Creating alternative path through {ext_p2}")
+            print(f"Creating alternative path through {getFormattedPoint(ext_p2)}")
 
         new_path_id = path_collection.add_path(path_collection.get_path(path_id).edges[:-1])
         new_edge2 = Edge(
