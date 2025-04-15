@@ -8,7 +8,7 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 from Code.Dynamic_War_Manager.Air_Route_Manager import *
-
+from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 ######################### ChatGPT #########################
 
@@ -67,6 +67,8 @@ class GPT_TestModule(unittest.TestCase):
         route.add_edge(edge2)
         waypoints = route.getWaypoints()
         self.assertEqual(waypoints, [wpA, wpB, wpC])
+        points = route.getPoints()
+        self.assertEqual(points, [wpA.point, wpB.point, wpC.point])
 
     def test_path_and_collection(self):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
@@ -122,8 +124,6 @@ class GPT_TestModule(unittest.TestCase):
         # Creazione di una minaccia utilizzando il cilindro reale
         threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, cylinder = cylinder)
         threats = [threat]
-
-        threats = [self.threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
@@ -142,14 +142,20 @@ class GPT_TestModule(unittest.TestCase):
         # Creazione di una minaccia utilizzando il cilindro reale
         threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, cylinder = cylinder)
         threats = [threat]
-
-        threats = [self.threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="no_change")
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
 
@@ -160,7 +166,7 @@ from unittest.mock import MagicMock, patch
 import math
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
-from Code.Dynamic_War_Manager.Cylinder import Cylinder
+#from Code.Dynamic_War_Manager.Cylinder import Cylinder
 
 # Assuming we have access to the module with the classes
 # from your_module import ThreatAA, Waypoint, Edge, Route, Path, PathCollection, RoutePlanner, Cylinder
