@@ -377,6 +377,12 @@ class RoutePlanner:
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # ricorda in threats devono essere escluse le threat che includono i 
+
+        #  ERRORE NEL CALCOLO DI UN PUNTO EXT: LO INSERISCE ALL'INTERNO DI UNA MINACCIA (GIUSTOM PUÒ SUCCEDERE IN QUANTO E' PREVISTO CHE IL NUOVO SEGMENTO
+        #  VENGA RICONTROLLATO, QUINDI UNO DEIM PUNTI E' INTERNO. CORREGGERE LA QUOTA DEGLI ESTREMI VISTO CHE INTERSECT MI RESTITUISCE UN PUNTO CON Z 
+        # INCONGRU ENTE. LA funzione Cylinder.getIntersection valuta il punto 3D quindi se la quota è esterna al cilindro restituisce un risukltato strano: non trova il punto interno
+        # e quindi rstituisce Segment3D(con due punti uguali) che diventa automaticamente un oggetto point3D (SIC: lo hai corretto in modo improprio creando un punto fittizio). Controlla perchè nel metodo di test 
+        # test_route_planner_calcRoute_with_threat_escape_up esce errore (vedi z) queto errore dovrebbe essere risolto con un adegato output della funzione o agendo nelle funzioni di Air_Rouute_Manager
                           
         found_path = False
         
@@ -493,7 +499,7 @@ class RoutePlanner:
         for threat in threats:
             threatInrange, intersection = threat.edgeIntersect(edge)
             
-            if threatInrange:                
+            if threatInrange or intersection:                
                 wpA_Intersection_distance = edge.wpA.point.distance(intersection.p1) # distanza dalla circonferenza della threat
                 
                 if wpA_Intersection_distance < threat_distance:
