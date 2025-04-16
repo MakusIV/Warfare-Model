@@ -2,6 +2,7 @@ import sys
 import os
 import heapq
 import math
+import copy
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
 from collections import defaultdict
@@ -28,8 +29,9 @@ class ThreatAA:
         self.max_altitude = cylinder.bottom_center.z + cylinder.height
         self.cylinder = cylinder
 
-    def edgeIntersect(self, edge):
-        segment = Segment3D(edge.wpA.point, edge.wpB.point)        
+    def edgeIntersect(self, edge) -> Tuple[bool, Optional[Segment3D]]:
+        segment = Segment3D(edge.wpA.point, edge.wpB.point)
+        #intersected, intersection = self.cylinder.getIntersection(segment, tolerance = MIN_LENGTH_SEGMENT)        
         return self.cylinder.getIntersection(segment, tolerance = MIN_LENGTH_SEGMENT)
     
     def innerPoint(self, point:Point3D):
@@ -371,7 +373,7 @@ class RoutePlanner:
         self.threats = threats
         
         
-    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change") -> Route:      
+    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False) -> Route:      
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # ricorda in threats devono essere escluse le threat che includono i 
@@ -387,30 +389,8 @@ class RoutePlanner:
         self.excludeThreat(threats, start)
         self.excludeThreat(threats, end)
 
-        # Calcola il percorso senza minacce (path_collectiopn è passato come riferimento e dovrebbe essere aggiornato dal metodo)
-        found_path = self.calcPathWithoutThreat(
-            start, 
-            end, 
-            end,
-            threats,
-            n_edge = 0,            
-            path_id = initial_path_id,
-            path_collection = path_collection,
-            aircraft_altitude_min = aircraft_altitude_min,
-            aircraft_altitude_max = aircraft_altitude_max,
-            aircraft_speed_max = aircraft_speed_max,
-            aircraft_speed = aircraft_speed,
-            aircraft_range_max = aircraft_range_max,
-            change_alt_option = change_alt_option,
-            debug = True
-        )
 
-        if not found_path:    
-            # Inizializzazione
-            path_collection = PathCollection()
-            initial_path_id = path_collection.add_path()
-
-            # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)                
+        if intersecate_threat:            
             found_path = self.calcPathWithThreat(
                 start, 
                 end, 
@@ -429,9 +409,59 @@ class RoutePlanner:
                 debug = True
             )
 
+
+        else: # Calcola il percorso senza minacce (path_collectiopn è passato come riferimento e dovrebbe essere aggiornato dal metodo)
+            found_path = self.calcPathWithoutThreat(
+                start, 
+                end, 
+                end,
+                threats,
+                n_edge = 0,            
+                path_id = initial_path_id,
+                path_collection = path_collection,
+                aircraft_altitude_min = aircraft_altitude_min,
+                aircraft_altitude_max = aircraft_altitude_max,
+                aircraft_speed_max = aircraft_speed_max,
+                aircraft_speed = aircraft_speed,
+                aircraft_range_max = aircraft_range_max,
+                change_alt_option = change_alt_option,
+                debug = True
+            )
+
+            if not found_path:    
+                # Inizializzazione
+                path_collection = PathCollection()
+                initial_path_id = path_collection.add_path()
+
+                # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)                
+                found_path = self.calcPathWithThreat(
+                    start, 
+                    end, 
+                    end,
+                    threats,
+                    n_edge = 0,                
+                    path_id = initial_path_id,
+                    path_collection = path_collection,
+                    aircraft_altitude_min = aircraft_altitude_min,
+                    aircraft_altitude_max = aircraft_altitude_max,
+                    aircraft_speed_max = aircraft_speed_max,
+                    aircraft_speed = aircraft_speed,
+                    aircraft_range_max = aircraft_range_max,
+                    time_to_inversion = aircraft_time_to_inversion,
+                    change_alt_option = change_alt_option,
+                    debug = True
+                )
+
         # nella funzione best path oltre che valutare la lunghezza devi valutare anche il pericolo: 0.7 * danger + 0.3 * length
         # Ottenere risultati
         if found_path:
+
+            for id_path in range(len(path_collection.paths)):
+                _path = path_collection.get_path(id_path)
+                print(f"Found path --> Path ID: {id_path}, Length: {_path.total_length:.2f}, Danger: {_path.total_danger:.2f}")
+
+                for edge in _path.edges:
+                    print(f"Edge {edge.name} from {getFormattedPoint(edge.wpA.point)} to {getFormattedPoint(edge.wpB.point)}")
 
             best_path = path_collection.get_best_path(aircraft_range_max)       
 
@@ -458,6 +488,7 @@ class RoutePlanner:
         DEBUG = True
         threat_distance = float('inf') # distanza da edge.wpa a threat.center
         first_threat = None
+    
 
         for threat in threats:
             threatInrange, intersection = threat.edgeIntersect(edge)
@@ -522,7 +553,7 @@ class RoutePlanner:
         edge = Edge(f"P:{path_id}-E:{n_edge}", wp_A, wp_B, aircraft_speed)
 
         if debug:
-            print(f"\nProcessing path {path_id}, edge {n_edge}: {wp_A.name} -> {wp_B.name}")
+            print(f"\nProcessing path {path_id}, edge {n_edge}: {wp_A.name}({getFormattedPoint(wp_A.point)}) -> {wp_B.name}({getFormattedPoint(wp_B.point)})")
 
         # Verifica intersezioni con minacce
         threat_intersect = self.firstThreatIntersected(edge, threats)
@@ -787,7 +818,7 @@ class RoutePlanner:
                     new_p1, p2, end, threats, n_edge + 1, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion, 
-                    change_alt_option, max_recursion, debug
+                    change_alt_option, max_recursion-1, debug
                 )
             elif caller == "calcPathWithoutThreat":
 
@@ -795,7 +826,7 @@ class RoutePlanner:
                     new_p1, p2, end, threats, n_edge + 1, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max,
-                    change_alt_option, max_recursion, debug
+                    change_alt_option, max_recursion-1, debug
                 )
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
@@ -811,18 +842,13 @@ class RoutePlanner:
                 print("Could not find extended points around threat")
             return False
 
-        # Percorso alternativo 1 (ext_p1)
-        if debug:
-            print(f"Creating alternative path through {getFormattedPoint(ext_p1)}")
+       
 
-        new_edge1 = Edge(
-            f"P:{path_id}-E:{n_edge}_alt1",
-            edge.wpA,
-            Waypoint(f"wp_B{path_id}_{n_edge}_alt1", ext_p1, None),
-            aircraft_speed
-        )
-        path_collection.get_path(path_id).add_edge(new_edge1)
-        
+        path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
+        new_path_id = path_collection.add_path(path_edges_copy) 
+
+        if debug:
+            print(f"Creating alternative path through new point (ext_p1): {getFormattedPoint(ext_p1)}")#, \nProcessing path {path_id}, new edge {new_edge1}: {new_edge1.wpA.name}({getFormattedPoint(new_edge1.wpA.point)}) -> {new_edge1.wpB.name}({getFormattedPoint(new_edge1.wpB.point)})")
 
         if caller == "calcPathWithThreat":
                 
@@ -844,19 +870,18 @@ class RoutePlanner:
             raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
 
 
-        # Percorso alternativo 2 (ext_p2)
+        # Percorso alternativo 2 (ext_p2)    
+        
+        #new_edge2 = Edge(
+        #    f"P:{new_path_id}-E:{n_edge}_alt2",
+        #    edge.wpA,
+        #    Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2, None),
+        #    aircraft_speed
+        #)
+        #path_collection.get_path(new_path_id).add_edge(new_edge2)
+
         if debug:
-            print(f"Creating alternative path through {getFormattedPoint(ext_p2)}")
-
-        new_path_id = path_collection.add_path(path_collection.get_path(path_id).edges[:-1])
-        new_edge2 = Edge(
-            f"P:{new_path_id}-E:{n_edge}_alt2",
-            edge.wpA,
-            Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2, None),
-            aircraft_speed
-        )
-        path_collection.get_path(new_path_id).add_edge(new_edge2)
-
+            print(f"Creating alternative path through new point (ext_p2): {getFormattedPoint(ext_p2)}") #, \nProcessing path {new_path_id}, new edge {new_edge2}: {new_edge2.wpA.name}({getFormattedPoint(new_edge2.wpA.point)}) -> {new_edge2.wpB.name}({getFormattedPoint(new_edge2.wpB.point)})")
 
         if caller == "calcPathWithThreat":
                 
