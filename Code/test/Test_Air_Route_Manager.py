@@ -100,7 +100,7 @@ class GPT_TestModule(unittest.TestCase):
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
                                   aircraft_range_max=1000, aircraft_time_to_inversion=20, 
-                                  change_alt_option="no_change")
+                                  change_alt_option="no_change", intersecate_threat=False)
         self.assertIsNotNone(route)
         self.assertLess(sum(edge.length for edge in route.edges.values()), 1000)
 
@@ -111,7 +111,7 @@ class GPT_TestModule(unittest.TestCase):
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
-                                  change_alt_option="change_up")
+                                  change_alt_option="change_up", intersecate_threat=False)
         self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
 
@@ -129,7 +129,7 @@ class GPT_TestModule(unittest.TestCase):
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
-                                  change_alt_option="change_down")
+                                  change_alt_option="change_down", intersecate_threat=False)
         self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
 
@@ -147,7 +147,38 @@ class GPT_TestModule(unittest.TestCase):
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=300, aircraft_speed=250,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
-                                  change_alt_option="no_change")
+                                  change_alt_option="no_change", intersecate_threat=False)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        self.assertGreater(len(route.edges), 1)
+
+
+    def test_route_planner_calcRoute_with_2_threat_escape_lateral(self):
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(22, 25, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, cylinder = cylinder)
+        threats = [threat]
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, cylinder = cylinder)
+        threats.append(threat)
+
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  change_alt_option="no_change", intersecate_threat=False)
                 
         points = route.getPoints() 
         
@@ -774,6 +805,9 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_up'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_down'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_lateral'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_2_threat_escape_lateral'))
+
+        
 
 
     # Claude test

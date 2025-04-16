@@ -254,7 +254,7 @@ class Cylinder:
             elif self.innerPoint(p2):
                 return False, Segment3D(valid_intersections[0], p2)
             else:
-                return False, Segment3D(valid_intersections[0], valid_intersections[0])
+                return False, Segment3D(valid_intersections[0], Point3D(valid_intersections[0].x+1, valid_intersections[0].y+1, valid_intersections[0].z+1 ))
         else:
             # Due punti di intersezione
             return True, Segment3D(valid_intersections[0], valid_intersections[1])
