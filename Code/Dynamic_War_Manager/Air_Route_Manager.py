@@ -16,7 +16,8 @@ from Code.Dynamic_War_Manager.Cylinder import Cylinder
 from Code.Utility import getFormattedPoint
 
 
-
+MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE = 1.05
+MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE = 0.95
 MIN_LENGTH_SEGMENT = 0.1 # minimum length of segment to consider it as valid intersection
 
 class ThreatAA:
@@ -376,14 +377,14 @@ class RoutePlanner:
     def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False) -> Route:      
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
-        # ricorda in threats devono essere escluse le threat che includono i 
+        # NOTA: 
+        # CONSIDERANDO L'ARCHITETTURA DI QUESTO ALGORITMO CONVIENE CALCOLARE LE ROTTE 
+        # ESEGUENDO QUESTA FUNZIONE CONSIDERANDO LA DOPPIA ESECUZIONE CON 
+        # change_alt_option = "no_change" E CON change_alt_optiNo = "change_up o down"
+        # p.e.: la scelta di cosa eseguire prima eè in base alle caratteristiche della missione:
+        # mission low profile (evitare intercettazione): prima esegui calcRoute con l'opzione change_down" e se non trovi un percorso soddisfacente esegui calcRoute con l'altezza cosnisderata e l'opzione "no_change" seconda della convenienza prima esegui 
 
-        #  ERRORE NEL CALCOLO DI UN PUNTO EXT: LO INSERISCE ALL'INTERNO DI UNA MINACCIA (GIUSTOM PUÒ SUCCEDERE IN QUANTO E' PREVISTO CHE IL NUOVO SEGMENTO
-        #  VENGA RICONTROLLATO, QUINDI UNO DEIM PUNTI E' INTERNO. CORREGGERE LA QUOTA DEGLI ESTREMI VISTO CHE INTERSECT MI RESTITUISCE UN PUNTO CON Z 
-        # INCONGRU ENTE. LA funzione Cylinder.getIntersection valuta il punto 3D quindi se la quota è esterna al cilindro restituisce un risukltato strano: non trova il punto interno
-        # e quindi rstituisce Segment3D(con due punti uguali) che diventa automaticamente un oggetto point3D (SIC: lo hai corretto in modo improprio creando un punto fittizio). Controlla perchè nel metodo di test 
-        # test_route_planner_calcRoute_with_threat_escape_up esce errore (vedi z) queto errore dovrebbe essere risolto con un adegato output della funzione o agendo nelle funzioni di Air_Rouute_Manager
-                          
+                      
         found_path = False
         
 
@@ -464,14 +465,14 @@ class RoutePlanner:
 
             for id_path in range(len(path_collection.paths)):
                 _path = path_collection.get_path(id_path)
-                print(f"Found path --> Path ID: {id_path}, Length: {_path.total_length:.2f}, Danger: {_path.total_danger:.2f}")
+                print(f"\nFound path --> Path ID: {id_path}, Length: {_path.total_length:.2f}, Danger: {_path.total_danger:.2f}, completed: {_path.completed}")
 
                 for edge in _path.edges:
                     print(f"Edge {edge.name} from {getFormattedPoint(edge.wpA.point)} to {getFormattedPoint(edge.wpB.point)}")
 
             best_path = path_collection.get_best_path(aircraft_range_max)       
 
-            print(f"Best path length: {best_path.total_length:.2f}, danger: {best_path.total_danger:.2f}")
+            print(f"\nBest path length: {best_path.total_length:.2f}, danger: {best_path.total_danger:.2f}")
 
             for edge in best_path.edges:
                 print(f"Edge from {getFormattedPoint(edge.wpA.point)} to {getFormattedPoint(edge.wpB.point)}")
@@ -779,11 +780,8 @@ class RoutePlanner:
     ) -> bool:
         """Gestisce l'evitamento della minaccia con cambio quota o percorsi alternativi."""
         # Verifica se possiamo cambiare quota
-        can_change_altitude = (
-            (aircraft_altitude_max > threat.max_altitude * 1.01 or 
-            aircraft_altitude_min < threat.min_altitude * 0.99 ) and
-            change_alt_option != "no_change"
-        )
+        can_change_altitude =   ( change_alt_option!= "no_change") and (change_alt_option == "change_up" and (aircraft_altitude_max > threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE)) or (change_alt_option == "change_down" and (aircraft_altitude_min < threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE))
+                
 
         if can_change_altitude:
             if debug:
@@ -800,11 +798,11 @@ class RoutePlanner:
 
             new_p1 = segm.p1
             if change_alt_option == "change_up":
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude * 1.01)
+                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE) 
                 if debug:
                     print(f"Changing altitude UP to {new_p1.z:.2f}")
             else:
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude * 0.99)
+                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE)
                 if debug:
                     print(f"Changing altitude DOWN to {new_p1.z:.2f}")
 
@@ -843,70 +841,96 @@ class RoutePlanner:
             edge.getSegment3D(), tolerance=0.001
         )
         
-        if not ext_p1 or not ext_p2:
+
+        # SE NON FUNZIONA VERIFICATA LA CODIZIONE DI  xt_p2_distance > 2 * ext_p1_distance RITORNA FALSE
+
+
+        if not ext_p1 and not ext_p2: # or
             if debug:
                 print("Could not find extended points around threat")
             return False
 
-       
-
-        path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
-        new_path_id = path_collection.add_path(path_edges_copy) 
-
-        if debug:
-            print(f"Creating alternative path through new point (ext_p1): {getFormattedPoint(ext_p1)}")#, \nProcessing path {path_id}, new edge {new_edge1}: {new_edge1.wpA.name}({getFormattedPoint(new_edge1.wpA.point)}) -> {new_edge1.wpB.name}({getFormattedPoint(new_edge1.wpB.point)})")
-
-        if caller == "calcPathWithThreat":
-                
-            result1 = self.calcPathWithThreat(
-                p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                change_alt_option, max_recursion, debug
-            )
-        elif caller == "calcPathWithoutThreat":
-
-            result1 = self.calcPathWithoutThreat(
-                p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max,
-                change_alt_option, max_recursion, debug
-            )
-        else:
-            raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
-
-
-        # Percorso alternativo 2 (ext_p2)    
         
-        #new_edge2 = Edge(
-        #    f"P:{new_path_id}-E:{n_edge}_alt2",
-        #    edge.wpA,
-        #    Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2, None),
-        #    aircraft_speed
-        #)
-        #path_collection.get_path(new_path_id).add_edge(new_edge2)
 
-        if debug:
-            print(f"Creating alternative path through new point (ext_p2): {getFormattedPoint(ext_p2)}") #, \nProcessing path {new_path_id}, new edge {new_edge2}: {new_edge2.wpA.name}({getFormattedPoint(new_edge2.wpA.point)}) -> {new_edge2.wpB.name}({getFormattedPoint(new_edge2.wpB.point)})")
+        ext_p1_distance = ext_p1.distance(edge.wpA.point) + ext_p1.distance(edge.wpB.point) # new
+        ext_p2_distance = ext_p2.distance(edge.wpA.point) + ext_p2.distance(edge.wpB.point)  # new      
+        
+        if ext_p2_distance > 2 * ext_p1_distance: # new ext_p2 richiede un punto del percorso troppo distante rispetto ext_p1. Il punto non viemne considerato per procedere nella ricorsione per la valutazione di un percorso
+            ext_p2 = None # procede solo ext_p2 con il path corrente
+            if debug:
+                print("Deleted ext_p2 from path ricorsion: ext_p2_distance{ext_p2_distance} > double ext_p1_distance{ext_p1_distance}")
 
-        if caller == "calcPathWithThreat":
-                
-            result2 = self.calcPathWithThreat(
-                p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                change_alt_option, max_recursion, debug
-            )
-        elif caller == "calcPathWithoutThreat":
+        elif ext_p1_distance > 2 * ext_p2_distance: # new ext_p1 richiede un punto del percorso troppo distante rispetto ext_p12. Il punto non viemne considerato per procedere nella ricorsione per la valutazione di un percorso
+            ext_p1 = None            
+            new_path_id = path_id # procede solo ext_p2 con il path corrente
+            if debug:
+                print("Deleted ext_p1 from path ricorsion: ext_p1_distance{ext_p1_distance} > double ext_p2_distance{ext_p2_distance}")
 
-            result2 = self.calcPathWithoutThreat(
-                p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max,
-                change_alt_option, max_recursion, debug
-            )
-        else:
-            raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+        else: # procedono sia ext_p1 che  ext_p2 il primo con il path corrente, il secondo con un nuovo path
+            path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
+            new_path_id = path_collection.add_path(path_edges_copy) 
+
+            
+        
+        if ext_p1: # new
+            #path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
+            #new_path_id = path_collection.add_path(path_edges_copy) 
+
+            if debug:
+                print(f"Creating alternative path through new point (ext_p1): {getFormattedPoint(ext_p1)}")#, \nProcessing path {path_id}, new edge {new_edge1}: {new_edge1.wpA.name}({getFormattedPoint(new_edge1.wpA.point)}) -> {new_edge1.wpB.name}({getFormattedPoint(new_edge1.wpB.point)})")
+
+            if caller == "calcPathWithThreat":
+                    
+                result1 = self.calcPathWithThreat(
+                    p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                    change_alt_option, max_recursion, debug
+                )
+            elif caller == "calcPathWithoutThreat":
+
+                result1 = self.calcPathWithoutThreat(
+                    p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    change_alt_option, max_recursion, debug
+                )
+            else:
+                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+
+
+        if ext_p2:# new
+            # Percorso alternativo 2 (ext_p2)    
+            
+            #new_edge2 = Edge(
+            #    f"P:{new_path_id}-E:{n_edge}_alt2",
+            #    edge.wpA,
+            #    Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2, None),
+            #    aircraft_speed
+            #)
+            #path_collection.get_path(new_path_id).add_edge(new_edge2)
+
+            if debug:
+                print(f"Creating alternative path through new point (ext_p2): {getFormattedPoint(ext_p2)}") #, \nProcessing path {new_path_id}, new edge {new_edge2}: {new_edge2.wpA.name}({getFormattedPoint(new_edge2.wpA.point)}) -> {new_edge2.wpB.name}({getFormattedPoint(new_edge2.wpB.point)})")
+
+            if caller == "calcPathWithThreat":
+                    
+                result2 = self.calcPathWithThreat(
+                    p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                    change_alt_option, max_recursion, debug
+                )
+            elif caller == "calcPathWithoutThreat":
+
+                result2 = self.calcPathWithoutThreat(
+                    p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    change_alt_option, max_recursion, debug
+                )
+            else:
+                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
 
         return result1 or result2
 

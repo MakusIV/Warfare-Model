@@ -1,6 +1,3 @@
-#ChatGPT
-from sympy import Point3D, Line3D, Segment3D
-import math
 
 
 from sympy import  Point2D, Line2D, Point3D, Line3D, Segment3D, Point, Line, Plane, Circle, Ray3D, Matrix
@@ -166,7 +163,7 @@ class Cylinder:
         tan_point1, tan_point2 = self.getTangentPoints(point)
         return Line2D(point, tan_point1), Line2D(point, tan_point2)
     
-    def getIntersection(self, edge: Segment3D, tolerance: float) -> tuple:
+    def getIntersectionA(self, edge: Segment3D, tolerance: float) -> tuple:
     
         """
         Calcola l'intersezione tra un segmento e il cilindro
@@ -212,7 +209,7 @@ class Cylinder:
         
         w = p1_xy - cylinder_center_xy
         
-        a = np.dot(v_xy, v_xy)
+        a = np.dot(v_xy, v_xy) # prodotto scalare di v_xy per se stesso (restiuisce v_xy^2) serve per verificare se v_xy è 0 (vettore con coord x=y=0 -> parallelo a z)
         b = 2 * np.dot(w, v_xy)
         c = np.dot(w, w) - self.radius**2
         
@@ -236,28 +233,113 @@ class Cylinder:
         
         # Filtra le intersezioni che sono sul segmento [0, 1]
         # e all'interno dell'altezza del cilindro
+        # gestisce estremi interni al cilindro ed uno dei due estremi esterno al cilindro che interseca sulla base o sul top del cilindro (interno o esterno l raggio della circonferenza)
+        # NON gestisce due estremi esterni che intersecano entrambi solo sulla base e o sul top del cilindro
         valid_intersections = []
+        horizzontal_intersection = None # 
         
         for t in [t1, t2]:
+
             if 0 <= t <= 1:
                 point_3d = p1_np + t * v
                 if DEBUG: print(f"getIntersection - t: {t}, point_3d: {point_3d}")
+                
                 if base_center_np[2] <= point_3d[2] <= base_center_np[2] + (self.top_center.z - self.bottom_center.z):
-                    valid_intersections.append(Point3D(point_3d[0], point_3d[1], point_3d[2]))
-        
-        if not valid_intersections:
+                    valid_intersections.append(Point3D(point_3d[0], point_3d[1], point_3d[2]))                    
+                
+                elif point_3d[2] < base_center_np[2]:
+                    horizzontal_intersection = Point3D(point_3d[0], point_3d[1], base_center_np[2])
+                
+                elif point_3d[2] > base_center_np[2]+ (self.top_center.z - self.bottom_center.z):
+                    horizzontal_intersection = Point3D(point_3d[0], point_3d[1], base_center_np[2] + (self.top_center.z - self.bottom_center.z))
+                    
+        if not valid_intersections: 
             return False, None
+        
         elif len(valid_intersections) == 1:
             # Un solo punto di intersezione
             if self.innerPoint(p1):
                 return False, Segment3D(valid_intersections[0], p1)
             elif self.innerPoint(p2):
                 return False, Segment3D(valid_intersections[0], p2)
-            else:
-                return False, Segment3D(valid_intersections[0], Point3D(valid_intersections[0].x+1, valid_intersections[0].y+1, valid_intersections[0].z+1 ))
+            else: # una delle intersezioni è sulla base o sul top del cilindro        
+                return False, Segment3D( valid_intersections[0], horizzontal_intersection )
         else:
             # Due punti di intersezione
             return True, Segment3D(valid_intersections[0], valid_intersections[1])
+
+    def getIntersection(self, edge: Segment3D, tolerance: float) -> tuple:
+        """
+        Calcola l'intersezione tra un segmento e il cilindro,
+        includendo superfici laterali e piani orizzontali (base e top).
+        """
+        p1, p2 = edge.points
+        # Coord numpy
+        p1_np = np.array([float(p1.x), float(p1.y), float(p1.z)])
+        p2_np = np.array([float(p2.x), float(p2.y), float(p2.z)])
+        v = p2_np - p1_np
+        v_len = np.linalg.norm(v)
+        if v_len < tolerance:
+            return False, None
+
+        base_np = np.array([float(self.bottom_center.x), float(self.bottom_center.y), float(self.bottom_center.z)])
+        base_z = base_np[2]
+        top_z = self.top_center.z
+
+        # Intersezioni con superficie laterale (proiezione XY)
+        cyl_xy = base_np[:2]
+        p1_xy = p1_np[:2]
+        v_xy = v[:2]
+        w = p1_xy - cyl_xy
+        a = np.dot(v_xy, v_xy)
+        lateral_ts = []
+        if abs(a) > 1e-12:
+            b = 2 * np.dot(w, v_xy)
+            c = np.dot(w, w) - self.radius**2
+            disc = b*b - 4*a*c
+            if disc >= 0:
+                sqrt_d = math.sqrt(disc)
+                t0 = (-b - sqrt_d) / (2*a)
+                t1 = (-b + sqrt_d) / (2*a)
+                for t in (t0, t1):
+                    if 0 <= t <= 1:
+                        P = p1_np + t * v
+                        if base_z <= P[2] <= top_z:
+                            lateral_ts.append(t)
+
+        # Intersezioni con piani orizzontali base e top
+        plane_ts = []
+        if abs(v[2]) > 1e-12:
+            for z_plane in (base_z, top_z):
+                t = (z_plane - p1_np[2]) / v[2]
+                if 0 <= t <= 1:
+                    P = p1_np + t * v
+                    # Verifica raggio
+                    dx, dy = P[0] - base_np[0], P[1] - base_np[1]
+                    if dx*dx + dy*dy <= self.radius**2 + tolerance:
+                        plane_ts.append(t)
+
+        # Unisci e ordina i parametri validi
+        all_ts = sorted(set(lateral_ts + plane_ts))
+        if not all_ts:
+            return False, None
+
+        # Calcola punti di intersezione
+        pts = [Point3D(*(p1_np + t * v)) for t in all_ts]
+        # Se due o più, prendiamo i primi due
+        if len(pts) >= 2:
+            return True, Segment3D(pts[0], pts[1])
+        # Un solo punto rilevato
+        single = pts[0]
+        # Se un estremo è interno, lo consideriamo
+        if self.innerPoint(p1):
+            return False, Segment3D(single, p1)
+        if self.innerPoint(p2):
+            return False, Segment3D(single, p2)
+        # Altrimenti due piani orizzontali? duplicalo
+        return False, Segment3D(single, single)
+
+
 
     def get_direction_vector(self, line):
         """Restituisce il vettore direzionale di una Line3D come un oggetto Matrix."""
