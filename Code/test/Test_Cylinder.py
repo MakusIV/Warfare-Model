@@ -117,25 +117,25 @@ class TestCylinderClaude(unittest.TestCase):
         """Verifica generica che il metodo getIntersection funzioni correttamente"""
         # Segmento che attraversa completamente il cilindro
         seg_through = Segment3D(Point3D(3, 9, 7), Point3D(9, 9, 7))
-        intersects, segment = self.cylinder.getIntersection(seg_through)
+        intersects, segment = self.cylinder.getIntersection(seg_through, 0.001)
         self.assertTrue(intersects)
         self.assertEqual(len(segment.points), 2)
         
         # Segmento che tocca il cilindro in un punto
         seg_touch = Segment3D(Point3D(8, 9, 7), Point3D(10, 9, 7))
-        intersects, segment = self.cylinder.getIntersection(seg_touch)
+        intersects, segment = self.cylinder.getIntersection(seg_touch, 0.001)
         self.assertFalse(intersects)
         self.assertIsNotNone(segment)
         
         # Segmento che non interseca il cilindro
         seg_outside = Segment3D(Point3D(9, 9, 7), Point3D(11, 9, 7))
-        intersects, segment = self.cylinder.getIntersection(seg_outside)
+        intersects, segment = self.cylinder.getIntersection(seg_outside, 0.001)
         self.assertFalse(intersects)
         self.assertIsNone(segment)
         
         # Segmento con un estremo dentro il cilindro
         seg_one_inside = Segment3D(Point3D(6, 9, 7), Point3D(10, 9, 7))
-        intersects, segment = self.cylinder.getIntersection(seg_one_inside)
+        intersects, segment = self.cylinder.getIntersection(seg_one_inside, 0.001)
         self.assertFalse(intersects)
         self.assertIsNotNone(segment)
         
@@ -178,7 +178,7 @@ class TestCylinderClaude(unittest.TestCase):
 
     def test_edge_A_intersection(self):
         """Test specifico per edge_A"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_A)
+        intersects, segment = self.cylinder.getIntersection(self.edge_A, 0.001)
         self.assertTrue(intersects)       
         self.assertAlmostEqual(segment.p1.x, 5.92, delta=1e-2)
         self.assertAlmostEqual(segment.p1.y, 7.00, delta=1e-2)
@@ -201,7 +201,7 @@ class TestCylinderClaude(unittest.TestCase):
         
     def test_edge_B_intersection(self):
         """Test specifico per edge_B"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_B)
+        intersects, segment = self.cylinder.getIntersection(self.edge_B, 0.001)
         self.assertTrue(intersects)  
         self.assertAlmostEqual(segment.p1.x, 7.26, delta=1e-2)
         self.assertAlmostEqual(segment.p1.y, 7.44, delta=1e-2)
@@ -224,7 +224,7 @@ class TestCylinderClaude(unittest.TestCase):
         
     def test_edge_C_intersection(self):
         """Test specifico per edge_C"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_C)
+        intersects, segment = self.cylinder.getIntersection(self.edge_C, 0.001)
         self.assertFalse(intersects)       
         self.assertIsNone(segment)
         #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
@@ -236,7 +236,7 @@ class TestCylinderClaude(unittest.TestCase):
         
     def test_edge_D_intersection(self):
         """Test specifico per edge_D"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_D)
+        intersects, segment = self.cylinder.getIntersection(self.edge_D, 0.001)
         self.assertFalse(intersects)       
         self.assertIsNone(segment)
         #points = [f"({p.x.evalf():.2f}, {p.y.evalf():.2f}, {p.z.evalf():.2f})" for p in segment.points]
@@ -247,14 +247,14 @@ class TestCylinderClaude(unittest.TestCase):
         #print(f"edge_E extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
         
     def test_edge_E_intersection(self):
-        """Test specifico per edge_E lo buca da sotto. La funzione rileva solo l'intersezione con la superfice laterale del cilindro"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_E)
-        self.assertFalse(intersects)       
+        """Test specifico per edge_E lo buca da sotto.Il test verifica solo l'intersezione con la superfice laterale del cilindro"""
+        intersects, segment = self.cylinder.getIntersection(self.edge_E, 0.001)
+        self.assertTrue(intersects)       
         self.assertIsNotNone(segment)
-        self.assertTrue(isinstance(segment, Point3D))
-        self.assertAlmostEqual(segment.x, 4.64, delta=1e-2)
-        self.assertAlmostEqual(segment.y, 10.47, delta=1e-2)
-        self.assertAlmostEqual(segment.z, 5.68, delta=1e-2)
+        self.assertTrue(isinstance(segment, Segment3D))
+        self.assertAlmostEqual(segment.p1.x, 6.00, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.y, 9.33, delta=1e-2)
+        self.assertAlmostEqual(segment.p1.z, 5.00, delta=1e-2)
 
         #points = f"({segment.x.evalf():.2f}, {segment.y.evalf():.2f}, {segment.z.evalf():.2f})"
         #print(f"edge_E intersection points: {points}")
@@ -265,7 +265,7 @@ class TestCylinderClaude(unittest.TestCase):
         
     def test_edge_F_intersection(self):
         """Test specifico per edge_F"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_F)
+        intersects, segment = self.cylinder.getIntersection(self.edge_F, 0.001)
         self.assertTrue(intersects)       
         self.assertIsNotNone(segment)
         self.assertAlmostEqual(segment.p1.x, 4.46, delta=1e-2)
@@ -289,7 +289,7 @@ class TestCylinderClaude(unittest.TestCase):
     
     def test_edge_G_intersection(self):
         """Test specifico per edge_G"""
-        intersects, segment = self.cylinder.getIntersection(self.edge_G)
+        intersects, segment = self.cylinder.getIntersection(self.edge_G, 0.001)
         self.assertTrue(intersects)       
         self.assertIsNotNone(segment)
         self.assertAlmostEqual(segment.p1.x, 8.00, delta=1e-2)
@@ -305,10 +305,10 @@ class TestCylinderClaude(unittest.TestCase):
         lp, rp = self.cylinder.getExtendedPoints(self.edge_G) 
         self.assertAlmostEqual(lp.x, 4.00, delta=1e-2)
         self.assertAlmostEqual(lp.y, 49.00, delta=1e-2)
-        self.assertAlmostEqual(lp.z, 10.00, delta=1e-2)
+        self.assertAlmostEqual(lp.z, 5.00, delta=1e-2)
         self.assertAlmostEqual(rp.x, 8.00, delta=1e-2)
         self.assertAlmostEqual(rp.y, -31.00, delta=1e-2)
-        self.assertAlmostEqual(rp.z, 10.00, delta=1e-2)  
+        self.assertAlmostEqual(rp.z, 5.00, delta=1e-2)  
         #print(f"edge_G extended points: ( {lp.x.evalf():.2f}, {lp.y.evalf():.2f}, {lp.z.evalf():.2f} ), ( {rp.x.evalf():.2f}, {rp.y.evalf():.2f}, {rp.z.evalf():.2f}")
     
 # Funzione per misurare il tempo medio di esecuzione di una funzione
@@ -343,13 +343,13 @@ def performance_test():
     t_inner = measure_time(cylinder.innerPoint, test_point_in, iterations=iterations)[0]
     t_tangent_points = measure_time(cylinder.getTangentPoints, test_point_out, iterations=iterations)[0]
     t_tangents = measure_time(cylinder.getTangents, test_point_out, iterations=iterations)[0]
-    t_intersection_A = measure_time(cylinder.getIntersection, edge_A, iterations=iterations)[0]
-    t_intersection_B = measure_time(cylinder.getIntersection, edge_B, iterations=iterations)[0]
-    t_intersection_C = measure_time(cylinder.getIntersection, edge_C, iterations=iterations)[0]
-    t_intersection_D = measure_time(cylinder.getIntersection, edge_D, iterations=iterations)[0]
-    t_intersection_E = measure_time(cylinder.getIntersection, edge_E, iterations=iterations)[0]
-    t_intersection_F = measure_time(cylinder.getIntersection, edge_F, iterations=iterations)[0]
-    t_intersection_G = measure_time(cylinder.getIntersection, edge_G, iterations=iterations)[0]
+    t_intersection_A = measure_time(cylinder.getIntersection, edge_A, 0.001, iterations=iterations)[0]
+    t_intersection_B = measure_time(cylinder.getIntersection, edge_B, 0.001, iterations=iterations)[0]
+    t_intersection_C = measure_time(cylinder.getIntersection, edge_C, 0.001, iterations=iterations)[0]
+    t_intersection_D = measure_time(cylinder.getIntersection, edge_D, 0.001, iterations=iterations)[0]
+    t_intersection_E = measure_time(cylinder.getIntersection, edge_E, 0.001, iterations=iterations)[0]
+    t_intersection_F = measure_time(cylinder.getIntersection, edge_F, 0.001, iterations=iterations)[0]
+    t_intersection_G = measure_time(cylinder.getIntersection, edge_G, 0.001, iterations=iterations)[0]
     t_extended_A = measure_time(cylinder.getExtendedPoints, edge_A, iterations=iterations)[0]
     t_extended_D = measure_time(cylinder.getExtendedPoints, edge_D, iterations=iterations)[0]
     t_extended_E = measure_time(cylinder.getExtendedPoints, edge_E, iterations=iterations)[0]
