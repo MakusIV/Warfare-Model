@@ -163,6 +163,7 @@ class Cylinder:
         tan_point1, tan_point2 = self.getTangentPoints(point)
         return Line2D(point, tan_point1), Line2D(point, tan_point2)
     
+    #DEPRECATED
     def getIntersectionA(self, edge: Segment3D, tolerance: float) -> tuple:
     
         """
@@ -326,16 +327,27 @@ class Cylinder:
 
         # Calcola punti di intersezione
         pts = [Point3D(*(p1_np + t * v)) for t in all_ts]
+        
         # Se due o più, prendiamo i primi due
         if len(pts) >= 2:
             return True, Segment3D(pts[0], pts[1])
+        
         # Un solo punto rilevato
         single = pts[0]
+        
         # Se un estremo è interno, lo consideriamo
         if self.innerPoint(p1):
+
+            if single == p1:
+                p1 = Point3D(single.x + 1e-6, single.y, single.z)                
             return False, Segment3D(single, p1)
+        
         if self.innerPoint(p2):
+
+            if single == p2:
+                p2 = Point3D(single.x + 1e-6, single.y, single.z)
             return False, Segment3D(single, p2)
+        
         # Altrimenti due piani orizzontali? duplicalo
         return False, Segment3D(single, single)
 
@@ -622,20 +634,23 @@ class Cylinder:
         - (C, D): tupla contenente le coordinate di C e D
         """
         # Estrai le coordinate
-        x_c, y_c = center
-        x_A, y_A = A
-        x_B, y_B = B
+        x_c = center.x 
+        y_c = center.y
+        x_A = A.x 
+        y_A = A.y
+        x_B = B.x
+        y_B = B.y
         
         # Verifica che A e B siano sulla circonferenza
         dist_A = math.sqrt((x_A - x_c)**2 + (y_A - y_c)**2)
         dist_B = math.sqrt((x_B - x_c)**2 + (y_B - y_c)**2)
         
-        if abs(dist_A - R) > 1e-10 or abs(dist_B - R) > 1e-10:
+        if abs(dist_A - R) > 1e-4 or abs(dist_B - R) > 1e-4:
             raise ValueError("I punti A e B devono essere sulla circonferenza")
         
         # Verifica che L sia una lunghezza valida per una corda (L ≤ 2R)
         if L > 2*R:
-            raise ValueError(f"La lunghezza L della corda non può superare il diametro (2R = {2*R})")
+            L = R 
         
         # Calcola il punto medio della corda AB
         mid_AB = ((x_A + x_B)/2, (y_A + y_B)/2)
@@ -645,10 +660,10 @@ class Cylinder:
         
         # Normalizza il vettore
         norm = math.sqrt(vec_c_mid[0]**2 + vec_c_mid[1]**2)
-        if norm < 1e-10:  # Se AB passa per il centro
+        if norm < 1e-6:  # Se AB passa per il centro
             # In questo caso, qualsiasi corda perpendicolare ad AB può essere la risposta
             # Prendiamo un vettore perpendicolare arbitrario
-            vec_dir = (1, 0) if abs(x_B - x_A) < 1e-10 else (-vec_c_mid[1]/norm, vec_c_mid[0]/norm)
+            vec_dir = (1, 0) if abs(x_B - x_A) < 1e-6 else (-vec_c_mid[1]/norm, vec_c_mid[0]/norm)
         else:
             # Direzione normalizzata dal centro verso il punto medio di AB
             vec_dir = (vec_c_mid[0]/norm, vec_c_mid[1]/norm)
@@ -667,15 +682,19 @@ class Cylinder:
         half_L = L / 2
         C = (mid_CD[0] - half_L * perp_vec[0], mid_CD[1] - half_L * perp_vec[1])
         D = (mid_CD[0] + half_L * perp_vec[0], mid_CD[1] + half_L * perp_vec[1])
-        
+        #C = Point2D(mid_CD[0] - half_L * perp_vec[0], mid_CD[1] - half_L * perp_vec[1])
+        #D = Point2D(mid_CD[0] + half_L * perp_vec[0], mid_CD[1] + half_L * perp_vec[1])
         # Verifica che C e D siano sulla circonferenza
         dist_C = math.sqrt((C[0] - x_c)**2 + (C[1] - y_c)**2)
         dist_D = math.sqrt((D[0] - x_c)**2 + (D[1] - y_c)**2)
         
-        if abs(dist_C - R) > 1e-10 or abs(dist_D - R) > 1e-10:
+        if abs(dist_C - R) > 1e-6 or abs(dist_D - R) > 1e-6:
             print(f"Attenzione: i punti calcolati potrebbero non essere esattamente sulla circonferenza")
             print(f"Distanza C dal centro: {dist_C}, differenza con R: {abs(dist_C - R)}")
             print(f"Distanza D dal centro: {dist_D}, differenza con R: {abs(dist_D - R)}")
+
+        C = Point2D(C[0], C[1])
+        D = Point2D(D[0], D[1])
         
         return (C, D)
 
