@@ -8,6 +8,7 @@ from sympy.geometry import intersection
 from collections import defaultdict
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
+from functools import singledispatch
 
 # Aggiungi il percorso della directory principale del progetto
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -386,7 +387,7 @@ class RoutePlanner:
         self.threats = threats
         
         
-    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False) -> Route:      
+    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_route: float, aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False, consider_aircraft_altitude_route: bool = True) -> Route:      
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # NOTA: 
@@ -408,6 +409,8 @@ class RoutePlanner:
         self.excludeThreat(threats, start)
         self.excludeThreat(threats, end)
 
+        if consider_aircraft_altitude_route:
+            self.excludeThreat(threats, aircraft_altitude_route)
 
         if intersecate_threat:            
             found_path = self.calcPathWithThreat(
@@ -493,16 +496,42 @@ class RoutePlanner:
         
         return None
 
-    def excludeThreat(self, threats: list[ThreatAA], point: Point3D):
+   
+
+    def excludeThreat(self, threats: list[ThreatAA], arg) -> bool:
+        # Controlla che gli elementi della lista siano di tipo ThreatAA
+        if not all(isinstance(threat, ThreatAA) for threat in threats):
+            raise TypeError("All elements in the list must be of type ThreatAA")
         
+        check_for_altitude = False
+        check_for_point = False
+
+        if isinstance(arg, Point3D):
+            point = arg
+            check_for_point = True
+
+        if isinstance(arg, float) or isinstance(arg, int):
+            aircraft_altitude_route = arg
+            check_for_altitude = True
+                    
+        threats_to_remove = []
+
         for threat in threats:
             
-            if threat.innerPoint(point):
-                threats.remove(threat)
+            if check_for_point and threat.innerPoint(point):
+                threats_to_remove.append(threat)                
+
+            if check_for_altitude and (  aircraft_altitude_route > threat.max_altitude or aircraft_altitude_route < threat.min_altitude):
+                threats_to_remove.append(threat)                
                 
-        return True 
 
+        for threat in threats_to_remove:
+            threats.remove(threat)
 
+        return check_for_altitude or check_for_point
+
+    
+    
     def firstThreatIntersected(self, edge: Edge, threats: list[ThreatAA]) -> ThreatAA:
         DEBUG = True
         threat_distance = float('inf') # distanza da edge.wpa a threat.center
@@ -797,7 +826,7 @@ class RoutePlanner:
         v_dx = d.x - c.x
         v_dy = d.y - c.y
         v_norm = math.sqrt(v_dx**2 + v_dy**2)        
-        d = Point2D( d.x + v_dx  * 1e-4 / v_norm, d.y  * 1e-4 / v_norm)
+        d = Point2D( d.x + v_dx  * TOLERANCE_FOR_INTERSECTION_CALCULUS / v_norm, d.y + v_dy * TOLERANCE_FOR_INTERSECTION_CALCULUS / v_norm)
 
         # Crea i waypoint di attraversamento
         wp_c = Waypoint(f"wp_{path_id}_{n_edge}_cross1", Point3D(c.x, c.y, edge.wpA.point.z), None)
@@ -1036,4 +1065,4 @@ class RoutePlanner:
 
         return result1 or result2
 
-        
+
