@@ -25,10 +25,11 @@ TOLERANCE_FOR_INTERSECTION_CALCULUS = 0.1 # minimum length of segment to conside
 
 class ThreatAA:
     
-    def __init__(self, danger_level, missile_speed: float, min_fire_time: float, cylinder: Cylinder):
+    def __init__(self, danger_level, missile_speed: float, min_fire_time: float, min_detection_time: float, cylinder: Cylinder):
         self.danger_level = danger_level
         self.missile_speed = missile_speed
         self.min_fire_time = min_fire_time
+        self.min_detection_time = min_detection_time
         self.min_altitude = cylinder.bottom_center.z
         self.max_altitude = cylinder.bottom_center.z + cylinder.height
         self.cylinder = cylinder
@@ -432,7 +433,7 @@ class RoutePlanner:
             )
 
 
-        else: # Calcola il percorso senza minacce (path_collectiopn è passato come riferimento e dovrebbe essere aggiornato dal metodo)
+        else: 
             found_path = self.calcPathWithoutThreat(
                 start, 
                 end, 
@@ -529,8 +530,6 @@ class RoutePlanner:
             threats.remove(threat)
 
         return check_for_altitude or check_for_point
-
-    
     
     def firstThreatIntersected(self, edge: Edge, threats: list[ThreatAA]) -> ThreatAA:
         DEBUG = True
@@ -921,25 +920,48 @@ class RoutePlanner:
                 return False
 
             new_p1 = segm.p1
+            new_p2 = segm.p2
+
             if change_alt_option == "change_up":
                 new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE) 
+                new_p2 = Point3D(new_p2.x, new_p2.y, threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE) 
                 if debug:
                     print(f"Changing altitude UP to {new_p1.z:.2f}")
             else:
                 new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE)
+                new_p2 = Point3D(new_p2.x, new_p2.y, threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE)
                 if debug:
                     print(f"Changing altitude DOWN to {new_p1.z:.2f}")
 
             # Crea nuovo edge con punto modificato
-            new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1, None) 
+            new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1, None)
+            new_wp_C = Waypoint(f"wp_C{path_id}_{n_edge}_alt", new_p2, None)
+
             new_edge = Edge(
                 f"P:{path_id}-E:{n_edge}_alt", 
                 edge.wpA, 
                 new_wp_B, 
                 aircraft_speed
             )
+
+            new_edge_C = Edge(
+                f"P:{path_id}-E:{n_edge}_alt", 
+                new_wp_B, 
+                new_wp_C, 
+                aircraft_speed
+            )
+
             current_path = path_collection.get_path(path_id)
             current_path.add_edge(new_edge)
+            edge_incr = 1
+
+            if not self.firstThreatIntersected(new_edge_C, threats):                      
+                current_path.add_edge(new_edge_C) # se il segmento che passa sopra la minaccia incontra altre minacce lo aggiunge al pth
+                edge_incr = 2
+                new_p1 = new_p2
+                if debug:
+                    print(f"added edge upper/lower threat altitude {new_edge_C}")
+            
 
             # terminate path if length or danger exceed limits
             if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
@@ -948,7 +970,7 @@ class RoutePlanner:
             if caller == "calcPathWithThreat":
                 
                 return self.calcPathWithThreat(
-                    new_p1, p2, end, threats, n_edge + 1, path_id, path_collection, 
+                    new_p1, p2, end, threats, n_edge + edge_incr, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion, 
                     change_alt_option, max_recursion - 1, debug
@@ -957,7 +979,7 @@ class RoutePlanner:
             elif caller == "calcPathWithoutThreat":
 
                 return self.calcPathWithoutThreat(
-                    new_p1, p2, end, threats, n_edge + 1, path_id, path_collection, 
+                    new_p1, p2, end, threats, n_edge + edge_incr, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max,
                     change_alt_option, max_recursion - 1, debug
