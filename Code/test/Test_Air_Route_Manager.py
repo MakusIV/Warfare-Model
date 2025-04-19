@@ -1066,13 +1066,12 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_2_threat_escape_lateral_and_up'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_escape_lateral'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_escape_lateral'))
-        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_escape_lateral_limited_range'))
-        
-        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_1_threat_pass_throught'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_escape_lateral_limited_range'))        
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_over_threat_altitude'))
         """
-        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_1_threat_pass_throught'))
+        #suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
         
         
 
