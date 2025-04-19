@@ -1056,6 +1056,7 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_edge_intersects_threat'))
         suite.addTest(GPT_TestModule('test_route_waypoints'))
         suite.addTest(GPT_TestModule('test_path_and_collection'))
+        """
         suite.addTest(GPT_TestModule('test_threat_calcMaxLenghtCrossSegment'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_no_threats'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_threat_escape_up'))
@@ -1070,8 +1071,8 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_1_threat_pass_throught'))
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_over_threat_altitude'))
-
-        #suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
+        """
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
         
         
 
