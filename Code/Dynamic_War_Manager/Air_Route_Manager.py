@@ -447,6 +447,7 @@ class RoutePlanner:
                 aircraft_speed_max = aircraft_speed_max,
                 aircraft_speed = aircraft_speed,
                 aircraft_range_max = aircraft_range_max,
+                time_to_inversion = aircraft_time_to_inversion,
                 change_alt_option = change_alt_option,
                 debug = True
             )
@@ -581,6 +582,7 @@ class RoutePlanner:
         aircraft_speed_max: float,
         aircraft_speed: float,
         aircraft_range_max: float,
+        time_to_inversion: float,
         change_alt_option: str,
         max_recursion: int = 100,
         debug: bool = False
@@ -639,7 +641,7 @@ class RoutePlanner:
             return self.calcPathWithoutThreat(
                 p2, end, end, threats, n_edge + 1, path_id, path_collection, 
                 aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                 change_alt_option, max_recursion - 1, debug
             )
 
@@ -648,7 +650,7 @@ class RoutePlanner:
             edge, threat_intersect, p1, p2, end, threats, n_edge,
             path_id, path_collection, 
             aircraft_altitude_min, aircraft_altitude_max,
-            aircraft_speed_max, aircraft_speed, aircraft_range_max, None,
+            aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
             change_alt_option, max_recursion, "calcPathWithoutThreat", debug
         )        
 
@@ -736,6 +738,9 @@ class RoutePlanner:
             if intersection.length < MIN_SECURE_LENGTH_EDGE:
 
                 current_path.add_edge(edge)
+
+                if debug:
+                    print(f"intersection.length( {intersection.length} ) < MIN_SECURE_LENGTH_EDGE ({MIN_SECURE_LENGTH_EDGE}). added edge: {edge} ")
 
                 # terminate path if length or danger exceed limits
                 if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
@@ -851,13 +856,16 @@ class RoutePlanner:
         for other_threat in threats:
 
             if other_threat != threat and other_threat.innerPoint(wp_d.point): # exit point inside another threat
-                
+
+                if debug:
+                    print(f"cross threat edge intersecate another threat ( {other_threat} ) try with threat avoidance procedure")
+         
                 # continue to avoid threat
                 return self._handle_threat_avoidance(
                     edge, threat, edge.wpA.point, edge.wpB.point, end, threats, n_edge,
                     path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, None,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max,  time_to_inversion,
                     change_alt_option, max_recursion, "calcPathWithThreat", debug
                 )        
 
@@ -865,6 +873,10 @@ class RoutePlanner:
         current_path = path_collection.get_path(path_id)
         current_path.add_edge(edge_to_c)
         current_path.add_edge(edge_through)
+
+        if debug:
+            print(f"cross threat edge don't intersecate another threat, added two edges:  from p1 to threat {edge_to_c} and crossing edge {edge_through}")
+         
 
         # terminate path if length or danger exceed limits
         if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
@@ -981,7 +993,7 @@ class RoutePlanner:
                 return self.calcPathWithoutThreat(
                     new_p1, p2, end, threats, n_edge + edge_incr, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion - 1, debug
                 )
             
@@ -1045,7 +1057,7 @@ class RoutePlanner:
                 result1 = self.calcPathWithoutThreat(
                     p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
             else:
@@ -1079,7 +1091,7 @@ class RoutePlanner:
                 result2 = self.calcPathWithoutThreat(
                     p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
             else:
