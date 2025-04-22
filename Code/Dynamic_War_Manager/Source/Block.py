@@ -356,6 +356,27 @@ class Block:
     def toString(self):
         return 'Name: {0}  -  Id: {1} - value: {2} \n description: {3}\n category: {4}\n'.format(self.name, self.id, self.value, self.description, self.category)
     
+    def __repr__(self):
+        """
+        Rappresentazione ufficiale dell'oggetto Block.
+        Utile per il debugging.
+        """
+        return (f"Block(name={self._name!r}, id={self._id!r}, side={self._side!r}, "
+                f"category={self._category!r}, value={self._value!r})")
+
+    def __str__(self):
+        """
+        Rappresentazione leggibile dell'oggetto Block.
+        Utile per l'utente finale.
+        """
+        return (f"Block Information:\n"
+                f"  Name: {self._name}\n"
+                f"  ID: {self._id}\n"
+                f"  Side: {self._side}\n"
+                f"  Category: {self._category}\n"
+                f"  Value: {self._value}\n"
+                f"  Description: {self._description}")
+    
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
         return type(object) == type(self)
@@ -436,4 +457,4 @@ class Block:
     
     def isCivilian(self):
         return isinstance(self, Urban)
-        
+

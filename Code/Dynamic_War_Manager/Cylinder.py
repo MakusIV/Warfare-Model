@@ -2,6 +2,7 @@
 
 from sympy import  Point2D, Line2D, Point3D, Line3D, Segment3D, Point, Line, Plane, Circle, Ray3D, Matrix
 from sympy.geometry import intersection
+from Code.Utility import getFormattedPoint
 import math
 import numpy as np
 
@@ -800,6 +801,25 @@ class Cylinder:
             print(f"Lunghezza ID2: {len_ID2}, differenza con L: {abs(len_ID2 - L)}")
         
         return I, (D1, D2)
+
+    def __repr__(self):
+            """
+            Rappresentazione ufficiale dell'oggetto Block.
+            Utile per il debugging.
+            """
+            return (f"bottom center: {getFormattedPoint(self.bottom_center)}, r: {self.radius:.2f}, h: {self.height:.2f}")
+
+    def __str__(self):
+        """
+        Rappresentazione leggibile dell'oggetto Block.
+        Utile per l'utente finale.
+        """
+        return (f"Cylinder:\n"
+                f"  bottom center: {getFormattedPoint(self.bottom_center)}\n"
+                f"  radius: r: {self.radius:.2f}\n"
+                f"  height: {self.height:.2f}\n"
+                )
+        
 
 
 def rotate_vector(v, angle):
