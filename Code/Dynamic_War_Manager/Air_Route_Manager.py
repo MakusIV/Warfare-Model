@@ -1,6 +1,6 @@
 import sys
 import os
-import heapq
+from heapq import heappop, heappush
 import math
 import copy
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
@@ -149,8 +149,9 @@ class Waypoint:
 class Edge:
     
     
-    def __init__(self, name: str, wpA: Waypoint, wpB: Waypoint, speed: float):
+    def __init__(self, name: str, order_position: int, wpA: Waypoint, wpB: Waypoint, speed: float):
         self.name = name # name = "P: num path - E: num edge "
+        self.order_position = order_position
         self.wpA = wpA
         self.wpB = wpB
         self.speed = speed
@@ -269,7 +270,7 @@ class Edge:
             Rappresentazione ufficiale dell'oggetto Block.
             Utile per il debugging.
             """
-            return (f"name: {self.name!r}, wpA: {self.wpA!r}, wpB: {self.wpB!r}, length: {self.length:.2f}")
+            return (f"name: {self.name!r}, order position: {self.order_position}, wpA: {self.wpA!r}, wpB: {self.wpB!r}, length: {self.length:.2f}")
 
     def __str__(self):
         """
@@ -278,6 +279,7 @@ class Edge:
         """
         return (f"Air Route Manager - Edge Information:\n"
                 f"  name: {self.name!r},\n"
+                f"  order position: {self.order_position},\n"
                 f"  wpA: {self.wpA!r}\n"
                 f"  wpB: {self.wpB!r}\n"
                 f"  length: {self.length:.2f}\n"
@@ -317,6 +319,20 @@ class Route:
             current = next_edges[0].wpB
 
         return path
+
+    def getWaypointsA(self):
+        path = []
+        waypoints = []
+
+        for edge in self.edges.values():
+            heappush(path, (edge.order_position , edge))
+
+        while len(path) > 0:
+            pos, edge = heappop(path)
+            waypoints.append(edge.wpA)                        
+
+        return waypoints
+    
 
     def getPoints(self):
         waypoints = self.getWaypoints()
@@ -655,6 +671,7 @@ class RoutePlanner:
         threat_distance = float('inf') # distanza da edge.wpa a threat.center
         first_threat = None
         complete_intersection = None
+        complete_intersection_first_threat = None
 
         for threat in threats:
             complete_intersection, intersection = threat.edgeIntersect(edge)
@@ -664,10 +681,11 @@ class RoutePlanner:
                 
                 if wpA_Intersection_distance < threat_distance:
                     threat_distance = wpA_Intersection_distance
+                    complete_intersection_first_threat = complete_intersection
                     first_threat = threat                    
                     if DEBUG: print(f"Found threat intersection at lesser distance: threat: {threat!r}, threat_distance: {threat_distance:.2f}")        
 
-        return complete_intersection, first_threat
+        return complete_intersection_first_threat, first_threat
 
     def checkPathOverlimits(self, path_id, path: Path, range_max: float, danger_max: float) -> bool:
         DEBUG = True
@@ -732,7 +750,7 @@ class RoutePlanner:
         current_path = path_collection.get_path(path_id)
         wp_A = Waypoint(f"wp_A{path_id}_{n_edge}", p1, None)
         wp_B = Waypoint(f"wp_B{path_id}_{n_edge}", p2, None)
-        edge = Edge(f"P:{path_id}-E:{n_edge}", wp_A, wp_B, aircraft_speed)
+        edge = Edge(f"P:{path_id}-E:{n_edge}", n_edge, wp_A, wp_B, aircraft_speed)
 
         if debug:
             print(f"\nProcessing path {path_id}, edge {n_edge}: {wp_A.name}({getFormattedPoint(wp_A.point)}) -> {wp_B.name}({getFormattedPoint(wp_B.point)})")
@@ -818,7 +836,7 @@ class RoutePlanner:
         current_path = path_collection.get_path(path_id)
         wp_A = Waypoint(f"wp_A{path_id}_{n_edge}", p1, None)
         wp_B = Waypoint(f"wp_B{path_id}_{n_edge}", p2, None)
-        edge = Edge(f"P:{path_id}-E:{n_edge}", wp_A, wp_B, aircraft_speed)
+        edge = Edge(f"P:{path_id}-E:{n_edge}", n_edge, wp_A, wp_B, aircraft_speed)
 
         if debug:
             print(f"\nProcessing path {path_id}, edge n:{n_edge}: {edge!r}")
@@ -881,9 +899,9 @@ class RoutePlanner:
                     aircraft_altitude_max,            
                     time_to_inversion,                    
                     edge.getSegment3D()
-                )
+                )                
 
-            # Verifica se possiamo attraversare la minaccia in sicurezza
+                # Verifica se possiamo attraversare la minaccia in sicurezza
             
                 return self._handle_threat_crossing(
                     edge, threat_intersect, p2, end, threats, n_edge,
@@ -961,7 +979,8 @@ class RoutePlanner:
 
         # Edge fino al punto di ingresso
         edge_to_c = Edge(
-            f"P:{path_id}-E:{n_edge}_pre",
+            f"P:{path_id}-E:{n_edge}_pre", 
+            n_edge,
             edge.wpA,
             wp_c,
             edge.speed
@@ -969,7 +988,8 @@ class RoutePlanner:
 
         # Edge attraverso la minaccia
         edge_through = Edge(
-            f"P:{path_id}-E:{n_edge + 1}_through",
+            f"P:{path_id}-E:{n_edge + 1}_through", 
+            n_edge + 1,
             wp_c,
             wp_d,
             edge.speed
@@ -1078,14 +1098,16 @@ class RoutePlanner:
             new_wp_C = Waypoint(f"wp_C{path_id}_{n_edge}_alt", new_p2, None)
 
             new_edge = Edge(
-                f"P:{path_id}-E:{n_edge}_alt", 
+                f"P:{path_id}-E:{n_edge}_alt",
+                n_edge, 
                 edge.wpA, 
                 new_wp_B, 
                 aircraft_speed
             )
 
             new_edge_C = Edge(
-                f"P:{path_id}-E:{n_edge}_alt", 
+                f"P:{path_id}-E:{n_edge + 1}_alt", 
+                n_edge + 1, 
                 new_wp_B, 
                 new_wp_C, 
                 aircraft_speed
@@ -1101,13 +1123,70 @@ class RoutePlanner:
 
             threatInRange, threat_intersect = self.firstThreatIntersected(new_edge_C, threats)
 
-            if not threatInRange or threat_intersect.max_altitude < new_edge_C.p1.z: #not self.firstThreatIntersected(new_edge_C, threats):                      
+            if not threatInRange or threat_intersect.max_altitude < new_edge_C.wpA.point.z: #not self.firstThreatIntersected(new_edge_C, threats):                      
                 current_path.add_edge(new_edge_C) # se il segmento che passa sopra la minaccia incontra altre minacce lo aggiunge al pth
                 edge_incr = 2
                 new_p1 = new_p2
                 if debug:
                     print(f"current path: {current_path!r} added edge from previous edge.wpB up or down threat: {new_edge_C!r}")
-            
+
+
+
+
+
+
+
+
+            ######################################################################################################################################################################
+            #                      imposta else: return False se non risolvi    
+            ######################################################################################################################################################################
+
+
+
+
+            else: 
+                
+                #return False
+                # prova a passare attraverso la threat
+                
+                threatInRange, intersection = threat_intersect.edgeIntersect(new_edge_C) # crea l'intersezione
+
+                if threatInRange and intersection: # l'intersezione con la successiva threat trovata è completa (il segmento interseca la threat in due punti)
+                    
+                
+                    # Calcola la massima lunghezza per un attraversamento sicuro                
+                    max_length = threat_intersect.calcMaxLenghtCrossSegment(
+                        aircraft_speed,
+                        aircraft_altitude_max,            
+                        time_to_inversion,                    
+                        edge.getSegment3D()
+                    )
+
+                    return self._handle_threat_crossing( # modificare la funzione ed eliminare p2
+                        new_edge_C, threat_intersect, p2, end, threats, n_edge + edge_incr,
+                        path_id, path_collection, max_length,
+                        aircraft_altitude_min, aircraft_altitude_max,
+                        aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                        change_alt_option, intersection, max_recursion - 1, debug
+                    )
+                
+                else:
+                    return False # l'intersezione con la threat non è completa (il segmento interseca la threat in un solo punto) -> non può essere gestita dal _handle_threat_crossing
+
+
+            # NOTA: SEMBRA CHE IL PATH VENGA ELABORATO MA NON SI AGGIORNA IL NUMERO DI PUNTI O DI EDGE AQUISITI
+
+
+            ######################################################################################################################################################################
+            #                    FINE
+            ######################################################################################################################################################################
+
+
+
+
+
+
+            #    return False # edge_c interseca una threat -> troppo complicata la gestione
 
             # terminate path if length or danger exceed limits
             if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
@@ -1120,7 +1199,7 @@ class RoutePlanner:
                     return False
 
                 return self.calcPathWithThreat(
-                    new_p1, p2, end, threats, n_edge + edge_incr, path_id, path_collection, 
+                    new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion, 
                     change_alt_option, max_recursion - 1, debug
@@ -1129,7 +1208,7 @@ class RoutePlanner:
             elif caller == "calcPathWithoutThreat":
 
                 return self.calcPathWithoutThreat(
-                    new_p1, p2, end, threats, n_edge + edge_incr, path_id, path_collection, 
+                    new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion - 1, debug
@@ -1235,6 +1314,8 @@ class RoutePlanner:
                 )
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+
+
 
         return result1 or result2
 
