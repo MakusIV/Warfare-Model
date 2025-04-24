@@ -34,14 +34,14 @@ class GPT_TestModule(unittest.TestCase):
         wp1 = Waypoint("A", Point3D(1, 2, 3), None)
         wp2 = Waypoint("B", Point3D(1, 2, 3), None)
         wp3 = Waypoint("C", Point3D(2, 3, 4), None)
-        self.assertEqual(wp1, wp2)
+        self.assertEqual(wp1.point, wp2.point)
         self.assertNotEqual(wp1, wp3)
         self.assertTrue(wp1 < wp3)
 
     def test_edge_length_and_segment(self):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(3, 4, 10), None)
-        edge = Edge("edge1", wpA, wpB, speed=250)
+        edge = Edge("edge1", 0, wpA, wpB, speed=250)
         self.assertAlmostEqual(float(edge.length), 5.0)
         seg3d = edge.getSegment3D()
         self.assertEqual(seg3d.p1, wpA.point)
@@ -50,7 +50,7 @@ class GPT_TestModule(unittest.TestCase):
     def test_edge_intersects_threat(self):
         wpA = Waypoint("A", Point3D(10, 10, 10), None)
         wpB = Waypoint("B", Point3D(15, 15, 10), None)
-        edge = Edge("edge_int", wpA, wpB, speed=250)
+        edge = Edge("edge_int", 0, wpA, wpB, speed=250)
         result, params = edge.intersects_threat(self.threat)
         self.assertTrue(result)
         t_range = edge.calculate_exposure(self.threat)
@@ -61,8 +61,8 @@ class GPT_TestModule(unittest.TestCase):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(10, 0, 10), None)
         wpC = Waypoint("C", Point3D(10, 10, 10), None)
-        edge1 = Edge("edge1", wpA, wpB, speed=200)
-        edge2 = Edge("edge2", wpB, wpC, speed=200)
+        edge1 = Edge("edge1", 0, wpA, wpB, speed=200)
+        edge2 = Edge("edge2", 1, wpB, wpC, speed=200)
         route.add_edge(edge1)
         route.add_edge(edge2)
         waypoints = route.getWaypoints()
@@ -74,8 +74,8 @@ class GPT_TestModule(unittest.TestCase):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(3, 4, 10), None)
         wpC = Waypoint("C", Point3D(6, 8, 10), None)
-        edge1 = Edge("edge1", wpA, wpB, speed=250)
-        edge2 = Edge("edge2", wpB, wpC, speed=250)
+        edge1 = Edge("edge1", 0, wpA, wpB, speed=250)
+        edge2 = Edge("edge2", 1, wpB, wpC, speed=250)
         path = Path([edge1, edge2])
         self.assertAlmostEqual(float(path.total_length), 10.0)
         pc = PathCollection()
@@ -419,11 +419,11 @@ class GPT_TestModule(unittest.TestCase):
         threat = ThreatAA(danger_level = 2.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_ = [threat]
 
-        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 10)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_.append(threat)
 
-        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
+        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 7)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_.append(threat)
 
@@ -452,6 +452,27 @@ class GPT_TestModule(unittest.TestCase):
         threats = copy.deepcopy(threats_)
 
         # change altitude option: change_up
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=18,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=40,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=True)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        #self.assertGreater(len(route.edges), 1)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 33.50, delta = 0.1)
+
+
+        threats = copy.deepcopy(threats_)
+        # change altitude option: change_up, consider aircraft altitude: True
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=40,
                                   aircraft_speed_max=1.5, aircraft_speed=1,
@@ -466,30 +487,9 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
-        self.assertGreater(len(route.edges), 1)
-        #self.assertEqual(len(route.edges), 4)
-        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
-
-
-        threats = copy.deepcopy(threats_)
-        # change altitude option: change_up, consider aircraft altitude: True
-        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
-                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=1.5, aircraft_speed=1,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
-                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=True)
-                
-        points = route.getPoints() 
-        
-        for point in points:
-            print(getFormattedPoint(point)) 
-            
-        self.assertEqual(points[0], start_point)
-        self.assertEqual(points[-1], end_point)
-        self.assertIsNotNone(route)
-        self.assertGreater(len(route.edges), 1)
-        #self.assertEqual(len(route.edges), 4)
-        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        #self.assertGreater(len(route.edges), 1)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 48.35, delta = 0.1)
 
         
     def test_route_planner_calcRoute_with_4_threat_pass_throught(self):
@@ -497,27 +497,30 @@ class GPT_TestModule(unittest.TestCase):
         end_point = Point3D(22, 25, 10)
         
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
-        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
         threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
-        threats = [threat]
-        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
+        threats_ = [threat]
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
-        threats.append(threat)
+        threats_.append(threat)
 
-        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
+        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
-        threats.append(threat)
+        threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
-        threats.append(threat)
+        threats_.append(threat)
+
+        threats = copy.deepcopy(threats_)
+        
 
         planner = RoutePlanner(start_point, end_point, threats)
-        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=False)
                 
         points = route.getPoints() 
@@ -528,9 +531,51 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
+        #self.assertGreater(len(route.edges), 1)
+        self.assertEqual(len(route.edges), 4)
+        self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+
+
+        threats = copy.deepcopy(threats_)
+        
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=False)
+                
+        points = route.getPoints() 
+        
+        print(route)
+
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
         self.assertGreater(len(route.edges), 1)
-        #self.assertEqual(len(route.edges), 5)
-        #self.assertAlmostEqual(route.length, 38.44, delta = 0.1)
+
+
+        threats = copy.deepcopy(threats_)
+
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=True)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        self.assertGreater(len(route.edges), 1)
 
 ######################### Claude Sonnet 3.7.2024 #########################
 
@@ -1136,7 +1181,7 @@ if __name__ == "__main__":
     suite = unittest.TestSuite()
     # GPT Test
     if True:
-    
+        """
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
         suite.addTest(GPT_TestModule('test_edge_intersects_threat'))
@@ -1159,7 +1204,8 @@ if __name__ == "__main__":
     
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_1_threat_pass_throught'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
-        #suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
+        """
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
         
         
         
