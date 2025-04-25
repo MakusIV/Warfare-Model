@@ -331,6 +331,10 @@ class Cylinder:
         
         # Se due o più, prendiamo i primi due
         if len(pts) >= 2:
+
+            if len(plane_ts) > 0:# uno o due  dei punti d'intersezione è sulle superfici orizzontali (bottom, top)
+                return False, Segment3D(pts[0], pts[1])
+            
             return True, Segment3D(pts[0], pts[1])
         
         # Un solo punto rilevato
@@ -349,7 +353,7 @@ class Cylinder:
                 p2 = Point3D(single.x + 1e-6, single.y, single.z)
             return False, Segment3D(single, p2)
         
-        # Altrimenti due piani orizzontali? duplicalo
+        # Altrimenti intersezione con i due piani orizzontali? duplicalo
         return False, Segment3D(single, single)
 
 

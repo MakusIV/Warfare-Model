@@ -1066,7 +1066,10 @@ class RoutePlanner:
         can_change_altitude =   ( change_alt_option!= "no_change") and (change_alt_option == "change_up" and (aircraft_altitude_max > threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE)) or (change_alt_option == "change_down" and (aircraft_altitude_min < threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE))
                 
 
+
         if can_change_altitude:
+
+
             if debug:
                 print(f"Attempting altitude change for threat at {threat!r}")
 
@@ -1083,13 +1086,15 @@ class RoutePlanner:
             new_p2 = segm.p2
 
             if change_alt_option == "change_up":
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE) 
-                new_p2 = Point3D(new_p2.x, new_p2.y, threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE) 
+                new_altitude = ( aircraft_altitude_max + threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE ) / 2
+                new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
+                new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude ) 
                 if debug:
                     print(f"Changing altitude UP to {new_p1.z:.2f}")
             else:
-                new_p1 = Point3D(new_p1.x, new_p1.y, threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE)
-                new_p2 = Point3D(new_p2.x, new_p2.y, threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE)
+                new_altitude = ( threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE + aircraft_altitude_min ) / 2
+                new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
+                new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude )
                 if debug:
                     print(f"Changing altitude DOWN to {new_p1.z:.2f}")
 
@@ -1131,19 +1136,6 @@ class RoutePlanner:
                     print(f"current path: {current_path!r} added edge from previous edge.wpB up or down threat: {new_edge_C!r}")
 
 
-
-
-
-
-
-
-            ######################################################################################################################################################################
-            #                      imposta else: return False se non risolvi    
-            ######################################################################################################################################################################
-
-
-
-
             else: 
                 
                 #return False
@@ -1172,19 +1164,6 @@ class RoutePlanner:
                 
                 else:
                     return False # l'intersezione con la threat non è completa (il segmento interseca la threat in un solo punto) -> non può essere gestita dal _handle_threat_crossing
-
-
-            # NOTA: SEMBRA CHE IL PATH VENGA ELABORATO MA NON SI AGGIORNA IL NUMERO DI PUNTI O DI EDGE AQUISITI
-
-
-            ######################################################################################################################################################################
-            #                    FINE
-            ######################################################################################################################################################################
-
-
-
-
-
 
             #    return False # edge_c interseca una threat -> troppo complicata la gestione
 
@@ -1270,6 +1249,10 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+                if debug and not result1:
+                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
+                    
+
             elif caller == "calcPathWithoutThreat":
 
                 result1 = self.calcPathWithoutThreat(
@@ -1278,6 +1261,10 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+
+                if debug and not result1:
+                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
+                
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
 
@@ -1304,6 +1291,10 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+
+                if debug and not result2:
+                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
+                
             elif caller == "calcPathWithoutThreat":
 
                 result2 = self.calcPathWithoutThreat(
@@ -1312,6 +1303,9 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+                if debug and not result2:
+                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
+
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
 
