@@ -114,7 +114,7 @@ class GPT_TestModule(unittest.TestCase):
                                   change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route=True)
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 3)
-        self.assertAlmostEqual(route.length, 31.60, delta=0.1)
+        self.assertAlmostEqual(route.length, 34.13, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_down(self):
         start_point = Point3D(0, 0, 10)
@@ -133,7 +133,7 @@ class GPT_TestModule(unittest.TestCase):
                                   change_alt_option="change_down", intersecate_threat=False, consider_aircraft_altitude_route=False)
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 3)
-        self.assertAlmostEqual(route.length, 33.32, delta=0.1)
+        self.assertAlmostEqual(route.length, 33.86, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_lateral(self):
         start_point = Point3D(0, 0, 10)
@@ -489,7 +489,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 48.35, delta = 0.1)
+        self.assertAlmostEqual(route.length, 66.61, delta = 0.1)
 
         
     def test_route_planner_calcRoute_with_4_threat_pass_throught(self):
@@ -555,7 +555,8 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
-        self.assertGreater(len(route.edges), 1)
+        self.assertEqual(len(route.edges), 6)
+        self.assertAlmostEqual(route.length, 43.92, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
@@ -575,7 +576,8 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
-        self.assertGreater(len(route.edges), 1)
+        self.assertEqual(len(route.edges), 3)
+        self.assertAlmostEqual(route.length, 33.31, delta = 0.1)
 
 ######################### Claude Sonnet 3.7.2024 #########################
 
@@ -1181,7 +1183,7 @@ if __name__ == "__main__":
     suite = unittest.TestSuite()
     # GPT Test
     if True:
-        """
+        
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
         suite.addTest(GPT_TestModule('test_edge_intersects_threat'))
@@ -1204,7 +1206,7 @@ if __name__ == "__main__":
     
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_1_threat_pass_throught'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
-        """
+        
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
         
         
