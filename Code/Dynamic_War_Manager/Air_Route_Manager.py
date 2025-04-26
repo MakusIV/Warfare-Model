@@ -9,6 +9,7 @@ from collections import defaultdict
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from functools import singledispatch
+from Code.Utility import rotate_vector
 
 # Aggiungi il percorso della directory principale del progetto
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -519,7 +520,7 @@ class RoutePlanner:
         self.threats = threats
         
         
-    def calcRoute(self, start: Point3D, end: Point3D, threats: list[ThreatAA], aircraft_altitude_route: float, aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False, consider_aircraft_altitude_route: bool = True) -> Route:      
+    def calcRoute(self, start: Point3D, end: Point3D, threats_: list[ThreatAA], aircraft_altitude_route: float, aircraft_altitude_min: float, aircraft_altitude_max: float, aircraft_speed_max: float, aircraft_speed: float, aircraft_range_max: float, aircraft_time_to_inversion: float, change_alt_option: str = "no_change", intersecate_threat: bool = False, consider_aircraft_altitude_route: bool = True) -> Route:      
 
         # change_alt_option: str = "no_change", "change_down", "change_up"
         # NOTA: 
@@ -528,10 +529,11 @@ class RoutePlanner:
         # change_alt_option = "no_change" E CON change_alt_optiNo = "change_up o down"
         # p.e.: la scelta di cosa eseguire prima eè in base alle caratteristiche della missione:
         # mission low profile (evitare intercettazione): prima esegui calcRoute con l'opzione change_down" e se non trovi un percorso soddisfacente esegui calcRoute con l'altezza cosnisderata e l'opzione "no_change" seconda della convenienza prima esegui 
-
+        
+        DEBUG = True
                       
         found_path = False
-        
+        threats = copy.deepcopy(threats_) # Copia profonda della lista delle minacce per evitare modifiche indesiderate
 
         # Inizializzazione
         path_collection = PathCollection()
@@ -561,8 +563,7 @@ class RoutePlanner:
                 time_to_inversion = aircraft_time_to_inversion,
                 change_alt_option = change_alt_option,
                 debug = True
-            )
-
+            )    
 
         else: 
             found_path = self.calcPathWithoutThreat(
@@ -1163,6 +1164,48 @@ class RoutePlanner:
                     )
                 
                 else:
+                    # PROVA AD EFFETTUARE UNO SPOSTAMENTO LATERALE DAL SECONDO PUNTO DEL PRIMO EDGE P1-TRHEAT A 90 GRADI VERSO L'ESTERNO DELLA THREAT CON SPOSTAMENTO PARI AL RAGGIO DELLA THREAT
+                    """"
+                     if not found_path:
+                        threats = copy.deepcopy(threats_) # Copia profonda della lista delle minacce per evitare modifiche indesiderate
+                        # Inizializzazione
+                        path_collection = PathCollection()
+                        initial_path_id = path_collection.add_path()
+
+                        # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
+                        self.excludeThreat(threats, start)
+                        self.excludeThreat(threats, end)
+
+                        
+                        start_2d = Point2D(start.x, start.y)
+                        end_2d = Point2D(end.x, end.y)  
+                        dir = end_2d - start_2d
+                        p2 = start_2d + dir
+                        p2 = Point3D(p2.x, p2.y, start.z)
+                        
+                        # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
+                        if DEBUG:
+                            print(f"Path not found, will try with lateral moving of radius of the first threat. New point p1: {getFormattedPoint(p2)}")
+
+                        found_path = self.calcPathWithThreat(
+                            start, 
+                            p2, 
+                            end,
+                            threats,
+                            n_edge = 0,                
+                            path_id = initial_path_id,
+                            path_collection = path_collection,
+                            aircraft_altitude_min = aircraft_altitude_min,
+                            aircraft_altitude_max = aircraft_altitude_max,
+                            aircraft_speed_max = aircraft_speed_max,
+                            aircraft_speed = aircraft_speed,
+                            aircraft_range_max = aircraft_range_max,
+                            time_to_inversion = aircraft_time_to_inversion,
+                            change_alt_option = change_alt_option,
+                            debug = True
+                        )    
+                            
+                    """
                     return False # l'intersezione con la threat non è completa (il segmento interseca la threat in un solo punto) -> non può essere gestita dal _handle_threat_crossing
 
             #    return False # edge_c interseca una threat -> troppo complicata la gestione
@@ -1232,7 +1275,8 @@ class RoutePlanner:
             path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
             new_path_id = path_collection.add_path(path_edges_copy) 
 
-            
+        result1 = False
+        result2 = False    
         
         if ext_p1: # new
             #path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
@@ -1249,6 +1293,8 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+                     
+
                 if debug and not result1:
                     print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
                     
@@ -1260,7 +1306,7 @@ class RoutePlanner:
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
-                )
+                )                    
 
                 if debug and not result1:
                     print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
@@ -1290,7 +1336,7 @@ class RoutePlanner:
                     aircraft_altitude_min, aircraft_altitude_max,
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
-                )
+                )             
 
                 if debug and not result2:
                     print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
@@ -1303,12 +1349,12 @@ class RoutePlanner:
                     aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
                     change_alt_option, max_recursion, debug
                 )
+
                 if debug and not result2:
                     print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
 
             else:
                 raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
-
 
 
         return result1 or result2

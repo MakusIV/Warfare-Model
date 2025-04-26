@@ -891,3 +891,12 @@ def evaluateMorale(success_ratio: float, efficiency: float):
 
 def getFormattedPoint(point, decimal_places=2):
     return tuple(f"{float(coord):.2f}" for coord in point)
+
+
+def rotate_vector(v, angle):
+        """
+        Ruota un vettore 2D di un dato angolo (in radianti)
+        """
+        cos_ang = math.cos(angle)
+        sin_ang = math.sin(angle)
+        return (v[0] * cos_ang - v[1] * sin_ang,  v[0] * sin_ang + v[1] * cos_ang)
