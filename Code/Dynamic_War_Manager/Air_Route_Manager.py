@@ -68,7 +68,7 @@ class ThreatAA:
             lm = lm2
         
 
-        time_max_in_threat_zone = lm * self.missile_speed
+        time_max_in_threat_zone = lm / self.missile_speed
         max_segment_lenght_in_threat_zone = ( time_max_in_threat_zone + time_to_inversion + self.min_fire_time) * aircraft_speed
 
 
@@ -1086,13 +1086,13 @@ class RoutePlanner:
             new_p2 = segm.p2
 
             if change_alt_option == "change_up":
-                new_altitude = ( aircraft_altitude_max + threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE ) / 2
+                new_altitude = ( 2 * aircraft_altitude_max + threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE ) / 3
                 new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
                 new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude ) 
                 if debug:
                     print(f"Changing altitude UP to {new_p1.z:.2f}")
             else:
-                new_altitude = ( threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE + aircraft_altitude_min ) / 2
+                new_altitude = ( threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE + 2 * aircraft_altitude_min ) / 3
                 new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
                 new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude )
                 if debug:

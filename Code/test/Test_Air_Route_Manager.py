@@ -90,15 +90,16 @@ class GPT_TestModule(unittest.TestCase):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(20, 0, 10), None)
         segment = Segment3D(wpA.point, wpB.point)
-        max_len = self.threat.calcMaxLenghtCrossSegment(aircraft_speed=250, aircraft_altitude=10, time_to_inversion=1.0, segment=segment)
+        max_len = self.threat.calcMaxLenghtCrossSegment(aircraft_speed=2, aircraft_altitude=10, time_to_inversion=1.0, segment=segment)
         self.assertGreater(max_len, MIN_SECURE_LENGTH_EDGE)
+        self.assertAlmostEqual(max_len, 4.03, delta=0.1)
 
     def test_route_planner_calcRoute_no_threats(self):
         threats = []
         planner = RoutePlanner(self.start_point, self.end_point, threats)
         route = planner.calcRoute(self.start_point, self.end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion=20, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=True)
         self.assertIsNotNone(route)
@@ -109,12 +110,12 @@ class GPT_TestModule(unittest.TestCase):
         planner = RoutePlanner(self.start_point, self.end_point, threats)
         route = planner.calcRoute(self.start_point, self.end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route=True)
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 3)
-        self.assertAlmostEqual(route.length, 34.13, delta=0.1)
+        self.assertAlmostEqual(route.length, 35.08, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_down(self):
         start_point = Point3D(0, 0, 10)
@@ -123,17 +124,17 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="change_down", intersecate_threat=False, consider_aircraft_altitude_route=False)
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 3)
-        self.assertAlmostEqual(route.length, 33.86, delta=0.1)
+        self.assertAlmostEqual(route.length, 34.20, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_lateral(self):
         start_point = Point3D(0, 0, 10)
@@ -142,12 +143,12 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
@@ -169,16 +170,16 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
@@ -199,16 +200,16 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 25) # height > max_aircraft_altitude -> escape lateral
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 3), radius = 5, height = 15) # height < max_aircraft_altitude -> escape up
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=22,
-                                  aircraft_speed_max=300, aircraft_speed=250,
+                                  aircraft_speed_max=3, aircraft_speed=2,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
                                   change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
@@ -229,21 +230,21 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  aircraft_speed_max=3, aircraft_speed=2,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
         points = route.getPoints() 
@@ -264,25 +265,25 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  aircraft_speed_max=3, aircraft_speed=2,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
         points = route.getPoints() 
@@ -305,25 +306,25 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=40, aircraft_time_to_inversion = 20, 
+                                  aircraft_speed_max=3, aircraft_speed=1,
+                                  aircraft_range_max=40, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
                 
         points = route.getPoints() 
@@ -346,25 +347,25 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 5)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=16,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=300, aircraft_speed=250,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 20, 
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=True)
                 
         points = route.getPoints() 
@@ -489,7 +490,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 66.61, delta = 0.1)
+        self.assertAlmostEqual(route.length, 72.82, delta = 0.1)
 
         
     def test_route_planner_calcRoute_with_4_threat_pass_throught(self):
@@ -499,18 +500,18 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 600, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         threats = copy.deepcopy(threats_)
@@ -556,7 +557,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 6)
-        self.assertAlmostEqual(route.length, 43.92, delta = 0.1)
+        self.assertAlmostEqual(route.length, 44.55, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
@@ -578,6 +579,126 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 3)
         self.assertAlmostEqual(route.length, 33.31, delta = 0.1)
+
+
+
+    def test_route_planner_calcRoute_with_5_threat(self):
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(22, 25, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_ = [threat]
+        
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        
+        
+        # avoid threat zone, no altitude change
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        #self.assertGreater(len(route.edges), 1)
+        #self.assertEqual(len(route.edges), 4)
+        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+
+        # crossing threat zone, no altitude change
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=False)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        #self.assertGreater(len(route.edges), 1)
+        #self.assertEqual(len(route.edges), 4)
+        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        
+        """
+
+        threats = copy.deepcopy(threats_)
+        
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=False)
+                
+        points = route.getPoints() 
+        
+        print(route)
+
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 6)
+        self.assertAlmostEqual(route.length, 44.55, delta = 0.1)
+
+
+        threats = copy.deepcopy(threats_)
+
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=True)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 3)
+        self.assertAlmostEqual(route.length, 33.31, delta = 0.1)
+        """
+
+
 
 ######################### Claude Sonnet 3.7.2024 #########################
 
@@ -1208,6 +1329,9 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_3_threat_pass_throught'))
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_5_threat'))
+
+        
         
         
         
