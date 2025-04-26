@@ -699,6 +699,71 @@ class GPT_TestModule(unittest.TestCase):
         """
 
 
+    def test_route_planner_calcRoute_with_6_threat(self):
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(22, 25, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_ = [threat]
+        
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        
+        
+        # avoid threat zone, no altitude change
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)
+        #self.assertGreater(len(route.edges), 1)
+        #self.assertEqual(len(route.edges), 4)
+        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+
+        # crossing threat zone, no altitude change
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=False)
+                
+        
+        self.assertIsNone(route)
+        
 
 ######################### Claude Sonnet 3.7.2024 #########################
 
@@ -1330,6 +1395,7 @@ if __name__ == "__main__":
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_5_threat'))
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_6_threat'))
 
         
         
