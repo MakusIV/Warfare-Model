@@ -40,7 +40,13 @@ class Cylinder:
         z = point.z
         center, _ = self._get_circle_at_z(z)
         return point.distance(center)
+    
+    def pointOfCirconference(self, point: Point2D) -> bool:
 
+        point_3d = Point3D(point.x, point.y, self.bottom_center.z)
+        return self.radius == self.distanceFromCirconference(point_3d)
+
+    # eliminare?
     def centerProximity(self, point: Point3D) -> float: # 1: external point or point on circonference, 0: point == center
 
         if not self.innerPoint(point):
@@ -48,7 +54,7 @@ class Cylinder:
         
         z = point.z
         center, radius = self._get_circle_at_z(z)        
-        proximity = point.distance(center) / radius
+        return point.distance(center) / radius
 
 
     def innerPoint(self, point: Point3D) -> bool:

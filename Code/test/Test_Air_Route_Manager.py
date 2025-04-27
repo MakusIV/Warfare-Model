@@ -31,6 +31,7 @@ class GPT_TestModule(unittest.TestCase):
         self.threats = [self.threat]
 
     def test_waypoint_equality_and_ordering(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wp1 = Waypoint("A", Point3D(1, 2, 3), None)
         wp2 = Waypoint("B", Point3D(1, 2, 3), None)
         wp3 = Waypoint("C", Point3D(2, 3, 4), None)
@@ -39,6 +40,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertTrue(wp1 < wp3)
 
     def test_edge_length_and_segment(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(3, 4, 10), None)
         edge = Edge("edge1", 0, wpA, wpB, speed=250)
@@ -48,6 +50,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(seg3d.p2, wpB.point)
 
     def test_edge_intersects_threat(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wpA = Waypoint("A", Point3D(10, 10, 10), None)
         wpB = Waypoint("B", Point3D(15, 15, 10), None)
         edge = Edge("edge_int", 0, wpA, wpB, speed=250)
@@ -57,6 +60,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsInstance(t_range, tuple)
 
     def test_route_waypoints(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         route = Route("TestRoute", 1000, 1000)
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(10, 0, 10), None)
@@ -71,6 +75,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points, [wpA.point, wpB.point, wpC.point])
 
     def test_path_and_collection(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(3, 4, 10), None)
         wpC = Waypoint("C", Point3D(6, 8, 10), None)
@@ -87,6 +92,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(float(best.total_length), 10.0)
 
     def test_threat_calcMaxLenghtCrossSegment(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(20, 0, 10), None)
         segment = Segment3D(wpA.point, wpB.point)
@@ -95,6 +101,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(max_len, 4.03, delta=0.1)
 
     def test_route_planner_calcRoute_no_threats(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         threats = []
         planner = RoutePlanner(self.start_point, self.end_point, threats)
         route = planner.calcRoute(self.start_point, self.end_point, threats, aircraft_altitude_route=10,
@@ -106,6 +113,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertLess(sum(edge.length for edge in route.edges.values()), 1000)
 
     def test_route_planner_calcRoute_with_threat_escape_up(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         threats = [self.threat]
         planner = RoutePlanner(self.start_point, self.end_point, threats)
         route = planner.calcRoute(self.start_point, self.end_point, threats, aircraft_altitude_route=10,
@@ -118,6 +126,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(route.length, 35.08, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_down(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -137,6 +146,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(route.length, 34.20, delta=0.1)
 
     def test_route_planner_calcRoute_with_threat_escape_lateral(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -164,6 +174,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_2_threat_escape_lateral(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -194,6 +205,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertGreater(len(route.edges), 1)
 
     def test_route_planner_calcRoute_with_2_threat_escape_lateral_and_up(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -224,6 +236,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertGreater(len(route.edges), 1)
 
     def test_route_planner_calcRoute_with_3_threat_escape_lateral(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -259,6 +272,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_4_threat_escape_lateral(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -300,6 +314,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_4_threat_escape_lateral_limited_range(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -341,6 +356,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_4_threat_over_threat_altitude(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -381,6 +397,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_1_threat_pass_throught(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -411,6 +428,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_3_threat_pass_throught(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -446,18 +464,18 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        self.assertEqual(len(route.edges), 4)
-        self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 40.45, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
 
-        # change altitude option: change_up
+        # change altitude option: change_up # nota: calcRoute con intersecate threat è modificata e non  cambia più altitude quindi questo test non serve
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=18,
                                   aircraft_altitude_min=5, aircraft_altitude_max=40,
                                   aircraft_speed_max=1.5, aircraft_speed=1,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
-                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=True)
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=True)
                 
         points = route.getPoints() 
         
@@ -471,29 +489,11 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(len(route.edges), 5)
         self.assertAlmostEqual(route.length, 33.50, delta = 0.1)
 
-
-        threats = copy.deepcopy(threats_)
-        # change altitude option: change_up, consider aircraft altitude: True
-        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
-                                  aircraft_altitude_min=5, aircraft_altitude_max=40,
-                                  aircraft_speed_max=1.5, aircraft_speed=1,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
-                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=False)
-                
-        points = route.getPoints() 
-        
-        for point in points:
-            print(getFormattedPoint(point)) 
-            
-        self.assertEqual(points[0], start_point)
-        self.assertEqual(points[-1], end_point)
-        self.assertIsNotNone(route)
-        #self.assertGreater(len(route.edges), 1)
-        self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 72.82, delta = 0.1)
+       
 
         
     def test_route_planner_calcRoute_with_4_threat_pass_throught(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -533,31 +533,10 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        self.assertEqual(len(route.edges), 4)
-        self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 40.45, delta = 0.1)
 
 
-        threats = copy.deepcopy(threats_)
-        
-        planner = RoutePlanner(start_point, end_point, threats)
-        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
-                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
-                                  aircraft_speed_max=1.5, aircraft_speed=1,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
-                                  change_alt_option="change_up", intersecate_threat=True, consider_aircraft_altitude_route=False)
-                
-        points = route.getPoints() 
-        
-        print(route)
-
-        for point in points:
-            print(getFormattedPoint(point)) 
-            
-        self.assertEqual(points[0], start_point)
-        self.assertEqual(points[-1], end_point)
-        self.assertIsNotNone(route)
-        self.assertEqual(len(route.edges), 6)
-        self.assertAlmostEqual(route.length, 44.55, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
@@ -583,6 +562,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_5_threat(self):
+        print("\n"+self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -611,6 +591,7 @@ class GPT_TestModule(unittest.TestCase):
         
         
         # avoid threat zone, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
@@ -628,10 +609,11 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        #self.assertEqual(len(route.edges), 4)
-        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 38.44, delta = 0.1)
 
         # crossing threat zone, no altitude change
+        print("\n"+self._testMethodName + " crossing threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
@@ -649,8 +631,8 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        #self.assertEqual(len(route.edges), 4)
-        #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
+        self.assertEqual(len(route.edges), 6)
+        self.assertAlmostEqual(route.length, 37.94, delta = 0.1)
         
         """
 
@@ -700,6 +682,7 @@ class GPT_TestModule(unittest.TestCase):
 
 
     def test_route_planner_calcRoute_with_6_threat(self):
+        print(self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
         end_point = Point3D(22, 25, 10)
         
@@ -732,6 +715,7 @@ class GPT_TestModule(unittest.TestCase):
         
         
         # avoid threat zone, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
@@ -753,6 +737,7 @@ class GPT_TestModule(unittest.TestCase):
         #self.assertAlmostEqual(route.length, 49.68, delta = 0.1)
 
         # crossing threat zone, no altitude change
+        print("\n"+self._testMethodName + " crossing threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,

@@ -9,7 +9,7 @@ from collections import defaultdict
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from functools import singledispatch
-from Code.Utility import rotate_vector
+from Code.Utility import rotate_vector, get_direction_vector
 
 # Aggiungi il percorso della directory principale del progetto
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -555,6 +555,7 @@ class RoutePlanner:
                 n_edge = 0,                
                 path_id = initial_path_id,
                 path_collection = path_collection,
+                aircraft_altitude = aircraft_altitude_route,
                 aircraft_altitude_min = aircraft_altitude_min,
                 aircraft_altitude_max = aircraft_altitude_max,
                 aircraft_speed_max = aircraft_speed_max,
@@ -582,31 +583,7 @@ class RoutePlanner:
                 time_to_inversion = aircraft_time_to_inversion,
                 change_alt_option = change_alt_option,
                 debug = True
-            )
-
-            if not found_path:    
-                # Inizializzazione
-                path_collection = PathCollection()
-                initial_path_id = path_collection.add_path()
-
-                # Se non ci sono percorsi senza minacce, calcola il percorso con le minacce (path è passato come riferimento e dovrebbe essere aggiornato dal metodo)                
-                found_path = self.calcPathWithThreat(
-                    start, 
-                    end, 
-                    end,
-                    threats,
-                    n_edge = 0,                
-                    path_id = initial_path_id,
-                    path_collection = path_collection,
-                    aircraft_altitude_min = aircraft_altitude_min,
-                    aircraft_altitude_max = aircraft_altitude_max,
-                    aircraft_speed_max = aircraft_speed_max,
-                    aircraft_speed = aircraft_speed,
-                    aircraft_range_max = aircraft_range_max,
-                    time_to_inversion = aircraft_time_to_inversion,
-                    change_alt_option = change_alt_option,
-                    debug = True
-                )
+            )           
 
         # nella funzione best path oltre che valutare la lunghezza devi valutare anche il pericolo: 0.7 * danger + 0.3 * length
         # Ottenere risultati
@@ -693,12 +670,12 @@ class RoutePlanner:
 
         if path.total_length > range_max:
             if DEBUG:
-                print(f"Current path {path_id} with length {path.total_length} exceed range_max {range_max}")
+                print(f"Current path {path_id} with length {path.total_length:.2f} exceed range_max {range_max:.2f}")
             return True
         
         if path.total_danger > danger_max:
             if DEBUG:
-                print(f"Current path {path_id} with danger {path.total_danger} exceed danger_max {danger_max}")
+                print(f"Current path {path_id} with danger {path.total_danger:.2f} exceed danger_max {danger_max:.2f}")
             return True
         
         return False
@@ -799,7 +776,8 @@ class RoutePlanner:
         threats: List[ThreatAA],
         n_edge: int,
         path_id: int,
-        path_collection: PathCollection,        
+        path_collection: PathCollection,   
+        aircraft_altitude: float,             
         aircraft_altitude_min: float,
         aircraft_altitude_max: float,
         aircraft_speed_max: float,
@@ -862,19 +840,33 @@ class RoutePlanner:
                 return True
 
             return self.calcPathWithThreat(
-                p2, end, end, threats, n_edge + 1, path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                change_alt_option, max_recursion - 1, debug
+                p2,
+                end, 
+                end, 
+                threats, 
+                n_edge + 1, 
+                path_id, 
+                path_collection, 
+                aircraft_altitude,
+                aircraft_altitude_min, 
+                aircraft_altitude_max,
+                aircraft_speed_max, 
+                aircraft_speed, 
+                aircraft_range_max, 
+                time_to_inversion,
+                change_alt_option, 
+                max_recursion - 1, 
+                debug
             )
 
         elif complete_intersection: # l'intersezione con la prima threat trovata è completa (il segmento interseca la threat in due punti)
             threatInrange, intersection = threat_intersect.edgeIntersect(edge) # crea l'intersezione
 
-            if not threatInrange and intersection:
+            if not threatInrange and intersection:# togliere per velocizzare?
                 raise Exception(f"not valid intersection: {getFormattedPoint(intersection.p1)} - {getFormattedPoint(intersection.p2)}")
                 
-            if intersection.length < MIN_SECURE_LENGTH_EDGE:# la lunghezza dell'intersezione completa è inferiore al valore minimo di default
+            if intersection.length < MIN_SECURE_LENGTH_EDGE:# or intersection.length < threat_intersect.calcMaxLenghtCrossSegment(aircraft_speed, aircraft_altitude, time_to_inversion, intersection) #la lunghezza dell'intersezione completa è inferiore al valore minimo di default
+                
 
                 current_path.add_edge(edge)
 
@@ -886,11 +878,24 @@ class RoutePlanner:
                     return False
                 
                 return self.calcPathWithThreat(
-                p2, end, end, threats, n_edge + 1, path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                change_alt_option, max_recursion - 1, debug
-            )
+                    p2,
+                    end, 
+                    end, 
+                    threats, 
+                    n_edge + 1, 
+                    path_id, 
+                    path_collection, 
+                    aircraft_altitude,
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion,
+                    change_alt_option, 
+                    max_recursion - 1, 
+                    debug
+                )
 
         
             else: # la lunghezza dell'intersezione completa è superiore al valore minimo di default
@@ -905,22 +910,28 @@ class RoutePlanner:
                 # Verifica se possiamo attraversare la minaccia in sicurezza
             
                 return self._handle_threat_crossing(
-                    edge, threat_intersect, p2, end, threats, n_edge,
-                    path_id, path_collection, max_length,
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, intersection, max_recursion, debug
+                    edge, 
+                    threat_intersect, 
+                    p2, 
+                    end, 
+                    threats, 
+                    n_edge,
+                    path_id, 
+                    path_collection, 
+                    max_length, 
+                    aircraft_altitude,
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion,
+                    change_alt_option, 
+                    intersection, 
+                    max_recursion, 
+                    debug
                 )
-
-                # Gestione alternativa (cambio quota o percorso alternativo)
-                return self._handle_threat_avoidance(
-                    edge, threat_intersect, p1, p2, end, threats, n_edge,
-                    path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion - 1, "calcPathWithThreat", debug
-                )
-            
+                        
         else:
             return False
 
@@ -935,6 +946,7 @@ class RoutePlanner:
         path_id: int,
         path_collection: PathCollection,        
         max_length: float,
+        aircraft_altitude: float,
         aircraft_altitude_min: float,
         aircraft_altitude_max: float,
         aircraft_speed_max: float,
@@ -1005,17 +1017,92 @@ class RoutePlanner:
 
             if other_threat != threat and other_threat.innerPoint(wp_d.point): # exit point inside another threat
 
+                result1 = False
+                result2 = False
+
                 if debug:
-                    print(f"cross threat edge intersecate another threat: ( {other_threat!r} ),\n   try with threat avoidance procedure with previous edge {edge!r}")
+                    print(f"cross threat edge intersecate another threat: ( {other_threat!r} )")
          
-                # continue to avoid threat
-                return self._handle_threat_avoidance(
-                    edge, threat, edge.wpA.point, edge.wpB.point, end, threats, n_edge,
-                    path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max,  time_to_inversion,
-                    change_alt_option, max_recursion, "calcPathWithThreat", debug
-                )        
+                # continue to avoid threat with lateral moving from wpA to new lateral point wp_b1
+                dir = get_direction_vector(Point2D(d.x, d.y), Point2D(c.x, c.y))
+                dir = rotate_vector(dir, math.pi / 2) # ruota il vettore di 90 gradi rispetto al segmento intersecante
+                new_p1 = Point3D(threat.cylinder.center.x + dir[0] * 1.5 * threat.cylinder.radius, threat.cylinder.center.y + dir[1] * 1.5 * threat.cylinder.radius, edge.wpA.point.z)                    
+                wp_b1 = Waypoint(f"wp_{path_id}_{n_edge}_lateral_1", new_p1, None)
+                new_edge_1 = Edge(
+                    f"P:{path_id}-E:{n_edge}_new_lateral_1", 
+                    n_edge,
+                    edge.wpA,
+                    wp_b1,
+                    edge.speed
+                )
+
+
+                # continue to avoid threat with lateral moving from wpA to new lateral point wp_b2 - new path
+                path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
+                new_path_id = path_collection.add_path(path_edges_copy) 
+                dir = rotate_vector(dir, math.pi) # ruota il vettore di 180 gradi
+                new_p2 = Point3D(threat.cylinder.center.x + dir[0] * 1.5 * threat.cylinder.radius, threat.cylinder.center.y + dir[1] * 1.5 * threat.cylinder.radius, edge.wpA.point.z)                    
+                wp_b2 = Waypoint(f"wp_{path_id}_{n_edge}_lateral_2", new_p2, None)
+                new_edge_2 = Edge(
+                    f"P:{new_path_id}-E:{n_edge}_new_lateral_2", 
+                    n_edge,
+                    edge.wpA,
+                    wp_b2,
+                    edge.speed
+                )
+
+                if debug:
+                    print(f"\n   calculare two lateral point: new_p1: {getFormattedPoint(new_p1)}, new_p2: {getFormattedPoint(new_p2)}")
+
+
+                if debug:
+                    print(f"\n   will try with lateral moving of radius of the first threat. New point p1: {getFormattedPoint(new_p1)}")
+
+
+                result1 = self.calcPathWithThreat(
+                    new_edge_1.wpA.point,  # Punto d
+                    new_edge_1.wpB.point,
+                    end,
+                    threats, 
+                    n_edge, 
+                    path_id, 
+                    path_collection, 
+                    aircraft_altitude,
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion, 
+                    change_alt_option, 
+                    max_recursion - 1, 
+                    debug
+                )
+                
+                if debug:
+                    print(f"\n   will try with lateral moving of radius of the first threat. New point p2: {getFormattedPoint(new_p1)}")
+
+                result2 = self.calcPathWithThreat(
+                    new_edge_2.wpA.point,  # Punto d
+                    new_edge_2.wpB.point,
+                    end,
+                    threats, 
+                    n_edge, 
+                    new_path_id, 
+                    path_collection, 
+                    aircraft_altitude,
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion, 
+                    change_alt_option, 
+                    max_recursion - 1, 
+                    debug
+                )
+
+                return result1 or result2
 
         # exit_point isn't inside other threats
         current_path = path_collection.get_path(path_id)
@@ -1034,10 +1121,22 @@ class RoutePlanner:
         # Prosegui dal punto di uscita
         return self.calcPathWithThreat(
             edge_through.wpB.point,  # Punto d
-            end, end, threats, n_edge + 2, path_id, path_collection, 
-            aircraft_altitude_min, aircraft_altitude_max,
-            aircraft_speed_max, aircraft_speed, aircraft_range_max, 
-            time_to_inversion, change_alt_option, max_recursion - 1, debug
+            end, 
+            end, 
+            threats, 
+            n_edge + 2, 
+            path_id, 
+            path_collection, 
+            aircraft_altitude,
+            aircraft_altitude_min, 
+            aircraft_altitude_max,
+            aircraft_speed_max, 
+            aircraft_speed, 
+            aircraft_range_max, 
+            time_to_inversion, 
+            change_alt_option, 
+            max_recursion - 1, 
+            debug
         )
 
     def _handle_threat_avoidance(
@@ -1136,109 +1235,19 @@ class RoutePlanner:
                 if debug:
                     print(f"current path: {current_path!r} added edge from previous edge.wpB up or down threat: {new_edge_C!r}")
 
-
-            else: 
-                
-                #return False
-                # prova a passare attraverso la threat
-                
-                threatInRange, intersection = threat_intersect.edgeIntersect(new_edge_C) # crea l'intersezione
-
-                if threatInRange and intersection: # l'intersezione con la successiva threat trovata è completa (il segmento interseca la threat in due punti)
-                    
-                
-                    # Calcola la massima lunghezza per un attraversamento sicuro                
-                    max_length = threat_intersect.calcMaxLenghtCrossSegment(
-                        aircraft_speed,
-                        aircraft_altitude_max,            
-                        time_to_inversion,                    
-                        edge.getSegment3D()
-                    )
-
-                    return self._handle_threat_crossing( # modificare la funzione ed eliminare p2
-                        new_edge_C, threat_intersect, p2, end, threats, n_edge + edge_incr,
-                        path_id, path_collection, max_length,
-                        aircraft_altitude_min, aircraft_altitude_max,
-                        aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                        change_alt_option, intersection, max_recursion - 1, debug
-                    )
-                
-                else:
-                    # PROVA AD EFFETTUARE UNO SPOSTAMENTO LATERALE DAL SECONDO PUNTO DEL PRIMO EDGE P1-TRHEAT A 90 GRADI VERSO L'ESTERNO DELLA THREAT CON SPOSTAMENTO PARI AL RAGGIO DELLA THREAT
-                    """"
-                     if not found_path:
-                        threats = copy.deepcopy(threats_) # Copia profonda della lista delle minacce per evitare modifiche indesiderate
-                        # Inizializzazione
-                        path_collection = PathCollection()
-                        initial_path_id = path_collection.add_path()
-
-                        # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
-                        self.excludeThreat(threats, start)
-                        self.excludeThreat(threats, end)
-
-                        
-                        start_2d = Point2D(start.x, start.y)
-                        end_2d = Point2D(end.x, end.y)  
-                        dir = end_2d - start_2d
-                        p2 = start_2d + dir
-                        p2 = Point3D(p2.x, p2.y, start.z)
-                        
-                        # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
-                        if DEBUG:
-                            print(f"Path not found, will try with lateral moving of radius of the first threat. New point p1: {getFormattedPoint(p2)}")
-
-                        found_path = self.calcPathWithThreat(
-                            start, 
-                            p2, 
-                            end,
-                            threats,
-                            n_edge = 0,                
-                            path_id = initial_path_id,
-                            path_collection = path_collection,
-                            aircraft_altitude_min = aircraft_altitude_min,
-                            aircraft_altitude_max = aircraft_altitude_max,
-                            aircraft_speed_max = aircraft_speed_max,
-                            aircraft_speed = aircraft_speed,
-                            aircraft_range_max = aircraft_range_max,
-                            time_to_inversion = aircraft_time_to_inversion,
-                            change_alt_option = change_alt_option,
-                            debug = True
-                        )    
-                            
-                    """
-                    return False # l'intersezione con la threat non è completa (il segmento interseca la threat in un solo punto) -> non può essere gestita dal _handle_threat_crossing
-
-            #    return False # edge_c interseca una threat -> troppo complicata la gestione
+           
 
             # terminate path if length or danger exceed limits
             if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
                 return False
 
-            if caller == "calcPathWithThreat":
-                
-                if not threatInRange and threat_intersect: 
-                    #intersezione laterale solo in un punto -> laq seconda è sul top o base quindi interna al perimetro e non può essere gestita correttemente dal _handle_threat_crossing
-                    return False
-
-                return self.calcPathWithThreat(
-                    new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion, 
-                    change_alt_option, max_recursion - 1, debug
-                )
-            
-            elif caller == "calcPathWithoutThreat":
-
-                return self.calcPathWithoutThreat(
-                    new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion - 1, debug
-                )
-            
-            else:
-                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
-
+            return self.calcPathWithoutThreat(
+                new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
+                aircraft_altitude_min, aircraft_altitude_max,
+                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                change_alt_option, max_recursion - 1, debug
+            )
+                        
         # Se non possiamo cambiare quota, troviamo percorsi alternativi calcolando gli extended points per una circonferenza leggermente più grande della threat
         extended_cylinder = Cylinder(threat.cylinder.center, threat.cylinder.radius * RADIUS_EXTENSION_THREAT_CIRCONFERENCE, threat.cylinder.height)
         ext_p1, ext_p2 = extended_cylinder.getExtendedPoints(
@@ -1249,9 +1258,9 @@ class RoutePlanner:
         # SE NON FUNZIONA VERIFICATA LA CODIZIONE DI  xt_p2_distance > 2 * ext_p1_distance RITORNA FALSE
 
 
-        if not ext_p1 and not ext_p2: # or
+        if not ext_p1 and not ext_p2: # si può verificare solo nel caso che uno dei punti p1 o p2 sia sulla circonferenza
             if debug:
-                print("Could not find extended points around threat")
+                print(f"Could not find extended points around threat: p1 or p2 on threat circonferenze? -> wpA: {threat.cylinder.pointOfCirconference(edge.wpA.point2d)}, wpB: {threat.cylinder.pointOfCirconference(edge.wpB.point2d)}")
             return False
 
         if debug:
@@ -1274,89 +1283,132 @@ class RoutePlanner:
         else: # procedono sia ext_p1 che  ext_p2 il primo con il path corrente, il secondo con un nuovo path
             path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
             new_path_id = path_collection.add_path(path_edges_copy) 
-
-        result1 = False
-        result2 = False    
         
-        if ext_p1: # new
-            #path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
-            #new_path_id = path_collection.add_path(path_edges_copy) 
 
-            if debug:
-                print(f"Creating alternative path through new point (ext_p1): {getFormattedPoint(ext_p1)}")#, \nProcessing path {path_id}, new edge {new_edge1}: {new_edge1.wpA.name}({getFormattedPoint(new_edge1.wpA.point)}) -> {new_edge1.wpB.name}({getFormattedPoint(new_edge1.wpB.point)})")
+        found_path1 = False
+        found_path2 = False
 
-            if caller == "calcPathWithThreat":
-                    
-                result1 = self.calcPathWithThreat(
-                    p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion, debug
-                )
-                     
+        #DEVI VERIFICARE SE SIA EXTP1 CHE EXTP2 SONO TRUE IN TAL CASO DEVI AGGIUNGERE UN NUOVO PATH ALTRIMENTI NO.
+        if ext_p1 or ext_p2: # new
 
-                if debug and not result1:
-                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
-                    
+            if ext_p1: # new
+                #path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
+                #new_path_id = path_collection.add_path(path_edges_copy) 
 
-            elif caller == "calcPathWithoutThreat":
+                if debug:
+                    print(f"Creating alternative path through new point (ext_p1): {getFormattedPoint(ext_p1)}")#, \nProcessing path {path_id}, new edge {new_edge1}: {new_edge1.wpA.name}({getFormattedPoint(new_edge1.wpA.point)}) -> {new_edge1.wpB.name}({getFormattedPoint(new_edge1.wpB.point)})")
+                        
 
-                result1 = self.calcPathWithoutThreat(
-                    p1, ext_p1, end, threats, n_edge, path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion, debug
+                found_path1 = self.calcPathWithoutThreat(
+                    p1, 
+                    ext_p1, 
+                    end, 
+                    threats, 
+                    n_edge, 
+                    path_id, 
+                    path_collection, 
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion,
+                    change_alt_option, 
+                    max_recursion, debug
                 )                    
 
-                if debug and not result1:
-                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p1)} not found")
-                
-            else:
-                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
-
-
-        if ext_p2:# new
-            # Percorso alternativo 2 (ext_p2)    
-            
-            #new_edge2 = Edge(
-            #    f"P:{new_path_id}-E:{n_edge}_alt2",
-            #    edge.wpA,
-            #    Waypoint(f"wp_B{new_path_id}_{n_edge}_alt2", ext_p2, None),
-            #    aircraft_speed
-            #)
-            #path_collection.get_path(new_path_id).add_edge(new_edge2)
-
-            if debug:
-                print(f"Creating alternative path through new point (ext_p2): {getFormattedPoint(ext_p2)}") #, \nProcessing path {new_path_id}, new edge {new_edge2}: {new_edge2.wpA.name}({getFormattedPoint(new_edge2.wpA.point)}) -> {new_edge2.wpB.name}({getFormattedPoint(new_edge2.wpB.point)})")
-
-            if caller == "calcPathWithThreat":
+                if not found_path1:  # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
+                    # PROVA AD EFFETTUARE UNO SPOSTAMENTO LATERALE SUL PÈIANO Z DAL SECONDO PUNTO DEL PRIMO EDGE P1-TRHEAT A 90 GRADI VERSO L'ESTERNO DELLA THREAT CON SPOSTAMENTO PARI AL RAGGIO DELLA THREAT        
+                            
+                    dir = get_direction_vector(Point2D(ext_p1.x, ext_p1.y), Point2D(threat.cylinder.center.x, threat.cylinder.center.y))
+                    new_ext_p = Point3D(ext_p1.x + dir[0] * threat.cylinder.radius, ext_p1.y + dir[1] * threat.cylinder.radius, ext_p1.z)                    
                     
-                result2 = self.calcPathWithThreat(
-                    p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion, debug
-                )             
+                    # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
+                    if debug:
+                        print(f"Path not found, will try with lateral moving of radius of the first threat. New point p1: {getFormattedPoint(new_ext_p)}")
 
-                if debug and not result2:
-                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
+                    found_path1 = self.calcPathWithoutThreat(
+                        p1, 
+                        new_ext_p, 
+                        end,
+                        threats,
+                        n_edge,                
+                        path_id,
+                        path_collection,
+                        aircraft_altitude_min,
+                        aircraft_altitude_max,
+                        aircraft_speed_max,
+                        aircraft_speed,
+                        aircraft_range_max,
+                        time_to_inversion,
+                        change_alt_option,
+                        debug
+                    )   
+
+            if ext_p2:# new
+                # Percorso alternativo 2 (ext_p2)    
+                # devi 
                 
-            elif caller == "calcPathWithoutThreat":
-
-                result2 = self.calcPathWithoutThreat(
-                    p1, ext_p2, end, threats, n_edge, new_path_id, path_collection, 
-                    aircraft_altitude_min, aircraft_altitude_max,
-                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                    change_alt_option, max_recursion, debug
+                if debug:
+                        print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
+                
+                    
+                found_path2 = self.calcPathWithoutThreat(
+                    p1,
+                    ext_p2, 
+                    end, 
+                    threats, 
+                    n_edge, 
+                    new_path_id, 
+                    path_collection, # o path_edges_copy?
+                    aircraft_altitude_min, 
+                    aircraft_altitude_max,
+                    aircraft_speed_max, 
+                    aircraft_speed, 
+                    aircraft_range_max, 
+                    time_to_inversion,
+                    change_alt_option, 
+                    max_recursion, 
+                    debug
                 )
 
-                if debug and not result2:
-                    print(f"alterative path for path_id {path_id} with new point ext_p1: {getFormattedPoint(ext_p2)} not found")
+                if not found_path2:  # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
+                    # PROVA AD EFFETTUARE UNO SPOSTAMENTO LATERALE DAL SECONDO PUNTO DEL PRIMO EDGE P1-TRHEAT A 90 GRADI VERSO L'ESTERNO DELLA THREAT CON SPOSTAMENTO PARI AL RAGGIO DELLA THREAT        
+                            
+                    dir = get_direction_vector(Point2D(ext_p2.x, ext_p2.y), Point2D(threat.cylinder.center.x, threat.cylinder.center.y))
+                    new_ext_p = Point3D(ext_p2.x + dir[0] * threat.cylinder.radius, ext_p2.y + dir[1] * threat.cylinder.radius, ext_p2.z)  
+                    
+                    # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
+                    if debug:
+                        print(f"Path not found, will try with lateral moving of radius of the first threat. New point p2: {getFormattedPoint(new_ext_p)}")
+                    
+                    found_path2 = self.calcPathWithoutThreat(
+                        p1, 
+                        new_ext_p, 
+                        end,
+                        threats,
+                        n_edge,                
+                        new_path_id,
+                        path_collection, # o path_edges_copy?
+                        aircraft_altitude_min,
+                        aircraft_altitude_max,
+                        aircraft_speed_max,
+                        aircraft_speed,
+                        aircraft_range_max,
+                        time_to_inversion,
+                        change_alt_option,
+                        debug
+                    )
 
-            else:
-                raise ValueError(f"Unexpected caller: {caller}. Expected 'calcPathWithThreat' or 'calcPathWithoutThreat'.")
+            return found_path1 or found_path2
 
 
-        return result1 or result2
+
+            
+                    
+
+                
+
+        
 
 

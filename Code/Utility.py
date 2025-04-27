@@ -900,3 +900,20 @@ def rotate_vector(v, angle):
         cos_ang = math.cos(angle)
         sin_ang = math.sin(angle)
         return (v[0] * cos_ang - v[1] * sin_ang,  v[0] * sin_ang + v[1] * cos_ang)
+
+def normalize_vector(v):
+    """
+    Normalizza un vettore 2D
+    """
+    length = math.sqrt(v[0]**2 + v[1]**2)
+    if length == 0:
+        return (0, 0)
+    return (v[0] / length, v[1] / length)
+
+def get_direction_vector(start, end):
+    """
+    Calcola il vettore direzione da un punto di partenza a un punto di arrivo
+    """
+    dir = normalize_vector((end[0] - start[0], end[1] - start[1]))
+    return dir
+    
