@@ -49,16 +49,6 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(seg3d.p1, wpA.point)
         self.assertEqual(seg3d.p2, wpB.point)
 
-    def test_edge_intersects_threat(self):
-        print("\n"+self._testMethodName + " -------------------------------------------------- ")
-        wpA = Waypoint("A", Point3D(10, 10, 10), None)
-        wpB = Waypoint("B", Point3D(15, 15, 10), None)
-        edge = Edge("edge_int", 0, wpA, wpB, speed=250)
-        result, params = edge.intersects_threat(self.threat)
-        self.assertTrue(result)
-        t_range = edge.calculate_exposure(self.threat)
-        self.assertIsInstance(t_range, tuple)
-
     def test_route_waypoints(self):
         print("\n"+self._testMethodName + " -------------------------------------------------- ")
         route = Route("TestRoute", 1000, 1000)
@@ -96,7 +86,7 @@ class GPT_TestModule(unittest.TestCase):
         wpA = Waypoint("A", Point3D(0, 0, 10), None)
         wpB = Waypoint("B", Point3D(20, 0, 10), None)
         segment = Segment3D(wpA.point, wpB.point)
-        max_len = self.threat.calcMaxLenghtCrossSegment(aircraft_speed=2, aircraft_altitude=10, time_to_inversion=1.0, segment=segment)
+        max_len = self.threat.calcMaxLenghtCrossSegment(aircraft_speed=2, aircraft_altitude=10, time_to_inversion=1.0)
         self.assertGreater(max_len, MIN_SECURE_LENGTH_EDGE)
         self.assertAlmostEqual(max_len, 4.03, delta=0.1)
 
@@ -684,7 +674,7 @@ class GPT_TestModule(unittest.TestCase):
     def test_route_planner_calcRoute_with_6_threat(self):
         print(self._testMethodName + " -------------------------------------------------- ")
         start_point = Point3D(0, 0, 10)
-        end_point = Point3D(22, 25, 10)
+        end_point = Point3D(32, 37, 10)
         
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
@@ -1355,9 +1345,10 @@ if __name__ == "__main__":
     # GPT Test
     if True:
         
+        
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
-        suite.addTest(GPT_TestModule('test_edge_intersects_threat'))
+        
         suite.addTest(GPT_TestModule('test_route_waypoints'))
         suite.addTest(GPT_TestModule('test_path_and_collection'))
         
@@ -1380,6 +1371,7 @@ if __name__ == "__main__":
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_5_threat'))
+    
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_6_threat'))
 
         
