@@ -3,6 +3,7 @@ import os
 from heapq import heappop, heappush
 import math
 import copy
+from numpy import arange
 from sympy import Point3D, Point2D, Segment3D, Line3D, Line2D, Circle
 from sympy.geometry import intersection
 from collections import defaultdict
@@ -17,9 +18,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from Code.Dynamic_War_Manager.Cylinder import Cylinder
 from Code.Utility import getFormattedPoint
 
-MAX_PATHS = 50
-MAX_RECURSION = 50
-MAX_EDGES = 50
+#NOTA: QUESTI PARAMETRI INFLUENZANO I RISULTATI DI RICERCA - CONSIGLIO MANTENERE BASSO IL NUMERO DI RICORRENZE (MAX_RECURSION) E ALZARE IL NUMERO DI PATH (MAX_PATHS) PER OTTENERE UNA RICERCA VELOCE E CHE CONSIDERI I PERCORSI PIU' CORTI
+# SE SI VUOLE UNA RICERCA PIÙ RAPIDA MA MENO CAPACE DI TROVARE IL PERCORSO OTTIMO -> DIMINUIRE SU MAX_PATH
+# SI SCONSIGLIA DI AUMENTARE MAX_RECURSION OLTRE 10: LA RICERCA DIVENTA MOLTO ONEROSA E NON NECESSARIAMENTE CAPACE DI TROVARE PERCORSI MIGLIORI: LE RICORSIONI SONO EFFETTUATE PER OGNI SINGLO PATH DI RICERCA
+MAX_PATHS = 50      # 50 path per una singola ricerca
+MAX_COMPLETED = 10  # 10 path completati per ogni singolo percorso per interrompere la ricerca
+MAX_RECURSION = 10  # 10 ricorsione per ogni path dedicato ad una ricerca
+MAX_EDGES = 30      # 30
 MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE = 1.05 # factor to increment upper limits for altitude route path
 MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE = 0.95 # factor to decrement lower limits for altitude route path
 RADIUS_EXTENSION_THREAT_CIRCONFERENCE = 1.03 # factor to increments radius threat circonference for route path calculus
@@ -336,6 +341,7 @@ class PathCollection:
     def __init__(self):
         self.paths: List[Path] = []
         self._active_path_indices = set()
+        self.completed = 0
 
     
     def add_path(self, initial_edges: Optional[List['Edge']] = None) -> int:
@@ -360,6 +366,7 @@ class PathCollection:
         if path_id in self._active_path_indices:
             self._active_path_indices.remove(path_id)
             self.paths[path_id].completed = True
+            self.completed += 1
     
     def get_active_paths(self) -> List[Path]:
         """Restituisce una lista dei percorsi ancora attivi."""
@@ -618,9 +625,9 @@ class RoutePlanner:
         Returns:
             True se è stato trovato almeno un percorso valido, False altrimenti
         """
-        if max_recursion <= 0:
+        if max_recursion <= 0 or path_collection.completed >= MAX_COMPLETED:
             if debug:
-                print(f"Max recursion depth reached for path {path_id}")
+                print(f"Max recursion depth  or Max path completed {path_collection.completed} reached for path {path_id}")
             return False
 
         current_path = path_collection.get_path(path_id)
@@ -705,9 +712,9 @@ class RoutePlanner:
         Returns:
             True se è stato trovato almeno un percorso valido, False altrimenti
         """
-        if max_recursion <= 0:
+        if max_recursion <= 0 or path_collection.completed >= MAX_COMPLETED:
             if debug:
-                print(f"Max recursion depth reached for path {path_id}")
+                print(f"Max recursion depth or Max path completed {path_collection.completed}  completed reached for path {path_id}")
             return False
 
         current_path = path_collection.get_path(path_id)
@@ -1173,6 +1180,7 @@ class RoutePlanner:
         if debug:
             print(f"found two external point from extended_cylinder threat({extended_cylinder!r}), ext1: {getFormattedPoint(ext_p1)}, ext2: {getFormattedPoint(ext_p2)}")
 
+
         ext_p1_distance = ext_p1.distance(edge.wpA.point) + ext_p1.distance(edge.wpB.point) # new
         ext_p2_distance = ext_p2.distance(edge.wpA.point) + ext_p2.distance(edge.wpB.point)  # new      
         
@@ -1181,13 +1189,62 @@ class RoutePlanner:
             if debug:
                 print(f"Deleted ext_p2 from path ricorsion: ext_p2_distance{ext_p2_distance:.2f} > double ext_p1_distance{ext_p1_distance:.2f}")
 
+
         elif ext_p1_distance > 2 * ext_p2_distance: # new ext_p1 richiede un punto del percorso troppo distante rispetto ext_p12. Il punto non viemne considerato per procedere nella ricorsione per la valutazione di un percorso
             ext_p1 = None            
             new_path_id = path_id # procede solo ext_p2 con il path corrente
             if debug:
                 print(f"Deleted ext_p1 from path ricorsion: ext_p1_distance{ext_p1_distance:.2f} > double ext_p2_distance{ext_p2_distance:.2f}")
 
-        elif len(path_collection.paths) < MAX_PATHS: # procedono sia ext_p1 che  ext_p2 il primo con il path corrente, il secondo con un nuovo path
+
+        # Verifica se i punti estesi sono all'interno di altre minacce
+        for other_threat in threats:
+            
+            if ext_p1 and other_threat != threat and other_threat.innerPoint(ext_p1):
+                
+                if debug:
+                    print(f"Extended point ext_p1 is inside another threat: {other_threat!r}. Trying to find a new point with lateral movement.")
+                
+                #another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat                
+                direction_movement = get_direction_vector(Point2D(threat.cylinder.center.x, threat.cylinder.center.y), Point2D(ext_p1.x, ext_p1.y))
+                valid_lateral_movement_ext_p1 = False
+
+                for ds in (0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 2.0):
+                    ext_p1 = Point3D(ext_p1.x + direction_movement[0] * ds * other_threat.cylinder.radius, ext_p1.y + direction_movement[1] * ds * other_threat.cylinder.radius, ext_p1.z)                                        
+                    
+                    if not other_threat.innerPoint(ext_p1):
+                        print(f"Valid lateral movement of Extended point ext_p1 {getFormattedPoint(ext_p1)}")
+                        valid_lateral_movement_ext_p1 = True
+                        break
+            
+                if not valid_lateral_movement_ext_p1 and debug:            
+                    ext_p1 = None
+                    print(f"Not valid lateral movement of Extended point ext_p1 {getFormattedPoint(ext_p1)}. ext_p1 is inside another threat: {other_threat!r}")
+
+
+            if ext_p2 and other_threat != threat and other_threat.innerPoint(ext_p2):
+                
+                if debug:
+                    print(f"Extended point ext_p2 is inside another threat: {other_threat!r}. Trying to find a new point with lateral movement.")
+                
+                #another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat                
+                direction_movement = get_direction_vector(Point2D(threat.cylinder.center.x, threat.cylinder.center.y), Point2D(ext_p2.x, ext_p2.y))
+                valid_lateral_movement_ext_p2 = False
+
+                for ds in (0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 2.0):
+                    ext_p2 = Point3D(ext_p2.x + direction_movement[0] * ds * other_threat.cylinder.radius, ext_p2.y + direction_movement[1] * ds * other_threat.cylinder.radius, ext_p2.z)                                        
+                    
+                    if not other_threat.innerPoint(ext_p2):
+                        print(f"Valid lateral movement of Extended point ext_p2 {getFormattedPoint(ext_p2)}")
+                        valid_lateral_movement_ext_p2 = True
+                        break
+                
+                
+                if not valid_lateral_movement_ext_p2 and debug:
+                    ext_p2 = None
+                    print(f"Not valid lateral movement of Extended point ext_p2 {getFormattedPoint(ext_p2)}. ext_p2 is inside another threat: {other_threat!r}")        
+
+        if len(path_collection.paths) < MAX_PATHS: # procedono sia ext_p1 che  ext_p2 il primo con il path corrente, il secondo con un nuovo path
             path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
             new_path_id = path_collection.add_path(path_edges_copy) 
 
@@ -1195,8 +1252,6 @@ class RoutePlanner:
             if debug:
                 print(f"Stop paths creation due max limit achieve{MAX_PATHS}")
             return False
-
-        
 
         found_path1 = False
         found_path2 = False
@@ -1214,20 +1269,6 @@ class RoutePlanner:
                 #path_edges_copy_1_1 = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
                 #new_path_id_1_1 = path_collection.add_path(path_edges_copy_1_1) 
                 #new_path_id_1_2 = path_collection.add_path(path_edges_copy_1_1) 
-
-
-
-
-
-
-                #####################################################################################################
-
-                # dovresti inserire il controllo di ext_p1 verso altre threat qui e eventualmente ricalcolare il punto
-
-                #####################################################################################################
-
-
-
 
 
                 found_path1 = self.calcPathWithoutThreat(
@@ -1248,64 +1289,7 @@ class RoutePlanner:
                     max_recursion - 1, 
                     debug
                 )                    
-                """
-                if not found_path1:  # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
-                    # PROVA AD EFFETTUARE UNO SPOSTAMENTO LATERALE SUL PÈIANO Z DAL SECONDO PUNTO DEL PRIMO EDGE P1-TRHEAT A 90 GRADI VERSO L'ESTERNO DELLA THREAT CON SPOSTAMENTO PARI AL RAGGIO DELLA THREAT                            
-                    dir = get_direction_vector(Point2D(ext_p1.x, ext_p1.y), Point2D(threat.cylinder.center.x, threat.cylinder.center.y))
-                    new_ext_p = Point3D(ext_p1.x + dir[0] * threat.cylinder.radius, ext_p1.y + dir[1] * threat.cylinder.radius, ext_p1.z)                                        
-                    
-                    # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
-                    if debug:
-                        print(f"Path not found, will try with lateral moving of radius of the first threat {threat!r}. New point p1: {getFormattedPoint(new_ext_p)}")
-
-                    found_path1 = self.calcPathWithoutThreat(
-                        p1, 
-                        new_ext_p, 
-                        end,
-                        threats,
-                        n_edge,                
-                        new_path_id_1_1,
-                        path_collection,
-                        aircraft_altitude_min,
-                        aircraft_altitude_max,
-                        aircraft_speed_max,
-                        aircraft_speed,
-                        aircraft_range_max,
-                        time_to_inversion,
-                        change_alt_option,
-                        max_recursion - 1, 
-                        debug
-                    )   
-
-                if not found_path1:  # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
-                    
-                    dir = rotate_vector(dir, math.pi) # ruota il vettore di 180 gradi rispetto al segmento intersecante
-                    new_ext_p = Point3D(ext_p1.x + dir[0] * threat.cylinder.radius, ext_p1.y + dir[1] * threat.cylinder.radius, ext_p1.z)  
-
-                    # another try with new point calculated by lateral moving of the ext_p2 point, new position wil be increase at radius of the threat
-                    if debug:
-                        print(f"Path not found, will try with lateral moving of radius of the first threat {threat!r}. New point p1: {getFormattedPoint(new_ext_p)}")                  
-
-                    found_path1 = self.calcPathWithoutThreat(
-                        p1, 
-                        new_ext_p, 
-                        end,
-                        threats,
-                        n_edge,                
-                        new_path_id_1_2,
-                        path_collection,
-                        aircraft_altitude_min,
-                        aircraft_altitude_max,
-                        aircraft_speed_max,
-                        aircraft_speed,
-                        aircraft_range_max,
-                        time_to_inversion,
-                        change_alt_option,
-                        max_recursion - 1, 
-                        debug
-                    )   
-
-                """
+               
             if ext_p2:# new
                 # Percorso alternativo 2 (ext_p2)    
                 # devi 
