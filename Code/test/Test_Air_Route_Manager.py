@@ -455,7 +455,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 40.45, delta = 0.1)
+        self.assertAlmostEqual(route.length, 33.30, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
@@ -477,7 +477,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 33.50, delta = 0.1)
+        self.assertAlmostEqual(route.length, 33.30, delta = 0.1)
 
        
 
@@ -524,7 +524,7 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 40.45, delta = 0.1)
+        self.assertAlmostEqual(route.length, 33.30, delta = 0.1)
 
 
 
@@ -621,8 +621,8 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        self.assertEqual(len(route.edges), 6)
-        self.assertAlmostEqual(route.length, 37.94, delta = 0.1)
+        self.assertEqual(len(route.edges), 4)
+        self.assertAlmostEqual(route.length, 37.32, delta = 0.1)
         
         """
 

@@ -865,14 +865,28 @@ class RoutePlanner:
 
         p_A = Point2D(intersection.p1.x, intersection.p1.y)
         p_B = Point2D(intersection.p2.x, intersection.p2.y)
-        # Trova i punti di attraversamento ottimali
-        c, d = threat.cylinder.find_chord_coordinates(
-            threat.cylinder.radius,
-            threat.cylinder.center,
-            p_A,
-            p_B,
-            max_length
-        )
+
+        if intersection.length < max_length:
+            if debug:
+                print(f"Intersection length {intersection.length:.2f} is less than max length {max_length:.2f}.")
+
+            c = p_A
+            d = p_B    
+
+
+        else:
+            if debug:
+                print(f"Intersection length {intersection.length:.2f} is bigger than max length {max_length:.2f}.")
+
+            
+            # Trova i punti di attraversamento ottimali
+            c, d = threat.cylinder.find_chord_coordinates(
+                threat.cylinder.radius,
+                threat.cylinder.center,
+                p_A,
+                p_B,
+                max_length
+            )
 
         if c.distance(edge.wpA.point2d) > d.distance(edge.wpA.point2d):
             s = c
