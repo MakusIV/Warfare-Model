@@ -1215,6 +1215,21 @@ class RoutePlanner:
                 #new_path_id_1_1 = path_collection.add_path(path_edges_copy_1_1) 
                 #new_path_id_1_2 = path_collection.add_path(path_edges_copy_1_1) 
 
+
+
+
+
+
+                #####################################################################################################
+
+                # dovresti inserire il controllo di ext_p1 verso altre threat qui e eventualmente ricalcolare il punto
+
+                #####################################################################################################
+
+
+
+
+
                 found_path1 = self.calcPathWithoutThreat(
                     p1, 
                     ext_p1, 
