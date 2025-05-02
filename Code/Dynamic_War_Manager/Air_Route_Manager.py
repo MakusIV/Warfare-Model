@@ -29,7 +29,9 @@ MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE = 1.05 # factor to increment upper 
 MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE = 0.95 # factor to decrement lower limits for altitude route path
 RADIUS_EXTENSION_THREAT_CIRCONFERENCE = 1.03 # factor to increments radius threat circonference for route path calculus
 MIN_SECURE_LENGTH_EDGE = 0.1 # max length of edge in threat zone (per velocizzare il calcolo: tutti i segmenti )
+MIN_DISTANCE_TO_CHANGE_ALTITUDE = 1 # min distance from threat to change altitude
 TOLERANCE_FOR_INTERSECTION_CALCULUS = 0.1 # minimum length of segment to consider it as valid intersection ATT questa è necessaria per distinguere un segmento da un punto 
+
 
 class ThreatAA:
     
@@ -1087,7 +1089,7 @@ class RoutePlanner:
         can_change_altitude =   ( change_alt_option!= "no_change") and (change_alt_option == "change_up" and (aircraft_altitude_max > threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE)) or (change_alt_option == "change_down" and (aircraft_altitude_min < threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE))                
 
         if can_change_altitude:
-
+            
 
             if debug:
                 print(f"Attempting altitude change for threat at {threat!r}")
@@ -1096,74 +1098,122 @@ class RoutePlanner:
                 edge.getSegment3D(), tolerance = TOLERANCE_FOR_INTERSECTION_CALCULUS
             )
             
-            if not intersected:
-                if debug:
-                    print("Unexpected: no intersection found where threat was detected  (segm: {segm!r})")
-                return False
+            
+            if not intersected and segm: # se l'intersezione è un segmento (parte dell'edge) che attraversa la threat viene dall'alto e và verso il basso, può essere gestito con cambio quota di pb. altrimenti no
+
+                pa, pb = segm.points
+
+                if  not ( threat.cylinder.innerPoint(pa) and  pa.z >= threat.max_altitude ): # l'intersezione non è un segmentro (parte dell'edge) che attraversa la threat viene dall'alto e và verso il basso. Quind non gestito con cambio quota
+
+                    if debug:
+                        print(f"Unexpected: no intersection found where threat was detected  (segm: {segm!r})")                    
+                    
+                    return False
+            
 
             new_p1 = segm.p1
             new_p2 = segm.p2
 
-            if change_alt_option == "change_up":
-                new_altitude = ( 2 * aircraft_altitude_max + threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE ) / 3
-                new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
-                new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude ) 
+            if edge.wpA.point.distance(Point3D(new_p1.x, new_p1.y, edge.wpA.point.z)) < MIN_DISTANCE_TO_CHANGE_ALTITUDE:
+
                 if debug:
-                    print(f"Changing altitude UP to {new_p1.z:.2f}")
+                    print(f"Distance to change altitude is too small: {edge.wpA.point.distance(Point3D(new_p1.x, new_p1.y, edge.wpA.point.z)):.2f} < {MIN_DISTANCE_TO_CHANGE_ALTITUDE}")
+
+                direction_movement = get_direction_vector(edge.wpA.point2d, edge.wpB.point2d)
+                direction_movement = rotate_vector(direction_movement, math.pi / 2)
+                direction_movement_1 = rotate_vector(direction_movement, math.pi)
+                new_p = None
+
+                #for ds in (0.1, 0.3, 0.6, 0.9, 1.2, 1.5, 2):
+                for ds in (5, 10, 30, 70, 100):
+                    #new_pA = Point3D(new_p1.x + direction_movement[0] * threat.cylinder.radius * ds, new_p1.y + direction_movement[1] * threat.cylinder.radius * ds, edge.wpA.point.z)                
+                    #new_pB = Point3D(new_p1.x + direction_movement_1[0] * threat.cylinder.radius * ds, new_p1.y + direction_movement_1[1] * threat.cylinder.radius * ds, edge.wpA.point.z)                    
+                    new_pA = Point3D(new_p1.x + direction_movement[0] * MIN_DISTANCE_TO_CHANGE_ALTITUDE * ds, new_p1.y + direction_movement[1] * MIN_DISTANCE_TO_CHANGE_ALTITUDE * ds, edge.wpA.point.z)                
+                    new_pB = Point3D(new_p1.x + direction_movement_1[0] * MIN_DISTANCE_TO_CHANGE_ALTITUDE * ds, new_p1.y + direction_movement_1[1] * MIN_DISTANCE_TO_CHANGE_ALTITUDE * ds, edge.wpA.point.z)                    
+                    
+                    if not threat.innerPoint(new_pA):
+                        new_p = new_pA
+                        break
+                        
+                    elif not threat.innerPoint(new_pB):
+                        new_p = new_pB
+                        break
+
+                if new_p:
+
+                    if debug:
+                        print(f" I'll try search path with new point: {getFormattedPoint(new_p)}.")
+
+                    return self.calcPathWithoutThreat(
+                        edge.wpA.point, new_p, end, threats, n_edge, path_id, path_collection, 
+                        aircraft_altitude_min, aircraft_altitude_max,
+                        aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                        change_alt_option, max_recursion - 1, debug
+                    )
+                                                        
+
             else:
-                new_altitude = ( threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE + 2 * aircraft_altitude_min ) / 3
-                new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
-                new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude )
+
+                if change_alt_option == "change_up":
+                    new_altitude = ( 2 * aircraft_altitude_max + threat.max_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MAX_VALUE ) / 3
+                    new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
+                    new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude ) 
+                    if debug:
+                        print(f"Changing altitude UP to {new_p1.z:.2f}")
+                else:
+                    new_altitude = ( threat.min_altitude * MARGIN_AIRCRAFT_ALTITUDE_AVOIDANCE_MIN_VALUE + 2 * aircraft_altitude_min ) / 3
+                    new_p1 = Point3D(new_p1.x, new_p1.y, new_altitude )
+                    new_p2 = Point3D(new_p2.x, new_p2.y, new_altitude )
+                    if debug:
+                        print(f"Changing altitude DOWN to {new_p1.z:.2f}")
+
+                # Crea nuovo edge con punto modificato
+                new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1, None)
+                new_wp_C = Waypoint(f"wp_C{path_id}_{n_edge}_alt", new_p2, None)
+
+                new_edge = Edge(
+                    f"P:{path_id}-E:{n_edge}_alt",
+                    n_edge, 
+                    edge.wpA, 
+                    new_wp_B, 
+                    aircraft_speed
+                )
+
+                new_edge_C = Edge(
+                    f"P:{path_id}-E:{n_edge + 1}_alt", 
+                    n_edge + 1, 
+                    new_wp_B, 
+                    new_wp_C, 
+                    aircraft_speed
+                )
+
+                current_path = path_collection.get_path(path_id)
+                current_path.add_edge(new_edge)
+                edge_incr = 1
+
                 if debug:
-                    print(f"Changing altitude DOWN to {new_p1.z:.2f}")
+                    if debug:
+                        print(f"current path: {current_path!r} added edge from wpA to threat: {new_edge!r}")
 
-            # Crea nuovo edge con punto modificato
-            new_wp_B = Waypoint(f"wp_B{path_id}_{n_edge}_alt", new_p1, None)
-            new_wp_C = Waypoint(f"wp_C{path_id}_{n_edge}_alt", new_p2, None)
+                threatInRange, threat_intersect = self.firstThreatIntersected(new_edge_C, threats)
 
-            new_edge = Edge(
-                f"P:{path_id}-E:{n_edge}_alt",
-                n_edge, 
-                edge.wpA, 
-                new_wp_B, 
-                aircraft_speed
-            )
+                if not threat_intersect or threat_intersect.max_altitude < new_edge_C.wpB.point.z: #not self.firstThreatIntersected(new_edge_C, threats):                      
+                    current_path.add_edge(new_edge_C) # se il segmento che passa sopra la minaccia incontra altre minacce lo aggiunge al pth
+                    edge_incr = 2
+                    new_p1 = new_p2
+                    if debug:
+                        print(f"current path: {current_path!r} added edge from previous edge.wpB up or down threat: {new_edge_C!r}")
+            
+                # terminate path if length or danger exceed limits
+                if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
+                    return False
 
-            new_edge_C = Edge(
-                f"P:{path_id}-E:{n_edge + 1}_alt", 
-                n_edge + 1, 
-                new_wp_B, 
-                new_wp_C, 
-                aircraft_speed
-            )
-
-            current_path = path_collection.get_path(path_id)
-            current_path.add_edge(new_edge)
-            edge_incr = 1
-
-            if debug:
-                if debug:
-                    print(f"current path: {current_path!r} added edge from wpA to threat: {new_edge!r}")
-
-            threatInRange, threat_intersect = self.firstThreatIntersected(new_edge_C, threats)
-
-            if not threatInRange or threat_intersect.max_altitude < new_edge_C.wpA.point.z: #not self.firstThreatIntersected(new_edge_C, threats):                      
-                current_path.add_edge(new_edge_C) # se il segmento che passa sopra la minaccia incontra altre minacce lo aggiunge al pth
-                edge_incr = 2
-                new_p1 = new_p2
-                if debug:
-                    print(f"current path: {current_path!r} added edge from previous edge.wpB up or down threat: {new_edge_C!r}")
-           
-            # terminate path if length or danger exceed limits
-            if self.checkPathOverlimits(path_id, current_path, aircraft_range_max, float('inf')):
-                return False
-
-            return self.calcPathWithoutThreat(
-                new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
-                aircraft_altitude_min, aircraft_altitude_max,
-                aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
-                change_alt_option, max_recursion - 1, debug
-            )
+                return self.calcPathWithoutThreat(
+                    new_p1, end, end, threats, n_edge + edge_incr, path_id, path_collection, 
+                    aircraft_altitude_min, aircraft_altitude_max,
+                    aircraft_speed_max, aircraft_speed, aircraft_range_max, time_to_inversion,
+                    change_alt_option, max_recursion - 1, debug
+                )
                         
         # Se non possiamo cambiare quota, troviamo percorsi alternativi calcolando gli extended points per una circonferenza leggermente più grande della threat
         extended_cylinder = Cylinder(threat.cylinder.center, threat.cylinder.radius * RADIUS_EXTENSION_THREAT_CIRCONFERENCE, threat.cylinder.height)
