@@ -41,6 +41,8 @@ class GPT_TestModule(unittest.TestCase):
         self.threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, min_detection_time = 7,  cylinder = self.cylinder)
         self.threats = [self.threat]
 
+    
+
     def test_waypoint_equality_and_ordering(self):
         print("\n"+self._testMethodName + " -------------------------------------------------- ")
         wp1 = Waypoint("A", Point3D(1, 2, 3), None)
@@ -590,7 +592,7 @@ class GPT_TestModule(unittest.TestCase):
         threats_.append(threat)
 
         
-        
+    
         # avoid threat zone, no altitude change
         print("\n"+self._testMethodName + " avoid threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
@@ -635,12 +637,12 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(route.danger, 4.00, delta = 0.1)
         
     
-
-        threats = copy.deepcopy(threats_)
         
+        print("\n"+self._testMethodName + " avoid threat zone, with altitude change")
+        threats = copy.deepcopy(threats_)        
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=11,
-                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=35,
                                   aircraft_speed_max=1.5, aircraft_speed=1,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route= True)
@@ -655,12 +657,13 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
+
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 42, delta = 3.0)
+        self.assertAlmostEqual(route.length, 71, delta = 3)        
+        
 
-
+        print("\n"+self._testMethodName + " crossing threat zone, no altitude change, consider altitude route")
         threats = copy.deepcopy(threats_)
-
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
@@ -764,7 +767,7 @@ class GPT_TestModule(unittest.TestCase):
         threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         
-        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 12)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
@@ -776,7 +779,7 @@ class GPT_TestModule(unittest.TestCase):
         threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
-        cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
+        cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 12)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
@@ -795,15 +798,13 @@ class GPT_TestModule(unittest.TestCase):
         cylinder = Cylinder(center = Point3D(48.62, 33.67, 7), radius = 10.4, height = 25)
         threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
-
-        
         
         # avoid threat zone, no altitude change
         print("\n"+self._testMethodName + " avoid threat zone, no altitude change")
         threats = copy.deepcopy(threats_)
         planner = RoutePlanner(start_point, end_point, threats)
-        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
-                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=35,
                                   aircraft_speed_max=1.5, aircraft_speed=1,
                                   aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
                                   change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
@@ -835,6 +836,200 @@ class GPT_TestModule(unittest.TestCase):
         self.assertAlmostEqual(route.length, 83, delta = 3.0)
         self.assertAlmostEqual(route.danger, 8, delta = 0.1)
 
+        # avoid threat zone @ route altitude, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone @ route altitude, no altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=True)
+                
+        
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 87, delta = 3.0)
+        
+        
+
+        
+        # avoid threat zone, altitude change
+        print("\n"+self._testMethodName + " avoid threat, altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route=False)
+                
+        
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 6)
+        self.assertAlmostEqual(route.length, 107, delta = 3.0)
+        
+  
+
+    def test_route_planner_calcRoute_with_16_threat(self):
+        print(self._testMethodName + " -------------------------------------------------- ")
+        start_point = Point3D(0, 0, 10)
+        end_point = Point3D(47.83, 54.35, 10)
+        
+        # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+        cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
+        # Creazione di una minaccia utilizzando il cilindro reale
+        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_ = [threat]
+        
+        cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 12)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 12)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(46.18, 55.08, 7), radius = 8.24, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(18.76, 42.4, 7), radius = 18.7, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(48.62, 33.67, 7), radius = 10.4, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(64.94, 63.37, 7), radius = 15, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(31.57, 63.92, 7), radius = 10.5, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(41.9, 50.75, 7), radius = 4, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(55.62, 44.26, 7), radius = 4, height = 25)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(38.25, 38.13, 7), radius = 4, height = 8)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(58.45, 48.83, 7), radius = 4, height = 8)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+        cylinder = Cylinder(center = Point3D(45.17, 71.32, 7), radius = 7, height = 8)
+        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threats_.append(threat)
+
+    
+        
+        # avoid threat zone, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone, no altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=12,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=35,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=False)
+      
+            
+    
+        self.assertIsNone(route)        
+        
+
+        # avoid threat zone, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone, no altitude change, consider altitude route")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=35,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route = True)
+                
+        points = route.getPoints() 
+        
+        for point in points:
+            print(getFormattedPoint(point)) 
+            
+        self.assertEqual(points[0], start_point)
+        self.assertEqual(points[-1], end_point)
+        self.assertIsNotNone(route)        
+        self.assertEqual(len(route.edges), 5)
+        self.assertAlmostEqual(route.length, 103, delta = 3.0)
+
+
+        # crossing threat zone, no altitude change
+        print("\n"+self._testMethodName + " crossing threat zone, no altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=16,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=False)
+                
+        
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 8)
+        self.assertAlmostEqual(route.length, 83, delta = 3.0)
+        self.assertAlmostEqual(route.danger, 12, delta = 0.1)
+
+        # avoid threat zone @ route altitude, no altitude change
+        print("\n"+self._testMethodName + " avoid threat zone @ route altitude, no altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=16,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="no_change", intersecate_threat=False, consider_aircraft_altitude_route=True)
+                
+        
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 4)
+        self.assertAlmostEqual(route.length, 130, delta = 3.0)
+        
+        
+    
+    
+        # avoid threat zone, altitude change
+        print("\n"+self._testMethodName + " avoid threat, altitude change")
+        threats = copy.deepcopy(threats_)
+        planner = RoutePlanner(start_point, end_point, threats)
+        route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=20,
+                                  aircraft_altitude_min=5, aircraft_altitude_max=35,
+                                  aircraft_speed_max=1.5, aircraft_speed=1,
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  change_alt_option="change_up", intersecate_threat=False, consider_aircraft_altitude_route=True)
+                
+        
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 8)
+        self.assertAlmostEqual(route.length, 104, delta = 3.0)
+      
         
 
 ######################### Claude Sonnet 3.7.2024 #########################
@@ -1442,7 +1637,6 @@ if __name__ == "__main__":
     # GPT Test
     if True:
         
-        
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
         
@@ -1469,10 +1663,13 @@ if __name__ == "__main__":
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_4_threat_pass_throught'))
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_5_threat'))
-    
+        
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_6_threat'))
          
+        
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_9_threat'))
+        
+        suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_16_threat'))
 
         
         
