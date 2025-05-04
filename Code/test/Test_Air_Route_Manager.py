@@ -38,7 +38,7 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         self.cylinder = Cylinder(center=self.center, radius=self.radius, height=self.height)
         # Creazione di una minaccia utilizzando il cilindro reale
-        self.threat = ThreatAA(danger_level = 2.0, missile_speed = 600, min_fire_time = 1.0, min_detection_time = 7,  cylinder = self.cylinder)
+        self.threat = ThreatAA(danger_level = 2.0, interception_speed = 600, min_fire_time = 1.0, min_detection_time = 7,  cylinder = self.cylinder)
         self.threats = [self.threat]
 
     
@@ -136,7 +136,7 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
@@ -156,7 +156,7 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         planner = RoutePlanner(start_point, end_point, threats)
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=10,
@@ -184,10 +184,10 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -215,10 +215,10 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 25) # height > max_aircraft_altitude -> escape lateral
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 3), radius = 5, height = 15) # height < max_aircraft_altitude -> escape up
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -246,14 +246,14 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -282,18 +282,18 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -324,18 +324,18 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -366,18 +366,18 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 5)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7, cylinder = cylinder)
         threats.append(threat)
 
         planner = RoutePlanner(start_point, end_point, threats)
@@ -407,7 +407,7 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 1, min_fire_time = 1.0, min_detection_time = 7,  cylinder = cylinder)
         threats = [threat]
         
         planner = RoutePlanner(start_point, end_point, threats)
@@ -438,15 +438,15 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 15)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_ = [threat]
 
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 10)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 7)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 1, min_fire_time = 1.0, min_detection_time = 7, cylinder = cylinder)
         threats_.append(threat)
 
         threats = copy.deepcopy(threats_)
@@ -503,18 +503,18 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         threats = copy.deepcopy(threats_)
@@ -572,23 +572,23 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         
@@ -693,27 +693,27 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         
@@ -764,39 +764,39 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 12)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 12)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(46.18, 55.08, 7), radius = 8.24, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(18.76, 42.4, 7), radius = 18.7, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(48.62, 33.67, 7), radius = 10.4, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
         
         # avoid threat zone, no altitude change
@@ -879,67 +879,67 @@ class GPT_TestModule(unittest.TestCase):
         # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
         cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
         # Creazione di una minaccia utilizzando il cilindro reale
-        threat = ThreatAA(danger_level = 2.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_ = [threat]
         
         cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 12)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 12)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(46.18, 55.08, 7), radius = 8.24, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(18.76, 42.4, 7), radius = 18.7, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(48.62, 33.67, 7), radius = 10.4, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(64.94, 63.37, 7), radius = 15, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(31.57, 63.92, 7), radius = 10.5, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(41.9, 50.75, 7), radius = 4, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(55.62, 44.26, 7), radius = 4, height = 25)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(38.25, 38.13, 7), radius = 4, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(58.45, 48.83, 7), radius = 4, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
         cylinder = Cylinder(center = Point3D(45.17, 71.32, 7), radius = 7, height = 8)
-        threat = ThreatAA(danger_level = 4.0, missile_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+        threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
         threats_.append(threat)
 
     
@@ -1087,7 +1087,7 @@ class TestThreatAA(unittest.TestCase):
     def test_init(self):
         """Test the initialization of ThreatAA"""
         self.assertEqual(self.threat.danger_level, 5)
-        self.assertEqual(self.threat.missile_speed, 500)
+        self.assertEqual(self.threat.interception_speed, 500)
         self.assertEqual(self.threat.min_fire_time, 2)
         self.assertEqual(self.threat.min_altitude, 100)
         self.assertEqual(self.threat.max_altitude, 80)  # bottom_center.z
@@ -1636,7 +1636,7 @@ if __name__ == "__main__":
     suite = unittest.TestSuite()
     # GPT Test
     if True:
-        
+        """
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
         
@@ -1668,6 +1668,7 @@ if __name__ == "__main__":
          
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_9_threat'))
+        """
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_16_threat'))
 

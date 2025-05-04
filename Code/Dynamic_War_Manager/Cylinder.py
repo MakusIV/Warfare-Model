@@ -17,7 +17,9 @@ import numpy as np
 
 
 class Cylinder:
-
+    """ Rappresents a cylinder in 3D space.
+    """    
+    
     def __init__(self, center: Point3D, radius: float, height: float):
         # Center si riferisce alla base del cilindro
         self.center = center
@@ -31,22 +33,45 @@ class Cylinder:
         self.bottom_center = center  # La base coincide con center
         self.top_center = Point3D(center.x, center.y, center.z + height)
 
-    def distanceFromCirconference(self, point: Point3D):
+    def distanceFromCirconference(self, point: Point3D) -> float:
+        """Calculate the distance from a point to the circumference of the cylinder at its z coordinate.
+
+        Args:
+            point (Point3D): The point to check.
+
+        Returns:
+            float: distance from the point to the circumference of the cylinder.
+        """        
         z = point.z
         center, radius = self._get_circle_at_z(z)
         return point.distance(center) - radius
 
-    def distanceFromCenter(self, point: Point3D):
+    def distanceFromCenter(self, point: Point3D) -> float:
+        """Calculate the distance from a point to the center of the cylinder at its z coordinate.
+
+        Args:
+            point (Point3D): The point to check.
+
+        Returns:
+            float: distance from a point to the center of the cylinder at its z coordinate.
+        """        
         z = point.z
         center, _ = self._get_circle_at_z(z)
         return point.distance(center)
     
     def pointOfCirconference(self, point: Point2D) -> bool:
+        """Verify if point is on the circumference of the cylinder at its z coordinate.
 
+        Args:
+            point (Point2D): The point to check
+
+        Returns:
+            bool: True if the point is on the circumference of the cylinder, False otherwise.
+        """        
         point_3d = Point3D(point.x, point.y, self.bottom_center.z)
         return self.radius == self.distanceFromCirconference(point_3d)
 
-    # eliminare?
+    # deprecated (eliminare)
     def centerProximity(self, point: Point3D) -> float: # 1: external point or point on circonference, 0: point == center
 
         if not self.innerPoint(point):
@@ -58,15 +83,15 @@ class Cylinder:
 
 
     def innerPoint(self, point: Point3D) -> bool:
-        """
-        Verifica se un punto è interno al cilindro
-        
+        """Verify if a point is inside the cylinder.
+
         Args:
-            point: Point3D - Il punto da verificare
-            
+            point (Point3D): The point to check
+
         Returns:
-            bool - True se il punto è interno al cilindro, False altrimenti
-        """
+            bool: True if the point is inside the cylinder, False otherwise.
+        """        
+        
         # Verifica se il punto è entro l'altezza del cilindro
         if not (self.bottom_center.z <= point.z <= self.top_center.z):
             return False
@@ -80,6 +105,7 @@ class Cylinder:
         return distance_to_axis < self.radius
     
     def _get_circle_at_z(self, z):
+        
         """
         Restituisce un Circle che rappresenta la sezione del cilindro all'altezza z
         """
@@ -88,15 +114,18 @@ class Cylinder:
         return center, self.radius
     
     def getTangentPoints(self, point: Point3D) -> tuple:
-        """
-        Calcola i punti di tangenza dal punto esterno al cilindro
-        
+        """Calculate the tangent points from an external point to the cylinder.
+
         Args:
-            point: Point3D - Punto esterno al cilindro
-            
+            point (Point3D): The point reference
+        
+        Raises:
+            ValueError: point inside the cylinder
+
         Returns:
-            tuple(Point3D, Point3D) - I due punti di tangenza
+            tuple(Point3D, Point3D): The two tangent points
         """
+        
         # Assicuriamoci che il punto sia esterno al cilindro
         if self.innerPoint(point):
             raise ValueError("Il punto deve essere esterno al cilindro")
@@ -144,28 +173,27 @@ class Cylinder:
         return Point3D(t1x, t1y, z), Point3D(t2x, t2y, z)
     
     def getTangents(self, point: Point3D) -> tuple:
-        """
-        Calcola le linee tangenti dal punto al cilindro
-        
+        """Calculated the tangent lines from a point to the cylinder.
+
         Args:
-            point: Point3D - Il punto da cui partono le tangenti
-            
+            point (Point3D): The point to calculate the tangents from
+
         Returns:
-            tuple(Line3D, Line3D) - Le due linee tangenti
-        """
+            tuple(Line3D, Line3D): the two tangent lines
+        """        
+    
         tan_point1, tan_point2 = self.getTangentPoints(point)
         return Line3D(point, tan_point1), Line3D(point, tan_point2)
     
     def getTangents2D(self, point: Point3D) -> tuple:
-        """
-        Calcola le linee tangenti dal punto al cilindro
-        
+        """Calculated the tangent lines from a point to the cylinder in 2D plane at z coordinate.
+
         Args:
-            point: Point2D - Il punto da cui partono le tangenti
-            
+            point (Point3D):The point to calculate the tangents from
         Returns:
-            tuple(Line2D, Line2D) - Le due linee tangenti
-        """
+            tuple(Line2D, Line2D): the two tangent lines in 2D plane
+        """        
+        
         point = Point2D(point.x, point.y)
         tan_point1, tan_point2 = self.getTangentPoints(point)
         return Line2D(point, tan_point1), Line2D(point, tan_point2)
@@ -277,10 +305,23 @@ class Cylinder:
             return True, Segment3D(valid_intersections[0], valid_intersections[1])
 
     def getIntersection(self, edge: Segment3D, tolerance: float) -> tuple:
-        """
-        Calcola l'intersezione tra un segmento e il cilindro,
-        includendo superfici laterali e piani orizzontali (base e top).
-        """
+        """Calculated the intersection between a segment and the cylinder, including lateral surfaces and horizontal planes (base and top).
+
+        Args:
+            edge (Segment3D): The segment to check for intersection with the cylinder
+            tolerance (float): The distance tolerance between intersection points (if below, considers them coincident, calculates and returns the midpoint in both values of the tuple)
+
+        Raises:
+            ValueError: anomaly intersection: only one point found but no internal extremes.
+
+        Returns:
+            tuple(_bool, Segment3D/None): True, Segment3D if the segment intersects the cylinder at two points on the lateral surface of the cylinder, Segment3D defined by the intersection points; 
+            tuple(_bool, Segment3D/None): False, Segment3D if the segment intersects the cylinder at two points and one of the points is on one of the horizontal surfaces of the cylinder (top/down); 
+            tuple(_bool, Segment3D/None): False, Segment3D if the segment intersects the cylinder at one point and one of the edges is internal; 
+            tuple(_bool, Segment3D/None): False, None if the segment does not intersect the cylinder;
+        """        
+               
+        
         p1, p2 = edge.points
         # Coord numpy
         p1_np = np.array([float(p1.x), float(p1.y), float(p1.z)])
@@ -341,7 +382,7 @@ class Cylinder:
             if len(plane_ts) > 0:# uno o due  dei punti d'intersezione è sulle superfici orizzontali (bottom, top)
                 return False, Segment3D(pts[0], pts[1])
             
-            return True, Segment3D(pts[0], pts[1])
+            return True, Segment3D(pts[0], pts[1])# i due punti d'intersezione sono sulle superfici laterali
         
         # Un solo punto rilevato
         single = pts[0]
@@ -351,25 +392,43 @@ class Cylinder:
 
             if single == p1:
                 p1 = Point3D(single.x + 1e-6, single.y, single.z)                
-            return False, Segment3D(single, p1)
+            return False, Segment3D(single, p1)# restituisce un segmento con estermi il punto interno e quello d'intersezione
         
         if self.innerPoint(p2):
 
             if single == p2:
                 p2 = Point3D(single.x + 1e-6, single.y, single.z)
-            return False, Segment3D(single, p2)
+            return False, Segment3D(single, p2)# restituisce un segmento con estermi il punto interno e quello d'intersezione
         
-        # Altrimenti intersezione con i due piani orizzontali? duplicalo
-        return False, Segment3D(single, single)
+        # Altrimenti condizione anomala
+        #return False, None#Segment3D(single, single)
+        raise ValueError(f"Intersezione anomala: un solo punto trovato{getFormattedPoint(single)} ma nessun estremo interno.")
 
 
 
-    def get_direction_vector(self, line):
-        """Restituisce il vettore direzionale di una Line3D come un oggetto Matrix."""
+    def get_direction_vector(self, line) -> Matrix:
+        """Calculated the direction vector of a Line3D as a Matrix object.
+
+        Args:
+            line (Line3D): The line to calculate the direction vector from
+
+        Returns:
+            Matrix: matrix with directional vector of the line
+        """                
         return Matrix([line.p2.x - line.p1.x, line.p2.y - line.p1.y, line.p2.z - line.p1.z])
 
 
-    def are_parallel(self, line1: Line3D, line2: Line3D, tolerance=1e-6):
+    def are_parallel(self, line1: Line3D, line2: Line3D, tolerance=1e-6) -> bool:
+        """Verify if two lines are parallel.
+
+        Args:
+            line1 (Line3D): line1
+            line2 (Line3D): line2
+            tolerance (float, optional): tolerance applied on scalar product. Defaults to 1e-6.
+
+        Returns:
+            bool: True if the lines are parallel, False otherwise
+        """        
         # Ottieni i vettori direzionali delle linee
         dir1 = self.get_direction_vector(line1)
         dir2 = self.get_direction_vector(line2)
@@ -381,7 +440,17 @@ class Cylinder:
         return cross_product.norm() < tolerance
 
 
-    def are_perpendicular(self, line1: Line3D, line2: Line3D, tolerance=1e-6):
+    def are_perpendicular(self, line1: Line3D, line2: Line3D, tolerance=1e-6) -> bool:
+        """Verify if two lines are perpendicular.
+
+        Args:
+            line1 (Line3D): line1
+            line2 (Line3D): line2
+            tolerance (float, optional): tolerance applied on vectorial product. Defaults to 1e-6.
+
+        Returns:
+            bool: True if the lines are perpendicular, False otherwise
+        """        
         # Ottieni i vettori direzionali delle linee
         dir1 = self.get_direction_vector(line1)
         dir2 = self.get_direction_vector(line2)
@@ -393,17 +462,18 @@ class Cylinder:
         return abs(dot_product) < tolerance
     
     def getExtendedPoints(self, edge: Segment3D, tolerance = 1e-6) -> tuple:
-        """
-        Calcola i punti estesi relativi all'intersezione del segmento col cilindro. I punti estesi sonocostituiti dai punti d'intersezione delle tangenti al cilindro le cui origini sono  gli estremi del segmento.
-        Qesti punti estesi sono definiti ad una quota z intermedia tra le quote z degli estremi del segmento
-        
+        """ Calculated the extended points of intersection between a segment and the cylinder .
+            The extended points are constituted by the intersection points of the tangents to the cylinder whose origins are the ends of the segment.
+            These extended points are defined at a z-level intermediate between the z-levels of the ends of the segment.
+
         Args:
-            edge: Segment3D - Il segmento da analizzare
-            tolerance: float - Tolleranza per la distanza tra i punti di intersezione (sotto li considera coincidenti, calcola e resituisce il punto medio in entrambi i valori della tupla)
-            
+            edge (Segment3D): The segment to analyze
+            tolerance (float, optional): tolerance applied to distance from intersection point of tangents on same side (if distance lesser tolerance extended  point is medium point of intersection points). Defaults to 1e-6.
+
         Returns:
-            tuple(Point3D, Point3D) - I punti di intersezione delle tangenti
-        """
+            tuple(Point3D, Point3D): the two extended points of intersection
+        """        
+                
         DEBUG = False
         # Verifica prima se c'è un'intersezione
         intersects, intersect_segment = self.getIntersection(edge, tolerance = 0.1)# nella mappa reale puoi aumentare tolerance es: 10 metri
@@ -471,9 +541,8 @@ class Cylinder:
         down_point_B = self._find_intersection_point(right_tangents[0], left_tangents[1] ) # tangente superiore di sinistra in [1], quella di destra in [0]              
 
         if DEBUG: print(f"getExtendedPoints - up_point: {up_point}, down_point: {down_point}, up_point_B: {up_point_B}, down_point_B: {down_point_B}")
-   
         
-
+        # Se entrambi i punti di intersezione sono stati trovati
         if up_point and down_point: 
             
             if up_point_B and down_point_B:
@@ -485,17 +554,22 @@ class Cylinder:
         elif up_point_B and down_point_B:                
             up_point = up_point_B            
             down_point = down_point_B
-        
-        
 
         if DEBUG: print(f"getExtendedPoints - up_point: {up_point}, down_point: {down_point}")
         
         return up_point, down_point
     
     def _find_intersection_point(self, line1: Line3D, line2: Line3D) -> Point3D:
-        """
-        Trova il punto di intersezione tra due linee, se esiste
-        """
+        """Search for the intersection point between two lines, if it exists.
+
+        Args:
+            line1 (Line3D): line1
+            line2 (Line3D): line2
+
+        Returns:
+            Point3D: the intersection point if it exists, None otherwise
+        """        
+        
         DEBUG = False      
         
         inters = intersection(line1, line2)
@@ -629,21 +703,23 @@ class Cylinder:
         return (punto_sx, punto_dx)
     
 
-    def find_chord_coordinates(self, R, center, A, B, L):
-        """
-        Calcola le coordinate degli estremi di una corda CD di lunghezza L
-        che sia la più vicina possibile alla corda AB sulla circonferenza.
-        
-        Parametri:
-        - R: raggio della circonferenza
-        - center: tupla (x,y) delle coordinate del centro
-        - A: tupla (x,y) delle coordinate del punto A
-        - B: tupla (x,y) delle coordinate del punto B
-        - L: lunghezza desiderata della corda CD
-        
+    def find_chord_coordinates(self, R, center, A, B, L) -> tuple:
+        """Calculate the coordinates of the endpoints of a chord CD of length L that is as close as possible to the chord AB on the circumference.
+
+        Args:
+            R (float): circonference radius
+            center (tuple): (x,y) coordinates of the center
+            A (tuple): (x,y) coordinates of point A
+            B (tuple): (x,y) coordinates of point B
+            L (float): length of the desired chord CD
+
+        Raises:
+            ValueError: points A and B must be on the circumference
+
         Returns:
-        - (C, D): tupla contenente le coordinate di C e D
-        """
+            tuple: (Point2D, Point2D) containing the coordinates of C and D
+        """        
+        
         # Estrai le coordinate
         x_c = center.x 
         y_c = center.y
@@ -709,22 +785,27 @@ class Cylinder:
         
         return (C, D)
 
-    # da utilizzare se sivuole considerare anche il caso di un segmento con un estremo interno al cilindro (unica intersezione)
-    def find_chord_endpoint(self, R, center, A, B, L):
-        """
-        Calcola le coordinate del punto D tale che la corda ID abbia lunghezza L,
-        dove I è il punto di intersezione tra il segmento AB e la circonferenza.
-        
-        Parametri:
-        - R: raggio della circonferenza
-        - center: tupla (x,y) delle coordinate del centro
-        - A: tupla (x,y) delle coordinate del punto A
-        - B: tupla (x,y) delle coordinate del punto B
-        - L: lunghezza desiderata della corda ID
-        
+    # non utilizzata e verficata - da utilizzare se sivuole considerare anche il caso di un segmento con un estremo interno al cilindro (unica intersezione)
+    # deprecated
+    def find_chord_endpoint(self, R, center, A, B, L):        
+        """Calculate the coordinates of the endpoints of a chords ID of length L that is as close as possible to the chord AB on the circumference.
+        The point I is the intersection between the segment AB and the circumference, while Dx are the endpoints of the chords ID.
+        The points D are calculated such that the chords ID has length L, where I is the intersection point between segment AB and the circumference.
+    
+        Args:
+            R (float): circonference radius
+            center (tuple): (x,y) coordinates of the center
+            A (tuple): (x,y) coordinates of point A
+            B (tuple): (x,y) coordinates of point B
+            L (float): length of the desired chord CD
+
+        Raises:
+            ValueError: points A and B must be on the circumference
+
         Returns:
-        - (I, D): tupla contenente le coordinate di I e le due possibili soluzioni per D
-        """
+            tuple: (I, (D1, D2)) containing the coordinates of I,  D1 and D2. I, D1 and D2 are tuple: (x,y)
+        """        
+            
         x_c, y_c = center
         x_A, y_A = A
         x_B, y_B = B
