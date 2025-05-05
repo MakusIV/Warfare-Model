@@ -32,14 +32,6 @@ LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFih
 DELTA_PERC_LIMIT = 0.05 # variazione percentuale casuale applicata ai limiti per il calcolo del damage (min_perc_en, min_perc_fr, max_perc_en, max_perc_fr)
 
 def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_increment, combat_load_sustainability): 
-
-    # realizzare un test che visualizzi una tabella con tutte le combinazioni gs, flr, dyn_inc e cls per verificare la coerenza e inserire nuove regole oppure eliminare eventuali sbagliate
-
-    # Variabili di input
-    # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
-    # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
-    # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
-    # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
     """
     Evaluate and determine the best tactical action based on input parameters.
 
@@ -60,6 +52,15 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
     tuple: A string indicating the suggested action ('RETRAIT', 'DEFENCE', 'MAINTAIN', 'ATTACK') 
            and a numeric value representing the action's strength.
     """
+
+    # realizzare un test che visualizzi una tabella con tutte le combinazioni gs, flr, dyn_inc e cls per verificare la coerenza e inserire nuove regole oppure eliminare eventuali sbagliate
+
+    # Variabili di input
+    # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
+    # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
+    # dyn_inc = flr / media(flr); dyn_inc >> 1 combat success increment 
+    # cls = ( asset_stored + asset_production - co ) / ( enemy_asset_stored + enemy_asset_production + enemy_co ) or ( asset_stored + media(asset_production) - media(co) ) / ( enemy_asset_stored + media(enemy_asset_production) + media(enemy_co) ) if dev_std (co) and dev_std (co_enemy)<< 1; cls > 1 vantaggio
+    
 
     gs = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'gs')  # gs = gf / gf_enemy;  gf = Tank*kt + Armor*ka + Motorized*km + Artillery*kar / (kt + ka + km + kar); gs > 1 vantaggio
     flr = ctrl.Antecedent(np.arange(0, 10.1, 0.1), 'flr')  # flr = co / co_enemy; co = loss_asset or flt = media(co)/media(co_enemy) if sco = dev_std (co) <<; flr < 1 vantaggio
@@ -144,8 +145,6 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
     output_string = get_membership_label(output_numeric, action)
 
     return output_string, output_numeric
-
-
 
 def calcRecoAccuracy(parameter: str, recon_mission_success_ratio: float, recon_asset_efficiency: float):
     """
@@ -232,7 +231,6 @@ def calcRecoAccuracy(parameter: str, recon_mission_success_ratio: float, recon_a
     return accuracy_string, accuracy_value
     #print("Valore numerico di accuracy:", accuracy_value)
     #print("Valore stringa di accuracy:", accuracy_string)
-
 
 def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float:
     
@@ -352,7 +350,6 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
 
     return result
 
-
 def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> float:
     #{ }
     # asset_fr(en): {   GROUND_ASSET_CATEGORY["Tank"]: {num: 23, efficiency: 0.5},
@@ -435,7 +432,6 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     combat_superiority = combat_pow_fr / ( combat_pow_en + combat_pow_fr )
     return combat_superiority
 
-
 def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> float:   
 
     """
@@ -496,8 +492,25 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         # evaluate enemy air defence for an possible air attack
         pass
     
-    
 def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed: float, tot_time_route: float) -> dict:
+    """
+    Evaluate the danger level of a ground route based on enemy bases and route characteristics.
+    This function calculates the danger level of a ground route based on the enemy bases and the route characteristics.
+    It takes into account the air attack, ground attack, and artillery range of the enemy bases along the route.    
+    The danger levels are calculated based on the travel time of the route and the efficiency of the enemy bases.
+    The function also considers the time it takes for the enemy bases to attack the route and the travel time of the route.
+    The function uses the travel time of the route and the efficiency of the enemy bases to calculate the danger levels.
+    The function returns a tuple with tree danger values: air attack, ground attack, and artillery.
+
+    Args:
+        enemy_bases (list): _list of enemy bases along the route_
+        route (Route): _route object containing the waypoints and edges_
+        ground_speed (float): _speed of the ground vehicle_
+        tot_time_route (float): _total time of the route_
+
+    Returns:
+        tuple(float, float, float): _tuple with three danger values: air attack, ground attack, and artillery_
+    """    
     # waypoints
     air_danger, ground_intercept_danger, artillery_danger = 0, 0, 0
     n_waypoints = len(route.waypoints)

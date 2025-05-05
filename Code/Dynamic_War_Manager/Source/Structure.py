@@ -1,14 +1,15 @@
 import random
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Block import Block
-import Utility, Sphere, Hemisphere
+#import Utility, Sphere, Hemisphere
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, CATEGORY, MIL_BASE_CATEGORY, STRUCTURE_ASSET_CATEGORY
-from typing import Literal, List, Dict
+from Context import STRUCTURE_ASSET_CATEGORY
+#from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+f
 
 # LOGGING --
  
@@ -33,7 +34,7 @@ class Structure(Asset) :
 
     # methods
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
-        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()""""
+        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
 
         report = {
             "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
@@ -65,4 +66,38 @@ class Structure(Asset) :
                 report["asset"][category]["Number"] = report["asset"]["Number"] * (1 + number_error)
             
 
+
+
         
+    def isBridge(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Bridge"]
+    
+    def isHangar(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Hangar"]
+    
+    def isDepot(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Depot"]
+    
+    def isOilTank(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Oil_Tank"]
+    
+    def isFarm(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Farm"]
+    
+    def isPowerPlant(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Power_Plant"]
+    
+    def isFarm(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Farm"]
+    
+    def isStation(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Station"]
+    
+    def isBuilding(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Building"]
+    
+    def isFactory(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Factory"]
+    
+    def isBarrack(self):
+        return self.category == STRUCTURE_ASSET_CATEGORY["Barrack"]

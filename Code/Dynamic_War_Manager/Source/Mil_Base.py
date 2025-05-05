@@ -82,8 +82,6 @@ class Mil_Base(Block) :
         
         return True
         
-
-    
     def groundCombatPower(self, action: str)-> float:
 
         if action not in GROUND_ACTION:
@@ -282,8 +280,7 @@ class Mil_Base(Block) :
         return self._mil_category in MIL_BASE_CATEGORY["Ground Base"]
     
     def isNavalGroup(self):        
-        return self._mil_category in MIL_BASE_CATEGORY["Naval Base"]
-    
+        return self._mil_category in MIL_BASE_CATEGORY["Naval Base"]    
 
     def artilleryInRange(self, target: Point|Edge|None):
 
@@ -318,7 +315,6 @@ class Mil_Base(Block) :
 
         return artilleryInrange, in_range_level
     
-
     def time2attack(self, target_position: Point|Edge|None):
         speed = 0
         target_distance = 0

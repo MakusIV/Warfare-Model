@@ -16,7 +16,7 @@ logger = Logger(module_name = __name__, class_name = 'Mobile')
 # ASSET
 class Mobile(Asset) :    
 
-    def __init__(self, block: Block, name: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, speed: float|None, artillery_range: float|None)):   
+    def __init__(self, block: Block, name: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, cost: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, position: Point|None, volume: Volume|None, threat: Threat|None, crytical: bool|None, repair_time: int|None, speed: float|None, artillery_range: float|None):   
             
             super().__init__(name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time) 
 
