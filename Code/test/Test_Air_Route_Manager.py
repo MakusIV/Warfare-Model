@@ -1636,7 +1636,7 @@ if __name__ == "__main__":
     suite = unittest.TestSuite()
     # GPT Test
     if True:
-        """
+        
         suite.addTest(GPT_TestModule('test_waypoint_equality_and_ordering'))
         suite.addTest(GPT_TestModule('test_edge_length_and_segment'))
         
@@ -1668,7 +1668,7 @@ if __name__ == "__main__":
          
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_9_threat'))
-        """
+    
         
         suite.addTest(GPT_TestModule('test_route_planner_calcRoute_with_16_threat'))
 

@@ -209,11 +209,30 @@ Questo sistema fornisce una base solida per:
 
 
 
-
 def getTacticalReport(side: str) -> dict:
-    """ request report to any Mil_Base"""
-    """ scorre elenco Mil_Base:
-            aggiunge alla lista di report il report corrente. La lista è ordinata per criticità"""
+    
+    """ getTacticalReport: 
+        - get tactical report from all military blocks in the region
+        - return a list of tactical report ordered by priority
+        - tactical report is a dictionary with the following keys:
+            - region: name of the region
+            - block: name of the block
+            - report: tactical report (dict) with the following keys:
+                - type: type of the report (attack, defence, etc)
+                - priority: priority of the report (high, medium, low)
+                - description: description of the report
+                - action: action to be taken (attack, defend, etc)
+                - the report is ordered by priority (high, medium, low)
+    Args:
+        side (str): side of the blocks (red, blue)
+
+    Returns:
+        dict: with the following keys:
+            - region: name of the region
+            - block: name of the block
+    """    
+    
+     # scorre elenco Mil_Base: aggiunge alla lista di report il report corrente. La lista è ordinata per criticità
     tactical_reports = {} # 
 
     for region in regions:
@@ -261,7 +280,7 @@ def evaluateTargetPriority(target_list: list):
     pass
 
 
-def evaluateTotalProduction(type:str, side:str): # type: goods, energy, human resource
+def evaluateTotalProduction(type:str, side:str): # type goods, energy, human resource
     
     for region in regions:
         region.calcRegionTotalProduction(side, type)
@@ -271,21 +290,19 @@ def evaluateTotalProduction(type:str, side:str): # type: goods, energy, human re
 def evaluateStrategicPriority(block: Block): 
     pass
 
-def evaluateTotalTransport(type:str, side:str): # type: goods, energy, human resource
-
-
+def evaluateTotalTransport(type:str, side:str): # type goods, energy, human resource
     # side.sum( block_trans.production() )
     pass
 
-def evaluateLogisticLineTransport(type:str, trans_from_request, trans_to_request): # type: goods, energy, human resource
+def evaluateLogisticLineTransport(type:str, trans_from_request, trans_to_request): # type goods, energy, human resource
     # side.sum( block_prod.production() )
     pass
 
-def evaluateTotalStorage(type:str, side:str): # type: goods, energy, human resource
+def evaluateTotalStorage(type:str, side:str): # type goods, energy, human resource
     # side.sum( block_storage.production() )
     pass
 
-def calcCombatPowerCentrum(side: str, region: Region):# type: goods, energy, human resource    
+def calcCombatPowerCentrum(side: str, region: Region):# type goods, energy, human resource    
     pass
 
 

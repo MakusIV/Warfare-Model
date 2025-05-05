@@ -3,25 +3,27 @@ from typing import TYPE_CHECKING
 
 from Code import Context
 from numpy import mean
-import Utility, Sphere, Hemisphere
+import Utility
 from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
 from Context import STATE, BLOCK_CATEGORY, SIDE
 from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+#from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 
 
 if TYPE_CHECKING:    
     from Dynamic_War_Manager.Source.Asset import Asset
     from Dynamic_War_Manager.Source.Region import Region
-    from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
-    from Dynamic_War_Manager.Source.Production import Production
-    from Dynamic_War_Manager.Source.Storage import Storage
-    from Dynamic_War_Manager.Source.Transport import Transport
-    from Dynamic_War_Manager.Source.Urban import Urban
+
+    # UTILIZZATI SOLO PER LA VERIFICA DELLE CLASSI - INUTILE
+    #from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+    #from Dynamic_War_Manager.Source.Production import Production
+    #from Dynamic_War_Manager.Source.Storage import Storage
+    #from Dynamic_War_Manager.Source.Transport import Transport
+    #from Dynamic_War_Manager.Source.Urban import Urban
 
 # LOGGING --
  
@@ -397,8 +399,8 @@ class Block:
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and (not isinstance(category, Literal) or category not in [BLOCK_CATEGORY]):                        
-            return (False, "Bad Arg: category must be a Literal.CATEGORY or Literal.MIL_CATEGORY")        
+        if category and (category not in [BLOCK_CATEGORY]):                        
+            return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_CATEGORY))        
         if function and not isinstance(function, str):
             return (False, "Bad Arg: function must be a str")
         if value and not isinstance(value, int):
@@ -450,11 +452,11 @@ class Block:
         return balance/len(self.assets)
 
     def isMilitary(self):
-        return (self.category == "Military") or isinstance(self, Mil_Base)
+        return (self.category == "Military")
     
     def isLogistic(self):
-        return any[isinstance(self, Context.BLOCK_CLASS["Production"]), isinstance(self, Context.BLOCK_CLASS["Storage"]), isinstance(self, Context.BLOCK_CLASS["Transport"])]
+        return any[self.category == Context.BLOCK_CLASS["Production"], self.category == Context.BLOCK_CLASS["Storage"], self.category == Context.BLOCK_CLASS["Transport"]]
     
     def isCivilian(self):
-        return isinstance(self, Urban)
+        return self.category == Context.BLOCK_CLASS["Urban"]
 
