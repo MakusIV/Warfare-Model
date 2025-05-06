@@ -372,12 +372,29 @@ class Asset :
 
     @property
     def acp(self) -> Payload:
+        """Assigned Consume Payload
+        Assigned Consume Payload is the payload that the asset can consume from the block
+
+        Returns:
+            Payload: acp object
+        """        
         return self._acp
 
 
     @acp.setter
     def acp(self, param: Payload) -> bool:
+        """Assigned Consume Payload
+        Assigned Consume Payload is the payload that the asset can consume from the block
+        
+        Args:
+            param (Payload): payload object
 
+        Raises:
+            Exception: Validation error
+
+        Returns:
+            bool: True if the payload is set correctly
+        """
         check_result = self.checkParam(acp = param)
         
         if not check_result[1]:
@@ -393,11 +410,27 @@ class Asset :
 
     @property
     def rcp(self) -> Payload:
+        """Required Consume Payload
+        Required Consume Payload is the payload that the asset needs to consume from the block
+
+        Returns:
+            Payload: rcp object
+        """        
         return self._rcp
 
     @rcp.setter
     def rcp(self, param: Payload) -> bool:
+        """Required Consume Payload is the payload that the asset needs to consume from the block
 
+        Args:
+            param (Payload): assignment consume payload object
+
+        Raises:
+            Exception: validation error
+
+        Returns:
+            bool: True if the payload is set correctly
+        """        
         check_result = self.checkParam(rcp = param)
         
         if not check_result[1]:
@@ -411,11 +444,26 @@ class Asset :
 
     @property
     def payload(self) -> Payload:
+        """Payload is the payload that the asset must manage (transport, trasformation) from the block
+
+        Returns:
+            Payload: payload object
+        """        
         return self._payload
 
     @payload.setter
     def payload(self, param: Payload) -> bool:
+        """Payload is the payload that the asset must manage (transport, trasformation) from the block
 
+        Args:
+            param (Payload): payload object for management
+
+        Raises:
+            Exception: Validation error
+
+        Returns:
+            bool: True if the payload is set correctly
+        """        
         check_result = self.checkParam(payload = param)
         
         if not check_result[1]:
@@ -426,6 +474,91 @@ class Asset :
             # L'assegnazione del link di payload a Block è demandata unicamente al setter di payload
 
         return True    
+
+    def consume(self) -> dict:
+        """Reduce acp of rcp payload quantity
+
+        Returns:
+            Dictionary[item]: bool: True if subtraction from acp is complete (acp >=0 after reduction), item = ("goods", "energy", "hr", "hc", "hs", "hb")
+        """         
+        return self._consume(self.rcp)
+    
+    def _consume(self, cons: Payload) -> dict:
+        """Reduce acp of cons payload quantity
+
+        Args:
+            cons (Payload): object with resource quantity for subtraction
+
+        Raises:
+            Exception: Validation error
+
+        Returns:
+            Dictionary[item]: bool: True if subtraction from acp is complete (acp >=0 after reduction), item = ("goods", "energy", "hr", "hc", "hs", "hb")
+        """        
+        check_result = self.checkParam(payload = cons)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        else:
+            consume_execution = {"goods": None, "energy": None, "hr": None, "hc": None, "hs": None, "hb": None}
+
+            if cons.goods: # il consumo di goods è richiesto
+
+                if self.acp.goods >= cons.goods: # assigned consume payload previsto per goods (acp) è sufficiente per soddisfare il consumo
+                    self.acp.goods -= cons.goods # riduco goods nell'acp
+                    consume_execution["goods"] = True # consumo soddisfatto
+                
+                else:
+                    consume_execution["goods"] = False # consumo non soddisfatto
+
+            if cons.energy:
+                
+                if self.acp.energy >= cons.energy:
+                    self.acp.energy -= cons.energy
+                    consume_execution["energy"] = True
+                
+                else:
+                    consume_execution["energy"] = False
+                
+            if cons.hr:
+
+                if self.acp.hr >= cons.hr:
+                    self.acp.hr -= cons.hr
+                    consume_execution["hr"] = True
+                
+                else:
+                    consume_execution["hr"] = False
+
+            if cons.hc:
+
+                if self.acp.hc >= cons.hc:
+                    self.acp.hc -= cons.hc
+                    consume_execution["hc"] = True
+                
+                else:
+                    consume_execution["hc"] = False
+                
+            if cons.hs:
+
+                if self.acp.hs >= cons.hs:
+                    self.acp.hs -= cons.hs
+                    consume_execution["hs"] = True
+                
+                else:
+                    consume_execution["hs"] = False
+                
+            if cons.hb:
+
+                if self.acp.hb >= cons.hb:
+                    self.acp.hb -= cons.hb
+                    consume_execution["hb"] = True
+                
+                else:
+                    consume_execution["hb"] = False
+        
+        return True    
+
 
     @property
     def volume(self) -> Volume: #override      
