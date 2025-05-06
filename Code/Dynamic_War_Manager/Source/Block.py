@@ -264,6 +264,13 @@ class Block:
     
     @property
     def acp(self) -> Payload:
+        """Assigned Consume Payload
+        Assigned Consume Payload is the payload that the block can consume.
+        acp = sum(acp of all assets)
+
+        Returns:
+            Payload: object acp
+        """      
         # restituisce acp calcolato in base agli assets
         return self.updatePayload(destination = "acp")
         
@@ -271,13 +278,26 @@ class Block:
 
     @property
     def rcp(self) -> Payload:
+         
+        """Required Consume Payload
+        Required Consume Payload is the payload that the block needs to consume
+        rcp = sum(rcp of all assets)
+        
+        Returns:
+            Payload: object rcp
+        """        
         # restituisce rcp calcolato in base agli assets
         return self.updatePayload(destination = "rcp")
 
 
-
     @property
     def payload(self) -> Payload:
+        """Payload is the payload that the block must manage (transport, trasformation)
+        payload = sum(payload of all assets)
+        
+        Returns:
+            Payload: object payload
+        """     
         # restituisce payload calcolato in base agli assets
         return self.updatePayload(destination = "payload")
 
