@@ -14,7 +14,7 @@ from Dynamic_War_Manager.Source.Event import Event
 from LoggerClass import Logger
 from Context import STATE, MIL_BASE_CATEGORY
 from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from sympy import Point, Line, Point2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
  
@@ -176,7 +176,7 @@ class Region:
         if blockCategory == "Military":
             return [block for block in self._blocks if isinstance(block, Mil_Base) and block.side == side]
 
-    def calcRegionStrategicLogisticCenter(self, side: str): # inserire in region?
+    def calcRegionStrategicLogisticCenter(self, side: str) -> Point2D:
         
         logistic_blocks = self.getBlocks("Logistic", side)
         
@@ -185,8 +185,9 @@ class Region:
         tot_RSP, tp = 0, 0 # tot_RSP: summmatory of strategic logistic block priority
 
         for block in logistic_blocks:
-            tot_RSP += block.priority 
-            tp += block.position * block.priority 
+            position_2d = Point2D(block.position.x, block.position.y)
+            tot_RSP += block.value             
+            tp += position_2d * block.value # Point2D per uno scalare produce un Point2D con le sue coordinate moltiplicate ognuna per lo scalare
         
         r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
         return r_SLP

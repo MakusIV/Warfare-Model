@@ -23,9 +23,9 @@ logger = Logger(module_name = __name__, class_name = 'Transport')
 # BLOCK
 class Transport(Block):    
 
-    def __init__(self, block: Block, mil_category: str, name: str|None, side: str|None, description: str|None, category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):   
+    def __init__(self, block: Block, mil_category: str, name: str|None, side: str|None, description: str|None, category: str|None, sub_category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):   
             
-            super().__init__(name, description, side, category, functionality, value, acp, rcp, payload)
+            super().__init__(name, description, side, category, sub_category, functionality, value, acp, rcp, payload)
 
             # propriety             
             

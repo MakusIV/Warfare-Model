@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from Code import Context
 from numpy import mean
 import Utility
@@ -8,9 +7,9 @@ from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, BLOCK_CATEGORY, SIDE
+from Context import STATE, BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
 from typing import Literal, List, Dict
-#from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from sympy import Point
 
 
 
@@ -29,20 +28,22 @@ if TYPE_CHECKING:
  
 logger = Logger(module_name = __name__, class_name = 'Block')
 
-# ASSET o BLOCK
+# ASSET o BLOCK (non deve essere istanziata: solo le derivate)
 class Block:    
 
-    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, functionality: str|None, value: int|None, region: Region|None):
+    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: float|None, region: Region|None):
 
             # propriety
             self._name = name # block name - type str
             self._id = None # id self-assigned - type str
             self._description = description # block description - type str
             self._side = side # block side - type str
-            self._category = category # block category - type Literal 
+            self._category = category # block category - (Civilian, Logistic, Military, All)
+            
+            self._sub_category = sub_category # Road, Railway, Airport, Electric, Power_Plant, Factory, Administrative, Service, Stronghold, Farp ,...
             self._functionality = functionality # block functionality - type str
-            self._value = value # block value - type int             
-            self._events = List[Event] = [] # block event - list of Block event's          
+            self._value = value # strategical value of block- type float             
+            self._events = List[Event] = [] # block event - list of Block event's    
 
               
             # Association  
@@ -61,13 +62,16 @@ class Block:
             if not side:
                 side = "Neutral"
             # check input parameters            
-            check_results =  self.checkParam( name, description, side, category, functionality, value, region )            
+            check_results =  self.checkParam( name, description, side, category, sub_category, functionality, value, region )            
             
             if not check_results[1]:
                 raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
                        
 
     # methods
+    @property
+    def block_class(self):
+        return self.__class__.__name__ #(Production, Transport, Storage, Urban, Mil_Base)
   
     @property
     def name(self):
@@ -151,6 +155,23 @@ class Block:
 
         return True
     
+    @property
+    def sub_category(self):
+        return self._sub_category
+
+    @sub_category.setter
+    def sub_category(self, param):
+
+        check_result = self.checkParam(sub_category = param)
+        
+        if not check_result[1]:
+            raise Exception(check_result[2])    
+
+        self._sub_category = param
+
+        return True
+    
+
 
     @property
     def functionality(self):
@@ -235,7 +256,8 @@ class Block:
     def cost(self, cost):
         raise ValueError("cost not modifiable for Block")
     
-
+    # ma che roba è??
+    #ELIMINARE
     def updatePayload(self, destination: str):
         
         req = Payload
@@ -383,8 +405,7 @@ class Block:
         Rappresentazione ufficiale dell'oggetto Block.
         Utile per il debugging.
         """
-        return (f"Block(name={self._name!r}, id={self._id!r}, side={self._side!r}, "
-                f"category={self._category!r}, value={self._value!r})")
+        return (f"name: {self._name!r}, id: {self._id!r}, side: {self._side!r}, category: {self._category!r}, functionality: {self._functionality!r}, value={self._value!r})")
 
     def __str__(self):
         """
@@ -396,6 +417,7 @@ class Block:
                 f"  ID: {self._id}\n"
                 f"  Side: {self._side}\n"
                 f"  Category: {self._category}\n"
+                f"  Functionality: {self._category}\n"
                 f"  Value: {self._value}\n"
                 f"  Description: {self._description}")
     
@@ -410,7 +432,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str, description: str, side: str, category: Literal, function: str, value: int, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> (bool, str): # type: ignore
+    def checkParam(self, name: str, description: str, side: str, category: str, sub_category: str, function: str, value: float, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
                    
         if name and not isinstance(name, str):
@@ -419,12 +441,14 @@ class Block:
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and (category not in [BLOCK_CATEGORY]):                        
+        if category and not isinstance(category, str) and (category not in [BLOCK_CATEGORY]):                        
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_CATEGORY))        
+        if sub_category and not isinstance(sub_category, str) and (sub_category not in BLOCK_ASSET_CATEGORY[self.block_class].keys()):                        
+            return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_ASSET_CATEGORY[self.block_class].keys()))        
         if function and not isinstance(function, str):
             return (False, "Bad Arg: function must be a str")
-        if value and not isinstance(value, int):
-            return (False, "Bad Arg: value must be a int")
+        if value and not isinstance(value, float):
+            return (False, "Bad Arg: value must be a float")
         if position and not isinstance(position, Point):
             return (False, "Bad Arg: position must be a Point object")
         if region and not isinstance(region, Region):
@@ -443,6 +467,7 @@ class Block:
         """calculate center point from assets position"""        
         return Utility.mean_point([asset.position for asset in self.assets]) 
     
+
     @property
     def morale(self):             
         return Utility.evaluateMorale(State.success_ratio[self], self.efficiency) # mission success ratio recordered for this object
@@ -463,13 +488,19 @@ class Block:
             
     @property
     def balance_trade(self):        
-        
-        balance = 0
-        
-        for asset in self.assets:
-            balance += asset.balance_trade
+        """Returns median value of balance ratio (acp/rcp) of the assets
 
-        return balance/len(self.assets)
+        Returns:
+            float: balance trade ratio
+        """        
+        #balance = 0
+        #for asset in self.assets:
+        #    balance += asset.balance_trade
+        #return balance/len(self.assets)
+
+        return mean([asset.balance_trade for asset in self.assets]) 
+
+        
 
     def isMilitary(self):
         return (self.category == "Military")
