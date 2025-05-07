@@ -130,3 +130,14 @@ class Payload:
         elif type == 'hb':
             return self._hb
         
+    def __repr__(self):
+        return (f"goods: {self._goods!r}, energy: {self._energy!r}, hr: {self._hr!r}, hr: {self._hr!r}, hc: {self._hc!r}, hs: {self._hs!r}, hb: {self._hb!r}")
+    
+    def __str__(self):
+        return (f"payload:\n"
+                f"goods: {self._goods!r}\n"
+                f"energy: {self._energy!r}\n"
+                f"hr: {self._hr!r}\n"
+                f"hc: {self._hc!r}\n"
+                f"hs: {self._hs!r}\n"
+                f"hb: {self._hb!r}")

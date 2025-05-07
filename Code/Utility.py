@@ -805,21 +805,33 @@ def getClassName(obj):
     return obj.__class__.__name__
 
 
-def mean_point(points: Point) -> Point:
+def mean_point(points: list) -> Point:
     if not points:
-        raise ValueError("La lista dei punti non può essere vuota")
+        raise ValueError("None value, points must be a list of Points")
+    
+    if not isinstance(points, list) or any([no_point for no_point in points if not isinstance(no_point, Point)]):
+        raise ValueError("points must be a list of Points: {points!r}")
+    
+    if isinstance(points[0], Point3D) and any([no_point3D for no_point3D in points if not isinstance(no_point3D, Point3D)]):
+        raise ValueError("points must have only Point3D or only Point2D: {points!r}")
+    
+    if isinstance(points[0], Point2D) and any([no_point2D for no_point2D in points if not isinstance(no_point2D, Point2D)]):
+        raise ValueError("points must have only Point3D or only Point2D: {points!r}")
+
 
     if isinstance(points[0], Point3D):
         x_mean = np.mean([point.x for point in points])
         y_mean = np.mean([point.y for point in points])
         z_mean = np.mean([point.z for point in points])
         return Point3D(x_mean, y_mean, z_mean)
+    
     elif isinstance(points[0], Point2D):
         x_mean = np.mean([point.x for point in points])
         y_mean = np.mean([point.y for point in points])
         return Point(x_mean, y_mean)
+    
     else:
-        raise TypeError("I punti devono essere istanze di Point2D o Point3D")
+        raise TypeError("Unknow anomaly in points {points!r}")
 
 def evaluateMorale(success_ratio: float, efficiency: float):
     """

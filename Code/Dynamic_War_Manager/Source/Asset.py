@@ -15,7 +15,7 @@ from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_BASE_CATEGORY, COUNTRY, SIDE, STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY
+from Context import STATE, MIL_BASE_CATEGORY, COUNTRY, SIDE, STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, BLOCK_ASSET, BLOCK_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Region import Region
@@ -27,7 +27,7 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None): # type: ignore   
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point3D|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None): # type: ignore   
             
             
             # propriety
@@ -35,15 +35,17 @@ class Asset :
             self._name = name # asset name - type str
             self._id = Utility.setId(self._name) # id self-assigned - type str
             self._description = description # asset description - type str
-            self._side = block.side # asset side - type str
-            self._category = category # asset category - type Literal 
-            self._asset_type = asset_type
+            self._side = block.side # asset side - type str            
+            self._category = category # asset category - type Literal
+            self._asset_type = asset_type # lo usi per le sub categorie 
             self._functionality = functionality # asset functionality - type str  
             self._health = int|None      
             self._position: Point|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
-            self._cost: int|None = cost # asset cost - type int 
+            self._cost: int = None # asset cost - type int             
+            self._value: float = None # asset value - type float
+            self._payload_perc: int = None
             self._crytical: bool|None = crytical 
-            self._repair_time: int|None = repair_time
+            self._repair_time: int = None
             self._role: str|None = role # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, storage (energy, goods, ..)                          
             self._dcs_unit_data = dcs_unit_data
             """
@@ -82,6 +84,11 @@ class Asset :
             self._threat: int|Threat|None = threat
             self._block: int|Block = block # asset block - component of Block - type Block asset not exist without block
             
+
+            # load Context.BLOCK_ASSET data
+            if not self.loadAssetDataFromContext():
+                raise Exception(f"Error in load BLOCK ASSET data cost: {self._cost}, value: {self._value}, repair_time: {self._repair_time}, rpc: {self._rcp!r}\n - Object not istantiate.")
+
             # check input parameters
 
             if dcs_unit_data and self.checkParamDCS(dcs_unit_data): # update property with dcs_unit_data if defined 
@@ -109,6 +116,32 @@ class Asset :
             
             if not check_results[1]:
                 raise Exception(check_results[2] + ". Object not istantiate.")
+
+
+    def loadAssetDataFromContext(self) -> bool:
+        """Initialize some asset property loading data from Context module
+            asset_type is Subcategory of BLOCK_ASSET 
+
+        Returns:
+            bool: True if data is loaded, otherwise False
+        """        
+
+        for k1, v1 in BLOCK_ASSET:
+
+            for k2, v2 in v1:
+
+                for asset_type, asset_data in v2:
+                    
+                    if asset_type == self.asset_type:
+                        self.cost = asset_data["cost"]
+                        self.value = asset_data["value"]
+                        self.rcp = asset_data["rcp"]
+                        self.repair_time = asset_data["t2r"]
+                        self._payload_perc = asset_data["payload%"]
+                        return True              
+        return False
+    
+
 
     # getter & setter methods
 
@@ -224,14 +257,15 @@ class Asset :
     @property
     def cost(self) -> int: #override      
         return self._cost
-
+    
     @cost.setter
-    def cost(self, cost) -> bool: #override
-        check_result = self.checkParam(cost = cost)
+    def cost(self, param) -> bool:
+        check_result = self.checkParam(cost = param)
         
         if not check_result[1]:
-            raise Exception(check_result[2])                        
-        self._cost = cost
+            raise Exception(check_result[2])    
+
+        self._cost = param              
         return True
     
     @property
@@ -317,7 +351,7 @@ class Asset :
         return True
     
     @property
-    def position(self) -> Point: #override      
+    def position(self) -> Point3D: #override      
         return self._position
     
     @position.setter
@@ -341,25 +375,29 @@ class Asset :
 
     @property
     def balance_trade(self) -> float:        
+        """Returns median value of sum of the acp.item / rcp.item ratio 
 
+        Returns:
+            float: median value of sum of the acp.item / rcp.item ratio 
+        """        
         goods = None, energy = None, hr = None, hc = None, hs = None, hb = None              
         
-        if self.rcp.goods > 0:
+        if self.rcp.goods and self.rcp.goods > 0:
             goods = self.acp.goods / self.rcp.goods
         
-        if self.rcp.energy > 0:
+        if self.rcp.energy and self.rcp.energy > 0:
             energy = self.acp.energy / self.rcp.energy
 
-        if self.rcp.hr > 0:
+        if self.rcp.hr and self.rcp.hr > 0:
             hr = self.acp.hr / self.rcp.hr
 
-        if self.rcp.hc > 0:
+        if self.rcp.hc and self.rcp.hc > 0:
             hc = self.acp.hc / self.rcp.hc
 
-        if self.rcp.hs > 0:
+        if self.rcp.hs and self.rcp.hs > 0:
             hs = self.acp.hs / self.rcp.hs
 
-        if self.rcp.hb > 0:
+        if self.rcp.hb and self.rcp.hb > 0:
             hb = self.acp.hb / self.rcp.hb
 
         variables =  [goods, energy, hr, hc, hs, hb]
@@ -606,7 +644,7 @@ class Asset :
         return True
 
     # use case methods
-    def checkParam(name: str, description: str, category: str, asset_type:str, side: str, function: str, position: Point, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> (bool, str): # type: ignore
+    def checkParam(self, name: str, description: str, category: str, asset_type:str, side: str, functionality: str, position: Point3D, volume: Volume, threat: Threat, crytical: bool, repair_time: int, cost: int, country: str, block: Block, role: str, health: int) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
@@ -614,14 +652,60 @@ class Asset :
             return (False, "Bad Arg: description must be a str")
         if side and (not isinstance(side, str) or side not in SIDE):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if asset_type and (not isinstance(asset_type, str)):            
-            return (False, "Bad Arg: asset_type must be a str")
-        if category and (not isinstance(category, str) or category not in [GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]):                        
+        if asset_type and (isinstance(asset_type, str)):        
+
+            if self.block.block_class == "Mil_Base":
+
+                air_asset = BLOCK_ASSET_CATEGORY["Air_Mil_Base_Craft_Asset"].keys()
+                naval_asset = BLOCK_ASSET_CATEGORY["Naval_Mil_Base_Craft_Asset"].keys() 
+
+                if asset_type in [air_asset, naval_asset]:
+                    return (True, "OK")
+                
+                elif category:
+                    vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"][category].keys()
+                    air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"][category].keys()
+                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].keys()
+
+                    if asset_type in [vehicle_asset, air_defence_asset, struc_asset]:
+                        return (True, "OK")
+                    
+                else:
+
+                    vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].values().keys()
+                    air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].values().keys()
+                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()
+
+                    if asset_type in [vehicle_asset, air_defence_asset, struc_asset]:
+                        return (True, "OK")
+            
+            else:
+
+                if category:
+                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].values()                
+                
+                else:
+                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()                
+                
+                if asset_type in struc_asset:
+                    return (True, "OK")"
+                    
+            return (False, f"Bad Arg: asset_type must be any string from BLOCK_ASSET_CATEGORY {a_type!r}")                  
+
+        if category and (not isinstance(category, str)
+            return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")                     
+
+        else:
+            
+            for cat_gen in BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values():# cicla le categorie principali degli asset per quella block class
+                for cat_sec in cat_gen.values()                        
+                    if category == cat_sec
             return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")        
-        if function and not isinstance(function, str):
+        
+        if functionality and not isinstance(functionality, str):
             return (False, "Bad Arg: function must be a str")       
-        if position and not isinstance(position, Point):
-            return (False, "Bad Arg: position must be a Point object")        
+        if position and not isinstance(position, Point3D):
+            return (False, "Bad Arg: position must be a Point3D object")        
         if block and not isinstance(block, Block):
             return (False, "Bad Arg: block must be a Block object")        
         if volume and not isinstance(volume, Volume):
