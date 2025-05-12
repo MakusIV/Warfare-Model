@@ -1,7 +1,6 @@
 from Dynamic_War_Manager.Source.Mobile import Mobile
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload

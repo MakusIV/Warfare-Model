@@ -8,15 +8,19 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
+import sys
+import os
+# Aggiungi il percorso della directory principale del progetto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Utility import get_membership_label
 import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY, MIL_BASE_CATEGORY
-from Waypoint import Waypoint
-from Edge import Edge
-from Route import Route
+from Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
+from Dynamic_War_Manager.Source.Waypoint import Waypoint
+from Dynamic_War_Manager.Source.Edge import Edge
+from Dynamic_War_Manager.Source.Route import Route
 
 
 
@@ -392,7 +396,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     if not isinstance(asset_fr, dict): 
         raise ValueError("asset_fr: must be an dictionary")
     
-    if not all(k in GROUND_ASSET_CATEGORY.keys() for k in asset_fr):
+    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].keys() for k in asset_fr):
         raise ValueError("asset_fr.keys must be included in GROUND_ASSET_CATEGORY")
 
     if not all(isinstance(v, dict) for v in asset_fr.values()):    
@@ -401,7 +405,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     if not isinstance(asset_en, dict): 
         raise ValueError("asset_en: must be an dictionary")
     
-    if not all(k in GROUND_ASSET_CATEGORY.keys() for k in asset_en):
+    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].keys() for k in asset_en):
         raise ValueError("asset_en.keys must be included in GROUND_ASSET_CATEGORY")
 
     if not all(isinstance(v, dict) for v in asset_en.values()):    
@@ -415,7 +419,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     combat_pow_en_alt = 0
 
     
-    for cat in [GROUND_ASSET_CATEGORY["Tank"], GROUND_ASSET_CATEGORY["Armor"], GROUND_ASSET_CATEGORY["Motorized"], GROUND_ASSET_CATEGORY["Artillery_Fix"], GROUND_ASSET_CATEGORY["Artillery_Semovent"]]:
+    for cat in BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"].keys():
         
         if action == GROUND_ACTION["Attack"]:            
             combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]

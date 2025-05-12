@@ -1,7 +1,7 @@
 from heapq import heappush, heappop
 from Dynamic_War_Manager.Source.Asset import Asset
-from Edge import Edge
-from Waypoint import Waypoint
+from Dynamic_War_Manager.Source.Edge import Edge
+from Dynamic_War_Manager.Source.Waypoint import Waypoint
 from sympy import Point3D
 from Context import ROUTE_TYPE
 from LoggerClass import Logger

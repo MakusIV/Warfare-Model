@@ -14,7 +14,7 @@ logger = Logger(module_name = __name__, class_name = 'Area')
 
 class Area:
 
-    def __init__(self, shape: str = SHAPE2D.Circonference, radius: float = None, center: Point2D = None): 
+    def __init__(self, shape: str = SHAPE2D.CIRCLE, radius: float = None, center: Point2D = None): 
             
 
             # check input parameters

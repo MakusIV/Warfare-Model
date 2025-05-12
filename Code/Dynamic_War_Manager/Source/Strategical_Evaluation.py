@@ -9,17 +9,13 @@
 #VARIABLE = Literal["A", "B, "C"]
 
 from Utility import get_membership_label
-from Block import Block
-from Region import Region
+from Dynamic_War_Manager.Source.Block import Block
+from Dynamic_War_Manager.Source.Coalition import Coalition
 
-from Code.CommandControl import regions
-import Context
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
-import numpy as np
-
-from Dynamic_War_Manager.Source import Mil_Base
-from Context import MIL_BASE_CATEGORY
+#import skfuzzy as fuzz
+#import numpy as np
+from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+from Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MIL_BASE_VEHICLE_ASSET, GROUND_ACTION
 
 
 
@@ -209,7 +205,7 @@ Questo sistema fornisce una base solida per:
 
 
 
-def getTacticalReport(side: str) -> dict:
+def getTacticalReport(coalition: Coalition) -> dict:
     
     """ getTacticalReport: 
         - get tactical report from all military blocks in the region
@@ -235,14 +231,14 @@ def getTacticalReport(side: str) -> dict:
      # scorre elenco Mil_Base: aggiunge alla lista di report il report corrente. La lista è ordinata per criticità
     tactical_reports = {} # 
 
-    for region in regions:
-        military_blocks = region.getBlocks(blockCategory = "Military", side = side)
+    
+    military_blocks = coalition.getBlocks(blockCategory = "Military", side = coalition.side)
 
-        for block in military_blocks:            
-            #tactical reports only from ground bases and air bases
-            if isinstance(block, Mil_Base):
-                report = block.getTacticalReport()
-                tactical_reports[region.name][block.name] = report
+    for block in military_blocks:            
+        #tactical reports only from ground bases and air bases
+        if isinstance(block, Mil_Base):
+            report = block.getTacticalReport()
+            tactical_reports[block.region][block.name] = report
 
     return tactical_reports
 

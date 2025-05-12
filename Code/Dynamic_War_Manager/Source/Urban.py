@@ -4,7 +4,6 @@ from numpy import median
 from heapq import heappop, heappush
 from Dynamic_War_Manager.Source.Block import Block
 import Utility
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload

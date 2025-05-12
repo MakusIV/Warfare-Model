@@ -9,14 +9,12 @@
 #VARIABLE = Literal["A", "B, "C"]
 from enum import Enum
 
-MAX_WORLD_DISTANCE = 1.2e+90
+MAX_WORLD_DISTANCE = float('inf')
 DCS_DATA_DIRECTORY = "E:\Sviluppo\Warfare_Model\Code\Persistence\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
-
+DEBUG = True
 
 PATH_TYPE = ["onroad", "offroad", "air", "water"]
 ROUTE_TYPE = ["ground", "air", "water", "mixed"]
-
-
 
 
 GROUND_ACTION  = {
@@ -427,6 +425,14 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     "Building": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
                                     "Barrack": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                                                      
                                 },
+                                "Shipyard": {
+                                    "Command_&_Control": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                                    "Hangar": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                                    "Oil_Tank": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                                    "Depot": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                                    "Building": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                                    "Barrack": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                                                      
+                                },
                                 "Air_Defence": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
                                     "Command_&_Control": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
                                     "Barrack": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                    
@@ -439,29 +445,33 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 
 BLOCK_ASSET_CATEGORY = {
     "Block_Infrastructure_Asset": {},
-    "Ground_Mil_Base Vehicle Asset": {},
-    "Air_Defence_Asset_Category": {}
+    "Ground_Mil_Base_Vehicle_Asset": {},
+    "Air_Defence_Asset_Category": {},
+    "Naval_Mil_Base_Craft_Asset": {},
+    "Air_Mil_Base_Craft_Asset": {}
 }
+
+
 
 # Generate AIR DEFENCE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
 k = "Block_Infrastructure_Asset"
 
-for k1, v1 in BLOCK_INFRASTRUCTURE_ASSET:
+for k1, v1 in BLOCK_INFRASTRUCTURE_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = {} # Block Class
 
-    for k2, v2 in v1:
+    for k2, v2 in v1.items():
         BLOCK_ASSET_CATEGORY[k][k1][k2] = {}  # asset Category       
         
-        for k3, v3 in v2:
+        for k3, v3 in v2.items():
             BLOCK_ASSET_CATEGORY[k][k1][k2][k3] = k3 # asset type 
 
 # Generate GROUND_MIL_BASE_VEHICLE_ASSET (ASSET TYPE)
-k = "Ground_Mil_Base Vehicle Asset"
+k = "Ground_Mil_Base_Vehicle_Asset"
 
-for k1, v1 in GROUND_MIL_BASE_VEHICLE_ASSET:
+for k1, v1 in GROUND_MIL_BASE_VEHICLE_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = {} # asset Category
 
-    for k2, v2 in v1:
+    for k2, v2 in v1.items():
         BLOCK_ASSET_CATEGORY[k][k1][k2] = k2  # asset type
         
         
@@ -469,9 +479,9 @@ for k1, v1 in GROUND_MIL_BASE_VEHICLE_ASSET:
  #Generate AIR DEFENCE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
 k = "Air_Defence_Asset_Category"
 
-for k1, v1 in AIR_DEFENCE_ASSET:
+for k1, v1 in AIR_DEFENCE_ASSET.items():
 
-    for k2, v2 in v1:
+    for k2, v2 in v1.items():
 
         if k1 != k2:
             cat = k1 + "_" + k2
@@ -480,48 +490,48 @@ for k1, v1 in AIR_DEFENCE_ASSET:
             cat = k1        
         BLOCK_ASSET_CATEGORY[k][cat] = {} #asset Category
 
-        for k3, v3 in v2:            
+        for k3, v3 in v2.items():            
             BLOCK_ASSET_CATEGORY[k][cat][k3] = k3 # asset type
 
 
 # Generate AIR_MIL_BASE_CRAFT_ASSET
 k = "Air_Mil_Base_Craft_Asset"
-BLOCK_ASSET_CATEGORY[k] = {}
+#BLOCK_ASSET_CATEGORY[k] = {}
 
-for k1, v1 in AIR_MIL_BASE_CRAFT_ASSET:
+for k1, v1 in AIR_MIL_BASE_CRAFT_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = k1  # asset type
+    
 
 
 # Generate NAVAL_MIL_BASE_CRAFT_ASSET
 k = "Naval_Mil_Base_Craft_Asset"
 BLOCK_ASSET_CATEGORY[k] = {}
 
-for k1, v1 in NAVAL_MIL_BASE_CRAFT_ASSET:
+for k1, v1 in NAVAL_MIL_BASE_CRAFT_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = k1  # asset type
 
 
-ASSET_CATEGORY = {} # tutte le categorie secondaria degli asset appartenenti alle diverse classi dei blocchi
+# verifica 
+if DEBUG:
+    
+    for k, v in BLOCK_ASSET_CATEGORY.items():
 
+        print(f"k: {k}\n:")
+        
+        for k1, v1 in v.items():
 
-"""
-VEHICLE_ASSET = {  #Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
-                    "Tank": {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Armored": {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Motorized": {"cost": None, "value": VALUE.VERY_HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Truck": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Jeep": {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Artillery_Fix": {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                    
-                    "Artillery_Semovent": {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33}                                    
-                },
+            if k in ["Air_Mil_Base_Craft_Asset", "Naval_Mil_Base_Craft_Asset"]:
+                print(f"BLOCK_ASSET_CATEGORY[{k}][{k1}] = {BLOCK_ASSET_CATEGORY[k][k1]}") # asset type 
+            
+            else:
 
+                for k2, v2 in v1.items():
 
-GROUND_MILITARY_ASSET = {  #Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
-                    "Tank": {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Armored": {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Motorized": {"cost": None, "value": VALUE.VERY_HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Truck": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Jeep": {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
-                    "Artillery_Fix": {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                    
-                    "Artillery_Semovent": {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33}                                    
-                },
-"""
+                    if k in ["Air_Defence_Asset_Category", "Ground_Mil_Base_Vehicle_Asset"]:
+                        print(f"BLOCK_ASSET_CATEGORY[{k}][{k1}][{k2}] = {BLOCK_ASSET_CATEGORY[k][k1][k2]}") # asset type 
+
+                    else:
+                                    
+                        for k3, v3 in v2.items():
+                            print(f"BLOCK_ASSET_CATEGORY[{k}][{k1}][{k2}][{k3}] = {BLOCK_ASSET_CATEGORY[k][k1][k2][k3]}") # asset type 
+

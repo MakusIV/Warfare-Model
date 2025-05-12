@@ -3,11 +3,14 @@
 import random 
 import logging
 import os
+import sys
+# Aggiungi il percorso della directory principale del progetto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 import math
 import hashlib
 import uuid
-from Code.Sphere import Sphere
-from Code.Hemisphere import Hemisphere
+from Sphere import Sphere
+from Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Point2D, Line3D, symbols, solve, Eq, sqrt, And
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl

@@ -1,9 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
+import sys
+import os
+# Aggiungi il percorso della directory principale del progetto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from Code import Context
 from numpy import mean
 import Utility
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
