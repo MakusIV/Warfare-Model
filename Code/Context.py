@@ -75,17 +75,17 @@ MIL_BASE_CATEGORY = {
 WEIGHT_FORCE_GROUND_ASSET = {
 
     "Tank": 7,
-    "Armor": 5,
+    "Armored": 5,
     "Motorized": 3,
-    "Artillery_Fix": 4,
+    "Artillery_Fixed": 4,
     "Artillery_Semovent": 7,
 }
 
 # Parametri per il calcolo della combat power  in Tactical_Evaluation Module
 GROUND_COMBAT_EFFICACY = {
-    GROUND_ACTION["Attack"]: {"Tank": 5, "Armor": 3.5, "Motorized": 2, "Artillery_Semovent": 4, "Artillery_Fix": 3},
-    GROUND_ACTION["Defence"]: {"Tank": 4, "Armor": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fix": 5},
-    GROUND_ACTION["Maintain"]: {"Tank": 3, "Armor": 3.7, "Motorized": 4, "Artillery_Semovent": 2, "Artillery_Fix": 3},    
+    GROUND_ACTION["Attack"]: {"Tank": 5, "Armored": 3.5, "Motorized": 2, "Artillery_Semovent": 4, "Artillery_Fixed": 3},
+    GROUND_ACTION["Defence"]: {"Tank": 4, "Armored": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fixed": 5},
+    GROUND_ACTION["Maintain"]: {"Tank": 3, "Armored": 3.7, "Motorized": 4, "Artillery_Semovent": 2, "Artillery_Fixed": 3},    
 }
 
 STATE = {"Standby": True , "Destroyed": True, "Damaged": True}

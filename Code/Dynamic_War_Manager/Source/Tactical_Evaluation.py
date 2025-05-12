@@ -396,7 +396,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     if not isinstance(asset_fr, dict): 
         raise ValueError("asset_fr: must be an dictionary")
     
-    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].keys() for k in asset_fr):
+    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"].keys() for k in asset_fr):
         raise ValueError("asset_fr.keys must be included in GROUND_ASSET_CATEGORY")
 
     if not all(isinstance(v, dict) for v in asset_fr.values()):    
@@ -405,7 +405,7 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     if not isinstance(asset_en, dict): 
         raise ValueError("asset_en: must be an dictionary")
     
-    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].keys() for k in asset_en):
+    if not all(k in BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"].keys() for k in asset_en):
         raise ValueError("asset_en.keys must be included in GROUND_ASSET_CATEGORY")
 
     if not all(isinstance(v, dict) for v in asset_en.values()):    
