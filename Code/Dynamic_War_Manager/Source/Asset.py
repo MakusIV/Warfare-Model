@@ -6,17 +6,19 @@ Il Block può essere costituito da diversi gruppi apparenenti a country diverse 
 
 """
 
-
+import sys
+import os
+# Aggiungi il percorso della directory principale del progetto
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Dynamic_War_Manager.Source.Block import Block
-import Utility, Sphere, Hemisphere
+import Code.Utility
 from LoggerClass import Logger
-from Dynamic_War_Manager.Source.Event import Event
+#from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, COUNTRY, SIDE, BLOCK_ASSET_CATEGORY
-from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from Code.Context import SIDE, BLOCK_ASSET_CATEGORY
+from sympy import Point, Point3D
 #from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
