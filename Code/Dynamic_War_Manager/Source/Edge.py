@@ -1,5 +1,5 @@
-from Asset import Asset
-from Waypoint import Waypoint
+from Dynamic_War_Manager.Source.Asset import Asset
+from Dynamic_War_Manager.Source.Waypoint import Waypoint
 from Context import PATH_TYPE
 from sympy import Point, Line, Point3D, Line3D, Line2D, symbols, solve, Eq, sqrt, And
 from LoggerClass import Logger

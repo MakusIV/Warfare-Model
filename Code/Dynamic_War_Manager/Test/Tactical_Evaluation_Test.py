@@ -3,12 +3,87 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import pandas as pd
-from Context import GROUND_ASSET_CATEGORY, GROUND_ACTION
-
+import sys
+import os
+# Aggiungi il percorso della directory principale del progetto
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MIL_BASE_VEHICLE_ASSET, GROUND_ACTION
 # Importa il metodo da testare evaluateGroundTacticalAction
 from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
 
 class TestEvaluateGroundTacticalAction(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        """
+        Metodo eseguito una volta prima di tutti i test.
+        Esegue il codice necessario dal modulo Context.        
+        """
+        """
+        # Caratteristiche degli asset delle diversè unità MIL_BASE: Corazzate, Meccanizzate, Motorizzate e Artiglieria
+        GROUND_MIL_BASE_VEHICLE_ASSET = {
+            # Corazzata 
+            "Tank":     {   "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
+                            "Tank":                             {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Main_Battle_Tank":                 {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
+                            "Infantry_Fighting_Vehicle":        {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Truck_Supply":                     {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33}},
+            # Meccanizzata
+            "Armored":    { "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
+                            "Armored_Personal_Carrier":         {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Infantry_Fighting_Vehicle":        {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Truck_Supply":                     {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                    
+                            "Self_Propelled_ATGM":              {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_Gun":               {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33}    },
+            # Motorizzata
+            "Motorized": {  "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
+                            "Armored_Personal_Carrier":         {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Infantry_Fighting_Vehicle":        {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Truck_Supply":                     {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                        
+                            "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_ATGM":              {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_Gun":               {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33} },
+            # Artiglieria fissa
+            "Artillery_Fixed": {  "Command_&_Control":          {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Howitzer_Big":                     {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Howitzer_Medium":                  {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Howitzer_Small":                   {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Mortar":                           {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                    
+                            "Truck_Supply":                     {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33} },
+            # Artiglieria semovent
+            "Artillery_Semovent": {  "Command_&_Control":       {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                    
+                            "Mortar":                           {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Multiple_Rocket_Launcher":         {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_Artillery_Big":     {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_Artillery_Medium":  {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Self_Propelled_Artillery_Small":   {"cost": None, "value": VALUE.HIGH, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Truck_Supply":                     {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
+                            "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33} }
+        }
+       
+        # Esegui il codice necessario dal modulo Context
+        BLOCK_ASSET_CATEGORY = {
+            "Block_Infrastructure_Asset": {},
+            "Ground_Mil_Base_Vehicle_Asset": {},
+            "Air_Defence_Asset_Category": {},
+            "Naval_Mil_Base_Craft_Asset": {},
+            "Air_Mil_Base_Craft_Asset": {}
+        }
+        """
+        # Generate GROUND_MIL_BASE_VEHICLE_ASSET (ASSET TYPE)
+        k = "Ground_Mil_Base_Vehicle_Asset"
+
+        for k1, v1 in GROUND_MIL_BASE_VEHICLE_ASSET.items():
+            BLOCK_ASSET_CATEGORY[k][k1] = {} # asset Category
+
+            for k2, v2 in v1.items():
+                BLOCK_ASSET_CATEGORY[k][k1][k2] = k2  # asset type
+                
+                print("Context setup completed.")
+
 
     def testCalcRecoNumberAccuracy(self):
         # Test con valori di input validi
@@ -318,18 +393,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con asset uguali
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.8},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.8},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.4}
         }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.8},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.8},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.5, delta = 0.1)
@@ -340,18 +415,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con enemy asset azzerati
         asset_fr = {            
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 200, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 150, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 150, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 50, "efficiency": 0.4}
             }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 0, "efficiency": 0}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 0, "efficiency": 0}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertEqual(result, 1)
@@ -362,18 +437,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con friendly asset azzerati
         asset_fr = {            
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 0, "efficiency": 0}            
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 0, "efficiency": 0},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 0, "efficiency": 0}            
             }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}            
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 200, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 150, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 150, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 50, "efficiency": 0.4}            
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertEqual(result, 0)
@@ -384,18 +459,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
              
         # Test con asset num e efficiency diversi
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.3}
             }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 200, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 150, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 150, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 50, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 200, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 150, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 150, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 100, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 50, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.05149, places = 3)
@@ -406,18 +481,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con asset num e efficiency diversi
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.3}
         }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 20, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 15, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 15, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 5, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.3518, places = 3)
@@ -428,18 +503,18 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con asset num e efficiency diversi
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 20, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 15, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 15, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.3}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.6720, places = 3)
@@ -450,36 +525,36 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 
         # Test con asset diversi e azione di combattimento non valida
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 15, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 20, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 15, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 15, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.3}
         }
         with self.assertRaises(ValueError):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
 
         # Test con categoria asset non incluse
         asset_fr = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 20, "efficiency": 0.9},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 15, "efficiency": 0.77},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 20, "efficiency": 0.9},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 15, "efficiency": 0.77},
             "NOT_INCLUDED": {"num": 15, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 5, "efficiency": 0.4}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 10, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
-            GROUND_ASSET_CATEGORY["Tank"]: {"num": 10, "efficiency": 0.7},
-            GROUND_ASSET_CATEGORY["Armor"]: {"num": 5, "efficiency": 0.6},
-            GROUND_ASSET_CATEGORY["Motorized"]: {"num": 20, "efficiency": 0.5},
-            GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
-            GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"num": 10, "efficiency": 0.3}
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Tank"]: {"num": 10, "efficiency": 0.7},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Armored"]: {"num": 5, "efficiency": 0.6},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Motorized"]: {"num": 20, "efficiency": 0.5},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Semovent"]: {"num": 5, "efficiency": 0.4},
+            BLOCK_ASSET_CATEGORY["Ground_Mil_Base_Vehicle_Asset"]["Artillery_Fixed"]: {"num": 10, "efficiency": 0.3}
         }
         with self.assertRaises(ValueError):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
@@ -487,4 +562,5 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
 # test_evaluateCriticality
 
 if __name__ == '__main__':
+
     unittest.main()

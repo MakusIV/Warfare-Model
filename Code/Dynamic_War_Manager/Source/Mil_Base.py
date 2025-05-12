@@ -6,11 +6,10 @@ from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere, random
 from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
 from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticalityGroundEnemy, evaluateCriticalityAirDefence # cambiare in Mil_Zone_Evaluation
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_BASE_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, GROUND_COMBAT_EFFICACY, GROUND_ACTION, AIR_TASK
+from Context import STATE, GROUND_COMBAT_EFFICACY, GROUND_ACTION, AIR_TASK
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
 from Dynamic_War_Manager.Source.Asset import Asset
@@ -176,7 +175,7 @@ class Mil_Base(Block) :
         recon_Asset_Efficiency = self.getReconEfficiency() # efficiency of reconnaissance assets
         asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset number
         asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset efficiency
-        enemy_blocks = self.region.getEnemyBlocks(self.getEnemySide()) # get enemy blocks in the region
+        enemy_blocks = self.region.getEnemyBlocks(Utility.enemySide(self.side)) # get enemy blocks in the region
         report_base = self.getBlockInfo("friendly_request") # get this base report          
         recon_reports = { "id_base": self.id, "name_base": self.name, "attack": (), "defence": (), "retrait": (), "maintain": ()} # dictionary of reports
         report_queue = []    # priority queue (heapq) for managing reports by criticality

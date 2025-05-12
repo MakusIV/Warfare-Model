@@ -1,6 +1,5 @@
 
 import Utility
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 
 # LOGGING --
@@ -65,13 +64,13 @@ class Event:
     
 
     def checkParam(self, typ, volume,  time2go, duration, energy, power, mass):
-
+        """
         if not General.checkEventType( typ ):
             return False
 
         if volume and not General.checkVolume(volume):
             return False
-
+        """
         if not isinstance(time2go, int) or not isinstance(duration, int):
             return False
 

@@ -6,20 +6,20 @@ command and control class for the simulation of the command and control system i
 """
 
 from Code import Context
-import Utility, Sphere, Hemisphere
+import Utility
 from Dynamic_War_Manager.Source.State import State
 from Dynamic_War_Manager.Source.Block import Block
-from Dynamic_War_Manager.Source.Block import Mil_Base
-from Dynamic_War_Manager.Source.Block import Urban
-from Dynamic_War_Manager.Source.Block import Production
-from Dynamic_War_Manager.Source.Block import Storage
-from Dynamic_War_Manager.Source.Block import Transport
+from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+from Dynamic_War_Manager.Source.Urban import Urban
+from Dynamic_War_Manager.Source.Production import Production
+from Dynamic_War_Manager.Source.Storage import Storage
+from Dynamic_War_Manager.Source.Transport import Transport
 from Dynamic_War_Manager.Source.Asset import Asset
 from Dynamic_War_Manager.Source.Limes import Limes
 from Dynamic_War_Manager.Source.Payload import Payload
 from Dynamic_War_Manager.Source.Event import Event
 from LoggerClass import Logger
-from Context import STATE, MIL_BASE_CATEGORY
+from Context import STATE
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 

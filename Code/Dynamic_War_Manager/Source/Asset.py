@@ -9,16 +9,15 @@ Il Block può essere costituito da diversi gruppi apparenenti a country diverse 
 
 from Dynamic_War_Manager.Source.Block import Block
 import Utility, Sphere, Hemisphere
-from Dynamic_War_Manager.Source.State import State
 from LoggerClass import Logger
 from Dynamic_War_Manager.Source.Event import Event
 from Dynamic_War_Manager.Source.Volume import Volume
 from Dynamic_War_Manager.Source.Threat import Threat
 from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, MIL_BASE_CATEGORY, COUNTRY, SIDE, STRUCTURE_ASSET_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, BLOCK_ASSET, BLOCK_ASSET_CATEGORY
+from Context import STATE, COUNTRY, SIDE, BLOCK_ASSET_CATEGORY
 from typing import Literal, List, Dict
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
-from Dynamic_War_Manager.Source.Region import Region
+#from Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
  
@@ -27,7 +26,7 @@ logger = Logger(module_name = __name__, class_name = 'Asset')
 # ASSET
 class Asset :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point3D|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, region: Region|None = None, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None): # type: ignore   
+    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None = None, functionality: str|None = None, cost: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point3D|None = None, volume: Volume|None = None, threat: Threat|None = None, crytical: bool|None = False, repair_time: int|None = 0, country: str|None = None, role: str|None = None, dcs_unit_data: dict|None = None): # type: ignore   
             
             
             # propriety
@@ -118,7 +117,7 @@ class Asset :
                 raise Exception(check_results[2] + ". Object not istantiate.")
 
 
-    def loadAssetDataFromContext(self) -> bool:
+    def loadAssetDataFromContext(self, block__asset_data_from_context: dict) -> bool:
         """Initialize some asset property loading data from Context module
             asset_type is Subcategory of BLOCK_ASSET 
 
@@ -126,7 +125,7 @@ class Asset :
             bool: True if data is loaded, otherwise False
         """        
 
-        for k1, v1 in BLOCK_ASSET:
+        for k1, v1 in block__asset_data_from_context:
 
             for k2, v2 in v1:
 
@@ -380,7 +379,12 @@ class Asset :
         Returns:
             float: median value of sum of the acp.item / rcp.item ratio 
         """        
-        goods = None, energy = None, hr = None, hc = None, hs = None, hb = None              
+        goods = None 
+        energy = None
+        hr = None 
+        hc = None 
+        hs = None
+        hb = None              
         
         if self.rcp.goods and self.rcp.goods > 0:
             goods = self.acp.goods / self.rcp.goods
@@ -654,7 +658,7 @@ class Asset :
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
         if asset_type and (isinstance(asset_type, str)):        
 
-            if self.block.block_class == "Mil_Base":
+            if self.block.block_class == "Mil_Base": # asset is a Mil_Base component
 
                 air_asset = BLOCK_ASSET_CATEGORY["Air_Mil_Base_Craft_Asset"].keys()
                 naval_asset = BLOCK_ASSET_CATEGORY["Naval_Mil_Base_Craft_Asset"].keys() 
@@ -665,42 +669,46 @@ class Asset :
                 elif category:
                     vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"][category].keys()
                     air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"][category].keys()
-                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].keys()
+                    struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].keys()
 
-                    if asset_type in [vehicle_asset, air_defence_asset, struc_asset]:
+                    if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
                         return (True, "OK")
                     
                 else:
 
                     vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].values().keys()
                     air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].values().keys()
-                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()
+                    struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()
 
-                    if asset_type in [vehicle_asset, air_defence_asset, struc_asset]:
+                    if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
                         return (True, "OK")
             
-            else:
+            else:  # asset isn't a Mil_Base component
 
-                if category:
-                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].values()                
+                if category: 
+
+                    struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class][category].values()                
                 
                 else:
-                    struc_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()                
+                    struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values().keys()                
                 
-                if asset_type in struc_asset:
-                    return (True, "OK")"
+                if asset_type in struct_asset:
+                    return (True, "OK")
                     
-            return (False, f"Bad Arg: asset_type must be any string from BLOCK_ASSET_CATEGORY {a_type!r}")                  
+            return (False, f"Bad Arg: asset_type must be any string from BLOCK_ASSET_CATEGORY {BLOCK_ASSET_CATEGORY!r}")                  
 
-        if category and (not isinstance(category, str)
+
+        if category and isinstance(category, str):
+
+            vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Mil_Base Vehicle Asset"].keys()
+            air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].keys()
+            struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].keys()
+
+            if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
+                return (True, "OK")
+
             return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")                     
 
-        else:
-            
-            for cat_gen in BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].values():# cicla le categorie principali degli asset per quella block class
-                for cat_sec in cat_gen.values()                        
-                    if category == cat_sec
-            return (False, "Bad Arg: category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")        
         
         if functionality and not isinstance(functionality, str):
             return (False, "Bad Arg: function must be a str")       

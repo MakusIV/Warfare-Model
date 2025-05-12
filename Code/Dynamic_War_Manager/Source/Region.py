@@ -1,19 +1,15 @@
 from Code import Context
-import Utility, Sphere, Hemisphere
-from Dynamic_War_Manager.Source.State import State
 from Dynamic_War_Manager.Source.Block import Block
-from Dynamic_War_Manager.Source.Block import Mil_Base
-from Dynamic_War_Manager.Source.Block import Urban
-from Dynamic_War_Manager.Source.Block import Production
-from Dynamic_War_Manager.Source.Block import Storage
-from Dynamic_War_Manager.Source.Block import Transport
-from Dynamic_War_Manager.Source.Asset import Asset
+from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
+from Dynamic_War_Manager.Source.Urban import Urban
+from Dynamic_War_Manager.Source.Production import Production
+from Dynamic_War_Manager.Source.Storage import Storage
+from Dynamic_War_Manager.Source.Transport import Transport
 from Dynamic_War_Manager.Source.Limes import Limes
 from Dynamic_War_Manager.Source.Payload import Payload
-from Dynamic_War_Manager.Source.Event import Event
 from LoggerClass import Logger
-from Context import STATE, MIL_BASE_CATEGORY
-from typing import Literal, List, Dict
+from Context import STATE
+from typing import List
 from sympy import Point, Line, Point2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
@@ -244,7 +240,7 @@ class Region:
         if category == Context.BLOCK_CATEGORY["Military"]:
             block_list = [block for block in self.blocks if block.side == side and isinstance(block, Mil_Base) or block.isMilitary]
         elif category == Context.BLOCK_CATEGORY["Logistic"]:
-            block_list = [block for block in self.blocks if block.side == side and block.is]
+            block_list = [block for block in self.blocks if block.side == side and block.isLogistic]
         elif category == Context.BLOCK_CATEGORY["Civilian"]:
             block_list = [block for block in self.blocks if block.side == side and isinstance(block, Urban)]        
         elif category in Context.BLOCK_CLASS:
