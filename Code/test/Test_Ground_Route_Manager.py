@@ -63,7 +63,7 @@ Questo modulo garantisce che il sistema rispetti i requisiti funzionali e sia re
 
 import unittest
 from math import sqrt
-from Route_Manager import NavigationGraph, Waypoint, Edge
+from Code.Route_Manager import NavigationGraph, Waypoint, Edge
 
 class TestNavigationSystem(unittest.TestCase):
     def setUp(self):

@@ -1,6 +1,6 @@
 {
-    "python.pythonPath": "E:/Program/Python",
+    "python.pythonPath": "/home/marco/Sviluppo/Warfare-Model/venv/bin/python",
     "python.analysis.extraPaths": [
-        "./Code"
+        "/home/marco/Sviluppo/Warfare-Model/Code"
     ]
 }

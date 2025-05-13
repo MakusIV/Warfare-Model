@@ -6,10 +6,13 @@ import pandas as pd
 import sys
 import os
 # Aggiungi il percorso della directory principale del progetto
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MIL_BASE_VEHICLE_ASSET, GROUND_ACTION
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from Code.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MIL_BASE_VEHICLE_ASSET, GROUND_ACTION
 # Importa il metodo da testare evaluateGroundTacticalAction
-from Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
+from Code.Dynamic_War_Manager.Source.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
+
+print("\nPYTHONPATH during execution:")
+print("\n".join(sys.path))
 
 class TestEvaluateGroundTacticalAction(unittest.TestCase):
 

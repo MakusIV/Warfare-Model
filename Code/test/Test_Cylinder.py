@@ -2,7 +2,7 @@ import sys
 import os
 
 # Aggiungi il percorso della directory principale del progetto
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 
 
@@ -19,6 +19,10 @@ import numpy as np
 # Importa la classe Cylinder dal modulo implementato
 # Assumo che la classe sia in un file chiamato cylinder.py
 from Code.Dynamic_War_Manager.Cylinder import Cylinder
+
+print("\nPYTHONPATH during execution:")
+print("\n".join(sys.path))
+
 
 class TestCylinderClaude(unittest.TestCase):
     

@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING
 import sys
 import os
 # Aggiungi il percorso della directory principale del progetto
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 from Code import Context
 from numpy import mean
 #import Code.Utility
 from Code.LoggerClass import Logger
-from Dynamic_War_Manager.Source.Event import Event
-from Dynamic_War_Manager.Source.Payload import Payload
-from Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
+from Code.Dynamic_War_Manager.Source.Event import Event
+from Code.Dynamic_War_Manager.Source.Payload import Payload
+from Code.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
 from typing import List, Dict
 from sympy import Point
 
