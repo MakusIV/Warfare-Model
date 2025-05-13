@@ -11,18 +11,19 @@
 import sys
 import os
 # Aggiungi il percorso della directory principale del progetto
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from Utility import get_membership_label
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from Code.Utility import get_membership_label
 import Context, random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
-from Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
-from Dynamic_War_Manager.Source.Waypoint import Waypoint
-from Dynamic_War_Manager.Source.Edge import Edge
-from Dynamic_War_Manager.Source.Route import Route
+from Code.Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
+from Code.Dynamic_War_Manager.Source.Waypoint import Waypoint
+from Code.Dynamic_War_Manager.Source.Edge import Edge
+from Code.Dynamic_War_Manager.Source.Route import Route
 
-
+print("\nPYTHONPATH during execution:")
+print("\n".join(sys.path))
 
 
 
