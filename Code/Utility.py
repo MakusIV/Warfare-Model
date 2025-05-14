@@ -266,7 +266,7 @@ def checkEventType(_type):
     return _type != None and isinstance(_type, str) and any( [ True for el in EVENT_TYPE if el == _type ] )
 
 
-def setId(name, id):
+def setId(name: str, id = None ):
     """Return string name plus random int 6 digit"""                    
     if not id or not isinstance(id, int):
         # Genera un identificativo univoco basato su codifica hash e generazione casuale di numeri

@@ -10,7 +10,7 @@
 
 from Utility import get_membership_label
 from Dynamic_War_Manager.Source.Block import Block
-from Dynamic_War_Manager.Source.Coalition import Coalition
+
 
 #import skfuzzy as fuzz
 #import numpy as np
@@ -205,42 +205,7 @@ Questo sistema fornisce una base solida per:
 
 
 
-def getTacticalReport(coalition: Coalition) -> dict:
-    
-    """ getTacticalReport: 
-        - get tactical report from all military blocks in the region
-        - return a list of tactical report ordered by priority
-        - tactical report is a dictionary with the following keys:
-            - region: name of the region
-            - block: name of the block
-            - report: tactical report (dict) with the following keys:
-                - type: type of the report (attack, defence, etc)
-                - priority: priority of the report (high, medium, low)
-                - description: description of the report
-                - action: action to be taken (attack, defend, etc)
-                - the report is ordered by priority (high, medium, low)
-    Args:
-        side (str): side of the blocks (red, blue)
 
-    Returns:
-        dict: with the following keys:
-            - region: name of the region
-            - block: name of the block
-    """    
-    
-     # scorre elenco Mil_Base: aggiunge alla lista di report il report corrente. La lista è ordinata per criticità
-    tactical_reports = {} # 
-
-    
-    military_blocks = coalition.getBlocks(blockCategory = "Military", side = coalition.side)
-
-    for block in military_blocks:            
-        #tactical reports only from ground bases and air bases
-        if isinstance(block, Mil_Base):
-            report = block.getTacticalReport()
-            tactical_reports[block.region][block.name] = report
-
-    return tactical_reports
 
 def evaluateTacticalReport(report_list: dict) -> dict:
     """Evaluate priority of tactical reports and resource request. List ordered by priority."""

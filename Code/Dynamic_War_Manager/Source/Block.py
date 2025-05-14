@@ -4,9 +4,8 @@ import sys
 import os
 # Aggiungi il percorso della directory principale del progetto
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-from Code import Context
+from Code import Context, Utility
 from numpy import mean
-#import Code.Utility
 from Code.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Event import Event
 from Code.Dynamic_War_Manager.Source.Payload import Payload
@@ -14,18 +13,9 @@ from Code.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
 from typing import List, Dict
 from sympy import Point
 
-
-
 if TYPE_CHECKING:    
-    from Dynamic_War_Manager.Source.Asset import Asset
-    from Dynamic_War_Manager.Source.Region import Region
-
-    # UTILIZZATI SOLO PER LA VERIFICA DELLE CLASSI - INUTILE
-    #from Dynamic_War_Manager.Source.Mil_Base import Mil_Base
-    #from Dynamic_War_Manager.Source.Production import Production
-    #from Dynamic_War_Manager.Source.Storage import Storage
-    #from Dynamic_War_Manager.Source.Transport import Transport
-    #from Dynamic_War_Manager.Source.Urban import Urban
+    from Code.Dynamic_War_Manager.Source.Asset import Asset
+    from Code.Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING --
  
@@ -34,7 +24,7 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK (non deve essere istanziata: solo le derivate)
 class Block:    
 
-    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: float|None, region: Region|None):
+    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: float|None, region: "Region"|None):
 
             # propriety
             self._name = name # block name - type str
@@ -46,21 +36,21 @@ class Block:
             self._sub_category = sub_category # Road, Railway, Airport, Electric, Power_Plant, Factory, Administrative, Service, Stronghold, Farp ,...
             self._functionality = functionality # block functionality - type str
             self._value = value # strategical value of block- type float             
-            self._events = List[Event] = [] # block event - list of Block event's    
+            self._events: List[Event] = [] # block event - list of Block event's    
 
               
             # Association  
-            self._assets = Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
+            self._assets: Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
 
 
             if not name:
-                self._name = Utility.setName('Unnamed_Block')
+                self._name = Utility.setName('Unnamed')
 
             else:
-                self._name = "Block." + name
+                self._name = name
 
-            self._id = Utility.setId(self._name)
+            self._id = Utility.setId(self._name, None)
            
             if not side:
                 side = "Neutral"
@@ -388,7 +378,7 @@ class Block:
         return self._region
 
     @region.setter
-    def region(self, param: Region) -> bool:
+    def region(self, param: "Region") -> bool:
 
         check_result = self.checkParam(region = param)
         
@@ -398,17 +388,14 @@ class Block:
         self._region = param       
             
         return True
-
-
-    def toString(self):
-        return 'Name: {0}  -  Id: {1} - value: {2} \n description: {3}\n category: {4}\n'.format(self.name, self.id, self.value, self.description, self.category)
+    
     
     def __repr__(self):
         """
         Rappresentazione ufficiale dell'oggetto Block.
         Utile per il debugging.
         """
-        return (f"name: {self._name!r}, id: {self._id!r}, side: {self._side!r}, category: {self._category!r}, functionality: {self._functionality!r}, value={self._value!r})")
+        return (f"Block - name: {self._name!r}, id: {self._id!r}, side: {self._side!r}, category: {self._category!r}, functionality: {self._functionality!r}, value={self._value!r})")
 
     def __str__(self):
         """
@@ -435,9 +422,11 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str, description: str, side: str, category: str, sub_category: str, function: str, value: float, position: Point, acp: Payload, rcp: Payload, payload: Payload, region: Region) -> (bool, str): # type: ignore
+    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, function: str = None, value: float = None, region: "Region" = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
-                   
+        from Code.Dynamic_War_Manager.Source.Region import Region
+        from Code.Dynamic_War_Manager.Source.Asset import Asset      
+
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
         if description and not isinstance(description, str):
@@ -452,8 +441,6 @@ class Block:
             return (False, "Bad Arg: function must be a str")
         if value and not isinstance(value, float):
             return (False, "Bad Arg: value must be a float")
-        if position and not isinstance(position, Point):
-            return (False, "Bad Arg: position must be a Point object")
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
             

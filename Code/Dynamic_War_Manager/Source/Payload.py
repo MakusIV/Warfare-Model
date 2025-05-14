@@ -25,7 +25,7 @@ class Payload:
         self._hs = hs # human resource: military specialist int
         self._hb = hb # human resource: military soldier int
 
-    def checkParam(self, goods: int|None, energy: int|None, hr: int|None, hc: int|None, hs: int|None, hb: int|None ):
+    def checkParam(self, goods: int = None, energy: int = None, hr: int = None, hc: int = None, hs: int = None, hb: int = None ):
          
         if goods and not isinstance(goods, int):
             return (False, "Bad Arg: goods must be a int")
