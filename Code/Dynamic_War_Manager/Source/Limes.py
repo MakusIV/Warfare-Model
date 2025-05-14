@@ -5,11 +5,10 @@ Represents the limes of a Region: a closed line defined from points
 
 """
 
-from LoggerClass import Logger
-import Utility
-from Dynamic_War_Manager.Source.Area import Area
+from Code.LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Area import Area
 from typing import Literal, List, Dict
-from Context import Context
+from Code import Context
 from sympy import Point2D, Line2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 import numpy as np
 from collections import deque

@@ -187,7 +187,8 @@ AREA_FOR_VOLUME = {
     SHAPE2D.SQUARE : {SHAPE3D.CUBE},
     SHAPE2D.HEXAGON : {SHAPE3D.PRISM}
 }
-    
+
+# key: asset type
 AIR_MIL_BASE_CRAFT_ASSET = {
     "Fighter":          {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
     "Fighter_Bomber":   {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
@@ -205,7 +206,7 @@ AIR_MIL_BASE_CRAFT_ASSET = {
  # Strategical_Evaluation:  MIL_BASE_CATEGORY
 
 #GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]
-
+# key1+key2: asset category, key3: asset type
 AIR_DEFENCE_ASSET = {  
     
     "SAM":                  {   "Big": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
@@ -251,6 +252,7 @@ AIR_DEFENCE_ASSET = {
 
 
 # Caratteristiche degli asset delle diversè unità MIL_BASE: Corazzate, Meccanizzate, Motorizzate e Artiglieria
+# key1: asset category, key2: asset type
 GROUND_MIL_BASE_VEHICLE_ASSET = {
     # Corazzata 
     "Tank":     {   "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
@@ -294,6 +296,7 @@ GROUND_MIL_BASE_VEHICLE_ASSET = {
                     "Scout_&_Recon":                    {"cost": None, "value": VALUE.LOW, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33} }
 }
 
+# key: asset type
 NAVAL_MIL_BASE_CRAFT_ASSET = {
      
     "Carrier":          {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},      
@@ -308,7 +311,7 @@ NAVAL_MIL_BASE_CRAFT_ASSET = {
 }
 
 
-# key1:   Block Class, key2: Block Sub-Category, key 3: Asset Category
+# key1:   Block Class, key2: Asset Category, key 3: Asset type
 # INFRASTRUCTURE BLOCK ASSET
 BLOCK_INFRASTRUCTURE_ASSET = {  
     
