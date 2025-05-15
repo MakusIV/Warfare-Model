@@ -24,18 +24,18 @@ logger = Logger(module_name = __name__, class_name = 'Block')
 # ASSET o BLOCK (non deve essere istanziata: solo le derivate)
 class Block:    
 
-    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: float|None, region: "Region"|None):
+    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: int|None, region: "Region"|None):
 
             # propriety
-            self._name = name # block name - type str
+            self._name: str = name # block name - type str
             self._id = None # id self-assigned - type str
-            self._description = description # block description - type str
-            self._side = side # block side - type str
-            self._category = category # block category - (Civilian, Logistic, Military, All)
+            self._description: str = description # block description - type str
+            self._side: str = side # block side - type str
+            self._category: str = category # block category - (Civilian, Logistic, Military, All)
             
-            self._sub_category = sub_category # Road, Railway, Airport, Electric, Power_Plant, Factory, Administrative, Service, Stronghold, Farp ,...
-            self._functionality = functionality # block functionality - type str
-            self._value = value # strategical value of block- type float             
+            self._sub_category: str = sub_category # Road, Railway, Airport, Electric, Power_Plant, Factory, Administrative, Service, Stronghold, Farp ,...
+            self._functionality:str = functionality # block functionality - type str
+            self._value: int = value # strategical value of block- type int (nota non è riferito al value dei singoli asset ma dovrebbe rappresentare un valore strategico rispetto gli altri blocchi)            
             self._events: List[Event] = [] # block event - list of Block event's    
 
               
@@ -240,7 +240,7 @@ class Block:
     def cost(self) -> int:
         cost = 0
 
-        for asset in self.assets:
+        for asset in self.assets.values():
             cost += asset.cost
 
         return cost
@@ -359,6 +359,8 @@ class Block:
 
     def setAsset(self, key, value):
 
+        from Code.Dynamic_War_Manager.Source.Asset import Asset
+
         if isinstance(value, Asset):
             self._assets[key] = value
             value.block = self 
@@ -422,7 +424,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, function: str = None, value: float = None, region: "Region" = None) -> (bool, str): # type: ignore
+    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, function: str = None, value: int = None, region: "Region" = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
         from Code.Dynamic_War_Manager.Source.Region import Region
         from Code.Dynamic_War_Manager.Source.Asset import Asset      
@@ -439,7 +441,7 @@ class Block:
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_ASSET_CATEGORY[self.block_class].keys()))        
         if function and not isinstance(function, str):
             return (False, "Bad Arg: function must be a str")
-        if value and not isinstance(value, float):
+        if value and not isinstance(value, int):
             return (False, "Bad Arg: value must be a float")
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
@@ -455,7 +457,7 @@ class Block:
     @property
     def position(self):
         """calculate center point from assets position"""        
-        return Utility.mean_point([asset.position for asset in self.assets]) 
+        return Utility.mean_point([asset.position for asset in self.assets.values()]) 
     
 
     @property
@@ -464,7 +466,7 @@ class Block:
         
     @property
     def efficiency(self):    
-        return mean(asset.efficiency for asset in self.assets)
+        return mean([asset.efficiency for asset in self.assets.values()])
 
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Defined in each subclass """
@@ -488,15 +490,15 @@ class Block:
         #    balance += asset.balance_trade
         #return balance/len(self.assets)
 
-        return mean([asset.balance_trade for asset in self.assets]) 
+        return mean([asset.balance_trade for asset in self.assets.values()]) 
 
         
 
     def isMilitary(self):
-        return (self.category == "Military")
+        return (self.category == Context.BLOCK_CLASS["Mil_Base"])
     
     def isLogistic(self):
-        return any[self.category == Context.BLOCK_CLASS["Production"], self.category == Context.BLOCK_CLASS["Storage"], self.category == Context.BLOCK_CLASS["Transport"]]
+        return self.category == Context.BLOCK_CLASS["Production"] or self.category == Context.BLOCK_CLASS["Storage"] or self.category == Context.BLOCK_CLASS["Transport"]
     
     def isCivilian(self):
         return self.category == Context.BLOCK_CLASS["Urban"]

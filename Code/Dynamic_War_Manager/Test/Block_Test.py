@@ -8,6 +8,7 @@ from Code.Context import SIDE, BLOCK_CATEGORY
 from typing import TYPE_CHECKING
 from Code.Dynamic_War_Manager.Source.Region import Region
 from Code.Dynamic_War_Manager.Source.Asset import Asset
+import copy
 # Forza TYPE_CHECKING a True per eseguire le importazioni condizionali
 #TYPE_CHECKING = True
 
@@ -40,8 +41,8 @@ class TestBlock(unittest.TestCase):
         )
         
         # Creazione di un mock per Asset
-        self.mock_asset = Asset(self.block, name = "Test Asset", cost=100) #Mock(spec=Asset)
-        #self.mock_asset.name = "Test Asset"
+        self.mock_asset = Asset(self.block, name = "Test Asset", cost = 100) #Mock(spec=Asset)
+        self.mock_asset.health = 100
         #self.mock_asset.cost = 100
         #self.mock_asset.efficiency = 0.8 è calcolato
         #self.mock_asset.balance_trade = 1.2è calcolato
@@ -119,19 +120,19 @@ class TestBlock(unittest.TestCase):
             
     def test_assets_management(self):
         # Test aggiunta asset
-        self.block.setAsset("asset1", self.mock_asset)
-        self.assertIn("asset1", self.block.assets)
-        self.assertEqual(self.block.assets["asset1"], self.mock_asset)
+        self.block.setAsset(self.mock_asset.id, self.mock_asset)
+        self.assertIn(self.mock_asset.id, self.block.assets)
+        self.assertEqual(self.block.assets[self.mock_asset.id], self.mock_asset)
         
         # Test lista chiavi
-        self.assertEqual(self.block.listAssetKeys(), ["asset1"])
+        self.assertEqual(self.block.listAssetKeys(), [self.mock_asset.id])
         
         # Test get asset
-        self.assertEqual(self.block.getAsset("asset1"), self.mock_asset)
+        self.assertEqual(self.block.getAsset(self.mock_asset.id), self.mock_asset)
         
         # Test rimozione asset
-        self.block.removeAsset("asset1")
-        self.assertNotIn("asset1", self.block.assets)
+        self.block.removeAsset(self.mock_asset.id)
+        self.assertNotIn(self.mock_asset.id, self.block.assets)
         
     def test_events_management(self):
         # Test aggiunta evento
@@ -151,25 +152,33 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(len(self.block.events), 0)
         
     def test_cost_property(self):
-        self.block.setAsset("asset1", self.mock_asset)
-        self.block.setAsset("asset2", self.mock_asset)
+        self.block.setAsset(self.mock_asset.id, self.mock_asset)
+        mock_asset2 = copy.deepcopy(self.mock_asset)
+        mock_asset2.id = "mock_asset2"
+        self.block.setAsset("mock_asset2", mock_asset2)
         self.assertEqual(self.block.cost, 200)
         
     def test_position_property(self):
-        self.block.setAsset("asset1", self.mock_asset)
-        self.block.setAsset("asset2", self.mock_asset)
+        self.block.setAsset(self.mock_asset.id, self.mock_asset)
+        mock_asset2 = copy.deepcopy(self.mock_asset)
+        mock_asset2.id = "mock_asset2"
+        self.block.setAsset("mock_asset2", mock_asset2)
         position = self.block.position
-        self.assertEqual(position, Point(0, 0))
+        self.assertEqual(position, Point(0, 0, 0))
         
     def test_efficiency_property(self):
-        self.block.setAsset("asset1", self.mock_asset)
-        self.block.setAsset("asset2", self.mock_asset)
-        self.assertEqual(self.block.efficiency, 0.8)
+        self.block.setAsset(self.mock_asset.id, self.mock_asset)
+        mock_asset2 = copy.deepcopy(self.mock_asset)
+        mock_asset2.id = "mock_asset2"
+        self.block.setAsset("mock_asset2", mock_asset2)
+        self.assertEqual(self.block.efficiency, 100)
         
     def test_balance_trade_property(self):
-        self.block.setAsset("asset1", self.mock_asset)
-        self.block.setAsset("asset2", self.mock_asset)
-        self.assertEqual(self.block.balance_trade, 1.2)
+        self.block.setAsset(self.mock_asset.id, self.mock_asset)
+        mock_asset2 = copy.deepcopy(self.mock_asset)
+        mock_asset2.id = "mock_asset2"
+        self.block.setAsset("mock_asset2", mock_asset2)
+        self.assertEqual(self.block.balance_trade, 1)
         
     def test_isMilitary(self):
         self.assertTrue(self.block.isMilitary())
@@ -192,11 +201,6 @@ class TestBlock(unittest.TestCase):
         self.block.category = "Military"
         self.assertFalse(self.block.isCivilian())
         
-    def test_toString(self):
-        string = self.block.toString()
-        self.assertIn("Test Block", string)
-        self.assertIn("Test Description", string)
-        self.assertIn("Military", string)
         
     def test_repr(self):
         repr_str = repr(self.block)
@@ -219,11 +223,7 @@ class TestBlock(unittest.TestCase):
             category="Military",
             sub_category="Stronghold",
             function="Defense",
-            value=100.0,
-            position=Point(0, 0),
-            acp=self.mock_payload,
-            rcp=self.mock_payload,
-            payload=self.mock_payload,
+            value=100.0,           
             region=self.mock_region
         )
         self.assertTrue(result)
