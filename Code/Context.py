@@ -45,7 +45,6 @@ BLOCK_CATEGORY = {
     "All": "All",
 }
 
-"""
 BLOCK_CLASS = {  # Non dovrebbe servire in quanto ci sono le classi- verifica se lo hai utilizzato nei moduli di management
 
     "Production": "Production",
@@ -55,7 +54,7 @@ BLOCK_CLASS = {  # Non dovrebbe servire in quanto ci sono le classi- verifica se
     "Urban": "Urban",
     "All": "All",
 }
-"""
+
 """
 MIL_BASE_CATEGORY = {
 

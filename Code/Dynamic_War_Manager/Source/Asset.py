@@ -41,7 +41,7 @@ class Asset :
             self._functionality = functionality # asset functionality - type str  
             self._health = int|None      
             self._position: Point|None = position # asset position - type Point (3D -> anche l'altezza deve essere considerata per la presenza di rilievi nel terreno)
-            self._cost: int = None # asset cost - type int             
+            self._cost: int = cost # asset cost - type int             
             self._value: int = value # asset value - type int
             self._payload_perc: int = None
             self._crytical: bool|None = crytical 
@@ -116,14 +116,11 @@ class Asset :
 
     @id.setter
     def id(self, param):
-
-        check_result = self.checkParam(id = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
-
-        
-        self._id = str(param)
+        if id:                        
+            self._id = str(param)
+        else:
+            self._id = None
             
         return True
     
@@ -311,8 +308,8 @@ class Asset :
     
 
     @property
-    def efficiency(self):
-        return self.balance_trade * self._health
+    def efficiency(self) -> float:
+        return float(self.balance_trade * self._health)
 
     @property
     def balance_trade(self) -> float:        
@@ -583,7 +580,7 @@ class Asset :
         if not check_result[1]:
             raise Exception(check_result[2])                
         
-        if param.get_asset(self._id).get_id() != self._id:
+        if param and param.getAsset(self._id).id != self._id:
             raise Exception("Association Incongruence: this Asset id is present like a key in Block association dictionary, but Asset object has different id")
         
         self._block = param
