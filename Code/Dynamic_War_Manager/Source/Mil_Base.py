@@ -64,8 +64,8 @@ class Mil_Base(Block) :
          
         check_result = self.checkParam(name = value)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._mil_category = value
         return True

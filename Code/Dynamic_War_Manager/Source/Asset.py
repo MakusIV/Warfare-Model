@@ -104,8 +104,8 @@ class Asset :
 
         check_result = self.checkParam(name = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         self._name = param  
         return True
@@ -133,8 +133,8 @@ class Asset :
 
         check_result = self.checkParam(description = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         
         self._description = param       
@@ -150,8 +150,8 @@ class Asset :
         
         check_result = self.checkParam(description = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         
         self._description = param       
@@ -167,8 +167,8 @@ class Asset :
 
         check_result = self.checkParam(category = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         self._category = param
 
@@ -183,8 +183,8 @@ class Asset :
 
         check_result = self.checkParam(functionality = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
 
         self._functionality = param  
@@ -199,8 +199,8 @@ class Asset :
     def cost(self, param) -> bool:
         check_result = self.checkParam(cost = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         self._cost = param              
         return True
@@ -214,8 +214,8 @@ class Asset :
     def value(self, param) -> bool:
         check_result = self.checkParam(value = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         self._value = param              
         return True
@@ -228,8 +228,8 @@ class Asset :
     def health(self, health) -> bool: #override
         check_result = self.checkParam(health = health)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])                        
+        if not check_result[0]:
+            raise Exception(check_result[0])                        
         self._health = health
         return True
 
@@ -241,8 +241,8 @@ class Asset :
     def crytical(self, crytical) -> bool: #override
         check_result = self.checkParam(crytical = crytical)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._crytical = crytical
         return True
     
@@ -255,8 +255,8 @@ class Asset :
         
         check_result = self.checkParam(repair_time = repair_time)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._repair_time = repair_time
         return True
 
@@ -269,8 +269,8 @@ class Asset :
         
         check_result = self.checkParam(role = role)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._role = role
         return True 
     
@@ -283,8 +283,8 @@ class Asset :
         
         check_result = self.checkParam(asset_type = asset_type)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._asset_type = asset_type
         return True 
         
@@ -297,8 +297,8 @@ class Asset :
         
         check_result = self.checkParam(position = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._position = param
         return True
 
@@ -378,8 +378,8 @@ class Asset :
         """
         check_result = self.checkParam(acp = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         else:
             self._acp = param
@@ -414,8 +414,8 @@ class Asset :
         """        
         check_result = self.checkParam(rcp = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
         else:
             self._rcp = param           
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
@@ -447,8 +447,8 @@ class Asset :
         """        
         check_result = self.checkParam(payload = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
         else:
             self._payload = param             
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
@@ -478,8 +478,8 @@ class Asset :
         """        
         check_result = self.checkParam(payload = cons)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[0])    
 
         else:
             consume_execution = {"goods": None, "energy": None, "hr": None, "hc": None, "hs": None, "hb": None}
@@ -550,8 +550,8 @@ class Asset :
         
         check_result = self.checkParam(volume = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._volume = param
         return True
     
@@ -564,8 +564,8 @@ class Asset :
         
         check_result = self.checkParam(threat = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         self._threat = param
         return True
     
@@ -577,8 +577,8 @@ class Asset :
     def block(self, param):
         check_result = self.checkParam(block = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[0])                
         
         if param and param.getAsset(self._id).id != self._id:
             raise Exception("Association Incongruence: this Asset id is present like a key in Block association dictionary, but Asset object has different id")

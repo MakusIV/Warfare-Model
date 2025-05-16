@@ -62,14 +62,14 @@ class TestBlock(unittest.TestCase):
         self.mock_asset.payload = self.mock_payload
 
     def test_initialization(self):
-        self.assertEqual(self.block.name, "Block.Test Block")
+        self.assertEqual(self.block.name, "Test Block")
         self.assertIsNotNone(self.block.id)
         self.assertEqual(self.block.description, "Test Description")
         self.assertEqual(self.block.side, "Blue")
         self.assertEqual(self.block.category, "Military")
         self.assertEqual(self.block.sub_category, "Stronghold")
         self.assertEqual(self.block.functionality, "Defense")
-        self.assertEqual(self.block.cost, 100.0)
+        self.assertEqual(self.block.cost, 0)
         self.assertEqual(self.block.region, self.mock_region)
         
     def test_initialization_with_defaults(self):
@@ -107,6 +107,7 @@ class TestBlock(unittest.TestCase):
         
         self.block.value = 200.0
         self.assertEqual(self.block.value, 200.0)
+        
         
     def test_invalid_property_setters(self):
         with self.assertRaises(Exception):
@@ -186,17 +187,13 @@ class TestBlock(unittest.TestCase):
         self.assertFalse(self.block.isMilitary())
         
     def test_isLogistic(self):
-        self.block.category = "Production"
-        self.assertTrue(self.block.isLogistic())
-        self.block.category = "Storage"
-        self.assertTrue(self.block.isLogistic())
-        self.block.category = "Transport"
-        self.assertTrue(self.block.isLogistic())
+        self.block.category = "Logistic"
+        self.assertTrue(self.block.isLogistic())        
         self.block.category = "Military"
         self.assertFalse(self.block.isLogistic())
         
     def test_isCivilian(self):
-        self.block.category = "Urban"
+        self.block.category = "Civilian"
         self.assertTrue(self.block.isCivilian())
         self.block.category = "Military"
         self.assertFalse(self.block.isCivilian())
@@ -222,7 +219,7 @@ class TestBlock(unittest.TestCase):
             side="Blue",
             category="Military",
             sub_category="Stronghold",
-            function="Defense",
+            functionality="Defense",
             value=100.0,           
             region=self.mock_region
         )

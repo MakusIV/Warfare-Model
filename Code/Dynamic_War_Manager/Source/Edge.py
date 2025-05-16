@@ -63,8 +63,8 @@ class Edge:
 
         check_result = self.checkParam(name = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._name = param  
         return True
@@ -78,8 +78,8 @@ class Edge:
         
         check_result = self.checkParam(path_type = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._path_type = param
         return True 
     
@@ -92,8 +92,8 @@ class Edge:
         
         check_result = self.checkParam(wpA = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._wpA = param
         return True
     
@@ -106,8 +106,8 @@ class Edge:
         
         check_result = self.checkParam(wpB = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._wpB = param
         return True
 
@@ -121,8 +121,8 @@ class Edge:
 
         check_result = self.checkParam(danger_level = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._danger_level = param  
         return True
@@ -137,8 +137,8 @@ class Edge:
 
         check_result = self.checkParam(speed = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._speed = param  
         return True
