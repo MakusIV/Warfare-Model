@@ -105,8 +105,8 @@ class TestBlock(unittest.TestCase):
         self.block.functionality = "Transport"
         self.assertEqual(self.block.functionality, "Transport")
         
-        self.block.value = 200.0
-        self.assertEqual(self.block.value, 200.0)
+        self.block.value = 10
+        self.assertEqual(self.block.value, 10)
         
         
     def test_invalid_property_setters(self):
@@ -220,7 +220,7 @@ class TestBlock(unittest.TestCase):
             category="Military",
             sub_category="Stronghold",
             functionality="Defense",
-            value=100.0,           
+            value=100,           
             region=self.mock_region
         )
         self.assertTrue(result)
