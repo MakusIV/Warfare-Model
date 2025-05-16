@@ -64,6 +64,22 @@ class Block:
                        
 
     # methods
+
+    @property
+    def state(self):                
+        return self._state
+    
+
+    @state.setter
+    def state(self, param) -> bool: #override
+        
+        check_result = self.checkParam(state = param)
+
+        if not check_result[0]:
+            raise Exception(check_result[1])                
+        self._state = param
+        return True
+
     @property
     def block_class(self):
         return self.__class__.__name__ #(Production, Transport, Storage, Urban, Mil_Base)
@@ -409,7 +425,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, functionality: str = None, value: int = None, region: "Region" = None) -> (bool, str): # type: ignore
+    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, functionality: str = None, value: int = None, region: "Region" = None, state: State = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
         from Code.Dynamic_War_Manager.Source.Region import Region
         from Code.Dynamic_War_Manager.Source.Asset import Asset      
@@ -430,6 +446,8 @@ class Block:
             return (False, "Bad Arg: value must be a float")
         if region and not isinstance(region, Region):
             return (False, "Bad Arg: region must be a Region object")
+        if state and not isinstance(state, State):                        
+            return (False, "Bad Arg: state must be a State object")  
             
         return (True, "OK")      
 

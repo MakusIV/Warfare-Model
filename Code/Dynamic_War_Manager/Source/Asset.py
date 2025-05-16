@@ -6,20 +6,17 @@ Il Block può essere costituito da diversi gruppi apparenenti a country diverse 
 
 """
 
-import sys
-import os
-# Aggiungi il percorso della directory principale del progetto
-#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Code.Dynamic_War_Manager.Source.Block import Block
 from Code  import Utility
 from Code.LoggerClass import Logger
-#from Code.Dynamic_War_Manager.Source.Event import Event
+from Code.Dynamic_War_Manager.Source.Event import Event
 from Code.Dynamic_War_Manager.Source.Volume import Volume
 from Code.Dynamic_War_Manager.Source.Threat import Threat
 from Code.Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import SIDE, BLOCK_ASSET_CATEGORY, AIR_MIL_BASE_CRAFT_ASSET, AIR_DEFENCE_ASSET, GROUND_MIL_BASE_VEHICLE_ASSET, NAVAL_MIL_BASE_CRAFT_ASSET, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.State import State
+#from Code.Context import SIDE, BLOCK_ASSET_CATEGORY, AIR_MIL_BASE_CRAFT_ASSET, AIR_DEFENCE_ASSET, GROUND_MIL_BASE_VEHICLE_ASSET, NAVAL_MIL_BASE_CRAFT_ASSET, BLOCK_INFRASTRUCTURE_ASSET
 from sympy import Point, Point3D
-#from Code.Dynamic_War_Manager.Source.Region import Region
+
 
 # LOGGING --
  
@@ -48,7 +45,8 @@ class Asset :
             self._repair_time: int = None
             self._role: str|None = role # asset role - type str Recon, Interdiction, ReconAndInterdiction, defence, attack, support, transport, storage (energy, goods, ..)                          
             self._dcs_unit_data = dcs_unit_data
-          
+            self._event = [Event] # block event - list of Asset event's    
+            self._state = State()
             
             # Association    
             self._volume: Volume|None = volume
@@ -62,8 +60,8 @@ class Asset :
                 self._id = dcs_unit_data["unitId"]                
                 self._position = Point3D(dcs_unit_data["unit_x"], dcs_unit_data["unit_y"], dcs_unit_data["unit_alt"])# att: nella gestione dello z devi tener conto se BARO o ASL
                 self._health = dcs_unit_data["unit_health"]
-            #else:
-            #    raise Exception(check_results[2] + ". Object not istantiate (DCS_DATA).")
+            else:
+                raise Exception(check_results[1] + ". Object not istantiate (Wrong DCS_DATA).")
 
 
             if not acp:
@@ -78,21 +76,69 @@ class Asset :
 
             check_results =  self.checkParam( name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role)
             
-            if not check_results[1]:
-                raise Exception(check_results[2] + ". Object not istantiate.")
+            if not check_results[0]:
+                raise Exception(check_results[1] + ". Object not istantiate.")
 
 
    
     # getter & setter methods
 
     @property
+    def events(self):
+        return self._events
+
+    @events.setter
+    def events(self, value):
+        if isinstance(value, list):
+            self._events = value
+        else:
+            raise ValueError("Il valore deve essere una lista")
+
+    def addEvent(self, event):
+        if isinstance(event, Event):
+            self._events.append(event)
+        else:
+            raise ValueError("Il valore deve essere un oggetto di tipo Event")
+
+    def getLastEvent(self):
+        if self._events:
+            return self._events[-1]
+        else:
+            raise IndexError("La lista è vuota")
+
+    def getEvent(self, index):
+        if index < len(self._events):
+            return self._events[index]
+        else:
+            raise IndexError("Indice fuori range")
+
+    def removeEvent(self, event):
+        if event in self._events:
+            self._events.remove(event)
+        else:
+            raise ValueError("L'evento non esiste nella lista")
+
+
+
+    @property
     def dcs_unit_data(self):
         return self._dcs_unit_data
     
     @dcs_unit_data.setter
-    def dcs_unit_data(self, data):
+    def dcs_unit_data(self, param):
 
-        self._dcs_unit_data = data
+        check_result = self.checkParamDCS(dcs_unit_data = param)
+        
+        if not check_result[0]:
+            raise Exception(check_result[1])    
+
+        self._dcs_unit_data = param  
+        self._nome = param["unit_name"]
+        self._id = param["unitId"]                
+        self._position = Point3D(param["unit_x"], param["unit_y"], param["unit_alt"])# att: nella gestione dello z devi tener conto se BARO o ASL
+        self._health = param["unit_health"]
+
+        return True
 
 
     @property
@@ -105,7 +151,7 @@ class Asset :
         check_result = self.checkParam(name = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         self._name = param  
         return True
@@ -134,7 +180,7 @@ class Asset :
         check_result = self.checkParam(description = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         
         self._description = param       
@@ -148,13 +194,13 @@ class Asset :
     @side.setter
     def side(self, param):
         
-        check_result = self.checkParam(description = param)
+        check_result = self.checkParam(side = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         
-        self._description = param       
+        self._side = param       
             
         return True
 
@@ -168,7 +214,7 @@ class Asset :
         check_result = self.checkParam(category = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         self._category = param
 
@@ -184,7 +230,7 @@ class Asset :
         check_result = self.checkParam(functionality = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
 
         self._functionality = param  
@@ -200,7 +246,7 @@ class Asset :
         check_result = self.checkParam(cost = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         self._cost = param              
         return True
@@ -215,7 +261,7 @@ class Asset :
         check_result = self.checkParam(value = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         self._value = param              
         return True
@@ -229,7 +275,7 @@ class Asset :
         check_result = self.checkParam(health = health)
         
         if not check_result[0]:
-            raise Exception(check_result[0])                        
+            raise Exception(check_result[1])                        
         self._health = health
         return True
 
@@ -242,7 +288,7 @@ class Asset :
         check_result = self.checkParam(crytical = crytical)
         
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._crytical = crytical
         return True
     
@@ -256,7 +302,7 @@ class Asset :
         check_result = self.checkParam(repair_time = repair_time)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._repair_time = repair_time
         return True
 
@@ -270,7 +316,7 @@ class Asset :
         check_result = self.checkParam(role = role)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._role = role
         return True 
     
@@ -284,7 +330,7 @@ class Asset :
         check_result = self.checkParam(asset_type = asset_type)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._asset_type = asset_type
         return True 
         
@@ -298,14 +344,24 @@ class Asset :
         check_result = self.checkParam(position = param)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._position = param
         return True
 
     @property
     def state(self):                
-        return {"name": self._name, "id": self.id, "category": self._category, "role": self._role, "health": self._health, "efficiency": self.efficiency, "balance_trade": self.balance_trade, "position": self._position}
+        return self._state#return {"name": self._name, "id": self.id, "category": self._category, "role": self._role, "health": self._health, "efficiency": self.efficiency, "balance_trade": self.balance_trade, "position": self._position}
     
+
+    @state.setter
+    def state(self, param) -> bool: #override
+        
+        check_result = self.checkParam(state = param)
+
+        if not check_result[0]:
+            raise Exception(check_result[1])                
+        self._state = param
+        return True
 
     @property
     def efficiency(self) -> float:
@@ -379,7 +435,7 @@ class Asset :
         check_result = self.checkParam(acp = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         else:
             self._acp = param
@@ -415,7 +471,7 @@ class Asset :
         check_result = self.checkParam(rcp = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
         else:
             self._rcp = param           
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
@@ -448,7 +504,7 @@ class Asset :
         check_result = self.checkParam(payload = param)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
         else:
             self._payload = param             
             # payload.parent = self NO si crea un riferimento circolare in cui i due metodi setter delle classi associate si richiamano tra loro con loop ricorsivamente
@@ -479,7 +535,7 @@ class Asset :
         check_result = self.checkParam(payload = cons)
         
         if not check_result[0]:
-            raise Exception(check_result[0])    
+            raise Exception(check_result[1])    
 
         else:
             consume_execution = {"goods": None, "energy": None, "hr": None, "hc": None, "hs": None, "hb": None}
@@ -551,7 +607,7 @@ class Asset :
         check_result = self.checkParam(volume = param)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._volume = param
         return True
     
@@ -565,7 +621,7 @@ class Asset :
         check_result = self.checkParam(threat = param)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         self._threat = param
         return True
     
@@ -578,7 +634,7 @@ class Asset :
         check_result = self.checkParam(block = param)
 
         if not check_result[0]:
-            raise Exception(check_result[0])                
+            raise Exception(check_result[1])                
         
         if param and param.getAsset(self._id).id != self._id:
             raise Exception("Association Incongruence: this Asset id is present like a key in Block association dictionary, but Asset object has different id")
@@ -587,7 +643,7 @@ class Asset :
         return True
 
     # use case methods
-    def checkParam(self, name: str = None, description: str = None, category: str = None, asset_type: str = None, functionality: str = None, cost: int = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point3D = None, volume: Volume = None, crytical: bool = None, repair_time: int = None, block: Block = None, role: str = None, health: int = None) -> (bool, str): # type: ignore
+    def checkParam(self, name: str = None, description: str = None, category: str = None, asset_type: str = None, functionality: str = None, cost: int = None, value: int = None, acp: Payload = None, rcp: Payload = None, payload: Payload = None, position: Point3D = None, volume: Volume = None, crytical: bool = None, repair_time: int = None, block: Block = None, role: str = None, health: int = None, state: State = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")
@@ -622,10 +678,11 @@ class Asset :
         if role and not isinstance(role, str):  
             return (False, "Bad Arg: role must be a str")        
         if health and not isinstance(health, int):
-            return (False, "Bad Arg: health must be a int")
-            
+            return (False, "Bad Arg: health must be a int")            
         if crytical and not isinstance(crytical, bool):
             return (False, "Bad Arg: crytical must be a bool")        
+        if state and not isinstance(state, State):                        
+            return (False, "Bad Arg: state must be a State object")  
     
         return (True, "OK")
     
