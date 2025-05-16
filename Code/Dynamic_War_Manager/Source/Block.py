@@ -8,6 +8,7 @@ from Code import Context, Utility
 from numpy import mean
 from Code.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Event import Event
+from Code.Dynamic_War_Manager.Source.State import State
 from Code.Dynamic_War_Manager.Source.Payload import Payload
 from Code.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
 from typing import List, Dict
@@ -42,6 +43,7 @@ class Block:
             # Association  
             self._assets: Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
             self._region = region # block map region - type Region
+            self._state = State()
 
 
             if not name:
@@ -53,7 +55,7 @@ class Block:
             self._id = Utility.setId(self._name, None)
            
             if not side:
-                side = "Neutral"
+                self._side = "Neutral"
             # check input parameters            
             check_results =  self.checkParam( name, description, side, category, sub_category, functionality, value, region )            
             
@@ -75,8 +77,8 @@ class Block:
 
         check_result = self.checkParam(name = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._name = param  
         return True
@@ -90,8 +92,8 @@ class Block:
 
         check_result = self.checkParam(id = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         
         self._id = str(param)
@@ -108,7 +110,7 @@ class Block:
         check_result = self.checkParam(description = param)
         
         if not check_result[1]:
-            raise Exception(check_result[2])    
+            raise Exception(check_result[1])    
 
         
         self._description = param       
@@ -124,11 +126,11 @@ class Block:
         
         check_result = self.checkParam(side = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         
-        self._description = param       
+        self._side = param       
             
         return True
 
@@ -141,8 +143,8 @@ class Block:
 
         check_result = self.checkParam(category = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._category = param
 
@@ -157,8 +159,8 @@ class Block:
 
         check_result = self.checkParam(sub_category = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._sub_category = param
 
@@ -175,8 +177,8 @@ class Block:
 
         check_result = self.checkParam(functionality = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
 
         self._functionality = param  
@@ -193,8 +195,8 @@ class Block:
 
         check_result = self.checkParam(value = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
     
         self._value = param            
         return True
@@ -316,23 +318,6 @@ class Block:
         # restituisce payload calcolato in base agli assets
         return self.updatePayload(destination = "payload")
 
-    
-    @property
-    def state(self):
-        state = State
-        pre = True
-        n_mission = None
-        date_mission = None
-
-        for asset in self.assets:                        
-            state.damage += asset.state.damage
-        
-        state.n_mission = n_mission
-        state.date_mission = date_mission
-        state.damage /= len(self.assets) # la media dovrebbe essere pesata in funzine dell'importanza dell'asset
-        return {"name": self._name, "id": self.id, "category": self._category, "role": self._role, "health": self._health, "efficiency": self.efficiency, "balance_trade": self.balance_trade, "position": self._position}
-
-
 
     @property
     def assets(self):
@@ -384,8 +369,8 @@ class Block:
 
         check_result = self.checkParam(region = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
                 
         self._region = param       
             
@@ -424,7 +409,7 @@ class Block:
 
      # vedi il libro
     
-    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, function: str = None, value: int = None, region: "Region" = None) -> (bool, str): # type: ignore
+    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, functionality: str = None, value: int = None, region: "Region" = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""   
         from Code.Dynamic_War_Manager.Source.Region import Region
         from Code.Dynamic_War_Manager.Source.Asset import Asset      
@@ -433,14 +418,14 @@ class Block:
             return (False, "Bad Arg: name must be a str")
         if description and not isinstance(description, str):
             return (False, "Bad Arg: description must be a str")
-        if side and (not isinstance(side, str) or side not in SIDE):
+        if side and ( not isinstance(side, str) or not (side in SIDE)   ):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and not isinstance(category, str) and (category not in [BLOCK_CATEGORY]):                        
+        if category and not isinstance(category, str) or (category not in [BLOCK_CATEGORY]):                        
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_CATEGORY))        
         if sub_category and not isinstance(sub_category, str) and (sub_category not in BLOCK_ASSET_CATEGORY[self.block_class].keys()):                        
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_ASSET_CATEGORY[self.block_class].keys()))        
-        if function and not isinstance(function, str):
-            return (False, "Bad Arg: function must be a str")
+        if functionality and not isinstance(functionality, str):
+            return (False, "Bad Arg: functionality must be a str")
         if value and not isinstance(value, int):
             return (False, "Bad Arg: value must be a float")
         if region and not isinstance(region, Region):
@@ -495,11 +480,11 @@ class Block:
         
 
     def isMilitary(self):
-        return (self.category == Context.BLOCK_CLASS["Mil_Base"])
+        return (self.category == Context.BLOCK_CATEGORY["Military"])
     
     def isLogistic(self):
-        return self.category == Context.BLOCK_CLASS["Production"] or self.category == Context.BLOCK_CLASS["Storage"] or self.category == Context.BLOCK_CLASS["Transport"]
+        return self.category == Context.BLOCK_CATEGORY["Logistic"]
     
     def isCivilian(self):
-        return self.category == Context.BLOCK_CLASS["Urban"]
+        return self.category == Context.BLOCK_CATEGORY["Civilian"]
 

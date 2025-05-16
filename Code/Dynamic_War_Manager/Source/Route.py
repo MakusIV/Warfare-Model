@@ -65,8 +65,8 @@ class Route:
 
         check_result = self.checkParam(name = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._name = param  
         return True
@@ -80,8 +80,8 @@ class Route:
         
         check_result = self.checkParam(route_type = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._route_type = param
         return True 
     
@@ -94,8 +94,8 @@ class Route:
         
         check_result = self.checkParam(edges = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._edges = param
         return True
 

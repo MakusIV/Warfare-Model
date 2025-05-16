@@ -45,15 +45,7 @@ BLOCK_CATEGORY = {
     "All": "All",
 }
 
-BLOCK_CLASS = {  # Non dovrebbe servire in quanto ci sono le classi- verifica se lo hai utilizzato nei moduli di management
 
-    "Production": "Production",
-    "Storage": "Storage",    
-    "Transport": "Transport",
-    "Mil_Base": "Mil_Base",
-    "Urban": "Urban",
-    "All": "All",
-}
 
 """
 MIL_BASE_CATEGORY = {
@@ -87,7 +79,7 @@ GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION["Maintain"]: {"Tank": 3, "Armored": 3.7, "Motorized": 4, "Artillery_Semovent": 2, "Artillery_Fixed": 3},    
 }
 
-STATE = {"Standby": True , "Destroyed": True, "Damaged": True}
+STATE = {"Operational": True, "Not_Operational": True , "Destroyed": True, "Critical": True, "Damaged": True}
 
 AIR_TASK = {
     

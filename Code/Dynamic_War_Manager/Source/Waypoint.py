@@ -49,8 +49,8 @@ class Waypoint:
 
         check_result = self.checkParam(name = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._name = param  
         return True
@@ -64,8 +64,8 @@ class Waypoint:
         
         check_result = self.checkParam(obj_reference = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._reference = param
         return True 
     
@@ -78,8 +78,8 @@ class Waypoint:
         
         check_result = self.checkParam(point = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2])                
+        if not check_result[0]:
+            raise Exception(check_result[1])                
         self._point = param
         return True
 

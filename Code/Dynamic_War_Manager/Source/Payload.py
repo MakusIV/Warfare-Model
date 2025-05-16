@@ -49,8 +49,8 @@ class Payload:
     @goods.setter
     def goods(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._goods = value
         return True
 
@@ -61,8 +61,8 @@ class Payload:
     @energy.setter
     def energy(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._energy = value
         return True
 
@@ -73,8 +73,8 @@ class Payload:
     @hr.setter
     def hr(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._hr = value
         return True
 
@@ -85,8 +85,8 @@ class Payload:
     @hc.setter
     def hc(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._hc = value
         return True
 
@@ -97,8 +97,8 @@ class Payload:
     @hs.setter
     def hs(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._hs = value
         return True
 
@@ -109,8 +109,8 @@ class Payload:
     @hb.setter
     def hb(self, value):
         check_result = self.checkParam(value)
-        if not check_result[1]:
-            raise Exception(check_result[2])
+        if not check_result[0]:
+            raise Exception(check_result[1])
         self._hb = value
         return True
 

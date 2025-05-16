@@ -86,8 +86,8 @@ class Mobile(Asset) :
 
         check_result = self.checkParam(speed = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._speed = param  
         return True
@@ -102,8 +102,8 @@ class Mobile(Asset) :
 
         check_result = self.checkParam(fire_range = param)
         
-        if not check_result[1]:
-            raise Exception(check_result[2])    
+        if not check_result[0]:
+            raise Exception(check_result[1])    
 
         self._fire_range = param  
         return True

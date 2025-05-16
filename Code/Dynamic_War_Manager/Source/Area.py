@@ -41,8 +41,8 @@ class Area:
 
         check_result = self.checkParam(shape = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2]) 
+        if not check_result[0]:
+            raise Exception(check_result[1]) 
                 
         self._shape = param
 
@@ -55,8 +55,8 @@ class Area:
 
         check_result = self.checkParam(radius = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2]) 
+        if not check_result[0]:
+            raise Exception(check_result[1]) 
         
         self._radius = param 
 
@@ -69,8 +69,8 @@ class Area:
         
         check_result = self.checkParam(center = param)
 
-        if not check_result[1]:
-            raise Exception(check_result[2]) 
+        if not check_result[0]:
+            raise Exception(check_result[1]) 
         
         self._center = param
 
