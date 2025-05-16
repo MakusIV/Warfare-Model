@@ -420,7 +420,7 @@ class Block:
             return (False, "Bad Arg: description must be a str")
         if side and ( not isinstance(side, str) or not (side in SIDE)   ):
             return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and not isinstance(category, str) or (category not in [BLOCK_CATEGORY]):                        
+        if category and ( not isinstance(category, str) or (category not in BLOCK_CATEGORY.keys()) ):                        
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_CATEGORY))        
         if sub_category and not isinstance(sub_category, str) and (sub_category not in BLOCK_ASSET_CATEGORY[self.block_class].keys()):                        
             return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_ASSET_CATEGORY[self.block_class].keys()))        
