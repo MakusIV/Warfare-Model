@@ -1,235 +1,176 @@
 import unittest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, patch
 from sympy import Point
 from Code.Dynamic_War_Manager.Source.Block import Block
 from Code.Dynamic_War_Manager.Source.Event import Event
-from Code.Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import SIDE, BLOCK_CATEGORY
-from typing import TYPE_CHECKING
-from Code.Dynamic_War_Manager.Source.Region import Region
+from Code.Dynamic_War_Manager.Source.State import State
 from Code.Dynamic_War_Manager.Source.Asset import Asset
-import copy
-# Forza TYPE_CHECKING a True per eseguire le importazioni condizionali
-#TYPE_CHECKING = True
-
-#if TYPE_CHECKING:
-#    from Code.Dynamic_War_Manager.Source.Asset import Asset
-   
+from Code.Dynamic_War_Manager.Source.Region import Region
 
 class TestBlock(unittest.TestCase):
     def setUp(self):
-        # Creazione di un mock per Region
-        self.mock_region = Region(name = "Test Region", description="nothong", blocks =  None, limes = None)  #Mock(spec = Region)
-        #self.mock_region.name = "Test Region"
-        
-        
-        
-        # Creazione di un mock per Event
-        self.mock_event = Event("event 1") #Mock(spec=Event)
-        #self.mock_event.name = "Test Event"
-        
-        # Creazione di un'istanza di Block per i test
+        """Set up test fixtures"""
         self.block = Block(
             name="Test Block",
             description="Test Description",
             side="Blue",
             category="Military",
-            sub_category="Stronghold",
+            sub_category="Base",
             functionality="Defense",
-            value=100.0,
-            region=self.mock_region
+            value=100
         )
         
-        # Creazione di un mock per Asset
-        self.mock_asset = Asset(self.block, name = "Test Asset", cost = 100) #Mock(spec=Asset)
-        self.mock_asset.health = 100
-        #self.mock_asset.cost = 100
-        #self.mock_asset.efficiency = 0.8 è calcolato
-        #self.mock_asset.balance_trade = 1.2è calcolato
-        self.mock_asset.position = Point(0, 0, 0)
-
-        # Configurazione dei mock per i payload
-        self.mock_payload = Payload() #Mock(spec=Payload)
-        self.mock_payload.energy = 10
-        self.mock_payload.goods = 5
-        self.mock_payload.hr = 3
-        self.mock_payload.hc = 2
-        self.mock_payload.hs = 1
-        self.mock_payload.hb = 0
+        # Mock assets
+        self.mock_asset1 = MagicMock(spec=Asset)
+        self.mock_asset1.cost = 50
+        self.mock_asset1.efficiency = 0.8
+        self.mock_asset1.balance_trade = 1.2
+        self.mock_asset1.position = Point(10, 20)
         
-        self.mock_asset.acp = self.mock_payload
-        self.mock_asset.rcp = self.mock_payload
-        self.mock_asset.payload = self.mock_payload
+        self.mock_asset2 = MagicMock(spec=Asset)
+        self.mock_asset2.cost = 75
+        self.mock_asset2.efficiency = 0.6
+        self.mock_asset2.balance_trade = 0.9
+        self.mock_asset2.position = Point(30, 40)
+        
+        # Mock event
+        self.mock_event = MagicMock(spec=Event)
+        self.mock_event.name = "Test Event"
+
+        # Mock Region
+        self.mock_region = MagicMock()
+        self.mock_region.__class__.__name__ = 'Region'
 
     def test_initialization(self):
+        """Test block initialization"""
         self.assertEqual(self.block.name, "Test Block")
-        self.assertIsNotNone(self.block.id)
         self.assertEqual(self.block.description, "Test Description")
         self.assertEqual(self.block.side, "Blue")
         self.assertEqual(self.block.category, "Military")
-        self.assertEqual(self.block.sub_category, "Stronghold")
+        self.assertEqual(self.block.sub_category, "Base")
         self.assertEqual(self.block.functionality, "Defense")
-        self.assertEqual(self.block.cost, 0)
-        self.assertEqual(self.block.region, self.mock_region)
-        
-    def test_initialization_with_defaults(self):
-        block = Block(
-            name=None,
-            description=None,
-            side=None,
-            category=None,
-            sub_category=None,
-            functionality=None,
-            value=None,
-            region=None
-        )
-        self.assertTrue(block.name.startswith("Unnamed"))
-        self.assertEqual(block.side, "Neutral")
-        
-    def test_property_setters(self):
+        self.assertEqual(self.block.value, 100)
+        self.assertIsInstance(self.block.id, str)
+        self.assertIsInstance(self.block.state, State)
+
+    def test_property_validation(self):
+        """Test property validation"""
+        # Test valid property setting
         self.block.name = "New Name"
         self.assertEqual(self.block.name, "New Name")
         
-        self.block.description = "New Description"
-        self.assertEqual(self.block.description, "New Description")
-        
-        self.block.side = "Red"
-        self.assertEqual(self.block.side, "Red")
-        
-        self.block.category = "Logistic"
-        self.assertEqual(self.block.category, "Logistic")
-        
-        self.block.sub_category = "Airport"
-        self.assertEqual(self.block.sub_category, "Airport")
-        
-        self.block.functionality = "Transport"
-        self.assertEqual(self.block.functionality, "Transport")
-        
-        self.block.value = 10
-        self.assertEqual(self.block.value, 10)
-        
-        
-    def test_invalid_property_setters(self):
-        with self.assertRaises(Exception):
-            self.block.side = "Invalid Side"
+        # Test invalid property types
+        with self.assertRaises(TypeError):
+            self.block.name = 123
             
-        with self.assertRaises(Exception):
-            self.block.category = "Invalid Category"
+        with self.assertRaises(TypeError):
+            self.block.value = "invalid"
             
-        with self.assertRaises(Exception):
-            self.block.value = "Not a float"
-            
-    def test_assets_management(self):
-        # Test aggiunta asset
-        self.block.setAsset(self.mock_asset.id, self.mock_asset)
-        self.assertIn(self.mock_asset.id, self.block.assets)
-        self.assertEqual(self.block.assets[self.mock_asset.id], self.mock_asset)
-        
-        # Test lista chiavi
-        self.assertEqual(self.block.listAssetKeys(), [self.mock_asset.id])
-        
-        # Test get asset
-        self.assertEqual(self.block.getAsset(self.mock_asset.id), self.mock_asset)
-        
-        # Test rimozione asset
-        self.block.removeAsset(self.mock_asset.id)
-        self.assertNotIn(self.mock_asset.id, self.block.assets)
-        
-    def test_events_management(self):
-        # Test aggiunta evento
-        self.block.addEvent(self.mock_event)
+        with self.assertRaises(ValueError):
+            self.block.side = "InvalidSide"
+
+    def test_event_management(self):
+        """Test event management methods"""
+        # Test adding events
+        self.block.add_event(self.mock_event)
         self.assertEqual(len(self.block.events), 1)
         
-        # Test get ultimo evento
-        last_event = self.block.getLastEvent()
-        self.assertEqual(last_event, self.mock_event)
+        # Test getting events
+        self.assertEqual(self.block.get_last_event(), self.mock_event)
+        self.assertEqual(self.block.get_event(0), self.mock_event)
         
-        # Test get evento per indice
-        event = self.block.getEvent(0)
-        self.assertEqual(event, self.mock_event)
-        
-        # Test rimozione evento
-        self.block.removeEvent(self.mock_event)
+        # Test removing events
+        self.block.remove_event(self.mock_event)
         self.assertEqual(len(self.block.events), 0)
         
-    def test_cost_property(self):
-        self.block.setAsset(self.mock_asset.id, self.mock_asset)
-        mock_asset2 = copy.deepcopy(self.mock_asset)
-        mock_asset2.id = "mock_asset2"
-        self.block.setAsset("mock_asset2", mock_asset2)
-        self.assertEqual(self.block.cost, 200)
+        # Test invalid operations
+        with self.assertRaises(TypeError):
+            self.block.add_event("not an event")
+            
+        with self.assertRaises(IndexError):
+            self.block.get_event(0)
+
+    def test_asset_management(self):
+        """Test asset management methods"""
+        # Test adding assets
+        self.block.set_asset("asset1", self.mock_asset1)
+        self.block.set_asset("asset2", self.mock_asset2)
+        self.assertEqual(len(self.block.assets), 2)
         
-    def test_position_property(self):
-        self.block.setAsset(self.mock_asset.id, self.mock_asset)
-        mock_asset2 = copy.deepcopy(self.mock_asset)
-        mock_asset2.id = "mock_asset2"
-        self.block.setAsset("mock_asset2", mock_asset2)
-        position = self.block.position
-        self.assertEqual(position, Point(0, 0, 0))
+        # Test getting assets
+        self.assertEqual(self.block.get_asset("asset1"), self.mock_asset1)
+        self.assertEqual(self.block.get_asset("invalid"), None)
         
-    def test_efficiency_property(self):
-        self.block.setAsset(self.mock_asset.id, self.mock_asset)
-        mock_asset2 = copy.deepcopy(self.mock_asset)
-        mock_asset2.id = "mock_asset2"
-        self.block.setAsset("mock_asset2", mock_asset2)
-        self.assertEqual(self.block.efficiency, 100)
+        # Test listing asset keys
+        self.assertCountEqual(self.block.list_asset_keys(), ["asset1", "asset2"])
         
-    def test_balance_trade_property(self):
-        self.block.setAsset(self.mock_asset.id, self.mock_asset)
-        mock_asset2 = copy.deepcopy(self.mock_asset)
-        mock_asset2.id = "mock_asset2"
-        self.block.setAsset("mock_asset2", mock_asset2)
-        self.assertEqual(self.block.balance_trade, 1)
+        # Test removing assets
+        self.block.remove_asset("asset1")
+        self.assertEqual(len(self.block.assets), 1)
         
-    def test_isMilitary(self):
-        self.assertTrue(self.block.isMilitary())
-        self.block.category = "Civilian"
-        self.assertFalse(self.block.isMilitary())
+        # Test invalid operations
+        with self.assertRaises(TypeError):
+            self.block.set_asset(123, self.mock_asset1)
+            
+        with self.assertRaises(KeyError):
+            self.block.remove_asset("nonexistent")
+
+    def test_calculated_properties(self):
+        """Test calculated properties"""
+        # Set up assets
+        self.block.set_asset("asset1", self.mock_asset1)
+        self.block.set_asset("asset2", self.mock_asset2)
         
-    def test_isLogistic(self):
+        # Test cost calculation
+        self.assertEqual(self.block.cost, 125)  # 50 + 75
+        
+        # Test efficiency calculation
+        expected_efficiency = (0.8 + 0.6) / 2
+        self.assertAlmostEqual(self.block.efficiency, expected_efficiency)
+        
+        # Test balance trade calculation
+        expected_balance = (1.2 + 0.9) / 2
+        self.assertAlmostEqual(self.block.balance_trade, expected_balance)
+        
+        # Test position calculation
+        expected_position = Point(20, 30)  # Mean of (10,20) and (30,40)
+        self.assertEqual(self.block.position, expected_position)
+        
+        # Test empty case
+        empty_block = Block(name="Empty")
+        self.assertEqual(empty_block.cost, 0)
+        self.assertEqual(empty_block.efficiency, 0.0)
+        self.assertIsNone(empty_block.position)
+
+    def test_type_checks(self):
+        """Test block type checking methods"""
+        self.assertTrue(self.block.is_military())
+        self.assertFalse(self.block.is_logistic())
+        self.assertFalse(self.block.is_civilian())
+        
+        # Change category and re-test
         self.block.category = "Logistic"
-        self.assertTrue(self.block.isLogistic())        
-        self.block.category = "Military"
-        self.assertFalse(self.block.isLogistic())
-        
-    def test_isCivilian(self):
-        self.block.category = "Civilian"
-        self.assertTrue(self.block.isCivilian())
-        self.block.category = "Military"
-        self.assertFalse(self.block.isCivilian())
-        
-        
-    def test_repr(self):
+        self.assertFalse(self.block.is_military())
+        self.assertTrue(self.block.is_logistic())
+
+    def test_representation(self):
+        """Test string representations"""
         repr_str = repr(self.block)
         self.assertIn("Test Block", repr_str)
-        self.assertIn("Blue", repr_str)
         self.assertIn("Military", repr_str)
         
-    def test_str(self):
-        str_rep = str(self.block)
-        self.assertIn("Block Information", str_rep)
-        self.assertIn("Test Block", str_rep)
-        self.assertIn("Blue", str_rep)
+        str_str = str(self.block)
+        self.assertIn("Test Block", str_str)
+        self.assertIn("Blue", str_str)
+
+    def test_region_association(self):
+        """Test region association"""        
+        self.block.region = self.mock_region
+        self.assertEqual(self.block.region, self.mock_region)
         
-    def test_checkParam(self):
-        # Test con parametri validi
-        result, message = self.block.checkParam(
-            name="Valid",
-            description="Valid",
-            side="Blue",
-            category="Military",
-            sub_category="Stronghold",
-            functionality="Defense",
-            value=100,           
-            region=self.mock_region
-        )
-        self.assertTrue(result)
-        self.assertEqual(message, "OK")
-        
-        # Test con parametri non validi
-        result, message = self.block.checkParam(side="Invalid")
-        self.assertFalse(result)
-        self.assertIn("Bad Arg: side must be a str with value", message)
+        # Test invalid region type
+        with self.assertRaises(TypeError):
+            self.block.region = "invalid region"
 
 if __name__ == '__main__':
     unittest.main()
