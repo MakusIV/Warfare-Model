@@ -1,508 +1,405 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-import sys
-import os
-# Aggiungi il percorso della directory principale del progetto
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-from Code import Context, Utility
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
+from sympy import Point
+from dataclasses import dataclass
+from Code import Utility
 from Code.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Event import Event
 from Code.Dynamic_War_Manager.Source.State import State
 from Code.Dynamic_War_Manager.Source.Payload import Payload
-from Code.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
-from typing import List, Dict
-from sympy import Point
+from Code.Context import BLOCK_CATEGORY, SIDE
 
-if TYPE_CHECKING:    
+if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Asset import Asset
     from Code.Dynamic_War_Manager.Source.Region import Region
 
-# LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Block')
+# LOGGING
+logger = Logger(module_name=__name__, class_name='Block')
 
-# ASSET o BLOCK (non deve essere istanziata: solo le derivate)
-class Block:    
+@dataclass
+class BlockParams:
+    """Data class for holding block parameters for validation"""
+    name: Optional[str] = None
+    description: Optional[str] = None
+    side: Optional[str] = None
+    category: Optional[str] = None
+    sub_category: Optional[str] = None
+    functionality: Optional[str] = None
+    value: Optional[int] = None
+    region: Optional["Region"] = None
 
-    def __init__(self, name: str|None, description: str|None, side: str |None, category: str|None, sub_category: str|None, functionality: str|None, value: int|None, region: "Region"|None):
-
-            # propriety
-            self._name: str = name # block name - type str
-            self._id = None # id self-assigned - type str
-            self._description: str = description # block description - type str
-            self._side: str = side # block side - type str
-            self._category: str = category # block category - (Civilian, Logistic, Military, All)
-            
-            self._sub_category: str = sub_category # Road, Railway, Airport, Electric, Power_Plant, Factory, Administrative, Service, Stronghold, Farp ,...
-            self._functionality:str = functionality # block functionality - type str
-            self._value: int = value # strategical value of block- type int (nota non è riferito al value dei singoli asset ma dovrebbe rappresentare un valore strategico rispetto gli altri blocchi)            
-            self._events: List[Event] = [] # block event - list of Block event's    
-
-              
-            # Association  
-            self._assets: Dict[str, Asset] = {} # assets - component of Block - type list forse è meglio un dict
-            self._region = region # block map region - type Region
-            self._state = State()
-
-
-            if not name:
-                self._name = Utility.setName('Unnamed')
-
-            else:
-                self._name = name
-
-            self._id = Utility.setId(self._name, None)
-           
-            if not side:
-                self._side = "Neutral"
-            # check input parameters            
-            check_results =  self.checkParam( name, description, side, category, sub_category, functionality, value, region )            
-            
-            if not check_results[1]:
-                raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
-                       
-
-    # methods
-
-    @property
-    def state(self):                
-        return self._state
+class Block:
+    """
+    Represents a logistic or territorial block in a simulation game.
     
+    A block contains and manages resources (Assets) and can be classified
+    as military, logistic, or civilian.
+    """
+
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        side: Optional[str] = None,
+        category: Optional[str] = None,
+        sub_category: Optional[str] = None,
+        functionality: Optional[str] = None,
+        value: Optional[int] = None,
+        region: Optional[Union["Region", None]] = None,
+    ):
+        """
+        Initialize a new block.
+
+        Args:
+            name: Block name
+            description: Block description
+            side: Block side (e.g., "Blue", "Red", "Neutral")
+            category: Block category (e.g., "Civilian", "Logistic", "Military")
+            sub_category: Block sub-category (e.g., "Road", "Railway")
+            functionality: Block functionality
+            value: Strategic value of the block
+            region: Region the block belongs to
+
+        Raises:
+            ValueError: If parameters are invalid
+        """
+        # Block properties
+        self._name = name if name else Utility.setName('Unnamed')
+        self._id = Utility.setId(self._name, None)
+        self._description = description or ""
+        self._side = side or "Neutral"
+        self._category = category or ""
+        self._sub_category = sub_category or ""
+        self._functionality = functionality or ""
+        self._value = value or 0
+        self._events = []
+        self._assets = {}
+        self._region = region
+        self._state = State()
+
+        # Validate parameters
+        self._validate_params(
+            name=name,
+            description=description,
+            side=side,
+            category=category,
+            sub_category=sub_category,
+            functionality=functionality,
+            value=value,
+            region=region
+        )
+
+    def _validate_params(self, **kwargs) -> None:
+        """
+        Validate block parameters.
+
+        Args:
+            kwargs: Parameters to validate
+
+        Raises:
+            TypeError: If parameter has invalid type
+            ValueError: If parameter has invalid value
+        """
+        type_checks = {
+            'name': str,
+            'description': str,
+            'side': str,
+            'category': str,
+            'sub_category': str,
+            'functionality': str,
+            'value': int,
+            'region': (type(None)), # accetta solo None durante il runtime, altrimenti genera errore perchè Region non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato 
+            'state': State
+        }
+
+        for param, value in kwargs.items():
+            if value is not None and param in type_checks:
+                expected_type = type_checks[param]
+                # Controllo speciale per Region
+                if param == 'region':
+                    if not (value is None or getattr(value, '__class__', {}).__name__ == 'Region'):
+                        raise TypeError(f"{param} must be None or a Region object")
+                    continue
+                if not isinstance(value, expected_type):
+                    raise TypeError(f"{param} must be {expected_type.__name__}")
+
+        # Additional value checks
+        if 'side' in kwargs and kwargs['side'] and kwargs['side'] not in SIDE:
+            raise ValueError(f"side must be one of: {', '.join(SIDE)}")
+        
+        if 'category' in kwargs and kwargs['category'] and kwargs['category'] not in BLOCK_CATEGORY:
+            raise ValueError(f"category must be one of: {', '.join(BLOCK_CATEGORY)}")
+
+    # Property getters and setters
+    @property
+    def state(self) -> State:
+        """Get block state"""
+        return self._state
 
     @state.setter
-    def state(self, param) -> bool: #override
-        
-        check_result = self.checkParam(state = param)
-
-        if not check_result[0]:
-            raise Exception(check_result[1])                
-        self._state = param
-        return True
+    def state(self, value: State) -> None:
+        """Set block state"""
+        self._validate_params(state=value)
+        self._state = value
 
     @property
-    def block_class(self):
-        return self.__class__.__name__ #(Production, Transport, Storage, Urban, Mil_Base)
-  
+    def block_class(self) -> str:
+        """Get block class name"""
+        return self.__class__.__name__
+
     @property
-    def name(self):
+    def name(self) -> str:
+        """Get block name"""
         return self._name
 
     @name.setter
-    def name(self, param):
+    def name(self, value: str) -> None:
+        """Set block name"""
+        self._validate_params(name=value)
+        self._name = value
 
-        check_result = self.checkParam(name = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        self._name = param  
-        return True
-            
     @property
-    def id(self):
+    def id(self) -> str:
+        """Get block ID"""
         return self._id
 
     @id.setter
-    def id(self, param):
+    def id(self, value: str) -> None:
+        """Set block ID"""
+        if not isinstance(value, str):
+            raise TypeError("id must be a string")
+        self._id = value
 
-        check_result = self.checkParam(id = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        
-        self._id = str(param)
-            
-        return True
-    
     @property
-    def description(self):
+    def description(self) -> str:
+        """Get block description"""
         return self._description
 
     @description.setter
-    def description(self, param):
+    def description(self, value: str) -> None:
+        """Set block description"""
+        self._validate_params(description=value)
+        self._description = value
 
-        check_result = self.checkParam(description = param)
-        
-        if not check_result[1]:
-            raise Exception(check_result[1])    
-
-        
-        self._description = param       
-            
-        return True
-    
     @property
-    def side(self):
+    def side(self) -> str:
+        """Get block side"""
         return self._side
 
     @side.setter
-    def side(self, param):
-        
-        check_result = self.checkParam(side = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        
-        self._side = param       
-            
-        return True
+    def side(self, value: str) -> None:
+        """Set block side"""
+        self._validate_params(side=value)
+        self._side = value
 
     @property
-    def category(self):
+    def category(self) -> str:
+        """Get block category"""
         return self._category
 
     @category.setter
-    def category(self, param):
+    def category(self, value: str) -> None:
+        """Set block category"""
+        self._validate_params(category=value)
+        self._category = value
 
-        check_result = self.checkParam(category = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        self._category = param
-
-        return True
-    
     @property
-    def sub_category(self):
+    def sub_category(self) -> str:
+        """Get block sub-category"""
         return self._sub_category
 
     @sub_category.setter
-    def sub_category(self, param):
-
-        check_result = self.checkParam(sub_category = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        self._sub_category = param
-
-        return True
-    
-
+    def sub_category(self, value: str) -> None:
+        """Set block sub-category"""
+        self._validate_params(sub_category=value)
+        self._sub_category = value
 
     @property
-    def functionality(self):
+    def functionality(self) -> str:
+        """Get block functionality"""
         return self._functionality
 
     @functionality.setter
-    def functionality(self, param):
-
-        check_result = self.checkParam(functionality = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-
-        self._functionality = param  
-            
-        return True
-    
+    def functionality(self, value: str) -> None:
+        """Set block functionality"""
+        self._validate_params(functionality=value)
+        self._functionality = value
 
     @property
-    def value(self):
+    def value(self) -> int:
+        """Get block value"""
         return self._value
 
     @value.setter
-    def value(self, param):
+    def value(self, value: int) -> None:
+        """Set block value"""
+        self._validate_params(value=value)
+        self._value = value
 
-        check_result = self.checkParam(value = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-    
-        self._value = param            
-        return True
-
-
+    # Event management methods
     @property
-    def events(self):
+    def events(self) -> List[Event]:
+        """Get block events list"""
         return self._events
 
     @events.setter
-    def events(self, value):
-        if isinstance(value, list):
-            self._events = value
-        else:
-            raise ValueError("Il valore deve essere una lista")
+    def events(self, value: List[Event]) -> None:
+        """Set block events list"""
+        if not isinstance(value, list):
+            raise TypeError("events must be a list")
+        if not all(isinstance(event, Event) for event in value):
+            raise ValueError("All items in events must be Event objects")
+        self._events = value
 
-    def addEvent(self, event):
-        if isinstance(event, Event):
-            self._events.append(event)
-        else:
-            raise ValueError("Il valore deve essere un oggetto di tipo Event")
+    def add_event(self, event: Event) -> None:
+        """Add event to block"""
+        if not isinstance(event, Event):
+            raise TypeError("event must be an Event object")
+        self._events.append(event)
 
-    def getLastEvent(self):
-        if self._events:
-            return self._events[-1]
-        else:
-            raise IndexError("La lista è vuota")
+    def get_last_event(self) -> Event:
+        """Get most recent event"""
+        if not self._events:
+            raise IndexError("Events list is empty")
+        return self._events[-1]
 
-    def getEvent(self, index):
-        if index < len(self._events):
-            return self._events[index]
-        else:
-            raise IndexError("Indice fuori range")
+    def get_event(self, index: int) -> Event:
+        """Get event by index"""
+        if not isinstance(index, int):
+            raise TypeError("index must be an integer")
+        if index < 0 or index >= len(self._events):
+            raise IndexError("Index out of events list range")
+        return self._events[index]
 
-    def removeEvent(self, event):
-        if event in self._events:
-            self._events.remove(event)
-        else:
-            raise ValueError("L'evento non esiste nella lista")
+    def remove_event(self, event: Event) -> None:
+        """Remove event from block"""
+        if not isinstance(event, Event):
+            raise TypeError("event must be an Event object")
+        if event not in self._events:
+            raise ValueError("Event not found in events list")
+        self._events.remove(event)
 
-
+    # Asset management methods
     @property
     def cost(self) -> int:
-        cost = 0
-
-        for asset in self.assets.values():
-            cost += asset.cost
-
-        return cost
-    
-    @cost.setter
-    def cost(self, cost):
-        raise ValueError("cost not modifiable for Block")
-    
-    # ma che roba è??
-    #ELIMINARE
-    def updatePayload(self, destination: str):
-        
-        req = Payload
-
-        for asset in self.assets:
-
-            if destination == "acp":
-                dest = asset.acp
-            elif destination == "rcp":
-                dest = asset.rcp
-            elif destination == "payload":
-                dest = asset.payload
-            else:
-                raise Exception(f"destination {0} mus be a string: acp, or payload".format(destination))
-
-            req.energy += dest.energy
-            req.goods += dest.goods
-            req.hr += dest.hr
-            req.hc += dest.hc
-            req.hs += dest.hs
-            req.hb += dest.hb
-
-        return req
-
-
-    
-    @property
-    def acp(self) -> Payload:
-        """Assigned Consume Payload
-        Assigned Consume Payload is the payload that the block can consume.
-        acp = sum(acp of all assets)
-
-        Returns:
-            Payload: object acp
-        """      
-        # restituisce acp calcolato in base agli assets
-        return self.updatePayload(destination = "acp")
-        
-
+        """Get total cost of all assets"""
+        return sum(asset.cost for asset in self._assets.values() if asset.cost is not None)
 
     @property
-    def rcp(self) -> Payload:
-         
-        """Required Consume Payload
-        Required Consume Payload is the payload that the block needs to consume
-        rcp = sum(rcp of all assets)
-        
-        Returns:
-            Payload: object rcp
-        """        
-        # restituisce rcp calcolato in base agli assets
-        return self.updatePayload(destination = "rcp")
-
-
-    @property
-    def payload(self) -> Payload:
-        """Payload is the payload that the block must manage (transport, trasformation)
-        payload = sum(payload of all assets)
-        
-        Returns:
-            Payload: object payload
-        """     
-        # restituisce payload calcolato in base agli assets
-        return self.updatePayload(destination = "payload")
-
-
-    @property
-    def assets(self):
+    def assets(self) -> Dict[str, "Asset"]:
+        """Get assets dictionary"""
         return self._assets
-    
+
     @assets.setter
-    def assets(self, value):
-        if isinstance(value, dict) and all(isinstance(asset, Asset) for asset in value.values()):
-            self._assets = value
-        else:
-            raise ValueError("Il valore deve essere un dizionario")
+    def assets(self, value: Dict[str, "Asset"]) -> None:
+        """Set assets dictionary"""
+        if not isinstance(value, dict):
+            raise TypeError("assets must be a dictionary")
+        if not all(isinstance(asset, Asset) for asset in value.values()):
+            raise ValueError("All values in assets must be Asset objects")
+        self._assets = value
 
-
-    def listAssetKeys(self) -> list[str]:
-        """Restituisce la lista degli identificatori associati."""
+    def list_asset_keys(self) -> List[str]:
+        """Get list of asset IDs"""
         return list(self._assets.keys())
 
+    def get_asset(self, key: str) -> Optional["Asset"]:
+        """Get asset by ID"""
+        if not isinstance(key, str):
+            raise TypeError("key must be a string")
+        return self._assets.get(key)
 
-    def getAsset(self, key):
-        if key in self._assets:
-            return self._assets[key]
-        else:
-            raise KeyError(f"L'asset {key} non esiste in assets")
+    def set_asset(self, key: str, asset: "Asset") -> None:
+        """Add or update asset"""
+        if not isinstance(key, str):
+            raise TypeError("key must be a string")
+        if not hasattr(asset, '__class__') or asset.__class__.__name__ != 'Asset':
+            raise TypeError("value must be an Asset object")
+        self._assets[key] = asset
+        asset.block = self  # Set back-reference
 
-    def setAsset(self, key, value):
+    def remove_asset(self, key: str) -> None:
+        """Remove asset by ID"""
+        if not isinstance(key, str):
+            raise TypeError("key must be a string")
+        if key not in self._assets:
+            raise KeyError(f"Asset with key '{key}' not found")
+        del self._assets[key]
 
-        from Code.Dynamic_War_Manager.Source.Asset import Asset
-
-        if isinstance(value, Asset):
-            self._assets[key] = value
-            value.block = self 
-        else:
-            raise ValueError("Il valore deve essere un Asset")  
-
-    def removeAsset(self, key):
-        if key in self._assets:
-            self._assets[key].block = None
-            del self._assets[key]
-        else:
-            raise KeyError(f"L'asset {key} non esiste nel dizionario")
-  
-
+    # Region property
     @property
-    def region(self):
+    def region(self) -> Optional["Region"]:
+        """Get associated region"""
         return self._region
 
     @region.setter
-    def region(self, param: "Region") -> bool:
+    def region(self, value: Optional["Region"]) -> None:
+        """Set associated region"""
+        self._validate_params(region=value)
+        self._region = value
 
-        check_result = self.checkParam(region = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-                
-        self._region = param       
-            
-        return True
-    
-    
-    def __repr__(self):
-        """
-        Rappresentazione ufficiale dell'oggetto Block.
-        Utile per il debugging.
-        """
-        return (f"Block - name: {self._name!r}, id: {self._id!r}, side: {self._side!r}, category: {self._category!r}, functionality: {self._functionality!r}, value={self._value!r})")
+    # Utility methods
+    def __repr__(self) -> str:
+        """Official string representation"""
+        return (f"Block(name={self._name!r}, id={self._id!r}, side={self._side!r}, "
+                f"category={self._category!r}, value={self._value!r})")
 
-    def __str__(self):
-        """
-        Rappresentazione leggibile dell'oggetto Block.
-        Utile per l'utente finale.
-        """
-        return (f"Block Information:\n"
-                f"  Name: {self._name}\n"
-                f"  ID: {self._id}\n"
-                f"  Side: {self._side}\n"
-                f"  Category: {self._category}\n"
-                f"  Functionality: {self._category}\n"
-                f"  Value: {self._value}\n"
-                f"  Description: {self._description}")
-    
-    def checkClass(self, object):
-        """Return True if objects is a Object object otherwise False"""
-        return type(object) == type(self)
-        
-    def checkClassList(self, objects):
-        """Return True if objectsobject is a list of Block object otherwise False"""
-        return all(type(obj) == type(self) for obj in objects)
+    def __str__(self) -> str:
+        """User-friendly string representation"""
+        return (f"Block {self._name} (ID: {self._id})\n"
+                f"Side: {self._side}, Category: {self._category}\n"
+                f"Value: {self._value}, Assets: {len(self._assets)}")
 
+    def is_instance(self, obj: Any) -> bool:
+        """Check if object is a Block instance"""
+        return isinstance(obj, Block)
 
-     # vedi il libro
-    
-    def checkParam(self, name: str = None, description: str = None, side: str = None, category: str = None, sub_category: str = None, functionality: str = None, value: int = None, region: "Region" = None, state: State = None) -> (bool, str): # type: ignore
-        """Return True if type compliance of the parameters is verified"""   
-        from Code.Dynamic_War_Manager.Source.Region import Region
-        from Code.Dynamic_War_Manager.Source.Asset import Asset      
-
-        if name and not isinstance(name, str):
-            return (False, "Bad Arg: name must be a str")
-        if description and not isinstance(description, str):
-            return (False, "Bad Arg: description must be a str")
-        if side and ( not isinstance(side, str) or not (side in SIDE)   ):
-            return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        if category and ( not isinstance(category, str) or (category not in BLOCK_CATEGORY.keys()) ):                        
-            return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_CATEGORY))        
-        if sub_category and not isinstance(sub_category, str) and (sub_category not in BLOCK_ASSET_CATEGORY[self.block_class].keys()):                        
-            return (False, "Bad Arg: category must be a BLOCK_CATEGORY: {0}".format(bc for bc in BLOCK_ASSET_CATEGORY[self.block_class].keys()))        
-        if functionality and not isinstance(functionality, str):
-            return (False, "Bad Arg: functionality must be a str")
-        if value and not isinstance(value, int):
-            return (False, "Bad Arg: value must be a float")
-        if region and not isinstance(region, Region):
-            return (False, "Bad Arg: region must be a Region object")
-        if state and not isinstance(state, State):                        
-            return (False, "Bad Arg: state must be a State object")  
-            
-        return (True, "OK")      
-
-    def threatVolume(self):
-        """calculate Threat_Volume from asset Threat_Volume"""
-        # tv = max(assetThreat_Volume) 
-        # return tv
-        pass
+    def check_instance_list(self, objs: List[Any]) -> bool:
+        """Check if all objects in list are Block instances"""
+        return all(isinstance(obj, Block) for obj in objs) if isinstance(objs, list) else False
 
     @property
-    def position(self):
-        """calculate center point from assets position"""        
-        return Utility.mean_point([asset.position for asset in self.assets.values()]) 
-    
+    def position(self) -> Optional[Point]:
+        """Calculate centroid from asset positions"""
+        if not self._assets:
+            return None
+        positions = [asset.position for asset in self._assets.values() if asset.position is not None]
+        return Utility.mean_point(positions) if positions else None
 
     @property
-    def morale(self):             
-        return Utility.evaluateMorale(State.success_ratio[self], self.efficiency) # mission success ratio recordered for this object
-        
+    def morale(self) -> float:
+        """Evaluate block morale"""
+        return Utility.evaluate_morale(State.success_ratio[self], self.efficiency)
+
     @property
-    def efficiency(self):    
-        return mean([asset.efficiency for asset in self.assets.values()])
+    def efficiency(self) -> float:
+        """Calculate average asset efficiency"""
+        if not self._assets:
+            return 0.0
+        efficiencies = [asset.efficiency for asset in self._assets.values()]
+        return mean(efficiencies) if efficiencies else 0.0
 
-    def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
-        """ Defined in each subclass """
-        return self.name, self.id
-    
-    def enemySide(self):
-        """
-        Determine and return the side that is considered the enemy.
-        """
-        return Utility.enemySide(self.side)
-            
     @property
-    def balance_trade(self):        
-        """Returns median value of balance ratio (acp/rcp) of the assets
+    def balance_trade(self) -> float:
+        """Calculate average asset trade balance"""
+        if not self._assets:
+            return 0.0
+        balances = [asset.balance_trade for asset in self._assets.values()]
+        return mean(balances) if balances else 0.0
 
-        Returns:
-            float: balance trade ratio
-        """        
-        #balance = 0
-        #for asset in self.assets:
-        #    balance += asset.balance_trade
-        #return balance/len(self.assets)
+    def is_military(self) -> bool:
+        """Check if block is military"""
+        return self._category == BLOCK_CATEGORY["Military"]
 
-        return mean([asset.balance_trade for asset in self.assets.values()]) 
+    def is_logistic(self) -> bool:
+        """Check if block is logistic"""
+        return self._category == BLOCK_CATEGORY["Logistic"]
 
-        
+    def is_civilian(self) -> bool:
+        """Check if block is civilian"""
+        return self._category == BLOCK_CATEGORY["Civilian"]
 
-    def isMilitary(self):
-        return (self.category == Context.BLOCK_CATEGORY["Military"])
-    
-    def isLogistic(self):
-        return self.category == Context.BLOCK_CATEGORY["Logistic"]
-    
-    def isCivilian(self):
-        return self.category == Context.BLOCK_CATEGORY["Civilian"]
-
+    def enemy_side(self) -> str:
+        """Determine enemy side"""
+        return Utility.enemy_side(self._side)
