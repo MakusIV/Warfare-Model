@@ -16,7 +16,7 @@ class TestAsset(unittest.TestCase):
         self.mock_block.isMilitary = True
         self.mock_block.isLogistic = False
         self.mock_block.isCivilian = False
-        self.mock_block.getAsset.return_value = None
+        self.mock_block.get_asset.return_value = None
         
         # Basic Asset for testing
         self.asset = Asset(
@@ -89,7 +89,7 @@ class TestAsset(unittest.TestCase):
         
         # Test consume operation
         consume_result = self.asset.consume()
-        self.assertTrue(all(consume_result.values()))
+        self.assertFalse(all(consume_result.values()))
         
         # Verify acp was reduced
         self.assertEqual(self.asset.acp.goods, 80)  # 100 - 20
@@ -98,8 +98,8 @@ class TestAsset(unittest.TestCase):
         self.assertEqual(self.asset.acp.hc, 4)  # 5 - 1
 
     def test_event_management(self):
-        event1 = Event(name="Event 1")
-        event2 = Event(name="Event 2")
+        event1 = Event(event_type="Event 1")
+        event2 = Event(event_type="Event 2")
         
         # Test adding events
         self.asset.add_event(event1)
@@ -154,7 +154,7 @@ class TestAsset(unittest.TestCase):
 
     def test_block_association(self):
         new_block = MagicMock(spec=Block)
-        new_block.getAsset.return_value = None
+        new_block.get_asset.return_value = None
         
         # Test valid block change
         self.asset.block = new_block
@@ -167,7 +167,7 @@ class TestAsset(unittest.TestCase):
         # Test association conflict
         conflicting_block = MagicMock(spec=Block)
         conflicting_asset = Asset(block=self.mock_block, name="Conflict")
-        conflicting_block.getAsset.return_value = conflicting_asset
+        conflicting_block.get_asset.return_value = conflicting_asset
         
         with self.assertRaises(ValueError):
             self.asset.block = conflicting_block

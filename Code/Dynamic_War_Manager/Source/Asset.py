@@ -284,7 +284,7 @@ class Asset:
     @block.setter
     def block(self, value: Block) -> None:
         self._validate_param('block', value, Block)
-        if value and value.getAsset(self._id) and value.getAsset(self._id).id != self._id:
+        if value and value.get_asset(self._id) and value.get_asset(self._id).id != self._id:
             raise ValueError("Association Incongruence: Asset id conflict in Block association")
         self._block = value
 
