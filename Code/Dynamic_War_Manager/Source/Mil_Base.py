@@ -1,348 +1,248 @@
-import datetime
-
-from numpy import median
+from __future__ import annotations
+import random
+from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
 from heapq import heappop, heappush
-from Dynamic_War_Manager.Source.Block import Block
-import Utility, Sphere, Hemisphere, random
-from Dynamic_War_Manager.Source.Strategical_Evaluation import evaluateRecoMissionRatio # cambiare in Scenario_Military_Evaluation
-from Dynamic_War_Manager.Source.Tactical_Evaluation import calcRecoAccuracy, evaluateCombatSuperiority, evaluateGroundTacticalAction, evaluateCriticalityGroundEnemy, evaluateCriticalityAirDefence # cambiare in Mil_Zone_Evaluation
+from numpy import median
+from sympy import Point, Point3D, Edge
+
+if TYPE_CHECKING:
+    from .Region import Region
+    from .Vehicle import Vehicle
+    from .Aircraft import Aircraft
+    from .Ship import Ship
+    from .Asset import Asset
+
+from .Block import Block
+from .Event import Event
 from LoggerClass import Logger
-from Dynamic_War_Manager.Source.Event import Event
-from Dynamic_War_Manager.Source.Payload import Payload
-from Context import STATE, GROUND_COMBAT_EFFICACY, GROUND_ACTION, AIR_TASK
-from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
-from Dynamic_War_Manager.Source.Asset import Asset
-from Dynamic_War_Manager.Source.Region import Region
-from Dynamic_War_Manager.Source.Volume import Volume
-from Dynamic_War_Manager.Source.Vehicle import Vehicle
-from Aircraft import Aircraft
-from Ship import Ship
-from Edge import Edge
+from Context import (
+    STATE, 
+    GROUND_COMBAT_EFFICACY, 
+    GROUND_ACTION, 
+    AIR_TASK,
+    MIL_BASE_CATEGORY,
+    GROUND_ASSET_CATEGORY
+)
 
+# LOGGING
+logger = Logger(module_name=__name__, class_name='Mil_Base')
 
-# LOGGING -- 
-logger = Logger(module_name = __name__, class_name = 'Mil_Base')
-
-# ASSET
-class Mil_Base(Block) :    
-
-    def __init__(self, block: Block, mil_category: str, name: str|None, side: str|None, description: str|None, category: str|None, sub_category: str|None, functionality: str|None, value: int|None, acp: Payload|None, rcp: Payload|None, payload: Payload|None, region: Region|None):   
-            
-            super().__init__(name, description, side, category, sub_category, functionality, value, acp, rcp, payload)
-
-            # propriety             
-            
+class Mil_Base(Block):
+    """Military Base class representing specialized combat Block"""
     
-            # Association    
-            
-            if not name:
-                self._name = Utility.setName('Unnamed_Mil_Base')
+    def __init__(
+        self,
+        mil_category: str,
+        name: Optional[str] = None,
+        side: Optional[str] = None,
+        description: Optional[str] = None,
+        category: Optional[str] = None,
+        sub_category: Optional[str] = None,
+        functionality: Optional[str] = None,
+        value: Optional[int] = None,
+        region: Optional["Region"] = None
+    ):
+        """
+        Initialize a Military Base
+        
+        Args:
+            mil_category: Military category (from MIL_BASE_CATEGORY)
+            name: Base name
+            side: Base side (Blue/Red/Neutral)
+            description: Base description
+            category: Base category
+            sub_category: Base sub-category
+            functionality: Base functionality
+            value: Strategic value
+            region: Associated region
+        """
+        super().__init__(
+            name=f"Mil_Base.{name}" if name else Utility.setName('Unnamed_Mil_Base'),
+            description=description,
+            side=side,
+            category=category,
+            sub_category=sub_category,
+            functionality=functionality,
+            value=value,
+            region=region
+        )
+        
+        self._mil_category = mil_category
+        self._validate_mil_category(mil_category)
 
-            else:
-                self._name = "Mil_Base." + name
-
-            self._id = Utility.setId(self._name)
-
-            self._mil_category = mil_category
-
-            # check input parameters            
-            check_results =  self.checkParam( mil_category )            
-            
-            if not check_results[1]:
-                raise Exception("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
-                       
-
-    # methods
-
+    # Property getters and setters
     @property
-    def mil_category(self):
+    def mil_category(self) -> str:
+        """Get military category"""
         return self._mil_category
-    
+
     @mil_category.setter
-    def mil_category(self, value):
-         
-        check_result = self.checkParam(name = value)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
+    def mil_category(self, value: str) -> None:
+        """Set military category"""
+        self._validate_mil_category(value)
         self._mil_category = value
-        return True
-    
-    def checkParam(mil_category: str) -> bool: # type: ignore
-        """Return True if type compliance of the parameters is verified"""   
-    
-        #if not super().checkParam(name, description, side, category, function, value, position, acs, rcs, payload):
-            #return False     # non serve dovrebbe essere già verificata nella costruzione di Block
 
-        if not isinstance(mil_category, str) and mil_category not in MIL_BASE_CATEGORY:
-            return (False, f"Bad argument: mil_category {0} must be a MIL_CATEGORY string: {1}".format(mil_category, str([cat for cat in MIL_BASE_CATEGORY])))
-        
-        return True
-        
-    def groundCombatPower(self, action: str)-> float:
+    def _validate_mil_category(self, category: str) -> None:
+        """Validate military category"""
+        if not isinstance(category, str) or category not in MIL_BASE_CATEGORY.values():
+            valid_categories = ", ".join(MIL_BASE_CATEGORY.values())
+            raise ValueError(
+                f"Invalid mil_category: {category}. Must be one of: {valid_categories}"
+            )
 
+    # Combat capabilities
+    def ground_combat_power(self, action: str) -> float:
+        """Calculate total ground combat power for specified action"""
         if action not in GROUND_ACTION:
-            raise Exception(f"action {0} must be: {1}".format(action, GROUND_ACTION))            
-
-        combat_pow = 0    
+            valid_actions = ", ".join(GROUND_ACTION)
+            raise ValueError(f"Invalid action: {action}. Must be one of: {valid_actions}")
         
-        for asset in self.assets:
+        return sum(
+            asset.combat_power 
+            for asset in self.assets.values() 
+            if hasattr(asset, 'combat_power') and isinstance(asset, Vehicle)
+        )
 
-             if isinstance(asset, Vehicle):                
-                combat_pow += asset.combatPower
-
-        return combat_pow
-
-    def airCombatPower(self, task: str)-> float:
-
+    def air_combat_power(self, task: str) -> float:
+        """Calculate total air combat power for specified task"""
         if task not in AIR_TASK:
-            raise Exception(f"role {0} must be: {1}".format(task, AIR_TASK))            
-
-        combat_pow = 0    
+            valid_tasks = ", ".join(AIR_TASK)
+            raise ValueError(f"Invalid task: {task}. Must be one of: {valid_tasks}")
         
-        for asset in self.assets:
+        return sum(
+            asset.combat_power 
+            for asset in self.assets.values() 
+            if hasattr(asset, 'combat_power') and isinstance(asset, Aircraft)
+        )
 
-            if isinstance(asset, Aircraft):                
-                combat_pow += asset.combatPower
+    # Base type checks
+    def is_airbase(self) -> bool:
+        """Check if base is an airbase"""
+        return self._mil_category == MIL_BASE_CATEGORY["Air Base"]
 
-        return combat_pow
+    def is_groundbase(self) -> bool:
+        """Check if base is a ground base"""
+        return self._mil_category == MIL_BASE_CATEGORY["Ground Base"]
 
-    def airDefence(self):
-        """calculate air defense Volume from asset air defense volume"""
-        # adsVolume = asset.air_defense from asset in self.assets 
-        # adMax = max(adsVolume.range for adsVolume in adsVolume)
-        # return adsVolume, adMax
-        pass
+    def is_navalgroup(self) -> bool:
+        """Check if base is a naval group"""
+        return self._mil_category == MIL_BASE_CATEGORY["Naval Base"]
 
-    def combatRange(self, type: str = "Artillery", height: int = 0):
-        """calculate combat range from asset position"""    
-        # return combatVolume(type=type).range(height=height)         
-        pass
-
-    def defenseAARange(self, height: int = 0):
-        """calculate combat range from assets"""    
-        # return defenceAAVolume().range(height=height)         
-        pass
-
-    def combatVolume(self, type: str = "Artillery"):
-        """calculate combat volume from asset"""
-        # distinguere tra arty, mech, motorized, 
-        pass
-    
-    def defenceAAVolume(self):
-        """return defense volume from asset"""    
-        pass
-
-    def intelligence(self):
-        """calculate intelligence level"""
-        # intelligence_level = median(asset.efficiency for asset in assets.recognitor())
-        # return intelligence_level
-        pass
-    
-    def recognition(self):
-        """calculate recognition report"""
-        # f(intelligenze, evaluate neightroom, front)
-        # return Dict{evaluate.enemy.asset.position, evaluate.enemy.asset.category, evaluate.enemy.asset.class, evaluate.enemy.asset.type, evaluate.enemy.asset.status, evaluate.enemy.asset.qty, evaluate.enemy.asset.efficiency}
-        pass    
-
-    def threatVolume(self):
-        """calculate Threat_Volume from asset Threat_Volume"""
-        # tv = max(assetThreat_Volume) 
-        # return tv
-        pass
-
-    def front(self):
-        """calculate"""
-        # ap = median(assetPosition) 
-        # return ap
-        pass
-
-    def combatState(self):
-        """calculate front from state of assets"""
-    
-    def getRecon(self) -> Dict:
-       
+    # Range calculations
+    def artillery_in_range(
+        self, 
+        target: Union[Point, Point3D, Edge]
+    ) -> Tuple[bool, Optional[float]]:
         """
-        Create a recognition report for the enemy blocks in the region. The report is a dictionary with keys 'attack', 'defence', 'retrait', 'maintain' containing report from asset's recognition info.
-
+        Check if target is within artillery range
+        
+        Args:
+            target: Target position (Point or Edge)
+            
         Returns:
-            Dict: a dictionary with keys 'attack', 'defence', 'retrait', 'maintain' containing sorted recognition reports from enemy blocks in the region. The reports are sorted by criticality in descending order.
+            Tuple of (in_range, range_level) where:
+            - in_range: True if target is in range
+            - range_level: Ratio of max_range/target_distance
         """
-    
-        success_Mission_Recon_Ratio = evaluateRecoMissionRatio(self.side, self.region.name) # success of reconnaissance mission
-        recon_Asset_Efficiency = self.getReconEfficiency() # efficiency of reconnaissance assets
-        asset_Number_Accuracy = calcRecoAccuracy("Number", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset number
-        asset_Efficiency_Accuracy = calcRecoAccuracy("Efficiency", success_Mission_Recon_Ratio, recon_Asset_Efficiency) # accuracy of recon evaluation of asset efficiency
-        enemy_blocks = self.region.getEnemyBlocks(Utility.enemySide(self.side)) # get enemy blocks in the region
-        report_base = self.getBlockInfo("friendly_request") # get this base report          
-        recon_reports = { "id_base": self.id, "name_base": self.name, "attack": (), "defence": (), "retrait": (), "maintain": ()} # dictionary of reports
-        report_queue = []    # priority queue (heapq) for managing reports by criticality
-
-        for enmy_block in enemy_blocks:
-
-            report_enemy = enmy_block.getBlockInfo("enemy_request",  asset_Number_Accuracy, asset_Efficiency_Accuracy)            
+        if not isinstance(target, (Point, Point3D, Edge)):
+            raise TypeError("Target must be Point, Point3D or Edge")
             
-            if self.mil_category in MIL_BASE_CATEGORY["Ground Base"]:
+        target_distance = self._calculate_target_distance(target)
+        max_range = self._get_max_artillery_range()
+        
+        if max_range > target_distance:
+            return True, max_range / target_distance
+        return False, None
 
-                criticality = evaluateCriticalityGroundEnemy(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base                          
+    def _calculate_target_distance(self, target) -> float:
+        """Calculate distance to target"""
+        if isinstance(target, Edge):
+            return target.min_distance(self.position)
+        return target.distance(self.position)
+
+    def _get_max_artillery_range(self) -> float:
+        """Get maximum artillery range of all assets"""
+        max_range = 0.0
+        
+        for asset in self.assets.values():
+            if (isinstance(asset, (Vehicle, Ship)) and hasattr(asset, 'artillery_range')):
+                max_range = max(max_range, asset.artillery_range)
                 
+        return max_range
 
-            elif self.mil_category in MIL_BASE_CATEGORY["Air Base"]:
-
-                criticality = evaluateCriticalityAirDefence(report_base, report_enemy) # evaluate criticality of enemy report compared to report_base
-
-            else:
-                raise Exception( "Bad argument: mil_category {0} must be a MIL_CATEGORY[/'Ground Base/'] or MIL_CATEGORY[/'Air Base/'] string: {1}".format(self.mil_category, str( [cat for cat in [MIL_BASE_CATEGORY["Ground Base"], MIL_BASE_CATEGORY["Air Base"]]]) ))
-
-            heappush(report_queue, (-criticality, report_enemy)) # Use negative criticality for max-heap behavior
-
-        sorted_reports =  [heappop(report_queue)[1] for _ in range(len(report_queue))] # sort reports by criticality
+    # Time calculations
+    def time_to_attack(self, target_position: Union[Point, Point3D, Edge]) -> float:
+        """
+        Calculate estimated time to reach target
         
-        for report in sorted_reports: # create sorted reports dictionary (max criticality at end dictionary)
-            action = report["criticality"]["action"]
-            recon_reports[action].append(report)
-
-        return recon_reports
-                   
-    def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
-        """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
-
-        report = {
-            "reporter name": self.side + "_" + self.name + "_" + self.state.n_mission + "_" + self.state.date_mission,
-            "radius area": 0.0,
-            "center area": 0.0,
-            "military category": self.category, 
-            "air distance": 0.0,
-            "on road ground distance": 0.0,
-            "off road ground distance": 0.0,
-            "artillery range": 0.0,
-            "combat range": 0.0,
-            "AA range": 0.0,
-            "AA height": 0.0,
-            "criticality": { "action": None, "value": 0 }, # action = ["attack", "defence"], value int [1-100]              
-            "asset": {
-                GROUND_ASSET_CATEGORY["Tank"]: {"Number": 0, "Efficiency": 0},
-                GROUND_ASSET_CATEGORY["Armor"]: {"Number": 0, "Efficiency": 0},
-                GROUND_ASSET_CATEGORY["Motorized"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["Artillery_Fix"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["Artillery_Semovent"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["Command_&_Control"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["SAM Big"]: {"Number": 0, "Efficiency": 0}, 
-                GROUND_ASSET_CATEGORY["SAM Med"]: {"Number": 0, "Efficiency": 0},
-                GROUND_ASSET_CATEGORY["SAM Small"]: {"Number": 0, "Efficiency": 0},
-                GROUND_ASSET_CATEGORY["AAA"]: {"Number": 0, "Efficiency": 0},                    
-                GROUND_ASSET_CATEGORY["EWR"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Fighter"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Fighter_Bomber"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Attacker"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Bomber"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Heavy_Bomber"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Awacs"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Recon"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Transport"]: {"Number": 0, "Efficiency": 0}, 
-                AIR_ASSET_CATEGORY["Helicopter"]: {"Number": 0, "Efficiency": 0},                                                
-            }
-        }
-        
-        # calculate total number and efficiency for each assets category: Tank, Armor, Motorized, ...
-        for asset in self.assets:        
-            category = asset.category # Tank, Armor, Motorized, Artillery, SAM, AAA, Fighter, Fighter_Bomber, Attacker, Bomber, Heavy_Bomber, Awacs, Recon, Transport, Command_&_Control            
-            efficiency = asset.getEfficiency()
-            report["asset"][category]["Number"] += 1
-            report["asset"][category]["Efficiency"] += efficiency
-
-        
-        # update efficiency and number for each category of asset
-        for category in GROUND_ASSET_CATEGORY:
- 
-            if request == "enemy_request": # if it's an enemy request update efficiency and number with random error                                
-                efficiency_error = random.choice([-1, 1]) * random.uniform(0, asset_Efficiency_Accuracy)
-                number_error = random.choice([-1, 1]) * random.uniform(0, asset_Number_Accuracy)
-                report["asset"][category]["Efficiency"] = report["asset"]["Efficiency"] * (1 + efficiency_error) / report["asset"]["Number"]
-                report["asset"][category]["Number"] = report["asset"]["Number"] * (1 + number_error)
-                    
-        return report
+        Args:
+            target_position: Target position
             
-    def getReconEfficiency(self):
-        """Return the efficiency of the reconnaissance assets"""
-
-        recognitors = [asset for asset in self.assets if asset.role == "Recon"]
-        efficiency = median(asset.getEfficiency("hr_mil") for asset in recognitors)
-        return efficiency
-    
-    def isAirbase(self):
-        return self._mil_category in MIL_BASE_CATEGORY["Air Base"]
-    
-    def isGroundBase(self):        
-        return self._mil_category in MIL_BASE_CATEGORY["Ground Base"]
-    
-    def isNavalGroup(self):        
-        return self._mil_category in MIL_BASE_CATEGORY["Naval Base"]    
-
-    def artilleryInRange(self, target: Point|Edge|None):
-
-        artilleryInrange = False
-        in_range_level = None
-
-        max_artillery_range = 0
-        target_distance = float('inf')
-
-        if isinstance(target, Edge):            
-            target_distance = target.minDistance(self._position)
-
-        elif isinstance(target, Point):
-            target_distance = target.distance(self._positin) # verifica se distingue tra 2D e 3D
-        
-        else:
-            raise TypeError(f"target{target} is not a Point or Edge object")
-        
-
-        if self.isGroundBase or self.isNavalGroup:
-        
-            for asset in self.assets:                
-                ground = isinstance(asset, Vehicle) and ( asset.isTank or asset.isArtillery ) 
-                sea = isinstance(asset, Ship) and ( asset.isDestroyer ) 
-                    
-                if ( ground or sea) and asset.artillery_range > max_artillery_range:
-                    max_artillery_range = asset.artillery_range
-
-        if max_artillery_range > target_distance:
-            artilleryInrange = True
-            in_range_level = max_artillery_range / target_distance
-
-        return artilleryInrange, in_range_level
-    
-    def time2attack(self, target_position: Point|Edge|None):
-        speed = 0
-        target_distance = 0
-
-        if isinstance(target_position, Edge):            
-            target_distance = target_position.minDistance(self.position)
-
-        elif isinstance(target_position, Point):
-            target_distance = target_position.distance(self.position)
-        
-        else:
-            raise TypeError(f"target{target_position} is not a Point or Edge object")
-        
-
-        if self.isAirbase or self.isGroundBase or self.isNavalGroup:
-        
-            for asset in self.assets:
-                air = isinstance( asset, Aircraft ) and ( asset.isAttacker or asset.isBomber or asset.isFighterBomber )
-                ground = isinstance( asset, Vehicle ) and ( asset.isTank or asset.isArmor or asset.isMotorized ) 
-                sea = isinstance( asset, Ship ) and ( asset.isDestroyer or asset.isCarrier or asset.isSubmarine ) 
-                    
-                if ( air or ground or sea) and asset.speed > speed:
-                    speed = asset.max_speed
-
-
-        if speed > 0 and target_distance > 0:
-            return target_distance / speed
-        else:
-            return float('inf')
-                
+        Returns:
+            Time in hours to reach target or infinity if unreachable
+        """
+        if not isinstance(target_position, (Point, Point3D, Edge)):
+            raise TypeError("Target must be Point, Point3D or Edge")
             
+        distance = self._calculate_target_distance(target_position)
+        max_speed = self._get_max_attack_speed()
+        
+        return distance / max_speed if max_speed > 0 else float('inf')
+
+    def _get_max_attack_speed(self) -> float:
+        """Get maximum speed of attack-capable assets"""
+        max_speed = 0.0
+        
+        for asset in self.assets.values():
+            if isinstance(asset, (Aircraft, Vehicle, Ship)) and hasattr(asset, 'max_speed'):
+                max_speed = max(max_speed, asset.max_speed)
                 
+        return max_speed
+
+    # Reconnaissance methods
+    def get_recon_efficiency(self) -> float:
+        """Calculate median efficiency of reconnaissance assets"""
+        recognitors = [
+            asset for asset in self.assets.values() 
+            if hasattr(asset, 'role') and asset.role == "Recon"
+        ]
+        return median(
+            [asset.get_efficiency("hr_mil") for asset in recognitors]
+        ) if recognitors else 0.0
+
+    # Placeholder methods for future implementation
+    def air_defense(self) -> None:
+        """Calculate air defense volume (to be implemented)"""
+        pass
+
+    def combat_range(self, type: str = "Artillery", height: int = 0) -> None:
+        """Calculate combat range (to be implemented)"""
+        pass
+
+    def defense_aa_range(self, height: int = 0) -> None:
+        """Calculate AA defense range (to be implemented)"""
+        pass
+
+    def combat_volume(self, type: str = "Artillery") -> None:
+        """Calculate combat volume (to be implemented)"""
+        pass
+
+    def defense_aa_volume(self) -> None:
+        """Calculate AA defense volume (to be implemented)"""
+        pass
+
+    def intelligence(self) -> None:
+        """Calculate intelligence level (to be implemented)"""
+        pass
+
+    def threat_volume(self) -> None:
+        """Calculate threat volume (to be implemented)"""
+        pass
+
+    def front(self) -> None:
+        """Calculate front position (to be implemented)"""
+        pass
+
+    def combat_state(self) -> None:
+        """Calculate combat state (to be implemented)"""
+        pass

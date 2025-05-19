@@ -47,19 +47,29 @@ BLOCK_CATEGORY = {
 
 
 
-"""
+
 MIL_BASE_CATEGORY = {
+
+"""    
+Divisione:        Brigate e/o Reggimenti - 10-20k men
+
+Brigata:           2 Reggimenti - 3600 men
+
+Reggimento:  3 Battaglioni -1800 men
+
+Battaglione:   4 Compagnie - 600 men
+
+Compagnia:    150 men
+"""
 
     "Ground Base": ("Stronghold",  "Farp", "Regiment", "Battallion", "Company", "Brigade", "Division", "Command_&_Control_C2", "Command_&_Control_C4"),
 
     "Air_Base": {"Airbase", "Heliport"},
 
-    "Naval_Base": {"Port", "Shipyard", "Naval_Group"},    
-    
-    "EWR": ("EWR"),   
+    "Naval_Base": {"Port", "Shipyard", "Naval_Group"},     
     
 }
-"""
+
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
 # dovresti integrare per artillery con il caliro: Artillery_Fix.Howitzer_Big, Artillery_Fix.Howitzer_Small, Artillery_Semovent.Self_Propelled_Big, ........
