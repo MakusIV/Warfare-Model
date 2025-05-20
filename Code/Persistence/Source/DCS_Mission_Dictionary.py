@@ -7,7 +7,7 @@
  TEST: OK with Jupiter Notebook
 
 """
-from LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from typing import Literal
 import lupa
 from lupa import LuaRuntime
@@ -17,7 +17,7 @@ from Persistence.Source.RoutePoint import RoutePoint
 from Persistence.Source.Coalition import Coalition
 from Persistence.Source.Group import Group
 from Persistence.Source.Country import Country
-from Context import DCS_DATA_DIRECTORY # Store Lua file table and Python dictionary
+from Code.Dynamic_War_Manager.Source.Context.Context import DCS_DATA_DIRECTORY # Store Lua file table and Python dictionary
 import Persistence.Source.DCS_Data_Management as DCS_Data_Management
 
 

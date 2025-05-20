@@ -4,9 +4,9 @@ contains DCS Point information
 Coalition -> Country -> Group -> Route -> Point
 """
 
-from LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Persistence.Source.Country import Country
-from Context import SIDE
+from Code.Dynamic_War_Manager.Source.Context.Context import SIDE
 from Persistence.Source.Task import Task
 from sympy import Point2D
 from typing import Literal, List, Dict
