@@ -3,8 +3,8 @@ Class Country
 contains DCS Country information
 """
 
-from LoggerClass import Logger
-from Context import GROUP_CATEGORY
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUP_CATEGORY
 from sympy import Point2D
 from typing import Literal, List, Dict
 from Persistence.Source.Group import Group
