@@ -19,8 +19,15 @@ class Vehicle(Mobile) :
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
-            # propriety             
-        
+            # propriety  
+            self.speed = {
+                "on_road":{"nominal": None. "max": None},
+                "off_road":{"nominal": None. "max": None}
+            }
+
+            self.range
+            # dcs_data for vehicle
+
             # Association    
                     
             # check input parameters
@@ -132,46 +139,46 @@ class Vehicle(Mobile) :
             return (False, "Bad Arg: Vehicle category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")                     
     
         return (True, "OK")
-
+    @property
     def isTank(self):
         return self.category == "Tank"
-    
+    @property
     def isArmor(self):
         return self.category == "Armor"
-    
+    @property
     def isMotorized(self):
         return self.category == "Motorized"
-    
+    @property
     def isArtillery_Semovent(self):
         return self.category == "Artillery_Semovent"
-    
+    @property
     def isArtillery_Fixed(self):
         return self.category == "Artillery_Fixed"
-    
+    @property
     def isArtillery(self):
         return self.isArtillery_Fixed or self.isArtillery_Semovent
-    
+    @property
     def isAntiAircraft(self):
         return self.isSAM or self.isAAA
-    
+    @property
     def isSAM(self):
         return self.isSAM_Big or self.isSAM_Med or self.isSAM_Small
-    
+    @property
     def isSAM_Big(self):
         return self.category == "SAM Big"
-    
+    @property
     def isSAM_Med(self):
         return self.category == "SAM Med"
-    
+    @property
     def isSAM_Small(self):
         return self.category == "SAM Small"
-    
+    @property
     def isAAA(self):
         return self.category == "AAA"
-    
+    @property
     def isEWR(self):
         return self.category == "EWR"
-    
+    @property
     def isCommandControl(self):
         return self.category == "Command_&_Control"
     

@@ -1,9 +1,8 @@
 from __future__ import annotations
-import random
 from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
 from heapq import heappop, heappush
 from numpy import median
-from sympy import Point, Point3D, Edge
+from sympy import Point3D, Point2D
 
 if TYPE_CHECKING:
     from .Region import Region
@@ -20,15 +19,14 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_COMBAT_EFFICACY, 
     GROUND_ACTION, 
     AIR_TASK,
-    Military_CATEGORY,
+    MILITARY_CATEGORY,
     GROUND_ASSET_CATEGORY
 )
 
-# LOGGING
 logger = Logger(module_name=__name__, class_name='Military')
 
 class Military(Block):
-    """Military class representing specialized combat Block"""
+    """Military class representing specialized combat Block with combat capabilities."""
     
     def __init__(
         self,
@@ -41,9 +39,9 @@ class Military(Block):
         functionality: Optional[str] = None,
         value: Optional[int] = None,
         region: Optional["Region"] = None
-    ):
+    ) -> None:
         """
-        Initialize a Military
+        Initialize a Military instance.
         
         Args:
             mil_category: Military category (from Military_CATEGORY)
@@ -70,29 +68,40 @@ class Military(Block):
         self._mil_category = mil_category
         self._validate_mil_category(mil_category)
 
-    # Property getters and setters
+    #region Properties
     @property
     def mil_category(self) -> str:
-        """Get military category"""
+        """Get military category."""
         return self._mil_category
 
     @mil_category.setter
     def mil_category(self, value: str) -> None:
-        """Set military category"""
+        """Set military category after validation."""
         self._validate_mil_category(value)
         self._mil_category = value
+    #endregion
 
+    #region Validation Methods
     def _validate_mil_category(self, category: str) -> None:
-        """Validate military category"""
-        if not isinstance(category, str) or category not in Military_CATEGORY.values():
-            valid_categories = ", ".join(Military_CATEGORY.values())
+        """Validate military category against allowed values."""
+        if not isinstance(category, str) or category not in MILITARY_CATEGORY.values():
+            valid_categories = ", ".join(MILITARY_CATEGORY.values())
             raise ValueError(
                 f"Invalid mil_category: {category}. Must be one of: {valid_categories}"
             )
+    #endregion
 
-    # Combat capabilities
+    #region Combat Capabilities
     def ground_combat_power(self, action: str) -> float:
-        """Calculate total ground combat power for specified action"""
+        """
+        Calculate total ground combat power for specified action.
+        
+        Args:
+            action: Ground action type (from GROUND_ACTION)
+            
+        Returns:
+            Total combat power of applicable ground assets
+        """
         if action not in GROUND_ACTION:
             valid_actions = ", ".join(GROUND_ACTION)
             raise ValueError(f"Invalid action: {action}. Must be one of: {valid_actions}")
@@ -100,11 +109,19 @@ class Military(Block):
         return sum(
             asset.combat_power 
             for asset in self.assets.values() 
-            if hasattr(asset, 'combat_power') and isinstance(asset, Vehicle)
+            if isinstance(asset, Vehicle) and hasattr(asset, 'combat_power')
         )
 
     def air_combat_power(self, task: str) -> float:
-        """Calculate total air combat power for specified task"""
+        """
+        Calculate total air combat power for specified task.
+        
+        Args:
+            task: Air task type (from AIR_TASK)
+            
+        Returns:
+            Total combat power of applicable air assets
+        """
         if task not in AIR_TASK:
             valid_tasks = ", ".join(AIR_TASK)
             raise ValueError(f"Invalid task: {task}. Must be one of: {valid_tasks}")
@@ -112,96 +129,184 @@ class Military(Block):
         return sum(
             asset.combat_power 
             for asset in self.assets.values() 
-            if hasattr(asset, 'combat_power') and isinstance(asset, Aircraft)
+            if isinstance(asset, Aircraft) and hasattr(asset, 'combat_power')
         )
+    #endregion
 
-    # Base type checks
+    #region Base Type Checks
     def is_airbase(self) -> bool:
-        """Check if base is an airbase"""
-        return self._mil_category == Military_CATEGORY["Air Base"]
+        """Check if base is an airbase."""
+        return self._mil_category == MILITARY_CATEGORY["Air Base"]
 
     def is_groundbase(self) -> bool:
-        """Check if base is a ground base"""
-        return self._mil_category == Military_CATEGORY["Ground Base"]
+        """Check if base is a ground base."""
+        return self._mil_category == MILITARY_CATEGORY["Ground Base"]
 
     def is_navalgroup(self) -> bool:
-        """Check if base is a naval group"""
-        return self._mil_category == Military_CATEGORY["Naval Base"]
+        """Check if base is a naval group."""
+        return self._mil_category == MILITARY_CATEGORY["Naval Base"]
+    #endregion
 
-    # Range calculations
+    #region Range Calculations
     def artillery_in_range(
         self, 
-        target: Union[Point, Point3D, Edge]
-    ) -> Tuple[bool, Optional[float]]:
+        target_point: Union[Point2D, Point3D]
+    ) -> Tuple[bool, Optional[dict]]:
         """
-        Check if target is within artillery range
+        Check if target is within artillery range.
         
         Args:
-            target: Target position (Point or Edge)
+            target_point: Target position (Point2D or Point3D)
             
         Returns:
-            Tuple of (in_range, range_level) where:
-            - in_range: True if target is in range
-            - range_level: Ratio of max_range/target_distance
+            Tuple of (in_range, range_info) where:
+            - in_range: True if target is in range of any artillery
+            - range_info: Dictionary with range details if in range
         """
-        if not isinstance(target, (Point, Point3D, Edge)):
-            raise TypeError("Target must be Point, Point3D or Edge")
+        if not isinstance(target_point, (Point2D, Point3D)):
+            raise TypeError("Target must be Point2D or Point3D")
             
-        target_distance = self._calculate_target_distance(target)
-        max_range = self._get_max_artillery_range()
+        target_distance = target_point.distance(self.position)
+        has_artillery, max_range, med_range, ratio, quantity = self._get_artillery_stats()
+
+        if not has_artillery:
+            return False, None
+            
+        result = {
+            "target_within_max_range": max_range >= target_distance,
+            "target_within_med_range": med_range >= target_distance,
+            "max_range_ratio": max_range / target_distance if max_range > 0 else 0,
+            "med_range_ratio": med_range / target_distance if med_range > 0 else 0,
+            "artillery_quantity": quantity,
+        }
         
-        if max_range > target_distance:
-            return True, max_range / target_distance
-        return False, None
+        return True, result
 
-    def _calculate_target_distance(self, target) -> float:
-        """Calculate distance to target"""
-        if isinstance(target, Edge):
-            return target.min_distance(self.position)
-        return target.distance(self.position)
-
-    def _get_max_artillery_range(self) -> float:
-        """Get maximum artillery range of all assets"""
-        max_range = 0.0
-        
-        for asset in self.assets.values():
-            if (isinstance(asset, (Vehicle, Ship)) and hasattr(asset, 'artillery_range')):
-                max_range = max(max_range, asset.artillery_range)
-                
-        return max_range
-
-    # Time calculations
-    def time_to_attack(self, target_position: Union[Point, Point3D, Edge]) -> float:
+    def _get_artillery_stats(self) -> Tuple[bool, float, float, float, int]:
         """
-        Calculate estimated time to reach target
+        Calculate artillery statistics for the military unit.
+        
+        Returns:
+            Tuple containing:
+            - has_artillery: Boolean indicating if any artillery exists
+            - max_range: Maximum range of all artillery
+            - med_range: Median range of all artillery
+            - ratio: Median to max range ratio
+            - quantity: Number of artillery assets
+        """
+        range_values = [
+            asset.artillery_range 
+            for asset in self.assets.values() 
+            if isinstance(asset, (Vehicle, Ship)) and hasattr(asset, 'artillery_range')
+        ]
+        
+        if not range_values:
+            return False, 0.0, 0.0, 0.0, 0
+            
+        max_range = max(range_values)
+        med_range = median(range_values)
+        ratio = med_range / max_range if max_range > 0 else 0
+        quantity = len(range_values)
+        
+        return True, max_range, med_range, ratio, quantity
+    #endregion
+
+    #region Time Calculations
+    def time_to_direct_line_attack(
+        self, 
+        target: Union[Point2D, Point3D, Asset, Block]
+    ) -> Optional[Dict[str, float]]:
+        """
+        Calculate estimated time to reach target with direct line path.
         
         Args:
-            target_position: Target position
+            target: Target position or object with position
             
         Returns:
-            Time in hours to reach target or infinity if unreachable
+            Dictionary with time estimates in hours or None if unreachable
         """
-        if not isinstance(target_position, (Point, Point3D, Edge)):
-            raise TypeError("Target must be Point, Point3D or Edge")
+        distance = self._get_target_distance(target)
+        if distance is None:
+            return None
             
-        distance = self._calculate_target_distance(target_position)
-        max_speed = self._get_max_attack_speed()
-        
-        return distance / max_speed if max_speed > 0 else float('inf')
+        max_speed, med_speed, _ = self._get_attack_speeds()
+        if max_speed is None:
+            return None
+            
+        return {
+            "time": distance / med_speed if med_speed > 0 else float('inf'),
+            "min_time": distance / max_speed if max_speed > 0 else float('inf')
+        }
 
-    def _get_max_attack_speed(self) -> float:
-        """Get maximum speed of attack-capable assets"""
-        max_speed = 0.0
+    def _get_target_distance(self, target: Union[Point2D, Point3D, Asset, Block]) -> Optional[float]:
+        """Calculate distance to target."""
+        if isinstance(target, (Point2D, Point3D)):
+            return target.distance(self.position)
+        elif target.position and isinstance(target.position, (Point2D, Point3D)):
+            return target.position.distance(self.position)
+        return None
+
+    def _get_attack_speeds(self) -> Tuple[Optional[float], Optional[float], int]:
+        """
+        Get speed statistics for attack-capable assets.
+        
+        Returns:
+            Tuple containing:
+            - max_speed: Average maximum speed of attack assets
+            - med_speed: Average nominal speed of attack assets
+            - quantity: Number of attack-capable assets
+        """
+        speed_values = []
+        max_speed_values = []
         
         for asset in self.assets.values():
-            if isinstance(asset, (Aircraft, Vehicle, Ship)) and hasattr(asset, 'max_speed'):
-                max_speed = max(max_speed, asset.max_speed)
-                
-        return max_speed
+            if self._is_attack_asset(asset):
+                speed_values.append(self._get_nominal_speed(asset))
+                max_speed_values.append(self._get_max_speed(asset))
+        
+        if not speed_values:
+            return None, None, 0
+            
+        return (
+            sum(max_speed_values) / len(max_speed_values),
+            sum(speed_values) / len(speed_values),
+            len(speed_values)
+        )
 
-    # Reconnaissance methods
+    def _is_attack_asset(self, asset: Union[Vehicle, Aircraft, Ship]) -> bool:
+        """Check if asset is attack-capable based on military category."""
+        if self.is_groundbase() and isinstance(asset, Vehicle):
+            return asset.isTank or asset.isArmor or asset.isMotorized
+        elif self.is_airbase() and isinstance(asset, Aircraft):
+            return not (asset.isTransport or asset.isAwacs or asset.isRecon or asset.isHelicopter)
+        elif self.is_helibase() and isinstance(asset, Aircraft):
+            return asset.isHelicopter
+        elif self.is_navalgroup() and isinstance(asset, Ship):
+            return (asset.isCarrier or asset.isDestroyer or asset.isFrigate or 
+                    asset.isCruiser or asset.isFastAttackShip or asset.isSubmarine)
+        return False
+
+    def _get_nominal_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
+        """Get nominal speed of asset based on type."""
+        if isinstance(asset, Vehicle):
+            return asset.speed.get("off_road", {}).get("nominal", 0)
+        return asset.speed.get("nominal", 0)
+
+    def _get_max_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
+        """Get maximum speed of asset based on type."""
+        if isinstance(asset, Vehicle):
+            return asset.speed.get("off_road", {}).get("max", 0)
+        return asset.speed.get("max", 0)
+    #endregion
+
+    #region Reconnaissance Methods
     def get_recon_efficiency(self) -> float:
-        """Calculate median efficiency of reconnaissance assets"""
+        """
+        Calculate median efficiency of reconnaissance assets.
+        
+        Returns:
+            Median efficiency of recon assets or 0.0 if none exist
+        """
         recognitors = [
             asset for asset in self.assets.values() 
             if hasattr(asset, 'role') and asset.role == "Recon"
@@ -209,40 +314,42 @@ class Military(Block):
         return median(
             [asset.get_efficiency("hr_mil") for asset in recognitors]
         ) if recognitors else 0.0
+    #endregion
 
-    # Placeholder methods for future implementation
+    #region Placeholder Methods for Future Implementation
     def air_defense(self) -> None:
-        """Calculate air defense volume (to be implemented)"""
+        """Calculate air defense volume (to be implemented)."""
         pass
 
     def combat_range(self, type: str = "Artillery", height: int = 0) -> None:
-        """Calculate combat range (to be implemented)"""
+        """Calculate combat range (to be implemented)."""
         pass
 
     def defense_aa_range(self, height: int = 0) -> None:
-        """Calculate AA defense range (to be implemented)"""
+        """Calculate AA defense range (to be implemented)."""
         pass
 
     def combat_volume(self, type: str = "Artillery") -> None:
-        """Calculate combat volume (to be implemented)"""
+        """Calculate combat volume (to be implemented)."""
         pass
 
     def defense_aa_volume(self) -> None:
-        """Calculate AA defense volume (to be implemented)"""
+        """Calculate AA defense volume (to be implemented)."""
         pass
 
     def intelligence(self) -> None:
-        """Calculate intelligence level (to be implemented)"""
+        """Calculate intelligence level (to be implemented)."""
         pass
 
     def threat_volume(self) -> None:
-        """Calculate threat volume (to be implemented)"""
+        """Calculate threat volume (to be implemented)."""
         pass
 
     def front(self) -> None:
-        """Calculate front position (to be implemented)"""
+        """Calculate front position (to be implemented)."""
         pass
 
     def combat_state(self) -> None:
-        """Calculate combat state (to be implemented)"""
+        """Calculate combat state (to be implemented)."""
         pass
+    #endregion
