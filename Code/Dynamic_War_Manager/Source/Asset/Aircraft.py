@@ -20,7 +20,11 @@ class Aircraft(Mobile) :
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
             # propriety             
-            
+            self.speed = { #  true air speed @ 0 attenzione al calcolo dei tempi di attacco in Military Block
+
+                "nominal": None 
+                "max": None                
+            }
     
             # Association    
             
@@ -102,31 +106,31 @@ class Aircraft(Mobile) :
     def combatPower(self, task):
         return AIR_COMBAT_EFFICACY[self.asset_type][task] * self.efficiency
 
-
+    @property
     def isFighter(self):
         return self.category == "Fighter"
-    
+    @property
     def isFighterBomber(self):
         return self.category == "Fighter_Bomber"
-    
+    @property
     def isAttacker(self):
         return self.category == "Attacker"
-    
+    @property
     def isBomber(self):
         return self.category == "Bomber"
-    
+    @property
     def isHeavyBomber(self):
         return self.category == "Heavy_Bomber"
-    
+    @property
     def isAwacs(self):
         return self.category == "Awacs"
-    
+    @property
     def isRecon(self):
         return self.category == "Recon"
-    
+    @property
     def isTransport(self):
         return self.category == "Transport"
-    
+    @property
     def isHelicopter(self):
         return self.category == "Helicopter"
     

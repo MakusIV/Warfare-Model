@@ -831,7 +831,7 @@ def mean_point(points: list) -> Point:
     elif isinstance(points[0], Point2D):
         x_mean = np.mean([point.x for point in points])
         y_mean = np.mean([point.y for point in points])
-        return Point(x_mean, y_mean)
+        return Point2D(x_mean, y_mean)
     
     else:
         raise TypeError("Unknow anomaly in points {points!r}")

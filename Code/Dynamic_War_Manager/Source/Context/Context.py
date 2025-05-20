@@ -48,7 +48,7 @@ BLOCK_CATEGORY = {
 
 
 
-Military_CATEGORY = {
+MILITARY_CATEGORY = {
 
 """    
 Divisione:        Brigate e/o Reggimenti - 10-20k men

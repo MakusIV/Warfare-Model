@@ -20,7 +20,11 @@ class Ship(Mobile) :
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
            
             # propriety             
-            
+             self.speed = { 
+
+                "nominal": None 
+                "max": None                
+            }
     
             # Association    
             
@@ -100,16 +104,25 @@ class Ship(Mobile) :
     def combatPower(self, task):
         pass
 
-
+    @property
     def isDestroyer(self):
         return self.category == "Destroyer"
-    
+    @property
     def isCarrier(self):
         return self.category == "Carrier"
-       
+    @property
+    def isCruiser(self):
+        return self.category == "Cruiser"
+    @property   
+    def isFrigate(self):
+        return self.category == "Frigate"
+    @property
+    def isFastAttackShip(self):
+        return self.category == "FastAttackShip"
+    @property
     def isTransport(self):
         return self.category == "Transport"
-    
+    @property
     def isSubmarine(self):
         return self.category == "Submarine"
     
