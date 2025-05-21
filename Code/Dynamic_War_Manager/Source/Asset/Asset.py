@@ -6,7 +6,7 @@ A Block can consist of different groups belonging to different countries of the 
 """
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
-from Code.Dynamic_War_Manager.Source.Utility import Utility
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
@@ -50,7 +50,7 @@ class Asset:
         
         # Initialize properties
         self._name = name
-        self._id = Utility.setId(name)
+        self._id = setId(name)
         self._description = description
         self._category = category
         self._asset_type = asset_type
@@ -108,7 +108,7 @@ class Asset:
         if value:
             self._id = str(value)
         else:
-            self._id = Utility.setId(self._name)
+            self._id = setId(self._name)
 
     @property
     def description(self) -> Optional[str]:

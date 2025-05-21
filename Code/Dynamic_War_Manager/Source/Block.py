@@ -3,16 +3,16 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
 from sympy import Point
 from dataclasses import dataclass
-from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
-from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.DataType.Event import Event
-from Code.Dynamic_War_Manager.Source.DataType.State import State
-from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_CATEGORY, SIDE
+from Code import Utility
+from Code.LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Event import Event
+from Code.Dynamic_War_Manager.Source.State import State
+from Code.Dynamic_War_Manager.Source.Payload import Payload
+from Code.Context import BLOCK_CATEGORY, SIDE
 
 if TYPE_CHECKING:
-    from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
-    from Code.Dynamic_War_Manager.Source.Context.Region import Region
+    from Code.Dynamic_War_Manager.Source.Asset import Asset
+    from Code.Dynamic_War_Manager.Source.Region import Region
 
 # LOGGING
 logger = Logger(module_name=__name__, class_name='Block')
@@ -65,8 +65,8 @@ class Block:
             ValueError: If parameters are invalid
         """
         # Block properties
-        self._name = name if name else setName('Unnamed')
-        self._id = setId(self._name, None)
+        self._name = name if name else Utility.setName('Unnamed')
+        self._id = Utility.setId(self._name, None)
         self._description = description or ""
         self._side = side or "Neutral"
         self._category = category or ""
@@ -295,13 +295,10 @@ class Block:
     def assets(self, value: Dict[str, "Asset"]) -> None:
         """Set assets dictionary"""
         if not isinstance(value, dict):
-            raise TypeError("assets must be a dictionary")        
-        if not all(validate_class(asset, "Asset") for asset in value.values()):
+            raise TypeError("assets must be a dictionary")
+        if not all(isinstance(asset, Asset) for asset in value.values()):
             raise ValueError("All values in assets must be Asset objects")
         self._assets = value
-
-    
-
 
     def list_asset_keys(self) -> List[str]:
         """Get list of asset IDs"""
@@ -368,7 +365,7 @@ class Block:
         if not self._assets:
             return None
         positions = [asset.position for asset in self._assets.values() if asset.position is not None]
-        return mean_point(positions) if positions else None
+        return Utility.mean_point(positions) if positions else None
 
     @property
     def morale(self) -> float:

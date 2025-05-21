@@ -1,11 +1,14 @@
 from Dynamic_War_Manager.Source.Asset.Asset import Asset
 from Dynamic_War_Manager.Source.Block.Block import Block
-from Code.Dynamic_War_Manager.Source.Utility import Utility, Sphere, Hemisphere
+from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Dynamic_War_Manager.Source.Event import Event
-from Dynamic_War_Manager.Source.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import STATE, CATEGORY, Military_CATEGORY
-from typing import Literal, List, Dict
+from Dynamic_War_Manager.Source.DataType.Event import Event
+from Dynamic_War_Manager.Source.DataType.Sphere import Sphere
+from Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
+from Dynamic_War_Manager.Source.DataType.Volume import Volume
+from Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.Context.Context import STATE, BLOCK_CATEGORY, MILITARY_CATEGORY
+from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
@@ -15,7 +18,7 @@ logger = Logger(module_name = __name__, class_name = 'Mobile')
 # ASSET
 class Mobile(Asset) :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None = None, functionality: str|None = None, cost: int|None = None, value: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point3D|None = None, volume: Volume|None = None, crytical: bool|None = False, repair_time: int|None = 0, role: str|None = None, dcs_unit_data: dict|None = None):   
+    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
      
@@ -46,28 +49,28 @@ class Mobile(Asset) :
                                    "unit_alt": float, "unit_alt_type": str, "heading": int, "unit_speed": float, "unit_hardpoint_racks": int, "unit_livery_id": int, 
                                    "unit_psi": float, "unit_skill": str, "unit_onboard_num": int, "unit_payload": str|Dict, "unit_callsign": str|Dict}
             
-            self._unit_index: str|Dict|None = unit_index # DCS group unit_index - index Dict            
-            self._unit_name: str|None = unit_name # DCS unit group name - str
-            self._unit_type: str|None = unit_type # DCS unit group type - str
-            self._unit_unitId: int|None = unit_unitId # DCS unit group id - int
-            self._unit_communication: bool|None = unit_communication # DCS unit group communication - bool
-            self._unit_lateActivation: bool|None = unit_lateActivation # DCS unit group lateActivation - bool
-            self._unit_start_time: int|None = unit_start_time # DCS unit group start_time - int
-            self._unit_frequency: float|None = unit_frequency # DCS unit group frequency - float
-            self._unit_x: float|None = unit_x # DCS unit x - float
-            self._unit_y: float|None = unit_y # DCS unit y - float
-            self._unit_alt: float|None = unit_alt # DCS unit altitude - float
-            self._unit_alt_type: str|None = unit_alt_type # DCS unit altitude type - str (BARO, ...)
-            self._heading: int|None = heading # DCS unit heading - int
-            self._unit_speed: float|None = unit_speed # DCS unit speed - float
-            self._unit_hardpoint_racks: int|None = unit_hardpoint_racks # DCS unit hardpoint_racks - int
-            self._unit_livery_id: int|None = unit_livery_id # DCS unit livery_id - int
-            self._unit_psi: float|None = unit_psi # DCS unit psi - float
-            self._unit_skill: str|None = unit_skill # DCS unit skill - Literal (Average, ....)
-            self._unit_onboard_num: int|None = unit_onboard_num # DCS unit onboard_num - int
-            self._unit_payload: str|Dict|None = unit_payload # DCS unit payload - Dict
-            self._unit_callsign: str|Dict|None = unit_callsign  # DCS unit callsign - Dict
-            self._unit_health: int|None = health # DCS unit health - int [0-100] DEVI VEDERE NEI FILE TEMPORANEI GENERATI DOPO LA CONSLUSIONE DI UNA MISSIONE E PIMA DEL PROCESSAMENTO CON DCE
+            self._unit_index: str|Optional[dict] = unit_index # DCS group unit_index - index Dict            
+            self._unit_name: Optional[str] = unit_name # DCS unit group name - str
+            self._unit_type: Optional[str] = unit_type # DCS unit group type - str
+            self._unit_unitId: Optional[int] = unit_unitId # DCS unit group id - int
+            self._unit_communication: Optional[bool] = unit_communication # DCS unit group communication - bool
+            self._unit_lateActivation: Optional[bool] = unit_lateActivation # DCS unit group lateActivation - bool
+            self._unit_start_time: Optional[int] = unit_start_time # DCS unit group start_time - int
+            self._unit_frequency: Optional[float] = unit_frequency # DCS unit group frequency - float
+            self._unit_x: Optional[float] = unit_x # DCS unit x - float
+            self._unit_y: Optional[float] = unit_y # DCS unit y - float
+            self._unit_alt: Optional[float] = unit_alt # DCS unit altitude - float
+            self._unit_alt_type: Optional[str] = unit_alt_type # DCS unit altitude type - str (BARO, ...)
+            self._heading: Optional[int] = heading # DCS unit heading - int
+            self._unit_speed: Optional[float] = unit_speed # DCS unit speed - float
+            self._unit_hardpoint_racks: Optional[int] = unit_hardpoint_racks # DCS unit hardpoint_racks - int
+            self._unit_livery_id: Optional[int] = unit_livery_id # DCS unit livery_id - int
+            self._unit_psi: Optional[float] = unit_psi # DCS unit psi - float
+            self._unit_skill: Optional[str] = unit_skill # DCS unit skill - Literal (Average, ....)
+            self._unit_onboard_num: Optional[int] = unit_onboard_num # DCS unit onboard_num - int
+            self._unit_payload: str|Optional[dict] = unit_payload # DCS unit payload - Dict
+            self._unit_callsign: str|Optional[dict] = unit_callsign  # DCS unit callsign - Dict
+            self._unit_health: Optional[int] = health # DCS unit health - int [0-100] DEVI VEDERE NEI FILE TEMPORANEI GENERATI DOPO LA CONSLUSIONE DI UNA MISSIONE E PIMA DEL PROCESSAMENTO CON DCE
             """
     
             # Association    
