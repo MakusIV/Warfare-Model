@@ -19,22 +19,30 @@ ROUTE_TYPE = ["ground", "air", "water", "mixed"]
 
 GROUND_ACTION  = {
 
-    "Attack": "Attack",
-    "Defence": "Defence",
-    "Maintain": "Maintain"
+    "Attack":   "Attack",
+    "Defence":  "Defence",
+    "Maintain": "Maintain",
+    "Retrait":  "Retrait" 
 }
 
-AIR_ACTION  = {
-
-    "Escort": "Escort",
-    "Sweep": "Sweep",
-    "Patrol": "Patrol",
+AIR_TASK = {
+    
+    "CAP": "CAP",  
+    "Fighter_Sweep": "Fighter_Sweep"  ,
     "Intercept": "Intercept",
+    "Escort": "Escort",
+    "Recon": "Recon",
+    "CAS": "CAS",
     "Strike": "Strike",
-    "PinPointStrike": "PinPointStrike",
-    "Sead": "Sead",
-}
+    "Pinpoint_Strike": "Pinpoint_Strike",
+    "SEAD": "SEAD",
+} 
 
+NAVAL_TASK  = {
+
+    "Attack":   "Attack",    
+    "Retrait":  "Retrait" 
+}
 
 
 BLOCK_CATEGORY = {
@@ -42,13 +50,8 @@ BLOCK_CATEGORY = {
     "Civilian": "Civilian",
     "Logistic": "Logistic",    
     "Military": "Military",
-    "All": "All",
+    "All":      "All",
 }
-
-
-
-
-MILITARY_CATEGORY = {
 
 """    
 Divisione:        Brigate e/o Reggimenti - 10-20k men
@@ -62,11 +65,14 @@ Battaglione:   4 Compagnie - 600 men
 Compagnia:    150 men
 """
 
+
+MILITARY_CATEGORY = {
+
     "Ground_Base": ("Stronghold",  "Farp", "Regiment", "Battallion", "Company", "Brigade", "Division", "Command_&_Control_C2", "Command_&_Control_C4"),
 
-    "Air_Base": {"Airbase", "Heliport"},
+    "Air_Base": ("Airbase", "Heliport"),
 
-    "Naval_Base": {"Port", "Shipyard", "Naval_Group"},     
+    "Naval_Base": ("Port", "Shipyard", "Naval_Group"),     
     
 }
 
@@ -91,18 +97,7 @@ GROUND_COMBAT_EFFICACY = {
 
 STATE = {"Operational": True, "Not_Operational": True , "Destroyed": True, "Critical": True, "Damaged": True}
 
-AIR_TASK = {
-    
-    "CAP": "CAP",  
-    "Fighter Sweep": "Fighter Sweep"  ,
-    "Intercept": "Intercept",
-    "Escort": "Escort",
-    "Recon": "Recon",
-    "CAS": "CAS",
-    "Strike": "Strike",
-    "Pinpoint Strike": "Pinpoint Strike",
-    "SEAD": "SEAD",
-} 
+
 
 AIRCRAFT_TYPE = {# necessario?
 
@@ -115,8 +110,8 @@ AIRCRAFT_TYPE = {# necessario?
 #[action][asset.type]
 AIR_COMBAT_EFFICACY = {
     
-    "F-15": {AIR_TASK["CAP"]: 8, AIR_TASK["Fighter Sweep"]: 8, AIR_TASK["Intercept"]: 7, AIR_TASK["Escort"]: 8, AIR_TASK["Recon"]: 5, AIR_TASK["CAS"]: 4, AIR_TASK["Strike"]: 4, AIR_TASK["Pinpoint Strike"]: 4, AIR_TASK["SEAD"]: 2},
-    "F-4E": {AIR_TASK["CAP"]: 6, AIR_TASK["Fighter Sweep"]: 6, AIR_TASK["Intercept"]: 6, AIR_TASK["Escort"]: 6, AIR_TASK["Recon"]: 7, AIR_TASK["CAS"]: 8, AIR_TASK["Strike"]: 8, AIR_TASK["Pinpoint Strike"]: 7, AIR_TASK["SEAD"]: 6}
+    "F-15": {AIR_TASK["CAP"]: 8, AIR_TASK["Fighter_Sweep"]: 8, AIR_TASK["Intercept"]: 7, AIR_TASK["Escort"]: 8, AIR_TASK["Recon"]: 5, AIR_TASK["CAS"]: 4, AIR_TASK["Strike"]: 4, AIR_TASK["Pinpoint_Strike"]: 4, AIR_TASK["SEAD"]: 2},
+    "F-4E": {AIR_TASK["CAP"]: 6, AIR_TASK["Fighter_Sweep"]: 6, AIR_TASK["Intercept"]: 6, AIR_TASK["Escort"]: 6, AIR_TASK["Recon"]: 7, AIR_TASK["CAS"]: 8, AIR_TASK["Strike"]: 8, AIR_TASK["Pinpoint_Strike"]: 7, AIR_TASK["SEAD"]: 6}
 
 }
 

@@ -3,25 +3,25 @@ from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
 from heapq import heappop, heappush
 from numpy import median
 from sympy import Point3D, Point2D
-
-if TYPE_CHECKING:
-    from .Region import Region
-    from .Vehicle import Vehicle
-    from .Aircraft import Aircraft
-    from .Ship import Ship
-    from .Asset import Asset
-
-from .Block import Block
-from .Event import Event
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
+from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     STATE, 
     GROUND_COMBAT_EFFICACY, 
     GROUND_ACTION, 
     AIR_TASK,
-    MILITARY_CATEGORY,
-    GROUND_ASSET_CATEGORY
+    NAVAL_TASK,
+    MILITARY_CATEGORY,    
 )
+if TYPE_CHECKING:
+    from Code.Dynamic_War_Manager.Source.Context.Region import Region
+    from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
+    from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
+    from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
+    from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
+    
 
 logger = Logger(module_name=__name__, class_name='Military')
 
@@ -55,7 +55,7 @@ class Military(Block):
             region: Associated region
         """
         super().__init__(
-            name=f"Military.{name}" if name else Utility.setName('Unnamed_Military'),
+            name=f"Military.{name}" if name else setName('Unnamed_Military'),
             description=description,
             side=side,
             category=category,
@@ -84,8 +84,13 @@ class Military(Block):
     #region Validation Methods
     def _validate_mil_category(self, category: str) -> None:
         """Validate military category against allowed values."""
-        if not isinstance(category, str) or category not in MILITARY_CATEGORY.values():
-            valid_categories = ", ".join(MILITARY_CATEGORY.values())
+        cat = []                    
+        for b in MILITARY_CATEGORY.values():
+            for c in b:
+                cat.append(c)
+
+        if not isinstance(category, str) or category not in cat: #[MILITARY_CATEGORY["Air_Base"], MILITARY_CATEGORY["Naval_Base"], MILITARY_CATEGORY["Ground_Base"]]::   
+            valid_categories = ", ".join(cat)
             raise ValueError(
                 f"Invalid mil_category: {category}. Must be one of: {valid_categories}"
             )
@@ -109,7 +114,7 @@ class Military(Block):
         return sum(
             asset.combat_power 
             for asset in self.assets.values() 
-            if isinstance(asset, Vehicle) and hasattr(asset, 'combat_power')
+            if validate_class(asset, "Vehicle") and hasattr(asset, 'combat_power')
         )
 
     def air_combat_power(self, task: str) -> float:
@@ -129,22 +134,42 @@ class Military(Block):
         return sum(
             asset.combat_power 
             for asset in self.assets.values() 
-            if isinstance(asset, Aircraft) and hasattr(asset, 'combat_power')
+            if validate_class(asset, "Aircraft") and hasattr(asset, 'combat_power')
+        )
+    
+    def naval_combat_power(self, task: str) -> float:
+        """
+        Calculate total naval combat power for specified task.
+        
+        Args:
+            task: Air task type (from AIR_TASK)
+            
+        Returns:
+            Total combat power of applicable air assets
+        """
+        if task not in NAVAL_TASK:
+            valid_tasks = ", ".join(NAVAL_TASK)
+            raise ValueError(f"Invalid task: {task}. Must be one of: {valid_tasks}")
+        
+        return sum(
+            asset.combat_power 
+            for asset in self.assets.values() 
+            if validate_class(asset, "Ship") and hasattr(asset, 'combat_power')
         )
     #endregion
 
     #region Base Type Checks
     def is_airbase(self) -> bool:
         """Check if base is an airbase."""
-        return self._mil_category == MILITARY_CATEGORY["Air Base"]
+        return self._mil_category in MILITARY_CATEGORY["Air_Base"]
 
     def is_groundbase(self) -> bool:
         """Check if base is a ground base."""
-        return self._mil_category == MILITARY_CATEGORY["Ground Base"]
+        return self._mil_category in MILITARY_CATEGORY["Ground_Base"]
 
     def is_navalgroup(self) -> bool:
         """Check if base is a naval group."""
-        return self._mil_category == MILITARY_CATEGORY["Naval Base"]
+        return self._mil_category in MILITARY_CATEGORY["Naval_Base"]
     #endregion
 
     #region Range Calculations
@@ -197,7 +222,7 @@ class Military(Block):
         range_values = [
             asset.artillery_range 
             for asset in self.assets.values() 
-            if isinstance(asset, (Vehicle, Ship)) and hasattr(asset, 'artillery_range')
+            if ( validate_class(asset, "Vehicle") or validate_class(asset, "Ship") ) and hasattr(asset, 'artillery_range')            
         ]
         
         if not range_values:
@@ -242,7 +267,7 @@ class Military(Block):
         """Calculate distance to target."""
         if isinstance(target, (Point2D, Point3D)):
             return target.distance(self.position)
-        elif target.position and isinstance(target.position, (Point2D, Point3D)):
+        elif hasattr(target, 'position') and target.position != None and isinstance(target.position, (Point2D, Point3D)):
             return target.position.distance(self.position)
         return None
 
@@ -275,26 +300,26 @@ class Military(Block):
 
     def _is_attack_asset(self, asset: Union[Vehicle, Aircraft, Ship]) -> bool:
         """Check if asset is attack-capable based on military category."""
-        if self.is_groundbase() and isinstance(asset, Vehicle):
+        if self.is_groundbase() and validate_class(asset, "Vehicle"):
             return asset.isTank or asset.isArmor or asset.isMotorized
-        elif self.is_airbase() and isinstance(asset, Aircraft):
+        elif self.is_airbase() and validate_class(asset, "Aircraft"):
             return not (asset.isTransport or asset.isAwacs or asset.isRecon or asset.isHelicopter)
-        elif self.is_helibase() and isinstance(asset, Aircraft):
+        elif self.is_helibase() and validate_class(asset, "Aircraft"):
             return asset.isHelicopter
-        elif self.is_navalgroup() and isinstance(asset, Ship):
+        elif self.is_navalgroup() and validate_class(asset, "Ship"):
             return (asset.isCarrier or asset.isDestroyer or asset.isFrigate or 
                     asset.isCruiser or asset.isFastAttackShip or asset.isSubmarine)
         return False
 
     def _get_nominal_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
         """Get nominal speed of asset based on type."""
-        if isinstance(asset, Vehicle):
+        if validate_class(asset, "Vehicle"):
             return asset.speed.get("off_road", {}).get("nominal", 0)
         return asset.speed.get("nominal", 0)
 
     def _get_max_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
         """Get maximum speed of asset based on type."""
-        if isinstance(asset, Vehicle):
+        if validate_class(asset, "Vehicle"):
             return asset.speed.get("off_road", {}).get("max", 0)
         return asset.speed.get("max", 0)
     #endregion

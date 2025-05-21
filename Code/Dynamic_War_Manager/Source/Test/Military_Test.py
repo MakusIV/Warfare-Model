@@ -3,8 +3,12 @@ from unittest.mock import MagicMock, patch
 from sympy import Point2D
 from numpy import median
 
-from Military import Military
-from Context import (
+from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
+from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
+from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
+from Code.Dynamic_War_Manager.Source.Context.Context import (
     MILITARY_CATEGORY,
     GROUND_ACTION,
     AIR_TASK
@@ -14,59 +18,62 @@ class TestMilitary(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.airbase = Military(
-            mil_category=MILITARY_CATEGORY["Air Base"],
+            mil_category=MILITARY_CATEGORY["Air_Base"][1],
             name="Test Airbase",
             side="Blue"
         )
         self.groundbase = Military(
-            mil_category=MILITARY_CATEGORY["Ground Base"],
+            mil_category=MILITARY_CATEGORY["Ground_Base"][1],
             name="Test Groundbase",
             side="Red"
         )
         self.navalbase = Military(
-            mil_category=MILITARY_CATEGORY["Naval Base"],
+            mil_category=MILITARY_CATEGORY["Naval_Base"][1],
             name="Test Navalbase",
             side="Blue"
         )
         
         # Mock assets
-        self.mock_aircraft = MagicMock()
+        self.mock_aircraft = MagicMock(spec=Aircraft)
         self.mock_aircraft.combat_power = 10
         self.mock_aircraft.speed = {"nominal": 800, "max": 1000}
         self.mock_aircraft.isTransport = False
         self.mock_aircraft.isAwacs = False
         self.mock_aircraft.isRecon = False
         self.mock_aircraft.isHelicopter = False
+        self.mock_aircraft.position = Point2D(800,0)
         
-        self.mock_vehicle = MagicMock()
+        self.mock_vehicle = MagicMock(spec=Vehicle)
         self.mock_vehicle.combat_power = 5
         self.mock_vehicle.speed = {"off_road": {"nominal": 30, "max": 50}}
         self.mock_vehicle.isTank = True
         self.mock_vehicle.artillery_range = 1000
+        self.mock_vehicle.position = Point2D(0,0)        
         
-        self.mock_ship = MagicMock()
+        self.mock_ship = MagicMock(spec=Ship)
         self.mock_ship.combat_power = 8
         self.mock_ship.speed = {"nominal": 30, "max": 35}
         self.mock_ship.isDestroyer = True
-        self.mock_ship.artillery_range = 2000
+        self.mock_ship.artillery_range = 2000        
         
         self.mock_recon = MagicMock()
         self.mock_recon.role = "Recon"
-        self.mock_recon.get_efficiency.return_value = 0.75
+        self.mock_recon.get_efficiency.return_value = 0.75        
 
     def test_initialization(self):
         """Test Military initialization."""
-        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Air Base"])
-        self.assertEqual(self.groundbase.mil_category, MILITARY_CATEGORY["Ground Base"])
-        self.assertEqual(self.navalbase.mil_category, MILITARY_CATEGORY["Naval Base"])
+        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Air_Base"][1])
+        self.assertEqual(self.groundbase.mil_category, MILITARY_CATEGORY["Ground_Base"][1])
+        self.assertEqual(self.navalbase.mil_category, MILITARY_CATEGORY["Naval_Base"][1])
         
         with self.assertRaises(ValueError):
             Military(mil_category="Invalid Category")
 
     def test_mil_category_property(self):
         """Test military category property."""
-        self.airbase.mil_category = MILITARY_CATEGORY["Ground Base"]
-        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Ground Base"])
+        self.airbase.mil_category = MILITARY_CATEGORY["Ground_Base"][1]
+        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Ground_Base"])
+        self.airbase.mil_category = MILITARY_CATEGORY["Air_Base"][1]
         
         with self.assertRaises(ValueError):
             self.airbase.mil_category = "Invalid Category"
@@ -101,10 +108,18 @@ class TestMilitary(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.airbase.air_combat_power("Invalid Task")
 
+        # Test naval combat power
+        self.airbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
+        self.assertEqual(self.airbase.air_combat_power("Attack"), 16)
+        
+        with self.assertRaises(ValueError):
+            self.airbase.air_combat_power("Invalid Task")
+
     def test_artillery_in_range(self):
-        """Test artillery range calculations."""
-        self.groundbase.position = Point2D(0, 0)
+        """Test artillery range calculations."""        
         self.groundbase.assets = {"vehicle1": self.mock_vehicle}
+        self.assertIsNotNone(self.groundbase.position)
+        self.assertEqual(self.groundbase.position, Point2D(0,0))
         
         # Target within range
         target_in_range = Point2D(500, 0)
@@ -125,8 +140,7 @@ class TestMilitary(unittest.TestCase):
         self.assertIsNone(info)
 
     def test_time_to_direct_line_attack(self):
-        """Test time to attack calculations."""
-        self.airbase.position = Point2D(0, 0)
+        """Test time to attack calculations."""        
         self.airbase.assets = {"aircraft1": self.mock_aircraft}
         target = Point2D(800, 0)
         

@@ -3,12 +3,11 @@
 import random 
 import logging
 import os
-import sys
-# Aggiungi il percorso della directory principale del progetto
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+#import sys
 import math
 import hashlib
 import uuid
+import inspect
 from Code.Dynamic_War_Manager.Source.DataType.Sphere import Sphere
 from Code.Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
 from sympy import Point, Line, Point3D, Point2D, Line3D, symbols, solve, Eq, sqrt, And
@@ -932,3 +931,9 @@ def get_direction_vector(start, end):
     dir = normalize_vector((end[0] - start[0], end[1] - start[1]))
     return dir
     
+def validate_class(obj, class_name: str) -> bool:    
+    """return True if class_name is a class name of object's class gerarchy"""    
+    if not isinstance(class_name, str):
+        raise ValueError(f"class_name must be a string")
+
+    return class_name in tuple(cls.__name__ for cls in inspect.getmro(obj.__class__))

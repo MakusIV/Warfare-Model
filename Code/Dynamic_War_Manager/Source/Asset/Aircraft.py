@@ -1,12 +1,15 @@
-from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Mobile.Asset import Mobile
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.Event import Event
-from Code.Dynamic_War_Manager.Source.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_COMBAT_EFFICACY, AIR_Military_CRAFT_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
-#from typing import Literal, List, Dict
+from Code.Dynamic_War_Manager.Source.DataType.Event import Event
+from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
+from Code.Dynamic_War_Manager.Source.DataType.Threat import Threat
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.DataType.State import State
 from sympy import Point3D
+from dataclasses import dataclass
 
 # LOGGING --
  
@@ -15,14 +18,14 @@ logger = Logger(module_name = __name__, class_name = 'Aircraft')
 # ASSET
 class Aircraft(Mobile) :    
 
-    def __init__(self, block: Block, name: str|None = None, description: str|None = None, category: str|None = None, asset_type:str|None = None, functionality: str|None = None, cost: int|None = None, value: int|None = None, acp: Payload|None = None, rcp: Payload|None = None, payload: Payload|None = None, position: Point3D|None = None, volume: Volume|None = None, crytical: bool|None = False, repair_time: int|None = 0, role: str|None = None, dcs_unit_data: dict|None = None):   
+    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
             # propriety             
             self.speed = { #  true air speed @ 0 attenzione al calcolo dei tempi di attacco in Military Block
 
-                "nominal": None 
+                "nominal": None, 
                 "max": None                
             }
     

@@ -132,7 +132,7 @@ class TestBlock(unittest.TestCase):
         expected_balance = (1.2 + 0.9) / 2
         self.assertAlmostEqual(self.block.balance_trade, expected_balance)
         
-        # Test position calculation
+        # Test baricenter calculation
         expected_position = Point(20, 30)  # Mean of (10,20) and (30,40)
         self.assertEqual(self.block.position, expected_position)
         
