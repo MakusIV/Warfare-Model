@@ -56,9 +56,9 @@ class TestMilitary(unittest.TestCase):
         self.mock_ship.isDestroyer = True
         self.mock_ship.artillery_range = 2000        
         
-        self.mock_recon = MagicMock()
+        self.mock_recon = MagicMock(spec=Vehicle)
         self.mock_recon.role = "Recon"
-        self.mock_recon.get_efficiency.return_value = 0.75        
+        self.mock_recon.efficiency.return_value = 0.75        
 
     def test_initialization(self):
         """Test Military initialization."""
@@ -72,7 +72,7 @@ class TestMilitary(unittest.TestCase):
     def test_mil_category_property(self):
         """Test military category property."""
         self.airbase.mil_category = MILITARY_CATEGORY["Ground_Base"][1]
-        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Ground_Base"])
+        self.assertEqual(self.airbase.mil_category, MILITARY_CATEGORY["Ground_Base"][1])
         self.airbase.mil_category = MILITARY_CATEGORY["Air_Base"][1]
         
         with self.assertRaises(ValueError):
@@ -109,11 +109,11 @@ class TestMilitary(unittest.TestCase):
             self.airbase.air_combat_power("Invalid Task")
 
         # Test naval combat power
-        self.airbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.airbase.air_combat_power("Attack"), 16)
+        self.navalbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
+        self.assertEqual(self.navalbase.naval_combat_power("Attack"), 16)
         
         with self.assertRaises(ValueError):
-            self.airbase.air_combat_power("Invalid Task")
+            self.navalbase.naval_combat_power("Invalid Task")
 
     def test_artillery_in_range(self):
         """Test artillery range calculations."""        
@@ -142,17 +142,17 @@ class TestMilitary(unittest.TestCase):
     def test_time_to_direct_line_attack(self):
         """Test time to attack calculations."""        
         self.airbase.assets = {"aircraft1": self.mock_aircraft}
-        target = Point2D(800, 0)
+        target = Point2D(1600, 0)
         
         time_info = self.airbase.time_to_direct_line_attack(target)
         self.assertAlmostEqual(time_info["time"], 1.0)  # 800 km / 800 km/h = 1 hour
         self.assertAlmostEqual(time_info["min_time"], 0.8)  # 800 km / 1000 km/h = 0.8 hours
         
         # Test with asset that has position
-        mock_asset = MagicMock()
-        mock_asset.position = Point2D(800, 0)
+        mock_asset = MagicMock(spec=Aircraft)
+        mock_asset.position = Point2D(2400, 0)
         time_info = self.airbase.time_to_direct_line_attack(mock_asset)
-        self.assertAlmostEqual(time_info["time"], 1.0)
+        self.assertAlmostEqual(time_info["time"], 2.0)
         
         # Test no attack assets case
         self.airbase.assets = {}

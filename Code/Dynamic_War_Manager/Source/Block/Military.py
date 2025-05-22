@@ -190,11 +190,16 @@ class Military(Block):
         """
         if not isinstance(target_point, (Point2D, Point3D)):
             raise TypeError("Target must be Point2D or Point3D")
-            
-        target_distance = target_point.distance(self.position)
-        has_artillery, max_range, med_range, ratio, quantity = self._get_artillery_stats()
+        
+        position = self.position
 
-        if not has_artillery:
+        if position:
+            target_distance = target_point.distance(self.position)
+            has_artillery, max_range, med_range, ratio, quantity = self._get_artillery_stats()
+
+            if not has_artillery:
+                return False, None
+        else: 
             return False, None
             
         result = {
@@ -265,10 +270,11 @@ class Military(Block):
 
     def _get_target_distance(self, target: Union[Point2D, Point3D, Asset, Block]) -> Optional[float]:
         """Calculate distance to target."""
-        if isinstance(target, (Point2D, Point3D)):
-            return target.distance(self.position)
-        elif hasattr(target, 'position') and target.position != None and isinstance(target.position, (Point2D, Point3D)):
-            return target.position.distance(self.position)
+        if self.position: 
+            if isinstance(target, (Point2D, Point3D)):
+                return target.distance(self.position)
+            elif hasattr(target, 'position') and target.position != None and isinstance(target.position, (Point2D, Point3D)):
+                return target.position.distance(self.position)
         return None
 
     def _get_attack_speeds(self) -> Tuple[Optional[float], Optional[float], int]:
@@ -336,8 +342,9 @@ class Military(Block):
             asset for asset in self.assets.values() 
             if hasattr(asset, 'role') and asset.role == "Recon"
         ]
+        #eff = [asset.efficiency for asset in recognitors] if recognitors else 0.0
         return median(
-            [asset.get_efficiency("hr_mil") for asset in recognitors]
+            [asset.efficiency() for asset in recognitors]
         ) if recognitors else 0.0
     #endregion
 
