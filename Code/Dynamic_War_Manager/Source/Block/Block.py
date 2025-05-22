@@ -300,8 +300,6 @@ class Block:
             raise ValueError(f"All values in assets must be Asset objects, actual{value!r}")
         self._assets = value
 
-    
-
 
     def list_asset_keys(self) -> List[str]:
         """Get list of asset IDs"""
