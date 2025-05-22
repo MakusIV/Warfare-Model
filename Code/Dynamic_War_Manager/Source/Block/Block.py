@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
 from sympy import Point
 from dataclasses import dataclass
-from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point, evaluateMorale, enemySide
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.State import State
@@ -297,7 +297,7 @@ class Block:
         if not isinstance(value, dict):
             raise TypeError("assets must be a dictionary")        
         if not all(validate_class(asset, "Asset") for asset in value.values()):
-            raise ValueError("All values in assets must be Asset objects")
+            raise ValueError(f"All values in assets must be Asset objects, actual{value!r}")
         self._assets = value
 
     
@@ -373,7 +373,7 @@ class Block:
     @property
     def morale(self) -> float:
         """Evaluate block morale"""
-        return Utility.evaluate_morale(State.success_ratio[self], self.efficiency)
+        return evaluateMorale(State.success_ratio[self], self.efficiency)
 
     @property
     def efficiency(self) -> float:
@@ -405,4 +405,4 @@ class Block:
 
     def enemy_side(self) -> str:
         """Determine enemy side"""
-        return Utility.enemy_side(self._side)
+        return enemySide(self._side)
