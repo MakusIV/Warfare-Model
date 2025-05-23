@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
 from sympy import Point
 from dataclasses import dataclass
+from Code.Dynamic_War_Manager.Source.Component.Resource_Manager import Resource_Manager
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point, evaluateMorale, enemySide
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
@@ -27,7 +28,7 @@ class BlockParams:
     sub_category: Optional[str] = None
     functionality: Optional[str] = None
     value: Optional[int] = None
-    region: Optional["Region"] = None
+    region: Optional["Region"] = None    
 
 class Block:
     """
@@ -46,7 +47,7 @@ class Block:
         sub_category: Optional[str] = None,
         functionality: Optional[str] = None,
         value: Optional[int] = None,
-        region: Optional[Union["Region", None]] = None,
+        region: Optional[Union["Region", None]] = None
     ):
         """
         Initialize a new block.
@@ -60,6 +61,7 @@ class Block:
             functionality: Block functionality
             value: Strategic value of the block
             region: Region the block belongs to
+            resource_manager: Resource Manager of the block
 
         Raises:
             ValueError: If parameters are invalid
@@ -77,6 +79,7 @@ class Block:
         self._assets = {}
         self._region = region
         self._state = State()
+        self._resource_manager = Resource_Manager(self)
 
         # Validate parameters
         self._validate_params(
@@ -110,8 +113,10 @@ class Block:
             'functionality': str,
             'value': int,
             'region': (type(None)), # accetta solo None durante il runtime, altrimenti genera errore perchè Region non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato 
-            'state': State
+            'state': State,
+            'resource_manager': Resource_Manager
         }
+
 
         for param, value in kwargs.items():
             if value is not None and param in type_checks:
@@ -132,6 +137,17 @@ class Block:
             raise ValueError(f"category must be one of: {', '.join(BLOCK_CATEGORY)}")
 
     # Property getters and setters
+    @property
+    def resource_manager(self) -> Resource_Manager:
+        """Get block resource_manager"""
+        return self._resource_manager
+
+    @resource_manager.setter
+    def resource_manager(self, value: Resource_Manager) -> None:
+        """Set block resource_manager"""
+        self._validate_params(resource_manager=value)
+        self._resource_manager = value
+
     @property
     def state(self) -> State:
         """Get block state"""
@@ -400,6 +416,9 @@ class Block:
     def is_civilian(self) -> bool:
         """Check if block is civilian"""
         return self._category == BLOCK_CATEGORY["Civilian"]
+    
+    def has_resource_manager(self):
+        return self._resource_manager is not None
 
     def enemy_side(self) -> str:
         """Determine enemy side"""

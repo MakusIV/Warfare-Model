@@ -68,9 +68,9 @@ class TestAsset(unittest.TestCase):
 
     def test_payload_operations(self):
         # Set payloads
-        self.asset.acp = self.test_acp
-        self.asset.rcp = self.test_rcp
-        self.asset.payload = self.test_payload
+        self.asset.assigned_for_consume = self.test_acp
+        self.asset.requested_for_consume = self.test_rcp
+        self.asset.storage = self.test_payload
         
         # Test balance_trade calculation
         expected_balance = sum([
@@ -92,10 +92,10 @@ class TestAsset(unittest.TestCase):
         self.assertFalse(all(consume_result.values()))
         
         # Verify acp was reduced
-        self.assertEqual(self.asset.acp.goods, 80)  # 100 - 20
-        self.assertEqual(self.asset.acp.energy, 40)  # 50 - 10
-        self.assertEqual(self.asset.acp.hr, 8)  # 10 - 2
-        self.assertEqual(self.asset.acp.hc, 4)  # 5 - 1
+        self.assertEqual(self.asset.assigned_for_consume.goods, 80)  # 100 - 20
+        self.assertEqual(self.asset.assigned_for_consume.energy, 40)  # 50 - 10
+        self.assertEqual(self.asset.assigned_for_consume.hr, 8)  # 10 - 2
+        self.assertEqual(self.asset.assigned_for_consume.hc, 4)  # 5 - 1
 
     def test_event_management(self):
         event1 = Event(event_type="Event 1")

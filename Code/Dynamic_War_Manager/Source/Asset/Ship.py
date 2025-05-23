@@ -49,7 +49,7 @@ class Ship(Mobile) :
                 if self.asset_type == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
-                    self.rcp = v["rcp"]
+                    self.requested_for_consume = v["rcp"]
                     self.repair_time = v["t2r"]
                     self._payload_perc = v["payload%"]
                     return True              
@@ -62,7 +62,7 @@ class Ship(Mobile) :
                 if self.asset_type == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
-                    self.rcp = v["rcp"]
+                    self.requested_for_consume = v["rcp"]
                     self.repair_time = v["t2r"]
                     self._payload_perc = v["payload%"]
                     return True     

@@ -6,6 +6,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.State import State
 from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
 from Code.Dynamic_War_Manager.Source.Context.Region import Region
+from Code.Dynamic_War_Manager.Source.Component.Resource_Manager import Resource_Manager
 
 class TestBlock(unittest.TestCase):
     def setUp(self):
@@ -52,6 +53,8 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(self.block.value, 100)
         self.assertIsInstance(self.block.id, str)
         self.assertIsInstance(self.block.state, State)
+        self.assertIsInstance(self.block.resource_manager, Resource_Manager)
+        #self.assertEqual(self.block.resource_manager.block, self)
 
     def test_property_validation(self):
         """Test property validation"""
