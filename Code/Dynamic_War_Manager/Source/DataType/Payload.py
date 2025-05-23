@@ -42,6 +42,16 @@ class Payload:
         return (True, "OK")
                 
         
+    def sum(self, p1, p2):
+         
+         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
+             raise Exception("p1 and p2 must be Payload object")
+         
+         return Payload(goods =p1.goods+p2.goods, energy=p1.energy+p2.energy, hr=p1.hr+p2.hr, hc=p1.hc+p2.hc, hs=p1.hs+p2.hs, hb=p1.hb+p2.hb )
+
+
+
+
     @property
     def goods(self):
         return self._goods
