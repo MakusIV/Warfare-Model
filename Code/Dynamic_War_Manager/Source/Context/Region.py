@@ -37,6 +37,7 @@ class Region:
         self._blocks = blocks # list of Block members of Region - type List[Block]
         # NOTA: I BLOCKS CONSENTITI SONO MIL_ZONE, STORAGE
                     
+        self._blocks_priority = {} # dicr of Block priority of the Region - type Dict{id: Block}
     # methods
 
     @property
@@ -65,6 +66,15 @@ class Region:
         self._description = value
             
         return True
+
+    @property
+    def blocks_priority(self):
+        return self.__blocks_priority
+
+    @blocks.setter
+    def blocks_priority(self, value):
+        
+        self._blocks_priority = blocks_priority
 
     @property
     def blocks(self):
@@ -282,3 +292,18 @@ class Region:
             morale += block.morale
 
         return morale / len(self.blocks)
+
+    def evaluate_blocks_priority(self, side: str):
+        """Evaluate the priority of the blocks of the Region"""
+        # side: Red, Blue, Neutral
+        # return a list of blocks ordered by priority
+        block_list = [block for block in self.blocks if block.side == side]
+        # IN BASE ALL'IMPORTANZA STRATEGICA DEI BLOCCHI, VALUTA LA PRIORITA' DEI BLOCCO E RITORNA UNA LISTA ORDINATA PER PRIORITA'
+        # ANALISI MILITARY
+        #ANALISI LOGISTIC
+        #ANALISI CIVILIAN
+        # NOTA: per ora non implemento la priorità dei blocchi, ma solo la loro presenza
+        # block_list.sort(key=lambda x: x.priority, reverse=True)
+
+        # return block_dict # Dictionary{block_id: relative_priority}
+        pass

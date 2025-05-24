@@ -29,28 +29,63 @@ class Resource_Manager_Params:
     requested_for_self: Optional[Payload] = None, 
     assigned_for_self: Optional[Payload] = None, 
     request: Optional[Payload] = None, 
-    storage: Optional[Payload] = None
+    warehouse: Optional[Payload] = None
 
 class Resource_Manager:
     def __init__(self, block: "Block", 
                  clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,                  
-                 request: Optional[Payload] = None, storage: Optional[Payload] = None):
+                 request: Optional[Payload] = None, warehouse: Optional[Payload] = None):
     
         # Initialize properties
         self._block = block
         self._clients = clients
-        self._server = server
+        self._server = server        
         self._requested_for_self = self.evaluate_resource("requested")
         self._assigned_for_self = self.evaluate_resource("assigned")
         self._request = request
-        self._storage = storage
-        
+        self._warehouse = warehouse
 
         # Validate all parameters
         self._validate_all_params(
             block = block, clients = clients, server = server, requested_for_self = requested_for_self,
-            assigned_for_self = assigned_for_self, request = request, storage = storage
+            assigned_for_self = assigned_for_self, request = request, warehouse = warehouse
         )
+
+        self._block_priority = self.evaluate_server_priority_for_delivery(self)  # This will be calculated dynamically based on the server's priority
+
+
+
+    def evaluate_priority_for_request(self) -> Dict[str, (int, float)]:
+        """Evaluate relative priority based on the sum of block's priority"""
+        
+        # get from region the block's priority
+        region = self.block.region if self.block.region else None
+        
+        if not region:
+            raise ValueError("Block region is not set. Cannot evaluate server priority.")
+        delivery_priority = {}        
+        region_blocks_priority = region.blocks_priority
+
+        # check if block is in region block list
+        this_block_priority = region_blocks_priority.get(self.block.id)
+        if this_block_priority is None:
+            logger.warning(f"This block {self.block!r} not found in region block list. Cannot evaluate priority.")
+            continue
+        else:                
+            delivery_priority.added(key = self.block.id, value = this_block_priority)
+        
+        # check if server is in region block list
+        for server in self._server.values():            
+            priority = region_blocks_priority.get(server.id)
+            
+            if priority is None:
+                logger.warning(f"Server {server.id} not found in region block list. Cannot evaluate priority.")
+                continue
+            else:                
+                delivery_priority.added(key = server.id, value = priority)
+
+        
+        return this_block_priority / sum(delivery_priority.values()) if sum(delivery_priority.values()) > 0 else 0
 
     # Block property
     @property
@@ -83,13 +118,13 @@ class Resource_Manager:
         self._assigned_for_self = value
 
     @property
-    def storage(self) -> Payload:
-        return self._storage
+    def warehouse(self) -> Payload:
+        return self._warehouse
 
-    @storage.setter
-    def storage(self, value: Payload) -> None:
-        self._validate_param('storage', value, Payload)
-        self._storage = value
+    @warehouse.setter
+    def warehouse(self, value: Payload) -> None:
+        self._validate_param('warehouse', value, Payload)
+        self._warehouse = value
 
     @property
     def request(self) -> Payload:
@@ -100,12 +135,12 @@ class Resource_Manager:
         self._validate_param('request', value, Payload)
         self._request = value
 
+    
     def evaluate_resource(self, act: str) -> Payload:
         """Evaluate asset resources block based on act: requested or assigned"""
         
         if act and act not in ['requested', 'assigned']:
                 raise ValueError(f"Invalid act: {act}. Expected 'requested' or 'assigned'.")                
-
         resources = Payload()
         
         for asset  in self.block.assets:
@@ -113,8 +148,7 @@ class Resource_Manager:
             if act == 'request':
                 resources = request.sum(resources, asset.requested_for_self)
             elif act == 'assigned':
-                resources = request.sum(resources, asset.assigned_for_self)             
-            
+                resources = request.sum(resources, asset.assigned_for_self)                         
         return resources
 
     # Server client association
@@ -172,10 +206,33 @@ class Resource_Manager:
             raise Exception(f"Anomaly: this client: {self.block!r} has a reference in its resource manager while the server: {deleted_server!r} does not have its own resource manager. Resource server wasn't added")
     
     def receive(self) -> None:
+        """Receive resources from server based on request and warehouse"""
 
-        for server in self.server:
-            payload = server.resource_manager.delivery(self.request)
-            storage = storage.sum(storage, payload)
+        if not self.request or not self.warehouse:
+            raise ValueError("Request and warehouse must be set before receiving resources")
+        
+        autonomy = self.warehouse / self.request # Calculate autonomy based on warehouse and request
+
+        # Determine request priority based on autonomy
+        if autonomy < 1:
+            request_priority = "VH"
+        elif 1<= autonomy < 3:
+            request_priority = "H"
+        elif 3 <= autonomy < 5:
+            request_priority = "M"
+        else:
+            request_priority = "L"
+
+        # Update warehouse to sum received payloads
+        for server in self.server:            
+            payload = server.resource_manager.delivery(self.request, request_priority, self._block_priority) # request to server for resources based on request and priority
+            if not payload:
+                logger.Warning(f"Server {server.id} did not return a valid payload for request {self.request!r}")
+                continue
+            else:                
+                warehouse = warehouse.sum(warehouse, payload)# Update warehouse with received payload
+
+    
 
 
     
@@ -239,9 +296,11 @@ class Resource_Manager:
         del self._clients[key]
         # back reference setting only by client call with set_server method
 
-    def delivery(self, payload: Payload, priority: Optional[Union[str, int, float]]) -> None:
+    def delivery(self, payload: Payload, request_priority: Optional[str], priority: Optional[Union[str, int, float]]) -> None:
+
+
         payload = server.resource_manager.delivery(self.request)
-        storage = storage.sum(storage, payload)
+        warehouse = warehouse.sum(warehouse, payload)
         
         
 
@@ -275,7 +334,7 @@ class Resource_Manager:
             'requested_for_self': Payload,
             'assigned_for_self': Payload,
             'request': Payload,
-            'storage': Payload,            
+            'warehouse': Payload,            
         }
         
         for param, value in kwargs.items():            
