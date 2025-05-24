@@ -26,31 +26,30 @@ class Resource_Manager_Params:
     """Data class for holding Resource Manager parameters for validation"""
     clients: Optional[Dict[str, "Block"]] = None, 
     server: Optional[Dict[str, "Block"]] = None,
-    request_for_consume: Optional[Payload] = None, 
-    assigned_for_consume: Optional[Payload] = None, 
+    requested_for_self: Optional[Payload] = None, 
+    assigned_for_self: Optional[Payload] = None, 
     request: Optional[Payload] = None, 
     storage: Optional[Payload] = None
 
 class Resource_Manager:
     def __init__(self, block: "Block", 
-                 clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,
-                 request_for_consume: Optional[Payload] = None, assigned_for_consume: Optional[Payload] = None, 
+                 clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,                  
                  request: Optional[Payload] = None, storage: Optional[Payload] = None):
     
         # Initialize properties
         self._block = block
         self._clients = clients
         self._server = server
-        self._request_for_consume = request_for_consume
-        self._assigned_for_consume = assigned_for_consume
+        self._requested_for_self = self.evaluate_resource("requested")
+        self._assigned_for_self = self.evaluate_resource("assigned")
         self._request = request
         self._storage = storage
         
 
         # Validate all parameters
         self._validate_all_params(
-            block=block, clients=clients, server=server, request_for_consume=request_for_consume,
-            assigned_for_consume=assigned_for_consume, request=request, storage=storage
+            block = block, clients = clients, server = server, requested_for_self = requested_for_self,
+            assigned_for_self = assigned_for_self, request = request, storage = storage
         )
 
     # Block property
@@ -66,22 +65,22 @@ class Resource_Manager:
         self._region = value
 
     @property
-    def request_for_consume(self) -> Payload:
-        return self._request_for_consume
+    def requested_for_self(self) -> Payload:
+        return self._requested_for_self
 
-    @request_for_consume.setter
-    def request_for_consume(self, value: Payload) -> None:
-        self._validate_param('request_for_consume', value, Payload)
-        self._request_for_consume = value
+    @requested_for_self.setter
+    def requested_for_self(self, value: Payload) -> None:
+        self._validate_param('requested_for_self', value, Payload)
+        self._requested_for_self = value
 
     @property
-    def assigned_for_consume(self) -> Payload:
-        return self._assigned_for_consume
+    def assigned_for_self(self) -> Payload:
+        return self._assigned_for_self
 
-    @assigned_for_consume.setter
-    def assigned_for_consume(self, value: Payload) -> None:
-        self._validate_param('assigned_for_consume', value, Payload)
-        self._assigned_for_consume = value
+    @assigned_for_self.setter
+    def assigned_for_self(self, value: Payload) -> None:
+        self._validate_param('assigned_for_self', value, Payload)
+        self._assigned_for_self = value
 
     @property
     def storage(self) -> Payload:
@@ -101,12 +100,22 @@ class Resource_Manager:
         self._validate_param('request', value, Payload)
         self._request = value
 
-    def evaluate_request(self):
-        request = Payload()
+    def evaluate_resource(self, act: str) -> Payload:
+        """Evaluate asset resources block based on act: requested or assigned"""
+        
+        if act and act not in ['requested', 'assigned']:
+                raise ValueError(f"Invalid act: {act}. Expected 'requested' or 'assigned'.")                
+
+        resources = Payload()
         
         for asset  in self.block.assets:
-            request = request.sum(request, asset.requested_for_consume)
-        return request
+            
+            if act == 'request':
+                resources = request.sum(resources, asset.requested_for_self)
+            elif act == 'assigned':
+                resources = request.sum(resources, asset.assigned_for_self)             
+            
+        return resources
 
     # Server client association
     # NOTE: to avoid cycles client-server associations are managed by the client calls with set_server & remove_server methods
@@ -166,7 +175,7 @@ class Resource_Manager:
 
         for server in self.server:
             payload = server.resource_manager.delivery(self.request)
-            self.put_in_storage(payload)
+            storage = storage.sum(storage, payload)
 
 
     
@@ -231,7 +240,8 @@ class Resource_Manager:
         # back reference setting only by client call with set_server method
 
     def delivery(self, payload: Payload, priority: Optional[Union[str, int, float]]) -> None:
-        pass
+        payload = server.resource_manager.delivery(self.request)
+        storage = storage.sum(storage, payload)
         
         
 
@@ -262,8 +272,8 @@ class Resource_Manager:
         """Validate all input parameters"""
         type_checks = {            
             'block': (type(None)), # accetta solo None durante il runtime, altrimenti genera errore perchè Block non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato             
-            'request_for_consume': Payload,
-            'assigned_for_consume': Payload,
+            'requested_for_self': Payload,
+            'assigned_for_self': Payload,
             'request': Payload,
             'storage': Payload,            
         }
