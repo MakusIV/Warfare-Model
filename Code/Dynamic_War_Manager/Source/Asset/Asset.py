@@ -29,8 +29,8 @@ class AssetParams:
     functionality: Optional[str] = None
     cost: Optional[int] = None
     value: Optional[int] = None
-    assigned_for_consume: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
-    requested_for_consume: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
+    assigned_for_self: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
+    requested_for_self: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
     payload: Optional[Payload] = None       # payload -payload resource
     position: Optional[Point3D] = None
     crytical: Optional[bool] = False
@@ -42,8 +42,8 @@ class Asset:
     def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, 
                  category: Optional[str] = None, asset_type: Optional[str] = None, 
                  functionality: Optional[str] = None, cost: Optional[int] = None,
-                 value: Optional[int] = None, assigned_for_consume: Optional[Payload] = None, 
-                 requested_for_consume: Optional[Payload] = None, payload: Optional[Payload] = None, 
+                 value: Optional[int] = None, assigned_for_self: Optional[Payload] = None, 
+                 requested_for_self: Optional[Payload] = None, payload: Optional[Payload] = None, 
                  position: Optional[Point3D] = None, volume: Optional[Volume] = None,
                  crytical: Optional[bool] = False, repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
@@ -71,8 +71,8 @@ class Asset:
         self._threat = None
 
         # Initialize payloads with defaults if None
-        self._assigned_for_consume = assigned_for_consume if assigned_for_consume else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
-        self._requested_for_consume = requested_for_consume if requested_for_consume else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
+        self._assigned_for_self = assigned_for_self if assigned_for_self else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
+        self._requested_for_self = requested_for_self if requested_for_self else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
         self._payload = payload if payload else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
 
         # Process DCS data if provided
@@ -83,7 +83,7 @@ class Asset:
         self._validate_all_params(
             block=block, name=name, description=description, category=category,
             asset_type=asset_type, functionality=functionality, cost=cost,
-            value=value, assigned_for_consume=self._assigned_for_consume, requested_for_consume=self._requested_for_consume, payload=self._payload,
+            value=value, assigned_for_self=self._assigned_for_self, requested_for_self=self._requested_for_self, payload=self._payload,
             position=position, volume=volume, crytical=crytical,
             repair_time=repair_time, role=role, health=self._health,
             state=self._state
@@ -228,30 +228,30 @@ class Asset:
         ratios = []
         
         for item in ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']:
-            rcp_val = getattr(self.requested_for_consume, item, 0)
+            rcp_val = getattr(self.requested_for_self, item, 0)
             if rcp_val > 0:
-                acp_val = getattr(self.assigned_for_consume, item, 0)
+                acp_val = getattr(self.assigned_for_self, item, 0)
                 ratios.append(acp_val / rcp_val)
         
         return sum(ratios) / len(ratios) if ratios else 0.0
 
     @property
-    def assigned_for_consume(self) -> Payload:
-        return self._assigned_for_consume
+    def assigned_for_self(self) -> Payload:
+        return self._assigned_for_self
 
-    @assigned_for_consume.setter
-    def assigned_for_consume(self, value: Payload) -> None:
-        self._validate_param('assigned_for_consume', value, Payload)
-        self._assigned_for_consume = value
+    @assigned_for_self.setter
+    def assigned_for_self(self, value: Payload) -> None:
+        self._validate_param('assigned_for_self', value, Payload)
+        self._assigned_for_self = value
 
     @property
-    def requested_for_consume(self) -> Payload:
-        return self._requested_for_consume
+    def requested_for_self(self) -> Payload:
+        return self._requested_for_self
 
-    @requested_for_consume.setter
-    def requested_for_consume(self, value: Payload) -> None:
-        self._validate_param('requested_for_consume', value, Payload)
-        self._requested_for_consume = value
+    @requested_for_self.setter
+    def requested_for_self(self, value: Payload) -> None:
+        self._validate_param('requested_for_self', value, Payload)
+        self._requested_for_self = value
 
     @property
     def payload(self) -> Payload:
@@ -346,7 +346,7 @@ class Asset:
     # Consumption methods
     def consume(self) -> Dict[str, Optional[bool]]:
         """Reduce acp of rcp payload quantity"""
-        return self._consume(self.requested_for_consume)
+        return self._consume(self.requested_for_self)
 
     def _consume(self, cons: Payload) -> Dict[str, Optional[bool]]:
         """Internal method to reduce acp of cons payload quantity"""
@@ -357,9 +357,9 @@ class Asset:
         for item in results.keys():
             cons_val = getattr(cons, item)
             if cons_val:
-                acp_val = getattr(self.assigned_for_consume, item)
+                acp_val = getattr(self.assigned_for_self, item)
                 if acp_val >= cons_val:
-                    setattr(self.assigned_for_consume, item, acp_val - cons_val)
+                    setattr(self.assigned_for_self, item, acp_val - cons_val)
                     results[item] = True
                 else:
                     results[item] = False
@@ -395,8 +395,8 @@ class Asset:
             'position': Point3D,
             'block': Block,
             'volume': Volume,
-            'assigned_for_consume': Payload,
-            'requested_for_consume': Payload,
+            'assigned_for_self': Payload,
+            'requested_for_self': Payload,
             'payload': Payload,
             'repair_time': int,
             'role': str,

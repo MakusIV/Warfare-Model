@@ -49,8 +49,20 @@ class Payload:
          
          return Payload(goods =p1.goods+p2.goods, energy=p1.energy+p2.energy, hr=p1.hr+p2.hr, hc=p1.hc+p2.hc, hs=p1.hs+p2.hs, hb=p1.hb+p2.hb )
 
-
-
+    def subtract(self, p1, p2):
+         
+         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
+             raise Exception("p1 and p2 must be Payload object")
+         
+         return Payload(goods =p1.goods-p2.goods, energy=p1.energy-p2.energy, hr=p1.hr-p2.hr, hc=p1.hc-p2.hc, hs=p1.hs+p2.hs, hb=p1.hb-p2.hb )
+    
+    def product(self, p1, factor: float):
+         
+         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
+             raise Exception("p1 and p2 must be Payload object")
+         
+         return Payload(goods =p1.goods * factor, energy=p1.energy * factor, hr=p1.hr * factor, hc=p1.hc * factor, hs=p1.hs * factor, hb=p1.hb * factor )
+    
 
     @property
     def goods(self):
@@ -58,11 +70,8 @@ class Payload:
 
     @goods.setter
     def goods(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('goods', value, float)
         self._goods = value
-        return True
 
     @property
     def energy(self):
@@ -70,11 +79,8 @@ class Payload:
 
     @energy.setter
     def energy(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('energy', value, float)
         self._energy = value
-        return True
 
     @property
     def hr(self):
@@ -82,11 +88,8 @@ class Payload:
 
     @hr.setter
     def hr(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('hr', value, int)
         self._hr = value
-        return True
 
     @property
     def hc(self):
@@ -94,11 +97,8 @@ class Payload:
 
     @hc.setter
     def hc(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('hc', value, int)
         self._hc = value
-        return True
 
     @property
     def hs(self):
@@ -106,11 +106,8 @@ class Payload:
 
     @hs.setter
     def hs(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('hs', value, int)
         self._hs = value
-        return True
 
     @property
     def hb(self):
@@ -118,13 +115,29 @@ class Payload:
 
     @hb.setter
     def hb(self, value):
-        check_result = self.checkParam(value)
-        if not check_result[0]:
-            raise Exception(check_result[1])
+        self._validate_param('hb', value, int)
         self._hb = value
-        return True
 
-   
+    def _validate_all_params(self, **kwargs) -> None:
+        """Validate all input parameters"""
+        type_checks = {            
+                'goods': float, # accetta solo None durante il runtime, altrimenti genera errore perchè Block non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato             
+                'energy': float,
+                'hr': int,
+                'hc': int,
+                'hs': int,
+                'hb': int,                
+            }        
+        for param, value in kwargs.items():            
+            if value is not None and param in type_checks:                
+                    self._validate_param(param, value, type_checks[param])
+
+
+    def _validate_param(self, param_name: str, value: Any, expected_type: type) -> None:
+        """Validate a single parameter"""
+        if value is not None and not isinstance(value, expected_type):
+            raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
+
     def getStatus(self, type: str):
 
         if type == 'goods':
