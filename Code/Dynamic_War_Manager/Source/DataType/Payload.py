@@ -58,10 +58,17 @@ class Payload:
     
     def product(self, p1, factor: float):
          
-         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
-             raise Exception("p1 and p2 must be Payload object")
+         if not(p1 and factor) and not(p1.__class__.__name__ == "Payload" and isinstance(factor, (int, float))):
+             raise Exception("p1 must be Payload object and factor must be a number")
          
          return Payload(goods =p1.goods * factor, energy=p1.energy * factor, hr=p1.hr * factor, hc=p1.hc * factor, hs=p1.hs * factor, hb=p1.hb * factor )
+    
+    def division(self, p1, div: float):
+         
+         if not istance(div, (int, float)) or div == 0:
+             return None
+         
+         return self.product(p1, 1/div) 
     
 
     @property
@@ -164,3 +171,116 @@ class Payload:
                 f"hc: {self._hc!r}\n"
                 f"hs: {self._hs!r}\n"
                 f"hb: {self._hb!r}")
+
+    def __eq__(self, other):
+        if not isinstance(other, Payload):
+            return False
+        return (self._goods == other._goods and
+                self._energy == other._energy and
+                self._hr == other._hr and
+                self._hc == other._hc and
+                self._hs == other._hs and
+                self._hb == other._hb)
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
+    
+    def __lt__(self, other):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return (self._goods < other._goods and
+                self._energy < other._energy and
+                self._hr < other._hr and
+                self._hc < other._hc and
+                self._hs < other._hs and
+                self._hb < other._hb)
+    
+    def __le__(self, other):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return (self._goods <= other._goods and
+                self._energy <= other._energy and
+                self._hr <= other._hr and
+                self._hc <= other._hc and
+                self._hs <= other._hs and
+                self._hb <= other._hb)
+    
+    def __ge__(self, other):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return (self._goods >= other._goods and
+                self._energy >= other._energy and
+                self._hr >= other._hr and
+                self._hc >= other._hc and
+                self._hs >= other._hs and
+                self._hb >= other._hb)
+    
+    def __gt__(self, other):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return (self._goods > other._goods and
+                self._energy > other._energy and
+                self._hr > other._hr and
+                self._hc > other._hc and
+                self._hs > other._hs and
+                self._hb > other._hb)
+    
+    def __add__(self, other):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return Payload(
+            goods=self._goods + other._goods,
+            energy=self._energy + other._energy,
+            hr=self._hr + other._hr,
+            hc=self._hc + other._hc,
+            hs=self._hs + other._hs,
+            hb=self._hb + other._hb
+        )
+    
+    def __sub__(self, other):   
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return Payload(
+            goods=self._goods - other._goods,
+            energy=self._energy - other._energy,
+            hr=self._hr - other._hr,
+            hc=self._hc - other._hc,
+            hs=self._hs - other._hs,
+            hb=self._hb - other._hb
+        )
+    
+    def __mul__(self, factor: float):   
+        if not isinstance(factor, (int, float)):
+            raise TypeError("Operand must be a number")
+        return Payload(
+            goods=self._goods * factor,
+            energy=self._energy * factor,
+            hr=self._hr * factor,
+            hc=self._hc * factor,
+            hs=self._hs * factor,
+            hb=self._hb * factor
+        )
+    
+    def __truediv__(self, div: float):  
+        if not isinstance(div, (int, float)) or div == 0:
+            raise ValueError("Operand must be a non-zero number")
+        return Payload(
+            goods=self._goods / div,
+            energy=self._energy / div,
+            hr=self._hr / div,
+            hc=self._hc / div,
+            hs=self._hs / div,
+            hb=self._hb / div
+        )   
+
+    def __div__(self, other: Payload):
+        if not isinstance(other, Payload):
+            raise TypeError("Operand must be an instance of Payload")
+        return Payload(
+            goods=self._goods / other._goods if other._goods != 0 else 0,
+            energy=self._energy / other._energy if other._energy != 0 else 0,
+            hr=self._hr / other._hr if other._hr != 0 else 0,
+            hc=self._hc / other._hc if other._hc != 0 else 0,
+            hs=self._hs / other._hs if other._hs != 0 else 0,
+            hb=self._hb / other._hb if other._hb != 0 else 0
+        )

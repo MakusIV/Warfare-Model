@@ -302,8 +302,15 @@ class Region:
         # ANALISI MILITARY
         #ANALISI LOGISTIC
         #ANALISI CIVILIAN
+        # la priority deve essere un float che va da 0 a 1, dove 0 è la priorità più bassa e 1 è la priorità più alta
         # NOTA: per ora non implemento la priorità dei blocchi, ma solo la loro presenza
         # block_list.sort(key=lambda x: x.priority, reverse=True)
 
         # return block_dict # Dictionary{block_id: relative_priority}
         pass
+
+    def block_priority(self, block_id: str) -> Optional[float]:
+        """Return the priority of a block"""
+        if block_id in self._blocks_priority:
+            return self._blocks_priority[block_id]
+        
