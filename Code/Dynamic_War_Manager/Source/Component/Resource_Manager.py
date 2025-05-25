@@ -40,8 +40,8 @@ class Resource_Manager:
         self._block = block
         self._clients = clients
         self._server = server        
-        self._requested_for_self = self.evaluate_resource("requested")
-        self._assigned_for_self = self.evaluate_resource("assigned")
+        self._requested_for_self = self._evaluate_resource("requested")
+        self._assigned_for_self = self._evaluate_resource("assigned")# deprecated? (vedi consume)
         self._request = request
         self._warehouse = warehouse
 
@@ -126,7 +126,7 @@ class Resource_Manager:
         self._request = value
 
     
-    def evaluate_resource(self, act: str) -> Payload:
+    def _evaluate_resource(self, act: str) -> Payload:
         """Evaluate asset resources block based on act: requested or assigned"""
         
         if act and act not in ['requested', 'assigned']:
@@ -143,6 +143,18 @@ class Resource_Manager:
 
     # Server client association
     # NOTE: to avoid cycles client-server associations are managed by the client calls with set_server & remove_server methods
+
+    def consume(self) -> bool:
+        
+        if not self._request_for_self or not self._warehouse or not self._assigned_for_self:        
+            raise ValueError("Request and warehouse must be set before consuming resources")
+        
+        if self._warehouse.__lt__(self._request_for_self):
+            logger.warning(f"Warehouse {self._warehouse!r} is less than request {self._request_for_self!r}. Cannot consume resources.")
+            return False
+
+        self._warehouse = self._warehouse.__sub__(self._request_for_self)  # Update warehouse after consuming resources
+        return True  # Return True to indicate successful consumption of resources
 
 
     # SERVER MANAGEMENT: This section seeing this Block like a client of all server enlisted
@@ -195,7 +207,7 @@ class Resource_Manager:
         else:
             raise Exception(f"Anomaly: this client: {self.block!r} has a reference in its resource manager while the server: {deleted_server!r} does not have its own resource manager. Resource server wasn't added")
     
-    def assessment_necessary_resources(self) -> Payload:
+    def _assessment_necessary_resources(self) -> Payload:
         """Assess necessary resources for the block based on its request and warehouse"""
         
         if not self.request or not self.warehouse:
@@ -300,7 +312,7 @@ class Resource_Manager:
         
         # Calculate request priority based on clients' priorities
         for client in self.clients.values():
-            request = client.assessment_necessary_resources()  # Assess necessary resources based on request and warehouse
+            request = client._assessment_necessary_resources()  # Assess necessary resources based on request and warehouse
             max_delivery = delivery_unit.__mul__(clients_priority[client.id])  # Calculate delivery for each client based on its priority            
             
             if request.__lt__(max_delivery):  # If request is less than max delivery, use request as delivery
@@ -317,28 +329,8 @@ class Resource_Manager:
                 logger.info(f"Delivery failed for client {client.id} with payload {delivery!r}")
                
 
-    # Consumption methods
-    def consume(self) -> Dict[str, Optional[bool]]:
-        """Reduce acp of rcp payload quantity"""
-        return self._consume(self.rcp)
-
-    def _consume(self, cons: Payload) -> Dict[str, Optional[bool]]:
-        """Internal method to reduce acp of cons payload quantity"""
-        self._validate_param('cons', cons, Payload)
+    
         
-        results = {item: None for item in ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']}
-        
-        for item in results.keys():
-            cons_val = getattr(cons, item)
-            if cons_val:
-                acp_val = getattr(self.acp, item)
-                if acp_val >= cons_val:
-                    setattr(self.acp, item, acp_val - cons_val)
-                    results[item] = True
-                else:
-                    results[item] = False
-            
-
     # Validation methods
     def _validate_all_params(self, **kwargs) -> None:
         """Validate all input parameters"""
