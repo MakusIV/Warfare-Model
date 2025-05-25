@@ -54,8 +54,7 @@ class Resource_Manager:
         self._block_priority = self.evaluate_server_priority_for_delivery(self)  # This will be calculated dynamically based on the server's priority
 
 
-
-    def evaluate_priority_for_request(self) -> Dict[str, (int, float)]:
+    def clients_priority(self) -> Dict[str, (int, float)]:
         """Evaluate relative priority based on the sum of block's priority"""
         
         # get from region the block's priority
@@ -63,29 +62,20 @@ class Resource_Manager:
         
         if not region:
             raise ValueError("Block region is not set. Cannot evaluate server priority.")
-        delivery_priority = {}        
+        clients_priority = {}        
         region_blocks_priority = region.blocks_priority
 
-        # check if block is in region block list
-        this_block_priority = region_blocks_priority.get(self.block.id)
-        if this_block_priority is None:
-            logger.warning(f"This block {self.block!r} not found in region block list. Cannot evaluate priority.")
-            continue
-        else:                
-            delivery_priority.added(key = self.block.id, value = this_block_priority)
-        
         # check if server is in region block list
-        for server in self._server.values():            
+        for client in self._clients.values():            
             priority = region_blocks_priority.get(server.id)
             
             if priority is None:
                 logger.warning(f"Server {server.id} not found in region block list. Cannot evaluate priority.")
                 continue
             else:                
-                delivery_priority.added(key = server.id, value = priority)
-
+                clients_priority.added(key = client.id, value = priority)
         
-        return this_block_priority / sum(delivery_priority.values()) if sum(delivery_priority.values()) > 0 else 0
+        return clients_priority
 
     # Block property
     @property
@@ -205,34 +195,38 @@ class Resource_Manager:
         else:
             raise Exception(f"Anomaly: this client: {self.block!r} has a reference in its resource manager while the server: {deleted_server!r} does not have its own resource manager. Resource server wasn't added")
     
-    def receive(self) -> None:
+    def assessment_necessary_resources(self) -> Payload:
+        """Assess necessary resources for the block based on its request and warehouse"""
+        
+        if not self.request or not self.warehouse:
+            raise ValueError("Request and warehouse must be set before receiving resources")
+                
+        # ATT: AUTONOMY DEVE ESSERE CALCOLATA PER ONGI TIPO DI RISORSA: GOODS, ENERGY, ...        
+        autonomy = self.warehouse.__div__(self.request) # Calculate autonomy based on warehouse and request
+        
+        # Determine request priority based on autonomy
+        param =("goods", "energy", "hr", "hc", "hs", "hb")
+        for item in param:
+            if autonomy[item] < 2:
+                request[item] = self.request[item]  # If autonomy is less than 2, use full request
+            elif 2 <= autonomy[item] < 3:
+                request[item] = self.request[item] * 0.5
+            elif 3 <= autonomy[item] < 5:
+                request[item] = self.request[item] * 0.25
+            else:
+                request[item] = self.request[item] * 0.1
+    
+        return request  # Return the assessed necessary resources based on request and warehouse
+
+    def receive(self, payload: Payload) -> bool:
         """Receive resources from server based on request and warehouse"""
 
         if not self.request or not self.warehouse:
             raise ValueError("Request and warehouse must be set before receiving resources")
-        
-        autonomy = self.warehouse / self.request # Calculate autonomy based on warehouse and request
+                
+        warehouse = warehouse.__sum__(payload)# Update warehouse with received payload
 
-        # Determine request priority based on autonomy
-        if autonomy < 1:
-            request_priority = "VH"
-        elif 1<= autonomy < 3:
-            request_priority = "H"
-        elif 3 <= autonomy < 5:
-            request_priority = "M"
-        else:
-            request_priority = "L"
-
-        # Update warehouse to sum received payloads
-        for server in self.server:            
-            payload = server.resource_manager.delivery(self.request, request_priority, self._block_priority) # request to server for resources based on request and priority
-            if not payload:
-                logger.Warning(f"Server {server.id} did not return a valid payload for request {self.request!r}")
-                continue
-            else:                
-                warehouse = warehouse.sum(warehouse, payload)# Update warehouse with received payload
-
-    
+        # Check if request can be fulfilled   
 
 
     
@@ -296,13 +290,32 @@ class Resource_Manager:
         del self._clients[key]
         # back reference setting only by client call with set_server method
 
-    def delivery(self, payload: Payload, request_priority: Optional[str], priority: Optional[Union[str, int, float]]) -> None:
+    def delivery(self) -> None:
 
-
-        payload = server.resource_manager.delivery(self.request)
-        warehouse = warehouse.sum(warehouse, payload)
+        if not self.request or not self.warehouse:
+            raise ValueError("Request and warehouse must be set before delivery resources")
         
+        clients_priority = self.clients_priority()  # clients_priority list for delivery based on block's priority
+        delivery_unit = self.warehouse.division(self.warehouse, sum(clients_priority.values()) ) # Calculate delivery unit based on warehouse avalaiability and clients' priorities
         
+        # Calculate request priority based on clients' priorities
+        for client in self.clients.values():
+            request = client.assessment_necessary_resources()  # Assess necessary resources based on request and warehouse
+            max_delivery = delivery_unit.__mul__(clients_priority[client.id])  # Calculate delivery for each client based on its priority            
+            
+            if request.__lt__(max_delivery):  # If request is less than max delivery, use request as delivery
+                delivery = request  # If request is less than max delivery, use request as delivery
+            else:
+                delivery = max_delivery  # Otherwise, use max delivery as delivery
+            
+            receive_result = client.resource_manager.receive(delivery)  # request to server for resources based on request and priority
+            
+            if receive_result:
+                logger.info(f"Delivery successful for client {client.id} with payload {delivery!r}")
+                warehouse = warehouse.__sub__(delivery)  # Update warehouse after successful delivery
+            else:
+                logger.info(f"Delivery failed for client {client.id} with payload {delivery!r}")
+               
 
     # Consumption methods
     def consume(self) -> Dict[str, Optional[bool]]:
