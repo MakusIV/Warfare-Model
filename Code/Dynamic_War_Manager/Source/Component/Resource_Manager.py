@@ -44,13 +44,13 @@ class Resource_Manager:
 
         # Validate all parameters
         self._validate_all_params(
-            block = block, clients = clients, server = server, request = request, warehouse = warehouse
+            block = block, clients = clients, server = server, warehouse = warehouse
         )
 
         self._block_priority = self.evaluate_server_priority_for_delivery(self)  # This will be calculated dynamically based on the server's priority
 
 
-    def clients_priority(self) -> Dict[str, (int, float)]:
+    def clients_priority(self) -> Dict[str, float]:
         """Evaluate relative priority based on the sum of block's priority"""
         
         # get from region the block's priority
@@ -115,13 +115,12 @@ class Resource_Manager:
 
     
     def _evaluate_resource(self) -> Payload:
-        """Evaluate asset resources block based on act: requested or assigned"""
+        """Evaluate asset resources block"""
                 
         resources = Payload()
         
-        for asset  in self.block.assets:
-            
-            resources += asset.requested_for_self if asset.requested_for_self else Payload()
+        for asset  in self.block.assets:            
+            resources += asset.resources_requested if asset.resources_requested else Payload()
 
         return resources
 
@@ -339,22 +338,3 @@ class Resource_Manager:
         """Validate a single parameter"""
         if value is not None and not isinstance(value, expected_type):
             raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
-
-        """Validate DCS unit data structure"""
-        checks = [
-            ("unit_name", str),
-            ("unit_type", str),
-            ("unitId", int),
-            ("unit_frequency", float),
-            ("unit_x", float),
-            ("unit_y", float),
-            ("unit_alt", float),
-            ("unit_alt_type", str),
-            ("unit_health", int)
-        ]
-        
-        for field, field_type in checks:
-            if field in data and not isinstance(data[field], field_type):
-                return False, f"Bad Arg: {field} must be a {field_type.__name__}"
-        
-        return True, "DCS data validation passed"

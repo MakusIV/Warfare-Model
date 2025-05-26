@@ -1,9 +1,14 @@
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Block.Production import Production
+from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
+from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
+from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 from Code.Dynamic_War_Manager.Source.DataType.Limes import Limes
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from typing import List
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from sympy import Point, Line, Point2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
 # LOGGING --
@@ -71,10 +76,10 @@ class Region:
     def blocks_priority(self):
         return self.__blocks_priority
 
-    @blocks.setter
+    @blocks_priority.setter
     def blocks_priority(self, value):
         
-        self._blocks_priority = blocks_priority
+        self._blocks_priority = value
 
     @property
     def blocks(self):
