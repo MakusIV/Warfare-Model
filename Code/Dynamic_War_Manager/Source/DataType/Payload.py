@@ -1,6 +1,6 @@
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.Context.Context import STATE
-from Code.Dynamic_War_Manager.Source.Utility import Utility
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
+
 
 # LOGGING --
  
@@ -17,58 +17,17 @@ logger = Logger(module_name = __name__, class_name = 'State')
 
 
 class Payload:
-    def __init__(self, goods: int = 0, energy: int = 0, hr: int = 0, hc: int = 0, hs: int = 0, hb: int = 0 ):
-        self._goods = goods # int 
-        self._energy = energy # int
+    def __init__(self, goods: Optional[int] = 0, energy: Optional[int] = 0, hr: Optional[int] = 0, hc: Optional[int] = 0, hs: Optional[int] = 0, hb: Optional[int] = 0 ):
+        self._goods = goods # int food, component ecc
+        self._energy = energy # int fuel, power ecc
         self._hr = hr # human resource: civil worker int
         self._hc = hc # human resource: military commander int
         self._hs = hs # human resource: military specialist int
         self._hb = hb # human resource: military soldier int
 
-    def checkParam(self, goods: int = None, energy: int = None, hr: int = None, hc: int = None, hs: int = None, hb: int = None ):
-         
-        if goods and not isinstance(goods, int):
-            return (False, "Bad Arg: goods must be a int")
-        if energy and not isinstance(energy, int):
-            return (False, "Bad Arg: energy must be a int")
-        if hr and not isinstance(hr, int):
-            return (False, "Bad Arg: hr must be a int")
-        if hc and not isinstance(hc, int):
-            return (False, "Bad Arg: hc must be a int")
-        if hs and not isinstance(hs, int):
-            return (False, "Bad Arg: hs must be a int")
-        if hb and not isinstance(hb, int):
-            return (False, "Bad Arg: hb must be a int")
-        return (True, "OK")
-                
-        
-    def sum(self, p1, p2):
-         
-         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
-             raise Exception("p1 and p2 must be Payload object")
-         
-         return Payload(goods =p1.goods+p2.goods, energy=p1.energy+p2.energy, hr=p1.hr+p2.hr, hc=p1.hc+p2.hc, hs=p1.hs+p2.hs, hb=p1.hb+p2.hb )
+        # Validate all parameters at once
+        self._validate_all_params(goods=goods, energy=energy, hr=hr, hc=hc, hs=hs, hb=hb)
 
-    def subtract(self, p1, p2):
-         
-         if not(p1 and p2) and not(p1.__class__.__name__ == "Payload" and p2.__class__.__name__ == "Payload"):
-             raise Exception("p1 and p2 must be Payload object")
-         
-         return Payload(goods =p1.goods-p2.goods, energy=p1.energy-p2.energy, hr=p1.hr-p2.hr, hc=p1.hc-p2.hc, hs=p1.hs+p2.hs, hb=p1.hb-p2.hb )
-    
-    def product(self, p1, factor: float):
-         
-         if not(p1 and factor) and not(p1.__class__.__name__ == "Payload" and isinstance(factor, (int, float))):
-             raise Exception("p1 must be Payload object and factor must be a number")
-         
-         return Payload(goods =p1.goods * factor, energy=p1.energy * factor, hr=p1.hr * factor, hc=p1.hc * factor, hs=p1.hs * factor, hb=p1.hb * factor )
-    
-    def division(self, p1, div: float):
-         
-         if not istance(div, (int, float)) or div == 0:
-             return None
-         
-         return self.product(p1, 1/div) 
     
 
     @property
@@ -77,7 +36,7 @@ class Payload:
 
     @goods.setter
     def goods(self, value):
-        self._validate_param('goods', value, float)
+        self._validate_param('goods', value, (int, float))
         self._goods = value
 
     @property
@@ -86,7 +45,7 @@ class Payload:
 
     @energy.setter
     def energy(self, value):
-        self._validate_param('energy', value, float)
+        self._validate_param('energy', value, (int, float))
         self._energy = value
 
     @property
@@ -95,7 +54,7 @@ class Payload:
 
     @hr.setter
     def hr(self, value):
-        self._validate_param('hr', value, int)
+        self._validate_param('hr', value, (int, float))
         self._hr = value
 
     @property
@@ -104,7 +63,7 @@ class Payload:
 
     @hc.setter
     def hc(self, value):
-        self._validate_param('hc', value, int)
+        self._validate_param('hc', value, (int, float))
         self._hc = value
 
     @property
@@ -113,7 +72,7 @@ class Payload:
 
     @hs.setter
     def hs(self, value):
-        self._validate_param('hs', value, int)
+        self._validate_param('hs', value, (int, float))
         self._hs = value
 
     @property
@@ -122,18 +81,18 @@ class Payload:
 
     @hb.setter
     def hb(self, value):
-        self._validate_param('hb', value, int)
+        self._validate_param('hb', value, (int, float))
         self._hb = value
 
     def _validate_all_params(self, **kwargs) -> None:
         """Validate all input parameters"""
         type_checks = {            
-                'goods': float, # accetta solo None durante il runtime, altrimenti genera errore perchè Block non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato             
-                'energy': float,
-                'hr': int,
-                'hc': int,
-                'hs': int,
-                'hb': int,                
+                'goods': (int, float), # accetta solo None durante il runtime, altrimenti genera errore perchè Block non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato             
+                'energy': (int, float),
+                'hr': (int, float),
+                'hc': (int, float),
+                'hs': (int, float),
+                'hb': (int, float),                
             }        
         for param, value in kwargs.items():            
             if value is not None and param in type_checks:                
@@ -143,22 +102,9 @@ class Payload:
     def _validate_param(self, param_name: str, value: Any, expected_type: type) -> None:
         """Validate a single parameter"""
         if value is not None and not isinstance(value, expected_type):
-            raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
+            raise TypeError(f"Invalid type for {param_name}. Expected {expected_type!r}, got {type(value).__name__}")
 
-    def getStatus(self, type: str):
-
-        if type == 'goods':
-            return self._goods
-        elif type == 'energy':
-            return self._energy
-        elif type == 'hr':
-            return self._hr
-        elif type == 'hc':
-            return self._hc
-        elif type == 'hs':
-            return self._hs
-        elif type == 'hb':
-            return self._hb
+ 
         
     def __repr__(self):
         return (f"goods: {self._goods!r}, energy: {self._energy!r}, hr: {self._hr!r}, hr: {self._hr!r}, hc: {self._hc!r}, hs: {self._hs!r}, hb: {self._hb!r}")
@@ -273,8 +219,8 @@ class Payload:
             hb=self._hb / div
         )   
 
-    def __div__(self, other: Payload):
-        if not isinstance(other, Payload):
+    def division(self, other):
+        if other.__class__.__name__!= "Payload":
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
             goods=self._goods / other._goods if other._goods != 0 else 0,

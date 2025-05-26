@@ -26,29 +26,25 @@ class Resource_Manager_Params:
     """Data class for holding Resource Manager parameters for validation"""
     clients: Optional[Dict[str, "Block"]] = None, 
     server: Optional[Dict[str, "Block"]] = None,
-    requested_for_self: Optional[Payload] = None, 
-    assigned_for_self: Optional[Payload] = None, 
-    request: Optional[Payload] = None, 
+    requested_for_self: Optional[Payload] = None,    
     warehouse: Optional[Payload] = None
 
 class Resource_Manager:
-    def __init__(self, block: "Block", 
-                 clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,                  
-                 request: Optional[Payload] = None, warehouse: Optional[Payload] = None):
+    def __init__(self, block: "Block", clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,                  
+                 warehouse: Optional[Payload] = None):
     
         # Initialize properties
         self._block = block
         self._clients = clients
         self._server = server        
-        self._requested_for_self = self._evaluate_resource("requested")
-        self._assigned_for_self = self._evaluate_resource("assigned")# deprecated? (vedi consume)
-        self._request = request
-        self._warehouse = warehouse
+        self._warehouse = warehouse if warehouse else Payload()  # Initialize warehouse with empty payload if not provided
+        self._requested_for_self = self._evaluate_resource()        
+        self._request = self._assessment_necessary_resources()  # Assess necessary resources based on request and warehouse
+        
 
         # Validate all parameters
         self._validate_all_params(
-            block = block, clients = clients, server = server, requested_for_self = requested_for_self,
-            assigned_for_self = assigned_for_self, request = request, warehouse = warehouse
+            block = block, clients = clients, server = server, request = request, warehouse = warehouse
         )
 
         self._block_priority = self.evaluate_server_priority_for_delivery(self)  # This will be calculated dynamically based on the server's priority
@@ -65,15 +61,15 @@ class Resource_Manager:
         clients_priority = {}        
         region_blocks_priority = region.blocks_priority
 
-        # check if server is in region block list
+        # get client's priotity if client is in region block list
         for client in self._clients.values():            
-            priority = region_blocks_priority.get(server.id)
+            priority = region_blocks_priority.get(client.id)
             
             if priority is None:
-                logger.warning(f"Server {server.id} not found in region block list. Cannot evaluate priority.")
+                logger.warning(f"Server {client.id} not found in region block list. Cannot evaluate priority.")
                 continue
             else:                
-                clients_priority.added(key = client.id, value = priority)
+                clients_priority.append(key = client.id, value = priority)
         
         return clients_priority
 
@@ -98,15 +94,7 @@ class Resource_Manager:
         self._validate_param('requested_for_self', value, Payload)
         self._requested_for_self = value
 
-    @property
-    def assigned_for_self(self) -> Payload:
-        return self._assigned_for_self
-
-    @assigned_for_self.setter
-    def assigned_for_self(self, value: Payload) -> None:
-        self._validate_param('assigned_for_self', value, Payload)
-        self._assigned_for_self = value
-
+    
     @property
     def warehouse(self) -> Payload:
         return self._warehouse
@@ -126,19 +114,15 @@ class Resource_Manager:
         self._request = value
 
     
-    def _evaluate_resource(self, act: str) -> Payload:
+    def _evaluate_resource(self) -> Payload:
         """Evaluate asset resources block based on act: requested or assigned"""
-        
-        if act and act not in ['requested', 'assigned']:
-                raise ValueError(f"Invalid act: {act}. Expected 'requested' or 'assigned'.")                
+                
         resources = Payload()
         
         for asset  in self.block.assets:
             
-            if act == 'request':
-                resources = request.sum(resources, asset.requested_for_self)
-            elif act == 'assigned':
-                resources = request.sum(resources, asset.assigned_for_self)                         
+            resources += asset.requested_for_self if asset.requested_for_self else Payload()
+
         return resources
 
     # Server client association
@@ -146,14 +130,14 @@ class Resource_Manager:
 
     def consume(self) -> bool:
         
-        if not self._request_for_self or not self._warehouse or not self._assigned_for_self:        
+        if not self._request_for_self or not self._warehouse:        
             raise ValueError("Request and warehouse must be set before consuming resources")
         
-        if self._warehouse.__lt__(self._request_for_self):
+        if self._warehouse < self._request_for_self:
             logger.warning(f"Warehouse {self._warehouse!r} is less than request {self._request_for_self!r}. Cannot consume resources.")
             return False
 
-        self._warehouse = self._warehouse.__sub__(self._request_for_self)  # Update warehouse after consuming resources
+        self._warehouse -= self._request_for_self  # Update warehouse after consuming resources
         return True  # Return True to indicate successful consumption of resources
 
 
@@ -210,25 +194,25 @@ class Resource_Manager:
     def _assessment_necessary_resources(self) -> Payload:
         """Assess necessary resources for the block based on its request and warehouse"""
         
-        if not self.request or not self.warehouse:
+        if not self.requested_for_self or not self.warehouse:
             raise ValueError("Request and warehouse must be set before receiving resources")
-                
-        # ATT: AUTONOMY DEVE ESSERE CALCOLATA PER ONGI TIPO DI RISORSA: GOODS, ENERGY, ...        
-        autonomy = self.warehouse.__div__(self.request) # Calculate autonomy based on warehouse and request
+        
+        assessment = Payload()  # Initialize request payload        
+        autonomy = self.warehouse.division(self.requested_for_self) # Calculate autonomy based on warehouse and request
         
         # Determine request priority based on autonomy
         param =("goods", "energy", "hr", "hc", "hs", "hb")
         for item in param:
             if autonomy[item] < 2:
-                request[item] = self.request[item]  # If autonomy is less than 2, use full request
+                assessment[item] = self._requested_for_self[item]  # If autonomy is less than 2, use full request
             elif 2 <= autonomy[item] < 3:
-                request[item] = self.request[item] * 0.5
+                assessment[item] = self._requested_for_self[item] * 0.5
             elif 3 <= autonomy[item] < 5:
-                request[item] = self.request[item] * 0.25
+                assessment[item] = self._requested_for_self[item] * 0.25
             else:
-                request[item] = self.request[item] * 0.1
+                assessment[item] = self._requested_for_self[item] * 0.1
     
-        return request  # Return the assessed necessary resources based on request and warehouse
+        return assessment  # Return the assessed necessary resources based on request and warehouse
 
     def receive(self, payload: Payload) -> bool:
         """Receive resources from server based on request and warehouse"""
