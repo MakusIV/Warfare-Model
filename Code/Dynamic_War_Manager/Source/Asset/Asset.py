@@ -30,7 +30,7 @@ class AssetParams:
     cost: Optional[int] = None
     value: Optional[int] = None
     resources_assigned: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
-    resources_required: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
+    resources_to_self_consume: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
     payload: Optional[Payload] = None       # payload -payload resource
     position: Optional[Point3D] = None
     crytical: Optional[bool] = False
@@ -43,7 +43,7 @@ class Asset:
                  category: Optional[str] = None, asset_type: Optional[str] = None, 
                  functionality: Optional[str] = None, cost: Optional[int] = None,
                  value: Optional[int] = None, resources_assigned: Optional[Payload] = None, 
-                 resources_required: Optional[Payload] = None, payload: Optional[Payload] = None, 
+                 resources_to_self_consume: Optional[Payload] = None, payload: Optional[Payload] = None, 
                  position: Optional[Point3D] = None, volume: Optional[Volume] = None,
                  crytical: Optional[bool] = False, repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
@@ -72,7 +72,7 @@ class Asset:
 
         # Initialize payloads with defaults if None
         self._resources_assigned = resources_assigned if resources_assigned else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
-        self._resources_required = resources_required if resources_required else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
+        self._resources_to_self_consume = resources_to_self_consume if resources_to_self_consume else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
         self._payload = payload if payload else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
 
         # Process DCS data if provided
@@ -83,7 +83,7 @@ class Asset:
         self._validate_all_params(
             block=block, name=name, description=description, category=category,
             asset_type=asset_type, functionality=functionality, cost=cost,
-            value=value, resources_assigned=self._resources_assigned, resources_required=self._resources_required, payload=self._payload,
+            value=value, resources_assigned=self._resources_assigned, resources_to_self_consume=self._resources_to_self_consume, payload=self._payload,
             position=position, volume=volume, crytical=crytical,
             repair_time=repair_time, role=role, health=self._health,
             state=self._state
@@ -228,7 +228,7 @@ class Asset:
         ratios = []
         
         for item in ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']:
-            rcp_val = getattr(self.resources_required, item, 0)
+            rcp_val = getattr(self.resources_to_self_consume, item, 0)
             if rcp_val > 0:
                 acp_val = getattr(self.resources_assigned, item, 0)
                 ratios.append(acp_val / rcp_val)
@@ -245,13 +245,13 @@ class Asset:
         self._resources_assigned = value
 
     @property
-    def resources_required(self) -> Payload:
-        return self._resources_required
+    def resources_to_self_consume(self) -> Payload:
+        return self._resources_to_self_consume
 
-    @resources_required.setter
-    def resources_required(self, value: Payload) -> None:
-        self._validate_param('resources_required', value, Payload)
-        self._resources_required = value
+    @resources_to_self_consume.setter
+    def resources_to_self_consume(self, value: Payload) -> None:
+        self._validate_param('resources_to_self_consume', value, Payload)
+        self._resources_to_self_consume = value
 
     @property
     def payload(self) -> Payload:
@@ -346,7 +346,7 @@ class Asset:
     # Consumption methods
     def consume(self) -> Dict[str, Optional[bool]]:
         """Reduce acp of rcp payload quantity"""
-        return self._consume(self.resources_required)
+        return self._consume(self.resources_to_self_consume)
 
     def _consume(self, cons: Payload) -> Dict[str, Optional[bool]]:
         """Internal method to reduce acp of cons payload quantity"""
@@ -396,7 +396,7 @@ class Asset:
             'block': Block,
             'volume': Volume,
             'resources_assigned': Payload,
-            'resources_required': Payload,
+            'resources_to_self_consume': Payload,
             'payload': Payload,
             'repair_time': int,
             'role': str,

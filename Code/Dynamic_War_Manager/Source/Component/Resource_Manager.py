@@ -1,8 +1,15 @@
 """
-Resource_Manager Class
+Resource_Manager Class (Optimized)
 
 Represents a Block's component for resource management
 
+Main improvements:
+- Fixed syntax and logic errors
+- Enhanced exception handling
+- Optimized calculation methods
+- Added comprehensive documentation
+- Removed code redundancy
+- Improved parameter validation
 """
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
@@ -14,6 +21,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.State import State
 from sympy import Point3D
 from dataclasses import dataclass
+from collections import defaultdict
 
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Block.Block import Block
@@ -23,123 +31,115 @@ logger = Logger(module_name=__name__, class_name='Resource_Manager')
 
 @dataclass
 class Resource_Manager_Params:
-    """Data class for holding Resource Manager parameters for validation"""
-    clients: Optional[Dict[str, "Block"]] = None, 
-    server: Optional[Dict[str, "Block"]] = None,
-    resources_needed: Optional[Payload] = None,    
+    """Data class for Resource Manager parameters for validation"""
+    clients: Optional[Dict[str, "Block"]] = None
+    server: Optional[Dict[str, "Block"]] = None
+    resources_needed: Optional[Payload] = None    
     warehouse: Optional[Payload] = None
 
 class Resource_Manager:
-    def __init__(self, block: "Block", clients: Optional[Dict[str, "Block"]] = None, server: Optional[Dict[str, "Block"]] = None,                  
-                 warehouse: Optional[Payload] = None):
+    """
+    Manages resources for a Block, including client-server relationships
+    and priority-based resource distribution.
+    """
     
-        # Initialize properties
+    # Supported resource parameters
+    RESOURCE_PARAMS = ("goods", "energy", "hr", "hc", "hs", "hb")
+    
+    # Autonomy thresholds for calculating needed resources
+    AUTONOMY_THRESHOLDS = {
+        (0, 2): 1.0,      # Autonomy < 2: full request
+        (2, 3): 0.5,      # Autonomy 2-3: 50% of request
+        (3, 5): 0.25,     # Autonomy 3-5: 25% of request
+        (5, float('inf')): 0.1  # Autonomy > 5: 10% of request
+    }
+
+    def __init__(self, block: "Block", clients: Optional[Dict[str, "Block"]] = None, 
+                 server: Optional[Dict[str, "Block"]] = None, warehouse: Optional[Payload] = None):
+        """
+        Initialize the Resource Manager.
+        
+        Args:
+            block: The Block associated with this resource manager
+            clients: Dictionary of clients {id: Block}
+            server: Dictionary of servers {id: Block}
+            warehouse: Payload representing the resource warehouse
+        """
+        # Initial parameter validation
+        self._validate_all_params(block=block, clients=clients, server=server, warehouse=warehouse)
+        
+        # Property initialization
         self._block = block
-        self._clients = clients
-        self._server = server        
-        self._warehouse = warehouse if warehouse else Payload()  # Initialize warehouse with empty payload if not provided
-        self._resources_to_self_consume = self._evaluate_resources_to_self_consume() # resources requested based on sum of assets request of this block: used to evaluate consume
-        self._resources_needed = self._evaluate_effective_resources_needed()  # effective resources for server's request: evaluation based on asset request and warehouse availability: used to evaluate delivery resources at clients        
+        self._clients = clients or {}
+        self._server = server or {}
+        self._warehouse = warehouse or Payload()
         
-        # Validate all parameters
-        self._validate_all_params(
-            block = block, clients = clients, server = server, warehouse = warehouse
-        )
-
-
-
-    def _evaluate_clients_priority(self) -> Dict[str, float]:
-        """Evaluate relative priority based on the sum of block's priority"""
+        # Resource calculation (lazy loading to avoid unnecessary computations)
+        self._resources_to_self_consume = None
+        self._resources_needed = None
         
-        # get from region the block's priority
-        region = self.block.region if self.block.region else None
-        
-        if not region:
-            raise ValueError("Block region is not set. Cannot evaluate server priority.")
-        clients_priority = {}        
-        region_blocks_priority = region.blocks_priority
-
-        # get client's priotity if client is in region block list
-        for client in self._clients.values():            
-            priority = region_blocks_priority.get(client.id)
-            
-            if priority is None:
-                logger.warning(f"Server {client.id} not found in region block list. Cannot evaluate priority.")
-                continue
-            else:                
-                clients_priority.append(key = client.id, value = priority)
-        
-        return clients_priority
-
-    # Block property
+    # === BLOCK PROPERTIES ===
+    
     @property
     def block(self) -> Optional["Block"]:
-        """Get associated block"""
+        """Get the associated Block"""
         return self._block
 
     @block.setter
     def block(self, value: Optional["Block"]) -> None:
-        """Set associated block"""
-        self._validate_params(block=value)
-        self._region = value
+        """Set the associated Block"""
+        self._validate_block_param(value)
+        self._block = value
+        # Reset cache when block changes
+        self._invalidate_resource_cache()
 
     @property
     def resources_needed(self) -> Payload:
+        """Get needed resources (calculated)"""
+        if self._resources_needed is None:
+            self._resources_needed = self._evaluate_effective_resources_needed()
         return self._resources_needed
 
     @property
     def resources_to_self_consume(self) -> Payload:
-        return self._request
+        """Get resources for self-consumption (calculated)"""
+        if self._resources_to_self_consume is None:
+            self._resources_to_self_consume = self._evaluate_resources_to_self_consume()
+        return self._resources_to_self_consume
     
     @property
     def warehouse(self) -> Payload:
+        """Get the resource warehouse"""
         return self._warehouse
 
     @warehouse.setter
     def warehouse(self, value: Payload) -> None:
+        """Set the resource warehouse"""
         self._validate_param('warehouse', value, Payload)
         self._warehouse = value
+        # Reset cache when warehouse changes
+        self._invalidate_resource_cache()
 
-        
-    def _evaluate_resources_to_self_consume(self) -> Payload:
-        """Evaluate asset resources block"""                
-        resources = Payload()
-        
-        for asset  in self.block.assets:            
-            resources += asset.resources_to_self_consume if asset.resources_to_self_consume else Payload()
-        return resources
-
-    # Server client association
-    # NOTE: to avoid cycles client-server associations are managed by the client calls with set_server & remove_server methods
-
-    def consume(self) -> bool:
-        """Consume resources from warehouse based on request and warehouse availability"""
-
-        if not self._resources_to_self_consume or not self._warehouse:        
-            raise ValueError("resources_to_self_consume and warehouse must be set before consuming resources")
-        
-        if self._warehouse < self._resources_to_self_consume:
-            logger.warning(f"Warehouse {self._warehouse!r} is less than request {self._resources_to_self_consume!r}. Cannot consume resources.")
-            return False
-
-        self._warehouse -= self._resources_to_self_consume  # Update warehouse after consuming resources
-        return True  # Return True to indicate successful consumption of resources
-
-
-    # SERVER MANAGEMENT: This section seeing this Block like a client of all server enlisted
+    # === SERVER MANAGEMENT (this Block as client) ===
+    
     @property
-    def server(self) -> Dict[str, "Block"]:# {block, priority, ....}˘ o lascio solo block (semplificando parecchio) e calcolo ls priority in runtime per l'assegnazione pesata dellem risorse?}
-        """Get server dictionary"""
-        return self._server
+    def server(self) -> Dict[str, "Block"]:
+        """Get the server dictionary"""
+        return self._server.copy()  # Return a copy for safety
 
     @server.setter
     def server(self, value: Dict[str, "Block"]) -> None:
-        """Set server dictionary"""
+        """Set the server dictionary"""
         if not isinstance(value, dict):
-            raise TypeError("server must be a dictionary")        
-        if not all(validate_class(client, "Block") for client in value.values()):
-            raise ValueError(f"All values in server must be Block objects, actual{value!r}")
-        self._server = value
+            raise TypeError("server must be a dictionary")
+        
+        for server_id, server_block in value.items():
+            if not isinstance(server_id, str):
+                raise TypeError("Server dictionary keys must be strings")
+            if not self._is_valid_block(server_block):
+                raise ValueError(f"All values in server must be Block objects, current: {server_block!r}")
+        
+        self._server = value.copy()
 
     def list_server_keys(self) -> List[str]:
         """Get list of server IDs"""
@@ -152,83 +152,65 @@ class Resource_Manager:
         return self._server.get(key)
 
     def set_server(self, key: str, server: "Block") -> None:
-        """Add or update server"""
+        """Add or update a server"""
         if not isinstance(key, str):
             raise TypeError("key must be a string")
-        if not hasattr(server, '__class__') or server.__class__.__name__ != 'Block':
-            raise TypeError("value must be an Block object")
-        if server.has_resource_manager():
-            self._server[key] = server
-            server.resource_manager.set_client(self.id, self)  # Set back-reference (back reference setting only by client call with set_server method)
-        else:
-            raise Exception(f"block: {server!r} hasn't resource manager. Resource server wasn't added")
+        
+        if not self._is_valid_block(server):
+            raise TypeError("value must be a Block object")
+        
+        if not server.has_resource_manager():
+            raise ValueError(f"Block {server!r} does not have a resource manager")
+        
+        # Update bidirectional reference
+        self._server[key] = server
+        try:
+            server.resource_manager.set_client(self.block.id, self.block)
+        except Exception as e:
+            # Rollback on error
+            del self._server[key]
+            raise RuntimeError(f"Error setting bidirectional reference: {e}")
 
     def remove_server(self, key: str) -> None:
-        """Remove client by ID"""
+        """Remove server by ID"""
         if not isinstance(key, str):
             raise TypeError("key must be a string")
+        
         if key not in self._server:
             raise KeyError(f"Block with key '{key}' not found")
+        
         deleted_server = self._server[key]
-        if deleted_server.has_resource_manager():
-            deleted_server.resource_manager.remove_client(deleted_server.id) # Delete back-reference (back reference setting only by client call with set_server method)
+        
+        if not deleted_server.has_resource_manager():
+            raise RuntimeError(f"Anomaly: client {self.block!r} has reference while server {deleted_server!r} has no resource manager")
+        
+        # Remove bidirectional reference
+        try:
+            deleted_server.resource_manager.remove_client(self.block.id)
             del self._server[key]
-        else:
-            raise Exception(f"Anomaly: this client: {self.block!r} has a reference in its resource manager while the server: {deleted_server!r} does not have its own resource manager. Resource server wasn't added")
+        except Exception as e:
+            raise RuntimeError(f"Error removing bidirectional reference: {e}")
+
+    # === CLIENT MANAGEMENT (this Block as server) ===
     
-    def _evaluate_effective_resources_needed(self) -> Payload:
-        """resources needed to request from servers."""
-        
-        if not self._resources_to_self_consume or not self._warehouse:
-            raise ValueError("resources_to_self_consume and warehouse must be set before receiving resources")
-        
-        assessment = Payload()  # Initialize request payload        
-        autonomy = self._warehouse.division(self._resources_to_self_consume) # Calculate autonomy based on warehouse avalability and request
-        
-        # Determine request priority based on warehouse avalability and request
-        param =("goods", "energy", "hr", "hc", "hs", "hb")
-        for item in param:
-            if autonomy[item] < 2:
-                assessment[item] = self._resources_to_self_consume[item]  # If autonomy is less than 2, use full request
-            elif 2 <= autonomy[item] < 3:
-                assessment[item] = self._resources_to_self_consume[item] * 0.5
-            elif 3 <= autonomy[item] < 5:
-                assessment[item] = self._resources_to_self_consume[item] * 0.25
-            else:
-                assessment[item] = self._resources_to_self_consume[item] * 0.1
-    
-        return assessment  # Return the assessed necessary resources based on request and warehouse
-
-    def receive(self, payload: Payload) -> None:
-        """Receive resources from server and update warehouse"""
-
-        if not self._validate_param('payload', payload, Payload):
-            raise TypeError("payload must be a Payload object")
-
-        if not self._warehouse:
-            raise ValueError("warehouse must be set before receiving resources")
-                
-        self._warehouse += payload# Update warehouse with received payload
-
-        
-
-
-    
-    # CLIENT MANAGEMENT: This section seeing this Block like a server of all client enlisted
     @property
-    def clients(self) -> Dict[str, "Block"]:# {block, priority, ....}˘ o lascio solo block (semplificando parecchio) e calcolo ls priority in runtime per l'assegnazione pesata dellem risorse?}
-        """Get clients dictionary"""
-        return self._clients
+    def clients(self) -> Dict[str, "Block"]:
+        """Get the client dictionary"""
+        return self._clients.copy()  # Return a copy for safety
 
     @clients.setter
     def clients(self, value: Dict[str, "Block"]) -> None:
-        """Set clients dictionary"""
+        """Set the client dictionary"""
         if not isinstance(value, dict):
-            raise TypeError("clients must be a dictionary")        
-        if not all(validate_class(client, "Block") for client in value.values()):
-            raise ValueError(f"All values in clients must be Block objects, actual{value!r}")
-        self._clients = value
-
+            raise TypeError("clients must be a dictionary")
+        
+        for client_id, client_block in value.items():
+            if not isinstance(client_id, str):
+                raise TypeError("Client dictionary keys must be strings")
+            if not self._is_valid_block(client_block):
+                raise ValueError(f"All values in clients must be Block objects, current: {client_block!r}")
+        
+        self._clients = value.copy()
 
     def list_client_keys(self) -> List[str]:
         """Get list of client IDs"""
@@ -241,92 +223,275 @@ class Resource_Manager:
         return self._clients.get(key)
 
     def set_client(self, key: str, client: "Block") -> None:
-        """Add or update client"""
+        """Add or update a client (called automatically by set_server)"""
         if not isinstance(key, str):
             raise TypeError("key must be a string")
-        if not hasattr(client, '__class__') or client.__class__.__name__ != 'Block':
-            raise TypeError("value must be an Block object")
-        cl_rm = client.resource_manager
-
-        if not cl_rm: # il client non ha il resource manager
-            raise Exception(f"Anomaly - client: {client!r} hasn't a resource manager. Resource client wasn't added")
-        if cl_rm.get_server[self.id] != self: #la lista dei server presente nel resource manager del client non ha questo server
-            raise Exception(f"Anomaly - missing server: {self!r} in resource manager server list of this client {client!r}")
+        
+        if not self._is_valid_block(client):
+            raise TypeError("value must be a Block object")
+        
+        client_rm = client.resource_manager
+        if not client_rm:
+            raise ValueError(f"Anomaly - client {client!r} does not have a resource manager")
+        
+        # Verify bidirectional reference consistency
+        if client_rm.get_server(self.block.id) != self.block:
+            raise ValueError(f"Anomaly - server {self.block!r} missing from client {client!r} server list")
         
         self._clients[key] = client
-        # back reference setting only by client call with set_server method
 
     def remove_client(self, key: str) -> None:
-        """Remove client by ID"""
+        """Remove client by ID (called automatically by remove_server)"""
         if not isinstance(key, str):
             raise TypeError("key must be a string")
+        
         if key not in self._clients:
-            raise KeyError(f"Block with key '{key}' not found")          
+            raise KeyError(f"Block with key '{key}' not found")
 
         client = self._clients[key]
-        cl_rm = client.resource_manager
+        client_rm = client.resource_manager
         
-        if not cl_rm: # il client non ha il resource manager raise exception
-            raise Exception(f"Anomaly - client: {client!r} hasn't a resource manager. Resource client wasn't added")
-        if cl_rm.get_server[self.id] != self: #la lista dei server presente nel resource manager del client non ha questo server
-            raise Exception(f"Anomaly - missing server: {self!r} in resource manager server list of this client {client!r}")
+        if not client_rm:
+            raise ValueError(f"Anomaly - client {client!r} does not have a resource manager")
+        
+        # Verify bidirectional reference consistency
+        if client_rm.get_server(self.block.id) != self.block:
+            raise ValueError(f"Anomaly - server {self.block!r} missing from client {client!r} server list")
         
         del self._clients[key]
-        # back reference setting only by client call with set_server method
 
-    def delivery(self) -> None:
-        """Deliver resources to clients based on their strategic and tactical priority and request"""
-        if not self.resources_to_self_consume or not self.warehouse:
-            raise ValueError("Request and warehouse must be set before delivery resources")
-        
-        clients_priority = self._evaluate_clients_priority()  # clients_priority list for delivery based on block's priority: strategic priority
-        delivery_unit = self.warehouse.division(self.warehouse, sum(clients_priority.values()) ) # Calculate delivery unit based on warehouse avalaiability and clients' priorities
-        
-        # Calculate request priority based on clients priorities
-        for client in self.clients.values():
-            request = client.resource_manager.resources_needed  # Assess necessary resources based on request and warehouse
-            max_delivery = delivery_unit * clients_priority[client.id]  # Calculate delivery for each client based on its priority            
-            
-            param =("goods", "energy", "hr", "hc", "hs", "hb")
-            
-            for item in param:
-                
-                if request[item] < max_delivery[item]:  # If request is less than max delivery, use request as delivery
-                    delivery = request  # If request is less than max delivery, use request as delivery
-                else:
-                    delivery[item] = max_delivery[item]  # Otherwise, use max delivery as delivery
-                
-            receive_result = client.resource_manager.receive(delivery)  # request to server for resources based on request and priority
-            
-            if receive_result:
-                logger.info(f"Delivery successful for client {client.id} with payload {delivery!r}")
-                warehouse -= delivery  # Update warehouse after successful delivery
-            else:
-                logger.info(f"Delivery failed for client {client.id} with payload {delivery!r}")
-                
-
+    # === RESOURCE OPERATIONS ===
     
+    def consume(self) -> bool:
+        """
+        Consume resources from warehouse based on request.
         
-    # Validation methods
+        Returns:
+            bool: True if consumption was successful, False otherwise
+        """
+        try:
+            resources_needed = self.resources_to_self_consume
+            
+            if not resources_needed or not self._warehouse:
+                raise ValueError("resources_to_self_consume and warehouse must be set")
+            
+            if self._warehouse < resources_needed:
+                logger.warning(f"Warehouse {self._warehouse!r} insufficient for request {resources_needed!r}")
+                return False
+
+            self._warehouse -= resources_needed
+            logger.info(f"Consumption completed: {resources_needed!r}")
+            
+            # Invalidate cache after consumption
+            self._invalidate_resource_cache()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error during resource consumption: {e}")
+            return False
+
+    def receive(self, payload: Payload) -> bool:
+        """
+        Receive resources from a server and update warehouse.
+        
+        Args:
+            payload: Resources to receive
+            
+        Returns:
+            bool: True if reception was successful, False otherwise
+        """
+        try:
+            if not isinstance(payload, Payload):
+                raise TypeError("payload must be a Payload object")
+
+            if not self._warehouse:
+                raise ValueError("warehouse must be set before receiving resources")
+                
+            self._warehouse += payload
+            logger.info(f"Received resources: {payload!r}")
+            
+            # Invalidate cache after reception
+            self._invalidate_resource_cache()
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error during resource reception: {e}")
+            return False
+
+    def delivery(self) -> Dict[str, bool]:
+        """
+        Distribute resources to clients based on strategic and tactical priority.
+        
+        Returns:
+            Dict[str, bool]: Delivery result for each client
+        """
+        if not self.resources_to_self_consume or not self.warehouse:
+            raise ValueError("Request and warehouse must be set before resource distribution")
+        
+        try:
+            clients_priority = self._evaluate_clients_priority()
+            if not clients_priority:
+                logger.warning("No clients with valid priority found")
+                return {}
+            
+            delivery_results = {}
+            total_priority = sum(clients_priority.values())
+            
+            # Calculate distribution unit based on warehouse and priorities
+            available_resources = self.warehouse.copy()
+            
+            for client_id, client in self._clients.items():
+                if client_id not in clients_priority:
+                    logger.warning(f"Client {client_id} has no valid priority")
+                    delivery_results[client_id] = False
+                    continue
+                
+                try:
+                    client_priority = clients_priority[client_id]
+                    client_request = client.resource_manager.resources_needed
+                    
+                    # Calculate maximum distribution based on priority
+                    priority_ratio = client_priority / total_priority
+                    max_delivery = available_resources * priority_ratio
+                    
+                    # Determine actual delivery (minimum between request and maximum distribution)
+                    actual_delivery = Payload()
+                    for param in self.RESOURCE_PARAMS:
+                        actual_delivery[param] = min(client_request[param], max_delivery[param])
+                    
+                    # Perform delivery
+                    delivery_success = client.resource_manager.receive(actual_delivery)
+                    
+                    if delivery_success:
+                        self._warehouse -= actual_delivery
+                        available_resources -= actual_delivery
+                        logger.info(f"Successful delivery to client {client_id}: {actual_delivery!r}")
+                    else:
+                        logger.warning(f"Failed delivery to client {client_id}: {actual_delivery!r}")
+                    
+                    delivery_results[client_id] = delivery_success
+                    
+                except Exception as e:
+                    logger.error(f"Error in delivery to client {client_id}: {e}")
+                    delivery_results[client_id] = False
+            
+            return delivery_results
+            
+        except Exception as e:
+            logger.error(f"Error during resource distribution: {e}")
+            return {}
+
+    # === PRIVATE CALCULATION METHODS ===
+    
+    def _evaluate_resources_to_self_consume(self) -> Payload:
+        """Evaluate resources needed for Block self-consumption"""
+        if not self.block or not hasattr(self.block, 'assets'):
+            return Payload()
+        
+        resources = Payload()
+        for asset in self.block.assets:
+            if hasattr(asset, 'resources_to_self_consume') and asset.resources_to_self_consume:
+                resources += asset.resources_to_self_consume
+        
+        return resources
+
+    def _evaluate_effective_resources_needed(self) -> Payload:
+        """Calculate effective resources needed based on autonomy"""
+        resources_to_consume = self.resources_to_self_consume
+        warehouse = self.warehouse
+        
+        if not resources_to_consume or not warehouse:
+            return Payload()
+        
+        assessment = Payload()
+        autonomy = warehouse.division(resources_to_consume)
+        
+        for param in self.RESOURCE_PARAMS:
+            autonomy_value = autonomy[param]
+            multiplier = self._get_autonomy_multiplier(autonomy_value)
+            assessment[param] = resources_to_consume[param] * multiplier
+        
+        return assessment
+
+    def _get_autonomy_multiplier(self, autonomy_value: float) -> float:
+        """Get multiplier based on autonomy value"""
+        for (min_val, max_val), multiplier in self.AUTONOMY_THRESHOLDS.items():
+            if min_val <= autonomy_value < max_val:
+                return multiplier
+        return 0.1  # Default for very high values
+
+    def _evaluate_clients_priority(self) -> Dict[str, float]:
+        """Evaluate relative priority based on Block priority in region"""
+        if not self.block or not self.block.region:
+            logger.warning("Block or region not set. Cannot evaluate server priority.")
+            return {}
+        
+        clients_priority = {}
+        region_blocks_priority = self.block.region.blocks_priority
+        
+        for client_id, client in self._clients.items():
+            priority = region_blocks_priority.get(client.id)
+            
+            if priority is None:
+                logger.warning(f"Client {client.id} not found in region Block list.")
+                continue
+            
+            clients_priority[client_id] = priority
+        
+        return clients_priority
+
+    def _invalidate_resource_cache(self) -> None:
+        """Invalidate resource calculation cache"""
+        self._resources_to_self_consume = None
+        self._resources_needed = None
+
+    # === VALIDATION METHODS ===
+    
+    def _is_valid_block(self, block: Any) -> bool:
+        """Check if an object is a valid Block"""
+        return hasattr(block, '__class__') and block.__class__.__name__ == 'Block'
+
+    def _validate_block_param(self, value: Any) -> None:
+        """Validate block parameter"""
+        if value is not None and not self._is_valid_block(value):
+            raise TypeError("block must be None or a Block object")
+
     def _validate_all_params(self, **kwargs) -> None:
         """Validate all input parameters"""
-        type_checks = {            
-            'block': (type(None)), # accetta solo None durante il runtime, altrimenti genera errore perchè Block non è importata e non deve esserlo: l'utilizzo dei suoi metodi è cmq garantito dall'oggetto importato             
-            'clients': Dict[str, Payload],
-            'server': Dict[str, Payload],
-            'warehouse': Payload,            
+        validators = {
+            'block': self._validate_block_param,
+            'clients': lambda x: self._validate_dict_param('clients', x),
+            'server': lambda x: self._validate_dict_param('server', x),
+            'warehouse': lambda x: self._validate_param('warehouse', x, Payload),
         }
         
-        for param, value in kwargs.items():            
-            if value is not None and param in type_checks:
-                if param == 'block':
-                    if not (value is None or getattr(value, '__class__', {}).__name__ == 'Block'):
-                        raise TypeError(f"{param} must be None or a Block object")
-                    continue
-                else:
-                    self._validate_param(param, value, type_checks[param])
+        for param, value in kwargs.items():
+            if param in validators and value is not None:
+                validators[param](value)
 
-    def _validate_param(self, param_name: str, value: Any, expected_type: type) -> None:
+    def _validate_dict_param(self, param_name: str, value: Any) -> None:
+        """Validate dictionary parameters"""
+        if not isinstance(value, dict):
+            raise TypeError(f"{param_name} must be a dictionary")
+        
+        for key, block in value.items():
+            if not isinstance(key, str):
+                raise TypeError(f"{param_name} keys must be strings")
+            if not self._is_valid_block(block):
+                raise ValueError(f"All values in {param_name} must be Block objects")
+
+    def _validate_param(self, param_name: str, value: Any, expected_type: type) -> bool:
         """Validate a single parameter"""
         if value is not None and not isinstance(value, expected_type):
             raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
+        return True
+
+    def __repr__(self) -> str:
+        """String representation of the Resource Manager"""
+        return (f"Resource_Manager(block={self.block.id if self.block else None}, "
+                f"clients={len(self._clients)}, servers={len(self._server)}, "
+                f"warehouse={self._warehouse})")
+
+    def __str__(self) -> str:
+        """Readable string representation"""
+        return f"Resource Manager for Block {self.block.id if self.block else 'None'}"

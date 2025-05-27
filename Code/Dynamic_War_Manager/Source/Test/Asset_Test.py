@@ -69,7 +69,7 @@ class TestAsset(unittest.TestCase):
     def test_payload_operations(self):
         # Set payloads
         self.asset.resources_assigned = self.test_acp
-        self.asset.resources_required = self.test_rcp
+        self.asset.resources_to_self_consume = self.test_rcp
         self.asset.payload = self.test_payload
         
         # Test balance_trade calculation
