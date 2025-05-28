@@ -14,12 +14,7 @@ Main improvements:
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.DataType.Event import Event
-from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.DataType.Threat import Threat
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
-from Code.Dynamic_War_Manager.Source.DataType.State import State
-from sympy import Point3D
 from dataclasses import dataclass
 from collections import defaultdict
 
