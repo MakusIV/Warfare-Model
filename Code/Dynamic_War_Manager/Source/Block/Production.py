@@ -1,23 +1,14 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-import sys
-import os
-# Aggiungi il percorso della directory principale del progetto
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
-from Code.Dynamic_War_Manager.Source.Context import Context, Utility
+from typing import TYPE_CHECKING,  List, Dict, Literal
+from Code.Dynamic_War_Manager.Source.Utility import Utility
 from numpy import mean
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
-from Code.Dynamic_War_Manager.Source.Event import Event
-from Code.Dynamic_War_Manager.Source.State import State
-from Code.Dynamic_War_Manager.Source.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
-from typing import List, Dict
-from sympy import Point
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+#from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
 
-if TYPE_CHECKING:    
-    from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
-    from from Code.Dynamic_War_Manager.Source.Context.Region import Region
+if TYPE_CHECKING:        
+    from Code.Dynamic_War_Manager.Source.Context.Region import Region
 
 
 

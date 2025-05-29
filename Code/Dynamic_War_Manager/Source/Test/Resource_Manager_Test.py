@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch, call
 from typing import Dict, Optional
 from dataclasses import dataclass
 from Code.Dynamic_War_Manager.Source.Context.Region import Region
-from Code.Dynamic_War_Manager.Source.Block.Block import Block
+#from Code.Dynamic_War_Manager.Source.Block.Block import Block
 
 # Import the class to test (adjust the import path as needed)
 from Code.Dynamic_War_Manager.Source.Component.Resource_Manager import (
@@ -82,6 +82,12 @@ class MockPayload:
     def __repr__(self):
         return (f"Payload(goods={self.goods}, energy={self.energy}, hr={self.hr}, "
                 f"hc={self.hc}, hs={self.hs}, hb={self.hb})")
+    
+    @property
+    def __class__(self):
+        class Payload: pass
+        Payload.__name__ = 'Payload'
+        return Payload
 
 class MockBlock:
     def __init__(self, block_id: str, has_rm: bool = True):
@@ -136,17 +142,23 @@ class TestResourceManager(unittest.TestCase):
         )
         
         # Patch the logger to avoid actual logging during tests
-        self.logger_patcher = patch.object(logger, 'info')
-        self.logger_warning_patcher = patch.object(logger, 'warning')
-        self.logger_error_patcher = patch.object(logger, 'error')
-        self.mock_logger_info = self.logger_patcher.start()
-        self.mock_logger_warning = self.logger_warning_patcher.start()
-        self.mock_logger_error = self.logger_error_patcher.start()
+         # Mock dell'intero logger invece dei singoli metodi
+        self.logger_patcher = patch('Code.Dynamic_War_Manager.Source.Component.Resource_Manager.logger')
+        self.mock_logger = self.logger_patcher.start()
+        # Configura i metodi del logger che verranno usati
+        self.mock_logger.info = MagicMock()
+        self.mock_logger.warning = MagicMock()
+        self.mock_logger.error = MagicMock()
+
+        #self.logger_patcher = patch('Code.Dynamic_War_Manager.Source.Component.Resource_Manager.logger', autospec=True)
+        #self.mock_logger_info = self.logger_patcher.start()
+        #self.mock_logger_warning = self.logger_warning_patcher.start()
+        #self.mock_logger_error = self.logger_error_patcher.start()
     
     def tearDown(self):
         self.logger_patcher.stop()
-        self.logger_warning_patcher.stop()
-        self.logger_error_patcher.stop()
+        #self.logger_warning_patcher.stop()
+        #self.logger_error_patcher.stop()
     
     def test_initialization(self):
         """Test that the Resource_Manager initializes correctly"""
@@ -217,13 +229,13 @@ class TestResourceManager(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(self.rm.warehouse.goods, 90)
         self.assertEqual(self.rm.warehouse.energy, 45)
-        self.mock_logger_info.assert_called()
+        self.mock_logger.info.assert_called()
         
         # Test insufficient resources
         self.rm._resources_to_self_consume = MockPayload(goods=1000, energy=500)
         result = self.rm.consume()
         self.assertFalse(result)
-        self.mock_logger_warning.assert_called()
+        self.mock_logger.warning.assert_called()
     
     def test_receive_resources(self):
         """Test receiving resources"""
@@ -233,7 +245,7 @@ class TestResourceManager(unittest.TestCase):
         self.assertTrue(result)
         self.assertEqual(self.rm.warehouse.goods, 110)
         self.assertEqual(self.rm.warehouse.energy, 55)
-        self.mock_logger_info.assert_called()
+        self.mock_logger.info.assert_called()
         
         # Test invalid payload type
         with self.assertRaises(TypeError):
@@ -295,7 +307,7 @@ class TestResourceManager(unittest.TestCase):
         self.assertEqual(self.rm._get_autonomy_multiplier(10.0), 0.1)  # >5
     
     def test_client_priority_evaluation(self):
-        """Test client priority evaluation"""
+        """Test client priority evaluation"""        
         priorities = self.rm._evaluate_clients_priority()
         self.assertEqual(priorities["client1"], 1.0)
         self.assertEqual(priorities["client2"], 0.5)
@@ -304,7 +316,7 @@ class TestResourceManager(unittest.TestCase):
         self.rm.block.region = None
         priorities = self.rm._evaluate_clients_priority()
         self.assertEqual(priorities, {})
-        self.mock_logger_warning.assert_called()
+        self.mock_logger.warning.assert_called()
     
     def test_invalid_operations(self):
         """Test error handling for invalid operations"""
