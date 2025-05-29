@@ -110,7 +110,7 @@ class Resource_Manager:
     @warehouse.setter
     def warehouse(self, value: Payload) -> None:
         """Set the resource warehouse"""
-        self._validate_param('warehouse', value, Payload)
+        self._validate_param('warehouse', value, "Payload")
         self._warehouse = value
         # Reset cache when warehouse changes
         self._invalidate_resource_cache()
@@ -352,7 +352,7 @@ class Resource_Manager:
                     # Determine actual delivery (minimum between request and maximum distribution)
                     actual_delivery = Payload()
                     for param in self.RESOURCE_PARAMS:
-                        actual_delivery[param] = min(client_request[param], max_delivery[param])
+                        setattr(actual_delivery, param, min( getattr(client_request, param), getattr(max_delivery, param) ))
                     
                     # Perform delivery
                     delivery_success = client.resource_manager.receive(actual_delivery)
@@ -402,9 +402,9 @@ class Resource_Manager:
         autonomy = warehouse.division(resources_to_consume)
         
         for param in self.RESOURCE_PARAMS:
-            autonomy_value = autonomy[param]
+            autonomy_value = getattr(autonomy, param)
             multiplier = self._get_autonomy_multiplier(autonomy_value)
-            assessment[param] = resources_to_consume[param] * multiplier
+            setattr( assessment, param, getattr(resources_to_consume, param) * multiplier )
         
         return assessment
 
@@ -457,7 +457,7 @@ class Resource_Manager:
             'block': self._validate_block_param,
             'clients': lambda x: self._validate_dict_param('clients', x),
             'server': lambda x: self._validate_dict_param('server', x),
-            'warehouse': lambda x: self._validate_param('warehouse', x, Payload),
+            'warehouse': lambda x: self._validate_param('warehouse', x, "Payload"),
         }
         
         for param, value in kwargs.items():
@@ -475,11 +475,11 @@ class Resource_Manager:
             if not self._is_valid_block(block):
                 raise ValueError(f"All values in {param_name} must be Block objects")
 
-    def _validate_param(self, param_name: str, value: Any, expected_type: type) -> bool:
+    def _validate_param(self, param_name: str, value: Any, expected_type: str) -> bool:
         """Validate a single parameter"""
-        if value is not None and not isinstance(value, expected_type):
-            raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
-        return True
+        if value is not None and hasattr(value, '__class__') and value.__class__.__name__ == expected_type:
+            return True
+        raise TypeError(f"Invalid type for {param_name}. Expected {expected_type}, got {type(value).__name__}")
 
     def __repr__(self) -> str:
         """String representation of the Resource Manager"""

@@ -104,6 +104,12 @@ class Payload:
         if value is not None and not isinstance(value, expected_type):
             raise TypeError(f"Invalid type for {param_name}. Expected {expected_type!r}, got {type(value).__name__}")
 
+    def _validate_payload_class(self, value: 'Payload') -> bool:
+        """Validate that the other object is an instance of Payload"""
+        if value is not None and hasattr(value, '__class__') and value.__class__.__name__ == 'Payload':
+            return True
+        return False
+
  
         
     def __repr__(self):
@@ -119,80 +125,80 @@ class Payload:
                 f"hb: {self._hb!r}")
 
     def __eq__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             return False
-        return (self._goods == other._goods and
-                self._energy == other._energy and
-                self._hr == other._hr and
-                self._hc == other._hc and
-                self._hs == other._hs and
-                self._hb == other._hb)
+        return (self._goods == other.goods and
+                self._energy == other.energy and
+                self._hr == other.hr and
+                self._hc == other.hc and
+                self._hs == other.hs and
+                self._hb == other.hb)
     
     def __ne__(self, other):
         return not self.__eq__(other)
     
     def __lt__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods < other._goods and
-                self._energy < other._energy and
-                self._hr < other._hr and
-                self._hc < other._hc and
-                self._hs < other._hs and
-                self._hb < other._hb)
+        return (self._goods < other.goods and
+                self._energy < other.energy and
+                self._hr < other.hr and
+                self._hc < other.hc and
+                self._hs < other.hs and
+                self._hb < other.hb)
     
     def __le__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods <= other._goods and
-                self._energy <= other._energy and
-                self._hr <= other._hr and
-                self._hc <= other._hc and
-                self._hs <= other._hs and
-                self._hb <= other._hb)
+        return (self._goods <= other.goods and
+                self._energy <= other.energy and
+                self._hr <= other.hr and
+                self._hc <= other.hc and
+                self._hs <= other.hs and
+                self._hb <= other.hb)
     
     def __ge__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods >= other._goods and
-                self._energy >= other._energy and
-                self._hr >= other._hr and
-                self._hc >= other._hc and
-                self._hs >= other._hs and
-                self._hb >= other._hb)
+        return (self._goods >= other.goods and
+                self._energy >= other.energy and
+                self._hr >= other.hr and
+                self._hc >= other.hc and
+                self._hs >= other.hs and
+                self._hb >= other.hb)
     
     def __gt__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods > other._goods and
-                self._energy > other._energy and
-                self._hr > other._hr and
-                self._hc > other._hc and
-                self._hs > other._hs and
-                self._hb > other._hb)
+        return (self._goods > other.goods and
+                self._energy > other.energy and
+                self._hr > other.hr and
+                self._hc > other.hc and
+                self._hs > other.hs and
+                self._hb > other.hb)
     
     def __add__(self, other):
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
-            goods=self._goods + other._goods,
-            energy=self._energy + other._energy,
-            hr=self._hr + other._hr,
-            hc=self._hc + other._hc,
-            hs=self._hs + other._hs,
-            hb=self._hb + other._hb
+            goods=self._goods + other.goods,
+            energy=self._energy + other.energy,
+            hr=self._hr + other.hr,
+            hc=self._hc + other.hc,
+            hs=self._hs + other.hs,
+            hb=self._hb + other.hb
         )
     
     def __sub__(self, other):   
-        if not isinstance(other, Payload):
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
-            goods=self._goods - other._goods,
-            energy=self._energy - other._energy,
-            hr=self._hr - other._hr,
-            hc=self._hc - other._hc,
-            hs=self._hs - other._hs,
-            hb=self._hb - other._hb
+            goods=self._goods - other.goods,
+            energy=self._energy - other.energy,
+            hr=self._hr - other.hr,
+            hc=self._hc - other.hc,
+            hs=self._hs - other.hs,
+            hb=self._hb - other.hb
         )
     
     def __mul__(self, factor: float):   
@@ -220,13 +226,13 @@ class Payload:
         )   
 
     def division(self, other):
-        if other.__class__.__name__!= "Payload":
+        if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
-            goods=self._goods / other._goods if other._goods != 0 else 0,
-            energy=self._energy / other._energy if other._energy != 0 else 0,
-            hr=self._hr / other._hr if other._hr != 0 else 0,
-            hc=self._hc / other._hc if other._hc != 0 else 0,
-            hs=self._hs / other._hs if other._hs != 0 else 0,
-            hb=self._hb / other._hb if other._hb != 0 else 0
+            goods=self._goods / other.goods if other.goods != 0 else 0,
+            energy=self._energy / other.energy if other.energy != 0 else 0,
+            hr=self._hr / other.hr if other.hr != 0 else 0,
+            hc=self._hc / other.hc if other.hc != 0 else 0,
+            hs=self._hs / other.hs if other.hs != 0 else 0,
+            hb=self._hb / other.hb if other.hb != 0 else 0
         )

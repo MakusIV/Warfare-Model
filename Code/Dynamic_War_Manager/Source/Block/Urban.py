@@ -1,18 +1,15 @@
-import datetime
-
+from __future__ import annotations
+from typing import TYPE_CHECKING,  List, Dict, Literal
 from numpy import median
 from heapq import heappop, heappush
 from Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Dynamic_War_Manager.Source.Event import Event
-from Dynamic_War_Manager.Source.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import STATE, Military_CATEGORY, GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, GROUND_COMBAT_EFFICACY, GROUND_ACTION, AIR_TASK
-from typing import Literal, List, Dict
-from sympy import Point, Line, Point3D, Line3D, Sphere, symbols, solve, Eq, sqrt, And
-from Dynamic_War_Manager.Source.Asset.Asset import Asset
-from Dynamic_War_Manager.Source.Region import Region
-from Dynamic_War_Manager.Source.Volume import Volume
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+#from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_CATEGORY, SIDE, BLOCK_ASSET_CATEGORY
+
+if TYPE_CHECKING:        
+    from Code.Dynamic_War_Manager.Source.Context.Region import Region
 
 
 
