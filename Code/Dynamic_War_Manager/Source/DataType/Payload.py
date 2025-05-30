@@ -14,7 +14,7 @@ logger = Logger(module_name = __name__, class_name = 'State')
  Rappresenta il tipo di dato payload utilizzato in alcune proprietà e metodi della classe Block
 
 """
-
+PAYLOAD_ATTRIBUTES = ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']
 
 class Payload:
     def __init__(self, goods: Optional[int] = 0, energy: Optional[int] = 0, hr: Optional[int] = 0, hc: Optional[int] = 0, hs: Optional[int] = 0, hb: Optional[int] = 0 ):
@@ -127,78 +127,70 @@ class Payload:
     def __eq__(self, other):
         if not self._validate_payload_class(other):
             return False
-        return (self._goods == other.goods and
-                self._energy == other.energy and
-                self._hr == other.hr and
-                self._hc == other.hc and
-                self._hs == other.hs and
-                self._hb == other.hb)
+        for attr in PAYLOAD_ATTRIBUTES:
+            if getattr(other, attr, None) and getattr(self, attr, None) == getattr(other, attr):
+                return True
+        return False
     
     def __ne__(self, other):
         return not self.__eq__(other)
     
     def __lt__(self, other):
         if not self._validate_payload_class(other):
-            raise TypeError("Operand must be an instance of Payload")
-        return (self._goods < other.goods and
-                self._energy < other.energy and
-                self._hr < other.hr and
-                self._hc < other.hc and
-                self._hs < other.hs and
-                self._hb < other.hb)
+            raise TypeError("Operand must be an instance of Payload")        
+        
+        for attr in PAYLOAD_ATTRIBUTES:
+            if getattr(other, attr, None) and getattr(self, attr, None) < getattr(other, attr):
+                return True
+        return False
+
     
     def __le__(self, other):
         if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods <= other.goods and
-                self._energy <= other.energy and
-                self._hr <= other.hr and
-                self._hc <= other.hc and
-                self._hs <= other.hs and
-                self._hb <= other.hb)
+        for attr in PAYLOAD_ATTRIBUTES:
+            if getattr(other, attr, None) and getattr(self, attr, None) <= getattr(other, attr):
+                return True
+        return False
     
     def __ge__(self, other):
         if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods >= other.goods and
-                self._energy >= other.energy and
-                self._hr >= other.hr and
-                self._hc >= other.hc and
-                self._hs >= other.hs and
-                self._hb >= other.hb)
+        for attr in PAYLOAD_ATTRIBUTES:
+            if getattr(other, attr, None) and getattr(self, attr, None) >= getattr(other, attr):
+                return True
+        return False
     
     def __gt__(self, other):
         if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
-        return (self._goods > other.goods and
-                self._energy > other.energy and
-                self._hr > other.hr and
-                self._hc > other.hc and
-                self._hs > other.hs and
-                self._hb > other.hb)
+        for attr in PAYLOAD_ATTRIBUTES:
+            if getattr(other, attr, None) and getattr(self, attr, None) > getattr(other, attr):
+                return True
+        return False
     
     def __add__(self, other):
         if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
-            goods=self._goods + other.goods,
-            energy=self._energy + other.energy,
-            hr=self._hr + other.hr,
-            hc=self._hc + other.hc,
-            hs=self._hs + other.hs,
-            hb=self._hb + other.hb
+            goods=self.goods + other.goods if other.goods else self.goods,
+            energy=self.energy + other.energy if other.energy else self.energy,
+            hr=self.hr + other.hr if ( other.hr and other.hr > 0 ) else self.hr,
+            hc=self.hc + other.hc if ( other.hc and other.hc > 0 ) else self.hc,
+            hs=self.hs + other.hs if ( other.hs and other.hs > 0 ) else self.hs,
+            hb=self.hb + other.hb if ( other.hb and other.hb > 0 ) else self.hb
         )
     
     def __sub__(self, other):   
         if not self._validate_payload_class(other):
             raise TypeError("Operand must be an instance of Payload")
         return Payload(
-            goods=self._goods - other.goods,
-            energy=self._energy - other.energy,
-            hr=self._hr - other.hr,
-            hc=self._hc - other.hc,
-            hs=self._hs - other.hs,
-            hb=self._hb - other.hb
+            goods=self.goods - other.goods if other.goods else self.goods,
+            energy=self.energy - other.energy if other.energy else self.energy,
+            hr=self.hr - other.hr if ( other.hr and other.hr > 0 ) else self.hr,
+            hc=self.hc - other.hc if ( other.hc and other.hc > 0 ) else self.hc,
+            hs=self.hs - other.hs if ( other.hs and other.hs > 0 ) else self.hs,
+            hb=self.hb - other.hb if ( other.hb and other.hb > 0 ) else self.hb
         )
     
     def __mul__(self, factor: float):   

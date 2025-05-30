@@ -24,33 +24,50 @@ class MockPayload:
     
     def __add__(self, other):
         return MockPayload(
-            goods=self.goods + other.goods,
-            energy=self.energy + other.energy,
-            hr=self.hr + other.hr,
-            hc=self.hc + other.hc,
-            hs=self.hs + other.hs,
-            hb=self.hb + other.hb
+            goods=self.goods + other.goods if other.goods else self.goods,
+            energy=self.energy + other.energy if other.energy else self.energy,
+            hr=self.hr + other.hr if ( other.hr and other.hr > 0 ) else self.hr,
+            hc=self.hc + other.hc if ( other.hc and other.hc > 0 ) else self.hc,
+            hs=self.hs + other.hs if ( other.hs and other.hs > 0 ) else self.hs,
+            hb=self.hb + other.hb if ( other.hb and other.hb > 0 ) else self.hb
         )
     
     def __sub__(self, other):
-        return MockPayload(
-            goods=self.goods - other.goods,
-            energy=self.energy - other.energy,
-            hr=self.hr - other.hr,
-            hc=self.hc - other.hc,
-            hs=self.hs - other.hs,
-            hb=self.hb - other.hb
+        return MockPayload(            
+            goods=self.goods - other.goods if other.goods else self.goods,
+            energy=self.energy - other.energy if other.energy else self.energy,
+            hr=self.hr - other.hr if ( other.hr and other.hr > 0 ) else self.hr,
+            hc=self.hc - other.hc if ( other.hc and other.hc > 0 ) else self.hc,
+            hs=self.hs - other.hs if ( other.hs and other.hs > 0 ) else self.hs,
+            hb=self.hb - other.hb if ( other.hb and other.hb > 0 ) else self.hb
         )
     
+    def __mul__(self, factor: float):
+        if not isinstance(factor, (int, float)):
+            raise TypeError("Operand must be a number")   
+        return MockPayload( 
+            goods=self.goods * factor,
+            energy=self.energy * factor,
+            hr=self.hr * factor,
+            hc=self.hc * factor,
+            hs=self.hs * factor,
+            hb=self.hb * factor
+        )
+
     def __lt__(self, other):
-        return all([
-            self.goods < other.goods,
-            self.energy < other.energy,
-            self.hr < other.hr,
-            self.hc < other.hc,
-            self.hs < other.hs,
-            self.hb < other.hb
-        ])
+        attributes = ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']
+        for attr in attributes:
+            if getattr(other, attr, None) and getattr(self, attr, None) < getattr(other, attr):
+                return True
+        return False
+
+
+    def __le__(self, other):
+        attributes = ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']
+        for attr in attributes:
+            if getattr(other, attr, None) and getattr(self, attr, None) <= getattr(other, attr):
+                return True
+        return False
     
     def copy(self):
         return MockPayload(
@@ -248,8 +265,8 @@ class TestResourceManager(unittest.TestCase):
         self.mock_logger.info.assert_called()
         
         # Test invalid payload type
-        with self.assertRaises(TypeError):
-            self.rm.receive("invalid_payload")
+        #with self.assertRaises(TypeError):
+        self.assertFalse(self.rm.receive("invalid_payload"))
     
     def test_delivery_to_clients(self):
         """Test resource delivery to clients"""
@@ -259,7 +276,7 @@ class TestResourceManager(unittest.TestCase):
         
         # Configure client resource managers
         self.mock_client1.resource_manager.resources_needed = MockPayload(goods=20, energy=10)
-        self.mock_client2.resource_manager.resource_manager.resources_needed = MockPayload(goods=10, energy=5)
+        self.mock_client2.resource_manager.resources_needed = MockPayload(goods=10, energy=5)
         
         # Mock the receive method for clients
         self.mock_client1.resource_manager.receive.return_value = True
@@ -294,7 +311,7 @@ class TestResourceManager(unittest.TestCase):
         
         # Test _evaluate_effective_resources_needed
         self.rm._resources_to_self_consume = MockPayload(goods=10, energy=5)
-        self.rm.warehouse = MockPayload(goods=20, energy=10)  # Autonomy of 2
+        self.rm._warehouse = MockPayload(goods=20, energy=10)  # Autonomy of 2
         result = self.rm._evaluate_effective_resources_needed()
         # Should be 50% of request (autonomy between 2-3)
         self.assertEqual(result.goods, 5)
@@ -321,9 +338,10 @@ class TestResourceManager(unittest.TestCase):
     def test_invalid_operations(self):
         """Test error handling for invalid operations"""
         # Test with no block set
-        empty_rm = Resource_Manager(block=None)
+        #empty_rm = Resource_Manager(block=None)
         with self.assertRaises(ValueError):
-            empty_rm.delivery()
+            empty_rm = Resource_Manager(block=None)
+            #empty_rm.delivery()
         
         # Test with invalid client (no resource manager)
         invalid_client = MockBlock("invalid", has_rm=False)
