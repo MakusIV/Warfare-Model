@@ -60,6 +60,9 @@ class Resource_Manager:
             server: Dictionary of servers {id: Block}
             warehouse: Payload representing the resource warehouse
         """
+        if block is None:
+            raise ValueError("block parameter must be provided")
+
         # Initial parameter validation
         self._validate_all_params(block=block, clients=clients, server=server, warehouse=warehouse)
         
@@ -294,10 +297,10 @@ class Resource_Manager:
             
         Returns:
             bool: True if reception was successful, False otherwise
-        """
-        try:
-            if not isinstance(payload, Payload):
-                raise TypeError("payload must be a Payload object")
+        """        
+
+        try:            
+            self._validate_param("payload", payload, "Payload")
 
             if not self._warehouse:
                 raise ValueError("warehouse must be set before receiving resources")
@@ -478,7 +481,7 @@ class Resource_Manager:
     def _validate_param(self, param_name: str, value: Any, expected_type: str) -> bool:
         """Validate a single parameter"""
         if value is not None and hasattr(value, '__class__') and value.__class__.__name__ == expected_type:
-            return True
+            return
         raise TypeError(f"Invalid type for {param_name}. Expected {expected_type}, got {type(value).__name__}")
 
     def __repr__(self) -> str:
