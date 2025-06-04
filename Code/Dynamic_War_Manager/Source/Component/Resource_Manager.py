@@ -28,8 +28,7 @@ logger = Logger(module_name=__name__, class_name='Resource_Manager')
 class Resource_Manager_Params:
     """Data class for Resource Manager parameters for validation"""
     clients: Optional[Dict[str, "Block"]] = None
-    server: Optional[Dict[str, "Block"]] = None
-    resources_needed: Optional[Payload] = None    
+    server: Optional[Dict[str, "Block"]] = None       
     warehouse: Optional[Payload] = None
 
 class Resource_Manager:
@@ -70,7 +69,8 @@ class Resource_Manager:
         self._block = block
         self._clients = clients or {}
         self._server = server or {}
-        self._warehouse = warehouse or Payload()
+        self._warehouse = warehouse or Payload() # la capacità max dipende dalle risorse disponibili nei diversi asset si come delivery che come receive quindi non è necessario fissare un valore massimo
+        
         
         # Resource calculation (lazy loading to avoid unnecessary computations)
         self._resources_to_self_consume = None
