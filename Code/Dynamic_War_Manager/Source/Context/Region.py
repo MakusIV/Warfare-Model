@@ -19,7 +19,7 @@ logger = Logger(module_name = __name__, class_name = 'Region')
 
 class Region:    
 
-    def __init__(self, name: str, description: str, blocks: List[Block] = None, limes: List[Limes]=None):
+    def __init__(self, name: str, description: str, side: str, blocks: List[Block] = None, limes: List[Limes]=None):
             
         
         # check input parameters
@@ -31,7 +31,8 @@ class Region:
 
         # propriety
         self._name = name # block name - type str
-        self._description = description # block description - type str               
+        self._description = description # block description - type str  
+        self._side = side # side of the Region - type str, must be: Blue, Red or Neutral            
         self._limes = limes # list of limes of the Region - type List[Limes]
 
         # Association             
@@ -40,7 +41,6 @@ class Region:
                 block.region(self)
 
         self._blocks = blocks # list of Block members of Region - type List[Block]
-        # NOTA: I BLOCKS CONSENTITI SONO MIL_ZONE, STORAGE
                     
         self._blocks_priority = {} # dicr of Block priority of the Region - type Dict{id: Block}
     # methods
@@ -51,12 +51,11 @@ class Region:
 
     @name.setter
     def name(self, value):
-
-        if not self.checkParam(name = value):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
-
-        self._name = value    
-        return True
+        """Set the name of the Region"""
+        self._validate_param('name', value, "str")
+        self._name = value
+        # Reset cache when block changes
+        # self._invalidate_resource_cache()
     
     @property
     def description(self):
@@ -64,17 +63,15 @@ class Region:
 
     @description.setter
     def description(self, value):
-
-        if not self.checkParam(description = value):
-            raise TypeError("Invalid parameters! Type not valid, str type expected")
-        
-        self._description = value
-            
-        return True
+        """Set the description of the Region"""
+        self._validate_param('description', value, "str")
+        self._name = value
+        # Reset cache when block changes
+        # self._invalidate_resource_cache()
 
     @property
     def blocks_priority(self):
-        return self.__blocks_priority
+        return self._blocks_priority
 
     @blocks_priority.setter
     def blocks_priority(self, value):
@@ -87,10 +84,17 @@ class Region:
 
     @blocks.setter
     def blocks(self, value):
-        if not self.checkParam(blocks = value):
-            raise ValueError("Il valore deve essere una lista")
-
-        self._blocks = value
+        """Set the blocks dictionary"""
+        if not isinstance(value, dict):
+            raise TypeError("blocks must be a dictionary")
+        
+        for server_id, block in value.items():
+            if not isinstance(server_id, str):
+                raise TypeError("blocks dictionary keys must be strings")
+            if not self._is_valid_block(block):
+                raise ValueError(f"All values in blocks must be Block objects, current: {block!r}")
+        
+        self._blocks = value.copy()
 
     def addBlock(self, block):
         if isinstance(block, Block):
@@ -118,6 +122,7 @@ class Region:
         else:
             raise ValueError("Il blocco non esiste nella lista")
 
+    # deprecated: Region has a specific side, so this method is not needed
     def getEnemyBlocks(self, enemy_side: str):
         
         """
@@ -128,9 +133,6 @@ class Region:
         enemy_blocks = [block for block in self._blocks if block.side == enemy_side]
         return enemy_blocks
 
-    def to_string(self):
-        return 'Name: {0}  -  Id: {1}'.format(self.getName(), str(self._id))
-    
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
         return type(object) == type(self)
@@ -142,24 +144,7 @@ class Region:
     def checkListOfObjects(self, classType: type, objects: List) -> bool: 
         """ Return True if objects is a list of classType object otherwise False"""
         return isinstance(objects, List) and not all(isinstance(obj, classType) for obj in objects )
-    
-    def checkParam(self, name: str, description: str, blocks: List[Block], limes: List[Limes]) -> bool:
-        """Return True if type compliance of the parameters is verified"""   
-
-        if name and not isinstance(name, str):
-            return (False, "Bad Arg: side must be a str with value: Blue, Red or Neutral")
-        
-        if description and not isinstance(description, str):
-            return (False, "Bad Arg: description must be a str")
-        
-        if blocks and self.checkListOfObjects(classType = Block, objects = blocks):
-            return (False, "Bad Arg: blocks must be a list of Block object")
-        
-        if limes and not self.checkListOfObjects(classType = Limes, objects = limes):
-            return (False, "Bad Arg: limes must be a list of Limes object")
-                
-        return True
-    
+     
     def block_status(self, blockCategory: str):
         """report info on specific block type(Mil, Urban, Production, Storage, Transport)"""
         # as = .... 
@@ -197,7 +182,7 @@ class Region:
         r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
         return r_SLP
     
-    def calcRegionCombatPowerCenter(self, side: str): # inserire in region?
+    def calcRegionCombatPowerCenter(self, side: str): 
         
         Militarys = self.getBlocks("Military", side)
                 
@@ -211,20 +196,14 @@ class Region:
         r_CPP = tp / (n * tot_CP) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP
 
-    def calcRegionProduction(self, side: str):
+    def calcRegionProduction(self):
         """ Return the total production of a specific type of goods, energy, human resource"""
         # per le hc, hs, hb devi prevedere delle scuole di formazione militare di class Production ed eventualmente category Military
-        block_list = [block for block in self.blocks if block.side == side and isinstance(block, Production)]        
         tot_production = Payload()
 
-        for block in block_list:
-            tot_production.energy += block.payload.energy
-            tot_production.goods += block.payload.goods
-            tot_production.hr += block.payload.hr
-            tot_production.hc += block.payload.hc
-            tot_production.hs += block.payload.hs
-            tot_production.hb += block.payload.hb
-
+        for block in self._blocks:
+            tot_production += block.payload
+            
         return tot_production
 
     def calcRegionGroundCombatPower(self, side: str, action: str):
@@ -304,9 +283,9 @@ class Region:
         # return a list of blocks ordered by priority
         block_list = [block for block in self.blocks if block.side == side]
         # IN BASE ALL'IMPORTANZA STRATEGICA DEI BLOCCHI, VALUTA LA PRIORITA' DEI BLOCCO E RITORNA UNA LISTA ORDINATA PER PRIORITA'
-        # ANALISI MILITARY
-        #ANALISI LOGISTIC
-        #ANALISI CIVILIAN
+        # ANALISI MILITARY: da determinare in base alla vicinanza/protezione dei blocchi Military rispetto agli urban e in base alla situazione tattico strategica rispetto ai blocchi nemici
+        #ANALISI LOGISTIC: non serve in quanto questa deriva dall'analisi militare e civile
+        #ANALISI CIVILIAN: da asegnare in modo statico inbase all'importanza dell'Urban
         # la priority deve essere un float che va da 0 a 1, dove 0 è la priorità più bassa e 1 è la priorità più alta
         # NOTA: per ora non implemento la priorità dei blocchi, ma solo la loro presenza
         # block_list.sort(key=lambda x: x.priority, reverse=True)
@@ -319,3 +298,57 @@ class Region:
         if block_id in self._blocks_priority:
             return self._blocks_priority[block_id]
         
+
+
+     # === VALIDATION METHODS ===
+    
+    def _is_valid_block(self, block: Any) -> bool:
+        """Check if an object is a valid Block"""
+        return hasattr(block, '__class__') and block.__class__.__name__ == 'Block'
+
+    def _validate_block_param(self, value: Any) -> None:
+        """Validate block parameter"""
+        if value is not None and not self._is_valid_block(value):
+            raise TypeError("block must be None or a Block object")
+
+    def _validate_all_params(self, **kwargs) -> None:
+        """Validate all input parameters"""
+        validators = {            
+            'name': lambda x: self._validate_param('name', x, "str"),
+            'description': lambda x: self._validate_param('description', x, "str"),
+            'side': lambda x: self._validate_param('side', x, "str"),
+            'blocks': lambda x: self._validate_dict_param('clients', x),
+            'limes': lambda x: self._validate_dict_param('limes', x),
+        }
+        
+        for param, value in kwargs.items():
+            if param in validators and value is not None:
+                validators[param](value)
+
+    def _validate_dict_param(self, param_name: str, value: Any) -> None:
+        """Validate dictionary parameters"""
+        if not isinstance(value, dict):
+            raise TypeError(f"{param_name} must be a dictionary")
+        
+        for key, block in value.items():
+            if not isinstance(key, str):
+                raise TypeError(f"{param_name} keys must be strings")
+            if not self._is_valid_block(block):
+                raise ValueError(f"All values in {param_name} must be Block objects")
+
+    def _validate_param(self, param_name: str, value: Any, expected_type: str) -> bool:
+        """Validate a single parameter"""
+        if value is not None and hasattr(value, '__class__') and value.__class__.__name__ == expected_type:
+            return
+        raise TypeError(f"Invalid type for {param_name}. Expected {expected_type}, got {type(value).__name__}")
+
+    def __repr__(self) -> str:
+        """String representation of the Resource Manager"""
+        return (f"Region(name={self._name}, description={self._description}, side={self._side}",                
+                f"blocks={len(self._clients)}, servers={len(self._server)}, "
+                f"warehouse={self._warehouse!r})",
+                f"limes={self._limes!r})")
+
+    def __str__(self) -> str:
+        """Readable string representation"""
+        return f"Region {self.name} {self.description} on side {self.side} with {len(self._blocks)} blocks"
