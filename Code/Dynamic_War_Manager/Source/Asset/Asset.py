@@ -11,7 +11,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Code.Dynamic_War_Manager.Source.DataType.Threat import Threat
-from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload, PAYLOAD_ATTRIBUTES
 from Code.Dynamic_War_Manager.Source.DataType.State import State
 from sympy import Point3D
 from dataclasses import dataclass
@@ -32,11 +32,12 @@ class AssetParams:
     resources_assigned: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
     resources_to_self_consume: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
     payload: Optional[Payload] = None       # payload -payload resource
+    production: Optional[Payload] = None       # payload -asset production resource
     position: Optional[Point3D] = None
     crytical: Optional[bool] = False
     repair_time: Optional[int] = 0
     role: Optional[str] = None
-    health: Optional[int] = None
+    health: Optional[int] = None # 0 -100
 
 class Asset:
     def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, 
@@ -44,7 +45,7 @@ class Asset:
                  functionality: Optional[str] = None, cost: Optional[int] = None,
                  value: Optional[int] = None, resources_assigned: Optional[Payload] = None, 
                  resources_to_self_consume: Optional[Payload] = None, payload: Optional[Payload] = None, 
-                 position: Optional[Point3D] = None, volume: Optional[Volume] = None,
+                 production: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None,
                  crytical: Optional[bool] = False, repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
         
@@ -74,6 +75,7 @@ class Asset:
         self._resources_assigned = resources_assigned if resources_assigned else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
         self._resources_to_self_consume = resources_to_self_consume if resources_to_self_consume else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
         self._payload = payload if payload else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
+        self._production = production if production else Payload(goods=0, energy=0, hr=0, hc=0, hs=0, hb=0)
 
         # Process DCS data if provided
         if dcs_unit_data:
@@ -84,7 +86,7 @@ class Asset:
             block=block, name=name, description=description, category=category,
             asset_type=asset_type, functionality=functionality, cost=cost,
             value=value, resources_assigned=self._resources_assigned, resources_to_self_consume=self._resources_to_self_consume, payload=self._payload,
-            position=position, volume=volume, crytical=crytical,
+            production=self._production, position=position, volume=volume, crytical=crytical,
             repair_time=repair_time, role=role, health=self._health,
             state=self._state
         )
@@ -220,7 +222,8 @@ class Asset:
 
     @property
     def efficiency(self) -> float:
-        return float(self.balance_trade * self._health) if self._health is not None else 0.0
+        value = float(self.balance_trade * self._health / 100) if self._health is not None else 0.0
+        return value if value < 1 else 1
 
     @property
     def balance_trade(self) -> float:
@@ -261,6 +264,15 @@ class Asset:
     def payload(self, value: Payload) -> None:
         self._validate_param('payload', value, Payload)
         self._payload = value
+
+    @property
+    def production(self) -> Payload:
+        return self._production
+
+    @production.setter
+    def production(self, value: Payload) -> None:
+        self._validate_param('production', value, Payload)
+        self._production = value
 
     @property
     def volume(self) -> Optional[Volume]:
@@ -352,7 +364,7 @@ class Asset:
         """Internal method to reduce acp of cons payload quantity"""
         self._validate_param('cons', cons, Payload)
         
-        results = {item: None for item in ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']}
+        results = {item: None for item in PAYLOAD_ATTRIBUTES}
         
         for item in results.keys():
             cons_val = getattr(cons, item)
@@ -365,6 +377,50 @@ class Asset:
                     results[item] = False
         
         return results
+    
+
+    # l'asset produce nella unità di tempo le risorse definite con self.production. 
+    # Tramite self.produce() il Payload viene incrementato ad ogni unità di tempo. 
+    # La richiesta delle risorse prodotte è fissata alla produzione nominale dell'asset.
+        
+    def get_production(self) -> Payload:
+        """Produce resources based on nominal production and the assigned payload"""
+        
+        items = ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']
+
+        delivery = Payload()
+
+        for item in PAYLOAD_ATTRIBUTES:
+            request_production_item = getattr(self.production, item)
+
+            if request_production_item > 0:
+                maximum_production_item = getattr(self.payload, item)
+
+                if maximum_production_item > request_production_item:
+                    setattr(delivery, item, request_production_item)
+                    setattr(self.payload, item, maximum_production_item - request_production_item)                    
+                
+                else:
+                    setattr(delivery, item, maximum_production_item)
+                    setattr(self.payload, item, 0)                    
+        
+        return delivery
+
+    def produce(self) -> bool:
+        """Produce resources based on the production payload"""
+        results = {item: None for item in PAYLOAD_ATTRIBUTES}
+
+        for item in PAYLOAD_ATTRIBUTES:
+            request_production_item = getattr(self.production, item)
+
+            if request_production_item > 0:
+                item_produced = request_production_item * self.efficiency
+                setattr(self.payload, item, getattr(self.payload, item) + item_produced)
+                results[item] = True
+            
+            else:
+                results[item] = False
+                
 
     # Utility methods
     def is_military(self) -> bool:
@@ -398,6 +454,7 @@ class Asset:
             'resources_assigned': Payload,
             'resources_to_self_consume': Payload,
             'payload': Payload,
+            'production': Payload,
             'repair_time': int,
             'role': str,
             'health': int,
