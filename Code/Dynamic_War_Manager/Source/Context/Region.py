@@ -284,8 +284,8 @@ class Region:
         block_list = [block for block in self.blocks if block.side == side]
         # IN BASE ALL'IMPORTANZA STRATEGICA DEI BLOCCHI, VALUTA LA PRIORITA' DEI BLOCCO E RITORNA UNA LISTA ORDINATA PER PRIORITA'
         # ANALISI MILITARY: da determinare in base alla vicinanza/protezione dei blocchi Military rispetto agli urban e in base alla situazione tattico strategica rispetto ai blocchi nemici
-        #ANALISI LOGISTIC: non serve in quanto questa deriva dall'analisi militare e civile
-        #ANALISI CIVILIAN: da asegnare in modo statico inbase all'importanza dell'Urban
+        # ANALISI LOGISTIC: non serve in quanto questa deriva dall'analisi militare e civile
+        # ANALISI CIVILIAN: da assegnare in modo statico inbase all'importanza dell'Urban
         # la priority deve essere un float che va da 0 a 1, dove 0 è la priorità più bassa e 1 è la priorità più alta
         # NOTA: per ora non implemento la priorità dei blocchi, ma solo la loro presenza
         # block_list.sort(key=lambda x: x.priority, reverse=True)

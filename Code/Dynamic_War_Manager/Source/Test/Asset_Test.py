@@ -35,6 +35,7 @@ class TestAsset(unittest.TestCase):
         self.test_acp = Payload(goods=100, energy=50, hr=10, hc=5, hs=2, hb=1)
         self.test_rcp = Payload(goods=20, energy=10, hr=2, hc=1, hs=0, hb=0)
         self.test_payload = Payload(goods=200, energy=100, hr=20, hc=10, hs=5, hb=2)
+        self.test_production = Payload(goods=70, energy=50, hr=10, hc=5, hs=2, hb=1)
 
     def test_initialization(self):
         self.assertEqual(self.asset.name, "Test Asset")
@@ -71,6 +72,7 @@ class TestAsset(unittest.TestCase):
         self.asset.resources_assigned = self.test_acp
         self.asset.resources_to_self_consume = self.test_rcp
         self.asset.payload = self.test_payload
+        self.asset.production = self.test_production
         
         # Test balance_trade calculation
         expected_balance = sum([
@@ -84,7 +86,7 @@ class TestAsset(unittest.TestCase):
         
         # Test efficiency calculation
         self.asset.health = 80
-        expected_efficiency = expected_balance * 80
+        expected_efficiency = 1 # expected_balance=5, 5 * 80 / 100 = 4, but efficiency is capped at 1
         self.assertAlmostEqual(self.asset.efficiency, expected_efficiency)
         
         # Test consume operation
@@ -96,6 +98,33 @@ class TestAsset(unittest.TestCase):
         self.assertEqual(self.asset.resources_assigned.energy, 40)  # 50 - 10
         self.assertEqual(self.asset.resources_assigned.hr, 8)  # 10 - 2
         self.assertEqual(self.asset.resources_assigned.hc, 4)  # 5 - 1
+
+        # verify delivery production
+        production_result = self.asset.get_production()
+        self.assertEqual(production_result.goods, 70)  # 200 > 70 -> 70
+        self.assertEqual(production_result.energy, 50)  # 100 > 50 -> 50
+        self.assertEqual(production_result.hr, 10)  # 20 - 10 -> 10
+        self.assertEqual(production_result.hc, 5) # 10 - 5 -> 5
+        self.assertEqual(production_result.hs, 2)  # 5 - 2 -> 2
+        self.assertEqual(production_result.hb, 1)  # 2 - 1 -> 1
+        
+        # verify payload was reduced
+        self.assertEqual(self.asset.payload.goods, 130)  # 200 - 70
+        self.assertEqual(self.asset.payload.energy, 50)  # 100 - 50
+        self.assertEqual(self.asset.payload.hr, 10)  # 20 - 10
+        self.assertEqual(self.asset.payload.hc, 5)  # 10 - 5
+        self.assertEqual(self.asset.payload.hs, 3)  # 5 - 2
+        self.assertEqual(self.asset.payload.hb, 1)  # 2 - 1
+
+        # verify payload increment for production
+        self.asset.produce()
+        self.assertEqual(self.asset.payload.goods, 200)  # 130 + 70
+        self.assertEqual(self.asset.payload.energy, 100)  # 50 + 50
+        self.assertEqual(self.asset.payload.hr, 20)  # 10 + 10
+        self.assertEqual(self.asset.payload.hc, 10)  # 5 + 5
+        self.assertEqual(self.asset.payload.hs, 5)  # 3 + 2
+        self.assertEqual(self.asset.payload.hb, 2)  # 1 + 1
+
 
     def test_event_management(self):
         event1 = Event(event_type="Event 1")
