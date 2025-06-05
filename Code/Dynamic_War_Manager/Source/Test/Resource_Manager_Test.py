@@ -298,8 +298,8 @@ class TestResourceManager(unittest.TestCase):
         self.mock_client1.resource_manager.receive.assert_called()
         self.mock_client2.resource_manager.receive.assert_called()
     
-    def test_resource_calculations(self):
-        """Test resource calculation methods"""
+    def test_resource_calculations(self):     
+        """Test resource calculation methods"""  
         # Test _evaluate_resources_to_self_consume
         self.mock_block.assets = [
             MagicMock(resources_to_self_consume=MockPayload(goods=5, energy=2)),
@@ -321,7 +321,35 @@ class TestResourceManager(unittest.TestCase):
         self.assertEqual(self.rm._get_autonomy_multiplier(1.5), 1.0)  # <2
         self.assertEqual(self.rm._get_autonomy_multiplier(2.5), 0.5)  # 2-3
         self.assertEqual(self.rm._get_autonomy_multiplier(4.0), 0.25)  # 3-5
-        self.assertEqual(self.rm._get_autonomy_multiplier(10.0), 0.1)  # >5
+        self.assertEqual(self.rm._get_autonomy_multiplier(10.0), 0.1)  # >5vvvvvvvvv
+
+    def test_production_calculations(self):
+        """Test production calculation methods"""
+        class MockPayload:
+            def __init__(self, goods=0, energy=0, hr=0, hc=0, hs=0, hb=0):
+                self.goods = goods
+                self.energy = energy
+                self.hr = hr
+                self.hc = hc
+                self.hs = hs
+                self.hb = hb
+
+        # Configura i mock degli asset
+        self.mock_block.assets = [
+            MagicMock(get_production=MagicMock(return_value=MockPayload(goods=25, energy=20, hr=15, hc=10, hs=5, hb=5))),
+            MagicMock(get_production=MagicMock(return_value=MockPayload(goods=30, energy=25, hr=20, hc=15, hs=10, hb=5))),
+        ]
+        old_warehouse = self.rm.warehouse.copy()
+        # Test _evaluate_production
+        results = self.rm.produce()
+        self.assertEqual(self.rm.warehouse.goods, old_warehouse.goods + 55)
+        self.assertEqual(self.rm.warehouse.energy, old_warehouse.energy + 45)
+        self.assertEqual(self.rm.warehouse.hr, old_warehouse.hr + 35)
+        self.assertEqual(self.rm.warehouse.hc, old_warehouse.hc + 25)
+        self.assertEqual(self.rm.warehouse.hs, old_warehouse.hs + 15)
+        self.assertEqual(self.rm.warehouse.hb, old_warehouse.hb + 10)        
+        self.assertTrue(all(results.values()))  # Ensure all resources were produced successfully
+
     
     def test_client_priority_evaluation(self):
         """Test client priority evaluation"""        

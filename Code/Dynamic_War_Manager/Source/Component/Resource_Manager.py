@@ -14,7 +14,7 @@ Main improvements:
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload, PAYLOAD_ATTRIBUTES
 from dataclasses import dataclass
 from collections import defaultdict
 
@@ -378,6 +378,26 @@ class Resource_Manager:
         except Exception as e:
             logger.error(f"Error during resource distribution: {e}")
             return {}
+
+    def produce(self) -> Dict[str, Optional[bool]]:
+        """Produce resources based on the block'2 asset production"""
+        
+        results = {item: None for item in PAYLOAD_ATTRIBUTES}
+
+        for asset in self.block.assets:
+            asset_production = asset.get_production()
+            
+            for item in PAYLOAD_ATTRIBUTES:
+                production_item = getattr(asset_production, item)
+
+                if production_item > 0:                    
+                    setattr(self.warehouse, item, getattr(self.warehouse, item) + production_item) # effect efficiency are applied in Asset method produce() with Asset efficiency
+                    results[item] = True
+                
+                else:
+                    results[item] = False
+        return results
+                
 
     # === PRIVATE CALCULATION METHODS ===
     
