@@ -406,7 +406,7 @@ class Asset:
         
         return delivery
 
-    def produce(self) -> bool:
+    def produce(self) -> Dict[str, Optional[bool]]:
         """Produce resources based on the production payload"""
         results = {item: None for item in PAYLOAD_ATTRIBUTES}
 
@@ -420,6 +420,7 @@ class Asset:
             
             else:
                 results[item] = False
+        return results
                 
 
     # Utility methods

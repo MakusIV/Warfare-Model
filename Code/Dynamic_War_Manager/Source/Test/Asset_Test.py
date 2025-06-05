@@ -117,13 +117,14 @@ class TestAsset(unittest.TestCase):
         self.assertEqual(self.asset.payload.hb, 1)  # 2 - 1
 
         # verify payload increment for production
-        self.asset.produce()
+        results = self.asset.produce()
         self.assertEqual(self.asset.payload.goods, 200)  # 130 + 70
         self.assertEqual(self.asset.payload.energy, 100)  # 50 + 50
         self.assertEqual(self.asset.payload.hr, 20)  # 10 + 10
         self.assertEqual(self.asset.payload.hc, 10)  # 5 + 5
         self.assertEqual(self.asset.payload.hs, 5)  # 3 + 2
         self.assertEqual(self.asset.payload.hb, 2)  # 1 + 1
+        self.assertTrue(all(results.values()))  # All should be True since production was successful
 
 
     def test_event_management(self):
