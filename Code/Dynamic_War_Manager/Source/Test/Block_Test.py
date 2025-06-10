@@ -18,7 +18,7 @@ class TestBlock(unittest.TestCase):
             category="Military",
             sub_category="Base",
             functionality="Defense",
-            value=100
+            value=10
         )
         
         # Mock assets
@@ -50,7 +50,7 @@ class TestBlock(unittest.TestCase):
         self.assertEqual(self.block.category, "Military")
         self.assertEqual(self.block.sub_category, "Base")
         self.assertEqual(self.block.functionality, "Defense")
-        self.assertEqual(self.block.value, 100)
+        self.assertEqual(self.block.value, 10)
         self.assertIsInstance(self.block.id, str)
         self.assertIsInstance(self.block.state, State)
         self.assertIsInstance(self.block.resource_manager, Resource_Manager)
@@ -71,6 +71,13 @@ class TestBlock(unittest.TestCase):
             
         with self.assertRaises(ValueError):
             self.block.side = "InvalidSide"
+
+        # Test value constraints
+        with self.assertRaises(ValueError):
+            self.block.value = 11
+        
+        with self.assertRaises(ValueError):
+            self.block.value = 0
 
     def test_event_management(self):
         """Test event management methods"""

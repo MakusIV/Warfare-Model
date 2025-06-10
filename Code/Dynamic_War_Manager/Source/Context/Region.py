@@ -1,5 +1,5 @@
 from Code.Dynamic_War_Manager.Source.Context import Context
-from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, MIN_VALUE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
 from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
@@ -10,6 +10,9 @@ from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from sympy import Point, Line, Point2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from dataclasses import dataclass
+from collections import defaultdict
+
 
 # LOGGING --
  
@@ -17,17 +20,25 @@ logger = Logger(module_name = __name__, class_name = 'Region')
 
 # NOTA: valuda un preload di Block, Asset, della regioneecc:  
 
+@dataclass
+class Region_Params:
+    """Data class for Region parameters for validation"""
+    name: str
+    description: str
+    side: str
+    blocks: Optional[List[list]] = None # [priority, block]
+    limes: Optional[List[Limes]] = None
+    
+
 class Region:    
 
-    def __init__(self, name: str, description: str, side: str, blocks: List[Block] = None, limes: List[Limes]=None):
+    def __init__(self, name: str, side: str, description: Optional[str] = None, blocks: Optional[List[list]] = None, limes: List[Limes]=None):
             
         
-        # check input parameters
-        check_results = self.checkParam( name, description, blocks, limes )
         
-        if not check_results:
-            raise TypeError("Invalid parameters: " +  check_results[2] + ". Object not istantiate.")
-            
+        # Initial parameter validation
+        self._validate_all_params(name = name, side = side, description = description, blocks = blocks, limes = limes)
+        
 
         # propriety
         self._name = name # block name - type str
@@ -35,14 +46,16 @@ class Region:
         self._side = side # side of the Region - type str, must be: Blue, Red or Neutral            
         self._limes = limes # list of limes of the Region - type List[Limes]
 
-        # Association             
+        # Association   DEVI UTILIZZARE UNA PRIORITY QUEUE. update_blocks_priority ricalcola la priority dei blocchi in base alla loro importanza strategica e ridefinisce il key value per la queue che viene riodinata
         if blocks:
-            for block in blocks:
+            for block in blocks.values:
+                if block.region is not None and block.region != self:
+                    raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
                 block.region(self)
 
-        self._blocks = blocks # list of Block members of Region - type List[Block]
-                    
-        self._blocks_priority = {} # dicr of Block priority of the Region - type Dict{id: Block}
+        self._blocks = blocks # list of Block members of Region - type List[ [priority(float), Block] ]
+        self.update_blocks_priority()
+        #self._blocks_priority = {} # dict of Block priority of the Region - type Dict{id: Block}
     # methods
 
     @property
@@ -74,8 +87,7 @@ class Region:
         return self._blocks_priority
 
     @blocks_priority.setter
-    def blocks_priority(self, value):
-        
+    def blocks_priority(self, value):        
         self._blocks_priority = value
 
     @property
@@ -85,42 +97,92 @@ class Region:
     @blocks.setter
     def blocks(self, value):
         """Set the blocks dictionary"""
-        if not isinstance(value, dict):
-            raise TypeError("blocks must be a dictionary")
+        if not isinstance(value, list):
+            raise TypeError("blocks must be a list")
         
-        for server_id, block in value.items():
-            if not isinstance(server_id, str):
-                raise TypeError("blocks dictionary keys must be strings")
+        for block_priority, block in value.items():
+            if not isinstance(block_priority, float):
+                raise TypeError("blocks list keys must be floats representing priority")
+            if block.region is not None and block.region != self:
+                raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
             if not self._is_valid_block(block):
                 raise ValueError(f"All values in blocks must be Block objects, current: {block!r}")
         
-        self._blocks = value.copy()
+        self._blocks = value
+        self.update_blocks_priority()
+        # Reset cache when blocks change
+        # self._invalidate_resource_cache() # la cache dovrebbe essere costituita dai valori calcolati dai metodi di calcolo della Region.
 
     def addBlock(self, block):
-        if isinstance(block, Block):
-            block.region(self)
-            self._blocks.append(block)
-        else:
-            raise ValueError("Il valore deve essere un oggetto di tipo Block")
+        """Add a Block to the Region"""
+        if not self._is_valid_block(block):
+            raise ValueError(f"All values in blocks must be Block objects, current: {block!r}")        
+        if block.region is not None and block.region != self:
+            raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
+                
+        block.region(self)
+        self._blocks.append([0, block])
+        self.update_blocks_priority()
 
-    def getLastBlock(self):
-        if self._blocks:
-            return self._blocks[-1]
-        else:
-            raise IndexError("La lista è vuota")
 
-    def getBlock(self, index):
-        if index < len(self._blocks):
-            return self.blocks[index]
-        else:
-            raise IndexError("Indice fuori range")
+    def get_block_inner_priority_range(self, priority_min: float, priority_max: float) -> Optional[list[Block]]:
+        """
+        Return a list of blocks with priority in the range [priority_min, priority_max]
+        :param priority_min: minimum priority
+        :param priority_max: maximum priority
+        :return: list of blocks with priority in the range [priority_min, priority_max]
+        """
+        if not isinstance(priority_min, float) or not isinstance(priority_max, float):
+            raise TypeError("priority_min and priority_max must be floats")
+        if priority_min > priority_max:
+            raise ValueError("priority_min must be less than or equal to priority_max")
+        blocks_in_range = [block for block in self._blocks if priority_min <= block[0] <= priority_max]
+        
+        if not blocks_in_range:
+            logger.warning(f"No blocks found with priority in the range [{priority_min}, {priority_max}]")
+            return None
+        return [block[1] for block in blocks_in_range]
+        
 
-    def removeBlock(self, block):
-        if isinstance(block , Block) and block in self._blocks and block.region == self:
-            block.region(None)
-            self._blocks.remove(block)
+    def get_block_by_id(self, block_id: str) -> Optional[Block]:
+        """
+        Return a Block by its ID
+        :param block_id: ID of the block
+        :return: Block object or None if not found
+        """
+        if not isinstance(block_id, str):
+            raise TypeError("block_id must be a string")
+        
+        for block in self._blocks:
+            if block[1].id == block_id:
+                return block[1]
+        
+        logger.warning(f"Block with ID {block_id} not found in region {self.name}")
+        return None
+    
+    def get_priority_block_list(self) -> List[Tuple[float, Block]]:
+        """
+        Return a list of tuples with block priority and Block object
+        :return: List[Tuple[float, Block]]
+        """
+        return sorted(self._blocks, key=lambda x: x[0], reverse=True)
+
+    def removeBlock(self, block_id: str):
+        """
+        Remove a Block from the Region by its ID
+        :param block_id: ID of the block to remove
+        :return: None
+        """
+        if not isinstance(block_id, str):
+            raise TypeError("block_id must be a string")
+        
+        block = self.get_block_by_id(block_id)
+        
+        if block is not None:
+            self._remove_block(block)
         else:
-            raise ValueError("Il blocco non esiste nella lista")
+            logger.warning(f"Block with ID {block_id} not found in region {self.name}")
+        return None
 
     # deprecated: Region has a specific side, so this method is not needed
     def getEnemyBlocks(self, enemy_side: str):
@@ -176,7 +238,7 @@ class Region:
 
         for block in logistic_blocks:
             position_2d = Point2D(block.position.x, block.position.y)
-            tot_RSP += block.value             
+            tot_RSP += block.value# utilizza value doovrebbe utilizzare la priority             
             tp += position_2d * block.value # Point2D per uno scalare produce un Point2D con le sue coordinate moltiplicate ognuna per lo scalare
         
         r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
@@ -196,15 +258,94 @@ class Region:
         r_CPP = tp / (n * tot_CP) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP
 
-    def calcRegionProduction(self):
-        """ Return the total production of a specific type of goods, energy, human resource"""
+    def calc_region_warehouse(self):
+        """ Return the total resource avalaible in warehouse"""
         # per le hc, hs, hb devi prevedere delle scuole di formazione militare di class Production ed eventualmente category Military
+        tot_warehouse = Payload()
+
+        for block in self._blocks:
+            tot_warehouse += block.resource_manager.warehouse()            
+        return tot_warehouse
+    
+    def calc_region_actual_production(self):
+        """ Return the total production resoirces of the Region"""
         tot_production = Payload()
 
         for block in self._blocks:
-            tot_production += block.payload
-            
+            if isinstance(block, Production):
+                tot_production += block.resource_manager.actual_production()        
         return tot_production
+
+    def calc_region_logistic_production_value(self) -> float:
+        """ Return the total production value of the Region"""
+        tot_production_production_value = 0.0
+        tot_storage_production_value = 0.0
+        tot_transport_production_value = 0.0
+        tor_urban_production_value = 0.0
+
+        for block in self._blocks:
+            if isinstance(block[1], Production):
+                tot_production_production_value += block.resource_manager.production_value()
+            elif isinstance(block[1], Storage):
+                tot_storage_production_value += block.resource_manager.production_value()
+            elif isinstance(block[1], Transport):
+                tot_transport_production_value += block.resource_manager.production_value()
+            elif isinstance(block[1], Urban):
+                tot_urban_production_value += block.resource_manager.production_value()
+        tot_production_value = (tot_production_production_value + tot_storage_production_value +
+                                tot_transport_production_value + tor_urban_production_value)
+        logger.debug(f"Region {self.name} total production value: {tot_production_value}")        
+        if tot_production_value == 0.0:
+            logger.warning("Total production value is 0, setting all production and storage blocks priority to 0")
+            return 0.0        
+        return {    "total": tot_production_production_value,
+                    "production": tot_production_production_value,
+                    "storage": tot_storage_production_value,
+                    "transport": tot_transport_production_value,
+                    "urban": tor_urban_production_value}
+    
+
+    
+    def update_logistic_blocks_priority(self) -> bool:
+        """Update the priority of the logistic blocks in the Region based on their strategic importance key: production_value"""
+        tot_production_value = self.calc_region_logistic_production_value() * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, used to normalize the production value to a range between 0 and 1
+        
+        if tot_production_value == 0:
+            logger.warning("Total production value is 0, setting all production and storage blocks priority to 0")
+            return False
+        
+        for block in self._blocks:
+
+            if block[1].isLogistic(): # isLogistic is a property of Block that returns True if the block is a Production, Storage or Transport block  
+                production_value = block[1].resource_manager.production_value()
+                
+                if production_value > 0:          
+
+                    block_absolute_priority_value =  production_value * block[1].value
+
+                    if isinstance(block[1], Production):
+                        # Production blocks priority is based on their production value relative to the total production value of the Region
+                        block_priority = block_absolute_priority_value / tot_production_value["production"]                        
+                        
+                    elif isinstance(block[1], Storage):
+                        # Storage blocks priority is based on their production value relative to the total production value of the Region
+                        block_priority = block_absolute_priority_value / tot_production_value["storage"]                                              
+
+                    elif isinstance(block[1], Transport):
+                        # Transport blocks priority is based on their production value relative to the total production value of the Region
+                        block_priority = block_absolute_priority_value / tot_production_value["transport"]                                                                    
+                    
+                    elif isinstance(block[1], Urban):
+                        # Urban blocks priority is based on their production value relative to the total production value of the Region
+                        block_priority = block_absolute_priority_value / tot_production_value["urban"]                                            
+
+                    else:
+                        continue # if the block is not a Production, Storage, Transport or Urban block, skip it
+
+                    block[0] = block_priority
+                    logger.debug(f"Block {block[1].name} priority updated to {block_priority}")                
+        return True
+
 
     def calcRegionGroundCombatPower(self, side: str, action: str):
         """ Return the total combat power of the Region"""

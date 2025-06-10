@@ -340,7 +340,7 @@ class TestResourceManager(unittest.TestCase):
             MagicMock(get_production=MagicMock(return_value=MockPayload(goods=30, energy=25, hr=20, hc=15, hs=10, hb=5))),
         ]
         old_warehouse = self.rm.warehouse.copy()
-        # Test _evaluate_production
+        # Test _evaluate_production: update warehouse with production values
         results = self.rm.produce()
         self.assertEqual(self.rm.warehouse.goods, old_warehouse.goods + 55)
         self.assertEqual(self.rm.warehouse.energy, old_warehouse.energy + 45)
@@ -349,6 +349,14 @@ class TestResourceManager(unittest.TestCase):
         self.assertEqual(self.rm.warehouse.hs, old_warehouse.hs + 15)
         self.assertEqual(self.rm.warehouse.hb, old_warehouse.hb + 10)        
         self.assertTrue(all(results.values()))  # Ensure all resources were produced successfully
+        # update production values
+        self.assertEqual(self.rm.actual_production.goods, 55)
+        self.assertEqual(self.rm.actual_production.energy, 45)
+        self.assertEqual(self.rm.actual_production.hr, 35)
+        self.assertEqual(self.rm.actual_production.hc, 25)
+        self.assertEqual(self.rm.actual_production.hs, 15)
+        self.assertEqual(self.rm.actual_production.hb, 10) 
+        self.assertEqual(self.rm.production_value, 1095/34) # ( 55*6 + 45*8 + 35*1 + 25*10 + 15*6 + 10*3 ) / ( 6 + 8 + 1 + 10 + 6 + 3 ) = 1095/34 (32.2059)
 
     
     def test_client_priority_evaluation(self):

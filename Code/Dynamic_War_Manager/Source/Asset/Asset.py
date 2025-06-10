@@ -28,7 +28,7 @@ class AssetParams:
     asset_type: Optional[str] = None
     functionality: Optional[str] = None
     cost: Optional[int] = None
-    value: Optional[int] = None
+    value: Optional[int] = None # rappresents relative value parameter refer to other asset's block
     resources_assigned: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
     resources_to_self_consume: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
     payload: Optional[Payload] = None       # payload -payload resource
@@ -267,10 +267,12 @@ class Asset:
 
     @property
     def production(self) -> Payload:
+        """Returns the nominal production of the asset"""
         return self._production
 
     @production.setter
     def production(self, value: Payload) -> None:
+        """Sets the nominal production of the asset"""
         self._validate_param('production', value, Payload)
         self._production = value
 
@@ -384,7 +386,7 @@ class Asset:
     # La richiesta delle risorse prodotte è fissata alla produzione nominale dell'asset.
         
     def get_production(self) -> Payload:
-        """Produce resources based on nominal production and the assigned payload"""
+        """get resources based on nominal production and stored in asset payload"""
         
         items = ['goods', 'energy', 'hr', 'hc', 'hs', 'hb']
 
@@ -407,7 +409,7 @@ class Asset:
         return delivery
 
     def produce(self) -> Dict[str, Optional[bool]]:
-        """Produce resources based on the production payload"""
+        """Produce resources based on the production request and asset efficiency. Production is added to the existing payload"""
         results = {item: None for item in PAYLOAD_ATTRIBUTES}
 
         for item in PAYLOAD_ATTRIBUTES:
