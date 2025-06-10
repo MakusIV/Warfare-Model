@@ -17,6 +17,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload, PAYLOAD_ATTRIBUTES
 from dataclasses import dataclass
 from collections import defaultdict
+from Code.Dynamic_War_Manager.Source.Context import Context
 
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Block.Block import Block
@@ -75,6 +76,7 @@ class Resource_Manager:
         # Resource calculation (lazy loading to avoid unnecessary computations)
         self._resources_to_self_consume = None
         self._resources_needed = None
+        self._actual_production = Payload()
         
     # === BLOCK PROPERTIES ===
     
@@ -117,6 +119,28 @@ class Resource_Manager:
         self._warehouse = value
         # Reset cache when warehouse changes
         self._invalidate_resource_cache()
+
+    @property
+    def production_value(self) -> float:
+        """Get the production value"""
+        
+        if not self.actual_production or self.actual_production == Payload():
+            return 0.0
+        production_value = 0.0
+        tot_weight = sum(Context.PRODUCTION_WEIGHT.values())
+
+        if tot_weight == 0:
+            raise ValueError("Total weight for production attributes cannot be zero, COntext.PRODUCTION_WEIGHT must be set correctly: {Context.PRODUCTION_WEIGHT!r}")
+
+        for item in PAYLOAD_ATTRIBUTES:            
+            production_value += getattr(self.actual_production, item) * Context.PRODUCTION_WEIGHT[item]   
+                             
+        return production_value / tot_weight
+    
+    @property
+    def actual_production(self) -> Payload:
+        """Get the actual production resources"""
+        return self._actual_production
 
     # === SERVER MANAGEMENT (this Block as client) ===
     
@@ -380,25 +404,26 @@ class Resource_Manager:
             return {}
 
     def produce(self) -> Dict[str, Optional[bool]]:
-        """Produce resources based on the block'2 asset production"""
-        
+        """Adde asset's production in warehouse and return results for each item"""
+        self._actual_production = Payload()  # Reset production value
         results = {item: None for item in PAYLOAD_ATTRIBUTES}
 
         for asset in self.block.assets:
             asset_production = asset.get_production()
-            
+
             for item in PAYLOAD_ATTRIBUTES:
                 production_item = getattr(asset_production, item)
 
                 if production_item > 0:                    
                     setattr(self.warehouse, item, getattr(self.warehouse, item) + production_item) # effect efficiency are applied in Asset method produce() with Asset efficiency
+                    setattr(self._actual_production, item, getattr(self._actual_production, item) + production_item) # effect efficiency are applied in Asset method produce() with Asset efficiency
                     results[item] = True
                 
                 else:
                     results[item] = False
         return results
                 
-
+    
     # === PRIVATE CALCULATION METHODS ===
     
     def _evaluate_resources_to_self_consume(self) -> Payload:

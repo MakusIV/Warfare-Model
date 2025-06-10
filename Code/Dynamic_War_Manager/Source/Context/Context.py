@@ -16,6 +16,16 @@ DEBUG = True
 PATH_TYPE = ["onroad", "offroad", "air", "water"]
 ROUTE_TYPE = ["ground", "air", "water", "mixed"]
 
+# Peso per il calcolo del valore complessivo di una produzione (Resource_Manager.production value)
+PRODUCTION_WEIGHT = {
+    "goods": 6,
+    "energy": 8,
+    "hr": 1,
+    "hc": 10,
+    "hs": 6,
+    "hb": 3,
+}
+
 
 GROUND_ACTION  = {
 

@@ -18,6 +18,10 @@ if TYPE_CHECKING:
 # LOGGING
 logger = Logger(module_name=__name__, class_name='Block')
 
+# Constants
+MAX_VALUE = 10  # Maximum value for block's strategic weight parameter
+MIN_VALUE = 1   # Minimum value for block's strategic weight parameter  
+
 @dataclass
 class BlockParams:
     """Data class for holding block parameters for validation"""
@@ -74,7 +78,7 @@ class Block:
         self._category = category or ""
         self._sub_category = sub_category or ""
         self._functionality = functionality or ""
-        self._value = value or 0
+        self._value = value or MIN_VALUE # rappresents strategic weight parameter for calculus of the block's strategic value.  Assigned from campaign maker. default value is 1
         self._events = []
         self._assets = {}
         self._region = region
@@ -89,7 +93,7 @@ class Block:
             category=category,
             sub_category=sub_category,
             functionality=functionality,
-            value=value,
+            value=value, # rappresents weight parameter for calculus of the block's strategic value.  Assigned from campaign maker. default value is 1 max value = 10
             region=region
         )
 
@@ -124,7 +128,7 @@ class Block:
                 # Controllo speciale per Region
                 if param == 'region':
                     if not (value is None or getattr(value, '__class__', {}).__name__ == 'Region'):
-                        raise TypeError(f"{param} must be None or a Region object")
+                        raise TypeError(f"region must be None or a Region object. Current type: {type(value).__name__}")
                     continue
                 if not isinstance(value, expected_type):
                     raise TypeError(f"{param} must be {expected_type.__name__}")
@@ -135,6 +139,12 @@ class Block:
         
         if 'category' in kwargs and kwargs['category'] and kwargs['category'] not in BLOCK_CATEGORY:
             raise ValueError(f"category must be one of: {', '.join(BLOCK_CATEGORY)}")
+        
+        if 'value' in kwargs and kwargs['value'] is not None:
+            if not isinstance(kwargs['value'], int):
+                raise TypeError(f"value must be an integer. Current type: {type(kwargs['value']).__name__}")
+            if kwargs['value'] < MIN_VALUE or kwargs['value'] > MAX_VALUE:
+                raise ValueError(f"value must be between 1 and 10. Current value: {kwargs['value']}")
 
     # Property getters and setters
     @property
