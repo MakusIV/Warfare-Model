@@ -25,25 +25,21 @@ class Region_Params:
     """Data class for Region parameters for validation"""
     name: str
     description: str
-    side: str
-    blocks: Optional[List[list]] = None # [priority, block]
+    blocks: Optional[List[List[float, Block]]] = None # [priority, block]
     limes: Optional[List[Limes]] = None
     
 
 class Region:    
 
-    def __init__(self, name: str, side: str, description: Optional[str] = None, blocks: Optional[List[list]] = None, limes: List[Limes]=None):
+    def __init__(self, name: str, description: Optional[str] = None, blocks: Optional[List[List[float, Block]]] = None, limes: List[Limes]=None):
             
-        
-        
+            
         # Initial parameter validation
-        self._validate_all_params(name = name, side = side, description = description, blocks = blocks, limes = limes)
-        
+        self._validate_all_params(name = name, description = description, blocks = blocks, limes = limes)        
 
         # propriety
         self._name = name # block name - type str
-        self._description = description # block description - type str  
-        self._side = side # side of the Region - type str, must be: Blue, Red or Neutral            
+        self._description = description # block description - type str               
         self._limes = limes # list of limes of the Region - type List[Limes]
 
         # Association   DEVI UTILIZZARE UNA PRIORITY QUEUE. update_blocks_priority ricalcola la priority dei blocchi in base alla loro importanza strategica e ridefinisce il key value per la queue che viene riodinata
@@ -53,9 +49,8 @@ class Region:
                     raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
                 block.region(self)
 
-        self._blocks = blocks # list of Block members of Region - type List[ [priority(float), Block] ]
-        self.update_blocks_priority()
-        #self._blocks_priority = {} # dict of Block priority of the Region - type Dict{id: Block}
+        self._blocks = blocks # list of Block members of Region - type List[ [priority(float), Block] ]        
+        
     # methods
 
     @property
@@ -83,14 +78,6 @@ class Region:
         # self._invalidate_resource_cache()
 
     @property
-    def blocks_priority(self):
-        return self._blocks_priority
-
-    @blocks_priority.setter
-    def blocks_priority(self, value):        
-        self._blocks_priority = value
-
-    @property
     def blocks(self):
         return self._blocks
 
@@ -98,18 +85,20 @@ class Region:
     def blocks(self, value):
         """Set the blocks dictionary"""
         if not isinstance(value, list):
-            raise TypeError("blocks must be a list")
+            raise TypeError(f"blocks must be a list {value!r}")
         
-        for block_priority, block in value.items():
-            if not isinstance(block_priority, float):
-                raise TypeError("blocks list keys must be floats representing priority")
-            if block.region is not None and block.region != self:
-                raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
-            if not self._is_valid_block(block):
-                raise ValueError(f"All values in blocks must be Block objects, current: {block!r}")
+        for block_item in value:
+            if not isinstance(value, list):
+                raise TypeError(f"blocks_item must be a list {block_item!r}")
+            if not isinstance(block_item[0], float):
+                raise TypeError(f"blocks list keys must be floats representing priority {block_item!r}")
+            if not self._is_valid_block(block_item[1]):
+                raise ValueError(f"All values in blocks must be Block objects, current: {block_item[1]!r}")
+            if block_item[1].region is not None and block_item[1].region != self:
+                raise ValueError(f"Block {block_item[1].name} is already associated with another region: {block_item[1].region.name}")
+            
         
-        self._blocks = value
-        self.update_blocks_priority()
+        self._blocks = value        
         # Reset cache when blocks change
         # self._invalidate_resource_cache() # la cache dovrebbe essere costituita dai valori calcolati dai metodi di calcolo della Region.
 
@@ -121,11 +110,11 @@ class Region:
             raise ValueError(f"Block {block.name} is already associated with another region: {block.region.name}")
                 
         block.region(self)
-        self._blocks.append([0, block])
-        self.update_blocks_priority()
+        self._blocks.append([0.0, block]) # append an block_item with priority value = 0.0        
+        logger.info(f"Block with ID {block.id} added in region {self.name}")
 
 
-    def get_block_inner_priority_range(self, priority_min: float, priority_max: float) -> Optional[list[Block]]:
+    def get_block_inner_priority_range(self, side: str, category: str, priority_min: float, priority_max: float) -> Optional[list[Block]]:
         """
         Return a list of blocks with priority in the range [priority_min, priority_max]
         :param priority_min: minimum priority
@@ -136,7 +125,8 @@ class Region:
             raise TypeError("priority_min and priority_max must be floats")
         if priority_min > priority_max:
             raise ValueError("priority_min must be less than or equal to priority_max")
-        blocks_in_range = [block for block in self._blocks if priority_min <= block[0] <= priority_max]
+        block_list = self.get_priority_block_list(side=side, category=category)
+        blocks_in_range = [block for block in block_list if priority_min <= block[0] <= priority_max]
         
         if not blocks_in_range:
             logger.warning(f"No blocks found with priority in the range [{priority_min}, {priority_max}]")
@@ -153,19 +143,42 @@ class Region:
         if not isinstance(block_id, str):
             raise TypeError("block_id must be a string")
         
-        for block in self._blocks:
-            if block[1].id == block_id:
-                return block[1]
+        for block_item in self._blocks:
+            if block_item[1].id == block_id:
+                return block_item
         
         logger.warning(f"Block with ID {block_id} not found in region {self.name}")
         return None
     
-    def get_priority_block_list(self) -> List[Tuple[float, Block]]:
+    def get_block_list(self, side: str, category: Optional[str], block_class: Optional[str]) -> List[Tuple[float, Block]]:
         """
         Return a list of tuples with block priority and Block object
         :return: List[Tuple[float, Block]]
         """
-        return sorted(self._blocks, key=lambda x: x[0], reverse=True)
+        block_list = []
+        for block in self._blocks:
+            if block.side == side:
+                if category:
+                    if block.category == category:
+                        if block_class:
+                            if block.__class__.__name__ == block_class:
+                                block_list.append((block[0], block[1]))  # added block only by side, categor and class_block (Production, Storage, ...)
+                        else:               
+                            block_list.append((block[0], block[1])) # added block by side and category (Logistic, Civilian, Military)
+                else:
+                    block_list.append((block[0], block[1])) # added block only by side (red, blue)
+        
+        return block_list
+    
+    def sorted_blocks_list(self, block_list: List[Tuple[float, Block]]) -> List[Tuple[float, Block]]:
+        """
+        Return a sorted list of blocks by priority in descending order
+        """
+        if not isinstance(block_list, list):
+            raise TypeError("blocks must be a list") 
+        
+        return sorted(block_list, key=lambda x: x[0], reverse=True)
+        
 
     def removeBlock(self, block_id: str):
         """
@@ -176,24 +189,25 @@ class Region:
         if not isinstance(block_id, str):
             raise TypeError("block_id must be a string")
         
-        block = self.get_block_by_id(block_id)
+        block_item = self.get_block_by_id(block_id)
         
-        if block is not None:
-            self._remove_block(block)
+        if block_item is not None:
+            self._blocks.remove( block_item )
+            logger.info(f"Block with ID {block_id} added in region {self.name}")
         else:
             logger.warning(f"Block with ID {block_id} not found in region {self.name}")
         return None
 
     # deprecated: Region has a specific side, so this method is not needed
-    def getEnemyBlocks(self, enemy_side: str):
+    def get_enemy_blocks(self, side: str, category: Optional[str], block_class: Optional[str]) -> List[Tuple[float, Block]]:
         
         """
         Return a list of Blocks of the Region that have the same side as the enemy_side parameter
         :param enemy_side: the side of the enemy
         :return: a list of Blocks
         """
-        enemy_blocks = [block for block in self._blocks if block.side == enemy_side]
-        return enemy_blocks
+        
+        return self.get_block_list(side = Utility.enemySide(side), category=category, block_class=block_class)
 
     def checkClass(self, object):
         """Return True if objects is a Object object otherwise False"""
@@ -305,7 +319,8 @@ class Region:
                     "urban": tor_urban_production_value}
     
 
-    
+    # nota: per i blocchi logistici la priority è utilizzata per l'assegnazione delle risorse di rifornimento e per l'assegnazione delle risorse militari
+    # mentre per i blocchi militari la priority è utilizzata solo per l'assegnazione delle risorse di rifornimento
     def update_logistic_blocks_priority(self) -> bool:
         """Update the priority of the logistic blocks in the Region based on their strategic importance key: production_value"""
         tot_production_value = self.calc_region_logistic_production_value() * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, used to normalize the production value to a range between 0 and 1
