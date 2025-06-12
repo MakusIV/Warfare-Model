@@ -25,13 +25,13 @@ class Region_Params:
     """Data class for Region parameters for validation"""
     name: str
     description: str
-    blocks: Optional[List[List[float, Block]]] = None # [priority, block]
+    blocks: Optional[List[list]] = None # [priority, block]
     limes: Optional[List[Limes]] = None
     
 
 class Region:    
 
-    def __init__(self, name: str, description: Optional[str] = None, blocks: Optional[List[List[float, Block]]] = None, limes: List[Limes]=None):
+    def __init__(self, name: str, description: Optional[str] = None, blocks: Optional[List[list]] = None, limes: List[Limes]=None):
             
             
         # Initial parameter validation
@@ -227,22 +227,22 @@ class Region:
         # return as
         pass
 
-    def getBlocks(self, blockCategory: str, side: str) -> List[Block]:
+    def get_blocks(self, blockClass: str, side: str) -> List[Block]:
         """ Return a list of blocks of a specific category and side"""
 
-        if blockCategory not in Context.BLOCK_CATEGORY:
+        if blockClass not in Context.BLOCK_CATEGORY:
             raise ValueError(f"Invalid block category {0}. block category must be: {1}".format(blockCategory, Context.BLOCK_CATEGORY))
         
-        if blockCategory == "Logistic":
+        if blockClass == "Logistic":
             return [block for block in self._blocks if any(isinstance(block, Production), isinstance(block, Storage), isinstance(block, Transport)) and block.side == side]
         
-        if blockCategory == "Civilian":
+        if blockClass == "Civilian":
             return [block for block in self._blocks if isinstance(block, Urban) and block.side == side]
         
-        if blockCategory == "Military":
+        if blockClass == "Military":
             return [block for block in self._blocks if isinstance(block, Military) and block.side == side]
 
-    def calcRegionStrategicLogisticCenter(self, side: str) -> Point2D:
+    def calc_region_strategic_logistic_center(self, side: str) -> Point2D:
         
         logistic_blocks = self.getBlocks("Logistic", side)
         
@@ -258,18 +258,41 @@ class Region:
         r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
         return r_SLP
     
-    def calcRegionCombatPowerCenter(self, side: str): 
-        
-        Militarys = self.getBlocks("Military", side)
-                
-        n = len(Militarys)
-        tot_CP, tp = 0, 0 # tot_CP: summmatory of strategic block combat power
+    def calc_combat_power_center(self, side: str): 
+        """ Calculation of baricenter point of the complessive military block's combat power 
 
-        for block in Militarys:
-            tot_CP += block.combat_power
-            tp += block.position * block.combat_power 
+        Args:
+            side (str): side of blocks
+            force (str): type of military force (air, ground, naval)
+
+        Returns:
+            Point2D: combat power baricenter
+        """
+        military_force = ["ground", "air", "naval"]
+        action_task = {"ground": Context.GROUND_ACTION,
+                  "air": Context.AIR_TASK,
+                  "ground": Context.NAVAL_TASK}
+        blocks_quantity = {}
+
+        for force in military_force:
+            for task in action_task[force]:                    
+                blocks_quantity[force][task] = 0
+
+        Militarys = self.get_blocks("Military", side)                                
+        r_CPP, tot_CP, tp = {}, {}, {} # tot_CP: summmatory of strategic block combat power
         
-        r_CPP = tp / (n * tot_CP) # r_CPP: region strategic combat power center position for side blocks
+        for force in military_force:
+            for task in action_task[force]:                                    
+                for block in Militarys:
+                    if ( block.is_airbase and force == "air" ) or (block.is_groundbase and force == "ground") or ( block.is_navalbase and force == "naval" ):
+                        cp = block.combat_power(action = task, military_force = force) # block combat power 
+                        tot_CP[force][task] += cp  # sum of block's combat power 
+                        tp[force][task] += block.position * cp  # sum of ponderate position block's point
+                        blocks_quantity[force][task] += 1 # number of blocks counted
+        
+        for force in military_force:
+                for task in action_task[force]:                    
+                    r_CPP[force][task] = tp[force][task] / ( blocks_quantity[force][task] * tot_CP[force][task] ) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP
 
     def calc_region_warehouse(self):

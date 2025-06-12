@@ -54,7 +54,6 @@ NAVAL_TASK  = {
     "Retrait":  "Retrait" 
 }
 
-
 BLOCK_CATEGORY = {
 
     "Civilian": "Civilian",
