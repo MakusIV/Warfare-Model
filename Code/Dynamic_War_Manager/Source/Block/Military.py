@@ -8,8 +8,6 @@ from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import (
-    STATE, 
-    GROUND_COMBAT_EFFICACY, 
     GROUND_ACTION, 
     AIR_TASK,
     NAVAL_TASK,
@@ -96,68 +94,43 @@ class Military(Block):
             )
     #endregion
 
-    #region Combat Capabilities
-    def ground_combat_power(self, action: str) -> float:
+    def combat_power(self, action: str, military_force: str) -> float:
         """
-        Calculate total ground combat power for specified action.
+        Calculate total combat power for specified action and military force.
         
         Args:
-            action: Ground action type (from GROUND_ACTION)
+            action: action type (from GROUND_ACTION, AIR_TASK and NAVAL_TASK)
+            military_force: air, naval or ground
             
         Returns:
-            Total combat power of applicable ground assets
+            Total combat power of applicable assets
         """
-        if action not in GROUND_ACTION:
-            valid_actions = ", ".join(GROUND_ACTION)
+        if not isinstance(action, str):
+            raise TypeError(f"Invalid type - action: {action.__class.__.__name__}. Must be str class")
+        if not isinstance(military_force, str) or military_force not in ["air", "ground", "naval"]:
+            raise TypeError(f"Invalid type - military_force: {action.__class.__.__name__}. Must be str class")
+        
+        if military_force == "ground":
+            action_list = GROUND_ACTION
+            asset_type = "Vehicle"
+        elif military_force == "air": 
+            action_list = AIR_TASK
+            asset_type = "Aircraft"
+        elif military_force == "naval": 
+            action_list = NAVAL_TASK
+            asset_type = "Ship"
+
+        if action not in action_list:
+            valid_actions = ", ".join(action_list)
             raise ValueError(f"Invalid action: {action}. Must be one of: {valid_actions}")
         
         return sum(
-            asset.combat_power 
+            asset.combat_power() # in mobile 
             for asset in self.assets.values() 
-            if validate_class(asset, "Vehicle") and hasattr(asset, 'combat_power')
+            if validate_class(asset, asset_type) and hasattr(asset, 'combat_power')
         )
 
-    def air_combat_power(self, task: str) -> float:
-        """
-        Calculate total air combat power for specified task.
-        
-        Args:
-            task: Air task type (from AIR_TASK)
-            
-        Returns:
-            Total combat power of applicable air assets
-        """
-        if task not in AIR_TASK:
-            valid_tasks = ", ".join(AIR_TASK)
-            raise ValueError(f"Invalid task: {task}. Must be one of: {valid_tasks}")
-        
-        return sum(
-            asset.combat_power 
-            for asset in self.assets.values() 
-            if validate_class(asset, "Aircraft") and hasattr(asset, 'combat_power')
-        )
     
-    def naval_combat_power(self, task: str) -> float:
-        """
-        Calculate total naval combat power for specified task.
-        
-        Args:
-            task: Air task type (from AIR_TASK)
-            
-        Returns:
-            Total combat power of applicable air assets
-        """
-        if task not in NAVAL_TASK:
-            valid_tasks = ", ".join(NAVAL_TASK)
-            raise ValueError(f"Invalid task: {task}. Must be one of: {valid_tasks}")
-        
-        return sum(
-            asset.combat_power 
-            for asset in self.assets.values() 
-            if validate_class(asset, "Ship") and hasattr(asset, 'combat_power')
-        )
-    #endregion
-
     #region Base Type Checks
     def is_airbase(self) -> bool:
         """Check if base is an airbase."""

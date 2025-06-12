@@ -120,6 +120,8 @@ class Mobile(Asset) :
         #return Volume
         pass
 
+    def combat_power(self):
+        pass
 
 
     def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore
