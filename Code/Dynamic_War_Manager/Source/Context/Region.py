@@ -1,4 +1,5 @@
 from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, MIN_VALUE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
@@ -18,6 +19,11 @@ from collections import defaultdict
  
 logger = Logger(module_name = __name__, class_name = 'Region')
 
+
+MILITARY_FORCE = ["ground", "air", "naval"]
+ACTION_TASK = {"ground": Context.GROUND_ACTION,
+                  "air": Context.AIR_TASK,
+                  "ground": Context.NAVAL_TASK}
 # NOTA: valuda un preload di Block, Asset, della regioneecc:  
 
 @dataclass
@@ -231,7 +237,7 @@ class Region:
         """ Return a list of blocks of a specific category and side"""
 
         if blockClass not in Context.BLOCK_CATEGORY:
-            raise ValueError(f"Invalid block category {0}. block category must be: {1}".format(blockCategory, Context.BLOCK_CATEGORY))
+            raise ValueError(f"Invalid block category {0}. block category must be: {1}".format(blockClass, Context.BLOCK_CATEGORY))
         
         if blockClass == "Logistic":
             return [block for block in self._blocks if any(isinstance(block, Production), isinstance(block, Storage), isinstance(block, Transport)) and block.side == side]
@@ -268,21 +274,19 @@ class Region:
         Returns:
             Point2D: combat power baricenter
         """
-        military_force = ["ground", "air", "naval"]
-        action_task = {"ground": Context.GROUND_ACTION,
-                  "air": Context.AIR_TASK,
-                  "ground": Context.NAVAL_TASK}
+        
+        
         blocks_quantity = {}
 
-        for force in military_force:
-            for task in action_task[force]:                    
+        for force in MILITARY_FORCE:
+            for task in ACTION_TASK[force]:                    
                 blocks_quantity[force][task] = 0
 
         Militarys = self.get_blocks("Military", side)                                
         r_CPP, tot_CP, tp = {}, {}, {} # tot_CP: summmatory of strategic block combat power
         
-        for force in military_force:
-            for task in action_task[force]:                                    
+        for force in MILITARY_FORCE:
+            for task in ACTION_TASK[force]:                                    
                 for block in Militarys:
                     if ( block.is_airbase and force == "air" ) or (block.is_groundbase and force == "ground") or ( block.is_navalbase and force == "naval" ):
                         cp = block.combat_power(action = task, military_force = force) # block combat power 
@@ -290,8 +294,8 @@ class Region:
                         tp[force][task] += block.position * cp  # sum of ponderate position block's point
                         blocks_quantity[force][task] += 1 # number of blocks counted
         
-        for force in military_force:
-                for task in action_task[force]:                    
+        for force in MILITARY_FORCE:
+                for task in ACTION_TASK[force]:                    
                     r_CPP[force][task] = tp[force][task] / ( blocks_quantity[force][task] * tot_CP[force][task] ) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP
 
@@ -383,6 +387,79 @@ class Region:
                     block[0] = block_priority
                     logger.debug(f"Block {block[1].name} priority updated to {block_priority}")                
         return True
+
+    def update_military_priority(self, side: str) -> bool:
+                
+        def __ground_naval_priority_function(combat_power: float, combat_range: float, ground_enemy_data: Dict, friendly_logistic_data: Dict, weight: Dict) -> float:
+            
+            # combat priority
+            enemy_quantity = len(ground_enemy_data)            
+            combat_priority = 0            
+            for i in range(0, enemy_quantity):
+                combat_priority += ground_enemy_data["combat_power"][i] * combat_range / ( combat_power * ground_enemy_data["distance"][i] )                
+            combat_priority *= weight["ground_combat"]/enemy_quantity
+            
+            # logistic defence priority
+            logistic_quantity = len(friendly_logistic_data)
+            logistic_defence_priority = 0
+            for i in range(0, logistic_quantity):      
+                logistic_defence_priority += friendly_logistic_data["logistic_priority"][i] / friendly_logistic_data["distance"][i] 
+            logistic_defence_priority *= weight["logistic_defence"]/logistic_quantity
+
+            return combat_priority + logistic_defence_priority
+        
+        def __air_priority_function(combat_power: float, combat_range: float, enemy_data: Dict, friendly_data: Dict, weight: Dict) -> float:
+            combat_category = ["combat_ground", "combat_air", "combat_naval", "attack_logistic", "defence_ground", "defence_naval", "defence_logistic"]            
+            priority = {}
+
+            # combat priority
+            for combat in combat_category:
+                
+                if combat == "combat_ground" or combat == "combat_air" or combat == "combat_naval" or combat == "attack_logistic":                        
+                    enemy_quantity = len(enemy_data[combat])            
+                    priority[combat] = 0            
+                    for i in range(0, enemy_quantity):
+                        if combat == "combat_ground" or combat == "combat_air" or combat == "combat_naval":                        
+                            priority[combat] += enemy_data[combat]["combat_power"][i] * combat_range / ( combat_power * enemy_data[combat]["distance"][i] )                                                
+                        elif combat == "attack_logistic":
+                            priority[combat] += enemy_data[combat]["priority"][i] * combat_range / ( combat_power * enemy_data[combat]["distance"][i] )                
+                    priority[combat] *= weight[combat]/enemy_quantity            
+                
+                elif combat == "defence_ground" or combat == "defence_naval" or combat == "defence_logistic":                        
+                    friendly_quantity = len(friendly_data[combat])             
+                    priority[combat] = 0            
+                    for i in range(0, friendly_quantity):                    
+                        priority["friendly"][combat] += friendly_data[combat]["priority"][i] * combat_range / ( friendly_data[combat]["distance"][i] )    
+                    priority[combat] *= weight[combat]/friendly_quantity                            
+
+            return sum( [ value for value in [ pry for pry in priority.value() ] ] )
+
+        priority_functions = {
+            "ground": __ground_naval_priority_function,
+            "air": __air_priority_function,
+            "naval": __ground_naval_priority_function,
+        }
+        
+        friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
+        enemy_combat_power_center = self.calc_combat_power_center( side = Utility.enemySide(side) )
+
+        friendly_blocks = self.get_blocks("Military", side)                                
+        enemy_blocks = self.get_blocks("Military", Utility.enemySide(side))                                
+            
+        for force in MILITARY_FORCE: 
+            for task in ACTION_TASK[force]:                                    
+                for friendly in friendly_blocks:                                
+                    if friendly.is_airbase and force == "air":                        
+                        combat_power = friendly.combat_power(action = task, military_force = force) # block combat power 
+                        
+                        for block in self.blocks:
+                        # setup enemy_data, friendly_data
+                            pass
+        pass
+        
+                        
+        
+        
 
 
     def calcRegionGroundCombatPower(self, side: str, action: str):
