@@ -6,6 +6,7 @@ from sympy import Point3D, Point2D
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
+from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_ACTION, 
@@ -94,40 +95,22 @@ class Military(Block):
             )
     #endregion
 
-    def combat_power(self, action: str, military_force: str) -> float:
+    def combat_power(self) -> float:
         """
         Calculate total combat power for specified action and military force.
         
         Args:
-            action: action type (from GROUND_ACTION, AIR_TASK and NAVAL_TASK)
-            military_force: air, naval or ground
+            
+            
             
         Returns:
             Total combat power of applicable assets
-        """
-        if not isinstance(action, str):
-            raise TypeError(f"Invalid type - action: {action.__class.__.__name__}. Must be str class")
-        if not isinstance(military_force, str) or military_force not in ["air", "ground", "naval"]:
-            raise TypeError(f"Invalid type - military_force: {action.__class.__.__name__}. Must be str class")
-        
-        if military_force == "ground":
-            action_list = GROUND_ACTION
-            asset_type = "Vehicle"
-        elif military_force == "air": 
-            action_list = AIR_TASK
-            asset_type = "Aircraft"
-        elif military_force == "naval": 
-            action_list = NAVAL_TASK
-            asset_type = "Ship"
+        """        
 
-        if action not in action_list:
-            valid_actions = ", ".join(action_list)
-            raise ValueError(f"Invalid action: {action}. Must be one of: {valid_actions}")
-        
         return sum(
             asset.combat_power() # in mobile 
             for asset in self.assets.values() 
-            if validate_class(asset, asset_type) and hasattr(asset, 'combat_power')
+            if hasattr(asset, 'combat_power')
         )
 
     
@@ -240,6 +223,27 @@ class Military(Block):
             "time": distance / med_speed if med_speed > 0 else float('inf'),
             "min_time": distance / max_speed if max_speed > 0 else float('inf')
         }
+
+    def time_to_ground_intercept(self, route: Route, speed: Optional[float]) -> Optional[Dict[str, float]]:
+
+        route = route.copy()
+        if speed:
+            route.speed = speed
+
+        return route.travelTime()
+        
+
+    def time2attack(self, target: Optional[Union[Point2D, Point3D, Asset, Block]], route = Optional[Route], speed = Optional[ float ]) -> Optional[ Dict[str, float] ]:
+        
+        if not(target and route):
+            raise ValueError("target or route value must be assigned")      
+
+        if self.is_airbase and target:
+            return self.time_to_direct_line_attack(target = target)
+        
+        elif self.is_groundbase and route:
+            return self.time_to_ground_intercept(route = route, speed = speed)
+
 
     def _get_target_distance(self, target: Union[Point2D, Point3D, Asset, Block]) -> Optional[float]:
         """Calculate distance to target."""

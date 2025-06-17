@@ -186,6 +186,6 @@ class Vehicle(Mobile) :
 
 
     @property
-    def combatPower(self, action):
+    def combat_power(self, action):
         return GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
     

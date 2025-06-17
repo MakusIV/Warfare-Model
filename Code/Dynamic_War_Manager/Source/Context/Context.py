@@ -50,7 +50,8 @@ AIR_TASK = {
 
 NAVAL_TASK  = {
 
-    "Attack":   "Attack",    
+    "Attack":   "Attack", 
+    "Defence":  "Defence",   
     "Retrait":  "Retrait" 
 }
 
@@ -63,15 +64,15 @@ BLOCK_CATEGORY = {
 }
 
 """    
-Divisione:        Brigate e/o Reggimenti - 10-20k men
+Divisione:      Brigate e/o Reggimenti - 10-20k men
 
-Brigata:           2 Reggimenti - 3600 men
+Brigata:        2 Reggimenti - 3600 men
 
-Reggimento:  3 Battaglioni -1800 men
+Reggimento:     3 Battaglioni -1800 men
 
-Battaglione:   4 Compagnie - 600 men
+Battaglione:    4 Compagnie - 600 men
 
-Compagnia:    150 men
+Compagnia:      150 men
 """
 
 

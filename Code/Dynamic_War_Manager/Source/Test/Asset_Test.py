@@ -27,7 +27,7 @@ class TestAsset(unittest.TestCase):
             asset_type="Tank",
             functionality="Combat",
             cost=100,
-            value=150,
+            value=10,
             position=Point3D(10, 20, 30)
         )
         
@@ -44,7 +44,7 @@ class TestAsset(unittest.TestCase):
         self.assertEqual(self.asset.asset_type, "Tank")
         self.assertEqual(self.asset.functionality, "Combat")
         self.assertEqual(self.asset.cost, 100)
-        self.assertEqual(self.asset.value, 150)
+        self.assertEqual(self.asset.value, 10)
         self.assertEqual(self.asset.position, Point3D(10, 20, 30))
         self.assertIsInstance(self.asset.id, str)
         self.assertIsInstance(self.asset.state, State)
@@ -57,6 +57,12 @@ class TestAsset(unittest.TestCase):
         # Test invalid name type
         with self.assertRaises(TypeError):
             self.asset.name = 123
+
+        # Test invalid value
+        with self.assertRaises(ValueError):
+            self.asset.value = 11
+        with self.assertRaises(ValueError):
+            self.asset.value = 0
             
         # Test position setter
         new_pos = Point3D(50, 60, 70)

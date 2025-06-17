@@ -144,7 +144,7 @@ class Block:
             if not isinstance(kwargs['value'], int):
                 raise TypeError(f"value must be an integer. Current type: {type(kwargs['value']).__name__}")
             if kwargs['value'] < MIN_VALUE or kwargs['value'] > MAX_VALUE:
-                raise ValueError(f"value must be between 1 and 10. Current value: {kwargs['value']}")
+                raise ValueError(f"value must be between {MIN_VALUE} and {MAX_VALUE}. Current value: {kwargs['value']}")
 
     # Property getters and setters
     @property
@@ -254,12 +254,12 @@ class Block:
 
     @property
     def value(self) -> int:
-        """Get block value"""
+        """Get block value (int). Represents the level of strategic importance assigned by the campaign creator"""
         return self._value
 
     @value.setter
     def value(self, value: int) -> None:
-        """Set block value"""
+        """Set block value (int). Represents the level of strategic importance assigned by the campaign creator"""
         self._validate_params(value=value)
         self._value = value
 
