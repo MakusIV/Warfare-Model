@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
 from Dynamic_War_Manager.Source.Asset.Asset import Asset
 from Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Context.Context import PATH_TYPE
@@ -154,8 +155,7 @@ class Edge:
             return self._lenght / self._speed
         else:
             return float('inf')
-
-        
+            
 
     def minDistance(self, point: Point):# distance 3D
 

@@ -529,10 +529,10 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
             attack_time = v_base.time2attack(v_edge) # air base -> flight time, gorund base -> time to intercept
             danger_level = travel_time * v_base.efficiency/ attack_time
             
-            if v_base.isAirbase and attack_time < 0.5 * route_travel_time:                    
+            if v_base.is_airbase and attack_time < 0.5 * route_travel_time:                    
                 danger["air_attack"].append(danger_level)
                 
-            if v_base.isGroundBase and attack_time < 0.7 * route_travel_time:
+            if v_base.is_groundbase and attack_time < 0.7 * route_travel_time:
                 danger["ground_attack"].append(danger_level)                
                 artilleryInRange, in_range_level = v_base.artilleryInRange(v_edge)
 

@@ -19,6 +19,10 @@ from dataclasses import dataclass
 # LOGGING
 logger = Logger(module_name=__name__, class_name='Asset')
 
+# Constants
+MAX_VALUE = 10  # Maximum value for block's strategic weight parameter
+MIN_VALUE = 1   # Minimum value for block's strategic weight parameter  
+
 @dataclass
 class AssetParams:
     """Data class for holding asset parameters for validation"""
@@ -59,7 +63,7 @@ class Asset:
         self._health = None
         self._position = position
         self._cost = cost
-        self._value = value
+        self._value = value # represents the relative importance level compared to the other assets belonging to the block
         self._payload_perc = None
         self._crytical = crytical
         self._repair_time = repair_time
@@ -159,10 +163,12 @@ class Asset:
 
     @property
     def value(self) -> Optional[int]:
+        """value (int) getter represents the relative importance level compared to the other assets belonging to the block"""
         return self._value
 
     @value.setter
     def value(self, value: Optional[int]) -> None:
+        """value (int) setter represents the relative importance level compared to the other assets belonging to the block"""
         self._validate_param('value', value, int)
         self._value = value
 
@@ -468,11 +474,17 @@ class Asset:
         for param, value in kwargs.items():
             if value is not None and param in type_checks:
                 self._validate_param(param, value, type_checks[param])
+        
 
     def _validate_param(self, param_name: str, value: Any, expected_type: type) -> None:
         """Validate a single parameter"""
         if value is not None and not isinstance(value, expected_type):
             raise TypeError(f"Invalid type for {param_name}. Expected {expected_type.__name__}, got {type(value).__name__}")
+        
+        if param_name == 'value':
+            if value < MIN_VALUE or value > MAX_VALUE:
+                raise ValueError(f"value must be between {MIN_VALUE} and {MAX_VALUE}. Current value: {value}")
+        
 
     def _validate_dcs_data(self, data: Dict[str, Any]) -> Tuple[bool, str]:
         """Validate DCS unit data structure"""

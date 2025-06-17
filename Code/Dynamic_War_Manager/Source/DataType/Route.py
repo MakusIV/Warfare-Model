@@ -110,11 +110,18 @@ class Route:
 
         return min_distance
 
-    def travelTime(self):
+    def travelTime(self):        
+
+        return self.travelTimeToEdge(self._edges.get(-1))
+    
+    def travelTimeToEdge(self, edge: Edge):
         travel_time = 0
 
-        for k,v in self._edges:
-            travel_time += v.calcTravelTime
+        for v in self._edges.values():
+            if v == edge:
+                return travel_time
+            
+            travel_time += v.calcTravelTime()
 
         return travel_time
 
