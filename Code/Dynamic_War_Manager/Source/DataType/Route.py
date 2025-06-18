@@ -124,5 +124,12 @@ class Route:
             travel_time += v.calcTravelTime()
 
         return travel_time
+    
+    def length(self) -> float:
+        length = 0
+        for k, v in self._edges:
+            length += v.calcLength()
+        
+        return length
 
         

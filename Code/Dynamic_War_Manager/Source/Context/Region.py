@@ -49,6 +49,7 @@ class Region:
         self._name = name # block name - type str
         self._description = description # block description - type str               
         self._limes = limes # list of limes of the Region - type List[Limes]
+        self._routes = routes
 
         # Association   DEVI UTILIZZARE UNA PRIORITY QUEUE. update_blocks_priority ricalcola la priority dei blocchi in base alla loro importanza strategica e ridefinisce il key value per la queue che viene riodinata
         if blocks:
@@ -89,6 +90,8 @@ class Region:
 
     @property
     def routes(self):
+        """routes getter. dict of Route : {(id_blocks, ....): Route}, (key = list of block's id)
+        """
         return self._blocks
 
     @routes.setter
@@ -119,7 +122,63 @@ class Region:
             pass
            
         self._routes.append([key, route]) # append an route_item with priority value = 0.0        
-        logger.info(f"Block with ID {route.id} added in region {self.name}")
+        logger.info(f"Route added in region {self.name}")
+
+    def get_route(self, block_id: str, block_id_target: Optional[str]):
+        """ search routes for a block
+
+        Args:
+            block_id (str): block's id
+
+        Returns:
+            Tuple[Route]: Returns a tuple of routes that affect the block
+        """
+        
+        if not isinstance(block_id, str):
+            raise TypeError("block_id must be a str")
+        
+        if block_id_target:
+            if not isinstance(block_id_target, str):
+                raise TypeError("block_id must be a str")
+            if block_id == block_id_target:
+                raise ValueError(f"block_id_target ({block_id_target}) must be different block_id")
+        
+        routes = []
+        
+        for tuple_of_block_id, route in self._routes:
+            block_id_found = False
+            block_id_target_found = False
+
+            for _block_id in tuple_of_block_id:
+                
+                if _block_id == block_id:
+                    block_id_found = True
+                    if block_id_target == True:
+                        routes.append(route)
+                        continue # to check full list and add more routes or return for speed
+                                            
+                if _block_id == block_id_target:
+                    block_id_target_found = True
+                    if block_id == True:
+                        routes.append(route)
+                        continue #return routes                        
+        num_routes = len(routes)
+
+        if num_routes == 0:
+            return None
+        elif num_routes == 1:
+            return routes[0]
+        else:
+            min_length = int('inf')
+            min_route = None
+            for route in routes:
+                length = route.length()
+                if length < min_length:
+                    min_length = length
+                    min_route = route
+        return route
+
+
 
 
     @property
@@ -493,7 +552,7 @@ class Region:
             return None
                 
         
-        def __calc_air_priority(block: Military, target_block: Block, attack_route: Route, weight: float) -> Optional[float]:     
+        def __calc_air_priority(block: Military, target_block: Block, weight: float) -> Optional[float]:     
             """
             calculates the priority of a military block (ground or naval) by evaluating its combat power, the distance from the target, the combat power of the target or the 
             priority assigned in the case of logistical targets.
@@ -545,75 +604,6 @@ class Region:
                 
             return None                    
 
-        
-
-        def __ground_naval_priority_function(block: Block, target_block: Block, attack_route: Route, weight: float) -> Optional[float]:
-            """Restituisce il valore della priorità 
-
-            Args:
-                combat_power (float): _description_
-                combat_range (float): _description_
-                enemy_data (Dict): _description_
-                friendly_logistic_data (Dict): _description_
-                weight (Dict): _description_
-
-            Returns:
-                float: _description_
-            """
-
-            combat_power = block.combat_power(action = task, military_force = force)
-            combat_range = block.artillery_in_range()
-            # combat priority
-            enemy_quantity = len(enemy_data)            
-            combat_priority = 0            
-            for i in range(0, enemy_quantity):
-                combat_priority += enemy_data["combat_power"][i] * combat_range / ( combat_power * enemy_data["distance"][i] )                
-            combat_priority *= weight["ground_combat"]/enemy_quantity
-            
-            # logistic defence priority
-            logistic_quantity = len(friendly_logistic_data)
-            logistic_defence_priority = 0
-            for i in range(0, logistic_quantity):      
-                logistic_defence_priority += friendly_logistic_data["logistic_priority"][i] / friendly_logistic_data["distance"][i] 
-            logistic_defence_priority *= weight["logistic_defence"]/logistic_quantity
-
-            return combat_priority + logistic_defence_priority
-        
-        def __air_priority_function(combat_power: float, combat_range: float, enemy_data: Dict, friendly_data: Dict, weight: Dict) -> float:
-            combat_category = ["combat_ground", "combat_air", "combat_naval", "attack_logistic", "defence_ground", "defence_naval", "defence_logistic"]            
-            priority = {}
-
-            # combat priority
-            for combat in combat_category:
-                
-                if combat == "combat_ground" or combat == "combat_air" or combat == "combat_naval" or combat == "attack_logistic":                        
-                    enemy_quantity = len(enemy_data[combat])            
-                    priority[combat] = 0            
-                    for i in range(0, enemy_quantity):
-                        if combat == "combat_ground" or combat == "combat_air" or combat == "combat_naval":                        
-                            priority[combat] += enemy_data[combat]["combat_power"][i] * combat_range / ( combat_power * enemy_data[combat]["distance"][i] )                                                
-                        elif combat == "attack_logistic":
-                            priority[combat] += enemy_data[combat]["priority"][i] * combat_range / ( combat_power * enemy_data[combat]["distance"][i] )                
-                    priority[combat] *= weight[combat]/enemy_quantity            
-                
-                elif combat == "defence_ground" or combat == "defence_naval" or combat == "defence_logistic":                        
-                    friendly_quantity = len(friendly_data[combat])             
-                    priority[combat] = 0            
-                    for i in range(0, friendly_quantity):                    
-                        if combat == "defence_ground" or combat == "defence_naval":
-                            priority["friendly"][combat] += friendly_data[combat]["combat_power"][i] * combat_range / ( friendly_data[combat]["distance"][i] )    
-                        elif combat == "defence_logistic":                        
-                            priority["friendly"][combat] += friendly_data[combat]["priority"][i] * combat_range / ( friendly_data[combat]["distance"][i] )    
-                    priority[combat] *= weight[combat]/friendly_quantity                            
-
-            return sum( [ value for value in [ pry for pry in priority.value() ] ] )
-        
-        priority_functions = {
-            "ground": __ground_naval_priority_function,
-            "air": __air_priority_function,
-            "naval": __ground_naval_priority_function,
-        }
-        
 
 
         friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
@@ -622,16 +612,17 @@ class Region:
         friendly_blocks = self.get_blocks("Military", side)                                
         enemy_blocks = self.get_blocks("Military", Utility.enemySide(side))                                
         priority = {}
+      
 
         for military in friendly_blocks:       
 
             # calc priority factor fro attack                          
             for enemy in enemy_blocks:             
                 if military.is_groundbase() or military.is_navalgroup():
-                    priority["attack"] += __calc_surface_priority(block = military, target_block = enemy, attack_route = route, weight = weight["attack"])
+                    priority["attack"] += __calc_surface_priority(block = military, target_block = enemy, attack_route = self.get_route(military, enemy), weight = self.weight["attack"])
 
                 elif military.is_airbase():
-                    priority["attack"] += __calc_air_priority(block = military, target_block = enemy, attack_route = route, weight = weight["attack"])
+                    priority["attack"] += __calc_air_priority(block = military, target_block = enemy, weight = self.weight["attack"])
 
             # calc priority factor for coverage
             for friendly in friendly_blocks:
@@ -643,20 +634,7 @@ class Region:
 
                 elif military.is_airbase():                
                     pass
-                
-                
-
-                    friendly_data[combat]["combat_power"]
-                    friendly_data[combat]["distance"]
-                    pass
-            
-                    for block in [block for block in self.blocks if block.side == Utility.enemySide(side)]:
-                        if combat == "defence_ground" or combat == "defence_naval" or combat == "defence_logistic":                        
-                            enemy_data[combat]["combat_power"] = block.combat_power(task, force)
-                        elif combat == "defence_logistic":
-                            enemy_data[combat]["priority"] = block.priority
-                        enemy_data[combat]["distance"] = friendly.position.distance(block)           
-                        pass
+                              
         pass
         
                         

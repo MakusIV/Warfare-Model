@@ -145,7 +145,7 @@ class Edge:
         return True
 
 
-    def calcLenght(self):
+    def calcLength(self):
             return self._wpA.distanceFrom(self._wpB)
         
 
