@@ -21,6 +21,40 @@ from collections import defaultdict
 logger = Logger(module_name = __name__, class_name = 'Region')
 
 
+DEFAULT_ATTACK_WEIGHT = 0.5
+
+DEFAULT_WEIGHT_PRIORITY_TARGET = {  "Ground_Base":   {"attack": {"Ground_Base": 0.7,
+                                                                "Naval_Base": 0,
+                                                                "Air_Base": 0.1,
+                                                                "Logistic": 0.2,
+                                                                "Civilian": 0},
+                                                    "defence": {"Ground_Base": 0.1,
+                                                                "Naval_Base": 0.1,
+                                                                "Air_Base": 0.1,
+                                                                "Logistic": 0.4,
+                                                                "Civilian": 0.3} },
+                                    "Air_Base":      {"attack": {"Ground_Base": 0.3,
+                                                                "Naval_Base": 0.2,
+                                                                "Air_Base": 0.2,
+                                                                "Logistic": 0.3,
+                                                                "Civilian": 0},
+                                                    "defence": {"Ground_Base": 0.3,
+                                                                "Naval_Base": 0.1,
+                                                                "Air_Base": 0.2,
+                                                                "Logistic": 0.3,
+                                                                "Civilian": 0} },
+                                    "Naval_Base":   {"attack": {"Ground_Base": 0,
+                                                                "Naval_Base": 0.5,
+                                                                "Air_Base": 0.2,
+                                                                "Logistic": 0.3,
+                                                                "Civilian": 0},
+                                                    "defence": {"Ground_Base": 0.1,
+                                                                "Naval_Base": 0.6,
+                                                                "Air_Base": 0.1,
+                                                                "Logistic": 0.2,
+                                                                "Civilian": 0} } }
+
+
 MILITARY_FORCE = ["ground", "air", "naval"]
 ACTION_TASK = {"ground": Context.GROUND_ACTION,
                   "air": Context.AIR_TASK,
@@ -49,7 +83,9 @@ class Region:
         self._name = name # block name - type str
         self._description = description # block description - type str               
         self._limes = limes # list of limes of the Region - type List[Limes]
-        self._routes = routes
+        self._routes = routes # ground attack routes
+        self._attack_weight = DEFAULT_ATTACK_WEIGHT # coefficient used to calculate the priority of a block considering the attack actions (updating with strategical directory: offensive -> weight= 0.7 -> defence = 1-0-7 = 0.3)
+        self._weight_priority_target = DEFAULT_WEIGHT_PRIORITY_TARGET
 
         # Association   DEVI UTILIZZARE UNA PRIORITY QUEUE. update_blocks_priority ricalcola la priority dei blocchi in base alla loro importanza strategica e ridefinisce il key value per la queue che viene riodinata
         if blocks:
@@ -87,6 +123,57 @@ class Region:
         self._name = value
         # Reset cache when block changes
         # self._invalidate_resource_cache()
+
+    @property
+    def weight(self):
+        """get weight: coefficient used to calculate the priority of a block considering the attack actions
+
+        Returns:
+            float: weight for calculates priority
+        """
+        return self._weight
+
+    @weight.setter
+    def weight(self, value):
+        """Set weight: coefficient used to calculate the priority of a block considering the attack actions"""
+        
+        self._validate_param('weight', value, "float")
+        if 0 > value > 1:
+            raise ValueError(f"the weight {value} must be between 0 and 1")
+        self._name = value
+        # Reset cache when block changes
+        # self._invalidate_resource_cache()
+    
+    @property
+    def weight_priority_target(self):
+        """get weight_priority_target: list of coefficient used to calculate the priority of a block based on the category it belongs to
+
+        Returns:
+            dict: weight for calculates priority
+        """
+        return self._weight_priority_target
+
+    @weight.setter
+    def weight_priority_target(self, value):
+        """Set weight_priority_target: list coefficient used to calculate the priority of a block based on the category it belongs to"""
+        
+        self._validate_param('weight_priority_target', value, "Dict")
+
+        if value.keys() not in Context.MILITARY_CATEGORY:
+            raise ValueError(f"value keys {value.keys()!r} not a MILITARY CATEGORY {Context.MILITARY_CATEGORY!r}")
+    
+        for k,v in value.values():
+            if k not in ["attack", "defence"]:
+                raise ValueError(f"value keys {k!r} not in [\"attack\", \"defence\"]")
+            if v.keys() not in ["Ground_Base", "Naval_Base" ,"Air_Base", "Logistic", "Civilian"]:
+                raise ValueError(f"value {v!r} not in [\"Ground_Base\", \"Naval_Base\", \"Air_Base\", \"Logistic\", \"Civilian\"]")
+            if not isinstance(v.value(), float):
+                raise TypeError(f"weight coefficent must be a float {v.value().__class__.__name__}")
+
+        self._name = value
+        # Reset cache when block changes
+        # self._invalidate_resource_cache()
+    
 
     @property
     def routes(self):
@@ -218,12 +305,19 @@ class Region:
         logger.info(f"Block with ID {block.id} added in region {self.name}")
 
 
-    def get_block_inner_priority_range(self, side: str, category: str, priority_min: float, priority_max: float) -> Optional[list[Block]]:
+    def get_block_inner_priority_range(self, side: str, category: str, priority_min: float, priority_max: float) -> Optional[list[Block]]:     
         """
-        Return a list of blocks with priority in the range [priority_min, priority_max]
-        :param priority_min: minimum priority
-        :param priority_max: maximum priority
-        :return: list of blocks with priority in the range [priority_min, priority_max]
+        returns a list of block objects that have priorities between the arguments: priority_min and priority_max
+
+        Args:           
+            side (str): side of the block
+            category (str): category of the block: military, Logistic, Civilian
+            priority_min (float): minimum priority
+            priority_max (float): maximum priority
+
+        Returns:
+            block ( Optional[Block] ): Block object: 
+        
         """
         if not isinstance(priority_min, float) or not isinstance(priority_max, float):
             raise TypeError("priority_min and priority_max must be floats")
@@ -240,9 +334,19 @@ class Region:
 
     def get_block_by_id(self, block_id: str) -> Optional[Block]:
         """
-        Return a Block by its ID
+        
         :param block_id: ID of the block
         :return: Block object or None if not found
+        """
+        """
+        Return a Block by its ID or None
+
+        Args:                
+            block_id (str): ID of the block            
+
+        Returns:
+            block ( Optional[Block] ): Block object: 
+        
         """
         if not isinstance(block_id, str):
             raise TypeError("block_id must be a string")
@@ -257,8 +361,17 @@ class Region:
     def get_block_list(self, side: str, category: Optional[str], block_class: Optional[str]) -> List[Tuple[float, Block]]:
         """
         Return a list of tuples with block priority and Block object
-        :return: List[Tuple[float, Block]]
+
+        Args:                
+            side (str): side of the block
+            category (str): category of the block: military, Logistic, Civilian
+            block_class: class of the block: Military, Production, Storage, Transport, Urban                
+
+        Returns:
+            block list ( List[Tuple[float, Block]] ): list of tuples with block priority and Block object: 
+        
         """
+        
         block_list = []
         for block in self._blocks:
             if block.side == side:
@@ -274,6 +387,22 @@ class Region:
         
         return block_list
     
+    def get_highest_priority_block(self, side: str, quantity: int, category: Optional[str], block_class: Optional[str]) -> List[Tuple[float, Block]]:
+        """
+        Return a list of quantity tuples with highest priority
+
+        Args:                
+            side (str): side of the block
+            quantity (int): max number of block in list
+            category (str): category of the block: military, Logistic, Civilian
+            block_class: class of the block: Military, Production, Storage, Transport, Urban                
+
+        Returns:
+            block list ( List[Tuple[float, Block]] ): list of tuples with block priority and Block object: 
+        
+        """
+        pass
+
     def sorted_blocks_list(self, block_list: List[Tuple[float, Block]]) -> List[Tuple[float, Block]]:
         """
         Return a sorted list of blocks by priority in descending order
@@ -352,14 +481,14 @@ class Region:
         
         # escludo le Military in quanto tot_RSP è utilizzato per valutare la copertura da richiedere alle Military per la protezione di questi blocchi    
         n = len(logistic_blocks)
-        tot_RSP, tp = 0, 0 # tot_RSP: summmatory of strategic logistic block priority
+        tot_RSP, tp = 0, 0 # tot_RSP: summmatory of strategic Logistic block priority
 
         for block in logistic_blocks:
             position_2d = Point2D(block.position.x, block.position.y)
             tot_RSP += block.value# utilizza value doovrebbe utilizzare la priority             
             tp += position_2d * block.value # Point2D per uno scalare produce un Point2D con le sue coordinate moltiplicate ognuna per lo scalare
         
-        r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic logistic center position for side blocks
+        r_SLP = tp / (n * tot_RSP) # r_SLP: region strategic Logistic center position for side blocks
         return r_SLP
     
     def calc_combat_power_center(self, side: str): 
@@ -386,7 +515,7 @@ class Region:
         for force in MILITARY_FORCE:
             for task in ACTION_TASK[force]:                                    
                 for block in Militarys:
-                    if ( block.is_airbase and force == "air" ) or (block.is_groundbase and force == "ground") or ( block.is_navalbase and force == "naval" ):
+                    if ( block.is_Air_Base and force == "air" ) or (block.is_Ground_Base and force == "ground") or ( block.is_navalbase and force == "naval" ):
                         cp = block.combat_power(action = task, military_force = force) # block combat power 
                         tot_CP[force][task] += cp  # sum of block's combat power 
                         tp[force][task] += block.position * cp  # sum of ponderate position block's point
@@ -447,7 +576,7 @@ class Region:
     # nota: per i blocchi logistici la priority è utilizzata per l'assegnazione delle risorse di rifornimento e per l'assegnazione delle risorse militari
     # mentre per i blocchi militari la priority è utilizzata solo per l'assegnazione delle risorse di rifornimento
     def update_logistic_blocks_priority(self) -> bool:
-        """Update the priority of the logistic blocks in the Region based on their strategic importance key: production_value"""
+        """Update the priority of the Logistic blocks in the Region based on their strategic importance key: production_value"""
         tot_production_value = self.calc_region_logistic_production_value() * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, used to normalize the production value to a range between 0 and 1
         
         if tot_production_value == 0:
@@ -497,7 +626,7 @@ class Region:
                 block (Military): block to calculates priority
                 target_block (Block): target of the block
                 attack_route (Route): intercept route to target_block
-                weight (float): assigned weight to calulates priority
+                weight (float): assigned weight for calulates priority
 
             Returns:
                 priority (float): priority value of the block
@@ -508,11 +637,11 @@ class Region:
             if not combat_power:
                 return None
 
-            if block.is_groundbase or block.is_navalgroup:            
+            if block.is_Ground_Base or block.is_Naval_Base:            
                 arty_combat_range = block.artillery_in_range( target_block.position )                        
-            if block.is_groundbase:
+            if block.is_Ground_Base:
                 time_to_intercept = block.time2attack( route = attack_route )   
-            elif block.is_navalgroup:
+            elif block.is_Naval_Base:
                 time_to_intercept = block.time2attack( target = target_block.position )   
             if time_to_intercept < 1: # second
                     time_to_intercept = 1                
@@ -559,14 +688,12 @@ class Region:
 
             Args:                
                 block (Military): block to calculates priority
-                target_block (Block): target of the block
-                attack_route (Route): intercept route to target_block
-                weight (float): assigned weight to calulates priority
+                target_block (Block): target of the block                
+                weight (float): assigned weight for calculates priority
 
             Returns:
                 priority (float): priority value of the block
-            """                
-            
+            """                            
             combat_power = block.combat_power()
             
             if not combat_power:
@@ -605,43 +732,73 @@ class Region:
             return None                    
 
 
+        # implementare in modo da usarli per orientare la priorità per l'attacco verso blocchi più 
+        # vicini al centro della potenza complessiva di combattimento del nemico e quella della difesa 
+        # versoblocchipiù vicini al baricentro delle zone produttive
 
-        friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
-        enemy_combat_power_center = self.calc_combat_power_center( side = Utility.enemySide(side) )
+        # friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
+        # enemy_combat_power_center = self.calc_combat_power_center( side = Utility.enemySide(side) )
 
-        friendly_blocks = self.get_blocks("Military", side)                                
-        enemy_blocks = self.get_blocks("Military", Utility.enemySide(side))                                
-        priority = {}
+        #priority only for military block category
+        friendly_blocks = self.get_block_list(side = side, category = "Military")                                
+        #target block for all category (military, logistic and civilian)
+        enemy_blocks = self.get_block_list(side = Utility.enemySide(side))                                                        
+        priority = {"attack": 0.0, "defence": 0.0}
       
+        for block_item in friendly_blocks:                   
+            military = block_item[1]            
+            #setup military block category to select weight index
+            block_category = military.get_military_category()            
+            
+            # calc priority factor for attack                          
+            for _, target in enemy_blocks:                     
+                #setup target block category to select weight index
+                if target.is_military():
+                    target_category = target.get_military_category()
+                elif target.is_civilian() or target.is_logistic():
+                    target_category = target.category              
+                else:
+                    logger.warning(f"the  block{target!r} is not a military base, logistical or civil block; block weight will be set with Civilian value")
+                    target_category = "Civilian"
+                
+                # weight selection
+                weight = self.weight_priority_target[block_category]["attack"][target_category]
+                
+                
+                # priority summatory
+                if military.is_Ground_Base() or military.is_Naval_Base():                    
+                    priority["attack"] += __calc_surface_priority(block = military, target_block = target, attack_route = self.get_route(military, target), weight = weight)
+                elif military.is_Air_Base():                    
+                    priority["attack"] += __calc_air_priority(block = military, target_block = target, weight = weight)
 
-        for military in friendly_blocks:       
-
-            # calc priority factor fro attack                          
-            for enemy in enemy_blocks:             
-                if military.is_groundbase() or military.is_navalgroup():
-                    priority["attack"] += __calc_surface_priority(block = military, target_block = enemy, attack_route = self.get_route(military, enemy), weight = self.weight["attack"])
-
-                elif military.is_airbase():
-                    priority["attack"] += __calc_air_priority(block = military, target_block = enemy, weight = self.weight["attack"])
-
-            # calc priority factor for coverage
-            for friendly in friendly_blocks:
+            # calc priority factor for defence
+            for _, friendly in friendly_blocks:
                 if military == friendly:
                     continue
-
-                if military.is_groundbase() or military.is_navalgroup():
-                    pass
-
-                elif military.is_airbase():                
-                    pass
-                              
-        pass
+                #setup target block category to select weight index
+                if friendly.is_military():
+                    target_category = target.get_military_category()
+                elif friendly.is_civilian() or target.is_logistic():
+                    friendly_category = target.category              
+                else:
+                    logger.warning(f"the  block{friendly!r} is not a military base, logistical or civil block; block weight will be set with Civilian value")
+                    friendly_category = "Civilian"
+                
+                # weight selection
+                weight = self.weight_priority_target[block_category]["defence"][friendly_category]
+                
+                if military.is_Ground_Base() or military.is_Naval_Base():
+                    priority["defence"] += __calc_surface_priority(block = military, target_block = friendly, attack_route = self.get_route(military, friendly), weight = weight)
+                elif military.is_Air_Base():                
+                    priority["defence"] += __calc_air_priority(block = military, target_block = friendly, weight = weight)
+        
+        overall_priority = priority["attack"] * weight + priority["defence"] * (1 - weight)
+        update_block_item = (overall_priority, military)
+        self._blocks.remove(block_item)
+        self._blocks.append(update_block_item)
+        return True
         
                         
-        
-        
-
-
     def calcRegionGroundCombatPower(self, side: str, action: str):
         """ Return the total combat power of the Region"""
         block_list = [block for block in self.blocks if block.side == side and isinstance(block, Military)]        

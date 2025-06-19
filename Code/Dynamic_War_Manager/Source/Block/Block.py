@@ -433,3 +433,6 @@ class Block:
     def enemy_side(self) -> str:
         """Determine enemy side"""
         return enemySide(self._side)
+    
+    def is_enemy(self, side: str):            
+            return self._side == self.enemy_side(side)

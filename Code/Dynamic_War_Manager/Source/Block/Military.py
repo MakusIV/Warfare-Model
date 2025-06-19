@@ -113,17 +113,34 @@ class Military(Block):
             if hasattr(asset, 'combat_power')
         )
 
+    def get_military_category(self):
+        """ Returns military category (Air_Base, Ground_Base, Naval_Base) of Block
+
+        Returns:
+        str: military category of block (Air_Base, Ground_Base, Naval_Base) 
+        """
     
+        military_category = None
+
+        if self.is_Air_Base:
+            military_sub_category = "Air_Base"
+        if self.is_Ground_Base:
+            military_sub_category = "Ground_Base"
+        if self.is_Naval_Base:
+            military_sub_category = "Naval_Base"
+
+        return military_category
+
     #region Base Type Checks
-    def is_airbase(self) -> bool:
-        """Check if base is an airbase."""
+    def is_Air_Base(self) -> bool:
+        """Check if base is an Air_Base."""
         return self._mil_category in MILITARY_CATEGORY["Air_Base"]
 
-    def is_groundbase(self) -> bool:
+    def is_Ground_Base(self) -> bool:
         """Check if base is a ground base."""
         return self._mil_category in MILITARY_CATEGORY["Ground_Base"]
 
-    def is_navalgroup(self) -> bool:
+    def is_Naval_Base(self) -> bool:
         """Check if base is a naval group."""
         return self._mil_category in MILITARY_CATEGORY["Naval_Base"]
     #endregion
@@ -238,10 +255,10 @@ class Military(Block):
         if not(target and route):
             raise ValueError("target or route value must be assigned")      
 
-        if self.is_airbase and target:
+        if self.is_Air_Base and target:
             return self.time_to_direct_line_attack(target = target)
         
-        elif self.is_groundbase and route:
+        elif self.is_Ground_Base and route:
             return self.time_to_ground_intercept(route = route, speed = speed)
 
 
@@ -283,13 +300,13 @@ class Military(Block):
 
     def _is_attack_asset(self, asset: Union[Vehicle, Aircraft, Ship]) -> bool:
         """Check if asset is attack-capable based on military category."""
-        if self.is_groundbase() and validate_class(asset, "Vehicle"):
+        if self.is_Ground_Base() and validate_class(asset, "Vehicle"):
             return asset.isTank or asset.isArmor or asset.isMotorized
-        elif self.is_airbase() and validate_class(asset, "Aircraft"):
+        elif self.is_Air_Base() and validate_class(asset, "Aircraft"):
             return not (asset.isTransport or asset.isAwacs or asset.isRecon or asset.isHelicopter)
         elif self.is_helibase() and validate_class(asset, "Aircraft"):
             return asset.isHelicopter
-        elif self.is_navalgroup() and validate_class(asset, "Ship"):
+        elif self.is_Naval_Base() and validate_class(asset, "Ship"):
             return (asset.isCarrier or asset.isDestroyer or asset.isFrigate or 
                     asset.isCruiser or asset.isFastAttackShip or asset.isSubmarine)
         return False
