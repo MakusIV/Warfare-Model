@@ -174,7 +174,6 @@ class Region:
         # Reset cache when block changes
         # self._invalidate_resource_cache()
     
-
     @property
     def routes(self):
         """routes getter. dict of Route : {(id_blocks, ....): Route}, (key = list of block's id)
@@ -264,9 +263,6 @@ class Region:
                     min_length = length
                     min_route = route
         return route
-
-
-
 
     @property
     def blocks(self):
@@ -401,7 +397,16 @@ class Region:
             block list ( List[Tuple[float, Block]] ): list of tuples with block priority and Block object: 
         
         """
-        pass
+        if quantity < 1:
+            raise ValueError(f"quantity must be bigger of 0")
+        
+        
+        block_count = 0
+        block_list = self.get_block_list(side = side, category = category, block_class = block_class)
+        block_list = self.sorted_blocks_list(block_list.copy())
+             
+        return block_list[ :quantity ]
+        # ottimizzato: return self.sorted_blocks_list( self.get_block_list(side = side, category = category, block_class = block_class) )[ : quantity ]
 
     def sorted_blocks_list(self, block_list: List[Tuple[float, Block]]) -> List[Tuple[float, Block]]:
         """
@@ -734,10 +739,10 @@ class Region:
 
         # implementare in modo da usarli per orientare la priorità per l'attacco verso blocchi più 
         # vicini al centro della potenza complessiva di combattimento del nemico e quella della difesa 
-        # versoblocchipiù vicini al baricentro delle zone produttive
+        # verso blocchipiù vicini al baricentro delle zone produttive
 
-        # friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
-        # enemy_combat_power_center = self.calc_combat_power_center( side = Utility.enemySide(side) )
+        #friendly_logistic_baricenter = self.calc_region_strategic_logistic_center( side = side )
+        #enemy_combat_power_center = self.calc_combat_power_center( side = Utility.enemySide(side) )
 
         #priority only for military block category
         friendly_blocks = self.get_block_list(side = side, category = "Military")                                
