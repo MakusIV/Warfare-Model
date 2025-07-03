@@ -1,0 +1,1316 @@
+@startuml __init__
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Utility" as Utility
+participant ":Logger" as Logger
+participant "block:Block" as Block
+
+User -> Region: new Region(name, limes, description, blocks, routes)
+activate Region
+
+Region -> Region: _validate_all_params(name, limes, description, blocks, routes)
+activate Region
+Region --> Region: (validation results)
+deactivate Region
+
+alt if blocks exist
+    loop for each block in blocks.values
+        Region -> Block: block.region()
+        activate Block
+        Block --> Region: self
+        deactivate Block
+        Region -> Block: block.region = self
+    end
+end
+
+Region -> Logger: info(f"Block with ID {block.id} added in region {self.name}")
+activate Logger
+Logger --> Region:
+deactivate Logger
+
+User <-- Region: Region object created
+deactivate Region
+@enduml
+
+@startuml addRoute
+autonumber
+actor User
+participant ":Region" as Region
+participant "route:Route" as Route
+participant ":Logger" as Logger
+
+User -> Region: addRoute(key, route)
+activate Region
+
+Region -> Region: _is_valid_route(route)
+activate Region
+Region --> Region: True/False
+deactivate Region
+
+alt if route is not valid
+    Region --> User: raise ValueError
+else if key is not string
+    Region --> User: raise TypeError
+else
+    Region -> Region: _validate_route_param()
+    activate Region
+    Region --> Region:
+    deactivate Region
+
+    Region -> Region: _routes.append([key, route])
+    Region -> Logger: info(f"Route added in region {self.name}")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+end
+
+User <-- Region: Route added
+deactivate Region
+@enduml
+
+@startuml get_route
+autonumber
+actor User
+participant ":Region" as Region
+participant "route:Route" as Route
+
+User -> Region: get_route(block_id, block_id_target)
+activate Region
+
+alt if block_id is not string
+    Region --> User: raise TypeError
+end
+
+alt if block_id_target exists and is not string
+    Region --> User: raise TypeError
+else if block_id == block_id_target
+    Region --> User: raise ValueError
+end
+
+loop for each tuple_of_block_id, route in _routes
+    Region -> Region: check if block_id or block_id_target is in tuple_of_block_id
+    alt if block_id_found and block_id_target_found
+        Region -> Region: routes.append(route)
+    end
+end
+
+alt if num_routes == 0
+    Region --> User: return None
+else if num_routes == 1
+    Region --> User: return routes[0]
+else
+    Region -> Region: find route with minimum length
+    Region --> User: return min_route
+end
+
+deactivate Region
+@enduml
+
+@startuml addBlock
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+participant ":Logger" as Logger
+
+User -> Region: addBlock(block)
+activate Region
+
+Region -> Region: _is_valid_block(block)
+activate Region
+Region --> Region: True/False
+deactivate Region
+
+alt if block is not valid
+    Region --> User: raise ValueError
+else if block.region is not None and block.region != self
+    Region --> User: raise ValueError
+else
+    Region -> Block: block.region(self)
+    activate Block
+    Block --> Region:
+    deactivate Block
+    Region -> Region: _blocks.append([0.0, block])
+    Region -> Logger: info(f"Block with ID {block.id} added in region {self.name}")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+end
+
+User <-- Region: Block added
+deactivate Region
+@enduml
+
+@startuml get_block_inner_priority_range
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Logger" as Logger
+participant "block:Block" as Block
+
+User -> Region: get_block_inner_priority_range(side, category, priority_min, priority_max)
+activate Region
+
+alt if priority_min or priority_max are not floats
+    Region --> User: raise TypeError
+else if priority_min > priority_max
+    Region --> User: raise ValueError
+end
+
+Region -> Region: get_priority_block_list(side, category)
+activate Region
+Region --> Region: block_list
+deactivate Region
+
+Region -> Region: filter blocks by priority range
+alt if no blocks in range
+    Region -> Logger: warning("No blocks found...")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+    Region --> User: return None
+else
+    Region --> User: return list of Block objects
+end
+
+deactivate Region
+@enduml
+
+@startuml get_block_by_id
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Logger" as Logger
+
+User -> Region: get_block_by_id(block_id)
+activate Region
+
+alt if block_id is not string
+    Region --> User: raise TypeError
+end
+
+loop for each block_item in _blocks
+    Region -> "block_item[1]:Block": block_item[1].id
+    "block_item[1]:Block" --> Region: block_id
+    alt if block_item[1].id == block_id
+        Region --> User: return block_item
+    end
+end
+
+Region -> Logger: warning(f"Block with ID {block_id} not found...")
+activate Logger
+Logger --> Region:
+deactivate Logger
+Region --> User: return None
+
+deactivate Region
+@enduml
+
+@startuml get_block_list
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+
+User -> Region: get_block_list(side, category, block_class)
+activate Region
+
+loop for each block in _blocks
+    Region -> Block: block.side
+    Block --> Region:
+    alt if block.side == side
+        Region -> Block: block.category
+        Block --> Region:
+        alt if category is provided and block.category == category
+            Region -> Block: block.__class__.__name__
+            Block --> Region:
+            alt if block_class is provided and block.__class__.__name__ == block_class
+                Region -> Region: add (block[0], block[1]) to block_list
+            else if block_class is not provided
+                Region -> Region: add (block[0], block[1]) to block_list
+            end
+        else if category is not provided
+            Region -> Region: add (block[0], block[1]) to block_list
+        end
+    end
+end
+
+Region --> User: return block_list
+deactivate Region
+@enduml
+
+@startuml get_highest_priority_block
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: get_highest_priority_block(side, quantity, category, block_class)
+activate Region
+
+alt if quantity < 1
+    Region --> User: raise ValueError
+end
+
+Region -> Region: get_block_list(side, category, block_class)
+activate Region
+Region --> Region: block_list_raw
+deactivate Region
+
+Region -> Region: sorted_blocks_list(block_list_raw.copy())
+activate Region
+Region --> Region: sorted_block_list
+deactivate Region
+
+Region --> User: return sorted_block_list[:quantity]
+deactivate Region
+@enduml
+
+@startuml sorted_blocks_list
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: sorted_blocks_list(block_list)
+activate Region
+
+alt if block_list is not a list
+    Region --> User: raise TypeError
+end
+
+Region -> Region: sort block_list by priority (x[0]) in descending order
+Region --> User: return sorted_list
+
+deactivate Region
+@enduml
+
+@startuml removeBlock
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Logger" as Logger
+
+User -> Region: removeBlock(block_id)
+activate Region
+
+alt if block_id is not string
+    Region --> User: raise TypeError
+end
+
+Region -> Region: get_block_by_id(block_id)
+activate Region
+Region --> Region: block_item_to_remove
+deactivate Region
+
+alt if block_item_to_remove is not None
+    Region -> Region: _blocks.remove(block_item_to_remove)
+    Region -> Logger: info(f"Block with ID {block_id} removed...")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+else
+    Region -> Logger: warning(f"Block with ID {block_id} not found...")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+end
+
+Region --> User: return None
+deactivate Region
+@enduml
+
+@startuml get_enemy_blocks
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Utility" as Utility
+
+User -> Region: get_enemy_blocks(side, category, block_class)
+activate Region
+
+Region -> Utility: enemySide(side)
+activate Utility
+Utility --> Region: enemy_side
+deactivate Utility
+
+Region -> Region: get_block_list(side = enemy_side, category, block_class)
+activate Region
+Region --> Region: enemy_blocks_list
+deactivate Region
+
+Region --> User: return enemy_blocks_list
+deactivate Region
+@enduml
+
+@startuml checkClass
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: checkClass(object)
+activate Region
+
+Region --> User: return type(object) == type(self)
+deactivate Region
+@enduml
+
+@startuml checkClassList
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: checkClassList(objects)
+activate Region
+
+Region --> User: return all(type(obj) == type(self) for obj in objects)
+deactivate Region
+@enduml
+
+@startuml checkListOfObjects
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: checkListOfObjects(classType, objects)
+activate Region
+
+Region --> User: return isinstance(objects, List) and not all(isinstance(obj, classType) for obj in objects)
+deactivate Region
+@enduml
+
+
+@startuml get_blocks
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Context" as Context
+participant "block:Block" as Block
+participant ":Production" as Production
+participant ":Storage" as Storage
+participant ":Transport" as Transport
+participant ":Urban" as Urban
+participant ":Military" as Military
+
+User -> Region: get_blocks(blockClass, side)
+activate Region
+
+Region -> Context: BLOCK_CATEGORY
+Context --> Region:
+alt if blockClass not in Context.BLOCK_CATEGORY
+    Region --> User: raise ValueError
+end
+
+alt if blockClass == "Logistic"
+    loop for block in _blocks
+        Region -> Block: block.side
+        Block --> Region:
+        alt if (isinstance(block, Production) or isinstance(block, Storage) or isinstance(block, Transport)) and block.side == side
+            Region -> Region: add block to list
+        end
+    end
+else if blockClass == "Civilian"
+    loop for block in _blocks
+        Region -> Block: block.side
+        Block --> Region:
+        alt if isinstance(block, Urban) and block.side == side
+            Region -> Region: add block to list
+        end
+    end
+else if blockClass == "Military"
+    loop for block in _blocks
+        Region -> Block: block.side
+        Block --> Region:
+        alt if isinstance(block, Military) and block.side == side
+            Region -> Region: add block to list
+        end
+    end
+end
+
+Region --> User: return list of blocks
+deactivate Region
+@enduml
+
+@startuml calc_region_strategic_logistic_center
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+participant ":Point2D" as Point2D
+
+User -> Region: calc_region_strategic_logistic_center(side)
+activate Region
+
+Region -> Region: getBlocks("Logistic", side)
+activate Region
+Region --> Region: logistic_blocks
+deactivate Region
+
+loop for block in logistic_blocks
+    Region -> Block: block.position
+    Block --> Region: position_3d
+    Region -> Point2D: new Point2D(position_3d.x, position_3d.y)
+    activate Point2D
+    Point2D --> Region: position_2d
+    deactivate Point2D
+    Region -> Block: block.value
+    Block --> Region: block_value
+    Region -> Region: tot_RSP += block_value
+    Region -> Region: tp += position_2d * block_value
+end
+
+Region -> Region: calculate r_SLP
+Region --> User: return r_SLP
+
+deactivate Region
+@enduml
+
+@startuml calc_combat_power_center
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Military" as Military
+participant ":Point2D" as Point2D
+participant ":Context" as Context
+
+User -> Region: calc_combat_power_center(side)
+activate Region
+
+Region -> Region: get_blocks("Military", side)
+activate Region
+Region --> Region: Militarys
+deactivate Region
+
+loop for force in MILITARY_FORCE
+    loop for task in ACTION_TASK[force]
+        loop for block in Militarys
+            alt if block matches force type
+                Region -> Military: block.combat_power(action = task, military_force = force)
+                activate Military
+                Military --> Region: cp
+                deactivate Military
+                Region -> Region: tot_CP[force][task] += cp
+                Region -> Block: block.position
+                Block --> Region: position_3d
+                Region -> Point2D: new Point2D(position_3d.x, position_3d.y)
+                activate Point2D
+                Point2D --> Region: position_2d
+                deactivate Point2D
+                Region -> Region: tp[force][task] += position_2d * cp
+                Region -> Region: blocks_quantity[force][task] += 1
+            end
+        end
+    end
+end
+
+loop for force in MILITARY_FORCE
+    loop for task in ACTION_TASK[force]
+        Region -> Region: calculate r_CPP[force][task]
+    end
+end
+
+Region --> User: return r_CPP
+deactivate Region
+@enduml
+
+@startuml calc_region_warehouse
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Payload" as Payload
+participant "block:Block" as Block
+participant "resource_manager:ResourceManager" as ResourceManager
+
+User -> Region: calc_region_warehouse()
+activate Region
+
+Region -> Payload: new Payload()
+activate Payload
+Payload --> Region: tot_warehouse
+deactivate Payload
+
+loop for block in _blocks
+    Region -> Block: block.resource_manager
+    Block --> Region: resource_manager
+    Region -> ResourceManager: warehouse()
+    activate ResourceManager
+    ResourceManager --> Region: block_warehouse
+    deactivate ResourceManager
+    Region -> Payload: tot_warehouse += block_warehouse
+    activate Payload
+    Payload --> Region:
+    deactivate Payload
+end
+
+Region --> User: return tot_warehouse
+deactivate Region
+@enduml
+
+@startuml calc_region_actual_production
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Payload" as Payload
+participant "block:Block" as Block
+participant ":Production" as Production
+participant "resource_manager:ResourceManager" as ResourceManager
+
+User -> Region: calc_region_actual_production()
+activate Region
+
+Region -> Payload: new Payload()
+activate Payload
+Payload --> Region: tot_production
+deactivate Payload
+
+loop for block in _blocks
+    alt if isinstance(block, Production)
+        Region -> Block: block.resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: actual_production()
+        activate ResourceManager
+        ResourceManager --> Region: block_production
+        deactivate ResourceManager
+        Region -> Payload: tot_production += block_production
+        activate Payload
+        Payload --> Region:
+        deactivate Payload
+    end
+end
+
+Region --> User: return tot_production
+deactivate Region
+@enduml
+
+@startuml calc_region_logistic_production_value
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+participant ":Production" as Production
+participant ":Storage" as Storage
+participant ":Transport" as Transport
+participant ":Urban" as Urban
+participant "resource_manager:ResourceManager" as ResourceManager
+participant ":Logger" as Logger
+
+User -> Region: calc_region_logistic_production_value()
+activate Region
+
+Region -> Region: Initialize tot_production_production_value, tot_storage_production_value, etc. to 0.0
+
+loop for block in _blocks
+    alt if isinstance(block[1], Production)
+        Region -> Block: block[1].resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: production_value()
+        activate ResourceManager
+        ResourceManager --> Region: value
+        deactivate ResourceManager
+        Region -> Region: tot_production_production_value += value
+    else if isinstance(block[1], Storage)
+        Region -> Block: block[1].resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: production_value()
+        activate ResourceManager
+        ResourceManager --> Region: value
+        deactivate ResourceManager
+        Region -> Region: tot_storage_production_value += value
+    else if isinstance(block[1], Transport)
+        Region -> Block: block[1].resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: production_value()
+        activate ResourceManager
+        ResourceManager --> Region: value
+        deactivate ResourceManager
+        Region -> Region: tot_transport_production_value += value
+    else if isinstance(block[1], Urban)
+        Region -> Block: block[1].resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: production_value()
+        activate ResourceManager
+        ResourceManager --> Region: value
+        deactivate ResourceManager
+        Region -> Region: tor_urban_production_value += value
+    end
+end
+
+Region -> Region: calculate tot_production_value
+Region -> Logger: debug(f"Region {self.name} total production value: {tot_production_value}")
+activate Logger
+Logger --> Region:
+deactivate Logger
+
+alt if tot_production_value == 0.0
+    Region -> Logger: warning("Total production value is 0...")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+    Region --> User: return 0.0
+else
+    Region --> User: return dictionary of production values
+end
+
+deactivate Region
+@enduml
+
+@startuml update_logistic_blocks_priority
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Block" as Block
+participant ":Production" as Production
+participant ":Storage" as Storage
+participant ":Transport" as Transport
+participant ":Urban" as Urban
+participant "resource_manager:ResourceManager" as ResourceManager
+participant ":Logger" as Logger
+
+User -> Region: update_logistic_blocks_priority()
+activate Region
+
+Region -> Region: calc_region_logistic_production_value()
+activate Region
+Region --> Region: tot_production_value
+deactivate Region
+
+alt if tot_production_value == 0
+    Region -> Logger: warning("Total production value is 0...")
+    activate Logger
+    Logger --> Region:
+    deactivate Logger
+    Region --> User: return False
+end
+
+loop for block in _blocks
+    Region -> Block: block[1].isLogistic()
+    activate Block
+    Block --> Region: is_logistic
+    deactivate Block
+
+    alt if is_logistic is True
+        Region -> Block: block[1].resource_manager
+        Block --> Region: resource_manager
+        Region -> ResourceManager: production_value()
+        activate ResourceManager
+        ResourceManager --> Region: production_value
+        deactivate ResourceManager
+
+        alt if production_value > 0
+            Region -> Region: block_absolute_priority_value = production_value * block[1].value
+
+            alt if isinstance(block[1], Production)
+                Region -> Region: block_priority = ... / tot_production_value["production"]
+            else if isinstance(block[1], Storage)
+                Region -> Region: block_priority = ... / tot_production_value["storage"]
+            else if isinstance(block[1], Transport)
+                Region -> Region: block_priority = ... / tot_production_value["transport"]
+            else if isinstance(block[1], Urban)
+                Region -> Region: block_priority = ... / tot_production_value["urban"]
+            else
+                Region -> Region: continue (skip block)
+            end
+
+            Region -> Region: block[0] = block_priority
+            Region -> Logger: debug(f"Block {block[1].name} priority updated to {block_priority}")
+            activate Logger
+            Logger --> Region:
+            deactivate Logger
+        end
+    end
+end
+
+Region --> User: return True
+deactivate Region
+@enduml
+
+@startuml update_military_priority
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Military" as Military
+participant ":Block" as Block
+participant ":Route" as Route
+participant ":Utility" as Utility
+participant ":Logger" as Logger
+
+User -> Region: update_military_priority(side)
+activate Region
+
+Region -> Region: get_block_list(side, "Military")
+activate Region
+Region --> Region: friendly_blocks
+deactivate Region
+
+Region -> Utility: enemySide(side)
+activate Utility
+Utility --> Region: enemy_side
+deactivate Utility
+
+Region -> Region: get_block_list(enemy_side)
+activate Region
+Region --> Region: enemy_blocks
+deactivate Region
+
+loop for block_item in friendly_blocks
+    !define military block_item[1]
+    !define block_category military.get_military_category()
+
+    alt Calculate attack priority
+        loop for _, target in enemy_blocks
+            !define target_category "target_category"
+            !define weight self.weight_priority_target[block_category]["attack"][target_category]
+            alt if military is Ground_Base or Naval_Base
+                Region -> Region: get_route(military, target)
+                activate Region
+                Region --> Region: attack_route
+                deactivate Region
+                Region -> Region: __calc_surface_priority(military, target, attack_route, weight)
+                activate Region
+                Region --> Region: priority_value
+                deactivate Region
+                Region -> Region: priority["attack"] += priority_value
+            else if military is Air_Base
+                Region -> Region: __calc_air_priority(military, target, weight)
+                activate Region
+                Region --> Region: priority_value
+                deactivate Region
+                Region -> Region: priority["attack"] += priority_value
+            end
+        end
+    end
+
+    alt Calculate defence priority
+        loop for _, friendly in friendly_blocks
+            alt if military == friendly
+                Region -> Region: continue
+            end
+            !define friendly_category "friendly_category"
+            !define weight self.weight_priority_target[block_category]["defence"][friendly_category]
+            alt if military is Ground_Base or Naval_Base
+                Region -> Region: get_route(military, friendly)
+                activate Region
+                Region --> Region: defence_route
+                deactivate Region
+                Region -> Region: __calc_surface_priority(military, friendly, defence_route, weight)
+                activate Region
+                Region --> Region: priority_value
+                deactivate Region
+                Region -> Region: priority["defence"] += priority_value
+            else if military is Air_Base
+                Region -> Region: __calc_air_priority(military, friendly, weight)
+                activate Region
+                Region --> Region: priority_value
+                deactivate Region
+                Region -> Region: priority["defence"] += priority_value
+            end
+        end
+    end
+
+    Region -> Region: calculate overall_priority
+    Region -> Region: remove block_item from _blocks
+    Region -> Region: append (overall_priority, military) to _blocks
+end
+
+Region --> User: return True
+deactivate Region
+
+@enduml
+
+
+@startuml __calc_surface_priority
+autonumber
+participant ":Military" as Military
+participant "target_block:Block" as Block
+participant "attack_route:Route" as Route
+participant ":Region" as Region
+
+Region -> Region: __calc_surface_priority(block, target_block, attack_route, weight)
+activate Region
+
+Region -> Military: block.combat_power()
+activate Military
+Military --> Region: combat_power
+deactivate Military
+
+alt if not combat_power
+    Region --> Region: return None
+end
+
+alt if block is Ground_Base or Naval_Base
+    Region -> Military: block.artillery_in_range(target_block.position)
+    activate Military
+    Military --> Region: arty_combat_range
+    deactivate Military
+end
+
+alt if block is Ground_Base
+    Region -> Military: block.time2attack(route = attack_route)
+    activate Military
+    Military --> Region: time_to_intercept
+    deactivate Military
+else if block is Naval_Base
+    Region -> Military: block.time2attack(target = target_block.position)
+    activate Military
+    Military --> Region: time_to_intercept
+    deactivate Military
+end
+
+alt if time_to_intercept < 1
+    Region -> Region: time_to_intercept = 1
+end
+
+alt if not arty_combat_range["target_within_med_range"] and (not time_to_intercept or time_to_intercept == float('inf'))
+    Region --> Region: return None
+end
+
+!define target_default_strategic_value target_block.value
+alt if not target_default_strategic_value
+    !define target_default_strategic_value 1
+end
+
+alt if arty_combat_range["target_within_med_range"]
+    !define range_ratio arty_combat_range["med_range_ratio"]
+else
+    !define range_ratio 1
+end
+
+alt if target_block.is_military
+    Region -> Block: target_block.combat_power()
+    activate Block
+    Block --> Region: target_combat_power
+    deactivate Block
+
+    alt if combat_power > 0.0
+        !define combat_power_ratio "risultato calcolo ratio"
+    end
+    !define priority "risultato calcolo priority"
+    Region --> Region: return priority
+else if target_block.is_logistic
+    Region -> Region: get_block_by_id(block.id)
+    activate Region
+    Region --> Region: target_priority, _
+    deactivate Region
+    alt if not target_priority
+        Region -> Region: update_logistic_blocks_priority()
+        activate Region
+        Region --> Region:
+        deactivate Region
+    end
+    !define priority "risultato calcolo priority"
+    Region --> Region: return priority
+end
+
+Region --> Region: return None
+deactivate Region
+@enduml
+
+@startuml __calc_air_priority
+autonumber
+participant ":Military" as Military
+participant "target_block:Block" as Block
+participant ":Region" as Region
+
+Region -> Region: __calc_air_priority(block, target_block, weight)
+activate Region
+
+Region -> Military: block.combat_power()
+activate Military
+Military --> Region: combat_power
+deactivate Military
+
+alt if not combat_power
+    Region --> Region: return None
+end
+
+Region -> Military: block.time2attack(target = target_block.position)
+activate Military
+Military --> Region: time_to_intercept
+deactivate Military
+
+alt if time_to_intercept < 1
+    Region -> Region: time_to_intercept = 1
+end
+
+!define target_default_strategic_value target_block.value
+alt if not target_default_strategic_value
+    !define target_default_strategic_value 1
+end
+
+alt if target_block.is_military
+    Region -> Block: target_block.combat_power(military_force = "ground")
+    activate Block
+    Block --> Region: target_combat_power
+    deactivate Block
+
+    alt if combat_power > 0.0
+        !define combat_power_ratio "risultato calcolo ratio"
+    end
+    !define priority "risultato calcolo priority"
+    Region --> Region: return priority
+else if target_block.is_logistic
+    Region -> Region: get_block_by_id(block.id)
+    activate Region
+    Region --> Region: target_priority, _
+    deactivate Region
+    alt if not target_priority
+        Region -> Region: update_logistic_blocks_priority()
+        activate Region
+        Region --> Region:
+        deactivate Region
+    end
+    !define priority "risultato calcolo priority"
+    Region --> Region: return priority
+end
+
+Region --> Region: return None
+deactivate Region
+@enduml
+
+@startuml calcRegionGroundCombatPower
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+participant ":Military" as Military
+
+User -> Region: calcRegionGroundCombatPower(side, action)
+activate Region
+
+Region -> Region: filter blocks by side and Military instance
+!define combat_power 0
+
+loop for block in block_list
+    Region -> Block: block.groundCombatPower(action)
+    activate Block
+    Block --> Region: block_combat_power
+    deactivate Block
+    Region -> Region: combat_power += block_combat_power
+end
+
+Region --> User: return combat_power
+deactivate Region
+@enduml
+
+@startuml calcRegionGoodsRequest
+autonumber
+actor User
+participant ":Region" as Region
+participant ":Context" as Context
+participant ":Payload" as Payload
+participant "block:Block" as Block
+participant "rcp:ResourceConsumptionPerPeriod" as ResourceConsumptionPerPeriod
+
+User -> Region: calcRegionGoodsRequest(side, category)
+activate Region
+
+Region -> Region: Initialize block_list to None
+alt if category is Military
+    Region -> Region: filter blocks by side and Military instance or isMilitary
+else if category is Logistic
+    Region -> Region: filter blocks by side and isLogistic
+else if category is Civilian
+    Region -> Region: filter blocks by side and Urban instance
+else if category in Context.BLOCK_CLASS
+    Region -> Region: filter blocks by side and category instance
+else if category == "All"
+    Region -> Region: block_list = self.blocks
+else
+    Region --> User: raise Exception
+end
+
+Region -> Payload: new Payload()
+activate Payload
+Payload --> Region: tot_request
+deactivate Payload
+
+loop for block in block_list
+    Region -> Block: block.rcp
+    Block --> Region: rcp
+    Region -> Payload: tot_request.energy += rcp.energy
+    Region -> Payload: tot_request.goods += rcp.goods
+    Region -> Payload: tot_request.hr += rcp.hr
+    Region -> Payload: tot_request.hc += rcp.hc
+    Region -> Payload: tot_request.hs += rcp.hs
+    Region -> Payload: tot_request.hb += rcp.hb
+    activate Payload
+    Payload --> Region:
+    deactivate Payload
+end
+
+Region --> User: return tot_request
+deactivate Region
+@enduml
+
+
+@startuml calcRegionMorale
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+
+User -> Region: morale(side)
+activate Region
+
+Region -> Region: filter blocks by side
+!define morale 0
+
+loop for block in block_list
+    Region -> Block: block.morale
+    activate Block
+    Block --> Region: block_morale
+    deactivate Block
+    Region -> Region: morale += block_morale
+end
+
+alt if len(self.blocks) > 0
+    Region --> User: return morale / len(self.blocks)
+else
+    Region --> User: return 0 // Assuming a default or error handling if no blocks //
+end
+
+deactivate Region
+@enduml
+
+
+@startuml calcRegionMilitaryMorale
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+
+User -> Region: moraleMilitary(side)
+activate Region
+
+Region -> Region: filter blocks by isMilitary and side
+!define morale 0
+
+loop for block in block_list
+    Region -> Block: block.morale
+    activate Block
+    Block --> Region: block_morale
+    deactivate Block
+    Region -> Region: morale += block_morale
+end
+
+alt if len(self.blocks) > 0
+    Region --> User: return morale / len(self.blocks)
+else
+    Region --> User: return 0 // Assuming a default or error handling if no blocks //
+end
+
+deactivate Region
+@enduml
+
+
+@startuml evaluate_blocks_priority
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: evaluate_blocks_priority(side)
+activate Region
+
+Region -> Region: filter blocks by side
+Region --> User: // Placeholder for implementation //
+deactivate Region
+@enduml
+
+@startuml get_block_priority
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: block_priority(block_id)
+activate Region
+
+alt if block_id in _blocks_priority
+    Region --> User: return _blocks_priority[block_id]
+else
+    Region --> User: return None
+end
+
+deactivate Region
+@enduml
+
+
+@startuml _is_valid_route
+autonumber
+actor User
+participant ":Region" as Region
+participant "route:Any" as Route
+
+User -> Region: _is_valid_route(route)
+activate Region
+
+Region --> User: return hasattr(route, '__class__') and route.__class__.__name__ == 'Route'
+deactivate Region
+@enduml
+
+
+@startuml _validate_route_param
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: _validate_route_param(value)
+activate Region
+
+alt if value is not None
+    Region -> Region: _is_valid_route(value)
+    activate Region
+    Region --> Region: True/False
+    deactivate Region
+    alt if not True
+        Region --> User: raise TypeError
+    end
+end
+
+Region --> User: return None
+deactivate Region
+@enduml
+
+
+@startuml _is_valid_block
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Any" as Block
+
+User -> Region: _is_valid_block(block)
+activate Region
+
+Region --> User: return hasattr(block, '__class__') and block.__class__.__name__ == 'Block'
+deactivate Region
+@enduml
+
+
+@startuml _validate_block_param
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: _validate_block_param(value)
+activate Region
+
+alt if value is not None
+    Region -> Region: _is_valid_block(value)
+    activate Region
+    Region --> Region: True/False
+    deactivate Region
+    alt if not True
+        Region --> User: raise TypeError
+    end
+end
+
+Region --> User: return None
+deactivate Region
+@enduml
+
+@startuml _validate_all_params
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: _validate_all_params(**kwargs)
+activate Region
+
+loop for param, value in kwargs.items()
+    alt if param in validators and value is not None
+        Region -> Region: call corresponding validator function (e.g., _validate_param, _validate_dict_block_param)
+        activate Region
+        Region --> Region: (validation result or exception)
+        deactivate Region
+    end
+end
+
+Region --> User: return None (if all valid) or raise error
+deactivate Region
+@enduml
+
+@startuml _validate_dict_block_param
+autonumber
+actor User
+participant ":Region" as Region
+participant "block:Block" as Block
+
+User -> Region: _validate_dict_block_param(param_name, value)
+activate Region
+
+alt if not isinstance(value, dict)
+    Region --> User: raise TypeError
+end
+
+loop for key, block in value.items()
+    alt if not isinstance(key, str)
+        Region --> User: raise TypeError
+    end
+    Region -> Region: _is_valid_block(block)
+    activate Region
+    Region --> Region: True/False
+    deactivate Region
+    alt if not True
+        Region --> User: raise ValueError
+    end
+end
+
+Region --> User: return None
+deactivate Region
+@enduml
+
+
+@startuml _validate_dict_route_param
+autonumber
+actor User
+participant ":Region" as Region
+participant "route:Route" as Route
+participant "block:Block" as Block
+
+User -> Region: _validate_dict_route_param(param_name, value)
+activate Region
+
+alt if not isinstance(value, dict)
+    Region --> User: raise TypeError
+end
+
+!define block_on_route False
+
+loop for key, route in value.items()
+    Region -> Region: _is_valid_route(route)
+    activate Region
+    Region --> Region: True/False
+    deactivate Region
+    alt if not True
+        Region --> User: raise ValueError
+    end
+    alt if not isinstance(key, str)
+        Region --> User: raise TypeError
+    end
+    loop for _, block in _blocks
+        Region -> Region: check if block.id is in key
+        alt if block.id is in key
+            !define block_on_route True
+        end
+    end
+end
+
+Region --> User: return block_on_route
+deactivate Region
+@enduml
+
+
+@startuml _validate_param
+autonumber
+actor User
+participant ":Region" as Region
+
+User -> Region: _validate_param(param_name, value, expected_type)
+activate Region
+
+alt if value is not None and hasattr(value, '__class__') and value.__class__.__name__ == expected_type
+    Region --> User: return None
+else
+    Region --> User: raise TypeError
+end
+
+deactivate Region
+@enduml
