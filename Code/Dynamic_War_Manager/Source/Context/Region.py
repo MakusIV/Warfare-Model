@@ -1,10 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections import defaultdict
 import logging
 from functools import lru_cache
 from enum import Enum
+
 
 # Assuming these imports exist in your codebase
 from Code.Dynamic_War_Manager.Source.Context import Context
@@ -20,6 +21,9 @@ from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from sympy import Point2D
+from numpy import clip
+
+
 
 # CONSTANTS
 DEFAULT_ATTACK_WEIGHT = 0.5
@@ -33,19 +37,19 @@ ACTION_TASKS = {
 DEFAULT_WEIGHT_PRIORITY_TARGET = {
     "Ground_Base": {
         "attack": {"Ground_Base": 0.7, "Naval_Base": 0.0, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0},
-        "defence": {"Ground_Base": 0.1, "Naval_Base": 0.1, "Air_Base": 0.1, "Logistic": 0.4, "Civilian": 0.3}
+        "defense": {"Ground_Base": 0.1, "Naval_Base": 0.1, "Air_Base": 0.1, "Logistic": 0.4, "Civilian": 0.3}
     },
     "Air_Base": {
         "attack": {"Ground_Base": 0.3, "Naval_Base": 0.2, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0},
-        "defence": {"Ground_Base": 0.3, "Naval_Base": 0.1, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0}
+        "defense": {"Ground_Base": 0.3, "Naval_Base": 0.1, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0}
     },
     "Naval_Base": {
         "attack": {"Ground_Base": 0.0, "Naval_Base": 0.5, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0},
-        "defence": {"Ground_Base": 0.1, "Naval_Base": 0.6, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0}
+        "defense": {"Ground_Base": 0.1, "Naval_Base": 0.6, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0}
     }
 }
 
-# LOGGING
+# Logger setup
 logger = Logger(module_name=__name__, class_name='Region')
 
 
@@ -104,11 +108,12 @@ class Region:
         self._name = name
         self._description = description or ""
         self._limes = limes or []
-        self._attack_weight = DEFAULT_ATTACK_WEIGHT
-        self._weight_priority_target = DEFAULT_WEIGHT_PRIORITY_TARGET.copy()
+        self._attack_weight = DEFAULT_ATTACK_WEIGHT  # Copia per evitare modifiche involontarie        
+        self._weight_priority_target = DEFAULT_WEIGHT_PRIORITY_TARGET.copy()   # Copia per evitare modifiche involontarie
         
-        # Initialize blocks with proper association
-        self._blocks: List[BlockItem] = []
+        # Inizializza i blocchi con associazione corretta. 
+        # Utilizziamo un dizionario per un accesso O(1) per ID.
+        self._blocks: Dict[str, BlockItem] = {}
         if blocks:
             for block_item in blocks:
                 self._add_block_item(block_item)
@@ -116,9 +121,9 @@ class Region:
         # Initialize routes
         self._routes: Dict[str, Route] = routes or {}
         
-        # Cache for expensive calculations
-        self._cache = {}
-        self._cache_valid = False
+        # Non è più necessaria una cache manuale con l'uso di @lru_cache sui metodi
+        # self._cache = {} 
+        # self._cache_valid = False 
     
     # PROPERTIES
     @property
@@ -127,9 +132,10 @@ class Region:
     
     @name.setter
     def name(self, value: str):
-        self._validate_string_param('name', value)
+        if not isinstance(value, str) or not value: # Validazione inline per setter
+            raise ValueError(f"Name must be a non-empty string, got {type(value).__name__}")
         self._name = value
-        self._invalidate_cache()
+        self._invalidate_caches() # Invalidare tutte le cache lru
     
     @property
     def description(self) -> str:
@@ -137,7 +143,8 @@ class Region:
     
     @description.setter
     def description(self, value: str):
-        self._validate_string_param('description', value)
+        if not isinstance(value, str):
+            raise TypeError(f"Description must be a string, got {type(value).__name__}")
         self._description = value
     
     @property
@@ -147,11 +154,11 @@ class Region:
     @attack_weight.setter
     def attack_weight(self, value: float):
         if not isinstance(value, (int, float)):
-            raise TypeError("Attack weight must be a number")
+            raise TypeError(f"Attack weight must be a number, got {type(value).__name__}")
         if not 0 <= value <= 1:
-            raise ValueError("Attack weight must be between 0 and 1")
+            raise ValueError(f"Attack weight must be between 0 and 1, got {value}")
         self._attack_weight = float(value)
-        self._invalidate_cache()
+        self._invalidate_caches()
     
     @property
     def weight_priority_target(self) -> Dict:
@@ -161,11 +168,12 @@ class Region:
     def weight_priority_target(self, value: Dict):
         self._validate_weight_priority_target(value)
         self._weight_priority_target = value.copy()
-        self._invalidate_cache()
+        self._invalidate_caches()
     
     @property
     def blocks(self) -> List[BlockItem]:
-        return self._blocks.copy()
+        # Restituisce una lista dei valori del dizionario
+        return list(self._blocks.values()) 
     
     @property
     def routes(self) -> Dict[str, Route]:
@@ -175,42 +183,41 @@ class Region:
     def add_block(self, block: Block, priority: float = 0.0) -> None:
         """Add a block to the region with specified priority."""
         if not isinstance(block, Block):
-            raise TypeError("Block must be a Block instance")
+            raise TypeError(f"Block must be a Block instance, got {type(block).__name__}")
         
         if block.region is not None and block.region != self:
             raise ValueError(f"Block {block.name} is already associated with another region")
         
         block_item = BlockItem(priority=priority, block=block)
-        self._add_block_item(block_item)
-        logger.info(f"Block {block.name} added to region {self.name}")
+        self._add_block_item(block_item) # la cache viene invalidata in _add_block_item
+        logger.info(f"Block {block.name} added to region {self.name}")        
     
     def _add_block_item(self, block_item: BlockItem) -> None:
         """Internal method to add a block item with validation."""
         if not isinstance(block_item, BlockItem):
-            raise TypeError("Expected BlockItem instance")
+            raise TypeError(f"Expected BlockItem instance, got {type(block_item).__name__}")
         
-        # Check if block already exists
-        if any(item.block.id == block_item.block.id for item in self._blocks):
+        # Check if block already exists using dictionary key check
+        if block_item.block.id in self._blocks:
             raise ValueError(f"Block {block_item.block.name} already exists in region")
         
-        # Associate block with region
+        # Associate block with region and add to dictionary
         block_item.block.region = self
-        self._blocks.append(block_item)
-        self._invalidate_cache()
+        self._blocks[block_item.block.id] = block_item # Aggiunto al dizionario
+        self._invalidate_caches()# Invalidate caches after adding a block_iem : inutule invalidare selettivamente in quanto qualsiasi nuova route, block cambia priority e coseguentemente logistic e military center
     
     def remove_block(self, block_id: str) -> bool:
         """Remove a block from the region by ID."""
         if not isinstance(block_id, str):
-            raise TypeError("Block ID must be a string")
+            raise TypeError(f"Block ID must be a string, got {type(block_id).__name__}")
         
-        for i, block_item in enumerate(self._blocks):
-            if block_item.block.id == block_id:
-                # Clear block association
-                block_item.block.region = None
-                self._blocks.pop(i)
-                self._invalidate_cache()
-                logger.info(f"Block {block_id} removed from region {self.name}")
-                return True
+        block_item = self._blocks.pop(block_id, None) # Accesso O(1)
+        if block_item:
+            # Clear block association
+            block_item.block.region = None
+            self._invalidate_caches()
+            logger.info(f"Block {block_id} removed from region {self.name}")
+            return True
         
         logger.warning(f"Block {block_id} not found in region {self.name}")
         return False
@@ -218,19 +225,16 @@ class Region:
     def get_block_by_id(self, block_id: str) -> Optional[BlockItem]:
         """Get a block item by its ID."""
         if not isinstance(block_id, str):
-            raise TypeError("Block ID must be a string")
+            raise TypeError(f"Block ID must be a string, got {type(block_id).__name__}")
         
-        for block_item in self._blocks:
-            if block_item.block.id == block_id:
-                return block_item
-        
-        return None
+        return self._blocks.get(block_id) # Accesso O(1)
     
+    @lru_cache(maxsize=128)
     def get_blocks_by_criteria(self, side: Optional[str] = None, 
                               category: Optional[str] = None,
                               block_class: Optional[type] = None) -> List[BlockItem]:
         """
-        Get blocks filtered by criteria.
+        Get blocks filtered by criteria. Cached for performance.
         
         Args:
             side: Filter by side (e.g., 'red', 'blue')
@@ -240,18 +244,29 @@ class Region:
         Returns:
             List of matching BlockItem objects
         """
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
         result = []
         
-        for block_item in self._blocks:
+        for block_item in self._blocks.values(): # Itera sui valori del dizionario
             block = block_item.block
             
             # Filter by side
             if side and hasattr(block, 'side') and block.side != side:
                 continue
             
-            # Filter by category
-            if category and not self._block_matches_category(block, category):
-                continue
+            # Filter by category - Uso diretto di BlockCategory Enum per robustezza
+            if category:
+                if category == BlockCategory.MILITARY.value and not isinstance(block, Military):
+                    continue
+                elif category == BlockCategory.LOGISTIC.value and not isinstance(block, (Production, Storage, Transport)):
+                    continue
+                elif category == BlockCategory.CIVILIAN.value and not isinstance(block, Urban):
+                    continue
+                # Se la categoria è un'altra stringa, si basa sull'attributo 'category' del blocco
+                elif block.category != category:
+                    continue
             
             # Filter by class
             if block_class and not isinstance(block, block_class):
@@ -261,60 +276,89 @@ class Region:
         
         return result
     
-    def get_highest_priority_blocks(self, count: int, side: Optional[str] = None,
+
+    def get_sorted_priority_blocks(self, count: int, side: str, sort_by: str = "highest",
                                    category: Optional[str] = None) -> List[BlockItem]:
-        """Get the highest priority blocks matching criteria."""
+        """Get the sorted priority blocks matching criteria. if sort_by is 'lowest', returns the lowest priority blocks. if 'highest', returns the highest priority blocks."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        if not isinstance(count, int):
+            raise TypeError(f"Count must be an integer, got {type(count).__name__}")
+        
         if count < 1:
             raise ValueError("Count must be positive")
         
+        if sort_by not in ["highest", "lowest"]:
+            raise ValueError("sort_by must be 'highest' or 'lowest'")
+        
+        if sort_by == "lowest":
+            sort_by = False
+        else:
+            sort_by = True
+
+        # get_blocks_by_criteria è ora memorizzato nella cache
         blocks = self.get_blocks_by_criteria(side=side, category=category)
-        blocks.sort(key=lambda x: x.priority, reverse=True)
+        blocks.sort(key=lambda x: x.priority, reverse = sort_by) # Ordina in base alla priorità
         
         return blocks[:count]
     
-    def get_blocks_in_priority_range(self, min_priority: float, max_priority: float,
-                                   side: Optional[str] = None,
-                                   category: Optional[str] = None) -> List[BlockItem]:
-        """Get blocks within a priority range."""
-        if min_priority > max_priority:
-            raise ValueError("Min priority must be <= max priority")
-        
-        blocks = self.get_blocks_by_criteria(side=side, category=category)
-        
-        return [block_item for block_item in blocks 
-                if min_priority <= block_item.priority <= max_priority]
     
     # ROUTE MANAGEMENT
     def add_route(self, key: str, route: Route) -> None:
         """Add a route to the region."""
         if not isinstance(key, str):
-            raise TypeError("Route key must be a string")
+            raise TypeError(f"Route key must be a string, got {type(key).__name__}")
         if not isinstance(route, Route):
-            raise TypeError("Route must be a Route instance")
+            raise TypeError(f"Route must be a Route instance, got {type(route).__name__}")
         
         self._routes[key] = route
         logger.info(f"Route {key} added to region {self.name}")
+        # Invalidate caches after adding a route: inutule invalidare selettivamente in quanto qualsiasi nuova route, block cambia priority e coseguentemente logistic e military center
+        self._invalidate_caches()
     
+    @lru_cache(maxsize=128)
     def get_route(self, block_id: str, target_block_id: Optional[str] = None) -> Optional[Route]:
-        """Get route between blocks."""
+        """
+        Get route between blocks. Cached for performance.
+        
+        Args:
+            block_id: ID of the source block.
+            target_block_id: ID of the target block (optional). If None, finds any route involving block_id.
+        Returns:
+            The shortest matching Route object, or None if no route found.
+        """
         if not isinstance(block_id, str):
-            raise TypeError("Block ID must be a string")
+            raise TypeError(f"Block ID must be a string, got {type(block_id).__name__}")
         
-        if target_block_id and not isinstance(target_block_id, str):
-            raise TypeError("Target block ID must be a string")
+        if target_block_id is not None:
+            if not isinstance(target_block_id, str):
+                raise TypeError(f"Target block ID must be a string, got {type(target_block_id).__name__}")
+            if target_block_id == block_id:
+                raise ValueError("Target block ID must be different from source block ID")
+
+
+        if target_block_id:
+            if not isinstance(target_block_id, str):
+                raise TypeError("Target block ID must be a string")
+            if target_block_id == block_id:
+                raise ValueError("Target block ID must be different from source block ID")
         
-        if target_block_id == block_id:
-            raise ValueError("Target block ID must be different from source block ID")
-        
-        # Find routes that include both blocks
         matching_routes = []
         
         for key, route in self._routes.items():
-            # Parse key to extract block IDs (assuming comma-separated format)
-            block_ids = [bid.strip() for bid in key.split(',')]
+            # Assumendo un formato chiave come "blockA_id,blockB_id" o "blockA_id-blockB_id"
+            # Ho aggiornato la logica per essere più robusta a diversi delimitatori
+            # o semplicemente verificare se entrambi gli ID sono presenti nella chiave.
             
-            if block_id in block_ids:
-                if target_block_id is None or target_block_id in block_ids:
+            # Una soluzione più robusta potrebbe essere memorizzare le rotte con chiavi strutturate
+            # ad esempio, una tupla (ID_blocco1, ID_blocco2)
+            # Per ora, si assume che la chiave sia una stringa che include entrambi gli ID.
+            
+            # Per generalizzare la ricerca, si può creare un set di IDs dalla chiave
+            key_ids = set(k.strip() for k in key.replace(',', ' ').replace('-', ' ').split())
+
+            if block_id in key_ids:
+                if target_block_id is None or target_block_id in key_ids:
                     matching_routes.append(route)
         
         if not matching_routes:
@@ -324,44 +368,46 @@ class Region:
         if len(matching_routes) == 1:
             return matching_routes[0]
         
+        # Usare min con un'espressione lambda per la chiave
         return min(matching_routes, key=lambda r: r.length())
     
     # STRATEGIC CALCULATIONS
-    
-    # da fare:
-    # def calc_military_production(self, side: str) -> List[hc, hs, hb]
-    # da utilizzare per il calcolo dei livelli di abilità (skill) e nelle capacità di combattimento
-
 
     @lru_cache(maxsize = 128)
     def calc_strategic_logistic_center(self, side: str) -> Optional[Point2D]:
-        """Calculate the strategic logistic center for a side."""
-        logistic_blocks = self.get_blocks_by_criteria(side = side, category = "Logistic")
+        """
+        Calculate the strategic logistic center for a side. Cached for performance.
+        """
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        
+        logistic_blocks = self.get_blocks_by_criteria(side = side, category = BlockCategory.LOGISTIC.value)
         
         if not logistic_blocks:
             return None
         
-        total_priority = 0
-        weighted_position = None               
+        total_priority = 0.0
+        weighted_position_x = 0.0
+        weighted_position_y = 0.0
         
         for block_item in logistic_blocks:
             block = block_item.block
             priority = block_item.priority
-            if hasattr(block, 'position') and priority > 0.0:
-                position = Point2D(block.position.x, block.position.y)            
+            if hasattr(block, 'position') and block.position is not None and priority > 0.0:
+                weighted_position_x += block.position.x * priority
+                weighted_position_y += block.position.y * priority
                 total_priority += priority
-                if not weighted_position:
-                    weighted_position = position * priority
-                else:
-                    weighted_position += position * priority
         
-        if total_priority == 0:
+        if total_priority == 0.0:
             return None
         
-        return weighted_position / total_priority
+        return Point2D(weighted_position_x / total_priority, weighted_position_y / total_priority)
 
+    """
+    @lru_cache(maxsize = 128) # Aggiunta cache
     def calc_combat_power_center(self, side: str): 
-        """ Calculation of baricenter point of the complessive military block's combat power 
+        Calculation of baricenter point of the complessive military block's combat power 
+
 
         Args:
             side (str): side of blocks
@@ -369,12 +415,10 @@ class Region:
 
         Returns:
             Point2D: combat power baricenter
-        """                
-        blocks_quantity = {}
-
-        for force in MILITARY_FORCES:
-            for task in ACTION_TASKS[force]:                    
-                blocks_quantity[force][task] = 0
+         
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")               
+        blocks_quantity = {force: {task: 0 for task in ACTION_TASKS[force]} for force in MILITARY_FORCES}
 
         Militarys = self.get_blocks("Military", side)                                
         r_CPP, tot_CP, tp = {}, {}, {} # tot_CP: summmatory of strategic block combat power
@@ -391,33 +435,83 @@ class Region:
         for force in MILITARY_FORCES:
                 for task in ACTION_TASKS[force]:                    
                     r_CPP[force][task] = tp[force][task] / ( blocks_quantity[force][task] * tot_CP[force][task] ) # r_CPP: region strategic combat power center position for side blocks
-        return r_CPP
+        return r_CPP"""
+
+    @lru_cache(maxsize=128)
+    def calc_combat_power_center(self, side: str) -> Dict[str, Dict[str, Point2D]]:
+        """Calculate combat power center for each force and task."""
+        # verifica se  i risultati coincidono con quelli attesi con la logica del vecchio metodo(sopra)
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")               
+        blocks_quantity = {force: {task: 0 for task in ACTION_TASKS[force]} for force in MILITARY_FORCES}
+        military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
+        
+        result = {force: {task: Point2D(0, 0) for task in ACTION_TASKS[force]} 
+                for force in MILITARY_FORCES}
+        counts = {force: {task: 0 for task in ACTION_TASKS[force]} 
+                for force in MILITARY_FORCES}
+        
+        for block_item in military_blocks:
+            block = block_item.block
+            for force in MILITARY_FORCES:
+                if ((block.is_Air_Base and force == "air") or 
+                    (block.is_Ground_Base and force == "ground") or 
+                    (block.is_Naval_Base and force == "naval")):
+                    
+                    for task in ACTION_TASKS[force]:
+                        cp = block.combat_power(action=task, military_force=force)
+                        if cp > 0:
+                            result[force][task] += block.position * cp
+                            counts[force][task] += cp
+        
+        # Normalize results
+        for force in MILITARY_FORCES:
+            for task in ACTION_TASKS[force]:
+                if counts[force][task] > 0:
+                    result[force][task] /= counts[force][task]
+        
+        return result
     
-    def calc_total_warehouse(self) -> Payload:
+    @lru_cache(maxsize=1) # Caching per un solo risultato, probabilmente chiamato spesso
+    def calc_total_warehouse(self, side: str) -> Payload:
         """Calculate total warehouse resources."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        
+        blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
         total = Payload()
         
-        for block_item in self._blocks:
+        for block_item in blocks.values():
             if hasattr(block_item.block, 'resource_manager'):
                 total += block_item.block.resource_manager.warehouse()
         
         return total
     
-    def calc_total_production(self) -> Payload:
+    @lru_cache(maxsize=1) # Caching per un solo risultato
+    def calc_total_production(self, side: str) -> Payload:
         """Calculate total production resources."""
+
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
         total = Payload()
         
-        for block_item in self._blocks:
+        for block_item in self._blocks.values():
             if isinstance(block_item.block, Production):
                 total += block_item.block.resource_manager.actual_production()
         
         return total
     
-    def calc_production_values(self) -> Dict[str, float]:
+    @lru_cache(maxsize=1) # Caching per un solo risultato
+    def calc_production_values(self, side: str) -> Dict[str, float]:
         """Calculate production values by block type."""
-        values = {"production": 0.0, "storage": 0.0, "transport": 0.0, "urban": 0.0}
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
+        blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
+        values = {"production": 0.0, "storage": 0.0, "transport": 0.0, "urban": 0.0, "military": 0.0, "total": 0.0}
         
-        for block_item in self._blocks:
+        for block_item in blocks.values():
             block = block_item.block
             if hasattr(block, 'resource_manager'):
                 production_value = block.resource_manager.production_value()
@@ -430,52 +524,78 @@ class Region:
                     values["transport"] += production_value
                 elif isinstance(block, Urban):
                     values["urban"] += production_value
+                elif isinstance(block, Military):
+                    values["military"] += production_value # dovrebbero essere prevalentemente hc, hs e hb
+                values["total"] += production_value # Aggiunto qui per chiarezza
         
-        values["total"] = sum(values.values())
         return values
     
     # PRIORITY UPDATES
-    def update_logistic_priorities(self) -> bool:
+    def update_logistic_priorities(self, side: str) -> bool:
         """Update priorities for logistic blocks based on production values."""
-        production_values = self.calc_production_values()
+
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        # Chiamata a metodo con cache
+        production_values = self.calc_production_values(side = side) * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, # Maximum value for block's strategic weight parameter
         
         if production_values["total"] == 0:
             logger.warning("No production value found, setting logistic priorities to 0")
+            # Imposta priorità a 0 per blocchi logistici
+            for block_item in self._blocks.values():
+                if self._is_logistic_block(block_item.block):
+                    block_item.priority = 0.0
+            self._invalidate_caches()
             return False
         
-        for block_item in self._blocks:
+        updated = False
+        for block_item in self._blocks.values():
             block = block_item.block
             
             if self._is_logistic_block(block):
                 block_production_value = block.resource_manager.production_value()
                 
                 if block_production_value > 0:
-                    # Calculate relative priority based on block type
+                    denominator = 0.0
                     if isinstance(block, Production):
                         denominator = production_values["production"]
                     elif isinstance(block, Storage):
                         denominator = production_values["storage"]
                     elif isinstance(block, Transport):
                         denominator = production_values["transport"]
-                    elif isinstance(block, Urban):
+                    elif isinstance(block, Urban): # Gli Urban blocks non sono logistic, ma la logica era presente
                         denominator = production_values["urban"]
-                    else:
-                        continue
                     
                     if denominator > 0:
                         absolute_priority = block_production_value * block.value
-                        block_item.priority = absolute_priority / denominator
-                        logger.debug(f"Updated priority for {block.name}: {block_item.priority}")
+                        new_priority = absolute_priority / denominator
+                        if block_item.priority != new_priority: # Aggiorna solo se diverso
+                            block_item.priority = new_priority
+                            updated = True
+                            logger.debug(f"Updated priority for {block.name}: {block_item.priority}")
+                    else: # Se il denominatore è 0 ma la produzione del blocco è > 0, imposta una priorità base o 0
+                        block_item.priority = 0.0
+                        updated = True
+                        logger.debug(f"Set priority to 0 for {block.name} due to zero denominator.")
+                        
+                elif block_item.priority != 0.0: # Se la produzione del blocco è 0, imposta priorità a 0
+                    block_item.priority = 0.0
+                    updated = True
+                    logger.debug(f"Set priority to 0 for {block.name} due to zero production value.")
         
-        self._invalidate_cache()
-        return True
+        if updated:
+            self._invalidate_caches()
+        return updated
     
     def update_military_priorities(self, side: str) -> None:
         """Update priorities for military blocks."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
         if not isinstance(side, str):
             raise TypeError("Side must be a string")
         
-        friendly_blocks = self.get_blocks_by_criteria(side=side, category="Military")
+        friendly_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         enemy_blocks = self.get_blocks_by_criteria(side=Utility.enemySide(side))
         
         for block_item in friendly_blocks:
@@ -484,163 +604,206 @@ class Region:
             if not isinstance(military_block, Military):
                 continue
             
-            attack_priority = self._calc_attack_priority(military_block, enemy_blocks)
-            defense_priority = self._calc_defense_priority(military_block, friendly_blocks)
+            # I calcoli di priorità sono ora memorizzati nella cache
+            # Definisco le tuple prima di passarle come parametri perchè: ogni tuple(...) crea una nuova tupla → invalida la cache ogni volta. 
+            # È importante riutilizzare una tupla generata una sola volta.
+            enemy_blocks_tuple = tuple(enemy_blocks) 
+            friendly_blocks_tuple = tuple(friendly_blocks)
+            attack_priority = self._calc_attack_priority(military_block, enemy_blocks_tuple) # tuple per cache
+            defense_priority = self._calc_defense_priority(military_block, friendly_blocks_tuple) # tuple per cache
             
             # Combined priority based on attack weight
             overall_priority = (attack_priority * self._attack_weight + 
                               defense_priority * (1 - self._attack_weight))
             
-            block_item.priority = overall_priority
-            logger.debug(f"Updated military priority for {military_block.name}: {overall_priority}")
+            if block_item.priority != overall_priority: # Aggiorna solo se diverso
+                block_item.priority = overall_priority
+                logger.debug(f"Updated military priority for {military_block.name}: {overall_priority}")
+                self._invalidate_caches() # Invalidate solo se c'è stato un cambiamento effettivo
         
-        self._invalidate_cache()
-    
     # HELPER METHODS
-    def _block_matches_category(self, block: Block, category: str) -> bool:
-        """Check if a block matches the specified category."""
-        if category == "Military":
-            return isinstance(block, Military)
-        elif category == "Logistic":
-            return isinstance(block, (Production, Storage, Transport))
-        elif category == "Civilian":
-            return isinstance(block, Urban)
-        else:
-            return hasattr(block, 'category') and block.category == category
     
     def _is_logistic_block(self, block: Block) -> bool:
         """Check if a block is a logistic block."""
         return isinstance(block, (Production, Storage, Transport))
-    
-    def _calc_attack_priority(self, military_block: Military, enemy_blocks: List[BlockItem]) -> float:
-        """Calculate attack priority for a military block."""
-        # Simplified calculation - should be expanded based on requirements
-        priority = 0.0
-        block_category = military_block.get_military_category()
 
-        
+    
+    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
+    def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[BlockItem, ...]) -> float:
+        """Calculate attack priority for a military block."""
+        priority = 0.0
+        # Assicurati che military_block.get_military_category() ritorni una chiave valida
+        block_category = military_block.get_military_category() 
+        if block_category not in self._weight_priority_target:
+            logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default attack weight.")
+            return 0.0
+
         for enemy_item in enemy_blocks:
-            target = enemy_item.block
-            #setup target block category to select weight index
-            if target.is_military():
-                target_category = target.get_military_category()
-            elif target.is_civilian() or target.is_logistic():
-                target_category = target.category              
-            else:
-                logger.warning(f"the  block{target!r} is not a military base, logistical or civil block; block weight will be set with Civilian value")
-                target_category = "Civilian"
-            
-            # weight selection
-            weight = self.weight_priority_target[block_category]["attack"][target_category]
-            
+            target = enemy_item.block            
+            weight = self._select_weight(target_block=target, task="attack", block_category=block_category) # Seleziona il peso per il blocco target
             
             # priority summatory
             if military_block.is_Ground_Base() or military_block.is_Naval_Base():                    
-                priority += self._calc_surface_priority(block = military_block, target_item = enemy_item, attack_route = self.get_route(military_block, target), weight = weight)
+                route = self.get_route(military_block.id, target.id) # get_route è ora memorizzato nella cache
+                calc_result = self._calc_surface_priority(block=military_block, target_item=enemy_item, attack_route=route, weight=weight)
+                if calc_result is not None: # Verifica se il risultato è valido
+                    priority += calc_result
             elif military_block.is_Air_Base():                    
-                priority += self._calc_air_priority(block = military_block, target_block = target, weight = weight)
-
+                calc_result = self._calc_air_priority(block=military_block, target_block=target, weight=weight)
+                if calc_result is not None: # Verifica se il risultato è valido
+                    priority += calc_result
         
         return priority
     
-    def _calc_defense_priority(self, military_block: Military, friendly_blocks: List[BlockItem]) -> float:
+
+    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
+    def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[BlockItem, ...]) -> float:
         """Calculate defense priority for a military block."""
-        # Simplified calculation - should be expanded based on requirements
         priority = 0.0
         block_category = military_block.get_military_category()
+        if block_category not in self._weight_priority_target:
+            logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default defense weight.")
+            return 0.0
         
         for friendly_item in friendly_blocks:
-            if friendly_item.block != military_block:
-                friendly = friendly_item.block  
-                #setup target block category to select weight index
-                if friendly.is_military():
-                    friendly_category =friendly.get_military_category()
-                elif friendly.is_civilian() or friendly.is_logistic():
-                    friendly_category = friendly.category              
-                else:
-                    logger.warning(f"the  block{friendly!r} is not a military base, logistical or civil block; block weight will be set with Civilian value")
-                    friendly_category = "Civilian"
-                
-                # weight selection
-                weight = self.weight_priority_target[block_category]["defence"][friendly_category]
-                
-                if military_block.is_Ground_Base() or military_block.is_Naval_Base():
-                    priority += self._calc_surface_priority(block = military_block, target_item = friendly_item, attack_route = self.get_route(military, friendly), weight = weight)
-                elif military_block.is_Air_Base():                
-                    priority += self._calc_air_priority(block = military_block, target_block = friendly, weight = weight)
+            friendly = friendly_item.block  
+            if friendly.id == military_block.id: # Evita di calcolare la priorità con se stesso
+                continue
+
+            # weight selection
+            weight = self._select_weight(target_block=friendly, task="defense", block_category=block_category) # Seleziona il peso per il blocco target
+            
+            if military_block.is_Ground_Base() or military_block.is_Naval_Base():
+                route = self.get_route(military_block.id, friendly.id) # get_route è ora memorizzato nella cache
+                calc_result = self._calc_surface_priority(block=military_block, target_item=friendly_item, attack_route=route, weight=weight)
+                if calc_result is not None:
+                    priority += calc_result
+            elif military_block.is_Air_Base():                
+                calc_result = self._calc_air_priority(block=military_block, target_block=friendly, weight=weight)
+                if calc_result is not None:
+                    priority += calc_result
         
         return priority
-    
 
-    def _calc_surface_priority(self, block: Military, target_item: BlockItem, attack_route: Route, weight: float) -> Optional[float]:   
-        """getBlocks
-        calculates the priority of a military block (ground or naval) by evaluating its combat power, the distance from the target, the combat power of the target or the 
-        priority assigned in the case of logistical targets.
+    
+    # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    def _select_weight(self, target_block: Block, task: str, block_category: str) -> float:
+        """        Select the weight for a block based on its category."""
+        if task not in self._weight_priority_target[block_category]:
+            logger.warning(f"Task '{task}' not found in weight_priority_target for block category '{block_category}'. Using default weight of 0.0.")
+            return 0.0
+        
+        #setup target block category to select weight index
+        target_category = ""
+        if target_block.is_military():
+            target_category = target_block.get_military_category()
+        elif target_block.is_logistic():
+            target_category = BlockCategory.LOGISTIC.value
+        elif target_block.is_civilian():
+            target_category = BlockCategory.CIVILIAN.value
+        else:
+            logger.warning(f"The block {target_block.name!r} is not a military base, logistical or civil block; block weight will be set with Civilian value.")
+            target_category = BlockCategory.CIVILIAN.value
+        
+        # weight selection
+        return self._weight_priority_target[block_category][task].get(target_category, 0.0) # Uso .get per default 0.0
+        
+
+
+    # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    def _calculate_priority(
+    self,
+    block: Military,
+    target_block: Block,
+    weight: float,
+    time_to_intercept: Optional[float],
+    range_ratio: float,
+    target_priority: Optional[float] = None,
+    force_type: Optional[str] = None
+) -> float:
+        """Calculate generic priority for a military block towards a target."""
+        combat_power = block.combat_power(military_force=force_type)
+        if not combat_power or combat_power <= 0:
+            return 0.0
+
+        time_to_intercept = time_to_intercept or float('inf')
+        if time_to_intercept < 1:
+            time_to_intercept = 1.0
+
+        target_value = target_block.value or 1.0
+        
+        if target_block.is_military():
+            target_cp = target_block.combat_power()
+            #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
+            combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)
+            return (target_value * combat_power_ratio * range_ratio * weight) / time_to_intercept
+        
+        elif target_block.is_logistic():
+            target_priority = target_priority or 0.0
+            return (target_priority * range_ratio * weight) / time_to_intercept
+        
+        elif target_block.is_civilian():
+            return (target_value * range_ratio * weight) / time_to_intercept
+        
+        return 0.0
+
+
+
+    # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    def _calc_surface_priority(self, block: Military, target_item: BlockItem,
+                            attack_route: Optional[Route], weight: float) -> float:
+        
+        """
+        Calculates the priority of a military block (ground or naval) by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets.
 
         Args:                
             block (Military): block to calculates priority
-            target_block (Block): target of the block
-            attack_route (Route): intercept route to target_block
-            weight (float): assigned weight for calulates priority
+            target_item (BlockItem): target BlockItem of the block
+            attack_route (Optional[Route]): intercept route to target_block
+            weight (float): assigned weight for calculates priority
 
         Returns:
-            priority (float): priority value of the block
-        """    
-        
-        combat_power = block.combat_power()
+            priority (float): priority value of the block, returns 0.0 if not applicable
+        """
         target_block = target_item.block
 
-        if not combat_power:
-            return None
-
-        if block.is_Ground_Base or block.is_Naval_Base:            
-            arty_combat_range = block.artillery_in_range( target_block.position )                        
-        if block.is_Ground_Base:
-            time_to_intercept = block.time2attack( route = attack_route )   
-        elif block.is_Naval_Base:
-            time_to_intercept = block.time2attack( target = target_block.position )   
-        if time_to_intercept < 1: # second
-                time_to_intercept = 1                
-        if not arty_combat_range["target_within_med_range"] and not time_to_intercept or time_to_intercept == float('inf'):
-            return None # not exist route to intercept and target is outer range 
-        
-        target_default_strategic_value = target_block.value
-
-        if not target_default_strategic_value:
-                target_default_strategic_value = 1
-        
-        if arty_combat_range["target_within_med_range"]: # combat_range > distance to target -> combat_range_ratio > 1
-            range_ratio = arty_combat_range["med_range_ratio"]
+        # Calcola tempo di intercetto
+        if attack_route:
+            tti = block.time2attack(route=attack_route)
+        elif target_block.position and block.position:
+            tti = block.time2attack(target=target_block.position)
         else:
-            range_ratio = 1
-        
-        if target_block.is_military:
-            target_combat_power = target_block.combat_power()                            
+            return 0.0
 
-            if combat_power > 0.0:
-                combat_power_ratio = target_combat_power / combat_power
-                if combat_power_ratio > 10.0:
-                    combat_power_ratio = 10.0
-                if combat_power_ratio < 0.1:
-                    combat_power_ratio = 0.1                                    
-            priority = target_default_strategic_value * combat_power_ratio * range_ratio * weight / time_to_intercept
-            return priority
-        
-        if target_block.is_logistic:                
-            target_priority = target_item.priority
-            
-            if not target_priority:
-                self.update_logistic_blocks_priority()
-            priority = target_priority * range_ratio * weight / time_to_intercept                
-            return priority
-            
-        return None
-            
-    
-    def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> Optional[float]:     
-        """
-        calculates the priority of a military block (ground or naval) by evaluating its combat power, the distance from the target, the combat power of the target or the 
-        priority assigned in the case of logistical targets.
+        # Calcola ratio di range
+        if target_block.position:
+            range_info = block.artillery_in_range(target_block.position)
+        else:
+            range_info = {"target_within_med_range": False, "med_range_ratio": 1.0}
+
+        if not range_info["target_within_med_range"] and tti == float('inf'):
+            return 0.0
+
+        range_ratio = range_info["med_range_ratio"] if range_info["target_within_med_range"] else 1.0
+
+        return self._calculate_priority(
+            block=block,
+            target_block=target_block,
+            weight=weight,
+            time_to_intercept=tti,
+            range_ratio=range_ratio,
+            target_priority=target_item.priority
+        )
+
+
+    # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> float:
+
+        """Calculates the priority of an air military block by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets.
 
         Args:                
             block (Military): block to calculates priority
@@ -648,53 +811,176 @@ class Region:
             weight (float): assigned weight for calculates priority
 
         Returns:
-            priority (float): priority value of the block
-        """                            
+            priority (float): priority value of the block, returns 0.0 if not applicable"""
+        
+        if not block.position or not target_block.position:
+            return 0.0
+
+        tti = block.time2attack(target=target_block.position)
+        return self._calculate_priority(
+            block=block,
+            target_block=target_block,
+            weight=weight,
+            time_to_intercept=tti,
+            range_ratio=1.0,
+            target_priority=self.get_block_by_id(target_block.id).priority if self.get_block_by_id(target_block.id) else 0.0,
+            force_type="air"
+        )
+
+
+
+    """ superata
+    def _calc_surface_priority(self, block: Military, target_item: BlockItem, attack_route: Optional[Route], weight: float) -> float:   
+        
+        Calculates the priority of a military block (ground or naval) by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets.
+
+        Args:                
+            block (Military): block to calculates priority
+            target_item (BlockItem): target BlockItem of the block
+            attack_route (Optional[Route]): intercept route to target_block
+            weight (float): assigned weight for calculates priority
+
+        Returns:
+            priority (float): priority value of the block, returns 0.0 if not applicable
+            
+        
+        combat_power = block.combat_power()
+        target_block = target_item.block
+
+        if not combat_power or combat_power <= 0: # Combat power deve essere positivo
+            return 0.0
+
+        arty_combat_range_info = {"target_within_med_range": False, "med_range_ratio": 1.0}
+        if block.is_Ground_Base() or block.is_Naval_Base():            
+            if target_block.position: # Assicurati che target_block.position esista
+                arty_combat_range_info = block.artillery_in_range(target_block.position)                        
+        
+        time_to_intercept = float('inf')
+        if attack_route: # Usa la route se disponibile
+            time_to_intercept = block.time2attack(route=attack_route)
+        elif target_block.position and block.position: # Altrimenti usa la distanza tra le posizioni
+            time_to_intercept = block.time2attack(target=target_block.position)
+
+        if time_to_intercept < 1: # Second
+                time_to_intercept = 1.0 # Evita divisione per zero e valori molto piccoli
+        
+        if not arty_combat_range_info["target_within_med_range"] and time_to_intercept == float('inf'):
+            return 0.0 # No route to intercept and target is out of range 
+        
+        target_default_strategic_value = target_block.value if target_block.value else 1.0
+
+        range_ratio = arty_combat_range_info["med_range_ratio"] if arty_combat_range_info["target_within_med_range"] else 1.0
+        
+        priority = 0.0
+        if target_block.is_military():
+            target_combat_power = target_block.combat_power()                            
+
+            if combat_power > 0.0:
+                combat_power_ratio = target_combat_power / combat_power if combat_power > 0 else 0.0
+                combat_power_ratio = max(0.1, min(combat_power_ratio, 10.0)) # Clamping values
+                                
+            priority = (target_default_strategic_value * combat_power_ratio * range_ratio * weight) / time_to_intercept
+            
+        elif target_block.is_logistic():                
+            # Assicurati che la priorità logistica sia aggiornata per il target.
+            # Qui si usa la priorità di BlockItem.
+            target_priority = target_item.priority
+            
+            # Se la priorità logistica non è stata aggiornata, potrebbe essere necessario farlo.
+            # Tuttavia, il metodo update_logistic_priorities è chiamato esternamente.
+            # Per evitare ricorsioni, assumiamo che le priorità siano aggiornate.
+            # In un ambiente reale, potresti voler gestire questo caso esplicitamente
+            # es: if target_priority is None or target_priority == 0.0: self.update_logistic_priorities()
+            
+            priority = (target_priority * range_ratio * weight) / time_to_intercept                
+            
+        elif target_block.is_civilian():
+            # I blocchi civili potrebbero avere una priorità calcolata diversamente o un valore fisso.
+            # Per ora, usiamo il loro valore strategico di default.
+            priority = (target_default_strategic_value * range_ratio * weight) / time_to_intercept
+
+        return priority
+    """
+        
+    """ superata
+    def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> float:     
+        
+        Calculates the priority of an air military block by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets.
+
+        Args:                
+            block (Military): block to calculates priority
+            target_block (Block): target of the block                
+            weight (float): assigned weight for calculates priority
+
+        Returns:
+            priority (float): priority value of the block, returns 0.0 if not applicable
+                                    
         combat_power = block.combat_power()
         
-        if not combat_power:
-            return None
+        if not combat_power or combat_power <= 0: # Combat power deve essere positivo
+            return 0.0
         
-        time_to_intercept = block.time2attack( target = target_block.position )   
+        time_to_intercept = float('inf')
+        if target_block.position and block.position: # Assicurati che le posizioni esistano
+            time_to_intercept = block.time2attack(target=target_block.position)   
 
-        if time_to_intercept < 1: # second
-            time_to_intercept = 1                
+        if time_to_intercept < 1: # Second
+            time_to_intercept = 1.0 # Evita divisione per zero e valori molto piccoli
         
-        target_default_strategic_value = target_block.value
-
-        if not target_default_strategic_value:
-            target_default_strategic_value = 1            
+        target_default_strategic_value = target_block.value if target_block.value else 1.0
         
-        if target_block.is_military:
-            target_combat_power = target_block.combat_power( military_force = "ground" )        
+        priority = 0.0
+        if target_block.is_military():
+            target_combat_power = target_block.combat_power(military_force="ground") # Forse "ground" è specifico, considera un parametro dinamico
             
             if combat_power > 0.0:
-                combat_power_ratio = target_combat_power / combat_power
-                if combat_power_ratio > 10.0:
-                    combat_power_ratio = 10.0
-                if combat_power_ratio < 0.1:
-                    combat_power_ratio = 0.1                                    
-            priority = target_default_strategic_value * combat_power_ratio * weight / time_to_intercept
-            return priority
+                combat_power_ratio = target_combat_power / combat_power if combat_power > 0 else 0.0
+                combat_power_ratio = max(0.1, min(combat_power_ratio, 10.0)) # Clamping values
+                                
+            priority = (target_default_strategic_value * combat_power_ratio * weight) / time_to_intercept
         
-        if target_block.is_logistic:                
-            target_priority, _ = self.get_block_by_id(block.id)
+        elif target_block.is_logistic():                
+            # Recupera BlockItem per accedere alla priorità logistica
+            target_item = self.get_block_by_id(target_block.id)
+            if target_item:
+                target_priority = target_item.priority
+            else:
+                target_priority = 0.0 # Se il blocco non è nella regione (dovrebbe esserlo)
             
-            if not target_priority:
-                self.update_logistic_blocks_priority()
-            priority = target_priority * weight / time_to_intercept                
-            return priority
+            priority = (target_priority * weight) / time_to_intercept                
             
-        return None                    
-
-
+        elif target_block.is_civilian():
+            priority = (target_default_strategic_value * weight) / time_to_intercept
+            
+        return priority                    
     
-    def _invalidate_cache(self) -> None:
-        """Invalidate calculation cache."""
-        self._cache.clear()
-        self._cache_valid = False
+        """
     
-    # VALIDATION METHODS
+    # CACHING METHODS (nota: la granularizzazione delle invalidazioni non serve in qaunto qualsisasi nmodifica di blocks o route, redo o blue, comporta la variazione di tutte le priority e conseguentemente di tutti i stategical center)
+    def _invalidate_caches(self, cache_type: Optional[str] = None) -> None:
+        """Invalidate specific caches based on type."""
+        if cache_type is None or cache_type == "blocks":
+            self.get_blocks_by_criteria.cache_clear()
+        if cache_type is None or cache_type == "routes":
+            self.get_route.cache_clear()
+        if cache_type is None or cache_type == "strategic centers":
+            self.calc_strategic_logistic_center.cache_clear()
+            self.calc_combat_power_center.cache_clear()
+        if cache_type is None or cache_type == "logistic resources":
+            self.calc_total_warehouse.cache_clear()
+            self.calc_total_production.cache_clear()
+            self.calc_production_values.cache_clear()
+        if cache_type is None or cache_type == "priority":
+            self._calc_attack_priority.cache_clear()
+            self._calc_defense_priority.cache_clear()
+        
+        logger.debug(f"Caches for Region {self.name} invalidated ({cache_type or 'all'}).")
+
+    # VALIDATION METHODS (mantenuti quasi invariati, con piccole migliorie)
     def _validate_init_params(self, name: str, limes: Optional[List[Limes]], 
                             description: Optional[str], blocks: Optional[List[BlockItem]],
                             routes: Optional[Dict[str, Route]]) -> None:
@@ -704,6 +990,7 @@ class Region:
         
         if limes is not None and not isinstance(limes, list):
             raise TypeError("Limes must be a list")
+        # Puoi aggiungere validazioni per gli elementi della lista limes se Limes ha un tipo specifico
         
         if description is not None and not isinstance(description, str):
             raise TypeError("Description must be a string")
@@ -724,10 +1011,11 @@ class Region:
                 if not isinstance(route, Route):
                     raise TypeError("Route values must be Route instances")
     
-    def _validate_string_param(self, param_name: str, value: str) -> None:
-        """Validate string parameter."""
-        if not isinstance(value, str):
-            raise TypeError(f"{param_name} must be a string")
+    # Questo metodo helper è stato integrato direttamente nei setter dove era usato.
+    # def _validate_string_param(self, param_name: str, value: str) -> None:
+    #     """Validate string parameter."""
+    #     if not isinstance(value, str):
+    #         raise TypeError(f"{param_name} must be a string")
     
     def _validate_weight_priority_target(self, value: Dict) -> None:
         """Validate weight priority target structure."""
@@ -739,9 +1027,20 @@ class Region:
             if not isinstance(weights, dict):
                 raise TypeError(f"Weights for {category} must be a dictionary")
             
-            if 'attack' not in weights or 'defence' not in weights:
-                raise ValueError(f"Category {category} must have 'attack' and 'defence' keys")
-    
+            if 'attack' not in weights or 'defense' not in weights:
+                raise ValueError(f"Category {category} must have 'attack' and 'defense' keys")
+            
+            # Ulteriore validazione dei sottodizionari attack/defense
+            for action_type in ['attack', 'defense']:
+                if not isinstance(weights[action_type], dict):
+                    raise TypeError(f"'{action_type}' weights for {category} must be a dictionary")
+                for target_cat, weight_val in weights[action_type].items():
+                    if not isinstance(target_cat, str):
+                        raise TypeError(f"Target category '{target_cat}' in {action_type} for {category} must be a string.")
+                    if not isinstance(weight_val, (int, float)) or not (0 <= weight_val <= 1):
+                        raise ValueError(f"Weight value '{weight_val}' for target")
+                    
+
     def __repr__(self) -> str:
         """String representation of the Region."""
         return (f"Region(name='{self._name}', description='{self._description}', "
