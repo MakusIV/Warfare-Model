@@ -180,6 +180,7 @@ class Region:
         return self._routes.copy()
     
     # BLOCK MANAGEMENT
+
     def add_block(self, block: Block, priority: float = 0.0) -> None:
         """Add a block to the region with specified priority."""
         if not isinstance(block, Block):
@@ -304,6 +305,7 @@ class Region:
     
     
     # ROUTE MANAGEMENT
+
     def add_route(self, key: str, route: Route) -> None:
         """Add a route to the region."""
         if not isinstance(key, str):
@@ -620,7 +622,28 @@ class Region:
                 block_item.priority = overall_priority
                 logger.debug(f"Updated military priority for {military_block.name}: {overall_priority}")
                 self._invalidate_caches() # Invalidate solo se c'è stato un cambiamento effettivo
+
+    def run_resource_management_cycle(self, side: str) -> None:
+        """Run a resource management cycle for the region."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
         
+        # Calcola le priorità logistiche prima di eseguire il ciclo di produzione
+        if self.update_logistic_priorities(side=side):
+            logger.info(f"Logistic priorities updated for side {side} in region {self.name}")
+        
+        # Aggiorna le priorità militari dopo aver aggiornato quelle logistiche
+        self.update_military_priorities(side=side)
+        logger.info(f"Military priorities updated for side {side} in region {self.name}")
+
+        for block_item in self._blocks.values():
+            block = block_item.block
+            
+            if hasattr(block, 'resource_manager'):
+                # Esegui il ciclo di produzione per ogni blocco con un resource manager
+                result = block.resource_manager.run_resource_management_cycle()
+                logger.debug(f"Resource management cycle run for {block.name} in region {self.name}. Result cyce: {result!r}")    
+    
     # HELPER METHODS
     
     def _is_logistic_block(self, block: Block) -> bool:

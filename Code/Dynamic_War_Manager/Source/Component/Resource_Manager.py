@@ -283,7 +283,11 @@ class Resource_Manager:
         del self._clients[key]
 
     # === RESOURCE OPERATIONS ===
-    
+    # I - consume()
+    # II - produce()
+    # III - delivery() (usa Receive)
+    # 
+
     def consume(self) -> bool:
         """
         Consume resources from warehouse based on request.
@@ -423,6 +427,25 @@ class Resource_Manager:
                     results[item] = False
         return results
                 
+    def run_management_cycle(self) -> Dict[str, Optional[bool]]:
+        """
+        Run the resource manager operations: consume, produce, and delivery.
+        
+        Returns:
+            Dict[str, Optional[bool]]: Results of each operation
+        """
+        results = {}
+        
+        # Consume resources
+        results['consume'] = self.consume()
+        
+        # Produce resources
+        results['produce'] = self.produce()
+        
+        # Deliver resources to clients
+        results['delivery'] = self.delivery()
+        
+        return results
     
     # === PRIVATE CALCULATION METHODS ===
     
