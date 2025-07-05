@@ -328,6 +328,20 @@ def enemySide(side):
         return "Neutral"
 
 
+def check_side(side: str):
+    """
+    Check if side is valid.
+    
+    Args:
+        side (str): Side to check.
+
+    Returns:
+        bool: True if side is valid, False otherwise.
+    """
+    if not isinstance(side, str):
+        return False
+    return side in ['Blue', 'Red', 'Neutral']
+
 # FUZZY LOGIC METHODS
 
 # Conversione dell'output in stringa usando le funzioni di appartenenza Funzione privata di calcProductionTargetPriority, calcStorageTargetPriority, calcTransportLineTargetPriority
