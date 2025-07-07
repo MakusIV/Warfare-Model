@@ -165,24 +165,24 @@ class CommandControl:
         zone 
             level of air operation: 
                 interdiction (strategic strike): production, storage and transport of: goods, energy, hr, military, urban
-                ground support: ground attack operation, ground defence operation
-                naval support: naval attack operation, naval defence operation
+                ground support: ground attack operation, ground defense operation
+                naval support: naval attack operation, naval defense operation
                 air superiority: awacs, fighter sweep, 
-                air defence operation: intercept, patrol (goods, energy, hr, military, urban)
+                air defense operation: intercept, patrol (goods, energy, hr, military, urban)
                 air escort: air strike mission, air transport mission, air recon mission, ground operation, naval operation 
                 air recon, 
                 air transport, 
                     
             level of ground operation:
                 offensive: ground attack operation: production, storage and transport of: goods, energy, hr, military, urban,
-                defensive: ground defence operation, 
+                defensive: ground defense operation, 
                 maintaing: ground patrol operation,
                 recon: ground recon operation: production, storage and transport of: goods, energy, hr, military, urban,
                 transport: ground transport operation: production, storage and transport of: goods, energy, hr, military, urban,
                 
             level of naval operation:
                 offensive: naval attack operation,
-                defensive: naval defence operation,
+                defensive: naval defense operation,
                 maintaing: naval patrol operation,
                 transport: naval transport operation,
                 recon: naval recon operation,

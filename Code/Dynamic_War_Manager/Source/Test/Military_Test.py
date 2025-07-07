@@ -44,7 +44,7 @@ class TestMilitary(unittest.TestCase):
         self.mock_aircraft.position = Point2D(800,0)
         
         self.mock_vehicle = MagicMock(spec=Vehicle)
-        self.mock_vehicle.combat_power = 5
+        self.mock_vehicle.combat_power = 5.0
         self.mock_vehicle.speed = {"off_road": {"nominal": 30, "max": 50}}
         self.mock_vehicle.isTank = True
         self.mock_vehicle.artillery_range = 1000
@@ -80,41 +80,32 @@ class TestMilitary(unittest.TestCase):
 
     def test_base_type_checks(self):
         """Test base type checking methods."""
-        self.assertTrue(self.airbase.is_airbase())
-        self.assertFalse(self.airbase.is_groundbase())
-        self.assertFalse(self.airbase.is_navalgroup())
+        self.assertTrue(self.airbase.is_Air_Base())
+        self.assertFalse(self.airbase.is_Ground_Base())
+        self.assertFalse(self.airbase.is_Naval_Base())
         
-        self.assertTrue(self.groundbase.is_groundbase())
-        self.assertFalse(self.groundbase.is_airbase())
-        self.assertFalse(self.groundbase.is_navalgroup())
+        self.assertTrue(self.groundbase.is_Ground_Base())
+        self.assertFalse(self.groundbase.is_Air_Base())
+        self.assertFalse(self.groundbase.is_Naval_Base())
         
-        self.assertTrue(self.navalbase.is_navalgroup())
-        self.assertFalse(self.navalbase.is_airbase())
-        self.assertFalse(self.navalbase.is_groundbase())
+        self.assertTrue(self.navalbase.is_Naval_Base())
+        self.assertFalse(self.navalbase.is_Air_Base())
+        self.assertFalse(self.navalbase.is_Ground_Base())
 
     def test_combat_power_calculations(self):
         """Test combat power calculations."""
         # Test ground combat power
         self.groundbase.assets = {"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
-        self.assertEqual(self.groundbase.ground_combat_power("Attack"), 10)
-        
-        with self.assertRaises(ValueError):
-            self.groundbase.ground_combat_power("Invalid Action")
-            
+        self.assertEqual(self.groundbase.combat_power(), 10)
+             
         # Test air combat power
         self.airbase.assets = {"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
-        self.assertEqual(self.airbase.air_combat_power("CAP"), 20)
+        self.assertEqual(self.airbase.combat_power(), 20)
         
-        with self.assertRaises(ValueError):
-            self.airbase.air_combat_power("Invalid Task")
-
         # Test naval combat power
         self.navalbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.navalbase.naval_combat_power("Attack"), 16)
+        self.assertEqual(self.navalbase.combat_power(), 16)
         
-        with self.assertRaises(ValueError):
-            self.navalbase.naval_combat_power("Invalid Task")
-
     def test_artillery_in_range(self):
         """Test artillery range calculations."""        
         self.groundbase.assets = {"vehicle1": self.mock_vehicle}
@@ -175,9 +166,7 @@ class TestMilitary(unittest.TestCase):
             self.airbase.defense_aa_range()
             self.airbase.combat_volume()
             self.airbase.defense_aa_volume()
-            self.airbase.intelligence()
-            self.airbase.threat_volume()
-            self.airbase.front()
+            self.airbase.intelligence()                        
             self.airbase.combat_state()
         except Exception as e:
             self.fail(f"Placeholder method raised exception: {e}")

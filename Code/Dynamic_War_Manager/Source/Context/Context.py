@@ -30,7 +30,7 @@ PRODUCTION_WEIGHT = {
 GROUND_ACTION  = {
 
     "Attack":   "Attack",
-    "Defence":  "Defence",
+    "defense":  "defense",
     "Maintain": "Maintain",
     "Retrait":  "Retrait" 
 }
@@ -51,7 +51,7 @@ AIR_TASK = {
 NAVAL_TASK  = {
 
     "Attack":   "Attack", 
-    "Defence":  "Defence",   
+    "defense":  "defense",   
     "Retrait":  "Retrait" 
 }
 
@@ -101,7 +101,7 @@ WEIGHT_FORCE_GROUND_ASSET = {
 # Parametri per il calcolo della combat power  in Tactical_Evaluation Module
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION["Attack"]: {"Tank": 5, "Armored": 3.5, "Motorized": 2, "Artillery_Semovent": 4, "Artillery_Fixed": 3},
-    GROUND_ACTION["Defence"]: {"Tank": 4, "Armored": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fixed": 5},
+    GROUND_ACTION["defense"]: {"Tank": 4, "Armored": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fixed": 5},
     GROUND_ACTION["Maintain"]: {"Tank": 3, "Armored": 3.7, "Motorized": 4, "Artillery_Semovent": 2, "Artillery_Fixed": 3},    
 }
 
@@ -213,7 +213,7 @@ AIR_Military_CRAFT_ASSET = {
 
 #GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]
 # key1+key2: asset category, key3: asset type
-AIR_DEFENCE_ASSET = {  
+AIR_DEFENSE_ASSET = {  
     
     "SAM":                  {   "Big": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
                                     "Command_&_Control": {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
@@ -442,7 +442,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     "Building": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
                                     "Barrack": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                                                      
                                 },
-                                "Air_Defence": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
+                                "Air_defense": {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
                                     "Command_&_Control": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
                                     "Barrack": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                    
                                     "Depot": {"cost": None, "value": VALUE.MEDIUM, "t2r":7, "rcp": {"hc": 0, "hs": 0, "hb": 6, "hr": None, "goods": 1, "energy": None}, "payload%": 33},                                                                                                    
@@ -455,14 +455,14 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 BLOCK_ASSET_CATEGORY = {
     "Block_Infrastructure_Asset": {},
     "Ground_Military_Vehicle_Asset": {},
-    "Air_Defence_Asset_Category": {},
+    "Air_defense_Asset_Category": {},
     "Naval_Military_Craft_Asset": {},
     "Air_Military_Craft_Asset": {}
 }
 
 
 
-# Generate AIR DEFENCE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
+# Generate AIR DEFENSE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
 k = "Block_Infrastructure_Asset"
 
 for k1, v1 in BLOCK_INFRASTRUCTURE_ASSET.items():
@@ -485,10 +485,10 @@ for k1, v1 in GROUND_Military_VEHICLE_ASSET.items():
         
         
 
- #Generate AIR DEFENCE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
-k = "Air_Defence_Asset_Category"
+ #Generate AIR DEFENSE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
+k = "Air_defense_Asset_Category"
 
-for k1, v1 in AIR_DEFENCE_ASSET.items():
+for k1, v1 in AIR_DEFENSE_ASSET.items():
 
     for k2, v2 in v1.items():
 
@@ -536,7 +536,7 @@ if DEBUG:
 
                 for k2, v2 in v1.items():
 
-                    if k in ["Air_Defence_Asset_Category", "Ground_Military_Vehicle_Asset"]:
+                    if k in ["Air_defense_Asset_Category", "Ground_Military_Vehicle_Asset"]:
                         print(f"BLOCK_ASSET_CATEGORY[{k}][{k1}][{k2}] = {BLOCK_ASSET_CATEGORY[k][k1][k2]}") # asset type 
 
                     else:

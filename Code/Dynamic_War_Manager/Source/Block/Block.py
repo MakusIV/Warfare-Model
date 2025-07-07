@@ -83,7 +83,7 @@ class Block:
         self._assets = {}
         self._region = region
         self._state = State()
-        self._resource_manager = Resource_Manager(self)
+        self._resource_manager = Resource_Manager(block = self)
 
         # Validate parameters
         self._validate_params(

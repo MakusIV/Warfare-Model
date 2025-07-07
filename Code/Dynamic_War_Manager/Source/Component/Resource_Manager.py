@@ -11,6 +11,7 @@ Main improvements:
 - Removed code redundancy
 - Improved parameter validation
 """
+import inspect
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -515,7 +516,13 @@ class Resource_Manager:
     
     def _is_valid_block(self, block: Any) -> bool:
         """Check if an object is a valid Block"""
-        return hasattr(block, '__class__') and block.__class__.__name__ == 'Block'
+        # Ottieni la gerarchia delle classi dell'oggetto
+        #class_hierarchy = inspect.getmro(block.__class__)
+    
+        # Controlla se una delle classi ha il nome specificato
+        return hasattr(block, '__class__') and any(cls.__name__ == 'Block' for cls in inspect.getmro(block.__class__) )
+
+        #return hasattr(block, '__class__') and block.__class__.__name__ == 'Block'
 
     def _validate_block_param(self, value: Any) -> None:
         """Validate block parameter"""

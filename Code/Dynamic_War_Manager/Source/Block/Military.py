@@ -108,7 +108,7 @@ class Military(Block):
         """        
 
         return sum(
-            asset.combat_power() # in mobile 
+            asset.combat_power # in mobile 
             for asset in self.assets.values() 
             if hasattr(asset, 'combat_power')
         )
@@ -324,7 +324,7 @@ class Military(Block):
         return asset.speed.get("max", 0)
     #endregion
 
-    #region Reconnaissance Methods
+    #Reconnaissance Methods
     def get_recon_efficiency(self) -> float:
         """
         Calculate median efficiency of reconnaissance assets.
@@ -342,7 +342,7 @@ class Military(Block):
         ) if recognitors else 0.0
     #endregion
 
-    #region Placeholder Methods for Future Implementation
+    #Placeholder Methods for Future Implementation
     def air_defense(self) -> None:
         """Calculate air defense volume (to be implemented)."""
         pass
@@ -365,14 +365,6 @@ class Military(Block):
 
     def intelligence(self) -> None:
         """Calculate intelligence level (to be implemented)."""
-        pass
-
-    def threat_volume(self) -> None:
-        """Calculate threat volume (to be implemented)."""
-        pass
-
-    def front(self) -> None:
-        """Calculate front position (to be implemented)."""
         pass
 
     def combat_state(self) -> None:

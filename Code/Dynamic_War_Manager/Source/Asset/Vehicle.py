@@ -5,7 +5,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_COMBAT_EFFICACY, AIR_DEFENCE_ASSET, GROUND_Military_VEHICLE_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_COMBAT_EFFICACY, AIR_DEFENSE_ASSET, GROUND_Military_VEHICLE_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
@@ -45,7 +45,7 @@ class Vehicle(Mobile) :
 
         if self.block.isMilitary():
             asset_data = GROUND_Military_VEHICLE_ASSET
-            asset_data_air_defence = AIR_DEFENCE_ASSET
+            asset_data_air_defense = AIR_DEFENSE_ASSET
 
             for k, v in asset_data[self.category]: # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"                       
                     
@@ -57,7 +57,7 @@ class Vehicle(Mobile) :
                     self._payload_perc = v["payload%"]
                     return True              
 
-            for k, v in asset_data_air_defence[self.category]: # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"            
+            for k, v in asset_data_air_defense[self.category]: # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"            
 
                 for k1, v1 in v:
                     key = k + "_" + k1    
@@ -98,19 +98,19 @@ class Vehicle(Mobile) :
                 
                 if category:
                     vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Military Vehicle Asset"][category].keys()
-                    air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"][category].keys()
+                    air_defense_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"][category].keys()
                     struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"]["Military"][category].keys()
 
-                    if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
+                    if asset_type in [vehicle_asset, air_defense_asset, struct_asset]:
                         return (True, "OK")
                     
                 else:
 
                     vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Military Vehicle Asset"].items().keys()
-                    air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].items().keys()
+                    air_defense_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].items().keys()
                     struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"]["Military"].items().keys()
 
-                    if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
+                    if asset_type in [vehicle_asset, air_defense_asset, struct_asset]:
                         return (True, "OK")
             
             else:  # asset isn't a Military component
@@ -131,10 +131,10 @@ class Vehicle(Mobile) :
         if category and isinstance(category, str):
 
             vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Military Vehicle Asset"].keys()
-            air_defence_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].keys()
+            air_defense_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].keys()
             struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].keys()
 
-            if asset_type in [vehicle_asset, air_defence_asset, struct_asset]:
+            if asset_type in [vehicle_asset, air_defense_asset, struct_asset]:
                 return (True, "OK")
 
             return (False, "Bad Arg: Vehicle category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")                     

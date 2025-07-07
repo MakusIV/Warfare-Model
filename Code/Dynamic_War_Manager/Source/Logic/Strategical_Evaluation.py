@@ -213,7 +213,7 @@ def evaluateTacticalReport(report_list: dict) -> dict:
     # asset is very important 
     pass
 
-def evaluateDefencePriorityZone(strategic_priority_list: dict) -> dict: #defence_priority_list
+def evaluatedefensePriorityZone(strategic_priority_list: dict) -> dict: #defense_priority_list
     """ Evaluate priority of strategic zone (Production Zone, Transport Line, Storage Zone ecc, Military) and resource request. List ordered by priority.
     
     strategic_infrastructure_list: block (name (id), position, area), type (production, transport, storage, Military, urban), importance (VH, H, M, L, VL) sorted by importance
@@ -222,10 +222,10 @@ def evaluateDefencePriorityZone(strategic_priority_list: dict) -> dict: #defence
     """
 
     # High probaility of attack (our asset is very weak respect wenemy force)
-    # return defence_priority_list # sorted by priority
+    # return defense_priority_list # sorted by priority
     pass
 
-def definePriorityPatrolZone(defence_priority_list, fighter_zone_cover) -> dict:
+def definePriorityPatrolZone(defense_priority_list, fighter_zone_cover) -> dict:
     """ Define the priority patrol zone list for fighter aircrafts. 
         define patrol zone as set of near block covered by single patrol mission.
 
