@@ -52,7 +52,7 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
                                         corresponding values. Values > 1 indicate an advantage.
 
     Returns:
-    tuple: A string indicating the suggested action ('RETRAIT', 'DEFENCE', 'MAINTAIN', 'ATTACK') 
+    tuple: A string indicating the suggested action ('RETRAIT', 'DEFENSE', 'MAINTAIN', 'ATTACK') 
            and a numeric value representing the action's strength.
     """
 
@@ -99,7 +99,7 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
     cls['MS'] = fuzz.trapmf(cls.universe, [1, 2, 3, 5])
     cls['HS'] = fuzz.trapmf(cls.universe, [3, 5, 10, 10])
 
-    action.automf(names=['RETRAIT', 'DEFENCE', 'MAINTAIN', 'ATTACK'])
+    action.automf(names=['RETRAIT', 'DEFENSE', 'MAINTAIN', 'ATTACK'])
 
     # Definizione delle regole
     rules = [
@@ -108,11 +108,11 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
         ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & ( dyn_inc['HI'] | dyn_inc['MI'] ), action['RETRAIT'] ),
         ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & dyn_inc['EQ'] & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
         ctrl.Rule( ( gs['HI'] | gs['MI'] | gs['EQ'] ) & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
-        # DEFENCE
-        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ), action['DEFENCE']),
-        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & dyn_inc['EQ'] & ( cls['MS'] | cls['HS'] ), action['DEFENCE']),
-        ctrl.Rule( gs['EQ'] & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['MS'] | cls['HS'] ), action['DEFENCE']),
-        ctrl.Rule( gs['EQ'] & flr['EQ'] & ( dyn_inc['EQ'] | dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['MI'] | cls['HI'] ), action['DEFENCE']),
+        # DEFENSE
+        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ), action['DEFENSE']),
+        ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & dyn_inc['EQ'] & ( cls['MS'] | cls['HS'] ), action['DEFENSE']),
+        ctrl.Rule( gs['EQ'] & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['MS'] | cls['HS'] ), action['DEFENSE']),
+        ctrl.Rule( gs['EQ'] & flr['EQ'] & ( dyn_inc['EQ'] | dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['MI'] | cls['HI'] ), action['DEFENSE']),
         # MAINTAIN
         ctrl.Rule( (gs['HI'] | gs['MI']) & ( flr['HS'] | flr['MS']), action['MAINTAIN']),
         ctrl.Rule( gs['EQ'] & ( flr['HS'] | flr['MS']) & ( cls['EQ'] ), action['MAINTAIN']),
@@ -421,10 +421,10 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     for cat in BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"].keys():
         
         if action == GROUND_ACTION["Attack"]:            
-            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Defence"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["defense"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
             combat_pow_en_alt += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
 
-        elif action == GROUND_ACTION["Defence"] or action == GROUND_ACTION["Maintain"]:
+        elif action == GROUND_ACTION["defense"] or action == GROUND_ACTION["Maintain"]:
             combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
 
         combat_pow_fr += GROUND_COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
@@ -465,7 +465,7 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
     # devi classificare
 
     attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
-    defence_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defence"], report_base, report_enemy)
+    defense_superiority = evaluateCombatSuperiority(GROUND_ACTION["defense"], report_base, report_enemy)
     maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
 
     criticality = { "action": None, "value": 0 }
@@ -475,24 +475,24 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         criticality["action"] = "attack"
         criticality[ "value" ] = int (attack_superiority * 100 )        
 
-    elif maintain_superiority > 0.45 and maintain_superiority > defence_superiority:
+    elif maintain_superiority > 0.45 and maintain_superiority > defense_superiority:
         criticality["action"] = "maintain"
         criticality[ "value" ] = int ( maintain_superiority * 100 )
         
-    elif defence_superiority > 0.40:
-        criticality["action"] = "defence"
-        criticality[ "value" ] = int ( defence_superiority * 100 )
+    elif defense_superiority > 0.40:
+        criticality["action"] = "defense"
+        criticality[ "value" ] = int ( defense_superiority * 100 )
     
     else:
         criticality["action"] = "retrait"
-        criticality[ "value" ] = int ( defence_superiority * 100 )
+        criticality[ "value" ] = int ( defense_superiority * 100 )
     
     return criticality
 
     
-    def evaluateCriticalityAirDefence(report_base: dict, report_enemy: dict) -> float: 
+    def evaluateCriticalityAirdefense(report_base: dict, report_enemy: dict) -> float: 
 
-        # evaluate enemy air defence for an possible air attack
+        # evaluate enemy air defense for an possible air attack
         pass
     
 def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed: float, tot_time_route: float) -> dict:

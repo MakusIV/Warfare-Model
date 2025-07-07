@@ -13,9 +13,9 @@ from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 
 
-from DataType.Route import Route
-from DataType.Payload import Payload
-from DataType.Limes import Limes
+from Code.Dynamic_War_Manager.Source.DataType.Route import Route
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.DataType.Limes import Limes
 
 class TestBlockItem(unittest.TestCase):
     def test_block_item_creation(self):
