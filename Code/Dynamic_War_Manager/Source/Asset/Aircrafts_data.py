@@ -1,3 +1,4 @@
+from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Dynamic_War_Manager.Source.Asset.Mobile import Mobile
@@ -115,6 +116,7 @@ class Aircraft_Data:
 
     
     # --- Implementazioni predefinite delle formule ---
+    @lru_cache
     def _radar_eval(self, modes: List = ['air', 'ground', 'sea']) -> float:
         """Evaluates the radar capabilities of the aircraft based on predefined weights."""
         if not self.radar:
@@ -142,6 +144,7 @@ class Aircraft_Data:
         
         return score
 
+    @lru_cache
     def _speed_at_altitude_eval(self, metric: str, altitude: Optional[float] = None):
         """Evaluates the speed of the aircraft at a given altitude based on predefined speed data.
         Args:
@@ -202,7 +205,12 @@ class Aircraft_Data:
             score += (speed * weight) * time - data.get('consume', 0) * 0.001
         return score
 
-    def _default_reliability_eval(self):
+    def _eval_speed(self) -> float:
+        eval_1000 = self._speed_at_altitude_eval('metric', 1000)  # Default to metric and altitude 1000
+        eval_5000 = self._speed_at_altitude_eval('metric', 6000)  # Default to metric and altitude 6000
+        return (eval_1000 + eval_5000) / 2
+
+    def _reliability_eval(self):
         """Formula predefinita per l'affidabilità complessiva"""
         components = [
             self.engine.get('reliability', {}).get('mtbf', 0),
@@ -211,19 +219,34 @@ class Aircraft_Data:
             self.avionics.get('reliability', {}).get('mtbf', 0),
             self.hydraulic.get('reliability', {}).get('mtbf', 0)
         ]
-        return sum(components) / len(components)
+        return min[components], sum(components) / len(components) # aircraft mtbf, median_mtbf
+    
+    
 
-    def _default_maintenance_eval(self):
+    def _maintenance_eval(self):
         """Formula predefinita per il carico di manutenzione"""
-        daily = self.engine.get('daily_maintenance_hours', 0)
-        daily += self.avionics.get('daily_maintenance_hours', 0)
-        daily += self.hydraulic.get('daily_maintenance_hours', 0)
+        components = [
+            self.engine.get('reliability', {}).get('mttr', 0),
+            self.radar.get('reliability', {}).get('mttr', 0),
+            self.radio_nav.get('reliability', {}).get('mttr', 0),
+            self.avionics.get('reliability', {}).get('mttr', 0),
+            self.hydraulic.get('reliability', {}).get('mttr', 0)
+        ]    
+        return max[components], sum(components) / len(components) # aircraft mttr, median_mttr
+    
+    def _avalaiability_score(self):
+        """Calcola il punteggio di disponibilità dell'aeromobile"""
+        mtbf, median_mtbf = self._reliability_eval()
+        mttr, median_mttr = self._maintenance_eval()
+
+        if mtbf == 0:
+            return 0.0
         
-        field_repair = self.engine.get('field_repair_hours', 0)
-        field_repair += self.radar.get('field_repair_hours', 0)
-        field_repair += self.radio_nav.get('field_repair_hours', 0)
-        
-        return daily + (field_repair * 0.1)  # Ponderazione riparazioni
+        # Calcola il punteggio di disponibilità come rapporto tra MTBF e (MTBF + MTTR)
+        ratio_a = mtbf / mttr if mttr > 0 else 1.0
+        ratio_b = median_mtbf / median_mttr if median_mttr > 0 else 1.0
+
+        return 0.7 * ratio_a + 0.3 * ratio_b
 
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self):
@@ -231,13 +254,14 @@ class Aircraft_Data:
         return self._normalize(self.evaluate_radar(), scores)
 
     def get_normalized_speed_score(self):
-        scores = [ac.evaluate_speed() for ac in Aircraft_Data._registry]
+        scores = [ac.eval_speed() for ac in Aircraft_Data._registry]
         return self._normalize(self.evaluate_speed(), scores)
 
     def get_normalized_reliability_score(self):
         scores = [ac.evaluate_reliability() for ac in Aircraft_Data._registry]
         return self._normalize(self.evaluate_reliability(), scores)
-
+    
+    
     def get_normalized_maintenance_score(self):
         scores = [ac.evaluate_maintenance() for ac in Aircraft_Data._registry]
         # Min-max invertito: manutenzione più bassa = migliore
@@ -253,15 +277,7 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-    # --- Metodi di utilità ---
-    @classmethod
-    def update_radar_formula(cls, new_formula):
-        cls.RADAR_EVAL_FORMULA = new_formula
-        
-    @classmethod
-    def update_speed_formula(cls, new_formula):
-        cls.SPEED_EVAL_FORMULA = new_formula
-        
+    
     @classmethod
     def get_all_Aircraft_Data(cls):
         return cls._registry
@@ -292,23 +308,17 @@ f16_data = {
     "radio_nav": {
         "model": "AN/ARN-118", 
         "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
-        "reliability": {"mtbf": 600, "mttr": 1.5},
-        "daily_maintenance_hours": 1.0,
-        "field_repair_hours": 0.5
+        "reliability": {"mtbf": 600, "mttr": 1.5}
         },
     "avionics": {
         "model": "AN/ALR-69A",
         "capabilities": {"flight_control": 0.9, "navigation_system": 0.8, "communication_system": 0.85},
-        "reliability": {"mtbf": 400, "mttr": 1.2},
-        "daily_maintenance_hours": 1.5,
-        "field_repair_hours": 0.7
+        "reliability": {"mtbf": 400, "mttr": 1.2}
     },
     "hydraulic": {
         "model": "Generic Hydraulic System",
         "capabilities": {"pressure": 3000, "fluid_capacity": 50},
         "reliability": {"mtbf": 200, "mttr": 1.0},
-        "daily_maintenance_hours": 1.0,
-        "field_repair_hours": 0.5
     },
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 5000, "consume": 1200},
