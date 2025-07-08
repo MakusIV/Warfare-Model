@@ -951,3 +951,151 @@ def validate_class(obj, class_name: str) -> bool:
         raise ValueError(f"class_name must be a string")
 
     return class_name in tuple(cls.__name__ for cls in inspect.getmro(obj.__class__))
+
+def indicated_air_speed(true_air_speed: float, altitude: float, metric: str) -> float:
+    """
+    Calcola la velocità indicata dell'aria (IAS) a partire dalla velocità vera dell'aria (TAS) e dall'altitudine.
+    
+    :param true_air_speed: Velocità vera dell'aria in metric: km/h, imperial: nodi..
+    :param altitude: Altitudine in metric: m, imperial: piedi.
+    :return: Velocità indicata dell'aria in metric: km/h, imperial: nodi..
+    """
+    if not isinstance(true_air_speed, (int, float)) or not isinstance(altitude, (int, float)):
+        raise TypeError(f"true_air_speed and altitude must be numeric values.got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+    
+    if true_air_speed <= 0 or altitude < 0:
+        raise ValueError(f"Input values must be positive and non-zero. got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+
+    if not isinstance(metric, str) or metric not in ["metric", "imperial"]:
+        raise ValueError(f"Invalid metric. Use 'metric' or 'imperial'. got {metric!r}")
+
+    if metric == "metric":
+        k = 9.44 * 10^-6
+    else:
+        k = 2.876 * 10^-3
+
+    # Formula per calcolare la velocità indicata dell'aria
+    return true_air_speed * math.sqrt(1 - (k * altitude ))
+
+def true_air_speed(indicated_air_speed: float, altitude: float, metric: str) -> float:
+    """
+    Calcola la velocità vera dell'aria (TAS) a partire dalla velocità indicata dell'aria (IAS) e dall'altitudine.
+    
+    :param indicated_air_speed: Velocità indicata dell'aria in metric: km/h, imperial: nodi.
+    :param altitude: Altitudine in metric: m, imperial: piedi.
+    :return: Velocità vera dell'aria in metric: km/h, imperial: nodi..
+    """
+    if not isinstance(true_air_speed, (int, float)) or not isinstance(altitude, (int, float)):
+        raise TypeError(f"true_air_speed and altitude must be numeric values.got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+    
+    if true_air_speed <= 0 or altitude < 0:
+        raise ValueError(f"Input values must be positive and non-zero. got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+
+    if not isinstance(metric, str) or metric not in ["metric", "imperial"]:
+        raise ValueError(f"Invalid metric. Use 'metric' or 'imperial'. got {metric!r}")
+
+    if metric == "metric":
+        k = 9.44 * 10^-6
+    else:
+        k = 2.876 * 10^-3
+    # Formula per calcolare la velocità vera
+    return indicated_air_speed / math.sqrt(1 - (k * altitude ))
+
+
+def mph_2_meters_per_second(mph: float) -> float:
+    """
+    Converti miglia orarie in metri al secondo.
+    
+    :param mph: Valore in miglia orarie.
+    :return: Valore convertito in metri al secondo.
+    """
+    if not isinstance(mph, (int, float)):
+        raise TypeError(f"mph must be a numeric value. got {mph!r}")
+    
+    if mph < 0:
+        raise ValueError(f"mph must be a positive value. got {mph!r}")
+
+    return mph * 0.44704  # 1 miglio orario = 0.44704 metri al secondo
+
+def meters_per_second_2_mph(mps: float) -> float:
+    """
+    Converti metri al secondo in miglia orarie.
+    
+    :param mps: Valore in metri al secondo.
+    :return: Valore convertito in miglia orarie.
+    """
+    if not isinstance(mps, (int, float)):
+        raise TypeError(f"mps must be a numeric value. got {mps!r}")
+    
+    if mps < 0:
+        raise ValueError(f"mps must be a positive value. got {mps!r}")
+
+    return mps / 0.44704  # 1 metro al secondo = 2.23694 miglia orarie
+
+import math
+
+def convert_feet_to_meters(feet):
+    return feet * 0.3048
+
+def convert_meters_to_feet(meters):
+    return meters / 0.3048
+
+def convert_mph_to_kmh(mph):
+    return mph * 1.609344
+
+def convert_kmh_to_mph(kmh):
+    return kmh / 1.609344
+
+def true_air_speed_at_new_altitude(true_air_speed, altitude, new_altitude, metric="metric"):
+    """
+    Calcola la True Air Speed (TAS) a new_altitude conoscendo la TAS a altitude.
+    
+    Parametri:
+    - true_air_speed: TAS alla quota 'altitude' (km/h se metric, mph se imperial)
+    - altitude: quota di riferimento (metri se metric, piedi se imperial)
+    - new_altitude: quota a cui calcolare la TAS (metri se metric, piedi se imperial)
+    - metric: "metric" o "imperial"
+    
+    Ritorna:
+    - TAS calcolata a new_altitude, nella stessa unità di true_air_speed
+    """
+    # Costante di conversione densità aria approssimata da formula semplificata
+    # Usata la formula: TAS_2 = TAS_1 * sqrt(rho_1 / rho_2)
+    # dove rho = densità aria, approssimata come funzione lineare dell'altitudine
+    
+    # Per semplicità usiamo la formula empirica approssimativa:
+    # TAS varia con radice inversa della densità, e la densità varia con altitudine
+    
+    # Convertiamo tutto in unità metriche per il calcolo della densità
+    if metric == "imperial":
+        altitude_m = convert_feet_to_meters(altitude)
+        new_altitude_m = convert_feet_to_meters(new_altitude)
+        tas_kmh = convert_mph_to_kmh(true_air_speed)
+    else:
+        altitude_m = altitude
+        new_altitude_m = new_altitude
+        tas_kmh = true_air_speed
+    
+    # Densità aria standard al livello del mare (kg/m^3)
+    rho0 = 1.225
+    
+    # Modello semplificato di densità aria ISA fino a 11 km:
+    # rho = rho0 * (1 - 0.0000225577 * h)^4.256
+    def air_density(h_m):
+        if h_m < 11000:
+            return rho0 * (1 - 0.0000225577 * h_m) ** 4.256
+        else:
+            # Per altitudini superiori approssimiamo costante o si può estendere il modello
+            return rho0 * 0.36391  # densità approssimativa a 11 km
+    
+    rho1 = air_density(altitude_m)
+    rho2 = air_density(new_altitude_m)
+    
+    # Calcolo TAS a new_altitude in km/h
+    tas_new_kmh = tas_kmh * math.sqrt(rho1 / rho2)
+    
+    # Convertiamo indietro se imperial
+    if metric == "imperial":
+        return convert_kmh_to_mph(tas_new_kmh)
+    else:
+        return tas_new_kmh
