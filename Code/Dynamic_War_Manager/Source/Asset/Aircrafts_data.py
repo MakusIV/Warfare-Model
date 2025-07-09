@@ -25,11 +25,12 @@ class Aircraft_Data:
     _registry = []
     
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ordinance: Dict ):
+    def __init__(self, constructor: str, made: str, model: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ordinance: Dict ):
         self.constructor = constructor
         self.made = made
         self.model = model
         self.category = category
+        self.cost = cost
         self.roles = roles
         self.engine = engine
         self.radar = radar
@@ -320,7 +321,7 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-    def role_score(self, role: str, task: str, target_dimension: Dict[str, any], minimum_destroyed_fraction: float):
+    def task_score(self, role: str, task: str, target_dimension: Dict[str, any], minimum_destroyed_fraction: float):
         
         if not role or not isinstance(role, str):
             raise TypeError ("role must be a string")
@@ -344,7 +345,8 @@ class Aircraft_Data:
 
         return destroyed_fraction * score_radar
     
-
+    def task_score_cost_ratio(self):
+        pass
 
 # AIRCRAFT DATA
 
@@ -404,8 +406,19 @@ f16_data = {
         "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 4500, "time": 120}  # time in minutes   
     },
     "ordinance": {
-        'air_2_air': {'AIM-120': 6},
-        'air_2_ground': {'GBU-12': 4},
+        'air_2_air': {
+            'CAP': {
+                'long': { {'AIM-120': 6}, {'AIM-9X': 2}, {'AIM-9X': 4}, {'Tank-300L': 2} },
+                'med': { {'AIM-120': 4}, {'AIM-9X': 2}, {'AIM-9X': 4}, {'Tank-300L': 1} },
+                'short': { {'AIM-120': 6}, {'AIM-9X': 4}, {'AIM-9X': 4}, {'Tank-300L': 1} },
+            },
+        },
+        'air_2_ground': {
+            'Pinpoint_strike': {
+                'lomg': { {'GBU-12': 4}, {'Tank-300L': 2} },
+
+            },
+        },
     }
 }
 
