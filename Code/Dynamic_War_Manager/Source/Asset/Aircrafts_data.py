@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
-from Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
@@ -17,80 +17,15 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-@dataclass
-class Engine:
-    model: str = "Generic Engine"
-    capabilities: Dict[str, Any] = {"thrust": 0, "fuel_efficiency": 0, "type": "jet"}
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0}
-    daily_maintenance_hours: float = 0.0
-    field_repair_hours: float = 0.0
+AIRCRAFT_ROLE = None
+AIRCRAFT_TASK = None
 
-@dataclass
-class Radar:
-    model: str = "Generic Radar" 
-    capabilities: Dict[str, Any] = {    "air": {True, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} }, 
-                                        "ground": {False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} },
-                                        "sea": {False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} },
-                                        "type": "pulse-doppler"
-                                    }
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0}
-    daily_maintenance_hours: float = 0.0    
-    field_repair_hours: float = 0.0
-
-
-@dataclass
-class TVD:
-    """TVD (Thermal Vision Device) for aircraft, typically used for night operations or low-visibility conditions."""
-    model: str = "Generic TVD Sensor"
-    # Capabilities for infrared sensors can vary widely, so this is a placeholder
-    capabilities: Dict[str, Any] = {    "air": {True, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} }, 
-                                        "ground": {True, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} },
-                                        "sea": {True, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0} },
-                                        "type": "thermal and optical" 
-                                    }
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0}
-    daily_maintenance_hours: float = 0.0    
-    field_repair_hours: float = 0.0
-
-
-@dataclass
-class RadioNav:
-    model: str = "Generic RadioNav"
-    capabilities: Dict[str, Any] = {"navigation_accuracy": 0, "communication_range": 0}
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0}
-    daily_maintenance_hours: float = 0.0
-    field_repair_hours: float = 0.0
-
-@dataclass
-class Avionics:
-    model: str = "Generic Avionics"
-    capabilities: Dict[str, Any] = {"flight_control": 0, "navigation_system": 0, "communication_system": 0}
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0} 
-    daily_maintenance_hours: float = 0.0
-    field_repair_hours: float = 0.0
-
-@dataclass
-class Hydraulic:
-    model: str = "Generic Hydraulic System"
-    capabilities: Dict[str, Any] = {"pressure": 0, "fluid_capacity": 0}
-    reliability: Dict[str, Any] = {"mtbf": 0, "mttr": 0}
-    daily_maintenance_hours: float = 0.0
-    field_repair_hours: float = 0.0
-
-@dataclass
-class SpeedData: #metric: speed in km/h, altitude in meters, imperial: speed in mph, altitude in feet, time in minutes
-    sustained: Dict[str, Any] = {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 0, "altitude": 0, "consume": 0}
-    combat: Dict[str, Any] = {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 0, "altitude": 0, "consume": 0, "time": 0}
-    emergency: Dict[str, Any] = {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 0, "altitude": 0, "consume": 0, "time": 0}
-    # Add more speed types as needed    
-
-    
 @dataclass
 class Aircraft_Data:
     _registry = []
     
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, roles: str, engine: Optional[Engine] = None, radar: Optional[Radar] = None, radio_nav: Optional[RadioNav] = None, avionics: Optional[Avionics] = None, hydraulic: Optional[Hydraulic] = None, speed_data: Optional[SpeedData] = None, ordinance: Optional[Ordinance] = None ):
+    def __init__(self, constructor: str, made: str, model: str, category: str, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ordinance: Dict ):
         self.constructor = constructor
         self.made = made
         self.model = model
@@ -98,6 +33,7 @@ class Aircraft_Data:
         self.roles = roles
         self.engine = engine
         self.radar = radar
+        self.TVD = TVD
         self.radio_nav = radio_nav
         self.avionics = avionics
         self.hydraulic = hydraulic
@@ -106,25 +42,40 @@ class Aircraft_Data:
         Aircraft_Data._registry.append(self)
 
     # --- Getter e Setter ---
-    def get_engine(self):
+    def engine(self):
         return self.engine
     
-    def set_engine(self, engine):
+    def engine(self, engine):
         self.engine = engine
 
+    def roles(self):
+        return self.roles
     # ... (altri getter/setter per tutte le proprietà)
 
     
     # --- Implementazioni predefinite delle formule ---
-    @lru_cache
-    def _radar_eval(self, modes: List = ['air', 'ground', 'sea']) -> float:
-        """Evaluates the radar capabilities of the aircraft based on predefined weights."""
+    #@lru_cache
+    def _radar_eval(self, modes: Optional[List] = None) -> float:
+        """Evaluates the radar capabilities of the aircraft based on predefined weights.
+
+        Params:
+            Optional[List]: modes = []  with : 'air', 'ground', 'sea'
+
+        Raises:
+            TypeError: if modes element 
+
+        Returns:
+            float: radar score value
+        """
         if not self.radar:
             logger.warning("Radar not defined.")
             return 0.0
         
-        if not isinstance(modes, List) or modes not in ['air', 'ground', 'sea']:
-            raise TypeError(f"Il parametro 'mode' must be a List of string with value:  ['air', 'ground', 'sea', 'all'], got {mode!r}.")
+        if not modes:
+            modes = ['air', 'ground', 'sea']
+        
+        elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
+            raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
         
         weights = {
             'tracking_range': 0.2,
@@ -135,16 +86,46 @@ class Aircraft_Data:
         score = 0.0
         
         for m in modes:
-            cap = self.radar.capabilities[m]
-            if cap.key(): 
-                score += cap.get('tracking_range', 0) * weights['tracking_range']
-                score += cap.get('acquisition_range', 0) * weights['acquisition_range']
-                score += cap.get('engagement_range', 0) * weights['engagement_range']
-                score += cap.get('multi_target_capacity', 0) * weights['multi_target']
+            cap = self.radar['capabilities'][m]
+            if cap[0]: 
+                score += cap[1].get('tracking_range', 0) * weights['tracking_range']
+                score += cap[1].get('acquisition_range', 0) * weights['acquisition_range']
+                score += cap[1].get('engagement_range', 0) * weights['engagement_range']
+                score += cap[1].get('multi_target_capacity', 0) * weights['multi_target']
+        
+        return score
+    
+    def _TVD_eval(self, modes: Optional[List] = None) -> float:
+        """Evaluates the radar capabilities of the aircraft based on predefined weights."""
+        if not self.TVD:
+            logger.warning("TVD not defined.")
+            return 0.0
+        
+        if not modes:
+            modes = ['air', 'ground', 'sea']
+        
+        elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
+            raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
+        
+        weights = {
+            'tracking_range': 0.2,
+            'acquisition_range': 0.1,
+            'engagement_range': 0.3,
+            'multi_target': 0.4
+        }
+        score = 0.0
+        
+        for m in modes:
+            cap = self.TVD['capabilities'][m]
+            if cap[0]: 
+                score += cap[1].get('tracking_range', 0) * weights['tracking_range']
+                score += cap[1].get('acquisition_range', 0) * weights['acquisition_range']
+                score += cap[1].get('engagement_range', 0) * weights['engagement_range']
+                score += cap[1].get('multi_target_capacity', 0) * weights['multi_target']
         
         return score
 
-    @lru_cache
+    #@lru_cache
     def _speed_at_altitude_eval(self, metric: str, altitude: Optional[float] = None):
         """Evaluates the speed of the aircraft at a given altitude based on predefined speed data.
         Args:
@@ -182,14 +163,14 @@ class Aircraft_Data:
 
             if data.get('type_speed') == "indicated_airspeed":
                 # converte l'airspeed indicato in velocità vera
-                speed = true_air_speed( data.get('true_airspeed', 0), data.get('altitude', 0), data.get('metric', 'metric') )
+                speed = true_air_speed( data.get('airspeed', 0), data.get('altitude'), data.get('metric') )
 
             elif data.get('type_speed') == "true_airspeed":
                 speed = data['airspeed']            
             else:
                 raise ValueError(f"Invalid type_speed: {data.get('type_speed', 'unknown')}. Expected 'indicated_airspeed' or 'true_airspeed'.")
             
-            speed = true_air_speed_at_new_altitude(speed, data.get('altitude', 0), altitude, metric=data.get('metric', 'metric'))
+            speed = true_air_speed_at_new_altitude(speed, data.get('altitude'), altitude, metric=data.get('metric'))
 
             if not hasattr(data, 'time'):
                 time = 1 # sustained speed
@@ -202,73 +183,135 @@ class Aircraft_Data:
                     time /= 3 # reference on 3'
             
             # Considera anche l'altitudine e il consumo
-            score += (speed * weight) * time - data.get('consume', 0) * 0.001
+            score += (speed * weight) * time # - data.get('consume', 0) * 0.001
         return score
 
-    def _eval_speed(self) -> float:
+    def _speed_eval(self) -> float:
+        """evaluate speed score at fixed altitude for comparations
+
+        Returns:
+            float: median of speed calculates at 1000 and 6000 meter
+        """        
         eval_1000 = self._speed_at_altitude_eval('metric', 1000)  # Default to metric and altitude 1000
         eval_5000 = self._speed_at_altitude_eval('metric', 6000)  # Default to metric and altitude 6000
         return (eval_1000 + eval_5000) / 2
 
     def _reliability_eval(self):
-        """Formula predefinita per l'affidabilità complessiva"""
+        """evaluate reliability (mtbf) of aircraft subsystem
+
+        Returns:
+            float: time (hour) before fault of an aircraft subsystem
+        """        
         components = [
             self.engine.get('reliability', {}).get('mtbf', 0),
             self.radar.get('reliability', {}).get('mtbf', 0),
+            self.TVD.get('reliability', {}).get('mtbf', 0),
             self.radio_nav.get('reliability', {}).get('mtbf', 0),
             self.avionics.get('reliability', {}).get('mtbf', 0),
             self.hydraulic.get('reliability', {}).get('mtbf', 0)
         ]
-        return min[components], sum(components) / len(components) # aircraft mtbf, median_mtbf
+        # l'mtbf del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
+        return min(components)* 0.3 + 0.7 * sum(components) / len(components) # aircraft mtbf
     
-    
-
     def _maintenance_eval(self):
-        """Formula predefinita per il carico di manutenzione"""
+        """evaluate maintenance load (mttr) requested of aircraft subsystem
+
+        Returns:
+            float: hour quantity rappresentative of maintenance job
+        """
         components = [
             self.engine.get('reliability', {}).get('mttr', 0),
             self.radar.get('reliability', {}).get('mttr', 0),
+            self.TVD.get('reliability', {}).get('mtbf', 0),
             self.radio_nav.get('reliability', {}).get('mttr', 0),
             self.avionics.get('reliability', {}).get('mttr', 0),
             self.hydraulic.get('reliability', {}).get('mttr', 0)
         ]    
-        return max[components], sum(components) / len(components) # aircraft mttr, median_mttr
+
+        # l'mttr del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
+        return max(components) * 0.3 + 0.7 * sum(components) / len(components) # aircraft mttr
     
-    def _avalaiability_score(self):
-        """Calcola il punteggio di disponibilità dell'aeromobile"""
-        mtbf, median_mtbf = self._reliability_eval()
-        mttr, median_mttr = self._maintenance_eval()
+    def _avalaiability_eval(self):
+        """evaluate avalaiability of aircraft
+
+        Returns:
+            float: avalaiability value (value = mtbf/mttr)
+        """
+        mtbf = self._reliability_eval()
+        mttr = self._maintenance_eval()
 
         if mtbf == 0:
             return 0.0
         
         # Calcola il punteggio di disponibilità come rapporto tra MTBF e (MTBF + MTTR)
-        ratio_a = mtbf / mttr if mttr > 0 else 1.0
-        ratio_b = median_mtbf / median_mttr if median_mttr > 0 else 1.0
-
-        return 0.7 * ratio_a + 0.3 * ratio_b
+        ratio = mtbf / mttr if mttr > 0 else 0.0        
+        return ratio
 
     # --- Metodi di confronto normalizzati ---
-    def get_normalized_radar_score(self):
-        scores = [ac.evaluate_radar() for ac in Aircraft_Data._registry]
-        return self._normalize(self.evaluate_radar(), scores)
+    def get_normalized_radar_score(self, modes: Optional[Dict] = None):
+        """returns radar score normalized from 0 (min score) 1 (max score)
 
+        Returns:
+            float: normalized radar score
+        """
+        scores = [ac._radar_eval(modes = modes) for ac in Aircraft_Data._registry]
+        return self._normalize(self._radar_eval(modes = modes), scores)
+    
+    def get_normalized_TVD_score(self, modes: Optional[Dict] = None):
+        """returns TVD score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized TVD score
+        """
+        scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry]
+        return self._normalize(self._TVD_eval(modes = modes), scores)
+    
     def get_normalized_speed_score(self):
-        scores = [ac.eval_speed() for ac in Aircraft_Data._registry]
-        return self._normalize(self.evaluate_speed(), scores)
+        """returns speed score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized speed score
+        """
+        scores = [ac._speed_eval() for ac in Aircraft_Data._registry]
+        return self._normalize(self._speed_eval(), scores)
 
     def get_normalized_reliability_score(self):
-        scores = [ac.evaluate_reliability() for ac in Aircraft_Data._registry]
-        return self._normalize(self.evaluate_reliability(), scores)
+        """returns reliability score (mtbf) normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized reliability score
+        """
+        scores = [ac._reliability_eval() for ac in Aircraft_Data._registry]
+        return self._normalize(self._reliability_eval(), scores)
     
+    def get_normalized_avalaiability_score(self):
+        """returns avalaiability score (mtbf/mttr) normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized avalaiability score
+        """
+        scores = [ac._avalaiability_eval() for ac in Aircraft_Data._registry]
+        return self._normalize(self._avalaiability_eval(), scores)
     
     def get_normalized_maintenance_score(self):
-        scores = [ac.evaluate_maintenance() for ac in Aircraft_Data._registry]
-        # Min-max invertito: manutenzione più bassa = migliore
-        normalized = self._normalize(self.evaluate_maintenance(), scores)
-        return 1 - normalized
+        """returns maintenance score (mttr) normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized maintenance score
+        """
+        scores = [ac._maintenance_eval() for ac in Aircraft_Data._registry]
+        return 1- self._normalize(self._maintenance_eval(), scores)        
 
     def _normalize(self, value, scores):
+        """Normalize values from 0 to 1
+
+        Args:
+            value (_type_): value to normalize
+            scores (_type_): list of values for normalization calculus
+
+        Returns:
+            float: score (from 0 to 1)
+        """
         if not scores:
             return 0
         min_val = min(scores)
@@ -277,53 +320,88 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
+    def role_score(self, role: str, task: str, target_dimension: Dict[str, any], minimum_destroyed_fraction: float):
+        
+        if not role or not isinstance(role, str):
+            raise TypeError ("role must be a string")
+        if role not in AIRCRAFT_ROLE:
+            raise ValueError(f"role must be a string with values: {AIRCRAFT_ROLE!r}, got {role!r}")
+        if role not in self.roles:
+            logger.warning(f"role {role!r} not in roles for this aircraft {self.constructor} - {self.model}")
+            return 0.0
+        
+        if not task or not isinstance(task, str):
+            raise TypeError ("task must be a string")
+        if task not in AIRCRAFT_TASK[role]:
+            raise ValueError(f"task must be a string with values: {AIRCRAFT_TASK[role]!r}, got {task!r}")
+        
+        
+        score_radar = self._score_radar(role = role)
+        destroyed_fraction  = self._eval_destroyed_quantity_with_ordinance( task = task, target = target_dimension)
+
+        if destroyed_fraction < minimum_destroyed_fraction:
+            return 0.0, 0.0
+
+        return destroyed_fraction * score_radar
     
-    @classmethod
-    def get_all_Aircraft_Data(cls):
-        return cls._registry
-    
-        # Valutazione personalizzata
-    def custom_radar_eval(radar):
-        return radar['capabilities']['tracking_range'] * 0.7 + radar['capabilities']['multi_target_capacity'] * 0.3
-
-    # Aircraft_Data.update_radar_formula(custom_radar_eval)
 
 
+# AIRCRAFT DATA
 
-# Creazione aeromobile
+# metric = metric - > speed: km/h, altitude: m, radar/TVD/radioNav range: km 
+# metric = imperial - > speed: mph, altitude: feet, radar/TVD/radioNav range: nm
+
 f16_data = {
     "constructor": "Lockheed Martin",
     "made": "USA",
     "model": "F-16C Block 50",
     "category": "fighter",
     "roles": ["CAP", "Intercept", "SEAD"],
-    "engine": {"model": "F110-GE-129", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.8, "type": "jet"}, "reliability": {"mtbf": 500, "mttr": 2}, "daily_maintenance_hours": 2.5, "field_repair_hours": 1.0},
+    "engine": {
+        "model": "F110-GE-129", 
+        "capabilities": {"thrust": 13000, "fuel_efficiency": 0.8, "type": "jet"}, 
+        "reliability": {"mtbf": 40, "mttr": 5}
+    },
     "radar": {
         "model": "AN/APG-68(V)9",
         "capabilities": {
-            "air": {True, {"tracking_range": 160, "acquisition_range": 200, "engagement_range": 150, "multi_target_capacity": 10}},
-            "ground": {False, {"tracking_range": 80, "acquisition_range": 100, "engagement_range": 80, "multi_target_capacity": 5}},
-            "sea": {False, {"tracking_range": 50, "acquisition_range": 60, "engagement_range": 50, "multi_target_capacity": 3}}},
-            "type": "pulse-doppler"},
+            "air": (True, {"tracking_range": 160, "acquisition_range": 70, "engagement_range": 50, "multi_target_capacity": 6}),
+            "ground": (True, {"tracking_range": 80, "acquisition_range": 60, "engagement_range": 20, "multi_target_capacity": 3}),
+            "sea": (False, {"tracking_range": 50, "acquisition_range": 60, "engagement_range": 50, "multi_target_capacity": 3})            
+        },
+        "reliability": {"mtbf": 60, "mttr": 4},
+        "type": "pulse-doppler"
+            
+    },
+    "TVD": {
+        "model": "AN/AAQ-28 LITENING",
+        "capabilities": {
+            "air": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 5}),
+            "ground": (True, {"tracking_range": 80, "acquisition_range": 100, "engagement_range": 80, "multi_target_capacity": 4}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})      
+        },
+        "reliability": {"mtbf": 40, "mttr": 3},
+        "type": "thermal and optical"
+    },
     "radio_nav": {
         "model": "AN/ARN-118", 
         "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
-        "reliability": {"mtbf": 600, "mttr": 1.5}
+        "reliability": {"mtbf": 60, "mttr": 1.5}
         },
     "avionics": {
         "model": "AN/ALR-69A",
         "capabilities": {"flight_control": 0.9, "navigation_system": 0.8, "communication_system": 0.85},
-        "reliability": {"mtbf": 400, "mttr": 1.2}
+        "reliability": {"mtbf": 40, "mttr": 1.2}
     },
     "hydraulic": {
         "model": "Generic Hydraulic System",
         "capabilities": {"pressure": 3000, "fluid_capacity": 50},
-        "reliability": {"mtbf": 200, "mttr": 1.0},
+        "reliability": {"mtbf": 90, "mttr": 1.0},
     },
     "speed_data": {
-        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 5000, "consume": 1200},
-        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 920, "altitude": 3000, "consume": 2500, "time": 120},  # time in minutes
-        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1450, "altitude": 8000, "consume": 4500, "time": 120}  # time in minutes   
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 1200},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 2500, "time": 120},  # time in minutes
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 4500, "time": 120}  # time in minutes   
     },
     "ordinance": {
         'air_2_air': {'AIM-120': 6},
@@ -331,9 +409,212 @@ f16_data = {
     }
 }
 
+f18_data = {
+    "constructor": "Lockheed Martin",
+    "made": "USA",
+    "model": "F-18C Block 50",
+    "category": "fighter",
+    "roles": ["CAP", "Intercept", "SEAD"],
+    "engine": {
+        "model": "F110-GE-129", 
+        "capabilities": {"thrust": 13000, "fuel_efficiency": 0.8, "type": "jet"}, 
+        "reliability": {"mtbf": 35, "mttr": 8}
+    },
+    "radar": {
+        "model": "AN/APG-68(V)9",
+        "capabilities": {
+            "air": (True, {"tracking_range": 150, "acquisition_range": 70, "engagement_range": 70, "multi_target_capacity": 10}),
+            "ground": (True, {"tracking_range": 80, "acquisition_range": 40, "engagement_range": 30, "multi_target_capacity": 5}),
+            "sea": (True, {"tracking_range": 50, "acquisition_range": 30, "engagement_range": 30, "multi_target_capacity": 3})    
+        },
+        "reliability": {"mtbf": 65, "mttr": 6},
+        "type": "pulse-doppler"
+    },
+    "TVD": {
+        "model": "AN/AAQ-28 LITENING",
+        "capabilities": {
+            "air": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 5}),
+            "ground": (True, {"tracking_range": 80, "acquisition_range": 100, "engagement_range": 80, "multi_target_capacity": 4}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})        
+        },
+        "reliability": {"mtbf": 55, "mttr": 5},
+        "type": "thermal and optical"
+    },
+    "radio_nav": {
+        "model": "AN/ARN-118", 
+        "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
+        "reliability": {"mtbf": 60, "mttr": 4.5}
+        },
+    "avionics": {
+        "model": "AN/ALR-69A",
+        "capabilities": {"flight_control": 0.9, "navigation_system": 0.8, "communication_system": 0.85},
+        "reliability": {"mtbf": 80, "mttr": 3.2}
+    },
+    "hydraulic": {
+        "model": "Generic Hydraulic System",
+        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
+        "reliability": {"mtbf": 100, "mttr": 1.0},
+    },
+    "speed_data": {
+        "sustained": {"metric": "imperial", "type_speed": "indicated_airspeed", "airspeed": 350, "altitude": 29000, "consume": 1400},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 2700, "time": 120},  # time in minutes
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 4900, "time": 120}  # time in minutes   
+    },
+    "ordinance": {
+        'air_2_air': {'AIM-120': 6},
+        'air_2_ground': {'GBU-12': 4},
+    }
+}
+
+f14_data = {
+    "constructor": "Grumman",
+    "made": "USA",
+    "model": "F-14A Tomcat",
+    "category": "fighter",
+    "roles": ["CAP", "Intercept", "SEAD"],
+    "engine": {
+        "model": "TF30-P-414A", 
+        "capabilities": {"thrust": 20000, "fuel_efficiency": 0.7, "type": "jet"}, 
+        "reliability": {"mtbf": 30, "mttr": 10}
+    },
+    "radar": {
+        "model": "AN/AWG-9",
+        "capabilities": {
+            "air": (True, {"tracking_range": 185, "acquisition_range": 120, "engagement_range": 120, "multi_target_capacity": 20}),
+            "ground": (False, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 10}),
+            "sea": (False, {"tracking_range": 70, "acquisition_range": 80, "engagement_range": 70, "multi_target_capacity": 5})            
+        },
+        "reliability": {"mtbf": 43, "mttr": 8},
+        "type": "pulse-doppler"
+    },
+    "TVD": {
+        "model": "AN/AAX-1 TCS",
+        "capabilities": {
+            "air": (True, {"tracking_range": 150, "acquisition_range": 180, "engagement_range": 150, "multi_target_capacity": 10}),
+            "ground": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 8}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})        
+        },
+        "reliability": {"mtbf": 36, "mttr": 8},
+        "type": "thermal and optical"
+    },
+    "radio_nav": {
+        "model": "AN/ARN-92", 
+        "capabilities": {"navigation_accuracy": 0.6, "communication_range": 250},
+        "reliability": {"mtbf": 50, "mttr": 2}
+        },
+    "avionics": {
+        "model": "AN/ALR-45",
+        "capabilities": {"flight_control": 0.85, "navigation_system": 0.75, "communication_system": 0.8},
+        "reliability": {"mtbf": 45, "mttr": 6}
+    },
+    "hydraulic": {
+        "model": "Generic Hydraulic System",
+        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
+        "reliability": {"mtbf": 105, "mttr": 12},
+    },
+    "speed_data": {
+        "sustained": {"metric": "imperial", "type_speed": "indicated_airspeed", "airspeed": 540, "altitude": 30000, "consume": 1300},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 2600, "time": 120},  # time in minutes
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 4800, "time": 120}  # time in minutes   
+    },
+    "ordinance": {
+        'air_2_air': {'AIM-54 Phoenix': 6, 'AIM-7 Sparrow': 4},
+        'air_2_ground': {'GBU-12': 4},
+    }
+}
+
+f15_data = {
+    "constructor": "McDonnell Douglas",
+    "made": "USA",
+    "model": "F-15C Eagle",
+    "category": "fighter",
+    "roles": ["CAP", "Intercept", "SEAD"],
+    "engine": {
+        "model": "F100-PW-220", 
+        "capabilities": {"thrust": 15000, "fuel_efficiency": 0.75, "type": "jet"}, 
+        "reliability": {"mtbf": 60, "mttr": 12}
+    },
+    "radar": {
+        "model": "AN/APG-63(V)1",
+        "capabilities": {
+            "air": (True, {"tracking_range": 170, "acquisition_range": 80, "engagement_range": 60, "multi_target_capacity": 15}),
+            "ground": (True, {"tracking_range": 90, "acquisition_range": 110, "engagement_range": 90, "multi_target_capacity": 7}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})            
+        },
+        "reliability": {"mtbf": 45, "mttr": 7},
+        "type": "pulse-doppler"
+    },
+    "TVD": {
+        "model": "AN/AAQ-13 LANTIRN",
+        "capabilities": {
+            "air": (True, {"tracking_range": 120, "acquisition_range": 140, "engagement_range": 120, "multi_target_capacity": 6}),
+            "ground": (True, {"tracking_range": 90, "acquisition_range": 110, "engagement_range": 90, "multi_target_capacity": 5}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})            
+        },
+        "reliability": {"mtbf": 40, "mttr": 10},
+        "type": 'thermal and optical'
+    },
+    "radio_nav": {
+        "model": "AN/ARN-118", 
+        "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
+        "reliability": {"mtbf": 38, "mttr": 4}
+        },
+    "avionics": {
+        "model": "AN/ALR-56C",
+        "capabilities": {"flight_control": 0.9, "navigation_system": 0.85, "communication_system": 0.9},
+        "reliability": {"mtbf": 45, "mttr": 9}
+    },
+    "hydraulic": {
+        "model": "Generic Hydraulic System",
+        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
+        "reliability": {"mtbf": 58, "mttr": 8},
+    },
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 1500},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 2800, "time": 120},  # time in minutes
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 5000, "time": 120}  # time in minutes   
+    },
+    "ordinance": {
+        'air_2_air': {'AIM-120': 6, 'AIM-7 Sparrow': 4},
+        'air_2_ground': {'GBU-12': 4},
+    }
+}
+
+
+
+# TEST
 f16 = Aircraft_Data(**f16_data)
+f18 = Aircraft_Data(**f18_data)
+f14 = Aircraft_Data(**f14_data)
+f15 = Aircraft_Data(**f15_data)
 
 # Ottenere punteggi normalizzati
-print(f"Radar score: {f16.get_normalized_radar_score():.2f}")
-print(f"Speed score: {f16.get_normalized_speed_score():.2f}")
-    
+print(f"f16 Radar score: {f16.get_normalized_radar_score():.2f}")
+print(f"f16 Radar score a2a: {f16.get_normalized_radar_score(['air']):.2f}")
+print(f"f16 Speed score: {f16.get_normalized_speed_score():.2f}")
+print(f"f16 avalaibility: {f16.get_normalized_avalaiability_score():.2f}")
+print(f"f16 manutenability score (mttr): {f16.get_normalized_maintenance_score()}")
+print(f"f16 reliability score (mtbf): {f16.get_normalized_reliability_score()}")
+
+print(f"f18 Radar score: {f18.get_normalized_radar_score():.2f}")
+print(f"f18 Radar score a2a: {f18.get_normalized_radar_score(['air']):.2f}")
+print(f"f18 Speed score: {f18.get_normalized_speed_score():.2f}")
+print(f"f18 avalaibility: {f18.get_normalized_avalaiability_score():.2f}")
+print(f"f18 manutenability score (mttr): {f18.get_normalized_maintenance_score()}")
+print(f"f18 reliability score (mtbf): {f18.get_normalized_reliability_score()}")
+
+
+print(f"f15 Radar score: {f15.get_normalized_radar_score():.2f}")
+print(f"f15 Radar score a2a: {f15.get_normalized_radar_score(['air']):.2f}")
+print(f"f15 Speed score: {f15.get_normalized_speed_score():.2f}")
+print(f"f15 avalaibility: {f15.get_normalized_avalaiability_score():.2f}")
+print(f"f15 manutenability score (mttr): {f15.get_normalized_maintenance_score()}")
+print(f"f15 reliability score (mtbf): {f15.get_normalized_reliability_score()}")
+
+
+print(f"f14 Radar score: {f14.get_normalized_radar_score():.2f}")
+print(f"f14 Radar score a2a: {f14.get_normalized_radar_score(['air']):.2f}")
+print(f"f14 Speed score: {f14.get_normalized_speed_score():.2f}")
+print(f"f14 avalaibility score: {f14.get_normalized_avalaiability_score():.2f}")
+print(f"f14 manutenability score (mttr): {f14.get_normalized_maintenance_score()}")
+print(f"f14 reliability score (mtbf): {f14.get_normalized_reliability_score()}")
