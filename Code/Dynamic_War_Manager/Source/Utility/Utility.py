@@ -985,21 +985,24 @@ def true_air_speed(indicated_air_speed: float, altitude: float, metric: str) -> 
     :param altitude: Altitudine in metric: m, imperial: piedi.
     :return: Velocità vera dell'aria in metric: km/h, imperial: nodi..
     """
-    if not isinstance(true_air_speed, (int, float)) or not isinstance(altitude, (int, float)):
-        raise TypeError(f"true_air_speed and altitude must be numeric values.got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+    if not isinstance(indicated_air_speed, (int, float)) or not isinstance(altitude, (int, float)):
+        raise TypeError(f"true_air_speed and altitude must be numeric values.got true_air_speed: {indicated_air_speed!r}, altitude: {altitude!r}")
     
-    if true_air_speed <= 0 or altitude < 0:
-        raise ValueError(f"Input values must be positive and non-zero. got true_air_speed: {true_air_speed!r}, altitude: {altitude!r}")
+    if indicated_air_speed <= 0 or altitude < 0:
+        raise ValueError(f"Input values must be positive and non-zero. got true_air_speed: {indicated_air_speed!r}, altitude: {altitude!r}")
 
     if not isinstance(metric, str) or metric not in ["metric", "imperial"]:
         raise ValueError(f"Invalid metric. Use 'metric' or 'imperial'. got {metric!r}")
 
-    if metric == "metric":
-        k = 9.44 * 10^-6
-    else:
-        k = 2.876 * 10^-3
-    # Formula per calcolare la velocità vera
-    return indicated_air_speed / math.sqrt(1 - (k * altitude ))
+
+
+    if metric == "imperial":
+        indicated_air_speed = convert_mph_to_kmh(indicated_air_speed)  # Converti nodi in km/h
+        altitude = convert_feet_to_meters(altitude)  # Converti piedi in
+    
+    densità_relativa = (1 - 2.25577e-5 * altitude) ** 4.25588
+    true_air_speed = indicated_air_speed / math.sqrt(densità_relativa)
+    return true_air_speed
 
 
 def mph_2_meters_per_second(mph: float) -> float:
