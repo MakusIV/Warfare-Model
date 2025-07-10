@@ -1,14 +1,9 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Block.Block import Block
-from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Context import Context 
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-from Code.Dynamic_War_Manager.Source.DataType.Event import Event
-from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.DataType.Threat import Threat
-from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
-from Code.Dynamic_War_Manager.Source.DataType.State import State
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
 from dataclasses import dataclass
@@ -17,15 +12,15 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-AIRCRAFT_ROLE = None
-AIRCRAFT_TASK = None
+AIRCRAFT_ROLE = Context.AIR_Military_CRAFT_ASSET.keys()
+AIRCRAFT_TASK = Context.AIR_TASK
 
 @dataclass
 class Aircraft_Data:
     _registry = []
     
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ordinance: Dict ):
+    def __init__(self, constructor: str, made: str, model: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
         self.constructor = constructor
         self.made = made
         self.model = model
@@ -39,7 +34,6 @@ class Aircraft_Data:
         self.avionics = avionics
         self.hydraulic = hydraulic
         self.speed_data = speed_data
-        self.ordinance = ordinance
         Aircraft_Data._registry.append(self)
 
     # --- Getter e Setter ---
@@ -357,7 +351,10 @@ f16_data = {
     "constructor": "Lockheed Martin",
     "made": "USA",
     "model": "F-16C Block 50",
+    "start_service": 1978,
+    "end_service": int('inf'),
     "category": "fighter",
+    "cost": 10, # M$
     "roles": ["CAP", "Intercept", "SEAD"],
     "engine": {
         "model": "F110-GE-129", 
@@ -405,28 +402,16 @@ f16_data = {
         "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 2500, "time": 120},  # time in minutes
         "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 4500, "time": 120}  # time in minutes   
     },
-    "ordinance": {
-        'air_2_air': {
-            'CAP': {
-                'long': { {'AIM-120': 6}, {'AIM-9X': 2}, {'AIM-9X': 4}, {'Tank-300L': 2} },
-                'med': { {'AIM-120': 4}, {'AIM-9X': 2}, {'AIM-9X': 4}, {'Tank-300L': 1} },
-                'short': { {'AIM-120': 6}, {'AIM-9X': 4}, {'AIM-9X': 4}, {'Tank-300L': 1} },
-            },
-        },
-        'air_2_ground': {
-            'Pinpoint_strike': {
-                'lomg': { {'GBU-12': 4}, {'Tank-300L': 2} },
-
-            },
-        },
-    }
 }
 
 f18_data = {
     "constructor": "Lockheed Martin",
     "made": "USA",
     "model": "F-18C Block 50",
+    "start_service": 1978,
+    "end_service": int('inf'),
     "category": "fighter",
+    "cost": 10, # M$
     "roles": ["CAP", "Intercept", "SEAD"],
     "engine": {
         "model": "F110-GE-129", 
@@ -483,7 +468,10 @@ f14_data = {
     "constructor": "Grumman",
     "made": "USA",
     "model": "F-14A Tomcat",
+    "start_service": 1978,
+    "end_service": int('inf'),
     "category": "fighter",
+    "cost": 10,
     "roles": ["CAP", "Intercept", "SEAD"],
     "engine": {
         "model": "TF30-P-414A", 
@@ -540,7 +528,10 @@ f15_data = {
     "constructor": "McDonnell Douglas",
     "made": "USA",
     "model": "F-15C Eagle",
+    "start_service": 1978,
+    "end_service": int('inf'),
     "category": "fighter",
+    "cost": 10,
     "roles": ["CAP", "Intercept", "SEAD"],
     "engine": {
         "model": "F100-PW-220", 
