@@ -10,7 +10,7 @@
 from enum import Enum
 
 MAX_WORLD_DISTANCE = float('inf')
-DCS_DATA_DIRECTORY = "E:\Sviluppo\Warfare_Model\Code\Persistence\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
+DCS_DATA_DIRECTORY = "E:\\Sviluppo\Warfare_Model\\Code\\Persistence\\DCS_Data" # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
 DEBUG = True
 
 PATH_TYPE = ["onroad", "offroad", "air", "water"]
@@ -30,7 +30,7 @@ PRODUCTION_WEIGHT = {
 GROUND_ACTION  = {
 
     "Attack":   "Attack",
-    "defense":  "defense",
+    "Defense":  "Defense",
     "Maintain": "Maintain",
     "Retrait":  "Retrait" 
 }
@@ -51,7 +51,7 @@ AIR_TASK = {
 NAVAL_TASK  = {
 
     "Attack":   "Attack", 
-    "defense":  "defense",   
+    "Defense":  "Defense",   
     "Retrait":  "Retrait" 
 }
 
@@ -101,7 +101,7 @@ WEIGHT_FORCE_GROUND_ASSET = {
 # Parametri per il calcolo della combat power  in Tactical_Evaluation Module
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION["Attack"]: {"Tank": 5, "Armored": 3.5, "Motorized": 2, "Artillery_Semovent": 4, "Artillery_Fixed": 3},
-    GROUND_ACTION["defense"]: {"Tank": 4, "Armored": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fixed": 5},
+    GROUND_ACTION["Defense"]: {"Tank": 4, "Armored": 3.2, "Motorized": 2, "Artillery_Semovent": 3, "Artillery_Fixed": 5},
     GROUND_ACTION["Maintain"]: {"Tank": 3, "Armored": 3.7, "Motorized": 4, "Artillery_Semovent": 2, "Artillery_Fixed": 3},    
 }
 

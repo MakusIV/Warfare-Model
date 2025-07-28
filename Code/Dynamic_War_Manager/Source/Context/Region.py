@@ -50,7 +50,13 @@ DEFAULT_WEIGHT_PRIORITY_TARGET = {
 }
 
 # Logger setup
-logger = Logger(module_name=__name__, class_name='Region')
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_level=30, class_name="Region").logger
 
 
 class BlockCategory(Enum):
@@ -483,9 +489,9 @@ class Region:
         blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
         total = Payload()
         
-        for block_item in blocks.values():
+        for block_item in blocks:
             if hasattr(block_item.block, 'resource_manager'):
-                total += block_item.block.resource_manager.warehouse()
+                total += block_item.block.resource_manager.warehouse
         
         return total
     
@@ -513,7 +519,7 @@ class Region:
         blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
         values = {"production": 0.0, "storage": 0.0, "transport": 0.0, "urban": 0.0, "military": 0.0, "total": 0.0}
         
-        for block_item in blocks.values():
+        for block_item in blocks:
             block = block_item.block
             if hasattr(block, 'resource_manager'):
                 production_value = block.resource_manager.production_value()
