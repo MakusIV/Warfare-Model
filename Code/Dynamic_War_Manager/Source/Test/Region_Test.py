@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from sympy import Point2D
 from typing import List, Dict, Optional, Tuple
+import inspect  # Aggiungi questo import
 
 # Import the classes to test
 from Code.Dynamic_War_Manager.Source.Context.Region import Region, BlockItem, BlockCategory
@@ -12,6 +13,7 @@ from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
 from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 
 
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
@@ -49,7 +51,8 @@ class TestRegion(unittest.TestCase):
             "target_within_med_range": True,
             "med_range_ratio": 0.8
         }
-        
+        self.mock_military.category = 'Military'
+
         self.mock_production = MagicMock(spec=Production)
         self.mock_production.id = "prod1"
         self.mock_production.name = "Production Facility"
@@ -58,6 +61,7 @@ class TestRegion(unittest.TestCase):
         self.mock_production.is_logistic.return_value = True
         self.mock_production.position = Point2D(20, 20)
         self.mock_production.value = 1.0
+        self.mock_production.category = 'Logistic'
         
         self.mock_urban = MagicMock(spec=Urban)
         self.mock_urban.id = "urban1"
@@ -67,6 +71,7 @@ class TestRegion(unittest.TestCase):
         self.mock_urban.is_civilian.return_value = True
         self.mock_urban.position = Point2D(30, 30)
         self.mock_urban.value = 0.5
+        self.mock_urban.category = 'Civilian'
         
         # Create mock routes
         self.mock_route = MagicMock(spec=Route)
@@ -144,7 +149,7 @@ class TestRegion(unittest.TestCase):
     
     def test_calc_strategic_logistic_center(self):
         # Setup production block with position and priority
-        self.mock_production.position = Point2D(10, 20)
+        self.mock_production.position = Point2D(10, 20)        
         block_item = self.region.get_block_by_id("prod1")
         block_item.priority = 1.0
         
@@ -162,21 +167,36 @@ class TestRegion(unittest.TestCase):
         self.assertIsInstance(centers["ground"]["Maintain"], Point2D)
         self.assertIsInstance(centers["ground"]["Defense"], Point2D)
     
+    
     def test_calc_total_warehouse(self):
         # Setup production block with resource manager
         self.mock_production.resource_manager = MagicMock()
-        self.mock_production.resource_manager.warehouse.return_value = Payload(goods=100)
         
+        # Create a real Payload instance
+        real_payload = Payload(goods=100)# Configurazione CORRETTA per una property
+        type(self.mock_production.resource_manager).warehouse = real_payload
+        # Disabilita resource_manager per military1
+        self.mock_military.resource_manager = None
+        
+        # Chiama con il case corretto ("Red")
         total = self.region.calc_total_warehouse("Red")
+        
+        # Verifica
         self.assertEqual(total.goods, 100)
-    
+       
+
     def test_calc_total_production(self):
         # Setup production block with resource manager
         self.mock_production.resource_manager = MagicMock()
-        self.mock_production.resource_manager.actual_production.return_value = Payload(goods=50)
         
+        # Create a proper Payload instance instead of MagicMock        
+        mock_payload = Payload(goods=50)  # Usa il costruttore reale di Payload        
+        self.mock_production.resource_manager.actual_production.return_value = mock_payload
         total = self.region.calc_total_production("Red")
+        
+        # Verify
         self.assertEqual(total.goods, 50)
+        self.mock_production.resource_manager.actual_production.assert_called_once()
     
     def test_calc_production_values(self):
         # Setup production block with production value
@@ -240,28 +260,48 @@ class TestRegion(unittest.TestCase):
             self.mock_production.resource_manager.run_resource_management_cycle.assert_called_once()
     
     def test_invalidate_caches(self):
-        with patch.object(self.region.get_blocks_by_criteria.cache_clear) as mock_blocks, \
-             patch.object(self.region.get_route.cache_clear) as mock_routes, \
-             patch.object(self.region.calc_strategic_logistic_center.cache_clear) as mock_logistic, \
-             patch.object(self.region.calc_combat_power_center.cache_clear) as mock_combat, \
-             patch.object(self.region.calc_total_warehouse.cache_clear) as mock_warehouse, \
-             patch.object(self.region.calc_total_production.cache_clear) as mock_production, \
-             patch.object(self.region.calc_production_values.cache_clear) as mock_values, \
-             patch.object(self.region._calc_attack_priority.cache_clear) as mock_attack, \
-             patch.object(self.region._calc_defense_priority.cache_clear) as mock_defense:
+        """Test the cache invalidation mechanism"""
+        # Create mock functions that preserve cache_clear
+        mock_functions = {}
+        
+        # List of all cached methods to test
+        cached_methods = [
+            'get_blocks_by_criteria',
+            'get_route',
+            'calc_strategic_logistic_center',
+            'calc_combat_power_center',
+            'calc_total_warehouse',
+            'calc_total_production',
+            'calc_production_values',
+            '_calc_attack_priority',
+            '_calc_defense_priority'
+        ]
+
+        # Create a tracker for calls
+        calls = {name: 0 for name in cached_methods}
+
+        # Replace each method with a mock that tracks calls to cache_clear
+        for name in cached_methods:
+            original = getattr(self.region, name)
             
-            self.region._invalidate_caches()
+            def make_mock(original, name):
+                def mock_cache_clear():
+                    calls[name] += 1
+                    return original.cache_clear()
+                
+                mock = MagicMock()
+                mock.cache_clear = mock_cache_clear
+                return mock
             
-            # Verify all caches were cleared
-            mock_blocks.assert_called_once()
-            mock_routes.assert_called_once()
-            mock_logistic.assert_called_once()
-            mock_combat.assert_called_once()
-            mock_warehouse.assert_called_once()
-            mock_production.assert_called_once()
-            mock_values.assert_called_once()
-            mock_attack.assert_called_once()
-            mock_defense.assert_called_once()
+            mock_func = make_mock(original, name)
+            setattr(self.region, name, mock_func)
+
+        # Call the method under test
+        self.region._invalidate_caches()
+
+        # Verify all caches were cleared
+        for name in cached_methods:
+            self.assertEqual(calls[name], 1, f"{name} cache not cleared")
     
     def test_validate_weight_priority_target(self):
         valid_weights = {
