@@ -251,9 +251,7 @@ class Region:
         Returns:
             List of matching BlockItem objects
         """
-        if not Utility.check_side(side):
-            raise ValueError(f"Invalid side: {side!r}")
-
+        
         result = []
         
         for block_item in self._blocks.values(): # Itera sui valori del dizionario
@@ -486,12 +484,18 @@ class Region:
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
         
-        blocks = self.get_blocks_by_criteria(side=side) # Filtra una volta    
         total = Payload()
+        blocks = self.get_blocks_by_criteria(side=side)
         
         for block_item in blocks:
             if hasattr(block_item.block, 'resource_manager'):
-                total += block_item.block.resource_manager.warehouse
+                rm = block_item.block.resource_manager
+                if rm is not None and hasattr(rm, 'warehouse'):
+                    warehouse = rm.warehouse
+                    if isinstance(warehouse, Payload):
+                        total += warehouse
+                    else:
+                        print(f"Warning: Invalid warehouse type in {block_item.block.id} - {type(warehouse)}")
         
         return total
     
@@ -538,6 +542,15 @@ class Region:
         
         return values
     
+    def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
+        # crea una tupla di coppie (priority, block) evitando di utilizzare la classe BlockItem non hashable in quanto dataclass
+        tuple_priority_and_block = ()
+        for block_item in block_items:
+            item = (block_item.priority, block_item.block)
+            tuple_priority_and_block += (item,)
+
+        return tuple_priority_and_block
+
     # PRIORITY UPDATES
     def update_logistic_priorities(self, side: str) -> bool:
         """Update priorities for logistic blocks based on production values."""
@@ -545,8 +558,12 @@ class Region:
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
         # Chiamata a metodo con cache
-        production_values = self.calc_production_values(side = side) * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, # Maximum value for block's strategic weight parameter
+        production_values = self.calc_production_values(side = side)
         
+        for k, v in production_values.items():
+            production_values[k] = v * MAX_VALUE # MAX_VALUE is a constant defined in Block.py, # Maximum value for block's strategic weight parameter
+
+
         if production_values["total"] == 0:
             logger.warning("No production value found, setting logistic priorities to 0")
             # Imposta priorità a 0 per blocchi logistici
@@ -605,6 +622,7 @@ class Region:
         
         friendly_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         enemy_blocks = self.get_blocks_by_criteria(side=Utility.enemySide(side))
+
         
         for block_item in friendly_blocks:
             military_block = block_item.block
@@ -615,8 +633,8 @@ class Region:
             # I calcoli di priorità sono ora memorizzati nella cache
             # Definisco le tuple prima di passarle come parametri perchè: ogni tuple(...) crea una nuova tupla → invalida la cache ogni volta. 
             # È importante riutilizzare una tupla generata una sola volta.
-            enemy_blocks_tuple = tuple(enemy_blocks) 
-            friendly_blocks_tuple = tuple(friendly_blocks)
+            enemy_blocks_tuple = self._get_tuple_hashable_block_item(block_items=enemy_blocks) 
+            friendly_blocks_tuple = self._get_tuple_hashable_block_item(block_items=friendly_blocks)
             attack_priority = self._calc_attack_priority(military_block, enemy_blocks_tuple) # tuple per cache
             defense_priority = self._calc_defense_priority(military_block, friendly_blocks_tuple) # tuple per cache
             
@@ -658,7 +676,7 @@ class Region:
 
     
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
-    def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[BlockItem, ...]) -> float:
+    def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[(float, Block), ...]) -> float:
         """Calculate attack priority for a military block."""
         priority = 0.0
         # Assicurati che military_block.get_military_category() ritorni una chiave valida
@@ -668,7 +686,7 @@ class Region:
             return 0.0
 
         for enemy_item in enemy_blocks:
-            target = enemy_item.block            
+            target = enemy_item[1]            
             weight = self._select_weight(target_block=target, task="attack", block_category=block_category) # Seleziona il peso per il blocco target
             
             # priority summatory
@@ -686,7 +704,7 @@ class Region:
     
 
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
-    def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[BlockItem, ...]) -> float:
+    def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[(float, Block), ...]) -> float:
         """Calculate defense priority for a military block."""
         priority = 0.0
         block_category = military_block.get_military_category()
@@ -695,7 +713,7 @@ class Region:
             return 0.0
         
         for friendly_item in friendly_blocks:
-            friendly = friendly_item.block  
+            friendly = friendly_item[1]  
             if friendly.id == military_block.id: # Evita di calcolare la priorità con se stesso
                 continue
 
@@ -779,7 +797,7 @@ class Region:
 
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
-    def _calc_surface_priority(self, block: Military, target_item: BlockItem,
+    def _calc_surface_priority(self, block: Military, target_item: Tuple[float, Block],
                             attack_route: Optional[Route], weight: float) -> float:
         
         """
@@ -796,7 +814,7 @@ class Region:
         Returns:
             priority (float): priority value of the block, returns 0.0 if not applicable
         """
-        target_block = target_item.block
+        target_block = target_item[1]
 
         # Calcola tempo di intercetto
         if attack_route:
@@ -823,7 +841,7 @@ class Region:
             weight=weight,
             time_to_intercept=tti,
             range_ratio=range_ratio,
-            target_priority=target_item.priority
+            target_priority=target_item[0]
         )
 
 
