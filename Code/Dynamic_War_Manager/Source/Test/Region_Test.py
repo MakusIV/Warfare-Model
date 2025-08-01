@@ -43,10 +43,13 @@ class TestRegion(unittest.TestCase):
         self.mock_military.side = "Red"
         self.mock_military.get_military_category.return_value = "Ground_Base"
         self.mock_military.is_military.return_value = True
+        self.mock_military.is_logistic.return_value = False
+        self.mock_military.is_civilian.return_value = False
         self.mock_military.is_Ground_Base.return_value = True
         self.mock_military.position = Point2D(10, 10)
         self.mock_military.combat_power.return_value = 100
         self.mock_military.time2attack.return_value = 60
+        self.mock_military.value = 1
         self.mock_military.artillery_in_range.return_value = {
             "target_within_med_range": True,
             "med_range_ratio": 0.8
@@ -59,6 +62,7 @@ class TestRegion(unittest.TestCase):
         self.mock_production.side = "Red"
         self.mock_production.is_military.return_value = False
         self.mock_production.is_logistic.return_value = True
+        self.mock_production.is_civilian.return_value = False
         self.mock_production.position = Point2D(20, 20)
         self.mock_production.value = 1.0
         self.mock_production.category = 'Logistic'
@@ -68,6 +72,7 @@ class TestRegion(unittest.TestCase):
         self.mock_urban.name = "Urban Area"
         self.mock_urban.side = "Blue"
         self.mock_urban.is_military.return_value = False
+        self.mock_urban.is_logistic.return_value = False
         self.mock_urban.is_civilian.return_value = True
         self.mock_urban.position = Point2D(30, 30)
         self.mock_urban.value = 0.5
@@ -220,7 +225,7 @@ class TestRegion(unittest.TestCase):
             self.assertTrue(updated)
             
             block_item = self.region.get_block_by_id("prod1")
-            self.assertAlmostEqual(block_item.priority, 1.0)  # 100 * 1.0 / 100
+            self.assertAlmostEqual(block_item.priority, 0.1)  # 100 * 1.0 / ( 100 *10 (MAX_VALUE)) = 0.1
     
     def test_update_military_priorities(self):
         # Setup military block
@@ -232,9 +237,11 @@ class TestRegion(unittest.TestCase):
         enemy_block.side = "Blue"
         enemy_block.get_military_category.return_value = "Ground_Base"
         enemy_block.is_military.return_value = True
+        enemy_block.is_logistic.return_value = False
+        enemy_block.is_civilian.return_value = False
         enemy_block.combat_power.return_value = 80
         enemy_block.position = Point2D(50, 50)
-        
+        enemy_block.value = 1
         # Add enemy block to region
         self.region._add_block_item(BlockItem(priority=0.5, block=enemy_block))
         
@@ -252,11 +259,11 @@ class TestRegion(unittest.TestCase):
         with patch.object(self.region, 'update_logistic_priorities', return_value=True) as mock_log, \
              patch.object(self.region, 'update_military_priorities') as mock_mil:
             
-            self.region.run_resource_management_cycle("Red")
+            self.region.run_resource_management_cycle(side="Red")
             
             # Verify methods were called
-            mock_log.assert_called_once_with("Red")
-            mock_mil.assert_called_once_with("Red")
+            mock_log.assert_called_once_with(side="Red")
+            mock_mil.assert_called_once_with(side="Red")
             self.mock_production.resource_manager.run_resource_management_cycle.assert_called_once()
     
     def test_invalidate_caches(self):
@@ -320,13 +327,15 @@ class TestRegion(unittest.TestCase):
         
         with self.assertRaises(TypeError):
             self.region._validate_weight_priority_target({"Ground_Base": "invalid"})
+
+        with self.assertRaises(ValueError):
+            invalid_weights = {"Ground_Base": {"attack": {"Ground_Base": 1.5}, "defense": {"Ground_Base": 0.1}}}
+            self.region._validate_weight_priority_target(invalid_weights)
         
         with self.assertRaises(ValueError):
             self.region._validate_weight_priority_target({"Ground_Base": {"attack": {}, "defense": {}}})
         
-        with self.assertRaises(ValueError):
-            invalid_weights = {"Ground_Base": {"attack": {"Ground_Base": 1.5}, "defense": {"Ground_Base": 0.1}}}
-            self.region._validate_weight_priority_target(invalid_weights)
+        
 
 if __name__ == '__main__':
     unittest.main()

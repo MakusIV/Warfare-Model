@@ -616,9 +616,6 @@ class Region:
         """Update priorities for military blocks."""
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
-
-        if not isinstance(side, str):
-            raise TypeError("Side must be a string")
         
         friendly_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         enemy_blocks = self.get_blocks_by_criteria(side=Utility.enemySide(side))
@@ -1080,7 +1077,11 @@ class Region:
             # Ulteriore validazione dei sottodizionari attack/defense
             for action_type in ['attack', 'defense']:
                 if not isinstance(weights[action_type], dict):
-                    raise TypeError(f"'{action_type}' weights for {category} must be a dictionary")
+                    raise TypeError(f"'{action_type}' weights for {category} must be a dictionary with values")
+            
+                if not weights[action_type]:
+                    raise ValueError(f"'{action_type}' weights for {category} cannot be empty")
+            
                 for target_cat, weight_val in weights[action_type].items():
                     if not isinstance(target_cat, str):
                         raise TypeError(f"Target category '{target_cat}' in {action_type} for {category} must be a string.")

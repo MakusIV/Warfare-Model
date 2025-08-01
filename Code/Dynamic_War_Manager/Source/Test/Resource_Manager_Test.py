@@ -357,7 +357,6 @@ class TestResourceManager(unittest.TestCase):
         self.assertEqual(self.rm.actual_production.hs, 15)
         self.assertEqual(self.rm.actual_production.hb, 10) 
         self.assertEqual(self.rm.production_value, 1095/34) # ( 55*6 + 45*8 + 35*1 + 25*10 + 15*6 + 10*3 ) / ( 6 + 8 + 1 + 10 + 6 + 3 ) = 1095/34 (32.2059)
-
     
     def test_client_priority_evaluation(self):
         """Test client priority evaluation"""        
