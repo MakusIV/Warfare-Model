@@ -21,7 +21,13 @@ if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
     from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
     
-
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
 logger = Logger(module_name=__name__, class_name='Military')
 
 class Military(Block):

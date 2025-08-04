@@ -17,6 +17,13 @@ from sympy import Point3D
 from dataclasses import dataclass
 
 # LOGGING
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
 logger = Logger(module_name=__name__, class_name='Asset')
 
 # Constants
