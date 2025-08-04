@@ -16,6 +16,13 @@ if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Context.Region import Region
 
 # LOGGING
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
 logger = Logger(module_name=__name__, class_name='Block')
 
 # Constants

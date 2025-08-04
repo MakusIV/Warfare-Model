@@ -2,7 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from dataclasses import dataclass, field
 from collections import defaultdict
-import logging
 from functools import lru_cache
 from enum import Enum
 
@@ -187,7 +186,7 @@ class Region:
     
     # BLOCK MANAGEMENT
 
-    def add_block(self, block: Block, priority: float = 0.0) -> None:
+    def add_block(self, block: Block, priority: float = 0.0) -> None:        
         """Add a block to the region with specified priority."""
         if not isinstance(block, Block):
             raise TypeError(f"Block must be a Block instance, got {type(block).__name__}")
@@ -409,6 +408,7 @@ class Region:
         
         return Point2D(weighted_position_x / total_priority, weighted_position_y / total_priority)
 
+    # old
     """
     @lru_cache(maxsize = 128) # Aggiunta cache
     def calc_combat_power_center(self, side: str): 
@@ -449,7 +449,6 @@ class Region:
         # verifica se  i risultati coincidono con quelli attesi con la logica del vecchio metodo(sopra)
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")               
-        blocks_quantity = {force: {task: 0 for task in ACTION_TASKS[force]} for force in MILITARY_FORCES}
         military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         
         result = {force: {task: Point2D(0, 0) for task in ACTION_TASKS[force]} 

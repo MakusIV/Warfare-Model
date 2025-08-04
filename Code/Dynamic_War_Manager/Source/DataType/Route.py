@@ -7,7 +7,13 @@ from Code.Dynamic_War_Manager.Source.Context.Context import ROUTE_TYPE
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 # LOGGING --
- 
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
 logger = Logger(module_name = __name__, class_name = 'Route')
 
 # ASSET
@@ -111,7 +117,6 @@ class Route:
         return min_distance
 
     def travelTime(self):        
-
         return self.travelTimeToEdge(self._edges.get(-1))
     
     def travelTimeToEdge(self, edge: Edge):
