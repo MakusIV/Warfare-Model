@@ -55,6 +55,13 @@ NAVAL_TASK  = {
     "Retrait":  "Retrait" 
 }
 
+MILITARY_FORCES = ["ground", "air", "naval"]
+ACTION_TASKS = {
+    "ground": GROUND_ACTION,
+    "air": AIR_TASK,
+    "naval": NAVAL_TASK
+}
+
 BLOCK_CATEGORY = {
 
     "Civilian": "Civilian",

@@ -7,9 +7,16 @@ from Dynamic_War_Manager.Source.DataType.Sphere import Sphere
 from Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
 from Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Dynamic_War_Manager.Source.DataType.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import STATE, BLOCK_CATEGORY, MILITARY_CATEGORY
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    GROUND_ACTION, 
+    AIR_TASK,
+    NAVAL_TASK,
+    MILITARY_CATEGORY,    
+    MILITARY_FORCES,
+    ACTION_TASKS
+)
 
 # LOGGING --
  
@@ -121,7 +128,20 @@ class Mobile(Asset) :
         pass
 
     @property
-    def combat_power(self):
+    def combat_power(self, force: str, action:str):
+
+        if not isinstance(force, str):
+            raise TypeError(f"Expected str instance, got {type(force).__name__}")
+        
+        if force not in MILITARY_FORCES:
+            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
+        
+        admit_task = [task for task in ACTION_TASKS[force]]
+        if action not in admit_task:
+            raise ValueError(f"force must be: {admit_task}")
+
+        if not isinstance(action, str):
+            raise TypeError(f"Expected str instance, got {type(action).__name__}")
         pass
 
 

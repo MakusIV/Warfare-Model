@@ -35,7 +35,7 @@ class TestMilitary(unittest.TestCase):
         
         # Mock assets
         self.mock_aircraft = MagicMock(spec=Aircraft)
-        self.mock_aircraft.combat_power = 10
+        self.mock_aircraft.combat_power = {"air": {"Intercept": 15}}
         self.mock_aircraft.speed = {"nominal": 800, "max": 1000}
         self.mock_aircraft.isTransport = False
         self.mock_aircraft.isAwacs = False
@@ -44,14 +44,14 @@ class TestMilitary(unittest.TestCase):
         self.mock_aircraft.position = Point2D(800,0)
         
         self.mock_vehicle = MagicMock(spec=Vehicle)
-        self.mock_vehicle.combat_power = 5.0
+        self.mock_vehicle.combat_power = {"ground": {"Attack": 10}}
         self.mock_vehicle.speed = {"off_road": {"nominal": 30, "max": 50}}
         self.mock_vehicle.isTank = True
         self.mock_vehicle.artillery_range = 1000
         self.mock_vehicle.position = Point2D(0,0)        
         
         self.mock_ship = MagicMock(spec=Ship)
-        self.mock_ship.combat_power = 8
+        self.mock_ship.combat_power = {"naval": {"Attack": 8}}
         self.mock_ship.speed = {"nominal": 30, "max": 35}
         self.mock_ship.isDestroyer = True
         self.mock_ship.artillery_range = 2000        
@@ -96,15 +96,15 @@ class TestMilitary(unittest.TestCase):
         """Test combat power calculations."""
         # Test ground combat power
         self.groundbase.assets = {"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
-        self.assertEqual(self.groundbase.combat_power(), 10)
+        self.assertEqual(self.groundbase.combat_power(force="ground", action="Attack")['ground']['Attack'], 20)
              
         # Test air combat power
         self.airbase.assets = {"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
-        self.assertEqual(self.airbase.combat_power(), 20)
+        self.assertEqual(self.airbase.combat_power(force="air", action="Intercept")['air']['Intercept'], 30)
         
         # Test naval combat power
         self.navalbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.navalbase.combat_power(), 16)
+        self.assertEqual(self.navalbase.combat_power(force="naval", action="Attack")['naval']['Attack'], 16)
         
     def test_artillery_in_range(self):
         """Test artillery range calculations."""        
