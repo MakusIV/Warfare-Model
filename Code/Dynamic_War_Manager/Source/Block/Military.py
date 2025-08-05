@@ -13,6 +13,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_TASK,
     NAVAL_TASK,
     MILITARY_CATEGORY,    
+    MILITARY_FORCES,
+    ACTION_TASKS
 )
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Context.Region import Region
@@ -101,7 +103,8 @@ class Military(Block):
             )
     #endregion
 
-    def combat_power(self) -> float:
+    def combat_power(self, force: str, action: str) -> float:
+        #action=task, military_force=force
         """
         Calculate total combat power for specified action and military force.
         
@@ -113,11 +116,27 @@ class Military(Block):
             Total combat power of applicable assets
         """        
 
-        return sum(
-            asset.combat_power # in mobile 
-            for asset in self.assets.values() 
-            if hasattr(asset, 'combat_power')
-        )
+        if not isinstance(force, str):
+            raise TypeError(f"Expected str instance, got {type(force).__name__}")
+        
+        if force not in MILITARY_FORCES:
+            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
+        
+        admit_task = [task for task in ACTION_TASKS[force]]
+        if action not in admit_task:
+            raise ValueError(f"action must be: {admit_task}")
+
+        if not isinstance(action, str):
+            raise TypeError(f"Expected str instance, got {type(action).__name__}")
+
+        result = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
+                for force in MILITARY_FORCES}
+        
+        for asset in self.assets.values(): 
+            if hasattr(asset, 'combat_power'):
+                result[force][action] += asset.combat_power[force][action]
+                
+        return result
 
     def get_military_category(self):
         """ Returns military category (Air_Base, Ground_Base, Naval_Base) of Block

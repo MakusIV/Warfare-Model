@@ -18,7 +18,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_level = 30, class_name="Region").logger
+logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_level = 30, class_name="Logistic_Lines").logger
 
 
 @dataclass
@@ -120,6 +120,20 @@ class Logistic_Lines:
         Returns:
             List of matching Logistic_Line objects
         """
+        if not isinstance(side, str):
+            raise TypeError(f"Expected str instance, got {type(side).__name__}")
+    
+        if not isinstance(transport_line_id, str):
+            raise TypeError(f"Expected str instance, got {type(transport_line_id).__name__}")
+        
+        if not isinstance(server_id, str):
+            raise TypeError(f"Expected str instance, got {type(server_id).__name__}")
+        
+        if not isinstance(client_id, str):
+            raise TypeError(f"Expected str instance, got {type(client_id).__name__}")
+        
+        if not isinstance(name, str):
+            raise TypeError(f"Expected str instance, got {type(name).__name__}")
         
         result = []
         

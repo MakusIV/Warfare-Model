@@ -26,13 +26,14 @@ from numpy import clip
 
 # CONSTANTS
 DEFAULT_ATTACK_WEIGHT = 0.5
+"""
 MILITARY_FORCES = ["ground", "air", "naval"]
 ACTION_TASKS = {
     "ground": Context.GROUND_ACTION,
     "air": Context.AIR_TASK,
     "naval": Context.NAVAL_TASK
 }
-
+"""
 DEFAULT_WEIGHT_PRIORITY_TARGET = {
     "Ground_Base": {
         "attack": {"Ground_Base": 0.7, "Naval_Base": 0.0, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0},
@@ -467,27 +468,27 @@ class Region:
             raise ValueError(f"Invalid side: {side!r}")               
         military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         
-        result = {force: {task: Point2D(0, 0) for task in ACTION_TASKS[force]} 
-                for force in MILITARY_FORCES}
-        counts = {force: {task: 0 for task in ACTION_TASKS[force]} 
-                for force in MILITARY_FORCES}
+        result = {force: {task: Point2D(0, 0) for task in Context.ACTION_TASKS[force]} 
+                for force in Context.MILITARY_FORCES}
+        counts = {force: {task: 0 for task in Context.ACTION_TASKS[force]} 
+                for force in Context.MILITARY_FORCES}
         
         for block_item in military_blocks:
             block = block_item.block
-            for force in MILITARY_FORCES:
+            for force in Context.MILITARY_FORCES:
                 if ((block.is_Air_Base and force == "air") or 
                     (block.is_Ground_Base and force == "ground") or 
                     (block.is_Naval_Base and force == "naval")):
                     
-                    for task in ACTION_TASKS[force]:
+                    for task in Context.ACTION_TASKS[force]:
                         cp = block.combat_power(action=task, military_force=force)
                         if cp > 0:
                             result[force][task] += block.position * cp
                             counts[force][task] += cp
         
         # Normalize results
-        for force in MILITARY_FORCES:
-            for task in ACTION_TASKS[force]:
+        for force in Context.MILITARY_FORCES:
+            for task in Context.ACTION_TASKS[force]:
                 if counts[force][task] > 0:
                     result[force][task] /= counts[force][task]
         
