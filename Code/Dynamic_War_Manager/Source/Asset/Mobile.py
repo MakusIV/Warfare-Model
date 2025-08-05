@@ -142,7 +142,13 @@ class Mobile(Asset) :
 
         if not isinstance(action, str):
             raise TypeError(f"Expected str instance, got {type(action).__name__}")
+        
+        result = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
+                for force in MILITARY_FORCES}
+        
         pass
+
+        #return result
 
 
     def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore

@@ -679,6 +679,7 @@ class Region:
             if hasattr(block, 'resource_manager'):
                 # Esegui il ciclo di produzione per ogni blocco con un resource manager
                 result = block.resource_manager.run_resource_management_cycle()
+                self._invalidate_caches()
                 logger.debug(f"Resource management cycle run for {block.name} in region {self.name}. Result cyce: {result!r}")    
 
         
