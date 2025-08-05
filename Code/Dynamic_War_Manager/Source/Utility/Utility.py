@@ -1102,3 +1102,26 @@ def true_air_speed_at_new_altitude(true_air_speed, altitude, new_altitude, metri
         return convert_kmh_to_mph(tas_new_kmh)
     else:
         return tas_new_kmh
+
+
+def get_sub_string(id_str:str, chiave:str):
+
+    if not isinstance(id_str, str):
+        raise TypeError(f"Expected str instance, got {type(id_str).__name__}")
+    
+    if not isinstance(chiave, str):
+        raise TypeError(f"Expected str instance, got {type(chiave).__name__}")
+    
+    chiave_con_due_punti = chiave + ":"
+    # Trova l'indice della chiave seguita da ':'
+    start = id_str.find(chiave_con_due_punti)
+    if start == -1:
+        return None
+    # Trova la posizione di inizio valore dopo la chiave
+    start_val = start + len(chiave_con_due_punti)
+    # Trova il primo punto dopo start_val
+    end_val = id_str.find('.', start_val)
+    if end_val == -1:
+        end_val = len(id_str)
+    # Estrae la sottostringa richiesta
+    return id_str[start_val:end_val]
