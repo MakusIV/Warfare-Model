@@ -17,7 +17,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_level=30, class_name="Region").logger
+logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_level = 30, class_name="Region").logger
 
 
 @dataclass
@@ -28,9 +28,7 @@ class Log_Line:
     transport_line: Transport
     server: Block
     client: Block
-    resource_from_server_to_client: Payload
     bidirectional: bool
-    resource_from_client_to_server: Payload
     state: State
 
 class Logistic_Lines:
@@ -50,7 +48,12 @@ class Logistic_Lines:
         elif args.search == "by transport":
             pass
 
-    def set_line(self, line: Log_Line):
+    def set_line(self, name: str, transport_line: Transport, server: Block, client: Block):
+
+        if not isinstance(transport_line, Transport):
+            raise TypeError(f"transport_line must be a Transport, got:{transport_line.__class__.__name__}")
+        
+        if 
         pass
 
     def setup_blocks_resource_manager(self):
@@ -69,5 +72,5 @@ class Logistic_Lines:
                 server.set_server(id = transport.id, server = transport)
                 transport.set_server(id = client.id, server = client)
 
-    
+
 

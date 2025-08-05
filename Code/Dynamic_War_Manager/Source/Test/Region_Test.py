@@ -139,6 +139,14 @@ class TestRegion(unittest.TestCase):
         
         low_priority = self.region.get_sorted_priority_blocks(1, "Red", "lowest")
         self.assertEqual(low_priority[0].priority, 0.6)
+
+    def test_get_normalized_priority_blocks(self):
+        high_priority = self.region.get_normalized_priority_blocks(2, "Red", "highest")
+        self.assertEqual(len(high_priority), 2)
+        self.assertEqual(high_priority[0].priority, 1)
+        
+        low_priority = self.region.get_normalized_priority_blocks(1, "Red", "lowest")
+        self.assertEqual(low_priority[0].priority, 0)
     
     def test_add_route(self):
         new_route = MagicMock(spec=Route)

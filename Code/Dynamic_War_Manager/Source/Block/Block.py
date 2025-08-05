@@ -437,6 +437,7 @@ class Block:
     def has_resource_manager(self):
         return self._resource_manager is not None
 
+    @DeprecationWarning
     def enemy_side(self) -> str:
         """Determine enemy side"""
         return enemySide(self._side)
