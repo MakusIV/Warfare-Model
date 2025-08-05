@@ -305,7 +305,23 @@ class Region:
         blocks.sort(key=lambda x: x.priority, reverse = sort_by) # Ordina in base alla priorità
         
         return blocks[:count]
-    
+
+    def get_normalized_priority_blocks(self, count: int, side: str, sort_by: str = "highest",
+                                   category: Optional[str] = None) -> List[BlockItem]:
+
+        blocks = self.get_sorted_priority_blocks(count=len(self.blocks), side=side, sort_by=sort_by, category=category)
+        normalized_blocks = []
+        min = blocks[-1].priority
+        delta = blocks[0].priority - min
+
+        if sort_by == 'lowest':
+            delta = -delta
+            min = blocks[0].priority 
+        
+        for blockItem in blocks:
+            normalized_blocks.append( BlockItem(priority = (blockItem.priority - min)/delta, block = blockItem.block) )
+
+        return normalized_blocks[:count]    
     
     # ROUTE MANAGEMENT
 
@@ -663,7 +679,8 @@ class Region:
                 # Esegui il ciclo di produzione per ogni blocco con un resource manager
                 result = block.resource_manager.run_resource_management_cycle()
                 logger.debug(f"Resource management cycle run for {block.name} in region {self.name}. Result cyce: {result!r}")    
-    
+
+        
     # HELPER METHODS
     
     def _is_logistic_block(self, block: Block) -> bool:
