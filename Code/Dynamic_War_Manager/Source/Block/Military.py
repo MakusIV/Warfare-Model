@@ -103,6 +103,7 @@ class Military(Block):
             )
     #endregion
 
+    @property
     def combat_power(self, force: str, action: str) -> float:
         #action=task, military_force=force
         """
@@ -135,7 +136,7 @@ class Military(Block):
         for asset in self.assets.values(): 
             if hasattr(asset, 'combat_power'):
                 result[force][action] += asset.combat_power[force][action]
-                
+
         return result
 
     def get_military_category(self):

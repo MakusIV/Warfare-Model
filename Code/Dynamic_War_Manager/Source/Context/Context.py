@@ -56,6 +56,7 @@ NAVAL_TASK  = {
 }
 
 MILITARY_FORCES = ["ground", "air", "naval"]
+
 ACTION_TASKS = {
     "ground": GROUND_ACTION,
     "air": AIR_TASK,
@@ -93,16 +94,22 @@ MILITARY_CATEGORY = {
     
 }
 
+class Ground_Asset_Type(Enum):
+    TANK = "Tank",
+    ARMORED = "Armored",
+    MOTORIZED = "Motorized",
+    ARTILLERY_FIXED = "Artillery_Fixed",
+    ARTILLERY_SEMOVENT = "Artillery_Semovent"
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
 # dovresti integrare per artillery con il caliro: Artillery_Fix.Howitzer_Big, Artillery_Fix.Howitzer_Small, Artillery_Semovent.Self_Propelled_Big, ........
 WEIGHT_FORCE_GROUND_ASSET = {
 
-    "Tank": 7,
-    "Armored": 5,
-    "Motorized": 3,
-    "Artillery_Fixed": 4,
-    "Artillery_Semovent": 7,
+    Ground_Asset_Type.TANK: 7,
+    Ground_Asset_Type.ARMORED: 5,
+    Ground_Asset_Type.MOTORIZED: 3,
+    Ground_Asset_Type.ARTILLERY_FIXED: 4,
+    Ground_Asset_Type.ARTILLERY_SEMOVENT: 7,
 }
 
 # Parametri per il calcolo della combat power  in Tactical_Evaluation Module
@@ -262,7 +269,7 @@ AIR_DEFENSE_ASSET = {
                             },
 }    
                     
-
+Ground_Asset_Type.TANK.value.__str__
 
 # Caratteristiche degli asset delle diversè unità Military: Corazzate, Meccanizzate, Motorizzate e Artiglieria
 # key1: asset category, key2: asset type
