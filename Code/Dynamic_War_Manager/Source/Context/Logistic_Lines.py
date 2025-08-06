@@ -24,7 +24,7 @@ logger = Logger(module_name=__name__, set_consolle_log_level = 10, set_file_log_
 @dataclass
 class Logistic_Line:
     """Represents a logistic line that connect two blocks"""
-    id: str # composto dall'id del server+id client + name + hash , per velocizzare ricerche fornendo id server e client
+    id: str # id: str # id = side + id transport_line + id server + id client + name
     side: str
     name: str    
     transport_line: Transport
@@ -34,10 +34,12 @@ class Logistic_Line:
     state: State
 
 class Logistic_Lines:
-
+    """ Manages the Logistic Lines and initializes the Resource_Managers of all Blocks.
+        A Logistic Line represents the connection between a Resource Server and a Client created via a Transport_Line.
+    """
     def __init__(self):
         #costruisce la classe con un DCS data seT
-        self._logistic_lines: Dict[str: Logistic_Line]# id: str # composto: side + id server+id client + name + hash , per velocizzare ricerche fornendo id server e client        
+        self._logistic_lines: Dict[str: Logistic_Line]# id: str # id = side + id transport_line + id server + id client + name
 
 
     def get_line(self, **args):
