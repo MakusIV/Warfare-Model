@@ -24,7 +24,7 @@ from dataclasses import dataclass
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, class_name='Asset')
+logger = Logger(module_name=__name__, class_name='Asset').logger
 
 # Constants
 MAX_VALUE = 10  # Maximum value for block's strategic weight parameter
@@ -45,7 +45,7 @@ class AssetParams:
     payload: Optional[Payload] = None       # payload -payload resource
     production: Optional[Payload] = None       # payload -asset production resource
     position: Optional[Point3D] = None
-    crytical: Optional[bool] = False
+    critical: Optional[bool] = False
     repair_time: Optional[int] = 0
     role: Optional[str] = None
     health: Optional[int] = None # 0 -100
@@ -57,7 +57,7 @@ class Asset:
                  value: Optional[int] = None, resources_assigned: Optional[Payload] = None, 
                  resources_to_self_consume: Optional[Payload] = None, payload: Optional[Payload] = None, 
                  production: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None,
-                 crytical: Optional[bool] = False, repair_time: Optional[int] = 0, 
+                 critical: Optional[bool] = False, repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
         
         # Initialize properties
@@ -67,17 +67,17 @@ class Asset:
         self._category = category
         self._asset_type = asset_type
         self._functionality = functionality
-        self._health = None
+        #self._health = None
         self._position = position
         self._cost = cost
         self._value = value # represents the relative importance level compared to the other assets belonging to the block
         self._payload_perc = None
-        self._crytical = crytical
+        self._crytical = critical #rapresents critical level of importance
         self._repair_time = repair_time
         self._role = role
         self._dcs_unit_data = None
         self._events = []
-        self._state = State()
+        self._state = State(object_id=self.id, object_type='Asset')
         self._volume = volume
         self._block = block
         self._threat = None
@@ -97,9 +97,8 @@ class Asset:
             block=block, name=name, description=description, category=category,
             asset_type=asset_type, functionality=functionality, cost=cost,
             value=value, resources_assigned=self._resources_assigned, resources_to_self_consume=self._resources_to_self_consume, payload=self._payload,
-            production=self._production, position=position, volume=volume, crytical=crytical,
-            repair_time=repair_time, role=role, health=self._health,
-            state=self._state
+            production=self._production, position=position, volume=volume, critical=critical,
+            repair_time=repair_time, role=role, state=self._state
         )
 
     # Property getters and setters
@@ -181,20 +180,20 @@ class Asset:
 
     @property
     def health(self) -> Optional[int]:
-        return self._health
+        return self._state.health
 
     @health.setter
-    def health(self, value: Optional[int]) -> None:
+    def health(self, value: int) -> None:
         self._validate_param('health', value, int)
-        self._health = value
+        self._state.health = value
 
     @property
-    def crytical(self) -> Optional[bool]:
+    def critical(self) -> Optional[bool]:
         return self._crytical
 
-    @crytical.setter
-    def crytical(self, value: Optional[bool]) -> None:
-        self._validate_param('crytical', value, bool)
+    @critical.setter
+    def critical(self, value: Optional[bool]) -> None:
+        self._validate_param('critical', value, bool)
         self._crytical = value
 
     @property
@@ -235,7 +234,7 @@ class Asset:
 
     @property
     def efficiency(self) -> float:
-        value = float(self.balance_trade * self._health / 100) if self._health is not None else 0.0
+        value = float(self.balance_trade * self._state.health / 100) if self._state.health is not None else 0.0
         return value if value < 1 else 1
 
     @property
@@ -347,7 +346,7 @@ class Asset:
         self._id = str(value.get("unitId")) if value.get("unitId") else self._id
         if all(k in value for k in ("unit_x", "unit_y", "unit_alt")):
             self._position = Point3D(value["unit_x"], value["unit_y"], value["unit_alt"])
-        self._health = value.get("unit_health")
+        self._state.health = value.get("unit_health")
 
     # Event management methods
     def add_event(self, event: Event) -> None:
@@ -474,7 +473,7 @@ class Asset:
             'repair_time': int,
             'role': str,
             'health': int,
-            'crytical': bool,
+            'critical': bool,
             'state': State
         }
         

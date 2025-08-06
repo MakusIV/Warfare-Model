@@ -19,19 +19,24 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
 )
 
 # LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Mobile')
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name = __name__, class_name = 'Mobile').logger
 
 # ASSET
 class Mobile(Asset) :    
 
-    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, speed: Optional[float] = None, max_speed: Optional[float] = None, range: Optional[float] = None, fire_range: Optional[float] = None, dcs_unit_data: Optional[dict] = None):   
+    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, speed: Optional[Dict] = {"nominal": None, "max": None}, range: Optional[float] = None, fire_range: Optional[float] = None, dcs_unit_data: Optional[dict] = None):   
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
      
             # propriety   
             self._speed = speed
-            self._max_speed = max_speed
             self._fire_range = fire_range
             self._range = range
             self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
@@ -195,8 +200,15 @@ class Mobile(Asset) :
 
     def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
-        if speed and not isinstance(speed, float):
-            return (False, "Bad Arg: speed must be a float")
+        if speed and isinstance(speed, Dict):
+            for key in speed.keys():
+                if key in ["cruise", "max"]:
+                    continue
+                else:
+                    return(False, (f"Unexpected speed.key: {key}. speed.keys() correct value: [\"cruise\", \"max\"]"))
+            return (True, 'OK')
+        else:
+            return (False, f"Bad Arg: speed must be a Dict, got {type(speed).__name__}")
         
         if fire_range and not isinstance(fire_range, float):
             return (False, "Bad Arg: fire_range must be a float")

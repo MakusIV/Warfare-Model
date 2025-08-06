@@ -1,5 +1,5 @@
 import random
-from Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Dynamic_War_Manager.Source.Asset.Asset import Asset
 from Dynamic_War_Manager.Source.Block.Block import Block
 #from Code.Dynamic_War_Manager.Source.Utility import Utility, Sphere, Hemisphere
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -9,11 +9,17 @@ from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
-f
+
 
 # LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Structure')
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name = __name__, class_name = 'Structure').logger
 
 # ASSET
 class Structure(Asset) :    
