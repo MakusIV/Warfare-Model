@@ -213,7 +213,7 @@ def evaluateTacticalReport(report_list: dict) -> dict:
     # asset is very important 
     pass
 
-def evaluatedefensePriorityZone(strategic_priority_list: dict) -> dict: #defense_priority_list
+def evaluateDefensePriorityZone(strategic_priority_list: dict) -> dict: #defense_priority_list
     """ Evaluate priority of strategic zone (Production Zone, Transport Line, Storage Zone ecc, Military) and resource request. List ordered by priority.
     
     strategic_infrastructure_list: block (name (id), position, area), type (production, transport, storage, Military, urban), importance (VH, H, M, L, VL) sorted by importance

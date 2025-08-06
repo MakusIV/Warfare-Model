@@ -421,20 +421,24 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     for cat in BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"].keys():
         
         if action == GROUND_ACTION["Attack"]:            
-            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["defense"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
-            combat_pow_en_alt += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            #combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Defense"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Defense"]
+            #combat_pow_en_alt += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+            combat_pow_en_alt += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Maintain"]
 
-        elif action == GROUND_ACTION["defense"] or action == GROUND_ACTION["Maintain"]:
-            combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+        elif action == GROUND_ACTION["Defense"] or action == GROUND_ACTION["Maintain"]:
+            #combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+            combat_pow_en += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Attack"]            
 
-        combat_pow_fr += GROUND_COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+        #combat_pow_fr += GROUND_COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+        combat_pow_fr += asset_fr[cat]["num"] * asset_fr[cat]["combat_power"][action]
 
     if combat_pow_en < combat_pow_en_alt:
         combat_pow_en = combat_pow_en_alt
     
     combat_superiority = combat_pow_fr / ( combat_pow_en + combat_pow_fr )
     return combat_superiority
-
+# da testare
 def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> float:   
 
     """
@@ -465,7 +469,7 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
     # devi classificare
 
     attack_superiority = evaluateCombatSuperiority(GROUND_ACTION["Attack"], report_base, report_enemy)
-    defense_superiority = evaluateCombatSuperiority(GROUND_ACTION["defense"], report_base, report_enemy)
+    defense_superiority = evaluateCombatSuperiority(GROUND_ACTION["Defense"], report_base, report_enemy)
     maintain_superiority = evaluateCombatSuperiority(GROUND_ACTION["Maintain"], report_base, report_enemy)
 
     criticality = { "action": None, "value": 0 }
@@ -480,7 +484,7 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         criticality[ "value" ] = int ( maintain_superiority * 100 )
         
     elif defense_superiority > 0.40:
-        criticality["action"] = "defense"
+        criticality["action"] = "Defense"
         criticality[ "value" ] = int ( defense_superiority * 100 )
     
     else:
@@ -492,9 +496,10 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
     
     def evaluateCriticalityAirdefense(report_base: dict, report_enemy: dict) -> float: 
 
-        # evaluate enemy air defense for an possible air attack
+        # evaluate enemy air Defense for an possible air attack
         pass
     
+# da testare    
 def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed: float, tot_time_route: float) -> dict:
     """
     Evaluate the danger level of a ground route based on enemy bases and route characteristics.

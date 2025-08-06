@@ -34,6 +34,16 @@ class Mobile(Asset) :
             self._max_speed = max_speed
             self._fire_range = fire_range
             self._range = range
+            self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
+                for force in MILITARY_FORCES}
+            """
+            combat_power = {    "air": {"CAP": 0.0, "Intercept": 0.0, "Pinpoint_Strike": 0.0, ...},
+            
+                                "ground": {"Attack": 0.0 , "Defense": 0.0},
+                                
+                                "naval": {"Attack": 0.0 , "Defense": 0.0}
+                                
+                            }"""
             
             
             if dcs_unit_data: 
@@ -128,27 +138,59 @@ class Mobile(Asset) :
         pass
 
     @property
-    def combat_power(self, force: str, action:str):
+    def combat_power(self, force: Optional[str], action: Optional[str]) -> Optional[Union[Dict, float]]:
 
-        if not isinstance(force, str):
+        if force is not None and not isinstance(force, str):
             raise TypeError(f"Expected str instance, got {type(force).__name__}")
         
         if force not in MILITARY_FORCES:
-            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
-        
-        admit_task = [task for task in ACTION_TASKS[force]]
-        if action not in admit_task:
-            raise ValueError(f"force must be: {admit_task}")
+            raise ValueError(f"force must be: {MILITARY_FORCES!r}")        
 
-        if not isinstance(action, str):
+        if action is not None and not isinstance(action, str):
             raise TypeError(f"Expected str instance, got {type(action).__name__}")
+
+        admit_task = [task for task in ACTION_TASKS[force]]
+
+        if action not in admit_task:
+            raise ValueError(f"force must be: {admit_task}")        
         
-        result = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
-                for force in MILITARY_FORCES}
+        if force and action:
+            return self._combat_power[force][action]
         
-        pass
+        if force:
+            return self._combat_power[force]
+        
+        if action:
+            result = {}
+            for force in MILITARY_FORCES:
+                for task in ACTION_TASKS[force]:
+                    if action == task:
+                        result[force]={task: self._combat_power[force][action]
+                                       }
+            return result
+        
+        return self._combat_power
 
         #return result
+
+    @combat_power.setter
+    def combat_power(self, combat_power: Dict):
+
+        if not isinstance(combat_power, Dict):
+            raise TypeError(f"Expected Dict instance, got {type(combat_power).__name__}")
+        
+        if combat_power.keys() in MILITARY_FORCES:
+            for force in MILITARY_FORCES:
+                if isinstance(combat_power[force].value(), Dict):
+                    if combat_power[force].keys() not in ACTION_TASKS[force]:
+                        raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
+                else:
+                    raise TypeError(f"Expected Dict, got {type(combat_power[force].value()).__name__}")
+        else:
+            raise TypeError(f"Unexpected combat_power.keys, got {combat_power.keys()}")
+        
+        self._combat_power = combat_power
+
 
 
     def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore
