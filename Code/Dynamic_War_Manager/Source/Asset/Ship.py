@@ -10,8 +10,14 @@ from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
 # LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Ship')
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name = __name__, class_name = 'Ship').logger
 
 # ASSET
 class Ship(Mobile) :    

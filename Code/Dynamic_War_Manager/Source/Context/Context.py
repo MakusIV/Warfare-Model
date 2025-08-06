@@ -469,7 +469,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 BLOCK_ASSET_CATEGORY = {
     "Block_Infrastructure_Asset": {},
     "Ground_Military_Vehicle_Asset": {},
-    "Air_defense_Asset_Category": {},
+    "Air_Defense_Asset": {},
     "Naval_Military_Craft_Asset": {},
     "Air_Military_Craft_Asset": {}
 }
@@ -500,7 +500,7 @@ for k1, v1 in GROUND_Military_VEHICLE_ASSET.items():
         
 
  #Generate AIR DEFENSE ASSET CATEGORY AND SUB CATEGORY(ASSET TYPE)
-k = "Air_defense_Asset_Category"
+k = "Air_Defense_Asset"
 
 for k1, v1 in AIR_DEFENSE_ASSET.items():
 
@@ -550,7 +550,7 @@ if DEBUG:
 
                 for k2, v2 in v1.items():
 
-                    if k in ["Air_defense_Asset_Category", "Ground_Military_Vehicle_Asset"]:
+                    if k in ["Air_Defense_Asset", "Ground_Military_Vehicle_Asset"]:
                         print(f"BLOCK_ASSET_CATEGORY[{k}][{k1}][{k2}] = {BLOCK_ASSET_CATEGORY[k][k1][k2]}") # asset type 
 
                     else:

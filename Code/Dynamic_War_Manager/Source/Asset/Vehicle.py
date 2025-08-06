@@ -10,8 +10,14 @@ from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
 # LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Vehicle')
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name = __name__, class_name = 'Vehicle').logger
 
 # ASSET
 class Vehicle(Mobile) :    
@@ -20,13 +26,10 @@ class Vehicle(Mobile) :
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
-            # propriety  
-            self.speed = {
-                "on_road":{"nominal": None, "max": None},
-                "off_road":{"nominal": None, "max": None}
-            }
-
-            self.range
+            # proprietry
+            self.speed_off_road = {"nominal": None, "max": None},
+                
+            
             # dcs_data for vehicle
 
             # Association    
@@ -130,8 +133,8 @@ class Vehicle(Mobile) :
 
         if category and isinstance(category, str):
 
-            vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Military Vehicle Asset"].keys()
-            air_defense_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset_Category"].keys()
+            vehicle_asset = BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"].keys()
+            air_defense_asset = BLOCK_ASSET_CATEGORY["Air_Defence_Asset"].keys()
             struct_asset = BLOCK_ASSET_CATEGORY["Block_Infrastructure_Asset"][self.block.block_class].keys()
 
             if asset_type in [vehicle_asset, air_defense_asset, struct_asset]:
@@ -140,6 +143,8 @@ class Vehicle(Mobile) :
             return (False, "Bad Arg: Vehicle category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")                     
     
         return (True, "OK")
+    
+
     @property
     def isTank(self):
         return self.category == "Tank"
@@ -185,7 +190,19 @@ class Vehicle(Mobile) :
     
 
 
-    @property
-    def combat_power(self, action):
-        return GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
+    def set_combat_power(self, force: Optional[str]=None, action: Optional[str]=None):
+        force ="ground"
+        combat_power = {}
+
+        if action and action not in ACTION_TASKS[force]:
+            raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
+    
+        for act in ACTION_TASKS[force]:
+            if action and act!= action:
+                continue
+            else:
+                combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
+
+        # call parent method
+        self.combat_power = {force: {combat_power}}
     

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name = __name__, class_name = 'State')
+logger = Logger(module_name = __name__, class_name = 'State').logger
 
 class StateCategory(Enum):
     HEALTHFUL = "Healtful"
@@ -39,7 +39,7 @@ HEALTH_LEVEL = {
 
 class State:
 
-    def __init__(self, object_type: str, object_id: str, success_ratio: Optional[float], health: Optional[float]): 
+    def __init__(self, object_type: str, object_id: str, success_ratio: Optional[float]=1.0, health: Optional[int]=100): 
         
         
         self._validate_init_params(object_type, object_id, success_ratio, health)
@@ -49,8 +49,8 @@ class State:
         self._object_type: str = object_type # Block, Asset, ...
         self._object_id: str = object_id   
         self._success_ratio: float = success_ratio # ("Block_ID", "Block_Name"): float) # per mil: mission_success_ratio, per prod, storage, transport = random_anomaly (anomalie di produzione, trasporto ecc generate casualmente in funzione del livello di goods (ricambi):  random(0, rcp_goods / acp _goods))        
-        self._health: float = health# health  - float := [0:1] ( o int := [0-100] ??)
-        self._state_value: str        
+        self._health: int = health# health  - float := [0:1] ( o int := [0-100] ??)
+        self._state_value: str = StateCategory.UNKNOW    
         self.update()
         logger.debug(f"State created {self!r}")    
 
@@ -63,8 +63,8 @@ class State:
     @health.setter
     def health(self, health):
         
-        if not isinstance(health, float):
-            raise TypeError(f"type not valid, float type expected, got {type(health).__name__}")
+        if not isinstance(health, int):
+            raise TypeError(f"type not valid, int type expected, got {type(health).__name__}")
 
         if health < 0:
             raise ValueError(f"health don't must be negative, got {health}")        
@@ -161,8 +161,8 @@ class State:
             raise TypeError("success_ratio must be a float not negative")
         # Puoi aggiungere validazioni per gli elementi della lista limes se Limes ha un tipo specifico
         
-        if health is not None and not isinstance(health, float) and health >= 0:
-            raise TypeError("health must be a float not negative")
+        if health is not None and not isinstance(health, int) and health >= 0:
+            raise TypeError("health must be a int not negative")
         
         
                     
