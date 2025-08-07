@@ -7,7 +7,7 @@ import sys
 import os
 # Aggiungi il percorso della directory principale del progetto
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_Military_VEHICLE_ASSET, GROUND_ACTION
+from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MILITARY_VEHICLE_ASSET, GROUND_ACTION
 # Importa il metodo da testare evaluateGroundTacticalAction
 from Code.Dynamic_War_Manager.Source.Logic.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
 
@@ -24,7 +24,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         """
         """
         # Caratteristiche degli asset delle diversè unità Military: Corazzate, Meccanizzate, Motorizzate e Artiglieria
-        GROUND_Military_VEHICLE_ASSET = {
+        GROUND_MILITARY_VEHICLE_ASSET = {
             # Corazzata 
             "Tank":     {   "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
                             "Tank":                             {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
@@ -77,7 +77,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         }
         """
         """
-        # Generate GROUND_Military_VEHICLE_ASSET (ASSET TYPE)
+        # Generate GROUND_MILITARY_VEHICLE_ASSET (ASSET TYPE)
         k = "Ground_Military_Vehicle_Asset"
 
         for k1, v1 in GROUND_Military_VEHICLE_ASSET.items():
@@ -401,24 +401,14 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Armored": {"num": 5, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
-            "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-            #"Tank": {"num": 10, "efficiency": 0.8},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.7},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.4}
+            "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},            
         }
         asset_en = {
             "Tank": {"num": 10, "combat_power": {"Attack": 0.8, "Defense": 0.8, "Maintain": 0.8}},
             "Armored": {"num": 5, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
-            "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-            #"Tank": {"num": 10, "efficiency": 0.8},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.7},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.4}
+            "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},            
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.5, delta = 0.1)
@@ -434,12 +424,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 150, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 100, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 50, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-            #"Tank": {"num": 200, "efficiency": 0.9},
-            #"Armored": {"num": 150, "efficiency": 0.77},
-            #"Motorized": {"num": 150, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 100, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 50, "efficiency": 0.4}
             }
         asset_en = {
             "Tank": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
@@ -447,11 +431,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
             "Artillery_Semovent": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
             "Artillery_Fixed": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
-            #"Tank": {"num": 0, "efficiency": 0},
-            #"Armored": {"num": 0, "efficiency": 0},
-            #"Motorized": {"num": 0, "efficiency": 0},
-            #"Artillery_Semovent": {"num": 0, "efficiency": 0},
-            #"Artillery_Fixed": {"num": 0, "efficiency": 0}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertEqual(result, 1)
@@ -467,11 +446,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
             "Artillery_Semovent": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
             "Artillery_Fixed": {"num": 0, "combat_power": {"Attack": 0, "Defense": 0, "Maintain": 0}},
-            #"Tank": {"num": 0, "efficiency": 0},
-            #"Armored": {"num": 0, "efficiency": 0},
-            #"Motorized": {"num": 0, "efficiency": 0},
-            #"Artillery_Semovent": {"num": 0, "efficiency": 0},
-            #"Artillery_Fixed": {"num": 0, "efficiency": 0}            
             }
         asset_en = {
             "Tank": {"num": 200, "combat_power": {"Attack": 0.9, "Defense": 0.9, "Maintain": 0.9}},
@@ -479,12 +453,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 150, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 100, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 50, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-            #"Tank": {"num": 200, "efficiency": 0.9},
-            #"Armored": {"num": 150, "efficiency": 0.77},
-            #"Motorized": {"num": 150, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 100, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 50, "efficiency": 0.4}            
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertEqual(result, 0)
@@ -500,11 +468,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
             "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.3, "Defense": 0.3, "Maintain": 0.3}},
-            #"Tank": {"num": 10, "efficiency": 0.7},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.5},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.4},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.3}
             }
         asset_en = {
             "Tank": {"num": 200, "combat_power": {"Attack": 0.9, "Defense": 0.9, "Maintain": 0.9}},
@@ -512,13 +475,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 150, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 100, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 50, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-
-            #"Tank": {"num": 200, "efficiency": 0.9},
-            #"Armored": {"num": 150, "efficiency": 0.77},
-            #"Motorized": {"num": 150, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 100, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 50, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.05, delta = 0.005)
@@ -534,13 +490,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
             "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.3, "Defense": 0.3, "Maintain": 0.3}},
-
-            #"Tank": {"num": 10, "efficiency": 0.7},
-            #"Tank": {"num": 10, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.5},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.4},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.3}
         }
         asset_en = {
             "Tank": {"num": 20, "combat_power": {"Attack": 0.9, "Defense": 0.9, "Maintain": 0.9}},
@@ -548,14 +497,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 15, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 10, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-
-            #"Tank": {"num": 20, "efficiency": 0.9},
-            #"Tank": {"num": 20, "combat_power": {"Attack": 0.9, "Defense": 0.9, "Maintain": 0.9},
-            #"Armored": {"num": 15, "efficiency": 0.77},
-            #"Motorized": {"num": 15, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 10, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 5, "efficiency": 0.4}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.33, delta = 0.05)
@@ -571,12 +512,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 15, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 10, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-            #"Tank": {"num": 20, "efficiency": 0.9},
-            #"Armored": {"num": 15, "efficiency": 0.77},
-            #"Motorized": {"num": 15, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 10, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
             "Tank": {"num": 10, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
@@ -584,12 +519,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
             "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.3, "Defense": 0.3, "Maintain": 0.3}},
-
-            #"Tank": {"num": 10, "efficiency": 0.7},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.5},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.4},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.3}
         }
         result = evaluateCombatSuperiority("Attack", asset_fr, asset_en)
         self.assertAlmostEqual(result, 0.64, delta = 0.05)
@@ -605,12 +534,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 15, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 10, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-            #"Tank": {"num": 20, "efficiency": 0.9},
-            #"Armored": {"num": 15, "efficiency": 0.77},
-            #"Motorized": {"num": 15, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 10, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
             "Tank": {"num": 10, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
@@ -618,12 +541,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 20, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
             "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.3, "Defense": 0.3, "Maintain": 0.3}},
-
-            #"Tank": {"num": 10, "efficiency": 0.7},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.5},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.4},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.3}
         }
         with self.assertRaises(ValueError):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
@@ -635,12 +552,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Motorized": {"num": 15, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
             "Artillery_Semovent": {"num": 10, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Fixed": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
-
-            #"Tank": {"num": 20, "efficiency": 0.9},
-            #"Armored": {"num": 15, "efficiency": 0.77},
-            #"Motorized": {"num": 15, "efficiency": 0.6},
-            #"Artillery_Semovent": {"num": 10, "efficiency": 0.5},
-            #"Artillery_Fixed": {"num": 5, "efficiency": 0.4}
         }
         asset_en = {
             "Tank": {"num": 10, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
@@ -648,12 +559,6 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "NOT_INCLUDED": {"num": 20, "combat_power": {"Attack": 0.5, "Defense": 0.5, "Maintain": 0.5}},
             "Artillery_Semovent": {"num": 5, "combat_power": {"Attack": 0.4, "Defense": 0.4, "Maintain": 0.4}},
             "Artillery_Fixed": {"num": 10, "combat_power": {"Attack": 0.3, "Defense": 0.3, "Maintain": 0.3}},
-
-            #"Tank": {"num": 10, "efficiency": 0.7},
-            #"Armored": {"num": 5, "efficiency": 0.6},
-            #"Motorized": {"num": 20, "efficiency": 0.5},
-            #"Artillery_Semovent": {"num": 5, "efficiency": 0.4},
-            #"Artillery_Fixed": {"num": 10, "efficiency": 0.3}
         }
         with self.assertRaises(ValueError):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)

@@ -1016,70 +1016,70 @@ weapon_db = {
             }
         },        
         "GBU-24": {  # like Mk-84
-        "type": "Guided bombs",
-        "task": ["Strike"],
-        "start_service": 1983,
-        "end_service": None,
-        "cost": 55,  # k$
-        "tnt": 429,  # kg
-        "perc_efficiency_variability": 0.05,  # percentage of efficiency variability 0-1 (100%)
-        "efficiency": {
-            "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                "big": {
-                    "accuracy": 1,  # 1 max, 0.1 min ( hit success percentage )
-                    "destroy_capacity": 0.8,  # 1 max: element destroyed (single hit), 0.1 min ( element destroy capacity )
+            "type": "Guided bombs",
+            "task": ["Strike"],
+            "start_service": 1983,
+            "end_service": None,
+            "cost": 55,  # k$
+            "tnt": 429,  # kg
+            "perc_efficiency_variability": 0.05,  # percentage of efficiency variability 0-1 (100%)
+            "efficiency": {
+                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
+                    "big": {
+                        "accuracy": 1,  # 1 max, 0.1 min ( hit success percentage )
+                        "destroy_capacity": 0.8,  # 1 max: element destroyed (single hit), 0.1 min ( element destroy capacity )
+                    },
+                    "med": {
+                        "accuracy": 0.9,
+                        "destroy_capacity": 0.9,
+                    },
+                    "small": {
+                        "accuracy": 0.8,
+                        "destroy_capacity": 1,
+                    },
+                    "mix": {
+                        "accuracy": 0.8,
+                        "destroy_capacity": 0.85,
+                    },
                 },
-                "med": {
-                    "accuracy": 0.9,
-                    "destroy_capacity": 0.9,
+                "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
+                    "big": {
+                        "accuracy": 1,
+                        "destroy_capacity": 0.7,
+                    },
+                    "med": {
+                        "accuracy": 0.9,
+                        "destroy_capacity": 0.8,
+                    },
+                    "small": {
+                        "accuracy": 0.8,
+                        "destroy_capacity": 0.9,
+                    },
+                    "mix": {
+                        "accuracy": 0.85,
+                        "destroy_capacity": 0.8,
+                    },
                 },
-                "small": {
-                    "accuracy": 0.8,
-                    "destroy_capacity": 1,
-                },
-                "mix": {
-                    "accuracy": 0.8,
-                    "destroy_capacity": 0.85,
-                },
-            },
-            "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
-                "big": {
-                    "accuracy": 1,
-                    "destroy_capacity": 0.7,
-                },
-                "med": {
-                    "accuracy": 0.9,
-                    "destroy_capacity": 0.8,
-                },
-                "small": {
-                    "accuracy": 0.8,
-                    "destroy_capacity": 0.9,
-                },
-                "mix": {
-                    "accuracy": 0.85,
-                    "destroy_capacity": 0.8,
-                },
-            },
-            "ship": {  # mobile target
-                "big": {
-                    "accuracy": 0.5,
-                    "destroy_capacity": 0.85,
-                },
-                "med": {
-                    "accuracy": 0.4,
-                    "destroy_capacity": 1,
-                },
-                "small": {
-                    "accuracy": 0.2,
-                    "destroy_capacity": 1,
-                },
-                "mix": {
-                    "accuracy": 0.3,
-                    "destroy_capacity": 0.8,
+                "ship": {  # mobile target
+                    "big": {
+                        "accuracy": 0.5,
+                        "destroy_capacity": 0.85,
+                    },
+                    "med": {
+                        "accuracy": 0.4,
+                        "destroy_capacity": 1,
+                    },
+                    "small": {
+                        "accuracy": 0.2,
+                        "destroy_capacity": 1,
+                    },
+                    "mix": {
+                        "accuracy": 0.3,
+                        "destroy_capacity": 0.8,
+                    },
                 },
             },
         },
-    },
         "GBU-27": {  # bunker
             "type": "Guided bombs",
             "task": ["Strike"],

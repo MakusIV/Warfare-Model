@@ -353,12 +353,7 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
 
     return result
 
-def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> float:
-    #{ }
-    # asset_fr(en): {   GROUND_ASSET_CATEGORY["Tank"]: {num: 23, efficiency: 0.5},
-    #                   GROUND_ASSET_CATEGORY["Armor"]: {num: 13, efficiency: 0.9},
-    # }
-
+def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> float:      
     """
     Evaluate the combat superiority of two forces given the ground assets and the action performed.
 
@@ -370,7 +365,20 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
         The assets of the first force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
     asset_en : dict
         The assets of the second force. Must be an dictionary with keys included in GROUND_ASSET_CATEGORY.
+    
+    example:
 
+    asset_fr = {
+            "Tank": {"num": 20, "combat_power": {"Attack": 0.9, "Defense": 0.9, "Maintain": 0.9}},
+            "Armored": {"num": 15, "combat_power": {"Attack": 0.77, "Defense": 0.77, "Maintain": 0.77}},
+            ......
+        }
+        asset_en = {
+            "Tank": {"num": 10, "combat_power": {"Attack": 0.7, "Defense": 0.7, "Maintain": 0.7}},
+            "Armored": {"num": 5, "combat_power": {"Attack": 0.6, "Defense": 0.6, "Maintain": 0.6}},
+            ......       
+        }
+    
     Returns
     -------
     float
@@ -391,6 +399,8 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     ValueError
         If action is not a string included in GROUND_ACTION or if asset_fr or asset_en are not dictionaries with keys included in GROUND_ASSET_CATEGORY.
 
+        
+    format 
     """
     if not isinstance(asset_fr, dict): 
         raise ValueError("asset_fr: must be an dictionary")

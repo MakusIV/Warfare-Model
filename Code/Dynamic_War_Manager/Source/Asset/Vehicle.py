@@ -5,7 +5,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_COMBAT_EFFICACY, AIR_DEFENSE_ASSET, GROUND_Military_VEHICLE_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_COMBAT_EFFICACY, AIR_DEFENSE_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET, ACTION_TASKS, Ground_Asset_Type
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
@@ -27,7 +27,9 @@ class Vehicle(Mobile) :
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
             # proprietry
-            self.speed_off_road = {"nominal": None, "max": None},
+            self._speed_off_road = {"nominal": None, "max": None},
+            
+            self.set_combat_power()
                 
             
             # dcs_data for vehicle
@@ -147,19 +149,19 @@ class Vehicle(Mobile) :
 
     @property
     def isTank(self):
-        return self.category == "Tank"
+        return self.category == Ground_Asset_Type.TANK.value
     @property
     def isArmor(self):
-        return self.category == "Armor"
+        return self.category == Ground_Asset_Type.ARMORED.value
     @property
     def isMotorized(self):
-        return self.category == "Motorized"
+        return self.category == Ground_Asset_Type.MOTORIZED.value
     @property
     def isArtillery_Semovent(self):
-        return self.category == "Artillery_Semovent"
+        return self.category == Ground_Asset_Type.ARTILLERY_SEMOVENT
     @property
     def isArtillery_Fixed(self):
-        return self.category == "Artillery_Fixed"
+        return self.category == Ground_Asset_Type.ARTILLERY_FIXED
     @property
     def isArtillery(self):
         return self.isArtillery_Fixed or self.isArtillery_Semovent
@@ -171,13 +173,13 @@ class Vehicle(Mobile) :
         return self.isSAM_Big or self.isSAM_Med or self.isSAM_Small
     @property
     def isSAM_Big(self):
-        return self.category == "SAM Big"
+        return self.category == "SAM_Big"
     @property
     def isSAM_Med(self):
-        return self.category == "SAM Med"
+        return self.category == "SAM_Med"
     @property
     def isSAM_Small(self):
-        return self.category == "SAM Small"
+        return self.category == "SAM_Small"
     @property
     def isAAA(self):
         return self.category == "AAA"
@@ -190,7 +192,7 @@ class Vehicle(Mobile) :
     
 
 
-    def set_combat_power(self, force: Optional[str]=None, action: Optional[str]=None):
+    def set_combat_power(self, action: Optional[str]=None):
         force ="ground"
         combat_power = {}
 
@@ -198,10 +200,10 @@ class Vehicle(Mobile) :
             raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
     
         for act in ACTION_TASKS[force]:
-            if action and act!= action:
-                continue
-            else:
-                combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
+            
+            if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
+                continue            
+            combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
 
         # call parent method
         self.combat_power = {force: {combat_power}}
