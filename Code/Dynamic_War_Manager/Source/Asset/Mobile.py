@@ -37,9 +37,20 @@ class Mobile(Asset) :
      
             # propriety   
             self._speed = speed
+            
+            # UTILIZZARE PER CALCOLO COMBAT_POWER
+            # LA COMBAT_POWER PUO ASSUMERE QUALUNQUE VALORE, TUTTAVIA IL CONFRONTO DEVE ESSERE OMOGNENO PER UGUAL TIPI DI FORCE:
+            # ground <-> ground, air <->air
             self._fire_range = fire_range
             self._range = range
-            self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
+            self._weapon = {
+                weapon_type: WEAPONS[Cannon] # cannon, rocket, missile, ...
+                weapon_size: WEAPONS[Cannon][Caliber] # cannon -> caliber, rocket->size, missile-> warhead TNT
+                fire_ratio:  WEAPONS[Cannon][Fire_ratio]
+                mtf: WEAPONS[Cannon][mtf]
+                mtr: WEAPONS[Cannon][mtr]
+            }
+            combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}
             """
             combat_power = {    "air": {"CAP": 0.0, "Intercept": 0.0, "Pinpoint_Strike": 0.0, ...},

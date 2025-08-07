@@ -269,11 +269,11 @@ AIR_DEFENSE_ASSET = {
                             },
 }    
                     
-Ground_Asset_Type.TANK.value.__str__
+
 
 # Caratteristiche degli asset delle diversè unità Military: Corazzate, Meccanizzate, Motorizzate e Artiglieria
 # key1: asset category, key2: asset type
-GROUND_Military_VEHICLE_ASSET = {
+GROUND_MILITARY_VEHICLE_ASSET = {
     # Corazzata 
     "Tank":     {   "Command_&_Control":                {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},     
                     "Tank":                             {"cost": None, "value": VALUE.CRITICAL, "t2r":7, "rcp": {"hc": 1, "hs": 4, "hb": 3, "hr": None, "goods": 1, "energy": None}, "payload%": 33},
@@ -488,10 +488,10 @@ for k1, v1 in BLOCK_INFRASTRUCTURE_ASSET.items():
         for k3, v3 in v2.items():
             BLOCK_ASSET_CATEGORY[k][k1][k2][k3] = k3 # asset type 
 
-# Generate GROUND_Military_VEHICLE_ASSET (ASSET TYPE)
+# Generate GROUND_MILITARY_VEHICLE_ASSET (ASSET TYPE)
 k = "Ground_Military_Vehicle_Asset"
 
-for k1, v1 in GROUND_Military_VEHICLE_ASSET.items():
+for k1, v1 in GROUND_MILITARY_VEHICLE_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = {} # asset Category
 
     for k2, v2 in v1.items():
