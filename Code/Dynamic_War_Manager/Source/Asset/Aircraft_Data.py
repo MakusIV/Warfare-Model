@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context import Context 
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_Military_CRAFT_ASSET, AIR_TASK 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -12,8 +12,8 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-AIRCRAFT_ROLE = Context.AIR_Military_CRAFT_ASSET.keys()
-AIRCRAFT_TASK = Context.AIR_TASK
+AIRCRAFT_ROLE = AIR_Military_CRAFT_ASSET.keys()
+AIRCRAFT_TASK = AIR_TASK
 
 @dataclass
 class Aircraft_Data:

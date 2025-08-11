@@ -47,8 +47,8 @@ class Mobile(Asset) :
                 weapon_type: WEAPONS[Cannon] # cannon, rocket, missile, ...
                 weapon_size: WEAPONS[Cannon][Caliber] # cannon -> caliber, rocket->size, missile-> warhead TNT
                 fire_ratio:  WEAPONS[Cannon][Fire_ratio]
-                mtf: WEAPONS[Cannon][mtf]
-                mtr: WEAPONS[Cannon][mtr]
+                mtf: WEAPONS[Cannon][mtbf]
+                mtr: WEAPONS[Cannon][mttr]
             }
             combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}

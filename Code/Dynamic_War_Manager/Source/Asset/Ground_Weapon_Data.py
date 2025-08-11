@@ -1,6 +1,6 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context import Context 
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_TASK
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -12,776 +12,101 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-AIRCRAFT_ROLE = Context.AIR_Military_CRAFT_ASSET.keys()
-AIRCRAFT_TASK = Context.AIR_TASK
+
+# mtbf, mttr
+
+# HE: Esplosivo, HEAT: High Explosive Anti Tank (carica cava), 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
+
+WEAPON_PARAM = {
+
+    'CANNONS': {'caliber': 0.3/300,
+                'muzzle_speed': 0.2/1000,
+                'fire_rate': 0.3/10,
+                'range': 0.2/5000,
+                },
+}
+
 
 #@dataclass
 #Class Weapon_Data:
 
+def combat_power(weapon_type, weapon_name):
+    
+    if weapon_type == 'CANNONS':
+        
+        weapon = GROUND_WEAPONS[weapon_type][weapon_name]
+        
+        if weapon['reload'] == 'Automatic':
+            reload_factor = 1
+        elif weapon['reload'] == 'Semi_Automatic':
+            reload_factor = 0.7
+        elif weapon['reload'] == 'Manual':
+            reload_factor = 0.3
+        else:
+           raise  
+        
+        combat_power = 0.0
 
-weapon_db = {
-   
-    "blue": {
-        "AIM-54A-MK47": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
+        for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+            if param_name == 'range':
+                combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+            else:
+                combat_power +=  weapon[param_name] * coeff_value
+
+        return reload_factor * combat_power 
+    
+    if weapon_type == 'define':
+        pass
+
+    if weapon_type == 'define':
+        pass
+
+    if weapon_type == 'define':
+        pass
+
+    if weapon_type == 'define':
+        pass
+
+
+GROUND_WEAPONS = {
+    'CANNONS': {
+        # combat_power cb = caliber *  
+        '2A46M': {
+            'model': '2A46M',
             "start_service": 1974,
-            "end_service": 2004,
-            "cost": 400,
-            "tnt": 61,
-            "reliability": 0.8,
-            "range": 160,
-            "semiactive_range": 130,
-            "active_range": 18,
-            "max_height": 24.8,
-            "max_speed": 3.8,
-            "manouvrability": 0.6
-        },
-        "AIM-54A-MK60": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": 2004,
-            "cost": 400,
-            "tnt": 61,
-            "reliability": 0.8,
-            "range": 160,
-            "semiactive_range": 130,
-            "active_range": 18,
-            "max_height": 24.8,
-            "max_speed": 3.8,
-            "manouvrability": 0.6
-        },
-        "AIM-54C-MK47": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1982,
-            "end_service": 2004,
-            "cost": 477,
-            "tnt": 61,
-            "reliability": 0.8,
-            "range": 160,
-            "semiactive_range": 148,
-            "active_range": 18,
-            "max_height": 24.8,
-            "max_speed": 4.5,
-            "manouvrability": 0.73
-        },
-        "AIM-54C-MK60": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1982,
-            "end_service": 2004,
-            "cost": 477,
-            "tnt": 61,
-            "reliability": 0.8,
-            "range": 160,
-            "semiactive_range": 148,
-            "active_range": 18,
-            "max_height": 24.8,
-            "max_speed": 4.5,
-            "manouvrability": 0.73
-        },
-        "AIM-7E": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1970,
-            "end_service": None,
-            "cost": 125,
-            "tnt": 40,
-            "reliability": 0.8,
-            "range": 45,
-            "semiactive_range": 45,
-            "active_range": None,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.6
-        },
-        "AIM-7F": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 130,
-            "tnt": 40,
-            "reliability": 0.8,
-            "range": 70,
-            "semiactive_range": 70,
-            "active_range": None,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.6
-        },
-        "AIM-7M": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1982,
-            "end_service": None,
-            "cost": 150,
-            "tnt": 40,
-            "reliability": 0.8,
-            "range": 70,
-            "semiactive_range": 70,
-            "active_range": None,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.65
-        },
-        "AIM-7MH": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1985,
-            "end_service": None,
-            "cost": 160,
-            "tnt": 40,
-            "reliability": 0.8,
-            "range": 70,
-            "semiactive_range": 70,
-            "active_range": None,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.66
-        },
-        "AIM-7P": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1987,
-            "end_service": None,
-            "cost": 170,
-            "tnt": 40,
-            "reliability": 0.8,
-            "range": 70,
-            "semiactive_range": 70,
-            "active_range": None,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.7
-        },
-        "AIM-9B": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1956,
-            "end_service": None,
-            "cost": 60,
-            "tnt": 4.5,
-            "reliability": 0.5,
-            "range": 4.6,
-            "max_height": 18,
-            "max_speed": 1.7,
-            "manouvrability": 0.5
-        },
-        "AIM-9P": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 70,
-            "tnt": 4.5,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2,
-            "manouvrability": 0.5
-        },
-        "AIM-9P5": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 73,
-            "tnt": 4.5,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2,
-            "manouvrability": 0.6
-        },
-        "AIM-9L": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 75,
-            "tnt": 9.4,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2.5,
-            "manouvrability": 0.7
-        },
-        "AIM-9M": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1982,
-            "end_service": None,
-            "cost": 80,
-            "tnt": 9.4,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2.5,
-            "manouvrability": 0.7
-        },
-        "AIM-9X": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 2003,
-            "end_service": None,
-            "cost": 100,
-            "tnt": 9.4,
-            "reliability": 0.6,
-            "range": 37,
-            "max_height": 25,
-            "max_speed": 2.9,
-            "manouvrability": 0.9
-        },
-        "R-550": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 27.5,
-            "tnt": 12.5,
-            "reliability": 0.6,
-            "range": 10,
-            "max_height": 18,
-            "max_speed": 2.8,
-            "manouvrability": 0.6
-        },
-        "R-530IR": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 157,
-            "tnt": 27,
-            "reliability": 0.6,
-            "range": 18,
-            "max_height": 18,
-            "max_speed": 3,
-            "manouvrability": 0.6
-        },
-        "R-530EM": {
-            "type": "AAM",
-            "seeker": "radar",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 157,
-            "tnt": 30,
-            "reliability": 0.7,
-            "range": 40,
-            "semiactive_range": 40,
-            "max_height": 20,
-            "max_speed": 4,
-            "manouvrability": 0.7
-        },
-        "RB-24": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1956,
-            "end_service": None,
-            "cost": 60,
-            "tnt": 4.5,
-            "reliability": 0.5,
-            "range": 4.6,
-            "max_height": 18,
-            "max_speed": 1.7,
-            "manouvrability": 0.5
-        },
-        "RB-24J": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 75,
-            "tnt": 4.5,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2,
-            "manouvrability": 0.6
-        },
-        "RB-74": {
-            "type": "AAM",
-            "seeker": "infrared",
-            "task": ["A2A"],
-            "start_service": 1975,
-            "end_service": None,
-            "cost": 73,
-            "tnt": 9.4,
-            "reliability": 0.6,
-            "range": 18.5,
-            "max_height": 18,
-            "max_speed": 2.5,
-            "manouvrability": 0.7
-        },
-        "RB-05A": {
-            "type": "ASM",
-            "seeker": "electro-optical",
-            "task": ["A2A"],
-            "start_service": 1972,
-            "end_service": 2005,
-            "cost": 180,
-            "tnt": 160,
-            "reliability": 0.5,
-            "range": 9,
-            "max_height": 18,
-            "max_speed": 1,
-            "manouvrability": 0.4
-        },
-        "RB-15F": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1985,
-            "end_service": None,
-            "cost": 720,
-            "tnt": 220,
-            "range": 75,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "ship": {
-                    "big": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.6
-                    },
-                    "med": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.8
-                    },
-                    "small": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.85
-                    }
-                }
-            }
-        },
-        "AGM-45": {
-            "type": "ASM",
-            "task": ["SEAD"],
-            "start_service": 1966,
-            "end_service": 1992,
-            "cost": 32,
-            "tnt": 66,
-            "range": 10,
-            "perc_efficiency_variability": 0.2,
-            "efficiency": {
-                "SAM": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": 0.7},
-                    "med": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.8}
-                }
-            }
-        },
-        "AGM-84A": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1970,
-            "end_service": None,
-            "cost": 720,
-            "tnt": 221,
-            "range": 50,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.85}
-                }
-            }
-        },
-        "AGM-88": {
-            "type": "ASM",
-            "task": ["SEAD"],
-            "start_service": 1966,
-            "end_service": 1992,
-            "cost": 200,
-            "tnt": 88,
-            "range": 80,
-            "perc_efficiency_variability": 0.2,
-            "efficiency": {
-                "SAM": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.77},
-                    "med": {"accuracy": 0.7, "destroy_capacity": 0.88},
-                    "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.85}
-                }
-            }
-        },
-        "Kormoran": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1973,
-            "end_service": None,
-            "cost": 200,
-            "tnt": 165,
-            "range": 30,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.45},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.7},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.70}
-                }
-            }
-        },
-        "RB-05E": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
-            "start_service": 1972,
-            "end_service": 2005,
-            "cost": 300,
-            "tnt": 160,
-            "range": 9,
-            "perc_efficiency_variability": 0.2,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.68, "destroy_capacity": 0.8}
-                },
-                "soft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.65, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.95}
-                },
-                "armor": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.7, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.9}
-                },
-                "Parked Aircraft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 1}
-                },
-                "SAM": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 1}
-                }
-            }
-        },
-        "RB-04E": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1975,
-            "end_service": 2000,
-            "cost": 700,
-            "tnt": 300,
-            "range": 32,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.94}
-                }
-            }
-        },
-        "Sea Eagle": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1985,
-            "end_service": None,
-            "cost": 700,
-            "tnt": 230,
-            "range": 100,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.7},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.8}
-                }
-            }
-        },
-        "RB-75T": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
-            "start_service": 1972,
-            "end_service": None,
-            "cost": 160,
-            "tnt": 52,
-            "range": 15,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.85}
-                },
-                "soft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "armor": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "Parked Aircraft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "SAM": {
-                    "big": {"accuracy": 1, "destroy_capacity": 1},
-                    "med": {"accuracy": 1, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 1}
-                }
-            }
-        },
-        "RB-15": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike"],
-            "start_service": 1989,
-            "end_service": None,
-            "cost": 350,
-            "tnt": 200,
-            "range": 70,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.85}
-                }
-            }
-        },
-        "AGM-65D": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
-            "start_service": 1967,
-            "end_service": None,
-            "cost": 160,
-            "tnt": 52,
-            "range": 15,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.85}
-                },
-                "soft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "armor": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "Parked Aircraft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "SAM": {
-                    "big": {"accuracy": 1, "destroy_capacity": 1},
-                    "med": {"accuracy": 1, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 1}
-                }
-            }
-        },
-        "AGM-65K": {
-            "type": "ASM",
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
-            "start_service": 1970,
-            "end_service": None,
-            "cost": 160,
-            "tnt": 52,
-            "range": 15,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "ship": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 1, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.85}
-                },
-                "soft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "armor": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "Parked Aircraft": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                },
-                "SAM": {
-                    "big": {"accuracy": 1, "destroy_capacity": 1},
-                    "med": {"accuracy": 1, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 1, "destroy_capacity": 1}
-                }
-            }
-        },
-        "AGM-114": {
-            "type": "ASM",
-            "task": ["Strike", "SEAD", "Anti-ship Strike"],
-            "start_service": 1984,
-            "end_service": None,
-            "cost": 80,
-            "tnt": 9,
-            "range": 8,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "soft": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.5},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 0.7},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.6}
-                },
-                "armor": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.4},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.5},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 0.6},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.5}
-                },
-                "SAM": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.6},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.7},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 0.8},
-                    "mix": {"accuracy": 1, "destroy_capacity": 0.7}
-                }
-            }
-        },
-        "BGM-71D": {
-            "type": "ASM",
-            "task": ["Strike", "SEAD"],
-            "start_service": 1970,
-            "end_service": None,
-            "cost": 12,
-            "tnt": 6.14,
-            "range": 3,
-            "perc_efficiency_variability": 0.05,
-            "efficiency": {
-                "soft": {
-                    "big": {"accuracy": 1, "destroy_capacity": 1},
-                    "med": {"accuracy": 1, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.9, "destroy_capacity": 1}
-                },
-                "armor": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.9, "destroy_capacity": 0.95}
-                },
-                "SAM": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 1, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.9, "destroy_capacity": 0.95}
-                }
-            }
-        },
-        "Mk-84": {
-            "type": "Bombs",
-            "task": ["Strike", "Anti-ship Strike"],
-            "start_service": 1950,
-            "end_service": None,
-            "cost": 4.4,
-            "tnt": 429,
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "Structure": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.8},
-                    "med": {"accuracy": 0.9, "destroy_capacity": 0.9},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 0.85}
-                },
-                "Bridge": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.7},
-                    "med": {"accuracy": 0.9, "destroy_capacity": 0.8},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                    "mix": {"accuracy": 0.85, "destroy_capacity": 0.8}
-                },
-                "ship": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": 0.85},
-                    "med": {"accuracy": 0.4, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.2, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.3, "destroy_capacity": 0.8}
-                },
-                "soft": {
-                    "med": {"accuracy": 0.8, "destroy_capacity": 0.85},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 0.95},
-                    "mix": {"accuracy": 0.7, "destroy_capacity": 0.85}
-                },
-                "Parked Aircraft": {
-                    "med": {"accuracy": 0.9, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.9, "destroy_capacity": 1}
-                },
-                "SAM": {
-                    "med": {"accuracy": 0.85, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.85, "destroy_capacity": 0.85}
-                },
-                "armor": {
-                    "med": {"accuracy": 0.85, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.85, "destroy_capacity": 0.85}
-                }
-            }
-        },
+            "end_service": int('inf'),
+            'reload': 'Automatic', # Semi_Automatic, Manual
+            'caliber': 125, # mm
+            'muzzle_speed': 1750, # m/s 
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 2120, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            
+        }, 
+    },
+    'MISSILES': {
+        '9K119M ': { # AT-11 Sniper
+            'model': '9K119M',
+            "start_service": 1974,
+            "end_service": int('inf'),
+            'guide': 'Laser', # Semi_Automatic, Manual
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 1300, # m/s             
+            'range': 4500, # m
+            'ammo_type': ['2HEAT'],
+            
+        }, 
+    }, 
+    'ROCKETS': {}, 
+    'MACHINE_GUNS': {}, 
+    'FLAME_TRHOWERS': {},
+    'RIFLE': {},
+    'MINES': {},
+    'BOMBS': {}
+
+} 
         "Mk-83": {
             "type": "Bombs",
             "task": ["Strike", "Anti-ship Strike"],
@@ -5465,6 +4790,13 @@ weapon_db = {
 
 }
 
+
+
+for side in weapon_db:
+    for weapon_name, weapon_data in side:        
+        AIR_WEAPONS[side][weapon_data['type']][weapon_name] = weapon_data
+
+                
 
 
 
