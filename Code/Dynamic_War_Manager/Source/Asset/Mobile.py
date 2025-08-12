@@ -43,13 +43,7 @@ class Mobile(Asset) :
             # ground <-> ground, air <->air
             self._fire_range = fire_range
             self._range = range
-            self._weapon = {
-                weapon_type: WEAPONS[Cannon] # cannon, rocket, missile, ...
-                weapon_size: WEAPONS[Cannon][Caliber] # cannon -> caliber, rocket->size, missile-> warhead TNT
-                fire_ratio:  WEAPONS[Cannon][Fire_ratio]
-                mtf: WEAPONS[Cannon][mtbf]
-                mtr: WEAPONS[Cannon][mttr]
-            }
+            self._weapon = {}
             combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}
             """
