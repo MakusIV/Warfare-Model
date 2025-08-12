@@ -1,4 +1,5 @@
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -22,16 +23,17 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle').logger
 # ASSET
 class Vehicle(Mobile) :    
 
-    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
+    def __init__(self, block: Block, name: Optional[str] = None, model: Optional[str]= None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
+            self._model = model #key per richiamare i datti definiti nella classe Vehicle_Data
             # proprietry
             self._speed_off_road = {"nominal": None, "max": None},
             
             self.set_combat_power()
                 
-            
+            self._vehicle_data = 
             # dcs_data for vehicle
 
             # Association    

@@ -1,8 +1,6 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_Military_CRAFT_ASSET, AIR_TASK 
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
-from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -10,20 +8,21 @@ from dataclasses import dataclass
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
+logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
 
 AIRCRAFT_ROLE = AIR_Military_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
 
 @dataclass
 class Aircraft_Data:
-    _registry = []
-    
-    
-    def __init__(self, constructor: str, made: str, model: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+    _registry = {}
+        
+    def __init__(self, constructor: str, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
         self.constructor = constructor
         self.made = made
         self.model = model
+        self.start_service = start_service
+        self.end_service = end_service
         self.category = category
         self.cost = cost
         self.roles = roles
@@ -34,7 +33,7 @@ class Aircraft_Data:
         self.avionics = avionics
         self.hydraulic = hydraulic
         self.speed_data = speed_data
-        Aircraft_Data._registry.append(self)
+        Aircraft_Data._registry[self.model] = self
 
     # --- Getter e Setter ---
     def engine(self):
@@ -45,8 +44,22 @@ class Aircraft_Data:
 
     def roles(self):
         return self.roles
-    # ... (altri getter/setter per tutte le proprietà)
 
+
+    def model(self):
+        return self.model
+    
+    def model(self, model):
+        self.model = model
+
+    def made(self):
+        return self.made
+    
+    def made(self, made):
+        self.made = made
+
+    def get_aircraft(self, model: str):
+        return self._registry.get(model)
     
     # --- Implementazioni predefinite delle formule ---
     #@lru_cache
@@ -73,10 +86,10 @@ class Aircraft_Data:
             raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
         
         weights = {
-            'tracking_range': 0.2,
-            'acquisition_range': 0.1,
-            'engagement_range': 0.3,
-            'multi_target': 0.4
+            'tracking_range': 0.2 / 400, # weights / reference distance (km)
+            'acquisition_range': 0.1 / 200,
+            'engagement_range': 0.3 / 100,
+            'multi_target': 0.4 / 5 # weights / reference multi targets
         }
         score = 0.0
         
@@ -196,17 +209,18 @@ class Aircraft_Data:
 
         Returns:
             float: time (hour) before fault of an aircraft subsystem
-        """        
+        """                
         components = [
-            self.engine.get('reliability', {}).get('mtbf', 0),
-            self.radar.get('reliability', {}).get('mtbf', 0),
-            self.TVD.get('reliability', {}).get('mtbf', 0),
-            self.radio_nav.get('reliability', {}).get('mtbf', 0),
-            self.avionics.get('reliability', {}).get('mtbf', 0),
-            self.hydraulic.get('reliability', {}).get('mtbf', 0)
+            self.engine.get('reliability', {}).get('mtbf', 0) if self.engine is not None and self.engine.get('reliability') else None,
+            self.radar.get('reliability', {}).get('mtbf', 0) if self.radar is not None and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mtbf', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
+            self.avionics.get('reliability', {}).get('mtbf', 0) if self.avionics is not None and self.avionics.get('reliability') else None,
+            self.radio_nav.get('reliability', {}).get('mtbf', 0) if self.radio_nav is not None and self.radio_nav.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mtbf', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
         ]
+        filtered_components = [x for x in components if x is not None]
         # l'mtbf del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
-        return min(components)* 0.3 + 0.7 * sum(components) / len(components) # aircraft mtbf
+        return min(filtered_components) * 0.3 + 0.7 * sum(filtered_components) / len(filtered_components) # aircraft mtbf
     
     def _maintenance_eval(self):
         """evaluate maintenance load (mttr) requested of aircraft subsystem
@@ -215,16 +229,16 @@ class Aircraft_Data:
             float: hour quantity rappresentative of maintenance job
         """
         components = [
-            self.engine.get('reliability', {}).get('mttr', 0),
-            self.radar.get('reliability', {}).get('mttr', 0),
-            self.TVD.get('reliability', {}).get('mtbf', 0),
-            self.radio_nav.get('reliability', {}).get('mttr', 0),
-            self.avionics.get('reliability', {}).get('mttr', 0),
-            self.hydraulic.get('reliability', {}).get('mttr', 0)
-        ]    
-
+            self.engine.get('reliability', {}).get('mttr', 0) if self.engine is not None and self.engine.get('reliability') else None,
+            self.radar.get('reliability', {}).get('mttr', 0) if self.radar is not None and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mttr', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
+            self.avionics.get('reliability', {}).get('mttr', 0) if self.avionics is not None and self.avionics.get('reliability') else None,
+            self.radio_nav.get('reliability', {}).get('mttr', 0) if self.radio_nav is not None and self.radio_nav.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mttr', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
+        ]
+        filtered_components = [x for x in components if x is not None]
         # l'mttr del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
-        return max(components) * 0.3 + 0.7 * sum(components) / len(components) # aircraft mttr
+        return min(filtered_components) * 0.3 + 0.7 * sum(filtered_components) / len(filtered_components) # aircraft mttr
     
     def _avalaiability_eval(self):
         """evaluate avalaiability of aircraft
@@ -243,13 +257,13 @@ class Aircraft_Data:
         return ratio
 
     # --- Metodi di confronto normalizzati ---
-    def get_normalized_radar_score(self, modes: Optional[Dict] = None):
+    def get_normalized_radar_score(self, modes: Optional[List] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized radar score
         """
-        scores = [ac._radar_eval(modes = modes) for ac in Aircraft_Data._registry]
+        scores = [ac._radar_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._radar_eval(modes = modes), scores)
     
     def get_normalized_TVD_score(self, modes: Optional[Dict] = None):
@@ -258,7 +272,7 @@ class Aircraft_Data:
         Returns:
             float: normalized TVD score
         """
-        scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry]
+        scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._TVD_eval(modes = modes), scores)
     
     def get_normalized_speed_score(self):
@@ -267,7 +281,7 @@ class Aircraft_Data:
         Returns:
             float: normalized speed score
         """
-        scores = [ac._speed_eval() for ac in Aircraft_Data._registry]
+        scores = [ac._speed_eval() for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._speed_eval(), scores)
 
     def get_normalized_reliability_score(self):
@@ -276,7 +290,7 @@ class Aircraft_Data:
         Returns:
             float: normalized reliability score
         """
-        scores = [ac._reliability_eval() for ac in Aircraft_Data._registry]
+        scores = [ac._reliability_eval() for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._reliability_eval(), scores)
     
     def get_normalized_avalaiability_score(self):
@@ -285,7 +299,7 @@ class Aircraft_Data:
         Returns:
             float: normalized avalaiability score
         """
-        scores = [ac._avalaiability_eval() for ac in Aircraft_Data._registry]
+        scores = [ac._avalaiability_eval() for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._avalaiability_eval(), scores)
     
     def get_normalized_maintenance_score(self):
@@ -294,7 +308,7 @@ class Aircraft_Data:
         Returns:
             float: normalized maintenance score
         """
-        scores = [ac._maintenance_eval() for ac in Aircraft_Data._registry]
+        scores = [ac._maintenance_eval() for ac in Aircraft_Data._registry.values()]
         return 1- self._normalize(self._maintenance_eval(), scores)        
 
     def _normalize(self, value, scores):
@@ -315,31 +329,46 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-    def task_score(self, role: str, task: str, target_dimension: Dict[str, any], minimum_destroyed_fraction: float):
-        
-        if not role or not isinstance(role, str):
-            raise TypeError ("role must be a string")
-        if role not in AIRCRAFT_ROLE:
-            raise ValueError(f"role must be a string with values: {AIRCRAFT_ROLE!r}, got {role!r}")
-        if role not in self.roles:
-            logger.warning(f"role {role!r} not in roles for this aircraft {self.constructor} - {self.model}")
-            return 0.0
+    # VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
+    def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
         
         if not task or not isinstance(task, str):
             raise TypeError ("task must be a string")
-        if task not in AIRCRAFT_TASK[role]:
-            raise ValueError(f"task must be a string with values: {AIRCRAFT_TASK[role]!r}, got {task!r}")
+        if task not in AIR_TASK:
+            raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
         
-        
-        score_radar = self._score_radar(role = role)
-        destroyed_fraction  = self._eval_destroyed_quantity_with_ordinance( task = task, target = target_dimension)
-
-        if destroyed_fraction < minimum_destroyed_fraction:
-            return 0.0, 0.0
-
-        return destroyed_fraction * score_radar
     
+        if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
+            score_radar = self.get_normalized_radar_score(mode = ['air'])
+            target_destroyed  = self._eval_destroyed_quantity_with_ordinance( task = task, loadout = loadout, target = target_dimension)
+            #dovresti anche inserire la valutazione sulle capacità di autodifesa e quelle relative al range
+
+        elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
+            score_radar = self.get_normalized_radar_score(['ground'])
+            pass
+            
+        elif task in ['Anti_Ship']:
+            score_radar = self.get_normalized_radar_score(['sea'])
+            pass
+
+        else:
+            score_radar = 0.0
+            pass
+
+        if target_destroyed < minimum_target_destroyed:
+            return 0.0
+
+        return target_destroyed * score_radar
+    
+    #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
     def task_score_cost_ratio(self):
+        
+        pass
+
+    
+    #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
+    def _eval_destroyed_quantity_with_ordinance( self, task: str, loadout: Dict, target: str):
+     
         pass
 
 # AIRCRAFT DATA
@@ -352,7 +381,7 @@ f16_data = {
     "made": "USA",
     "model": "F-16C Block 50",
     "start_service": 1978,
-    "end_service": int('inf'),
+    "end_service": None,
     "category": "fighter",
     "cost": 10, # M$
     "roles": ["CAP", "Intercept", "SEAD"],
@@ -409,7 +438,7 @@ f18_data = {
     "made": "USA",
     "model": "F-18C Block 50",
     "start_service": 1978,
-    "end_service": int('inf'),
+    "end_service": None,
     "category": "fighter",
     "cost": 10, # M$
     "roles": ["CAP", "Intercept", "SEAD"],
@@ -458,10 +487,6 @@ f18_data = {
         "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 2700, "time": 120},  # time in minutes
         "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 4900, "time": 120}  # time in minutes   
     },
-    "ordinance": {
-        'air_2_air': {'AIM-120': 6},
-        'air_2_ground': {'GBU-12': 4},
-    }
 }
 
 f14_data = {
@@ -469,7 +494,7 @@ f14_data = {
     "made": "USA",
     "model": "F-14A Tomcat",
     "start_service": 1978,
-    "end_service": int('inf'),
+    "end_service": None,
     "category": "fighter",
     "cost": 10,
     "roles": ["CAP", "Intercept", "SEAD"],
@@ -518,10 +543,7 @@ f14_data = {
         "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 2600, "time": 120},  # time in minutes
         "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 4800, "time": 120}  # time in minutes   
     },
-    "ordinance": {
-        'air_2_air': {'AIM-54 Phoenix': 6, 'AIM-7 Sparrow': 4},
-        'air_2_ground': {'GBU-12': 4},
-    }
+    
 }
 
 f15_data = {
@@ -529,7 +551,7 @@ f15_data = {
     "made": "USA",
     "model": "F-15C Eagle",
     "start_service": 1978,
-    "end_service": int('inf'),
+    "end_service": None,
     "category": "fighter",
     "cost": 10,
     "roles": ["CAP", "Intercept", "SEAD"],
@@ -578,47 +600,34 @@ f15_data = {
         "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 2800, "time": 120},  # time in minutes
         "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 5000, "time": 120}  # time in minutes   
     },
-    "ordinance": {
-        'air_2_air': {'AIM-120': 6, 'AIM-7 Sparrow': 4},
-        'air_2_ground': {'GBU-12': 4},
-    }
+   
 }
 
 
 
 # TEST
-f16 = Aircraft_Data(**f16_data)
-f18 = Aircraft_Data(**f18_data)
-f14 = Aircraft_Data(**f14_data)
-f15 = Aircraft_Data(**f15_data)
-
-# Ottenere punteggi normalizzati
-print(f"f16 Radar score: {f16.get_normalized_radar_score():.2f}")
-print(f"f16 Radar score a2a: {f16.get_normalized_radar_score(['air']):.2f}")
-print(f"f16 Speed score: {f16.get_normalized_speed_score():.2f}")
-print(f"f16 avalaibility: {f16.get_normalized_avalaiability_score():.2f}")
-print(f"f16 manutenability score (mttr): {f16.get_normalized_maintenance_score()}")
-print(f"f16 reliability score (mtbf): {f16.get_normalized_reliability_score()}")
-
-print(f"f18 Radar score: {f18.get_normalized_radar_score():.2f}")
-print(f"f18 Radar score a2a: {f18.get_normalized_radar_score(['air']):.2f}")
-print(f"f18 Speed score: {f18.get_normalized_speed_score():.2f}")
-print(f"f18 avalaibility: {f18.get_normalized_avalaiability_score():.2f}")
-print(f"f18 manutenability score (mttr): {f18.get_normalized_maintenance_score()}")
-print(f"f18 reliability score (mtbf): {f18.get_normalized_reliability_score()}")
+AIRCRAFT = {}
 
 
-print(f"f15 Radar score: {f15.get_normalized_radar_score():.2f}")
-print(f"f15 Radar score a2a: {f15.get_normalized_radar_score(['air']):.2f}")
-print(f"f15 Speed score: {f15.get_normalized_speed_score():.2f}")
-print(f"f15 avalaibility: {f15.get_normalized_avalaiability_score():.2f}")
-print(f"f15 manutenability score (mttr): {f15.get_normalized_maintenance_score()}")
-print(f"f15 reliability score (mtbf): {f15.get_normalized_reliability_score()}")
+Aircraft_Data(**f16_data)
+Aircraft_Data(**f18_data)
+Aircraft_Data(**f14_data)
+Aircraft_Data(**f15_data)
+
+for aircraft in Aircraft_Data._registry.values():    
+    model = aircraft.model
+    AIRCRAFT[model] = {}
+    AIRCRAFT[model]['Radar score'] = aircraft.get_normalized_radar_score() 
+    AIRCRAFT[model]['Radar score air'] = aircraft.get_normalized_radar_score(['air']) 
+    AIRCRAFT[model]['Speed score'] = aircraft.get_normalized_speed_score() 
+    AIRCRAFT[model]['avalaibility'] = aircraft.get_normalized_avalaiability_score()
+    AIRCRAFT[model]['manutenability score (mttr)'] = aircraft.get_normalized_maintenance_score()
+    AIRCRAFT[model]['reliability score (mtbf)'] = aircraft.get_normalized_reliability_score()
 
 
-print(f"f14 Radar score: {f14.get_normalized_radar_score():.2f}")
-print(f"f14 Radar score a2a: {f14.get_normalized_radar_score(['air']):.2f}")
-print(f"f14 Speed score: {f14.get_normalized_speed_score():.2f}")
-print(f"f14 avalaibility score: {f14.get_normalized_avalaiability_score():.2f}")
-print(f"f14 manutenability score (mttr): {f14.get_normalized_maintenance_score()}")
-print(f"f14 reliability score (mtbf): {f14.get_normalized_reliability_score()}")
+
+for model, data in AIRCRAFT.items():
+    for name, score in data.items():
+        print(f"{model} {name}: {score:.2f}")
+    
+    
