@@ -30,32 +30,54 @@ WEAPON_PARAM = {
 #@dataclass
 #Class Weapon_Data:
 
-def combat_power(weapon_type, weapon_name):
+def get_cannon_score(model: str):
+    """
+    returns cannon score
+
+    'model': '2A46M',
+    "start_service": 1974,
+    "end_service": int('inf'),
+    'reload': 'Automatic', # Semi_Automatic, Manual
+    'caliber': 125, # mm
+    'muzzle_speed': 1750, # m/s 
+    'fire_rate': 8, # shot per minute
+    'range': {'direct': 2120, 'indirect': 10000 }, # m
+    'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+
+    Args:
+        model (str): model 
+
+    Returns:
+        float: cannon score
+    """
+    weapon = GROUND_WEAPONS['CANNONS'][model]
+    
+    if weapon['reload'] == 'Autoatic':
+        reload_factor = 1
+    elif weapon['reload'] == 'Semi_Automatic':
+        reload_factor = 0.7
+    elif weapon['reload'] == 'Manual':
+        reload_factor = 0.3
+    else:
+        raise  
+    
+    combat_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+        else:
+            combat_power +=  weapon[param_name] * coeff_value
+
+    return reload_factor * combat_power 
+
+
+def get_weapon_power(weapon_type, weapon_name):
     
     if weapon_type == 'CANNONS':
         
-        weapon = GROUND_WEAPONS[weapon_type][weapon_name]
         
-        if weapon['reload'] == 'Automatic':
-            reload_factor = 1
-        elif weapon['reload'] == 'Semi_Automatic':
-            reload_factor = 0.7
-        elif weapon['reload'] == 'Manual':
-            reload_factor = 0.3
-        else:
-           raise  
-        
-        combat_power = 0.0
-
-        for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
-
-            if param_name == 'range':
-                combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
-            else:
-                combat_power +=  weapon[param_name] * coeff_value
-
-        return reload_factor * combat_power 
-    
     if weapon_type == 'define':
         pass
 

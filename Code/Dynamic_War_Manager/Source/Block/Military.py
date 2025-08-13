@@ -11,7 +11,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_ACTION, 
     AIR_TASK,
-    NAVAL_TASK,
+    SEA_TASK,
     MILITARY_CATEGORY,    
     MILITARY_FORCES,
     ACTION_TASKS
@@ -167,7 +167,7 @@ class Military(Block):
         return self._mil_category in MILITARY_CATEGORY["Ground_Base"]
 
     def is_Naval_Base(self) -> bool:
-        """Check if base is a naval group."""
+        """Check if base is a sea group."""
         return self._mil_category in MILITARY_CATEGORY["Naval_Base"]
     #endregion
 

@@ -1,5 +1,5 @@
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
-from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
+from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import get_vehicle_data, get_vehicle_scores
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -31,9 +31,8 @@ class Vehicle(Mobile) :
             # proprietry
             self._speed_off_road = {"nominal": None, "max": None},
             
+            self._vehicle_scores = get_vehicle_scores(model=model),
             self.set_combat_power()
-                
-            self._vehicle_data = 
             # dcs_data for vehicle
 
             # Association    
@@ -201,11 +200,13 @@ class Vehicle(Mobile) :
         if action and action not in ACTION_TASKS[force]:
             raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
     
+        
+
         for act in ACTION_TASKS[force]:
             
             if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
                 continue            
-            combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency
+            combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency * (1 + self._vehicle_scores['combat score']) 
 
         # call parent method
         self.combat_power = {force: {combat_power}}

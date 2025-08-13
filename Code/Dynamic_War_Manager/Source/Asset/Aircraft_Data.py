@@ -1,3 +1,20 @@
+'''
+NOTA: il calcolo dello score normalizzato deve essere effettuato considerando tipologie simili:
+fighter-fighter, bomber-bomber ecc. altrimenti c'è il rischio che le differenze di score tra due stesse tipologie
+siano ridotte causa il valutazione sottostimata delle score totale
+
+NO: 
+ specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria
+# probabilmente è meglio calcolarlo su tutte le categorie (non specificando la categoria negli argomenti) in quanto 
+# il valor rappresenterebbe il un valore significaativo per il confronto con tutte le categorie, permettendo unaa più 
+# realistica valutazione nel confronto tra forze eterogenee sul campo
+# Tuttavia la presenza nel dizzionario di veicoli di supporto può 'desensibilizzare' lo score quando si confrontano 
+# veicoli di pari caratteristiche.
+
+
+'''
+
+
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_Military_CRAFT_ASSET, AIR_TASK 
@@ -605,7 +622,8 @@ f15_data = {
 
 
 
-# TEST
+# SETUP DICTIONARY VALUE 
+SCORES = ('Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 AIRCRAFT = {}
 
 
@@ -624,10 +642,33 @@ for aircraft in Aircraft_Data._registry.values():
     AIRCRAFT[model]['manutenability score (mttr)'] = aircraft.get_normalized_maintenance_score()
     AIRCRAFT[model]['reliability score (mtbf)'] = aircraft.get_normalized_reliability_score()
 
+# STATIC METHODS (API)
+def get_aircraft_data(model: str):
+    return AIRCRAFT
 
+def get_aircraft_scores(model: str, scores: Optional[List]=None):
 
+    if model not in AIRCRAFT.keys():
+        raise ValueError(f"model unknow. model must be: {AIRCRAFT.keys()}")
+    
+    if scores and scores in SCORES:
+        raise ValueError(f"scores unknow. scores must be: {SCORES!r}")
+    
+    results = {}
+    for score in scores:
+        results[score] = AIRCRAFT[model][score]
+
+    return results
+
+#TEST
 for model, data in AIRCRAFT.items():
     for name, score in data.items():
         print(f"{model} {name}: {score:.2f}")
+    
+
+print(f"F-14 Speed score and avalaibility: {get_aircraft_scores(model = 'F-14A Tomcat', scores = ['Speed score', 'avalaibility'])}" )
+    
+
+
     
     

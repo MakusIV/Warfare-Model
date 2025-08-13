@@ -49,19 +49,19 @@ AIR_TASK = {
     'Anti_Ship': 'Anti_Ship'
 } 
 
-NAVAL_TASK  = {
+SEA_TASK  = {
 
     'Attack':   'Attack', 
     'Defense':  'Defense',   
     'Retrait':  'Retrait' 
 }
 
-MILITARY_FORCES = ['ground', 'air', 'naval']
+MILITARY_FORCES = ['ground', 'air', 'sea']
 
 ACTION_TASKS = {
     'ground': GROUND_ACTION,
     'air': AIR_TASK,
-    'naval': NAVAL_TASK
+    'sea': SEA_TASK
 }
 
 BLOCK_CATEGORY = {
@@ -318,7 +318,7 @@ GROUND_MILITARY_VEHICLE_ASSET = {
 }
 
 # key: asset type
-NAVAL_Military_CRAFT_ASSET = {
+SEA_Military_CRAFT_ASSET = {
      
     'Carrier':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
     'Destroyer':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
@@ -527,11 +527,11 @@ for k1, v1 in AIR_Military_CRAFT_ASSET.items():
     
 
 
-# Generate NAVAL_Military_CRAFT_ASSET
+# Generate SEA_Military_CRAFT_ASSET
 k = 'Naval_Military_Craft_Asset'
 BLOCK_ASSET_CATEGORY[k] = {}
 
-for k1, v1 in NAVAL_Military_CRAFT_ASSET.items():
+for k1, v1 in SEA_Military_CRAFT_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = k1  # asset type
 
 
