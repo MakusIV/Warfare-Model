@@ -2,11 +2,17 @@
 Vehicle_Data
 
 Singleton Class
+
+NOTA: il calcolo dello score normalizzato deve essere effettuato considerando tipologie simili:
+fighter-fighter, bomber-bomber ecc. altrimenti c'è il rischio che le differenze di score tra due stesse tipologie
+siano ridotte causa il valutazione sottostimata delle score totale
+
+
 '''
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTION_TASKS, BLOCK_ASSET_CATEGORY
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import convert_mph_to_kmh
 from sympy import Point3D
@@ -18,6 +24,8 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle_Data').logger
 
 
 VEHICLE_TASK = GROUND_ACTION
+MODES = ACTION_TASKS.keys()
+CATEGORY = BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys()
 
 @dataclass
 class Vehicle_Data:
@@ -28,7 +36,7 @@ class Vehicle_Data:
         self.constructor = constructor
         self.made = made
         self.model = model # registry keys
-        self.category = category
+        self.category = category #Tank, Armor, ......
         self.start_service = start_service
         self.end_service = end_service
         self.cost = cost
@@ -88,10 +96,10 @@ class Vehicle_Data:
             return 0.0
         
         if not modes:
-            modes = ['air', 'ground', 'sea']
-        
-        elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
-            raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
+            modes = MODES #['air', 'ground', 'sea']
+        elif not isinstance(modes, List) or not all ( m in MODES for m in modes ):
+            raise TypeError(f"modes must be a List of string with value:  {MODES!r}, got {modes!r}.")
+    
         
         weights = {
             'tracking_range': 0.2,
@@ -232,59 +240,156 @@ class Vehicle_Data:
 
 
     # --- Metodi di confronto normalizzati ---
-    def get_normalized_radar_score(self, modes: Optional[Dict] = None):
+    def get_normalized_radar_score(self, modes: Optional[Dict] = None, category: Optional[str] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized radar score
         """
-        scores = [ac._radar_eval(modes = modes) for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == self.category]
+
+        scores = [ac._radar_eval(modes = modes) for ac in vehicles]
         return self._normalize(self._radar_eval(modes = modes), scores)
     
-    def get_normalized_TVD_score(self, modes: Optional[Dict] = None):
+    def get_normalized_TVD_score(self, modes: Optional[Dict] = None, category: Optional[str] = None):
         """returns TVD score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized TVD score
         """
-        scores = [ac._TVD_eval(modes = modes) for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == self.category]
+        scores = [ac._TVD_eval(modes = modes) for ac in vehicles]
         return self._normalize(self._TVD_eval(modes = modes), scores)
     
-    def get_normalized_speed_score(self):
+    def get_normalized_speed_score(self, category: Optional[str] = None):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized speed score
         """
-        scores = [ac._speed_eval() for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        scores = [ac._speed_eval() for ac in vehicles]
         return self._normalize(self._speed_eval(), scores)
 
-    def get_normalized_reliability_score(self):
+    def get_normalized_reliability_score(self, category: Optional[str] = None):
         """returns reliability score (mtbf) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized reliability score
         """
-        scores = [ac._reliability_eval() for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        scores = [ac._reliability_eval() for ac in vehicles]
         return self._normalize(self._reliability_eval(), scores)
     
-    def get_normalized_avalaiability_score(self):
+    def get_normalized_avalaiability_score(self, category: Optional[str] = None):
         """returns avalaiability score (mtbf/mttr) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized avalaiability score
         """
-        scores = [ac._avalaiability_eval() for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        scores = [ac._avalaiability_eval() for ac in vehicles]
         return self._normalize(self._avalaiability_eval(), scores)
     
-    def get_normalized_maintenance_score(self):
+    def get_normalized_maintenance_score(self, category: Optional[str] = None):
         """returns maintenance score (mttr) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized maintenance score
         """
-        scores = [ac._maintenance_eval() for ac in Vehicle_Data._registry.values()]
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        scores = [ac._maintenance_eval() for ac in vehicles]
         return 1- self._normalize(self._maintenance_eval(), scores)        
+
+    def _combat_eval(self):
+            
+        # param = (value, weight)
+        params = {   
+                    'weapon':           ( self._weapon_eval(), 10 ), 
+                    'radar':            ( self._radar_eval(), 2 ), 
+                    'TVD':              ( self._TVD_eval(), 3 ), 
+                    'protection':       ( self._protection_eval(), 9 ), 
+                    'communication':    ( self._communication_eval(), 3 ), 
+                    'speed_data':       ( self._speed_eval(), 7 ), 
+                    'hydraulic':        ( self._hydraulic_eval(), 4 ), 
+                    'range':            ( self._range_eval(), 1 )
+                }
+        
+        tot_weights = sum( data[1] for param, data in params.items() )
+        return sum( data[0] * data[1] for param, data in params.items() ) / tot_weights
+
+    def _weapon_eval(self):
+
+      
+        return 1
+
+    def _protection_eval(self):
+
+        
+        return 1
+
+    def _communication_eval(self):
+
+        
+        return 1
+
+    def _hydraulic_eval(self):
+
+       
+        return 1
+    
+    def _range_eval(self):
+
+        
+        return 1
+    
+
+    def get_normalized_combat_score(self, category: Optional[str] = None):
+        """returns combat score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized combat score score
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        scores = [ac._combat_eval() for ac in vehicles]
+        return self._normalize(self._combat_eval(), scores)
+    
 
     def _normalize(self, value, scores):
         """Normalize values from 0 to 1
@@ -304,9 +409,10 @@ class Vehicle_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-    # VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
+
     def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
-        
+        #VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
+
         if not task or not isinstance(task, str):
             raise TypeError ("task must be a string")
         if task not in GROUND_ACTION:
@@ -351,7 +457,7 @@ T90_data = {
     'made': 'Russia',
     'start_service': 2020,
     'end_service': None,
-    'category': 'MTB', # Main Battle Tank
+    'category': 'Tank', # Main Battle Tank
     'cost': 4, # M$
     'range': 550, # km
     'roles': ['', 'Intercept', 'SEAD'],
@@ -414,7 +520,7 @@ T130_data = {
     'made': 'Russia',
     'start_service': 2030,
     'end_service': None,
-    'category': 'MTB', # Main Battle Tank
+    'category': 'Armored', # Main Battle Tank
     'cost': 4, # M$
     'range': 1200, # km
     'roles': ['', 'Intercept', 'SEAD'],
@@ -489,33 +595,40 @@ T130_data = {
     },
 }
 
-
-SCORES = ('Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 # SETUP DICTIONARY VALUE 
+SCORES = ('combat score', 'Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
 
 Vehicle_Data(**T90_data)
 Vehicle_Data(**T130_data)
 
+# Load scores in dict
+# specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria
+# probabilmente è meglio calcolarlo su tutte le categorie (non specificando la categoria negli argomenti) in quanto 
+# il valor rappresenterebbe il un valore significaativo per il confronto con tutte le categorie, permettendo unaa più 
+# realistica valutazione nel confronto tra forze eterogenee sul campo
+# Tuttavia la presenza nel dizzionario di veicoli di supporto può 'desensibilizzare' lo score quando si confrontano 
+# veicoli di pari caratteristiche.
 
 for vehicle in Vehicle_Data._registry.values():    
     model = vehicle.model
     VEHICLE[model] = {}
-    VEHICLE[model]['Radar score'] = vehicle.get_normalized_radar_score() 
-    VEHICLE[model]['Radar score air'] = vehicle.get_normalized_radar_score(['air']) 
-    VEHICLE[model]['Speed score'] = vehicle.get_normalized_speed_score() 
-    VEHICLE[model]['avalaibility'] = vehicle.get_normalized_avalaiability_score()
-    VEHICLE[model]['manutenability score (mttr)'] = vehicle.get_normalized_maintenance_score()
-    VEHICLE[model]['reliability score (mtbf)'] = vehicle.get_normalized_reliability_score()
+    VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
+    VEHICLE[model]['Radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
+    VEHICLE[model]['Radar score air'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['air']), 'category_score': vehicle.get_normalized_radar_score(modes = ['air'], category=vehicle.category) }
+    VEHICLE[model]['Speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
+    VEHICLE[model]['avalaibility'] = {'global_score': vehicle.get_normalized_avalaiability_score(), 'category_score': vehicle.get_normalized_avalaiability_score(category=vehicle.category)}
+    VEHICLE[model]['manutenability score (mttr)'] = {'global_score': vehicle.get_normalized_maintenance_score(), 'category_score': vehicle.get_normalized_maintenance_score(category=vehicle.category)}
+    VEHICLE[model]['reliability score (mtbf)'] = {'global_score': vehicle.get_normalized_reliability_score(), 'category_score': vehicle.get_normalized_reliability_score(category=vehicle.category)}
 
 
 
 
 # STATIC METHODS (API)
-def get_vehicle_data(model: str):
+def get_vehicle_data(model: str) -> Dict:
     return VEHICLE
 
-def get_vehicle_score(model: str, scores: Optional[List]=None):
+def get_vehicle_scores(model: str, scores: Optional[List]=None):
 
     if model not in VEHICLE.keys():
         raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")
@@ -532,8 +645,9 @@ def get_vehicle_score(model: str, scores: Optional[List]=None):
 #TEST
 for model, data in VEHICLE.items():
     for name, score in data.items():
-        print(f"{model} {name}: {score:.2f}")
+        for score_name, score_value in score.items():
+            print(f"{model} {name} {score_name}: {score_value:.2f}")
     
 
-print(f"T-90 Speed score and avalaibility: {get_vehicle_score(model = 'T-90M', scores = ['Speed score', 'avalaibility'])}" )
+print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', scores = ['Speed score', 'avalaibility', 'combat score'])}" )
     

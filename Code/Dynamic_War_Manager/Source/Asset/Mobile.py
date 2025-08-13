@@ -51,7 +51,7 @@ class Mobile(Asset) :
             
                                 "ground": {"Attack": 0.0 , "Defense": 0.0},
                                 
-                                "naval": {"Attack": 0.0 , "Defense": 0.0}
+                                "sea": {"Attack": 0.0 , "Defense": 0.0}
                                 
                             }"""
             

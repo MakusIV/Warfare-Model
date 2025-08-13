@@ -27,11 +27,11 @@ from numpy import clip
 # CONSTANTS
 DEFAULT_ATTACK_WEIGHT = 0.5
 """
-MILITARY_FORCES = ["ground", "air", "naval"]
+MILITARY_FORCES = ["ground", "air", "sea"]
 ACTION_TASKS = {
     "ground": Context.GROUND_ACTION,
     "air": Context.AIR_TASK,
-    "naval": Context.NAVAL_TASK
+    "sea": Context.SEA_TASK
 }
 """
 DEFAULT_WEIGHT_PRIORITY_TARGET = {
@@ -434,7 +434,7 @@ class Region:
 
         Args:
             side (str): side of blocks
-            force (str): type of military force (air, ground, naval)
+            force (str): type of military force (air, ground, sea)
 
         Returns:
             Point2D: combat power baricenter
@@ -449,7 +449,7 @@ class Region:
         for force in MILITARY_FORCES:
             for task in ACTION_TASKS[force]:                                    
                 for block in Militarys:
-                    if ( block.is_Air_Base and force == "air" ) or (block.is_Ground_Base and force == "ground") or ( block.is_navalbase and force == "naval" ):
+                    if ( block.is_Air_Base and force == "air" ) or (block.is_Ground_Base and force == "ground") or ( block.is_navalbase and force == "sea" ):
                         cp = block.combat_power(action = task, military_force = force) # block combat power 
                         tot_CP[force][task] += cp  # sum of block's combat power 
                         tp[force][task] += block.position * cp  # sum of ponderate position block's point
@@ -478,7 +478,7 @@ class Region:
             for force in Context.MILITARY_FORCES:
                 if ((block.is_Air_Base and force == "air") or 
                     (block.is_Ground_Base and force == "ground") or 
-                    (block.is_Naval_Base and force == "naval")):
+                    (block.is_Naval_Base and force == "sea")):
                     
                     for task in Context.ACTION_TASKS[force]:
                         cp = block.combat_power(action=task, military_force=force)
@@ -816,7 +816,7 @@ class Region:
                             attack_route: Optional[Route], weight: float) -> float:
         
         """
-        Calculates the priority of a military block (ground or naval) by evaluating its combat power, 
+        Calculates the priority of a military block (ground or sea) by evaluating its combat power, 
         the distance from the target, the combat power of the target or the priority assigned 
         in the case of logistical targets.
 
