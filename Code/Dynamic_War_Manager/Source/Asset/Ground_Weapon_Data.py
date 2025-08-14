@@ -19,18 +19,44 @@ logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
 WEAPON_PARAM = {
 
-    'CANNONS': {'caliber': 0.3/300,
-                'muzzle_speed': 0.2/1000,
-                'fire_rate': 0.3/10,
-                'range': 0.2/5000,
+    'CANNONS': {'caliber': 0.3/300, # coeff / max value
+                'muzzle_speed': 0.15/1000, 
+                'fire_rate': 0.25/10,
+                'range': 0.1/3000,
+                'ammo_type': 0.2,
+                },
+
+    'MISSILES': {'caliber': 0.2/300, 
+                'warhead': 0.4/250,
+                'range': 0.2/4000,
+                'ammo_type': 0.2,
                 },
 }
 
+AMMO_PARAM = {
+    'HE': 0.2,
+    'HEAT': 0.4,
+    'AP': 0.2,
+    '2HEAT': 0.9,
+    'APFSDS': 0.6,
+}
+
+GUIDE_PARAM = {
+    
+}
+'''
+RELOAD_PARAM = {
+
+    'Automatic': 1,
+    'Semi_Automatic': 0.7,
+    'Manual': 0.4
+}
+'''
 
 #@dataclass
 #Class Weapon_Data:
 
-def get_cannon_score(model: str):
+def get_cannon_score(model: str) -> float:
     """
     returns cannon score
 
@@ -45,46 +71,106 @@ def get_cannon_score(model: str):
     'ammo_type': ['HEAT', 'HE', 'APFSDS'],
 
     Args:
-        model (str): model 
+        model (str): cannon model 
 
     Returns:
         float: cannon score
     """
-    weapon = GROUND_WEAPONS['CANNONS'][model]
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
     
-    if weapon['reload'] == 'Autoatic':
-        reload_factor = 1
-    elif weapon['reload'] == 'Semi_Automatic':
-        reload_factor = 0.7
-    elif weapon['reload'] == 'Manual':
-        reload_factor = 0.3
-    else:
-        raise  
+
+    weapon_name = 'CANNONS'
+    weapon = GROUND_WEAPONS[weapon_name][model]
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+        
+        if param_name == 'range':
+            combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+        
+        elif param_name == 'ammo_type':
+            max = 0.0
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power 
+
+def get_missiles_score(model: str) -> float:
     
-    combat_power = 0.0
+    '''9K119M ': { # AT-11 Sniper
+            'model': '9K119M',
+            "start_service": 1974,
+            "end_service": int('inf'),
+            'guide': 'Laser', # Semi_Automatic, Manual
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 1300, # m/s             
+            'range': 4500, # m
+            'ammo_type': ['2HEAT'],'''
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'MISSILES'
+    weapon = GROUND_WEAPONS[weapon_name][model]
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
 
-        if param_name == 'range':
-            combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
-        else:
-            combat_power +=  weapon[param_name] * coeff_value
+        if param_name == 'ammo_type':
+            max = 0.0
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
 
-    return reload_factor * combat_power 
+            weapon_power += max * coeff_value
 
+        weapon_power +=  weapon[param_name] * coeff_value
 
-def get_weapon_power(weapon_type, weapon_name):
+    return weapon_power 
+
+def get_weapon_score(weapon_type: str, weapon_model: str):
+
+    if not weapon_type:
+        raise TypeError(f"weapon_type must be a str")
+    elif not isinstance(weapon_type, str) or weapon_type not in GROUND_WEAPONS.keys():
+        raise ValueError(f"weapon_type must be a str with value included in {GROUND_WEAPONS.keys()}. Got {type(weapon_type).__name__} {weapon_type}")
+
+    if not weapon_model:
+        raise TypeError(f"weapon_model must be a str")
+    elif not isinstance(weapon_model, str) or weapon_model not in GROUND_WEAPONS.values().keys():
+        raise ValueError(f"weapon_model must be a str with value included in {GROUND_WEAPONS.values().keys()}. Got {type(weapon_model).__name__} {weapon_type}")
     
     if weapon_type == 'CANNONS':
+        return get_cannon_score(model=weapon_model)
         
-        
-    if weapon_type == 'define':
+    if weapon_type == 'MISSILES':
+        return get_missiles_score(model=weapon_model)
+
+    if weapon_type == 'ROCKETS':
         pass
 
-    if weapon_type == 'define':
-        pass
-
-    if weapon_type == 'define':
+    if weapon_type == 'MACHINE_GUNS':
         pass
 
     if weapon_type == 'define':
@@ -98,7 +184,7 @@ GROUND_WEAPONS = {
             'model': '2A46M',
             "start_service": 1974,
             "end_service": int('inf'),
-            'reload': 'Automatic', # Semi_Automatic, Manual
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
             'caliber': 125, # mm
             'muzzle_speed': 1750, # m/s 
             'fire_rate': 8, # shot per minute
@@ -112,7 +198,7 @@ GROUND_WEAPONS = {
             'model': '9K119M',
             "start_service": 1974,
             "end_service": int('inf'),
-            'guide': 'Laser', # Semi_Automatic, Manual
+            'guide': 'Laser', # 
             'caliber': 125, # mm
             'warhead': 4.5, # kg
             'speed': 1300, # m/s             
@@ -129,6 +215,8 @@ GROUND_WEAPONS = {
     'BOMBS': {}
 
 } 
+        
+'''
         "Mk-83": {
             "type": "Bombs",
             "task": ["Strike", "Anti-ship Strike"],
@@ -4826,3 +4914,4 @@ for side in weapon_db:
 # Nota: Ho notato che in alcuni dizionari c'è "manouvrability" e in altri "manouvrability" (con una 'a' in più)
 # Sarebbe meglio uniformare l'ortografia per mantenere la coerenza nel codice
 
+'''

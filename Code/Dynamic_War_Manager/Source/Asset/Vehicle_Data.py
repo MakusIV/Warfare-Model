@@ -12,6 +12,7 @@ siano ridotte causa il valutazione sottostimata delle score totale
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
+from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import get_weapon_score
 from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTION_TASKS, BLOCK_ASSET_CATEGORY
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import convert_mph_to_kmh
@@ -43,7 +44,7 @@ class Vehicle_Data:
         self.range = range
         self.roles = roles
         self.engine = engine
-        self.weapons = weapons
+        self.weapons = weapons #{'model': quantity}
         self.radar = radar
         self.TVD = TVD
         self.communication = communication
@@ -332,7 +333,11 @@ class Vehicle_Data:
         return 1- self._normalize(self._maintenance_eval(), scores)        
 
     def _combat_eval(self):
-            
+        """Returns the combat score calculated by considering the individual scores of the vehicle's subsystems
+
+        Returns:
+            float: combat score
+        """
         # param = (value, weight)
         params = {   
                     'weapon':           ( self._weapon_eval(), 10 ), 
@@ -349,9 +354,34 @@ class Vehicle_Data:
         return sum( data[0] * data[1] for param, data in params.items() ) / tot_weights
 
     def _weapon_eval(self):
+        """Returns the score of all installed weapons
 
-      
-        return 1
+        Returns:
+            float: weapons combat score
+        """
+              
+        '''
+        'weapons': {
+            'cannons': [('2A46M', 42)],
+            'missiles': [('9K119M', 6)],
+            'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+         '''
+        score = 0.0
+
+        for weapon_type, weapon in self.weapons:
+            
+            for weapon_item in weapon:
+                factor_ammo_quantity = 1
+
+                if weapon_item[0] == 'cannons':
+                    factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
+
+                if weapon_item[0] == 'missiles':
+                    factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
+                
+                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity )
+
+        return score
 
     def _protection_eval(self):
 
