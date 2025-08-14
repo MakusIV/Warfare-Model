@@ -17,6 +17,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTIO
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import convert_mph_to_kmh
 from sympy import Point3D
+from tabulate import tabulate
+import pandas as pd
 from dataclasses import dataclass
 
 # LOGGING --
@@ -368,18 +370,21 @@ class Vehicle_Data:
          '''
         score = 0.0
 
-        for weapon_type, weapon in self.weapons:
-            
+        for weapon_type, weapon in self.weapons.items():
+
             for weapon_item in weapon:
                 factor_ammo_quantity = 1
 
-                if weapon_item[0] == 'cannons':
+                if weapon_type == 'CANNONS':
                     factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
 
-                if weapon_item[0] == 'missiles':
+                elif weapon_type == 'MISSILES':
                     factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
                 
-                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity )
+                #else:
+                #    logger.warning(f"weapon_type unknow, got {weapon_type}"
+                                   
+                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity
 
         return score
 
@@ -497,9 +502,9 @@ T90_data = {
         'reliability': {'mtbf': 40, 'mttr': 5}
     },
     'weapons': {
-        'cannons': [('2A46M', 42)],
-        'missiles': [('9K119M', 6)],
-        'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+        'CANNONS': [('2A46M', 42)],
+        'MISSILES': [('9K119M', 6)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
             
     },
     'radar': None,
@@ -543,6 +548,67 @@ T90_data = {
     },
 }
 
+T72_data = {
+    'constructor': 'UVTZ',    
+    'model': 'T-72B',
+    'made': 'Russia',
+    'start_service': 2020,
+    'end_service': None,
+    'category': 'Tank', # Main Battle Tank
+    'cost': 2.5, # M$
+    'range': 400, # km
+    'roles': ['', 'Intercept', 'SEAD'],
+    'engine': {
+        'model': 'Multifuel 12 Cylinders', 
+        'capabilities': {'thrust': 780, 'fuel_efficiency': 0.6, 'type': 'multifuel'}, 
+        'reliability': {'mtbf': 30, 'mttr': 8}
+    },
+    'weapons': {
+        'CANNONS': [('2A46M', 38)],
+        'MISSILES': [('99K120', 4)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
+            
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model', 
+        'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 130},
+        'reliability': {'mtbf': 50, 'mttr': 2.5}
+        },
+    'protections': {
+        # HE: Esplosivo, HEAT: carica cava, 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
+        'active':       {
+                            'model': 'Shtora-300',
+                            'threath_countermeasure': ['Laser', 'Infrared', 'TVD', 'Radar']
+                        },
+        'armor':        {  
+                            'front': (True, {'HEAT': 1070, 'APFSDS': 710}),
+                            'lateral': (True, {'HEAT': 1070, 'APFSDS': 710}),
+                            'back': (True, {'HEAT': 1070, 'APFSDS': 710}),
+                            'turret': (True, {'HEAT': 1340, 'APFSDS': 920}), 
+                        },
+        'reactive':     {
+                            'model': 'Kontact5',
+                            'increment_thickness': {
+                                'front': (True, {'HEAT': 600, 'APFSDS': 250}),
+                                'lateral': (True, {'HEAT': 600, 'APFSDS': 250}),
+                                'back': (True, {'HEAT': 600, 'APFSDS': 250}),
+                                'turret': (True, {'HEAT': 600, 'APFSDS': 250}),      
+                            },                                                
+                        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 50},
+        'reliability': {'mtbf': 60, 'mttr': 2.0},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.5},
+    },
+}
 
 T130_data = {
     'constructor': 'UVTZ',    
@@ -550,7 +616,7 @@ T130_data = {
     'made': 'Russia',
     'start_service': 2030,
     'end_service': None,
-    'category': 'Armored', # Main Battle Tank
+    'category': 'Tank', # Main Battle Tank
     'cost': 4, # M$
     'range': 1200, # km
     'roles': ['', 'Intercept', 'SEAD'],
@@ -560,9 +626,9 @@ T130_data = {
         'reliability': {'mtbf': 40, 'mttr': 5}
     },
     'weapons': {
-        'cannons': [('2A46M', 42)],
-        'missiles': [('9K119M', 6)],
-        'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+        'CANNONS': [('2A46M', 42)],
+        'MISSILES': [('9K119M', 6)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
             
     },
     'radar': {
@@ -630,6 +696,7 @@ SCORES = ('combat score', 'Radar score', 'Radar score air', 'Speed score', 'aval
 VEHICLE = {}
 
 Vehicle_Data(**T90_data)
+Vehicle_Data(**T72_data)
 Vehicle_Data(**T130_data)
 
 # Load scores in dict
@@ -673,11 +740,38 @@ def get_vehicle_scores(model: str, scores: Optional[List]=None):
     return results
 
 #TEST
+'''
 for model, data in VEHICLE.items():
     for name, score in data.items():
         for score_name, score_value in score.items():
-            print(f"{model} {name} {score_name}: {score_value:.2f}")
+            print(f"{model} {name} {score_name}: {score_value:.4f}")
     
 
 print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', scores = ['Speed score', 'avalaibility', 'combat score'])}" )
-    
+'''
+# Prepara i dati per la tabella
+table_data = []
+
+# Itera sui dati per costruire le righe della tabella
+for model, data in VEHICLE.items():
+    for name, score in data.items():
+        for score_name, score_value in score.items():
+            table_data.append([model, name, score_name, score_value])
+
+# Crea un DataFrame con i dati
+df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
+
+# Crea la tabella pivot
+pivot_table = df.pivot_table(
+    index=["Name", "Score Name"],  # Indici delle righe
+    columns=["Model"],              # Colonne della tabella
+    values="Score Value",         # Valori da visualizzare
+    aggfunc="first"               # Funzione di aggregazione (non necessaria qui)
+)
+
+# Riformatta le colonne per ottenere un layout leggibile
+pivot_table = pivot_table.sort_index(axis=1, level=[0, 1])  # Ordina le colonne per Model e Score Name
+
+
+# Stampa la tabella pivot in formato leggibile
+print(tabulate(pivot_table, headers="keys", tablefmt="grid"))

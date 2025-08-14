@@ -283,3 +283,737 @@
 2025-08-13 14:41:34,182 - __main__ - WARNING - _radar_eval - Radar not defined.
 2025-08-13 14:41:34,183 - __main__ - WARNING - _radar_eval - Radar not defined.
 2025-08-13 14:41:34,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:11:08,201 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got CANNONS
+2025-08-14 13:12:11,167 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,586 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,588 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,588 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,589 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:16:06,589 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,590 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,590 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,590 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:16:06,591 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,591 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,592 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,592 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:16:06,593 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,593 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,593 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,594 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,594 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,594 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,595 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,595 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:16:06,596 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,596 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,597 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,597 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,598 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:16:06,598 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,165 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,166 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,166 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,166 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:56:39,167 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,167 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,168 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,168 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:56:39,168 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,169 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,169 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,169 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 13:56:39,170 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,170 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,170 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,170 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,171 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,171 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,171 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,172 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 13:56:39,172 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,173 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,173 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,173 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,174 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 13:56:39,174 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,869 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,870 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,870 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,870 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:07:49,871 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,871 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,872 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,872 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:07:49,872 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,873 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,873 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,873 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:07:49,874 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,874 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,874 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,875 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,875 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,875 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,876 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,876 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:07:49,877 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,877 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,878 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,878 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,878 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:07:49,879 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,447 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,448 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,448 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,448 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:26:08,449 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,449 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,450 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,450 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:26:08,450 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,451 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,451 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,451 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:26:08,452 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,452 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,452 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,453 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,453 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,453 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,454 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,454 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:26:08,455 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,455 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,456 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,456 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,456 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:26:08,457 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:27:20,554 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:27:20,555 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:27:20,555 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:27:20,555 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:27:20,556 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:27:20,556 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:27:20,556 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:27:20,557 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,953 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,953 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,954 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,954 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,955 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,955 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,955 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,955 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,956 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,956 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,956 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,957 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,957 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,957 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,958 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,958 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,958 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,959 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,959 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,959 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,959 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,960 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,960 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,960 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,961 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,961 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,962 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,962 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,963 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,963 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,963 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,963 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,964 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,964 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,964 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,965 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,965 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,966 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,967 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,967 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,967 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:28:32,968 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,968 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,968 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,969 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,969 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,969 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:28:32,972 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,972 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,973 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,973 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,974 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:28:32,974 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,602 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,604 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,604 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,604 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,605 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,605 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,605 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,606 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,607 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,609 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,610 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,610 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,610 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,611 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,611 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,611 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,612 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,612 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,612 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,615 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,616 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,616 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,616 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,616 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,617 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,617 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,617 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,618 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,618 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,618 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,619 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,619 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,619 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,620 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,620 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,620 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:30:02,621 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,621 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,621 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,621 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,622 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,622 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,622 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,622 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,623 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,623 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,623 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,623 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:30:02,624 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,625 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,625 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,625 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,626 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:30:02,626 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,535 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,535 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,536 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,536 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,537 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,537 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,537 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,538 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,538 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,538 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,539 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,539 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,539 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,540 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,540 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,540 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,540 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,541 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,541 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,541 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,542 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,542 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,542 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,543 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,543 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,543 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,544 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,544 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,545 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,545 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,545 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,546 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,546 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,547 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,547 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,547 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,548 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,548 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,548 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,548 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,549 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,549 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,550 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,550 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 14:35:02,550 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,551 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,551 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,551 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,551 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,552 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,552 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,552 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,553 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,553 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,553 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,554 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 14:35:02,554 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,555 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,555 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,555 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,556 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 14:35:02,556 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,416 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,416 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,418 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,418 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,418 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,419 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,419 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,419 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,420 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,420 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,420 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,421 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,421 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,421 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,422 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,422 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,422 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,423 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,423 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,423 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,424 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,424 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,424 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,425 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,425 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,425 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,426 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,426 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,427 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,428 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,428 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,428 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,429 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,429 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,429 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,430 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,430 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,430 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,431 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,431 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,432 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,432 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,432 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,433 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:43:42,433 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,433 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,434 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,434 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,434 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,435 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,435 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,435 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,436 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,436 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,437 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,437 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:43:42,438 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,438 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,438 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,439 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,439 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:43:42,440 - __main__ - WARNING - _weapon_eval - weapon_type unknow, got MACHINE_GUNS
+2025-08-14 16:56:38,656 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,657 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,658 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,658 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,658 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,659 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,659 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,659 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,660 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,662 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,662 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,662 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,663 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,663 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,663 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,664 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,665 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,665 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,666 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,666 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,667 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,668 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,669 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,669 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,669 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,670 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,671 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,671 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 16:56:38,671 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,671 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,672 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,672 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,672 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,673 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,673 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,675 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,675 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,676 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,676 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 16:56:38,676 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,878 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,878 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,879 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,879 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,880 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,880 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,880 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,881 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,881 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,881 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,882 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,882 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,882 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,882 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,883 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,883 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,883 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,884 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,884 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,884 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,885 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,885 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,886 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,886 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,887 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,887 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,887 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,888 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:05:29,888 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,888 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,889 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,889 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,889 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,890 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,890 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,890 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,890 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,891 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,891 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:05:29,891 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,746 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,746 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,747 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,747 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,748 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,748 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,748 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,749 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,749 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,749 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,750 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,750 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,750 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,750 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,751 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,751 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,751 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,752 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,752 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,752 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,753 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,753 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,754 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,754 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,754 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,755 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,755 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,755 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:06:01,756 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,756 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,756 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,757 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,757 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,757 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,758 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,758 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,758 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,758 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,759 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:06:01,759 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,395 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,396 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,396 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,397 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,397 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,397 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,398 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,398 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,398 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,399 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,399 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,399 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,400 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,400 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,400 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,400 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,401 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,401 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,401 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,401 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,402 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,403 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,403 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,403 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,404 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,404 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,404 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,405 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:09:47,405 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,405 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,406 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,406 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,406 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,406 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,407 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,407 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,407 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,407 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,408 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:09:47,408 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,845 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,846 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,847 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,848 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,849 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,850 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,851 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,851 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,852 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,852 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,853 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,853 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,854 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,854 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,856 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,856 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,857 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,857 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,858 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,858 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,860 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,860 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,861 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,862 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,863 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,864 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,865 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,866 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:10:47,866 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,867 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,868 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,869 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,869 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,870 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,871 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,871 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,872 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,873 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,874 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:10:47,875 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,006 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,006 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,007 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,007 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,008 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,008 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,008 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,009 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,009 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,009 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,009 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,010 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,010 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,010 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,011 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,011 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,011 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,011 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,012 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,012 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,013 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,013 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,014 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,014 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,014 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,014 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,015 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,015 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:14:39,015 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,016 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,016 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,016 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,017 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,017 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,017 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,018 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,018 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,018 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,018 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:14:39,019 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,375 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,376 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,376 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,377 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,378 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,378 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,378 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,379 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,379 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,379 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,380 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,380 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,380 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,381 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,381 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,381 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,382 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,382 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,382 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,383 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,383 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,384 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,384 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,385 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,385 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,385 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,386 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,387 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:26:13,387 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,388 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,388 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,389 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,390 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,390 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,391 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,391 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,391 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,392 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,392 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:26:13,393 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,602 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,603 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,603 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,603 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,604 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,604 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,605 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,605 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,605 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,606 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,606 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,606 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,607 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,607 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,607 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,608 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,608 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,608 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,609 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,609 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,610 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,610 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,611 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,611 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,611 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,612 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,612 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,612 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:27:15,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,613 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,614 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,615 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,615 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,615 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,615 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,616 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:27:15,616 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,311 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,312 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,313 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,315 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,318 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,319 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,321 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,323 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,324 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,326 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,327 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,329 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,330 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,332 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,333 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,334 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,335 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,337 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,338 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,340 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,341 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,341 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,342 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,342 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,344 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,346 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,349 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,351 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,352 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,354 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,355 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,357 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,358 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,359 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,360 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,363 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,363 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,364 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,365 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,367 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,369 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,372 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,374 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,375 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2025-08-14 17:28:27,378 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,379 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,381 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,382 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,384 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,387 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,387 - __main__ - WARNING - _radar_eval - Radar not defined.
+2025-08-14 17:28:27,388 - __main__ - WARNING - _radar_eval - Radar not defined.
