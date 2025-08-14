@@ -12,7 +12,7 @@ from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_ACTION, 
     AIR_TASK,
-    NAVAL_TASK,
+    SEA_TASK,
     MILITARY_CATEGORY,    
     MILITARY_FORCES,
     ACTION_TASKS

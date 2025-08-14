@@ -1,6 +1,5 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_TASK
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -10,27 +9,45 @@ from dataclasses import dataclass
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
+logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
+
 
 
 # mtbf, mttr
+'''
+Calibro in pollici	Calibro in millimetri	Uso tipico
+.22	5,56	Mitragliatrici leggere, fucili
+.30/.308	7,62	Mitragliatrici medie, fucili
+.36	9,14	Armi corte e alcune mitragliatrici legger
+.50	12,7	Mitragliatrici pesanti (calibro .50)
+
+
+Calibro (mm)	Calibro (pollici)	Esempi di mitragliatrici	Note
+12,7 × 99 mm	.50 BMG (0.50)	Browning M2 (USA), FN M2	Il più diffuso calibro HMG occidentale
+12,7 × 108 mm	~0.50	DShK, NSV (ex URSS)	Calibro sovietico equivalente al .50 BMG
+14,5 × 114 mm	~0.57	KPV (Russia)	Calibro più grande, elevata potenza'''
 
 # HE: Esplosivo, HEAT: High Explosive Anti Tank (carica cava), 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
 
 WEAPON_PARAM = {
 
-    'CANNONS': {'caliber': 0.3/300, # coeff / max value
-                'muzzle_speed': 0.15/1000, 
-                'fire_rate': 0.25/10,
-                'range': 0.1/3000,
-                'ammo_type': 0.2,
-                },
+    'CANNONS':          {'caliber': 0.3/300, # coeff / max value
+                        'muzzle_speed': 0.15/1000, 
+                        'fire_rate': 0.25/10,
+                        'range': 0.1/3000,
+                        'ammo_type': 0.2,
+                        },
 
-    'MISSILES': {'caliber': 0.2/300, 
-                'warhead': 0.4/250,
-                'range': 0.2/4000,
-                'ammo_type': 0.2,
-                },
+    'MISSILES':         {'caliber': 0.2/300, 
+                        'warhead': 0.4/250,
+                        'range': 0.2/4000,
+                        'ammo_type': 0.2,
+                        },
+
+    'MACHINE_GUNS':     {'caliber': 0.3/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato                        
+                        'fire_rate': 0.25/500,
+                        'range': 0.1/1000,                        
+                        },
 }
 
 AMMO_PARAM = {
@@ -92,7 +109,7 @@ def get_cannon_score(model: str) -> float:
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
         
         if param_name == 'range':
-            combat_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
         
         elif param_name == 'ammo_type':
             max = 0.0
@@ -125,7 +142,8 @@ def get_missiles_score(model: str) -> float:
         raise TypeError(f"model is not str, got {type(model).__name__}")    
 
     weapon_name = 'MISSILES'
-    weapon = GROUND_WEAPONS[weapon_name][model]
+    weapon = GROUND_WEAPONS[weapon_name].get(model)#
+   
 
     if not weapon:
         logger.warning(f"weapon {weapon_name} {model} unknow")
@@ -136,7 +154,10 @@ def get_missiles_score(model: str) -> float:
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
 
-        if param_name == 'ammo_type':
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+        
+        elif param_name == 'ammo_type':
             max = 0.0
             for ammo_type in weapon[param_name]:
                 found = AMMO_PARAM.get(ammo_type)
@@ -144,8 +165,50 @@ def get_missiles_score(model: str) -> float:
                     max = found
 
             weapon_power += max * coeff_value
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
 
-        weapon_power +=  weapon[param_name] * coeff_value
+    return weapon_power 
+
+def get_machine_gun_score(model: str) -> float:
+    """
+    returns machine_gun score
+
+    'PKT-7.62': {
+            'model': 'PKT-7.62',
+            "start_service": 1992,
+            "end_service": 3000,            
+            'caliber': 7.62, # mm
+            'fire_rate': 700, # shot per minute
+            'range': {'direct': 1200, 'indirect': None }, # m
+        
+
+    Args:
+        model (str): machine gun model 
+
+    Returns:
+        float: machine gun score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+    
+
+    weapon_name = 'MACHINE_GUNS'
+    weapon = GROUND_WEAPONS[weapon_name][model]
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+        
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
 
     return weapon_power 
 
@@ -156,25 +219,28 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
     elif not isinstance(weapon_type, str) or weapon_type not in GROUND_WEAPONS.keys():
         raise ValueError(f"weapon_type must be a str with value included in {GROUND_WEAPONS.keys()}. Got {type(weapon_type).__name__} {weapon_type}")
 
-    if not weapon_model:
+    if not weapon_model or not isinstance(weapon_model, str):
         raise TypeError(f"weapon_model must be a str")
-    elif not isinstance(weapon_model, str) or weapon_model not in GROUND_WEAPONS.values().keys():
-        raise ValueError(f"weapon_model must be a str with value included in {GROUND_WEAPONS.values().keys()}. Got {type(weapon_model).__name__} {weapon_type}")
+
     
     if weapon_type == 'CANNONS':
         return get_cannon_score(model=weapon_model)
         
-    if weapon_type == 'MISSILES':
+    elif weapon_type == 'MISSILES':
         return get_missiles_score(model=weapon_model)
 
-    if weapon_type == 'ROCKETS':
-        pass
+    elif weapon_type == 'ROCKETS':
+        return 0
 
-    if weapon_type == 'MACHINE_GUNS':
-        pass
+    elif weapon_type == 'MACHINE_GUNS':
+        return get_machine_gun_score(model=weapon_model)
 
-    if weapon_type == 'define':
-        pass
+    elif weapon_type == 'define':
+        return 0
+    
+    else:
+        logger.warning(f"weapon_type unknow, got {weapon_type}")
+        return 0
 
 
 GROUND_WEAPONS = {
@@ -183,7 +249,7 @@ GROUND_WEAPONS = {
         '2A46M': {
             'model': '2A46M',
             "start_service": 1974,
-            "end_service": int('inf'),
+            "end_service": 3000,
             'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
             'caliber': 125, # mm
             'muzzle_speed': 1750, # m/s 
@@ -194,21 +260,58 @@ GROUND_WEAPONS = {
         }, 
     },
     'MISSILES': {
-        '9K119M ': { # AT-11 Sniper
+        '9K119M': { # AT-11 Sniper
             'model': '9K119M',
-            "start_service": 1974,
-            "end_service": int('inf'),
+            "start_service": 1984,
+            "end_service": 3000,
             'guide': 'Laser', # 
             'caliber': 125, # mm
             'warhead': 4.5, # kg
-            'speed': 1300, # m/s             
-            'range': 4500, # m
+            'speed': 390, # m/s             
+            'range': {'direct': 4500, 'indirect': 0 }, # m
             'ammo_type': ['2HEAT'],
+            
+        }, 
+        '99K120': { # AT-11 Sniper
+            'model': '9K119M',
+            "start_service": 1974,
+            "end_service": 3000,
+            'guide': 'Laser', # 
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 300, # m/s             
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
             
         }, 
     }, 
     'ROCKETS': {}, 
-    'MACHINE_GUNS': {}, 
+    'MACHINE_GUNS': {
+        'PKT-7.62': {
+            'model': 'PKT-7.62',
+            "start_service": 1992,
+            "end_service": 3000,            
+            'caliber': 7.62, # mm
+            'fire_rate': 700, # shot per minute
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+        }, 
+        'Kord-12.7': {
+            'model': 'Kord-12.7',
+            "start_service": 1992,
+            "end_service": 3000,            
+            'caliber': 12.7, # mm
+            'fire_rate': 750, # shot per minute
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+        }, 
+        'NSVT-12.7': {
+            'model': 'Kord-12.7',
+            "start_service": 1992,
+            "end_service": 3000,            
+            'caliber': 12.7, # mm
+            'fire_rate': 800, # shot per minute
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+        }, 
+    }, 
     'FLAME_TRHOWERS': {},
     'RIFLE': {},
     'MINES': {},
