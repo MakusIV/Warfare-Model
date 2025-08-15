@@ -254,7 +254,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == self.category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
 
         scores = [ac._radar_eval(modes = modes) for ac in vehicles]
         return self._normalize(self._radar_eval(modes = modes), scores)
@@ -270,7 +270,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == self.category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._TVD_eval(modes = modes) for ac in vehicles]
         return self._normalize(self._TVD_eval(modes = modes), scores)
     
@@ -285,7 +285,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._speed_eval() for ac in vehicles]
         return self._normalize(self._speed_eval(), scores)
 
@@ -300,7 +300,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._reliability_eval() for ac in vehicles]
         return self._normalize(self._reliability_eval(), scores)
     
@@ -315,7 +315,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._avalaiability_eval() for ac in vehicles]
         return self._normalize(self._avalaiability_eval(), scores)
     
@@ -330,7 +330,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._maintenance_eval() for ac in vehicles]
         return 1- self._normalize(self._maintenance_eval(), scores)        
 
@@ -421,7 +421,7 @@ class Vehicle_Data:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
 
-        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category == category]
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._combat_eval() for ac in vehicles]
         return self._normalize(self._combat_eval(), scores)
     
@@ -712,7 +712,7 @@ for vehicle in Vehicle_Data._registry.values():
     VEHICLE[model] = {}
     VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
     VEHICLE[model]['Radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
-    VEHICLE[model]['Radar score air'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['air']), 'category_score': vehicle.get_normalized_radar_score(modes = ['air'], category=vehicle.category) }
+    VEHICLE[model]['Radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
     VEHICLE[model]['Speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
     VEHICLE[model]['avalaibility'] = {'global_score': vehicle.get_normalized_avalaiability_score(), 'category_score': vehicle.get_normalized_avalaiability_score(category=vehicle.category)}
     VEHICLE[model]['manutenability score (mttr)'] = {'global_score': vehicle.get_normalized_maintenance_score(), 'category_score': vehicle.get_normalized_maintenance_score(category=vehicle.category)}
