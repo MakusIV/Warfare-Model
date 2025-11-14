@@ -96,7 +96,8 @@ class TestMilitary(unittest.TestCase):
         """Test combat power calculations."""
         # Test ground combat power
         self.groundbase.assets = {"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
-        self.assertEqual(self.groundbase.combat_power(force="ground", action="Attack")['ground']['Attack'], 20)
+        combat_power = self.groundbase.combat_power(force="ground", action="Attack")
+        self.assertEqual(combat_power['ground']['Attack'], 20)
              
         # Test air combat power
         self.airbase.assets = {"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
