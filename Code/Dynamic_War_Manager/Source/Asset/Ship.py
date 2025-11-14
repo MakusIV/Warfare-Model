@@ -5,7 +5,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import NAVAL_Military_CRAFT_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.Context.Context import SEA_Military_CRAFT_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
@@ -48,7 +48,7 @@ class Ship(Mobile) :
         """     
 
         if self.block.isMilitary():
-            asset_data = NAVAL_Military_CRAFT_ASSET            
+            asset_data = SEA_Military_CRAFT_ASSET            
 
             for k, v in asset_data[self.category]:            
                     
@@ -87,11 +87,11 @@ class Ship(Mobile) :
 
             if self.block.block_class == "Military": # asset is a Military component
             
-                if asset_type in NAVAL_Military_CRAFT_ASSET.keys():
+                if asset_type in SEA_Military_CRAFT_ASSET.keys():
                     return (True, "OK")
                 
                 else:
-                    raise ValueError(f"Ship Asset category not defined. Aircraft Asset must be any value from: {NAVAL_Military_CRAFT_ASSET.keys()}")
+                    raise ValueError(f"Ship Asset category not defined. Aircraft Asset must be any value from: {SEA_Military_CRAFT_ASSET.keys()}")
                     
             
             else:  # asset isn't a Military component (civilian or logistic not again implemented)

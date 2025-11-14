@@ -89,7 +89,7 @@ class Block:
         self._events = []
         self._assets = {}
         self._region = region
-        self._state = State()
+        self._state = State("Block", self._id)
         self._resource_manager = Resource_Manager(block = self)
 
         # Validate parameters
