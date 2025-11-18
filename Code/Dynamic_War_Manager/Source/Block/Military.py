@@ -103,7 +103,7 @@ class Military(Block):
             )
     #endregion
 
-    @property
+    
     def combat_power(self, force: str, action: str) -> float:
         #action=task, military_force=force
         """
