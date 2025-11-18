@@ -6,7 +6,15 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_COMBAT_EFFICACY, AIR_DEFENSE_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET, ACTION_TASKS, Ground_Asset_Type
+from Code.Dynamic_War_Manager.Source.Context.Context import ( 
+    GROUND_COMBAT_EFFICACY, 
+    AIR_DEFENSE_ASSET, 
+    BLOCK_ASSET_CATEGORY, 
+    BLOCK_INFRASTRUCTURE_ASSET, 
+    ACTION_TASKS, 
+    GROUND_MILITARY_VEHICLE_ASSET,
+    Ground_Asset_Type
+)
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
@@ -50,7 +58,7 @@ class Vehicle(Mobile) :
         """     
 
         if self.block.isMilitary():
-            asset_data = GROUND_Military_VEHICLE_ASSET
+            asset_data = GROUND_MILITARY_VEHICLE_ASSET
             asset_data_air_defense = AIR_DEFENSE_ASSET
 
             for k, v in asset_data[self.category]: # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"                       
@@ -193,7 +201,14 @@ class Vehicle(Mobile) :
     
 
 
-    def set_combat_power(self, action: Optional[str]=None):
+    def set_combat_power(self, action: Optional[str]=None):     
+        """
+        set combat_power propriety
+
+        args:
+        action - action from GROUND_ACTION, AIR_TASK or SEA_TASK
+
+        """
         force ="ground"
         combat_power = {}
 
@@ -205,7 +220,10 @@ class Vehicle(Mobile) :
         for act in ACTION_TASKS[force]:
             
             if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
-                continue            
+                continue  
+            # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ...
+            # è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
+            # Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
             combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency * (1 + self._vehicle_scores['combat score']) 
 
         # call parent method

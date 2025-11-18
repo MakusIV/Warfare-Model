@@ -114,6 +114,9 @@ WEIGHT_FORCE_GROUND_ASSET = {
 }
 
 # Parametri per il calcolo della combat power  in Tactical_Evaluation Module
+# NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ..
+# è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
+# Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
     GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.2, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
@@ -318,7 +321,7 @@ GROUND_MILITARY_VEHICLE_ASSET = {
 }
 
 # key: asset type
-SEA_Military_CRAFT_ASSET = {
+SEA_MILITARY_CRAFT_ASSET = {
      
     'Carrier':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
     'Destroyer':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
@@ -527,11 +530,11 @@ for k1, v1 in AIR_Military_CRAFT_ASSET.items():
     
 
 
-# Generate SEA_Military_CRAFT_ASSET
+# Generate SEA_MILITARY_CRAFT_ASSET
 k = 'Naval_Military_Craft_Asset'
 BLOCK_ASSET_CATEGORY[k] = {}
 
-for k1, v1 in SEA_Military_CRAFT_ASSET.items():
+for k1, v1 in SEA_MILITARY_CRAFT_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = k1  # asset type
 
 
