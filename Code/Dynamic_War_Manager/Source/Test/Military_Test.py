@@ -51,7 +51,7 @@ class TestMilitary(unittest.TestCase):
         self.mock_vehicle.position = Point2D(0,0)        
         
         self.mock_ship = MagicMock(spec=Ship)
-        self.mock_ship.combat_power = {"naval": {"Attack": 8}}
+        self.mock_ship.combat_power = {"sea": {"Attack": 8}}
         self.mock_ship.speed = {"nominal": 30, "max": 35}
         self.mock_ship.isDestroyer = True
         self.mock_ship.artillery_range = 2000        
@@ -105,7 +105,7 @@ class TestMilitary(unittest.TestCase):
         
         # Test naval combat power
         self.navalbase.assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.navalbase.combat_power(force="naval", action="Attack")['naval']['Attack'], 16)
+        self.assertEqual(self.navalbase.combat_power(force="sea", action="Attack")['sea']['Attack'], 16)
         
     def test_artillery_in_range(self):
         """Test artillery range calculations."""        
