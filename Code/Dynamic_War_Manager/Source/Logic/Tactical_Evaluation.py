@@ -284,6 +284,9 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
     if num_ratio > 0.98 and num_ratio < 1.02 and eff_ratio > 0.98 and eff_ratio < 1.02:
         return 1 # parity
 
+    # classi di rapporto n_enemy/n_friendly utilizzate per l'assegnazione dei coefficienti utilizzati nel calcolo delle stime percentuali sulle perdite (max(min)_perc_<xx>)
+    # esempio: [4, 10, 0.2] se a ratio A/B > 4 allora ad A viene assegnato coefficiente k_A = 10 e k_B = 0.2. Con questi coefficenti sono calcolate le stime sulle percentuali 
+    # di danno subito da A e B nel confronto (min-max_perc_<xxx>). Con queste stime si calcolano e si confrontano  i danni subiti da A e B dai quali viene determinato il vincitore.
     k_ratio = ( [ 4, 10, 0.2 ], [ 3, 1.9, 0.5 ], [ 2, 1.5, 0.66 ], [ 1, 1, 1 ] )
 
     if num_ratio > 4: 
@@ -299,16 +302,19 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
 
         while i < len(k_ratio):
             
+            # num_ratio coincide con i valori tabellati
             if num_ratio == k_ratio[i][0]:
                 k_fr = k_ratio[i][1]
                 k_en = k_ratio[i][2]
                 break
             
+            # num_ratio è compreso tra due valori tabellati
             if num_ratio < k_ratio[i][0] and num_ratio > k_ratio[i+1][0]:
                 k_fr = k_ratio[i][1] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
                 k_en = k_ratio[i][2] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
                 break
 
+            # num_ratio è compreso tra il reciproco dei valoti tabellati    
             if num_ratio > ( 1 / k_ratio[i][0] ) and num_ratio < ( 1 / k_ratio[i+1][0] ):
                 k_fr = k_ratio[i][1] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][1] - k_ratio[i][1]) / (k_ratio[i+1][0] - k_ratio[i][0])
                 k_en = k_ratio[i][2] + (num_ratio - k_ratio[i][0]) * (k_ratio[i+1][2] - k_ratio[i][2]) / (k_ratio[i+1][0] - k_ratio[i][0])
@@ -316,6 +322,7 @@ def calcFightResult(n_fr: int, n_en: int, eff_fr: float, eff_en: float) -> float
                 break
             i += 1
 
+    # calcolo delle stime precentuali minime e massime del presunto danno subito
     min_perc_fr = ( 1 - eff_fr * k_fr ) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT ) # eff_fr = [0:1], k_fr = [0.2:10] --> min_perc_fr = [-9:0]
     max_perc_fr = ( eff_en * k_en ) * random.uniform( 1 - DELTA_PERC_LIMIT, 1 + DELTA_PERC_LIMIT ) #    "       "     "         "    --> max_perc_fr = [0: 10]
 
@@ -453,6 +460,9 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
 
     """
     Evaluate the criticality of two forces given the ground assets and the action performed.
+    Criticality is a float number between 0 and 100.
+        - 0 means absolute enemy victory (minimal losses).
+        - 100 means absolute friendly victory (minimal losses).
 
     Parameters
     ----------
