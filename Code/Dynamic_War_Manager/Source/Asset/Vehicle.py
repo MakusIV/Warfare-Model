@@ -36,7 +36,7 @@ class Vehicle(Mobile) :
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
             
             self._model = model #key per richiamare i datti definiti nella classe Vehicle_Data
-            # proprietry
+            # propriety
             self._speed_off_road = {"nominal": None, "max": None},
             
             self._vehicle_scores = get_vehicle_scores(model=model),
@@ -48,19 +48,27 @@ class Vehicle(Mobile) :
             # check input parameters
             
 
-    # methods
+    # methods    
     def loadAssetDataFromContext(self) -> bool:
         """Initialize some asset property loading data from Context module
             asset_type is Subcategory of BLOCK_ASSET 
+            data asset:
+            -cost:
+            -value:
+            -rcp:request c p
+            -t2r: time to repair
+            -payload%:
 
         Returns:
             bool: True if data is loaded, otherwise False
         """     
 
-        if self.block.isMilitary():
-            asset_data = GROUND_MILITARY_VEHICLE_ASSET
-            asset_data_air_defense = AIR_DEFENSE_ASSET
+        
+        if self.block.isMilitary(): # reference Block is Military
+            asset_data = GROUND_MILITARY_VEHICLE_ASSET # load data from Context
+            asset_data_air_defense = AIR_DEFENSE_ASSET # load data from Context
 
+            # load primary asset data for his category
             for k, v in asset_data[self.category]: # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"                       
                     
                 if self.asset_type == k:
@@ -71,6 +79,7 @@ class Vehicle(Mobile) :
                     self._payload_perc = v["payload%"]
                     return True              
 
+            # air defence asset data for his category
             for k, v in asset_data_air_defense[self.category]: # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"            
 
                 for k1, v1 in v:
@@ -83,7 +92,7 @@ class Vehicle(Mobile) :
                     self._payload_perc = v["payload%"]
                     return True              
         
-        elif self.block.isLogistic():
+        elif self.block.isLogistic(): # reference Block is Logistic
             asset_data = BLOCK_INFRASTRUCTURE_ASSET
 
             for k, v in asset_data[self.block.block_class][self.category]:  # block_class = Transport, category = "Road", asset_type = "Truck"            

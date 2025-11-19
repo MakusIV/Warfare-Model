@@ -382,30 +382,21 @@ class Vehicle_Data:
                     factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
                 
                 #else:
-                #    logger.warning(f"weapon_type unknow, got {weapon_type}"
-                                   
+                #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
                 score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity
 
         return score
 
-    def _protection_eval(self):
-
-        
+    def _protection_eval(self):        
         return 1
 
     def _communication_eval(self):
-
-        
         return 1
 
     def _hydraulic_eval(self):
-
-       
         return 1
     
     def _range_eval(self):
-
-        
         return 1
     
 
@@ -451,7 +442,7 @@ class Vehicle_Data:
         if not task or not isinstance(task, str):
             raise TypeError ("task must be a string")
         if task not in GROUND_ACTION:
-            raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
+            raise ValueError(f"task must be a string with values: {GROUND_ACTION!r}, got {task!r}")
         
     
         if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
