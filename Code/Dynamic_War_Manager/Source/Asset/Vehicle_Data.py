@@ -740,29 +740,31 @@ for model, data in VEHICLE.items():
 
 print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', scores = ['Speed score', 'avalaibility', 'combat score'])}" )
 '''
-# Prepara i dati per la tabella
-table_data = []
+STAMPA = False
+if STAMPA:
+    # Prepara i dati per la tabella
+    table_data = []
 
-# Itera sui dati per costruire le righe della tabella
-for model, data in VEHICLE.items():
-    for name, score in data.items():
-        for score_name, score_value in score.items():
-            table_data.append([model, name, score_name, score_value])
+    # Itera sui dati per costruire le righe della tabella
+    for model, data in VEHICLE.items():
+        for name, score in data.items():
+            for score_name, score_value in score.items():
+                table_data.append([model, name, score_name, score_value])
 
-# Crea un DataFrame con i dati
-df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
+    # Crea un DataFrame con i dati
+    df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
 
-# Crea la tabella pivot
-pivot_table = df.pivot_table(
-    index=["Name", "Score Name"],  # Indici delle righe
-    columns=["Model"],              # Colonne della tabella
-    values="Score Value",         # Valori da visualizzare
-    aggfunc="first"               # Funzione di aggregazione (non necessaria qui)
-)
+    # Crea la tabella pivot
+    pivot_table = df.pivot_table(
+        index=["Name", "Score Name"],  # Indici delle righe
+        columns=["Model"],              # Colonne della tabella
+        values="Score Value",         # Valori da visualizzare
+        aggfunc="first"               # Funzione di aggregazione (non necessaria qui)
+    )
 
-# Riformatta le colonne per ottenere un layout leggibile
-pivot_table = pivot_table.sort_index(axis=1, level=[0, 1])  # Ordina le colonne per Model e Score Name
+    # Riformatta le colonne per ottenere un layout leggibile
+    pivot_table = pivot_table.sort_index(axis=1, level=[0, 1])  # Ordina le colonne per Model e Score Name
 
 
-# Stampa la tabella pivot in formato leggibile
-print(tabulate(pivot_table, headers="keys", tablefmt="grid"))
+    # Stampa la tabella pivot in formato leggibile
+    print(tabulate(pivot_table, headers="keys", tablefmt="grid"))

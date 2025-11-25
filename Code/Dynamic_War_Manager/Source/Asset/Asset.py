@@ -22,7 +22,7 @@ from dataclasses import dataclass
     # ERROR 	40
     # WARNING 	30
     # INFO 	20
-    # DEBUG 	10
+    # DEBUG     	10
     # NOTSET 	0
 logger = Logger(module_name=__name__, class_name='Asset').logger
 
@@ -61,7 +61,11 @@ class Asset:
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
         
         # Initialize properties
-        self._name = name
+        if name is None:
+            name = "Asset_" + setName(6)
+        else:
+            self._name = name
+            
         self._id = setId(name)
         self._description = description
         self._category = category

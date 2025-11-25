@@ -9,6 +9,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import SHAPE2D
 from sympy import Point2D, Line2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 
 # LOGGING --
  
@@ -97,12 +98,12 @@ class Area:
         return False
 
     
-    def checkParam(shape: str, radius: float, center: Point2D) -> bool: # type: ignore
+    def checkParam(self, shape: SHAPE2D, radius: float, center: Point2D) -> bool: # type: ignore
         
             """Return True if type compliance of the parameters is verified"""   
         
-            if not isinstance(shape, str) or not (shape in SHAPE2D):
-                return (False, "Bad Arg: shape must be a string from SHAPE2D")
+            if not isinstance(shape, SHAPE2D):
+                return (False, "Bad Arg: shape must be a SHAPE2D")
             
             if radius and not isinstance(radius, float) or radius < 0:
                 return (False, "Bad Arg: radius must be a float >= 0")
