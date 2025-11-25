@@ -7,7 +7,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Sphere import Sphere
 from Code.Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import SHAPE2D, SHAPE3D, AREA_FOR_VOLUME
-from Dynamic_War_Manager.Source.DataType.Area import Area
+from Code.Dynamic_War_Manager.Source.DataType.Area import Area
 from sympy import Point2D, Line2D, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 from typing import Literal, List, Dict
 
@@ -17,15 +17,15 @@ logger = Logger(module_name = __name__, class_name = 'Volume')
 
 class Volume:
 
-     def __init__(self, area_base: Area, volume_shape: str, radius_at_height: dict = None): 
+     def __init__(self, area_base: Area, volume_shape: SHAPE3D, radius_at_height: dict = None): 
             
           if not isinstance(area_base, Area):
                raise TypeError("Bad Arg: only Class Area, are allowed")
             
-          if not isinstance(volume_shape, str) or not (volume_shape in SHAPE3D):
-               raise TypeError("Bad Arg: shape must be a string from SHAPE3D: {0}".format(SHAPE3D))
+          if not isinstance(volume_shape, SHAPE3D):
+               raise TypeError("Bad Arg: shape must be a SHAPE3D: {0}".format(SHAPE3D))
             
-          if not AREA_FOR_VOLUME[area_base._shape] in SHAPE3D:
+          if not volume_shape in AREA_FOR_VOLUME[area_base._shape]:
                raise TypeError("Bad Arg: {0} area shape must be associable to volume shape: {1}".format(area_base.shape, AREA_FOR_VOLUME[area_base._shape]))
             
           if volume_shape == SHAPE3D.Solid:

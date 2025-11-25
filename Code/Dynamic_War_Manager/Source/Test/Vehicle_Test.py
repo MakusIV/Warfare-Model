@@ -5,12 +5,15 @@ from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
+from Code.Dynamic_War_Manager.Source.DataType.Area import Area
 from Code.Dynamic_War_Manager.Source.Context.Context import (
+    SHAPE2D,
+    SHAPE3D,
     GROUND_COMBAT_EFFICACY,
     ACTION_TASKS,
     Ground_Asset_Type
 )
-
+from sympy import Point, Line, Point3D, Point2D, Line3D, symbols, solve, Eq, sqrt, And
 
 class TestVehicle(unittest.TestCase):
     """Test suite for Vehicle class"""
@@ -19,9 +22,9 @@ class TestVehicle(unittest.TestCase):
         """Set up test fixtures before each test method"""
         # Create a mock Block
         self.mock_block = MagicMock(spec=Block)
-        self.mock_block.isMilitary.return_value = True
-        self.mock_block.isLogistic.return_value = False
-        self.mock_block.isCivilian.return_value = False
+        self.mock_block.is_military.return_value = True
+        self.mock_block.is_logistic.return_value = False
+        self.mock_block.is_civilian.return_value = False
         self.mock_block.block_class = "Military"
         self.mock_block.get_asset.return_value = None
 
@@ -38,7 +41,8 @@ class TestVehicle(unittest.TestCase):
         self.test_payload = Payload(goods=200, energy=100, hr=20, hc=10, hs=5, hb=2)
 
         # Test volume
-        self.test_volume = Volume(x=10, y=5, z=3)
+        area = Area(shape=SHAPE2D.CIRCLE, radius=4.0, center=Point2D(0, 0))
+        self.test_volume = Volume(area_base=area, volume_shape=SHAPE3D.CYLINDER)
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
@@ -49,7 +53,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            name="Test Tank",
+            name="T-90M",
             model="M1_Abrams",
             description="Test Description",
             category=Ground_Asset_Type.TANK.value,
@@ -68,7 +72,7 @@ class TestVehicle(unittest.TestCase):
         )
 
         self.assertEqual(vehicle.name, "Test Tank")
-        self.assertEqual(vehicle._model, "M1_Abrams")
+        self.assertEqual(vehicle._model, "T-90M")
         self.assertEqual(vehicle.description, "Test Description")
         self.assertEqual(vehicle.category, Ground_Asset_Type.TANK.value)
         self.assertEqual(vehicle.asset_type, "Main_Battle_Tank")
@@ -81,7 +85,7 @@ class TestVehicle(unittest.TestCase):
         self.assertEqual(vehicle.role, "Heavy Combat")
 
         # Verify get_vehicle_scores was called
-        mock_get_vehicle_scores.assert_called_once_with(model="M1_Abrams")
+        mock_get_vehicle_scores.assert_called_once_with(model="T-90M")
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
@@ -135,8 +139,8 @@ class TestVehicle(unittest.TestCase):
 
         # Create a logistic block
         logistic_block = MagicMock(spec=Block)
-        logistic_block.isMilitary.return_value = False
-        logistic_block.isLogistic.return_value = True
+        logistic_block.is_military.return_value = False
+        logistic_block.is_logistic.return_value = True
         logistic_block.block_class = "Transport"
 
         vehicle = Vehicle(
@@ -157,8 +161,8 @@ class TestVehicle(unittest.TestCase):
 
         # Create an invalid block (neither military nor logistic)
         invalid_block = MagicMock(spec=Block)
-        invalid_block.isMilitary.return_value = False
-        invalid_block.isLogistic.return_value = False
+        invalid_block.is_military.return_value = False
+        invalid_block.is_logistic.return_value = False
         invalid_block.block_class = "Invalid"
 
         vehicle = Vehicle(
@@ -458,7 +462,7 @@ class TestVehicle(unittest.TestCase):
         vehicle = Vehicle(
             block=self.mock_block,
             category=Ground_Asset_Type.TANK.value,
-            model="M1_Abrams"
+            model="T-90M"
         )
 
         # Manually set efficiency for testing
@@ -487,7 +491,7 @@ class TestVehicle(unittest.TestCase):
         vehicle = Vehicle(
             block=self.mock_block,
             category=Ground_Asset_Type.TANK.value,
-            model="M1_Abrams"
+            model="T-90M"
         )
 
         # Manually set efficiency for testing
