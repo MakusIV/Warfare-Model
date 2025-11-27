@@ -184,7 +184,7 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
 
-        vehicle = Vehicle(block=self.mock_block)
+        vehicle = Vehicle(block=self.mock_block, volume=self.test_volume)
 
         # Mock the asset category structure
         mock_asset_category.__getitem__ = MagicMock(return_value={
@@ -206,7 +206,7 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
 
-        vehicle = Vehicle(block=self.mock_block)
+        vehicle = Vehicle(block=self.mock_block, volume=self.test_volume)
 
         # The method expects strings, so it should handle None gracefully
         result = vehicle.checkParam(category=None, asset_type=None)
@@ -221,7 +221,8 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value
+            category=Ground_Asset_Type.TANK.value,
+            volume=self.test_volume
         )
 
         self.assertTrue(vehicle.isTank)
@@ -243,7 +244,8 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.ARMORED.value
+            category=Ground_Asset_Type.ARMORED.value, 
+            volume=self.test_volume
         )
 
         self.assertTrue(vehicle.isArmor)
@@ -257,7 +259,8 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.MOTORIZED.value
+            category=Ground_Asset_Type.MOTORIZED.value,
+            volume=self.test_volume
         )
 
         self.assertTrue(vehicle.isMotorized)
@@ -271,7 +274,8 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.ARTILLERY_SEMOVENT
+            category=Ground_Asset_Type.ARTILLERY_SEMOVENT, 
+            volume=self.test_volume
         )
 
         self.assertTrue(vehicle.isArtillery_Semovent)

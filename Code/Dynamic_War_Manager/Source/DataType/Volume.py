@@ -28,7 +28,7 @@ class Volume:
           if not volume_shape in AREA_FOR_VOLUME[area_base._shape]:
                raise TypeError("Bad Arg: {0} area shape must be associable to volume shape: {1}".format(area_base.shape, AREA_FOR_VOLUME[area_base._shape]))
             
-          if volume_shape == SHAPE3D.Solid:
+          if volume_shape == SHAPE3D.SOLID:
 
                if radius_at_height == None:
                     raise TypeError("Bad Arg: radius_at_height must be defined if volume shape is {0}".format(SHAPE3D.Solid))
