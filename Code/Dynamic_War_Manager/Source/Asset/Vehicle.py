@@ -32,9 +32,9 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle').logger
 class Vehicle(Mobile) :    
 
     def __init__(self, block: Block, name: Optional[str] = None, model: Optional[str]= None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
-            
-            super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
-            
+                        
+            super().__init__(block=block, name=name, description=description, category=category, asset_type=asset_type, functionality=functionality, cost=cost, value=value, resources_assigned=acp, resources_to_self_consume=rcp, payload=payload, position=position, volume=volume, crytical=crytical, repair_time=repair_time, role=role, dcs_unit_data=dcs_unit_data) 
+
             self._model = model #key per richiamare i datti definiti nella classe Vehicle_Data
             # propriety
             self._speed_off_road = {"nominal": None, "max": None},

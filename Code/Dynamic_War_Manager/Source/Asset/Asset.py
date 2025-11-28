@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 # LOGGING
 # Logger setup
-    # CRITICAL 	50
+    # CRYTICAL 	50
     # ERROR 	40
     # WARNING 	30
     # INFO 	20
@@ -45,7 +45,7 @@ class AssetParams:
     payload: Optional[Payload] = None       # payload -payload resource
     production: Optional[Payload] = None       # payload -asset production resource
     position: Optional[Point3D] = None
-    critical: Optional[bool] = False
+    crytical: Optional[bool] = False
     repair_time: Optional[int] = 0
     role: Optional[str] = None
     health: Optional[int] = None # 0 -100
@@ -57,7 +57,7 @@ class Asset:
                  value: Optional[int] = None, resources_assigned: Optional[Payload] = None, 
                  resources_to_self_consume: Optional[Payload] = None, payload: Optional[Payload] = None, 
                  production: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None,
-                 critical: Optional[bool] = False, repair_time: Optional[int] = 0, 
+                 crytical: Optional[bool] = False, repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, dcs_unit_data: Optional[Dict[str, Any]] = None):
         
         # Initialize properties
@@ -76,7 +76,7 @@ class Asset:
         self._cost = cost
         self._value = value # represents the relative importance level compared to the other assets belonging to the block
         self._payload_perc = None
-        self._crytical = critical #rapresents critical level of importance
+        self._crytical = crytical #rapresents crytical level of importance
         self._repair_time = repair_time
         self._role = role
         self._dcs_unit_data = None
@@ -101,7 +101,7 @@ class Asset:
             block=block, name=name, description=description, category=category,
             asset_type=asset_type, functionality=functionality, cost=cost,
             value=value, resources_assigned=self._resources_assigned, resources_to_self_consume=self._resources_to_self_consume, payload=self._payload,
-            production=self._production, position=position, volume=volume, critical=critical,
+            production=self._production, position=position, volume=volume, crytical=crytical,
             repair_time=repair_time, role=role, state=self._state
         )
 
@@ -192,12 +192,12 @@ class Asset:
         self._state.health = value
 
     @property
-    def critical(self) -> Optional[bool]:
+    def crytical(self) -> Optional[bool]:
         return self._crytical
 
-    @critical.setter
-    def critical(self, value: Optional[bool]) -> None:
-        self._validate_param('critical', value, bool)
+    @crytical.setter
+    def crytical(self, value: Optional[bool]) -> None:
+        self._validate_param('crytical', value, bool)
         self._crytical = value
 
     @property
@@ -477,7 +477,7 @@ class Asset:
             'repair_time': int,
             'role': str,
             'health': int,
-            'critical': bool,
+            'crytical': bool,
             'state': State
         }
         

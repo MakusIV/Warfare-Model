@@ -56,7 +56,7 @@ class TestVehicle(unittest.TestCase):
             name="T-90M",
             model="M1_Abrams",
             description="Test Description",
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             asset_type="Main_Battle_Tank",
             functionality="Combat",
             cost=1000,
@@ -74,7 +74,7 @@ class TestVehicle(unittest.TestCase):
         self.assertEqual(vehicle.name, "Test Tank")
         self.assertEqual(vehicle._model, "T-90M")
         self.assertEqual(vehicle.description, "Test Description")
-        self.assertEqual(vehicle.category, Ground_Asset_Type.TANK.value)
+        self.assertEqual(vehicle.category, Ground_Asset_Type.TANK)
         self.assertEqual(vehicle.asset_type, "Main_Battle_Tank")
         self.assertEqual(vehicle.functionality, "Combat")
         self.assertEqual(vehicle.cost, 1000)
@@ -120,7 +120,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             asset_type="Main_Battle_Tank"
         )
 
@@ -221,7 +221,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             volume=self.test_volume
         )
 
@@ -230,7 +230,7 @@ class TestVehicle(unittest.TestCase):
         # Test with non-tank category
         vehicle_armor = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.ARMORED.value
+            category=Ground_Asset_Type.ARMORED
         )
 
         self.assertFalse(vehicle_armor.isTank)
@@ -244,7 +244,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.ARMORED.value, 
+            category=Ground_Asset_Type.ARMORED, 
             volume=self.test_volume
         )
 
@@ -259,7 +259,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.MOTORIZED.value,
+            category=Ground_Asset_Type.MOTORIZED,
             volume=self.test_volume
         )
 
@@ -318,7 +318,7 @@ class TestVehicle(unittest.TestCase):
         # Test with non-artillery
         vehicle_tank = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value
+            category=Ground_Asset_Type.TANK
         )
         self.assertFalse(vehicle_tank.isArtillery)
 
@@ -460,12 +460,12 @@ class TestVehicle(unittest.TestCase):
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY
         mock_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
         mock_combat_efficacy.__getitem__ = MagicMock(return_value={
-            Ground_Asset_Type.TANK.value: 1.0
+            Ground_Asset_Type.TANK: 1.0
         })
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             model="T-90M"
         )
 
@@ -489,12 +489,12 @@ class TestVehicle(unittest.TestCase):
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY
         mock_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
         mock_combat_efficacy.__getitem__ = MagicMock(return_value={
-            Ground_Asset_Type.TANK.value: 1.0
+            Ground_Asset_Type.TANK: 1.0
         })
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             model="T-90M"
         )
 
@@ -519,7 +519,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Asset_Type.TANK.value,
+            category=Ground_Asset_Type.TANK,
             model="M1_Abrams"
         )
 
