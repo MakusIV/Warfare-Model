@@ -218,12 +218,18 @@ class Vehicle(Mobile) :
         action - action from GROUND_ACTION, AIR_TASK or SEA_TASK
 
         """
-        force ="ground"
-        combat_power = {}
 
         if action and action not in ACTION_TASKS[force]:
             raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
+        
+        if self.category == None:
+            logger.warning(f"self.category not defined: Unable to [{force}].keys: {combat_power}")
     
+
+        force ="ground"
+        combat_power = {}
+
+        
         
 
         for act in ACTION_TASKS[force]:
@@ -233,7 +239,7 @@ class Vehicle(Mobile) :
             # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ...
             # è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
             # Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
-            combat_power[act] = GROUND_COMBAT_EFFICACY[action][self.category] * self.efficiency * (1 + self._vehicle_scores['combat score']) 
+            combat_power[act] = GROUND_COMBAT_EFFICACY[act][self.category] * self.efficiency * (1 + self._vehicle_scores['combat score']) 
 
         # call parent method
         self.combat_power = {force: {combat_power}}

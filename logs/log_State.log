@@ -1043,3 +1043,371 @@
 2025-11-28 16:28:19,248 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5605_#443452', success_ratio=1.0, health=100, state_value=Healtful)
 2025-11-28 16:28:19,256 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
 2025-11-28 16:28:19,256 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5783_#263434', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,862 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,862 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8686_#526671', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,867 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,868 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7773_#822689', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,870 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,871 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#525070', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,874 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,874 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6610_#20481', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,879 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,879 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1900_#863879', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,882 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,882 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7052_#993827', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,885 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,885 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2815_#290740', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,887 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,888 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6972_#341418', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,893 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,893 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9003_#27171', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,895 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,895 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#142_#747890', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,897 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,897 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8211_#275158', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,900 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,900 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#90_#208645', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,902 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,903 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8522_#383060', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,905 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,905 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8714_#141092', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,907 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,907 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3156_#65584', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,909 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,909 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6443_#73213', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,910 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,910 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#421_#302282', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,912 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,912 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#290_#923725', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,915 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,915 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1433_#812819', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,918 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,918 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1616_#281182', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,920 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,920 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2594_#908179', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,923 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,923 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7659_#737950', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,925 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,926 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9298_#542809', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 05:28:14,929 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 05:28:14,929 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7531_#453179', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,905 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,905 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3942_#129605', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,908 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,908 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3115_#684173', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,911 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,912 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#754141', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,914 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,914 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3584_#735364', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,918 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,918 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1436_#694490', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,921 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,921 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6509_#179214', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,923 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,923 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9688_#312095', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,925 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,925 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3899_#495690', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,926 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,927 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9029_#286735', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,928 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,928 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8371_#537934', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,930 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,930 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8603_#760865', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,932 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,932 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4_#357858', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,933 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,933 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1287_#808256', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,934 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,934 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1374_#287751', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,936 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,936 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#827_#216594', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,937 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,937 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8769_#505994', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,939 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,939 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3105_#400612', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,940 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,940 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9581_#982232', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,943 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,943 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8087_#833658', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,945 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,946 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8766_#541983', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,947 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,947 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4735_#390859', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,949 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,949 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6239_#623406', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,951 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,951 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2224_#212195', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:36,953 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:36,953 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5565_#383754', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,945 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,945 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1310_#928982', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,947 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,948 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2083_#959491', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,949 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,950 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#787806', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,951 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,951 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1677_#939758', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,954 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,954 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3099_#857569', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,957 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,957 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8390_#646313', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,959 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,959 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4802_#683048', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,960 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,960 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4798_#476798', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,962 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,962 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9950_#847835', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,964 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,964 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#848_#343612', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,966 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,966 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7972_#160511', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,968 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,968 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7235_#603695', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,970 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,970 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5104_#11195', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,972 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,972 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2183_#201975', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,973 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,974 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1151_#262088', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,975 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,975 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5442_#611025', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,977 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,977 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2439_#778129', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,978 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,978 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5231_#559961', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,980 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,980 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#932_#699311', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,982 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,982 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#452_#863144', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,983 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,983 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6078_#694311', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,985 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,985 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6595_#871977', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,987 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,987 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8631_#221066', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:41:53,988 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:41:53,989 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9763_#737492', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,772 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,773 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#144_#24080', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,775 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,776 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2628_#335952', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,778 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,778 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#150626', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,780 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,780 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3167_#506021', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,783 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,783 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4212_#431292', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,785 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,785 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3575_#199157', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,788 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,788 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1048_#561234', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,790 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,791 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2383_#674851', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,792 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,792 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8115_#178780', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,794 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,794 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5103_#579214', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,796 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,796 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#868_#585641', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,798 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,798 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7803_#765808', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,800 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,800 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1746_#948921', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,801 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,801 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6402_#602281', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,803 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,803 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6039_#440848', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,805 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,805 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5313_#113891', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,808 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,808 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#405_#40885', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,810 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,811 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5372_#821924', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,814 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,814 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9286_#827643', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,817 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,817 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3117_#530879', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,819 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,819 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2415_#568509', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,820 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,820 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1007_#474638', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,824 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,824 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3001_#731799', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:43:39,827 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:43:39,827 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2783_#673960', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:49:01,920 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:49:01,921 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1572_#563812', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:49:42,822 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:49:42,822 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4700_#439950', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:49:53,650 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:49:53,650 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#589857', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:49:53,654 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:49:53,655 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2501_#37778', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:49:55,246 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:49:55,247 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3062_#662086', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:21,290 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:21,291 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2612_#984655', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:22,144 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:22,144 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1568_#60765', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:22,150 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:22,151 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3019_#987179', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:22,821 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:22,822 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7218_#89801', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:23,243 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:23,243 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7280_#915193', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:23,247 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:23,247 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8588_#242061', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:23,252 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:23,253 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3451_#355214', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:23,257 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:23,257 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7260_#57799', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:23,261 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:23,261 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#364_#176935', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,681 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,681 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6971_#488347', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,683 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,683 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7492_#162268', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,685 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,685 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#731796', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,687 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,687 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4654_#504766', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,690 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,690 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1999_#45704', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,692 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,692 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3025_#931769', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,694 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,694 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#925_#92303', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,695 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,695 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5440_#292360', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,697 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,697 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8740_#676373', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,698 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,698 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#323_#886216', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,700 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,700 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9007_#75150', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,702 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,702 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6172_#678000', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,703 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,703 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6585_#459699', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,705 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,705 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6071_#115221', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,706 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,706 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#271_#626660', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,708 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,708 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5475_#218513', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,709 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,710 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3860_#273212', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,711 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,711 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2520_#128822', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,713 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,713 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9944_#355278', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,715 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,715 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1731_#622879', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,716 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,716 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1090_#950861', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,718 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,718 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7501_#179061', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,720 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,720 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4075_#80686', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:36,722 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:36,722 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9776_#209690', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,755 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,755 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5314_#812151', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,758 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,758 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8473_#639673', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,759 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,759 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#930539', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,761 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,761 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6896_#623473', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,764 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,764 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1596_#296249', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,766 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,766 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8173_#749688', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,768 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,768 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1931_#500448', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,770 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,770 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4568_#888133', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,772 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,772 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1141_#828808', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,773 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,773 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8934_#550615', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,774 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,775 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3557_#133033', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,776 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,776 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#972_#541032', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,778 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,778 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9486_#295644', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,779 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,779 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3101_#469894', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,780 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,780 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#102_#731119', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,782 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,782 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2363_#666378', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,784 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,784 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4275_#987690', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,786 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,786 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5308_#689957', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,787 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,787 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3134_#885930', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,789 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,789 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2397_#139341', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,790 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,790 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5842_#950580', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,792 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,792 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#895_#632876', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,794 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,794 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3965_#172943', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:50:48,796 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:50:48,796 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#6991_#269711', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:56:07,477 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:56:07,477 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9783_#232501', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,591 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,591 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2095_#931465', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,594 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,594 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#550_#137538', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,595 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,595 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='T-90M_#707006', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,597 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,597 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4869_#481286', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,600 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,600 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4491_#751305', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,602 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,602 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3892_#855658', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,604 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,604 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4525_#427654', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,606 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,607 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4650_#198992', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,608 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,608 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8516_#290678', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,610 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,610 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7603_#374547', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,611 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,611 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#2079_#547827', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,613 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,613 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7978_#722970', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,614 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,614 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4928_#60356', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,616 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,616 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#5056_#308627', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,617 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,617 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#3908_#305262', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,619 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,619 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7913_#90092', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,620 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,621 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1987_#415086', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,623 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,623 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#448_#234760', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,625 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,625 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7802_#996411', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,628 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,628 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#7455_#91037', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,630 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,631 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#4101_#467242', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,633 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,633 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8962_#740922', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,635 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,635 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#8973_#665066', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:02,638 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:02,638 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1402_#788305', success_ratio=1.0, health=100, state_value=Healtful)
+2025-12-09 08:57:29,436 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2025-12-09 08:57:29,436 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#1547_#365159', success_ratio=1.0, health=100, state_value=Healtful)
