@@ -66,7 +66,7 @@ class Mobile(Asset) :
                 else:
                     raise Exception(f"Object not istantiate not valid DCS_DATA {result} .")
             else:
-                raise Exception("Object not istantiate DCS_DATA is  None.")
+                logger.warning("Object not istantiate DCS_DATA is  None.")
 
             
             """
