@@ -5,6 +5,7 @@ Represents unit -> group -> country -> coalition (DCS)
 A Block can consist of different groups belonging to different countries of the same coalition
 """
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
+from enum import Enum
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -66,6 +67,10 @@ class Asset:
         else:
             self._name = name
             
+        # Convert enum to string if necessary (before validation)
+        if isinstance(category, Enum):
+            category = category.value
+
         self._id = setId(name)
         self._description = description
         self._category = category
