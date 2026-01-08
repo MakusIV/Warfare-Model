@@ -123,6 +123,8 @@ GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Maintain']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 4, 'Artillery_Semovent': 2, 'Artillery_Fixed': 3},    
 }
 
+
+
 STATE = {'Operational': True, 'Not_Operational': True , 'Destroyed': True, 'Critical': True, 'Damaged': True}
 
 

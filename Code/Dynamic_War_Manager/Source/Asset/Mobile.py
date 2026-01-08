@@ -44,7 +44,7 @@ class Mobile(Asset) :
             self._fire_range = fire_range
             self._range = range
             self._weapon = {}
-            combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
+            self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}
             """
             combat_power = {    "air": {"CAP": 0.0, "Intercept": 0.0, "Pinpoint_Strike": 0.0, ...},
@@ -64,9 +64,9 @@ class Mobile(Asset) :
                     self._position = Point3D(dcs_unit_data["unit_x"], dcs_unit_data["unit_y"], dcs_unit_data["unit_alt"])# att: nella gestione dello z devi tener conto se BARO o ASL
                     self._health = dcs_unit_data["unit_health"]
                 else:
-                    raise Exception(f"Object not istantiate not valid DCS_DATA {result} .")
+                    raise Exception(f"Not valid DCS_DATA {result} . DCS compatibility could be compromised.")
             else:
-                logger.warning("Object not istantiate DCS_DATA is  None.")
+                logger.warning("Not valid DCS_DATA. DCS compatibility could be compromised.")
 
             
             """
