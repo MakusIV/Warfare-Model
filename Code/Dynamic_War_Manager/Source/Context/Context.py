@@ -96,10 +96,10 @@ MILITARY_CATEGORY = {
 }
 
 class Ground_Asset_Type(Enum):
-    TANK = 'Tank',
-    ARMORED = 'Armored',
-    MOTORIZED = 'Motorized',
-    ARTILLERY_FIXED = 'Artillery_Fixed',
+    TANK = 'Tank'
+    ARMORED = 'Armored'
+    MOTORIZED = 'Motorized'
+    ARTILLERY_FIXED = 'Artillery_Fixed'
     ARTILLERY_SEMOVENT = 'Artillery_Semovent'
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
@@ -446,7 +446,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                      
                                 },
-                                 'Port': {
+                                'Port': {
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Hangar': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Oil_Tank': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},

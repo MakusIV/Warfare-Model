@@ -37,9 +37,10 @@ class Vehicle(Mobile) :
 
             self._model = model #key per richiamare i datti definiti nella classe Vehicle_Data
             # propriety
-            self._speed_off_road = {"nominal": None, "max": None},
+            self._speed_off_road = {"nominal": None, "max": None}
             
-            self._vehicle_scores = get_vehicle_scores(model=model),
+            #vehicle_scores = get_vehicle_scores(model=model)
+            self._vehicle_scores = get_vehicle_scores(model=model)
 
             for task in ACTION_TASKS['ground']:                 
                 self.set_combat_power(task)
@@ -122,10 +123,9 @@ class Vehicle(Mobile) :
         if asset_type and (isinstance(asset_type, str)):
 
             if self.block.block_class == "Military": # asset is a Military component
-
+                
                 vehicle_asset = []
-                air_defense_asset = []
-                struct_asset = []
+                air_defense_asset = []                
 
                 # Check in Ground_Military_Vehicle_Asset
                 ground_military = BLOCK_ASSET_CATEGORY.get("Ground_Military_Vehicle_Asset", {})
@@ -139,16 +139,16 @@ class Vehicle(Mobile) :
 
                 # Check in Block_Infrastructure_Asset for Military blocks
                 # Note: Military blocks may have infrastructure assets too
-                block_infra = BLOCK_ASSET_CATEGORY.get("Block_Infrastructure_Asset", {})
-                military_infra = block_infra.get("Military", {})
-                if category in military_infra.keys():
-                    struct_asset = list(military_infra[category].keys())
+                # block_infra = BLOCK_ASSET_CATEGORY.get("Block_Infrastructure_Asset", {})
+                # military_infra = block_infra.get("Military", {})
+                # if category in military_infra.keys():
+                #    struct_asset = list(military_infra[category].keys())
 
-                if not vehicle_asset and not air_defense_asset and not struct_asset:
+                if not vehicle_asset and not air_defense_asset:
                     logger.warning(f"category ({category}) not found in BLOCK_ASSET_CATEGORY")
 
-                if asset_type in vehicle_asset or asset_type in air_defense_asset or asset_type in struct_asset:
-                    return (True, "OK")
+                if asset_type in vehicle_asset or asset_type in air_defense_asset:
+                   return (True, "OK")
 
                 else:
                     # Check if asset_type exists in any category
@@ -244,8 +244,8 @@ class Vehicle(Mobile) :
         action - action from GROUND_ACTION, AIR_TASK or SEA_TASK
 
         """
-
-        force ="ground"
+        
+        force ="ground" # Vehicle is a ground asset
         combat_power = {}
 
         if action and action not in ACTION_TASKS[force]:
@@ -260,12 +260,13 @@ class Vehicle(Mobile) :
             if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
                 continue
             # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ...
-            # è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
+            # è opportuno rivederlo nell'ottica (1 + self._vehicle_scores['combat score'])di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
             # Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).
 
             # Check if category exists in GROUND_COMBAT_EFFICACY for this action
             if self.category in GROUND_COMBAT_EFFICACY.get(act, {}):
-                combat_power[act] = GROUND_COMBAT_EFFICACY[act][self.category] * self.efficiency * (1 + self._vehicle_scores['combat score'])
+                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # 
+                combat_power[act] = GROUND_COMBAT_EFFICACY[act][self.category] * self.efficiency * score_modifier
             else:
                 # Category not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)
                 # Set a default combat power or skip

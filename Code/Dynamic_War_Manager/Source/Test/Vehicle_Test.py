@@ -30,9 +30,9 @@ class TestVehicle(unittest.TestCase):
 
         # Mock vehicle data
         self.mock_vehicle_scores = {
-            'combat score': 0.75,
-            'mobility score': 0.85,
-            'defense score': 0.65
+            'combat score': {'global score': 0.75, 'category score': 0.7}, 
+            'mobility score': {'global score': 0.85, 'category score': 0.8},
+            'defense score': {'global score': 0.65, 'category score': 0.6},
         }
 
         # Basic test payloads

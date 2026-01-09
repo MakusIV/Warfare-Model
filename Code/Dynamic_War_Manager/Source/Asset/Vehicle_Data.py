@@ -693,9 +693,9 @@ Vehicle_Data(**T130_data)
 # Load scores in dict
 # specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria
 # probabilmente è meglio calcolarlo su tutte le categorie (non specificando la categoria negli argomenti) in quanto 
-# il valor rappresenterebbe il un valore significaativo per il confronto con tutte le categorie, permettendo unaa più 
+# il valore rappresenterebbe un valore significaativo per il confronto con tutte le categorie, permettendo unaa più 
 # realistica valutazione nel confronto tra forze eterogenee sul campo
-# Tuttavia la presenza nel dizzionario di veicoli di supporto può 'desensibilizzare' lo score quando si confrontano 
+# Tuttavia la presenza nel dizionario di veicoli di supporto può 'desensibilizzare' lo score quando si confrontano 
 # veicoli di pari caratteristiche.
 
 for vehicle in Vehicle_Data._registry.values():    
