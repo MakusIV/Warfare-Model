@@ -69,7 +69,7 @@ class Asset:
             
         # Convert enum to string if necessary (before validation)
         if isinstance(category, Enum):
-            category = category.value
+            category = str(category.value)
 
         self._id = setId(name)
         self._description = description
@@ -146,6 +146,8 @@ class Asset:
 
     @category.setter
     def category(self, value: Optional[str]) -> None:
+        if isinstance(value, Enum):
+            value = str(value.value)
         self._validate_param('category', value, str)
         self._category = value
 
