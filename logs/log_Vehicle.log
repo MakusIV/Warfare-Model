@@ -432,3 +432,1007 @@
 2026-01-09 11:27:35,223 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
 2026-01-09 11:27:35,225 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
 2026-01-09 11:27:35,228 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 08:27:22,963 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,963 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,963 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,963 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,967 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,967 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,967 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,967 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,969 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 08:27:22,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 08:27:22,980 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:22,986 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:22,991 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:22,994 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,010 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,017 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,019 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,021 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,024 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,034 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 08:27:23,037 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,851 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,852 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,852 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,852 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,861 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,861 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,861 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,861 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:06:20,880 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,880 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,881 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,881 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:20,887 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,892 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,899 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,902 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,932 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,936 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,942 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,954 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,958 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,961 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,969 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,975 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:20,981 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,576 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,577 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,577 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,577 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,580 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,580 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,580 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,581 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,583 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:06:27,594 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,594 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,594 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,594 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:06:27,599 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,604 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,613 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,616 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,636 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,639 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,647 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,650 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,654 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,657 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,667 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,673 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:06:27,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:07:00,360 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,360 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,360 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,360 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,364 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,364 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,364 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,364 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:07:00,366 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:09:13,570 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,570 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,570 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,570 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,577 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:09:13,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:09:13,592 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,597 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,605 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,609 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,625 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,629 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,636 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,640 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,645 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,648 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,655 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:09:13,668 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,687 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,687 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,687 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,687 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,689 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:13:05,698 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,698 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,698 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,698 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:05,703 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,708 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,716 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,719 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,741 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,745 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,758 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,762 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,765 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,769 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,778 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,784 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:05,789 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,864 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,864 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,864 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,864 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,871 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:13:59,882 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,882 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,882 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,882 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:13:59,888 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,893 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,901 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,904 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,921 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,925 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,932 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,936 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,939 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,942 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,950 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,956 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:13:59,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:15:26,373 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,373 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,373 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,373 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,377 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,377 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,377 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,377 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:15:26,379 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:21:21,487 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,487 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,487 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,487 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,491 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,491 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,491 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,491 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:21,493 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:21:58,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,040 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,040 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,040 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,040 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:21:58,042 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:45:53,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,036 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:45:53,038 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:47:22,111 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,111 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,111 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,111 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,115 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,115 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,115 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,115 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,118 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:47:22,127 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,127 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,127 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,127 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:22,132 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,136 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,145 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,149 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,166 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,169 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,176 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,180 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,184 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,187 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,196 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,201 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:47:22,207 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:47:56,948 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,948 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,948 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,948 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,955 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,955 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,955 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,955 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:47:56,958 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:50:04,712 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,712 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,712 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,713 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,716 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,716 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,716 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,716 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:50:04,719 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:51:22,539 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,539 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,539 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,539 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,542 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,542 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,542 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,542 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,544 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:51:22,548 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,551 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,551 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,551 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,551 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:51:22,554 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,554 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,554 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,554 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,556 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,556 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,556 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,556 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,558 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,560 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,560 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,560 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,560 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,562 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,564 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,566 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,566 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,567 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,568 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,570 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,572 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,572 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,572 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,572 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,574 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,576 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,578 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,579 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,581 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,581 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,581 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,581 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,583 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,583 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,583 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,583 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,585 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,585 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:51:22,585 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:51:22,585 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,587 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:51:22,589 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,592 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:51:22,595 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,398 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,398 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,398 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,398 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,400 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,400 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,400 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,400 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,401 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 09:56:51,404 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,406 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,406 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,406 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,406 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 09:56:51,408 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,408 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,408 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,408 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,410 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,410 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,410 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,410 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,413 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,414 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,414 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,414 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,414 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,419 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,425 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,426 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,426 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,426 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,426 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,428 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,428 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,428 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,428 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,429 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,432 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,432 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,432 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,432 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,437 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,437 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,437 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,437 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,438 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,438 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 09:56:51,438 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 09:56:51,439 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 09:56:51,442 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,445 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 09:56:51,448 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:23:43,845 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,845 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,845 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,845 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,849 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,849 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,849 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,849 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,852 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 10:23:43,857 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:23:43,862 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,862 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,862 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,862 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:23:43,867 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:23:43,867 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:23:43,867 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:23:43,867 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:23:43,872 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:23:43,872 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:23:43,872 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:23:43,872 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:23:43,877 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:20,527 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:20,527 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:20,527 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:20,527 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,658 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,659 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,659 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,659 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,662 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,667 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,671 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,672 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,672 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,678 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,684 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,691 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,691 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,691 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,691 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,695 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,699 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,699 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,699 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,699 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,701 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,701 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,701 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,701 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,704 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,704 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,705 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,705 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,709 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,709 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,709 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,709 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,714 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,715 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:27:28,715 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:27:28,715 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,720 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,721 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:27:28,727 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,736 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:27:28,745 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,819 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,819 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,819 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,819 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,821 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,823 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,823 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,823 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,824 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 10:55:03,827 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,829 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,829 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,829 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,829 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 10:55:03,832 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,832 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,832 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,832 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,834 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,834 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,834 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,834 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,836 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,838 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,838 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,838 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,838 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,839 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,840 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,840 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,840 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,842 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,843 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,844 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,844 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,845 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,847 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,848 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,848 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,848 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,848 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,850 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,850 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,850 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,850 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,851 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,853 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,855 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,855 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,855 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,855 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,857 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,857 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,857 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,857 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,858 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,858 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 10:55:03,858 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 10:55:03,858 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,860 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,860 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 10:55:03,862 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,864 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 10:55:03,868 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,939 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,939 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,939 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,939 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,941 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,941 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,942 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,942 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,943 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - checkParam - category (Tank) not found in BLOCK_ASSET_CATEGORY
+2026-01-13 11:02:49,948 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,950 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,950 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,951 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,951 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:02:49,953 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,953 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,953 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,953 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,956 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,956 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,956 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,956 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,958 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,960 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,960 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,960 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,960 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,962 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,963 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,966 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,967 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,968 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,968 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,969 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,971 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,973 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,974 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,974 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,974 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,974 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,978 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,979 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,981 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,981 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,981 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,981 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,985 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,985 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:02:49,985 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:02:49,985 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,987 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,987 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:02:49,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,993 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:02:49,996 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,645 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,645 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,645 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,645 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,646 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,647 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,647 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,647 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,649 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,652 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,652 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,652 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,652 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:20:00,655 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,655 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,655 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,655 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,657 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,657 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,657 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,658 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,659 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,661 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,663 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,665 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,667 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,667 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,668 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,669 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,671 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,673 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,673 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,673 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,673 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,675 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,675 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,675 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,675 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,677 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,679 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,679 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,679 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,680 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,681 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,683 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,686 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,686 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,686 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,686 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:20:00,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:20:00,688 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,690 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,691 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:20:00,694 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,697 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:20:00,700 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:32:39,498 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:32:39,498 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:32:39,498 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:32:39,498 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,401 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,401 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,402 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,402 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,404 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,404 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,404 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,404 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,407 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,409 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,409 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,409 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,409 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:33:06,413 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,413 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,413 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,413 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,416 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,418 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,420 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,421 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,422 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,423 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,425 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,428 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,429 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,429 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,431 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,433 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,434 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,435 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,436 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,436 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,436 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,436 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,438 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,439 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,440 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,442 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,442 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,442 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,442 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,444 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,444 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,444 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,444 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,446 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,446 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:33:06,446 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:33:06,446 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,448 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,448 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:33:06,451 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,451 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:33:06,451 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:33:06,457 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:33:06,461 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:33:06,461 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:33:06,461 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:33:06,462 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,969 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,969 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,970 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,970 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,972 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,974 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,976 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:37:50,980 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,980 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:50,980 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:50,980 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:50,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:50,983 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,985 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,987 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,988 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:50,988 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:50,988 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,989 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,990 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,993 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,996 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,996 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,996 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:50,998 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,000 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,002 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,002 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,002 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,002 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,003 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,003 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,003 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,003 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,005 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,007 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,009 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,009 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,009 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,009 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,012 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,012 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,012 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,012 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,013 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,013 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:37:51,013 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:37:51,013 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,015 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,016 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:37:51,020 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,020 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:37:51,020 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:37:51,027 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:37:51,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:37:51,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:37:51,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:37:51,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,728 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,728 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,728 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,728 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,730 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,730 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,730 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,730 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,732 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,734 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,734 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,734 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,734 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - WARNING - set_combat_power - self.category not defined: Unable to set [ground].keys: combat_power
+2026-01-13 11:48:57,738 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,738 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,738 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,738 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Unknown' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,740 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,740 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,740 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,740 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Road' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,742 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,744 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,744 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,744 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,744 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,746 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'AAA' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,747 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,749 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,751 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,751 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,751 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,753 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Fixed' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,754 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Artillery_Semovent' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,756 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,756 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,756 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,756 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Command_&_Control' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,757 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,757 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,757 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,757 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'EWR' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,759 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Motorized' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,760 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,760 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,760 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,760 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,761 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,763 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,763 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,763 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,763 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Big' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,765 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,765 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,765 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,765 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Med' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,766 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,766 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-01-13 11:48:57,766 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Maintain'. Setting combat_power to 0.
+2026-01-13 11:48:57,766 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'SAM_Small' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,768 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,768 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Armored' not found in GROUND_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-01-13 11:48:57,771 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,771 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:48:57,771 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:48:57,775 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,775 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:48:57,775 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:48:57,775 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,775 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:48:57,776 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:48:57,778 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.
+2026-01-13 11:48:57,779 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'defend'. Setting combat_power to 0.
+2026-01-13 11:48:57,779 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'recon'. Setting combat_power to 0.
+2026-01-13 11:48:57,779 - Code.Dynamic_War_Manager.Source.Asset.Vehicle - DEBUG - set_combat_power - Category 'Tank' not found in GROUND_COMBAT_EFFICACY for action 'attack'. Setting combat_power to 0.

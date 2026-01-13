@@ -69,26 +69,26 @@ class Vehicle(Mobile) :
         """     
 
         
-        if self.block.isMilitary(): # reference Block is Military
+        if self.block.is_military(): # reference Block is Military
             asset_data = GROUND_MILITARY_VEHICLE_ASSET # load data from Context
             asset_data_air_defense = AIR_DEFENSE_ASSET # load data from Context
 
             # load primary asset data for his category
-            for k, v in asset_data[self.category]: # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"                       
-                    
+            for k, v in asset_data[self.category].items(): # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"
+
                 if self.asset_type == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
                     self.requested_for_consume = v["rcp"]
                     self.repair_time = v["t2r"]
                     self._payload_perc = v["payload%"]
-                    return True              
+                    return True
 
             # air defence asset data for his category
-            for k, v in asset_data_air_defense[self.category]: # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"            
+            for k, v in asset_data_air_defense[self.category].items(): # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"
 
-                for k1, v1 in v:
-                    key = k + "_" + k1    
+                for k1, v1 in v.items():
+                    key = k + "_" + k1
                 if self.asset_type == key:
                     self.cost = v["cost"]
                     self.value = v["value"]
@@ -97,11 +97,11 @@ class Vehicle(Mobile) :
                     self._payload_perc = v["payload%"]
                     return True              
         
-        elif self.block.isLogistic(): # reference Block is Logistic
+        elif self.block.is_logistic(): # reference Block is Logistic
             asset_data = BLOCK_INFRASTRUCTURE_ASSET
 
-            for k, v in asset_data[self.block.block_class][self.category]:  # block_class = Transport, category = "Road", asset_type = "Truck"            
-                    
+            for k, v in asset_data[self.block.block_class][self.category].items():  # block_class = Transport, category = "Road", asset_type = "Truck"
+
                 if self.asset_type == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
@@ -274,5 +274,5 @@ class Vehicle(Mobile) :
                 combat_power[act] = 0
 
         # call parent method
-        self.combat_power = {force: combat_power}
-    
+        self.set_combat_power_value({force: combat_power})
+
