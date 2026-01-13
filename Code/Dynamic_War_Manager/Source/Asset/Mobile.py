@@ -117,29 +117,28 @@ class Mobile(Asset) :
         #return Volume
         pass
 
-    @property
-    def combat_power(self, force: Optional[str], action: Optional[str]) -> Optional[Union[Dict, float]]:
+    def combat_power(self, force: Optional[str] = None, action: Optional[str] = None) -> Optional[Union[Dict, float]]:
 
         if force is not None and not isinstance(force, str):
             raise TypeError(f"Expected str instance, got {type(force).__name__}")
-        
-        if force not in MILITARY_FORCES:
-            raise ValueError(f"force must be: {MILITARY_FORCES!r}")        
+
+        if force is not None and force not in MILITARY_FORCES:
+            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
 
         if action is not None and not isinstance(action, str):
             raise TypeError(f"Expected str instance, got {type(action).__name__}")
 
-        admit_task = [task for task in ACTION_TASKS[force]]
+        if force is not None:
+            admit_task = [task for task in ACTION_TASKS[force]]
+            if action is not None and action not in admit_task:
+                raise ValueError(f"action must be: {admit_task}")
 
-        if action not in admit_task:
-            raise ValueError(f"force must be: {admit_task}")        
-        
         if force and action:
             return self._combat_power[force][action]
-        
+
         if force:
             return self._combat_power[force]
-        
+
         if action:
             result = {}
             for force in MILITARY_FORCES:
@@ -148,21 +147,22 @@ class Mobile(Asset) :
                         result[force]={task: self._combat_power[force][action]
                                        }
             return result
-        
+
         return self._combat_power
 
         #return result
 
-    @combat_power.setter
-    def combat_power(self, combat_power: Dict):
+    def set_combat_power_value(self, combat_power: Dict):
 
         if not isinstance(combat_power, Dict):
             raise TypeError(f"Expected Dict instance, got {type(combat_power).__name__}")
         
-        if combat_power.keys() in MILITARY_FORCES:
-            for force in MILITARY_FORCES:
-                if isinstance(combat_power[force].value(), Dict):
-                    if combat_power[force].keys() not in ACTION_TASKS[force]:
+        keys = [key in MILITARY_FORCES for key in combat_power.keys()]
+
+        if any(key in MILITARY_FORCES for key in combat_power.keys()):
+            for force in combat_power.keys():
+                if isinstance(combat_power[force], Dict):
+                    if not any(key in ACTION_TASKS[force] for key in combat_power[force].keys()):
                         raise TypeError(f"Unexpected combat_power[{force}].keys: {combat_power}")
                 else:
                     raise TypeError(f"Expected Dict, got {type(combat_power[force].value()).__name__}")
@@ -234,4 +234,4 @@ class Mobile(Asset) :
         return (True, "DCS_DATA OK")
 
 
-    
+
