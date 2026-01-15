@@ -17,7 +17,7 @@ NO:
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_Military_CRAFT_ASSET, AIR_TASK 
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK 
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -27,7 +27,7 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
 
-AIRCRAFT_ROLE = AIR_Military_CRAFT_ASSET.keys()
+AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
 
 @dataclass

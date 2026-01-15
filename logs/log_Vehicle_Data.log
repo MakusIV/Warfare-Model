@@ -11209,3 +11209,795 @@
 2026-01-13 11:48:57,724 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Radar not defined.
 2026-01-13 11:48:57,724 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Radar not defined.
 2026-01-13 11:48:57,724 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,177 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,178 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,179 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,180 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,181 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,182 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:35:15,183 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,964 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,964 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,965 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,966 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,967 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,967 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,967 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,967 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,970 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:36:46,971 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,576 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,577 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,578 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:38:41,579 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,095 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,096 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,097 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 05:47:58,098 - __main__ - WARNING - _radar_eval - Radar not defined.
+2026-01-15 07:06:10,795 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,795 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,795 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,795 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,796 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,797 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,798 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _TVD_eval - TVD not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 07:06:10,799 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,029 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,030 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,031 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 08:17:03,032 - Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:06:17,655 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:06:17,656 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:06:17,656 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:06:17,656 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:06:26,587 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:06:26,587 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:06:26,587 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:06:26,587 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,789 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,790 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,791 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,792 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,793 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,794 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:11:16,795 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,946 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,947 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,948 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,949 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 09:21:36,950 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,913 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,914 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,915 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,916 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:44:01,917 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,998 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:56,999 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,000 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,001 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia T-90M (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia T-72B (category:Tank) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _TVD_eval - Russia BMP-1 (category:Armored) - TVD not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,002 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia T-90M (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia T-72B (category:Tank) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.
+2026-01-15 10:49:57,003 - __main__ - WARNING - _radar_eval - Russia BMP-1 (category:Armored) - Radar not defined.

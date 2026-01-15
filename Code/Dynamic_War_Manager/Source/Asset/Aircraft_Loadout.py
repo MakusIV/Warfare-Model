@@ -12,7 +12,7 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-AIRCRAFT_ROLE = Context.AIR_Military_CRAFT_ASSET.keys()
+AIRCRAFT_ROLE = Context.AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = Context.AIR_TASK
 
 @dataclass

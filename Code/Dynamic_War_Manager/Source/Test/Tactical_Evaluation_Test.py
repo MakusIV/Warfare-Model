@@ -73,7 +73,7 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             "Ground_Military_Vehicle_Asset": {},
             "Air_defense_Asset_Category": {},
             "Naval_Military_Craft_Asset": {},
-            "Air_Military_Craft_Asset": {}
+            "AIR_MILITARY_CRAFT_ASSET": {}
         }
         """
         """
