@@ -11,7 +11,7 @@ from enum import Enum
 
 MAX_WORLD_DISTANCE = float('inf')
 DCS_DATA_DIRECTORY = 'E:\\Sviluppo\Warfare_Model\\Code\\Persistence\\DCS_Data' # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
-DEBUG = True
+DEBUG = False
 
 PATH_TYPE = ['onroad', 'offroad', 'air', 'water']
 ROUTE_TYPE = ['ground', 'air', 'water', 'mixed']
@@ -101,6 +101,7 @@ class Ground_Asset_Type(Enum):
     MOTORIZED = 'Motorized'
     ARTILLERY_FIXED = 'Artillery_Fixed'
     ARTILLERY_SEMOVENT = 'Artillery_Semovent'
+   
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
 # dovresti integrare per artillery con il caliro: Artillery_Fix.Howitzer_Big, Artillery_Fix.Howitzer_Small, Artillery_Semovent.Self_Propelled_Big, ........
@@ -215,7 +216,7 @@ AREA_FOR_VOLUME = {
 }
 
 # key: asset type
-AIR_Military_CRAFT_ASSET = {
+AIR_MILITARY_CRAFT_ASSET = {
     'Fighter':          {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
     'Fighter_Bomber':   {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
     'Attacker':         {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -477,7 +478,7 @@ BLOCK_ASSET_CATEGORY = {
     'Ground_Military_Vehicle_Asset': {},
     'Air_Defense_Asset': {},
     'Naval_Military_Craft_Asset': {},
-    'Air_Military_Craft_Asset': {}
+    'AIR_MILITARY_CRAFT_ASSET': {}
 }
 
 
@@ -523,11 +524,11 @@ for k1, v1 in AIR_DEFENSE_ASSET.items():
             BLOCK_ASSET_CATEGORY[k][cat][k3] = k3 # asset type
 
 
-# Generate AIR_Military_CRAFT_ASSET
-k = 'Air_Military_Craft_Asset'
+# Generate AIR_MILITARY_CRAFT_ASSET
+k = 'AIR_MILITARY_CRAFT_ASSET'
 #BLOCK_ASSET_CATEGORY[k] = {}
 
-for k1, v1 in AIR_Military_CRAFT_ASSET.items():
+for k1, v1 in AIR_MILITARY_CRAFT_ASSET.items():
     BLOCK_ASSET_CATEGORY[k][k1] = k1  # asset type
     
 
@@ -549,7 +550,7 @@ if DEBUG:
         
         for k1, v1 in v.items():
 
-            if k in ['Air_Military_Craft_Asset', 'Naval_Military_Craft_Asset']:
+            if k in ['AIR_MILITARY_CRAFT_ASSET', 'Naval_Military_Craft_Asset']:
                 print(f'BLOCK_ASSET_CATEGORY[{k}][{k1}] = {BLOCK_ASSET_CATEGORY[k][k1]}') # asset type 
             
             else:

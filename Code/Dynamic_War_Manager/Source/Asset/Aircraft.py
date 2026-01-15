@@ -50,7 +50,7 @@ class Aircraft(Mobile) :
         """     
 
         if self.block.isMilitary():
-            asset_data = AIR_Military_CRAFT_ASSET            
+            asset_data = AIR_MILITARY_CRAFT_ASSET            
 
             for k, v in asset_data[self.category]:            
                     
@@ -89,7 +89,7 @@ class Aircraft(Mobile) :
 
             if self.block.block_class == "Military": # asset is a Military component
                 
-                asset_t = AIR_Military_CRAFT_ASSET.keys()
+                asset_t = AIR_MILITARY_CRAFT_ASSET.keys()
                 if asset_type in asset_t:
                     return (True, "OK")
                 

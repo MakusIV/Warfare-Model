@@ -145,13 +145,13 @@ class Vehicle(Mobile) :
                 #    struct_asset = list(military_infra[category].keys())
 
                 if not vehicle_asset and not air_defense_asset:
-                    logger.warning(f"category ({category}) not found in BLOCK_ASSET_CATEGORY")
+                    logger.warning(f"Military category ({category}) not found in BLOCK_ASSET_CATEGORY")
 
                 if asset_type in vehicle_asset or asset_type in air_defense_asset:
                    return (True, "OK")
 
                 else:
-                    # Check if asset_type exists in any category
+                    # Check if asset_type exists in any category 
                     for cat in ground_military.values():
                         if asset_type in cat.keys():
                             return (True, "OK")
@@ -176,17 +176,17 @@ class Vehicle(Mobile) :
             return (False, f"Bad Arg: Vehicle asset_type must be any string from BLOCK_ASSET_CATEGORY")
 
 
-        if category and isinstance(category, str):
+        #if category and isinstance(category, str):
 
-            vehicle_asset = list(BLOCK_ASSET_CATEGORY.get("Ground_Military_Vehicle_Asset", {}).keys())
-            air_defense_asset = list(BLOCK_ASSET_CATEGORY.get("Air_Defense_Asset", {}).keys())
-            block_infra = BLOCK_ASSET_CATEGORY.get("Block_Infrastructure_Asset", {})
-            struct_asset = list(block_infra.get(self.block.block_class, {}).keys())
+        #    vehicle_asset = list(BLOCK_ASSET_CATEGORY.get("Ground_Military_Vehicle_Asset", {}).keys())
+        #    air_defense_asset = list(BLOCK_ASSET_CATEGORY.get("Air_Defense_Asset", {}).keys())
+        #    block_infra = BLOCK_ASSET_CATEGORY.get("Block_Infrastructure_Asset", {})
+        #    struct_asset = list(block_infra.get(self.block.block_class, {}).keys())
 
-            if category in vehicle_asset or category in air_defense_asset or category in struct_asset:
-                return (True, "OK")
+        #    if category in vehicle_asset or category in air_defense_asset or category in struct_asset:
+        #        return (True, "OK")
 
-            return (False, "Bad Arg: Vehicle category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")
+        #    return (False, "Bad Arg: Vehicle category must be any string from GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY")
 
         return (True, "OK")
     

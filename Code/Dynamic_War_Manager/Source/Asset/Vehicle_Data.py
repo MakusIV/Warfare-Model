@@ -39,7 +39,7 @@ class Vehicle_Data:
         self.constructor = constructor
         self.made = made
         self.model = model # registry keys
-        self.category = category #Tank, Armor, ......
+        self.category = category #Tank, Armored, Motorized from Context BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"], BLOCK_ASSET_CATEGORY["Air_Defense_Asset"].
         self.start_service = start_service
         self.end_service = end_service
         self.cost = cost
@@ -95,7 +95,7 @@ class Vehicle_Data:
             float: radar score value
         """
         if not self.radar:
-            logger.warning("Radar not defined.")
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Radar not defined.")
             return 0.0
         
         if not modes:
@@ -125,7 +125,7 @@ class Vehicle_Data:
     def _TVD_eval(self, modes: Optional[List] = None) -> float:
         """Evaluates the radar capabilities of the vehicle based on predefined weights."""
         if not self.TVD:
-            logger.warning("TVD not defined.")
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - TVD not defined.")
             return 0.0
         
         if not modes:
@@ -341,6 +341,8 @@ class Vehicle_Data:
             float: combat score
         """
         # param = (value, weight)
+        # nota: dovresti tarare i pesi in base all'importanza che vuoi dare ai singoli sottosistemi in relazione alla tipologia del veicolo
+        # per esempio un carro armato avrà un peso maggiore per la protezione e le armi rispetto al radar mentre una sam avrà un peso maggiore per il radar e le armi rispetto la protezione
         params = {   
                     'weapon':           ( self._weapon_eval(), 10 ), 
                     'radar':            ( self._radar_eval(), 2 ), 
@@ -682,6 +684,53 @@ T130_data = {
     },
 }
 
+BMP1_data = {
+    'constructor': 'Kurganmashzavod',    
+    'model': 'BMP-1',
+    'made': 'Russia',
+    'start_service': 1966,
+    'end_service': None,
+    'category': 'Armored', # 
+    'cost': 0.06, # M$
+    'range': 500, # km
+    'roles': ['APC', 'IFV'], # APC: Armored Personnel Carrier, IFV: Infantry Fighting Vehicle
+    'engine': {
+        'model': 'UTD-20', 
+        'capabilities': {'thrust': 300, 'fuel_efficiency': 0.8, 'type': 'diesel'}, 
+        'reliability': {'mtbf': 40, 'mttr': 5} # hours
+    },
+    'weapons': {
+        'CANNONS': [('2A28 Grom', 40)], # type, number of rounds
+        'MISSILES': [('9M14 Malyutka', 4)], # type, number of missiles
+        'MACHINE_GUNS': [('PKT-7.62', 1)], #type, units
+            
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': None,
+    'protections': {
+        # HE: Esplosivo, HEAT: carica cava, 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
+        'active':       None,
+        'armor':        {  
+                            'front': (True, {'AP': 19}),
+                            'lateral': (True, {'AP': 10}),
+                            'back': (True, {'AP': 10}),
+                            'turret': (True, {'AP': 23}), 
+                        },
+        'reactive':     {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 50},
+        'reliability': {'mtbf': 90, 'mttr': 1.0},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.15},
+        'max': {'metric': 'metric', 'speed': 70, 'consume': 0.3},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.4},
+    },
+}
+
 # SETUP DICTIONARY VALUE 
 SCORES = ('combat score', 'Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
@@ -689,6 +738,7 @@ VEHICLE = {}
 Vehicle_Data(**T90_data)
 Vehicle_Data(**T72_data)
 Vehicle_Data(**T130_data)
+Vehicle_Data(**BMP1_data)
 
 # Load scores in dict
 # specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria
@@ -721,7 +771,7 @@ def get_vehicle_scores(model: str, scores: Optional[List]=None):
     if model not in VEHICLE.keys():
         raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")
     
-    if scores and scores in SCORES:
+    if scores and scores not in SCORES:
         raise ValueError(f"scores unknow. scores must be: {SCORES!r}")
     
     results = {}
@@ -740,7 +790,7 @@ for model, data in VEHICLE.items():
 
 print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', scores = ['Speed score', 'avalaibility', 'combat score'])}" )
 '''
-STAMPA = False
+STAMPA = True
 if STAMPA:
     # Prepara i dati per la tabella
     table_data = []

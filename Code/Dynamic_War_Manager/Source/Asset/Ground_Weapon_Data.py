@@ -112,7 +112,8 @@ def get_cannon_score(model: str) -> float:
             weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
         
         elif param_name == 'ammo_type':
-            max = 0.0
+            max = min(AMMO_PARAM.values())
+
             for ammo_type in weapon[param_name]:
                 found = AMMO_PARAM.get(ammo_type)
                 if found and max < found:
@@ -158,13 +159,16 @@ def get_missiles_score(model: str) -> float:
             weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
         
         elif param_name == 'ammo_type':
-            max = 0.0
+            max = min(AMMO_PARAM.values())
+
             for ammo_type in weapon[param_name]:
                 found = AMMO_PARAM.get(ammo_type)
+
                 if found and max < found:
                     max = found
 
             weapon_power += max * coeff_value
+
         else:
             weapon_power +=  weapon[param_name] * coeff_value
 
@@ -258,6 +262,17 @@ GROUND_WEAPONS = {
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
             
         }, 
+        '2A28 Grom': {
+            'model': '2A28 Grom',
+            "start_service": 1974,
+            "end_service": 3000,
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
+            'caliber': 73, # mm
+            'muzzle_speed': 665, # m/s (HEAT) 
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 1300, 'indirect': 4500 }, # m
+            'ammo_type': ['HEAT', 'HE'],            
+        }, 
     },
     'MISSILES': {
         '9K119M': { # AT-11 Sniper
@@ -269,8 +284,7 @@ GROUND_WEAPONS = {
             'warhead': 4.5, # kg
             'speed': 390, # m/s             
             'range': {'direct': 4500, 'indirect': 0 }, # m
-            'ammo_type': ['2HEAT'],
-            
+            'ammo_type': ['2HEAT'],            
         }, 
         '99K120': { # AT-11 Sniper
             'model': '9K119M',
@@ -281,8 +295,18 @@ GROUND_WEAPONS = {
             'warhead': 4.5, # kg
             'speed': 300, # m/s             
             'range': {'direct': 4000, 'indirect': 0 }, # m
-            'ammo_type': ['HEAT'],
-            
+            'ammo_type': ['HEAT'],            
+        }, 
+        '9M14 Malyutka': { # AT-3 Sagger
+            'model': '9M14 Malyutka',
+            "start_service": 1965,
+            "end_service": None,
+            'guide': 'SACLOS', # SACLOS: Semi-Automatic Command to Line Of Sight
+            'caliber': 125, # mm
+            'warhead': 3, # kg
+            'speed': 115, # m/s             
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],            
         }, 
     }, 
     'ROCKETS': {}, 
