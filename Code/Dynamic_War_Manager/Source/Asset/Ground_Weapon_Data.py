@@ -35,7 +35,7 @@ WEAPON_PARAM = {
                         'muzzle_speed': 0.15/1000, 
                         'fire_rate': 0.25/10,
                         'range': 0.1/3000,
-                        'ammo_type': 0.2,
+                        'ammo_type': 0.2, # coefficente utilizzato per valuatare il peso del munizionamento nel calcolo del punteggio dell'arma
                         },
 
     'MISSILES':         {'caliber': 0.2/300, 
@@ -44,9 +44,15 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2,
                         },
 
-    'MACHINE_GUNS':     {'caliber': 0.3/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato                        
-                        'fire_rate': 0.25/500,
-                        'range': 0.1/1000,                        
+    'ROCKETS':         {'caliber': 0.2/240, 
+                        'warhead': 0.4/150,
+                        'range': 0.2/300,
+                        'ammo_type': 0.2,
+                        },
+
+    'MACHINE_GUNS':     {'caliber': 0.4/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato                        
+                        'fire_rate': 0.4/500,
+                        'range': 0.2/1000,                        
                         },
 }
 
