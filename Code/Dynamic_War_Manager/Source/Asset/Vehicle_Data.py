@@ -28,7 +28,8 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle_Data').logger
 
 VEHICLE_TASK = GROUND_ACTION
 MODES = ACTION_TASKS.keys()
-CATEGORY = BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys()
+CATEGORY = set(BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys())
+CATEGORY.update(BLOCK_ASSET_CATEGORY['Air_Defense_Asset'].keys())
 
 @dataclass
 class Vehicle_Data:
@@ -129,10 +130,9 @@ class Vehicle_Data:
             return 0.0
         
         if not modes:
-            modes = ['air', 'ground', 'sea']
-        
-        elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
-            raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
+            modes = MODES #['air', 'ground', 'sea']
+        elif not isinstance(modes, List) or not all ( m in MODES for m in modes ):
+            raise TypeError(f"modes must be a List of string with value:  {MODES!r}, got {modes!r}.")
         
         weights = {
             'tracking_range': 0.2,
@@ -229,18 +229,173 @@ class Vehicle_Data:
             metric = data.get('metric')
 
             if metric not in ['metric', 'imperial']:
-                raise ValueError(f"Metric must be 'metric' or 'imperial', got {metric!r}.")
+                raise ValueError(f"metric must be 'metric' or 'imperial', got {metric!r}.")
             
             speed = data.get('speed', 0)
 
             if metric == 'imperial':
                 speed = convert_mph_to_kmh(speed)
-
-            # Considera anche l'altitudine e il consumo
+        
             score += speed * weight # - data.get('consume', 0) * 0.001
             
+        return score / sum(weights.values())
+
+    def _weapon_eval(self):
+        """Returns the score of all installed weapons
+
+        Returns:
+            float: weapons combat score
+        """
+              
+        '''
+        'weapons': {
+            'cannons': [('2A46M', 42)],
+            'missiles': [('9K119M', 6)],
+            'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+         '''
+        score = 0.0
+
+        for weapon_type, weapon in self.weapons.items():
+
+            for weapon_item in weapon:
+                factor_ammo_quantity = 1
+
+                if weapon_type == 'CANNONS':
+                    factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
+
+                elif weapon_type == 'MISSILES':
+                    factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
+                
+                elif weapon_type == 'ROCKETS':
+                    factor_ammo_quantity += weapon_item[1] / 8 # 8 reference for rockets (16 rockets -> factor_ammo_quantity = 2) 
+                
+                #else:
+                #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
+                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * (1 + factor_ammo_quantity * 0.1) # incremento del 10% del punteggio dell'arma in base alla quantità di munizionamento disponibile
+
         return score
 
+    def _protection_eval(self):
+        """Evaluates the protection capabilities of the vehicle.
+
+        Considers:
+        - Base armor thickness by zone (front, lateral, back, turret)
+        - Active protection systems (countermeasures)
+        - Reactive armor (ERA)
+
+        Returns:
+            float: protection score
+        """
+        if not self.protections:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Protections not defined.")
+            return 0.0
+
+        # Pesi per le zone di corazzatura (front e turret più importanti)
+        zone_weights = {
+            'front': 0.35,
+            'turret': 0.30,
+            'lateral': 0.20,
+            'back': 0.15
+        }
+
+        # Pesi per i tipi di munizioni (APFSDS più pericoloso, quindi protezione più importante)
+        ammo_weights = {
+            'APFSDS': 0.40,
+            'HEAT': 0.30,
+            '2HEAT': 0.35,
+            'AP': 0.15,
+            'HE': 0.10
+        }
+
+        # Valore di riferimento per normalizzazione (mm equivalenti)
+        reference_value = 100.0
+
+        score = 0.0
+
+        # 1. Valutazione corazzatura base
+        armor = self.protections.get('armor')
+        if armor:
+            for zone, zone_weight in zone_weights.items():
+                zone_data = armor.get(zone)
+                if zone_data and zone_data[0]:  # (True, {...})
+                    armor_values = zone_data[1]
+                    # Calcola score pesato per tipo di munizione
+                    zone_score = 0.0
+                    total_ammo_weight = 0.0
+                    for ammo_type, thickness in armor_values.items():
+                        ammo_weight = ammo_weights.get(ammo_type, min(ammo_weights.values()))
+                        zone_score += (thickness / reference_value) * ammo_weight
+                        total_ammo_weight += ammo_weight
+
+                    if total_ammo_weight > 0:
+                        zone_score = zone_score / total_ammo_weight  # Normalizza per peso totale
+
+                    score += zone_score * zone_weight
+
+        # 2. Valutazione corazzatura reattiva (ERA)
+        reactive = self.protections.get('reactive')
+        if reactive and reactive.get('increment_thickness'):
+            era_bonus = 0.0
+            for zone, zone_weight in zone_weights.items():
+                zone_data = reactive['increment_thickness'].get(zone)
+                if zone_data and zone_data[0]:
+                    era_values = zone_data[1]
+                    zone_era = 0.0
+                    total_ammo_weight = 0.0
+                    for ammo_type, thickness in era_values.items():
+                        ammo_weight = ammo_weights.get(ammo_type, 0.1)
+                        zone_era += (thickness / reference_value) * ammo_weight
+                        total_ammo_weight += ammo_weight
+
+                    if total_ammo_weight > 0:
+                        zone_era = zone_era / total_ammo_weight
+
+                    era_bonus += zone_era * zone_weight
+
+            score += era_bonus
+
+        # 3. Valutazione protezione attiva (APS)
+        active = self.protections.get('active')
+        if active:
+            countermeasures = active.get('threath_countermeasure', [])
+            # Bonus per ogni tipo di contromisura (max 4 tipi comuni)
+            aps_bonus = len(countermeasures) * 0.5  # 0.5 punti per tipo
+            score += aps_bonus
+
+        return score
+
+    # da implementare
+    def _communication_eval(self):
+        return 1
+
+    def _hydraulic_eval(self):
+        return 1
+    
+    def _range_eval(self):
+        return 1
+    
+    def _combat_eval(self):
+        """Returns the combat score calculated by considering the individual scores of the vehicle's subsystems
+
+        Returns:
+            float: combat score
+        """
+        # param = (value, weight)
+        # nota: dovresti tarare i pesi in base all'importanza che vuoi dare ai singoli sottosistemi in relazione alla tipologia del veicolo
+        # per esempio un carro armato avrà un peso maggiore per la protezione e le armi rispetto al radar mentre una sam avrà un peso maggiore per il radar e le armi rispetto la protezione
+        params = {   
+                    'weapon':           ( self._weapon_eval(), 10 ), 
+                    'radar':            ( self._radar_eval(), 2 ), 
+                    'TVD':              ( self._TVD_eval(), 3 ), 
+                    'protection':       ( self._protection_eval(), 9 ), 
+                    'communication':    ( self._communication_eval(), 3 ), 
+                    'speed_data':       ( self._speed_eval(), 7 ), 
+                    'hydraulic':        ( self._hydraulic_eval(), 4 ), 
+                    'range':            ( self._range_eval(), 1 )
+                }
+        
+        tot_weights = sum( data[1] for param, data in params.items() )
+        return sum( data[0] * data[1] for param, data in params.items() ) / tot_weights
 
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[Dict] = None, category: Optional[str] = None):
@@ -334,73 +489,20 @@ class Vehicle_Data:
         scores = [ac._maintenance_eval() for ac in vehicles]
         return 1- self._normalize(self._maintenance_eval(), scores)        
 
-    def _combat_eval(self):
-        """Returns the combat score calculated by considering the individual scores of the vehicle's subsystems
+    def get_normalized_protection_score(self, category: Optional[str] = None):
+        """returns protection score normalized from 0 (min score) 1 (max score)
 
         Returns:
-            float: combat score
+            float: normalized protection score
         """
-        # param = (value, weight)
-        # nota: dovresti tarare i pesi in base all'importanza che vuoi dare ai singoli sottosistemi in relazione alla tipologia del veicolo
-        # per esempio un carro armato avrà un peso maggiore per la protezione e le armi rispetto al radar mentre una sam avrà un peso maggiore per il radar e le armi rispetto la protezione
-        params = {   
-                    'weapon':           ( self._weapon_eval(), 10 ), 
-                    'radar':            ( self._radar_eval(), 2 ), 
-                    'TVD':              ( self._TVD_eval(), 3 ), 
-                    'protection':       ( self._protection_eval(), 9 ), 
-                    'communication':    ( self._communication_eval(), 3 ), 
-                    'speed_data':       ( self._speed_eval(), 7 ), 
-                    'hydraulic':        ( self._hydraulic_eval(), 4 ), 
-                    'range':            ( self._range_eval(), 1 )
-                }
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-        tot_weights = sum( data[1] for param, data in params.items() )
-        return sum( data[0] * data[1] for param, data in params.items() ) / tot_weights
-
-    def _weapon_eval(self):
-        """Returns the score of all installed weapons
-
-        Returns:
-            float: weapons combat score
-        """
-              
-        '''
-        'weapons': {
-            'cannons': [('2A46M', 42)],
-            'missiles': [('9K119M', 6)],
-            'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
-         '''
-        score = 0.0
-
-        for weapon_type, weapon in self.weapons.items():
-
-            for weapon_item in weapon:
-                factor_ammo_quantity = 1
-
-                if weapon_type == 'CANNONS':
-                    factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
-
-                elif weapon_type == 'MISSILES':
-                    factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
-                
-                #else:
-                #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
-                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity
-
-        return score
-
-    def _protection_eval(self):        
-        return 1
-
-    def _communication_eval(self):
-        return 1
-
-    def _hydraulic_eval(self):
-        return 1
-    
-    def _range_eval(self):
-        return 1
-    
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+        scores = [ac._protection_eval() for ac in vehicles]
+        return self._normalize(self._protection_eval(), scores)
 
     def get_normalized_combat_score(self, category: Optional[str] = None):
         """returns combat score normalized from 0 (min score) 1 (max score)
@@ -413,7 +515,7 @@ class Vehicle_Data:
         elif not isinstance(category, str) or not category in CATEGORY:
             raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
         
-
+        
         vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._combat_eval() for ac in vehicles]
         return self._normalize(self._combat_eval(), scores)
@@ -488,7 +590,7 @@ T90_data = {
     'category': 'Tank', # Main Battle Tank
     'cost': 4, # M$
     'range': 550, # km
-    'roles': ['', 'Intercept', 'SEAD'],
+    'roles': ['Tank'],
     'engine': {
         'model': 'Multifuel 12 Cylinders', 
         'capabilities': {'thrust': 840, 'fuel_efficiency': 0.8, 'type': 'multifuel'}, 
@@ -550,7 +652,7 @@ T72_data = {
     'category': 'Tank', # Main Battle Tank
     'cost': 2.5, # M$
     'range': 400, # km
-    'roles': ['', 'Intercept', 'SEAD'],
+    'roles': ['Tank'],
     'engine': {
         'model': 'Multifuel 12 Cylinders', 
         'capabilities': {'thrust': 780, 'fuel_efficiency': 0.6, 'type': 'multifuel'}, 
@@ -612,7 +714,7 @@ T130_data = {
     'category': 'Tank', # Main Battle Tank
     'cost': 4, # M$
     'range': 1200, # km
-    'roles': ['', 'Intercept', 'SEAD'],
+    'roles': ['Tank'],
     'engine': {
         'model': 'Multifuel 12 Cylinders', 
         'capabilities': {'thrust': 840, 'fuel_efficiency': 0.8, 'type': 'multifuel'}, 
@@ -703,7 +805,7 @@ BMP1_data = {
         'CANNONS': [('2A28 Grom', 40)], # type, number of rounds
         'MISSILES': [('9M14 Malyutka', 4)], # type, number of missiles
         'MACHINE_GUNS': [('PKT-7.62', 1)], #type, units
-            
+            #['air', 'ground', 'sea']
     },
     'radar': None,
     'TVD': None,
@@ -747,6 +849,9 @@ Vehicle_Data(**BMP1_data)
 # realistica valutazione nel confronto tra forze eterogenee sul campo
 # Tuttavia la presenza nel dizionario di veicoli di supporto può 'desensibilizzare' lo score quando si confrontano 
 # veicoli di pari caratteristiche.
+# Il calcolo nelle funzioni normalizzate è il valore restituito dalle funzioni eval (punteggio assoluto) normalizzato in base ai valori massimi e minimi della categoria di appartenenza del veicolo in oggetto
+# quindi il valore restituito è sempre relativo alla categoria di appartenenza del veicolo e non confrontabile con veicoli di altre categorie
+# Pertanto quando viene calcolato lo score 
 
 for vehicle in Vehicle_Data._registry.values():    
     model = vehicle.model
