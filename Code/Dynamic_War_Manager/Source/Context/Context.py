@@ -114,14 +114,18 @@ WEIGHT_FORCE_GROUND_ASSET = {
     Ground_Asset_Type.ARTILLERY_SEMOVENT: 7,
 }
 
-# Parametri per il calcolo della combat power  in Tactical_Evaluation Module
+# Parametri per il calcolo della combat power degli asset da combattimento. 
+# Sono considerati  pesi di bilanciamento per i calcoli della combat_power utilizzati per confrontare classi di veicoli diversi in una determinata azione
+# Utilizzata in Tactical_Evaluation Modul e nel calcolo della combat_power Vehicle
 # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ..
-# è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
-# Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
+# Fatto (?): è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
+# Fatto(?): Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
+# Max value = 5, min value = 1
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
-    GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.2, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
+    GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
     GROUND_ACTION['Maintain']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 4, 'Artillery_Semovent': 2, 'Artillery_Fixed': 3},    
+    GROUND_ACTION['Retrait']: {'Tank': 5, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 3, 'Artillery_Fixed': 1},    
 }
 
 

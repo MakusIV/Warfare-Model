@@ -834,7 +834,7 @@ BMP1_data = {
 }
 
 # SETUP DICTIONARY VALUE 
-SCORES = ('combat score', 'Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
+SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
 
 Vehicle_Data(**T90_data)
@@ -857,9 +857,9 @@ for vehicle in Vehicle_Data._registry.values():
     model = vehicle.model
     VEHICLE[model] = {}
     VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
-    VEHICLE[model]['Radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
-    VEHICLE[model]['Radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
-    VEHICLE[model]['Speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
+    VEHICLE[model]['radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
+    VEHICLE[model]['radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
+    VEHICLE[model]['speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
     VEHICLE[model]['avalaibility'] = {'global_score': vehicle.get_normalized_avalaiability_score(), 'category_score': vehicle.get_normalized_avalaiability_score(category=vehicle.category)}
     VEHICLE[model]['manutenability score (mttr)'] = {'global_score': vehicle.get_normalized_maintenance_score(), 'category_score': vehicle.get_normalized_maintenance_score(category=vehicle.category)}
     VEHICLE[model]['reliability score (mtbf)'] = {'global_score': vehicle.get_normalized_reliability_score(), 'category_score': vehicle.get_normalized_reliability_score(category=vehicle.category)}
@@ -869,15 +869,64 @@ for vehicle in Vehicle_Data._registry.values():
 
 # STATIC METHODS (API)
 def get_vehicle_data(model: str) -> Dict:
-    return VEHICLE
+    """ Returns all data of a specific vehicle.
+    
+        Restituisce tutti i dati di un veicolo specifico.
 
-def get_vehicle_scores(model: str, scores: Optional[List]=None):
+    Args:
+        model (str): modello del veicolo
+
+    Raises:
+        ValueError: model unknow
+
+    Returns:
+        Dict: Data vehicle
+    """
 
     if model not in VEHICLE.keys():
-        raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")
+        raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")  
     
+    return VEHICLE[model]
+
+def get_vehicle_scores(model: str, scores: Optional[List]=SCORES) -> Dict:
+    """ Returns the overall and category scores for a specific vehicle.
+        Overall scores are calculated considering all vehicles in the database,
+        while category scores are calculated considering only vehicles of the same category as the specified vehicle.
+        The available scores are:
+        - Combat Score: Represents the vehicle's overall combat score. This score takes into account various factors such as armament, protection, mobility, and communications systems.
+        - Radar Score: Indicates the effectiveness of the vehicle's radar system. A higher score suggests a better ability to detect and track targets.
+        - Speed ​​Score: Evaluates the vehicle's speed and mobility. A higher score indicates a greater ability to move around the battlefield.
+        - Availability: Measures the vehicle's operational readiness, based on factors such as reliability and ease of maintenance.
+        - Maintainability Score (MTTR): Evaluates the vehicle's ease of maintenance, with a higher score indicating shorter repair times.
+        - reliability score (MTBF): represents the reliability of the vehicle, with a higher score indicating longer intervals between failures.
+    
+        Restituisce i punteggi globali e di categoria di un veicolo specifico.
+        I punteggi globali sono calcolati considerando tutti i veicoli presenti nel database,
+        mentre i punteggi di categoria sono calcolati considerando solo i veicoli della stessa categoria del veicolo specificato.
+        I punteggi disponibili sono:
+        - combat score: rappresenta il punteggio complessivo di combattimento del veicolo. Questo punteggio tiene conto di vari fattori come armamento, protezione, mobilità e sistemi di comunicazione.
+        - Radar score: indica l'efficacia del sistema radar del veicolo. Un punteggio più alto suggerisce una migliore capacità di rilevamento e tracciamento dei bersagli.
+        - Speed score: valuta la velocità e la mobilità del veicolo. Un punteggio più alto indica una maggiore capacità di movimento sul campo di battaglia.
+        - avalaibility: misura la disponibilità operativa del veicolo, basata su fattori come affidabilità e facilità di manutenzione.
+        - manutenability score (mttr): valuta la facilità di manutenzione del veicolo, con un punteggio più alto che indica tempi di riparazione più brevi.
+        - reliability score (mtbf): rappresenta l'affidabilità del veicolo, con un punteggio più alto che indica intervalli più lunghi tra i guasti.
+
+    Args:
+        model (str): modello del veicolo
+        scores (Optional[List], optional): score richiesti. Defaults all scores.
+
+    Raises:
+        ValueError: model unknow
+        ValueError: scores unknow
+    Returns:
+        Dict: Scores
+    """
+    if model not in VEHICLE.keys():
+        raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")    
+
     if scores and scores not in SCORES:
         raise ValueError(f"scores unknow. scores must be: {SCORES!r}")
+    
     
     results = {}
     for score in scores:

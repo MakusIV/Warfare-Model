@@ -31,8 +31,9 @@ class TestVehicle(unittest.TestCase):
         # Mock vehicle data
         self.mock_vehicle_scores = {
             'combat score': {'global score': 0.75, 'category score': 0.7}, 
-            'mobility score': {'global score': 0.85, 'category score': 0.8},
-            'defense score': {'global score': 0.65, 'category score': 0.6},
+            'avalaibility score': {'global score': 0.85, 'category score': 0.8},
+            'manutenability score': {'global score': 0.65, 'category score': 0.6},
+            'speed score': {'global score': 0.9, 'category score': 0.77},
         }
 
         # Basic test payloads
@@ -480,23 +481,25 @@ class TestVehicle(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.GROUND_COMBAT_EFFICACY')
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Asset.efficiency') # NUOVO
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.GROUND_COMBAT_EFFICACY')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.MILITARY_FORCES')
-    def test_set_combat_power_no_action(self, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_combat_efficacy, mock_get_vehicle_data, mock_get_vehicle_scores):
+    def test_set_combat_power_no_action(self, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_efficiency, mock_get_vehicle_data, mock_get_vehicle_scores):
         """Test set_combat_power without specific action"""
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
+        mock_efficiency.return_value = 0.8 # NUOVO
 
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY for Vehicle
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
-        mock_combat_efficacy.__getitem__ = MagicMock(return_value={
-            Ground_Asset_Type.TANK.value: 1.0
-        })
+        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        #mock_combat_efficacy.__getitem__ = MagicMock(return_value={
+        #    Ground_Asset_Type.TANK.value: 1.0
+        #}) # mock_combat_efficacy, 
 
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
+        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_mobile_forces.__contains__ = MagicMock(return_value=True)
 
         vehicle = Vehicle(
@@ -506,7 +509,7 @@ class TestVehicle(unittest.TestCase):
         )
 
         # Manually set efficiency for testing
-        vehicle._efficiency = 0.9
+        #vehicle._efficiency = 0.9
 
         vehicle.set_combat_power()
 
@@ -527,13 +530,13 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_data.return_value = {}
 
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY for Vehicle
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
+        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_combat_efficacy.__getitem__ = MagicMock(return_value={
             Ground_Asset_Type.TANK.value: 1.0
         })
 
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
+        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_mobile_forces.__contains__ = MagicMock(return_value=True)
 
         vehicle = Vehicle(
@@ -545,10 +548,10 @@ class TestVehicle(unittest.TestCase):
         # Manually set efficiency for testing
         vehicle._efficiency = 0.9
 
-        vehicle.set_combat_power(action="attack")
+        vehicle.set_combat_power(action=["Attack"])
 
         # Verify combat_power was set - combat_power is a method that takes force and action arguments
-        combat_power_result = vehicle.combat_power(force='ground', action='attack')
+        combat_power_result = vehicle.combat_power(force='ground', action='Attack')
         self.assertIsNotNone(combat_power_result)
         self.assertIsInstance(combat_power_result, (float, int))
 
@@ -563,10 +566,10 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_data.return_value = {}
 
         # Mock ACTION_TASKS to return a specific list
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
+        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
 
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["attack", "defend", "recon"])
+        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_mobile_forces.__contains__ = MagicMock(return_value=True)
 
         vehicle = Vehicle(
@@ -576,7 +579,7 @@ class TestVehicle(unittest.TestCase):
         )
 
         with self.assertRaises(TypeError):
-            vehicle.set_combat_power(action="invalid_action")
+            vehicle.set_combat_power(action=["Attack", "invalid_action"])
 
 
 if __name__ == '__main__':

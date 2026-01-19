@@ -8,6 +8,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Code.Dynamic_War_Manager.Source.Context.Context import ( 
     GROUND_COMBAT_EFFICACY, 
+    GROUND_ACTION,
     AIR_DEFENSE_ASSET, 
     BLOCK_ASSET_CATEGORY, 
     BLOCK_INFRASTRUCTURE_ASSET, 
@@ -42,8 +43,8 @@ class Vehicle(Mobile) :
             #vehicle_scores = get_vehicle_scores(model=model)
             self._vehicle_scores = get_vehicle_scores(model=model)
 
-            for task in ACTION_TASKS['ground']:                 
-                self.set_combat_power(task)
+            #for task in ACTION_TASKS['ground']:                 
+            self.set_combat_power(ACTION_TASKS['ground'])
 
 
             # dcs_data for vehicle
@@ -236,37 +237,50 @@ class Vehicle(Mobile) :
     
 
 
-    def set_combat_power(self, action: Optional[str]=None):
+    def set_combat_power(self, actions: Optional[Dict]=ACTION_TASKS["ground"]):
         """
-        set combat_power propriety
+        Calcola ed imposta il valore di combat_power per lo specifico  veicolo in funzione dell'azione specificata.
+
 
         args:
-        action - action from GROUND_ACTION, AIR_TASK or SEA_TASK
+        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retrait'
 
         """
         
-        force ="ground" # Vehicle is a ground asset
+        #force ="ground" # Vehicle is a ground asset
         combat_power = {}
 
-        if action and action not in ACTION_TASKS[force]:
-            raise TypeError(f"Unexpected action: {action} combat_power[{force}].keys: combat_power")
-
+        if actions and any(action not in ACTION_TASKS["ground"] for action in actions):
+            raise TypeError(f"Unexpected action in actions: {actions.values()}. Expected actions are: {ACTION_TASKS['ground'].values()}")
+                
         if self.category == None:
-            logger.warning(f"self.category not defined: Unable to set [{force}].keys: combat_power")
+            logger.warning("self.category not defined: Unable to set combat_power")
             return
 
-        for act in ACTION_TASKS[force]:
 
-            if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
-                continue
+
+        for act in actions:
+
+            #if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
+            #    continue
+
             # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ...
-            # è opportuno rivederlo nell'ottica (1 + self._vehicle_scores['combat score'])di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
+            # è opportuno rivederlo nell'ottica (1 + self._vehicle_scores['combat score'])di una valutazione più accurata: 
+            #    attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
             # Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).
 
             # Check if category exists in GROUND_COMBAT_EFFICACY for this action
-            if self.category in GROUND_COMBAT_EFFICACY.get(act, {}):
-                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # 
-                combat_power[act] = GROUND_COMBAT_EFFICACY[act][self.category] * self.efficiency * score_modifier
+            # Calcolo della combat_power in relazione:
+            # - all'azione da eseguire, 
+            # - alla categoria del veicolo, 
+            # - al suo punteggio di combattimento, 
+            # - alla sua efficienza 
+            # - applicando anche i pesi di confronto tra classi di veicoli, riportati mparametri della tabella GROUND_COMBAT_EFFICACY definita nel Context
+            categories_in_action = GROUND_COMBAT_EFFICACY.get(act, {}).keys()
+            if self.category in categories_in_action:
+                relative_weight = 1 + GROUND_COMBAT_EFFICACY[act][self.category]  * 0.3 / 5  # weight of vehicle class effectiveness respect to other class vehicles (30% of specific vehicle weight)
+                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # score modifier based on vehicle combat score
+                combat_power[act] = relative_weight * score_modifier * self.efficiency
             else:
                 # Category not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)
                 # Set a default combat power or skip
@@ -274,5 +288,5 @@ class Vehicle(Mobile) :
                 combat_power[act] = 0
 
         # call parent method
-        self.set_combat_power_value({force: combat_power})
+        self.set_combat_power_value({"ground": combat_power})
 
