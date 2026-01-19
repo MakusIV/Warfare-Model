@@ -153,6 +153,18 @@ class Mobile(Asset) :
         #return result
 
     def set_combat_power_value(self, combat_power: Dict):
+        """Imposta il valore la combat_power del Mobile 
+           E' il metodo utilizzato dalle classi derivate (Vehicle, Ship, Aircraft, ecc.) per settare il valore della combat_power dopo averlo calcolato specificatamente per lo specifico tipo di Mobile.
+
+        Args:
+            combat_power (Dict): _description_
+
+        Raises:
+            TypeError: _description_
+            TypeError: _description_
+            TypeError: _description_
+            TypeError: _description_
+        """
 
         if not isinstance(combat_power, Dict):
             raise TypeError(f"Expected Dict instance, got {type(combat_power).__name__}")
