@@ -251,7 +251,7 @@ class Vehicle(Mobile) :
         combat_power = {}
 
         if actions and any(action not in ACTION_TASKS["ground"] for action in actions):
-            raise TypeError(f"Unexpected action in actions: {actions.values()}. Expected actions are: {ACTION_TASKS['ground'].values()}")
+            raise TypeError(f"Unexpected action in actions: {actions}. Expected actions are: {ACTION_TASKS['ground']}")
                 
         if self.category == None:
             logger.warning("self.category not defined: Unable to set combat_power")
