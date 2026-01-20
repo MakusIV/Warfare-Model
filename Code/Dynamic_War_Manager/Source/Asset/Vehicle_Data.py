@@ -364,15 +364,106 @@ class Vehicle_Data:
 
         return score
 
-    # da implementare
-    def _communication_eval(self):
-        return 1
+    def _communication_eval(self) -> float:
+        """Evaluates the communication capabilities of the vehicle.
 
-    def _hydraulic_eval(self):
-        return 1
-    
-    def _range_eval(self):
-        return 1
+        Considers:
+        - navigation_accuracy: precision of navigation system (0-1)
+        - communication_range: communication range in km
+
+        Returns:
+            float: communication score
+        """
+        if not self.communication:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Communication not defined.")
+            return 0.0
+
+        capabilities = self.communication.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Communication capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'navigation_accuracy': 0.4,
+            'communication_range': 0.6
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'navigation_accuracy': 1.0,  # max accuracy
+            'communication_range': 300.0  # km (riferimento per sistemi avanzati)
+        }
+
+        score = 0.0
+        navigation_accuracy = capabilities.get('navigation_accuracy', 0)
+        communication_range = capabilities.get('communication_range', 0)
+
+        # Normalizza e applica i pesi
+        score += (navigation_accuracy / reference_values['navigation_accuracy']) * weights['navigation_accuracy']
+        score += (communication_range / reference_values['communication_range']) * weights['communication_range']
+
+        return score
+
+    def _hydraulic_eval(self) -> float:
+        """Evaluates the hydraulic system capabilities of the vehicle.
+
+        Considers:
+        - pressure: hydraulic system pressure (PSI)
+        - fluid_capacity: hydraulic fluid capacity (liters)
+
+        Returns:
+            float: hydraulic system score
+        """
+        if not self.hydraulic:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic system not defined.")
+            return 0.0
+
+        capabilities = self.hydraulic.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'pressure': 0.6,
+            'fluid_capacity': 0.4
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'pressure': 4000.0,  # PSI (riferimento per sistemi ad alta pressione)
+            'fluid_capacity': 80.0  # litri (riferimento per veicoli pesanti)
+        }
+
+        score = 0.0
+        pressure = capabilities.get('pressure', 0)
+        fluid_capacity = capabilities.get('fluid_capacity', 0)
+
+        # Normalizza e applica i pesi
+        score += (pressure / reference_values['pressure']) * weights['pressure']
+        score += (fluid_capacity / reference_values['fluid_capacity']) * weights['fluid_capacity']
+
+        return score
+
+    def _range_eval(self) -> float:
+        """Evaluates the operational range of the vehicle.
+
+        Considers:
+        - range: maximum operational range in km
+
+        Returns:
+            float: range score
+        """
+        if not self.range:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Range not defined.")
+            return 0.0
+
+        # Valore di riferimento per normalizzazione (km)
+        # 800 km è un buon riferimento per veicoli corazzati moderni
+        reference_range = 800.0
+
+        score = self.range / reference_range
+
+        return score
     
     def _combat_eval(self):
         """Returns the combat score calculated by considering the individual scores of the vehicle's subsystems
@@ -519,7 +610,60 @@ class Vehicle_Data:
         vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
         scores = [ac._combat_eval() for ac in vehicles]
         return self._normalize(self._combat_eval(), scores)
-    
+
+    def get_normalized_communication_score(self, category: Optional[str] = None):
+        """Returns communication score normalized from 0 (min score) to 1 (max score)
+
+        Args:
+            category (Optional[str], optional): Vehicle category for comparison. Defaults to all categories.
+
+        Returns:
+            float: normalized communication score
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category must be string with value: {CATEGORY!r}, got {category!r}.")
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+        scores = [ac._communication_eval() for ac in vehicles]
+        return self._normalize(self._communication_eval(), scores)
+
+    def get_normalized_hydraulic_score(self, category: Optional[str] = None):
+        """Returns hydraulic system score normalized from 0 (min score) to 1 (max score)
+
+        Args:
+            category (Optional[str], optional): Vehicle category for comparison. Defaults to all categories.
+
+        Returns:
+            float: normalized hydraulic score
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category must be string with value: {CATEGORY!r}, got {category!r}.")
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+        scores = [ac._hydraulic_eval() for ac in vehicles]
+        return self._normalize(self._hydraulic_eval(), scores)
+
+    def get_normalized_range_score(self, category: Optional[str] = None):
+        """Returns operational range score normalized from 0 (min score) to 1 (max score)
+
+        Args:
+            category (Optional[str], optional): Vehicle category for comparison. Defaults to all categories.
+
+        Returns:
+            float: normalized range score
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category must be string with value: {CATEGORY!r}, got {category!r}.")
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+        scores = [ac._range_eval() for ac in vehicles]
+        return self._normalize(self._range_eval(), scores)
 
     def _normalize(self, value, scores):
         """Normalize values from 0 to 1
@@ -802,7 +946,7 @@ BMP1_data = {
         'reliability': {'mtbf': 40, 'mttr': 5} # hours
     },
     'weapons': {
-        'CANNONS': [('2A28 Grom', 40)], # type, number of rounds
+        'CANNONS': [('2A28 Grom', 40)], # type, number of roundscapabilities'
         'MISSILES': [('9M14 Malyutka', 4)], # type, number of missiles
         'MACHINE_GUNS': [('PKT-7.62', 1)], #type, units
             #['air', 'ground', 'sea']
@@ -860,6 +1004,9 @@ for vehicle in Vehicle_Data._registry.values():
     VEHICLE[model]['radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
     VEHICLE[model]['radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
     VEHICLE[model]['speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
+    VEHICLE[model]['communication score'] = {'global_score': vehicle.get_normalized_communication_score(), 'category_score': vehicle.get_normalized_communication_score(category=vehicle.category) }
+    VEHICLE[model]['hydraulic score'] = {'global_score': vehicle.get_normalized_hydraulic_score(), 'category_score': vehicle.get_normalized_hydraulic_score(category=vehicle.category) }
+    VEHICLE[model]['range score'] = {'global_score': vehicle.get_normalized_range_score(), 'category_score': vehicle.get_normalized_range_score(category=vehicle.category) }
     VEHICLE[model]['avalaibility'] = {'global_score': vehicle.get_normalized_avalaiability_score(), 'category_score': vehicle.get_normalized_avalaiability_score(category=vehicle.category)}
     VEHICLE[model]['manutenability score (mttr)'] = {'global_score': vehicle.get_normalized_maintenance_score(), 'category_score': vehicle.get_normalized_maintenance_score(category=vehicle.category)}
     VEHICLE[model]['reliability score (mtbf)'] = {'global_score': vehicle.get_normalized_reliability_score(), 'category_score': vehicle.get_normalized_reliability_score(category=vehicle.category)}
@@ -899,6 +1046,8 @@ def get_vehicle_scores(model: str, scores: Optional[List]=SCORES) -> Dict:
         - Availability: Measures the vehicle's operational readiness, based on factors such as reliability and ease of maintenance.
         - Maintainability Score (MTTR): Evaluates the vehicle's ease of maintenance, with a higher score indicating shorter repair times.
         - reliability score (MTBF): represents the reliability of the vehicle, with a higher score indicating longer intervals between failures.
+
+        -------------------------------------
     
         Restituisce i punteggi globali e di categoria di un veicolo specifico.
         I punteggi globali sono calcolati considerando tutti i veicoli presenti nel database,
