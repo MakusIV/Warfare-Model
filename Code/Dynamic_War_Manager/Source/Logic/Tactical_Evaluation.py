@@ -437,17 +437,13 @@ def evaluateCombatSuperiority(action: str, asset_fr: dict, asset_en: dict) -> fl
     
     for cat in BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"].keys():
         
-        if action == GROUND_ACTION["Attack"]:            
-            #combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Defense"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
-            combat_pow_en += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Defense"]
-            #combat_pow_en_alt += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Maintain"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]
+        if action == GROUND_ACTION["Attack"]:                        
+            combat_pow_en += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Defense"]            
             combat_pow_en_alt += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Maintain"]
 
-        elif action == GROUND_ACTION["Defense"] or action == GROUND_ACTION["Maintain"]:
-            #combat_pow_en += GROUND_COMBAT_EFFICACY[GROUND_ACTION["Attack"]][cat] * asset_en[cat]["num"] * asset_en[cat]["efficiency"]            
+        elif action == GROUND_ACTION["Defense"] or action == GROUND_ACTION["Maintain"]:                       
             combat_pow_en += asset_en[cat]["num"] * asset_en[cat]["combat_power"]["Attack"]            
-
-        #combat_pow_fr += GROUND_COMBAT_EFFICACY[action][cat] * asset_fr[cat]["num"] * asset_fr[cat]["efficiency"]
+       
         combat_pow_fr += asset_fr[cat]["num"] * asset_fr[cat]["combat_power"][action]
 
     if combat_pow_en < combat_pow_en_alt:
