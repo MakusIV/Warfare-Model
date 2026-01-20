@@ -482,23 +482,21 @@ class TestVehicle(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.MILITARY_FORCES')
-    @patch.object(Asset, 'efficiency', new_callable=PropertyMock, return_value=0.8)
-    def test_set_combat_power_no_action(self, mock_efficiency, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_get_vehicle_data, mock_get_vehicle_scores):
+    #@patch.object(Vehicle, 'efficiency', new_callable=PropertyMock, return_value=0.8)
+    @patch.object(Vehicle, 'efficiency', new_callable=PropertyMock, return_value=0.8)
+    def test_set_combat_power_no_action(self, mock_efficiency, mock_mobile_forces, mock_get_vehicle_data, mock_get_vehicle_scores):
         """Test set_combat_power without specific action"""
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
 
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY for Vehicle
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
-        #mock_combat_efficacy.__getitem__ = MagicMock(return_value={
-        #    Ground_Asset_Type.TANK.value: 1.0
-        #}) # mock_combat_efficacy, 
-
+        #mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+     
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        #mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_mobile_forces.__contains__ = MagicMock(return_value=True)
 
         vehicle = Vehicle(
@@ -506,66 +504,71 @@ class TestVehicle(unittest.TestCase):
             category=Ground_Asset_Type.TANK,
             model="T-90M"
         )
-
-        # Manually set efficiency for testing
-        #vehicle._efficiency = 0.9
-
-        vehicle.set_combat_power()
+        vehicle.set_combat_power() # No actions provided, should compute for all
 
         # Verify combat_power was set - combat_power is a method that takes force and action arguments
-        combat_power_result = vehicle.combat_power(force='ground', action=None)
+        combat_power_result = vehicle.combat_power(force='ground')
+        print(f"\n###############   - > test_set_combat_power_with_action - combat_power_result {combat_power_result}\n")
         self.assertIsNotNone(combat_power_result)
-        self.assertIsInstance(combat_power_result, dict)
+        self.assertIsInstance(combat_power_result, dict)        
+        self.assertIsInstance(combat_power_result['Attack'], (float, int))
+        self.assertIsInstance(combat_power_result['Defense'], (float, int))
+        self.assertIsInstance(combat_power_result['Retrait'], (float, int))
+        self.assertIsInstance(combat_power_result['Maintain'], (float, int))
+
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.GROUND_COMBAT_EFFICACY')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.GROUND_COMBAT_EFFICACY')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.MILITARY_FORCES')
-    @patch.object(Asset, 'efficiency', new_callable=PropertyMock, return_value=0.8)
-    def test_set_combat_power_with_action(self, mock_efficiency, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_combat_efficacy, mock_get_vehicle_data, mock_get_vehicle_scores):
+    @patch.object(Vehicle, 'efficiency', new_callable=PropertyMock, return_value=0.8)
+    #def test_set_combat_power_with_action(self, mock_efficiency, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_combat_efficacy, mock_get_vehicle_data, mock_get_vehicle_scores):
+    def test_set_combat_power_with_action(self, mock_efficiency, mock_mobile_forces, mock_get_vehicle_data, mock_get_vehicle_scores):
         """Test set_combat_power with specific action"""
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
 
         # Mock ACTION_TASKS and GROUND_COMBAT_EFFICACY for Vehicle
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        #mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
 
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
-        mock_mobile_forces.__contains__ = MagicMock(return_value=True)
+        #mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        mock_mobile_forces.__contains__ = MagicMock(return_value=True) # comporta che la condizione "ground" in MILITARY_FORCES sia True
 
         vehicle = Vehicle(
             block=self.mock_block,
             category=Ground_Asset_Type.TANK,
             model="T-90M"
-        )
-
-        
+        )        
         vehicle.set_combat_power(actions=["Attack"])
 
         # Verify combat_power was set - combat_power is a method that takes force and action arguments
         combat_power_result = vehicle.combat_power(force='ground', action='Attack')
+        print(f"\n###############   - > test_set_combat_power_with_action - combat_power_result {combat_power_result}\n")
         self.assertIsNotNone(combat_power_result)
-        self.assertIsInstance(combat_power_result, (float, int))
+        self.assertIsInstance(combat_power_result, (float, int)) # vehicle.combat_power with specific action returns a float
+        self.assertGreater(combat_power_result, 0.0)
+        self.assertEqual(vehicle._combat_power['ground']['Attack'], combat_power_result) #self._combat_power is a nested dict
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_data')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
-    @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.ACTION_TASKS')
+    #@patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.ACTION_TASKS')
     @patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.MILITARY_FORCES')
-    @patch.object(Asset, 'efficiency', new_callable=PropertyMock, return_value=0.8)
-    def test_set_combat_power_invalid_action(self, mock_efficiency, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_get_vehicle_data, mock_get_vehicle_scores):
+    @patch.object(Vehicle, 'efficiency', new_callable=PropertyMock, return_value=0.8)
+    # def test_set_combat_power_invalid_action(self, mock_efficiency, mock_mobile_forces, mock_mobile_action_tasks, mock_action_tasks, mock_get_vehicle_data, mock_get_vehicle_scores):
+    def test_set_combat_power_invalid_action(self, mock_efficiency, mock_mobile_forces, mock_get_vehicle_data, mock_get_vehicle_scores):
         """Test set_combat_power with invalid action raises TypeError"""
         mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
         mock_get_vehicle_data.return_value = {}
 
         # Mock ACTION_TASKS to return a specific list
-        mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        #mock_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
 
         # Mock ACTION_TASKS and MILITARY_FORCES for Mobile
-        mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
+        #mock_mobile_action_tasks.__getitem__ = MagicMock(return_value=["Attack", "Defense", "Retrait", "Maintain"])
         mock_mobile_forces.__contains__ = MagicMock(return_value=True)
 
         vehicle = Vehicle(

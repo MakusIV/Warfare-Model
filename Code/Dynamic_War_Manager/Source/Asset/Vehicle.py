@@ -65,6 +65,9 @@ class Vehicle(Mobile) :
             -t2r: time to repair
             -payload%:
 
+        raise: 
+            Exception: if asset is not consistent with the ownership block
+
         Returns:
             bool: True if data is loaded, otherwise False
         """     
@@ -96,7 +99,10 @@ class Vehicle(Mobile) :
                     self.requested_for_consume = v["rcp"]
                     self.repair_time = v["t2r"]
                     self._payload_perc = v["payload%"]
-                    return True              
+                    return True             
+
+        
+
         
         elif self.block.is_logistic(): # reference Block is Logistic
             asset_data = BLOCK_INFRASTRUCTURE_ASSET
@@ -239,12 +245,26 @@ class Vehicle(Mobile) :
 
     def set_combat_power(self, actions: Optional[Dict]=ACTION_TASKS["ground"]):
         """
+        Calculates and sets the combat power value for the specific vehicle based on the specified action.
+        If actions is None, calculates the combat power for all actions defined in ACTION_TASKS["ground"].
+
+        args:
+        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retrait'
+
+        raises:
+        TypeError - if action is not in ACTION_TASKS["ground"]
+
+        -------------------------------
+        
         Calcola ed imposta il valore di combat_power per lo specifico  veicolo in funzione dell'azione specificata.
+        Se actions è None, calcola il combat_power per tutte le azioni definite in ACTION_TASKS["ground"].
 
 
         args:
         action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retrait'
 
+        raises:
+        TypeError - if action is not in ACTION_TASKS["ground"] 
         """
         
         #force ="ground" # Vehicle is a ground asset

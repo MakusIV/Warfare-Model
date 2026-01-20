@@ -118,6 +118,27 @@ class Mobile(Asset) :
         pass
 
     def combat_power(self, force: Optional[str] = None, action: Optional[str] = None) -> Optional[Union[Dict, float]]:
+        """
+        Returns the value contained in self._combat_power as a function of the specified force and action.
+
+        :param force: A string specifying the type of military force (e.g., "ground", "air", "sea") belonging to Context.MILITARY_FORCES.
+        :type force: Optional[str]
+        :param action: A string specifying the military action (e.g., "Attack", "Defense", etc.) belonging to Context.ACTION_TASKS[force].
+        :type action: Optional[str]
+        :return: The value contained in self._combat_power as a function of the specified force and action.
+        :rtype: Dict | float | None
+        
+        -------------------------------
+        
+        Restituisce il valore contenuto in self._combat_power in funzione del force e dell'action specificati.
+        
+        :param force: stringa che specifica il tipo di forza militare (ad esempio, "ground", "air", "sea") appartenente a Context.MILITARY_FORCES.
+        :type force: Optional[str]
+        :param action: stringa che specifica l'azione militare (ad esempio, "Attack", "Defense", ecc.) appartenente a Context.ACTION_TASKS[force].
+        :type action: Optional[str]
+        :return: il valore contenuto in self._combat_power in funzione del force e dell'action specificati.
+        :rtype: Dict | float | None
+        """
 
         if force is not None and not isinstance(force, str):
             raise TypeError(f"Expected str instance, got {type(force).__name__}")
@@ -134,10 +155,10 @@ class Mobile(Asset) :
                 raise ValueError(f"action must be: {admit_task}")
 
         if force and action:
-            return self._combat_power[force][action]
+            return self._combat_power[force][action] # return float
 
         if force:
-            return self._combat_power[force]
+            return self._combat_power[force] # return Dict
 
         if action:
             result = {}
@@ -146,30 +167,41 @@ class Mobile(Asset) :
                     if action == task:
                         result[force]={task: self._combat_power[force][action]
                                        }
-            return result
+            return result # return Dict
 
-        return self._combat_power
+        return self._combat_power   # return Dict
 
         #return result
 
     def set_combat_power_value(self, combat_power: Dict):
-        """Imposta il valore la combat_power del Mobile 
-           E' il metodo utilizzato dalle classi derivate (Vehicle, Ship, Aircraft, ecc.) per settare il valore della combat_power dopo averlo calcolato specificatamente per lo specifico tipo di Mobile.
+        """
+        Assigns the combat_power value to self._combat_power.
+        Combat_power is calculated in derived classes (Vehicle, Ship, Aircraft, etc.)
 
         Args:
-            combat_power (Dict): _description_
+        combat_power (Dict): Value to be assigned to self._combat_power
 
         Raises:
-            TypeError: _description_
-            TypeError: _description_
-            TypeError: _description_
-            TypeError: _description_
+        TypeError: The combat_power argument is not of type Dict
+        TypeError: Combat_power does not have the correct keys
+
+        ------------------------------
+        
+        Assegna il valore della combat_power a self._combat_power.
+        Il calcolo del valore della combat_power viene effettuato nelle classi derivate (Vehicle, Ship, Aircraft, ecc.)
+
+        Args:
+            combat_power (Dict): valore che si vuole assegnare a self._combat_power
+
+        Raises:
+            TypeError: l'argomento combat_power non è di tipo Dict
+            TypeError: combat_power non ha le chiavi corrette           
         """
 
         if not isinstance(combat_power, Dict):
             raise TypeError(f"Expected Dict instance, got {type(combat_power).__name__}")
         
-        keys = [key in MILITARY_FORCES for key in combat_power.keys()]
+        #keys = [key in MILITARY_FORCES for key in combat_power.keys()]
 
         if any(key in MILITARY_FORCES for key in combat_power.keys()):
             for force in combat_power.keys():
