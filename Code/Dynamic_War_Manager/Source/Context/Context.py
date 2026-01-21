@@ -95,23 +95,28 @@ MILITARY_CATEGORY = {
     
 }
 
-class Ground_Asset_Type(Enum):
+class Ground_Vehicle_Asset_Type(Enum):
     TANK = 'Tank'
     ARMORED = 'Armored'
     MOTORIZED = 'Motorized'
     ARTILLERY_FIXED = 'Artillery_Fixed'
     ARTILLERY_SEMOVENT = 'Artillery_Semovent'
+    SAM_BIG = 'SAM_Big'
+    SAM_MEDIUM = 'SAM_Medium'
+    SAM_SMALL = 'SAM_Small'
+    EWR = 'EWR'
+    AAA = 'AAA'
    
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
 # dovresti integrare per artillery con il caliro: Artillery_Fix.Howitzer_Big, Artillery_Fix.Howitzer_Small, Artillery_Semovent.Self_Propelled_Big, ........
 WEIGHT_FORCE_GROUND_ASSET = {
 
-    Ground_Asset_Type.TANK: 7,
-    Ground_Asset_Type.ARMORED: 5,   
-    Ground_Asset_Type.MOTORIZED: 3,
-    Ground_Asset_Type.ARTILLERY_FIXED: 4,
-    Ground_Asset_Type.ARTILLERY_SEMOVENT: 7,
+    Ground_Vehicle_Asset_Type.TANK: 7,
+    Ground_Vehicle_Asset_Type.ARMORED: 5,   
+    Ground_Vehicle_Asset_Type.MOTORIZED: 3,
+    Ground_Vehicle_Asset_Type.ARTILLERY_FIXED: 4,
+    Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT: 7,
 }
 
 # Parametri per il calcolo della combat power degli asset da combattimento. 
@@ -238,6 +243,8 @@ AIR_MILITARY_CRAFT_ASSET = {
 
 #GROUND_ASSET_CATEGORY, AIR_ASSET_CATEGORY, STRUCTURE_ASSET_CATEGORY]
 # key1+key2: asset category, key3: asset type
+
+
 AIR_DEFENSE_ASSET = {  
     
     'SAM':                  {   'Big': {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
@@ -280,7 +287,6 @@ AIR_DEFENSE_ASSET = {
                             },
 }    
                     
-
 
 # Caratteristiche degli asset delle diversè unità Military: Corazzate, Meccanizzate, Motorizzate e Artiglieria
 # key1: asset category, key2: asset type
