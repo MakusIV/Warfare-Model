@@ -14,7 +14,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     BLOCK_INFRASTRUCTURE_ASSET, 
     ACTION_TASKS, 
     GROUND_MILITARY_VEHICLE_ASSET,
-    Ground_Asset_Type
+    Ground_Vehicle_Asset_Type
 )
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
@@ -200,19 +200,19 @@ class Vehicle(Mobile) :
 
     @property
     def isTank(self):
-        return self.category == Ground_Asset_Type.TANK.value
+        return self.category == Ground_Vehicle_Asset_Type.TANK.value
     @property
     def isArmor(self):
-        return self.category == Ground_Asset_Type.ARMORED.value
+        return self.category == Ground_Vehicle_Asset_Type.ARMORED.value
     @property
     def isMotorized(self):
-        return self.category == Ground_Asset_Type.MOTORIZED.value
+        return self.category == Ground_Vehicle_Asset_Type.MOTORIZED.value
     @property
     def isArtillery_Semovent(self):
-        return self.category == Ground_Asset_Type.ARTILLERY_SEMOVENT.value
+        return self.category == Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value
     @property
     def isArtillery_Fixed(self):
-        return self.category == Ground_Asset_Type.ARTILLERY_FIXED.value
+        return self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value
     @property
     def isArtillery(self):
         return self.isArtillery_Fixed or self.isArtillery_Semovent
@@ -221,22 +221,22 @@ class Vehicle(Mobile) :
         return self.isSAM or self.isAAA
     @property
     def isSAM(self):
-        return self.isSAM_Big or self.isSAM_Med or self.isSAM_Small
+        return self.isSAM_Big or self.isSAM_Medium or self.isSAM_Small
     @property
     def isSAM_Big(self):
-        return self.category == "SAM_Big"
+        return self.category == Ground_Vehicle_Asset_Type.SAM_BIG.value
     @property
-    def isSAM_Med(self):
-        return self.category == "SAM_Med"
+    def isSAM_Medium(self):
+        return self.category == Ground_Vehicle_Asset_Type.SAM_MEDIUM.value
     @property
     def isSAM_Small(self):
-        return self.category == "SAM_Small"
+        return self.category == Ground_Vehicle_Asset_Type.SAM_SMALL.value
     @property
     def isAAA(self):
-        return self.category == "AAA"
+        return self.category == Ground_Vehicle_Asset_Type.AAA.value
     @property
     def isEWR(self):
-        return self.category == "EWR"
+        return self.category == Ground_Vehicle_Asset_Type.EWR.value
     @property
     def isCommandControl(self):
         return self.category == "Command_&_Control"

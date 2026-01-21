@@ -13,7 +13,7 @@ siano ridotte causa il valutazione sottostimata delle score totale
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import get_weapon_score
-from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTION_TASKS, BLOCK_ASSET_CATEGORY
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTION_TASKS, BLOCK_ASSET_CATEGORY, Ground_Vehicle_Asset_Type
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import convert_mph_to_kmh
 from sympy import Point3D
@@ -28,6 +28,8 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle_Data').logger
 
 VEHICLE_TASK = GROUND_ACTION
 MODES = ACTION_TASKS.keys()
+# AVAILABLE CATEGORIES : Tank, Armored, Motorized, Artillery_Fixed, Artillery_Semovent, SAM_Big, SAM_Medium, SAM_Small, EWR, AAA from Context BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"], BLOCK_ASSET_CATEGORY["Air_Defense_Asset"].
+# Sostituisce le due righe sottostanti con Ground_Vehicle_Asset_Type Enum
 CATEGORY = set(BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys())
 CATEGORY.update(BLOCK_ASSET_CATEGORY['Air_Defense_Asset'].keys())
 
@@ -465,28 +467,132 @@ class Vehicle_Data:
 
         return score
     
-    def _combat_eval(self):
+    def _combat_eval(self):        
         """Returns the combat score calculated by considering the individual scores of the vehicle's subsystems
 
         Returns:
             float: combat score
         """
-        # param = (value, weight)
-        # nota: dovresti tarare i pesi in base all'importanza che vuoi dare ai singoli sottosistemi in relazione alla tipologia del veicolo
-        # per esempio un carro armato avrà un peso maggiore per la protezione e le armi rispetto al radar mentre una sam avrà un peso maggiore per il radar e le armi rispetto la protezione
+        
         params = {   
-                    'weapon':           ( self._weapon_eval(), 10 ), 
-                    'radar':            ( self._radar_eval(), 2 ), 
-                    'TVD':              ( self._TVD_eval(), 3 ), 
-                    'protection':       ( self._protection_eval(), 9 ), 
-                    'communication':    ( self._communication_eval(), 3 ), 
-                    'speed_data':       ( self._speed_eval(), 7 ), 
-                    'hydraulic':        ( self._hydraulic_eval(), 4 ), 
-                    'range':            ( self._range_eval(), 1 )
+                    'weapon':           { 'score': self._weapon_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 10, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 10,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 5,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 10
+                                                      } }, 
+                    'radar':            { 'score': self._radar_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 2, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 7,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 10,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 7
+                                                      } }, 
+                    'TVD':              { 'score': self._TVD_eval(),
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 3, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 3,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 3,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 5,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 5,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 1,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 5
+                                                      } }, 
+                    'protection':       { 'score': self._protection_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 10, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 2,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 2,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 10
+                                                      } },                     
+                    'communication':    { 'score': self._communication_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 3, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 3,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 3,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 1,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 1,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 3,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 3
+                                                      } }, 
+                    'speed_data':       { 'score': self._speed_eval(),
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 8, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 8,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 7,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 1,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 4,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 3,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 5,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 1,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 5
+                                                      }  }, 
+                    'hydraulic':        { 'score': self._hydraulic_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 2, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 2,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 2,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 2,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 2,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 2
+                                                      } }, 
+                    'range':            { 'score': self._range_eval(), 
+                                          'weights': {Ground_Vehicle_Asset_Type.TANK.value: 5, 
+                                                      Ground_Vehicle_Asset_Type.ARMORED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.MOTORIZED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value: 10,
+                                                      Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_BIG.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 10,
+                                                      Ground_Vehicle_Asset_Type.SAM_SMALL.value: 10,
+                                                      Ground_Vehicle_Asset_Type.EWR.value: 5,
+                                                      Ground_Vehicle_Asset_Type.AAA.value: 10
+                                                      } }
                 }
         
-        tot_weights = sum( data[1] for param, data in params.items() )
-        return sum( data[0] * data[1] for param, data in params.items() ) / tot_weights
+        tot_weights = sum( data['weights'][self.category] for param, data in params.items() )
+        return sum( data['score'] * data['weights'][self.category] for param, data in params.items() ) / tot_weights
+
+
+    # --- Metodi di confronto normalizzati ---
+    def get_normalized_weapon_score(self, category: Optional[str] = None):
+        """returns weapon score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized weapon score
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+        
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+
+        scores = [ac._weapon_eval() for ac in vehicles]
+        return self._normalize(self._weapon_eval(), scores)
 
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[Dict] = None, category: Optional[str] = None):
@@ -1001,6 +1107,7 @@ for vehicle in Vehicle_Data._registry.values():
     model = vehicle.model
     VEHICLE[model] = {}
     VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
+    VEHICLE[model]['weapon score'] = {'global_score': vehicle.get_normalized_weapon_score(), 'category_score': vehicle.get_normalized_weapon_score(category=vehicle.category) }
     VEHICLE[model]['radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
     VEHICLE[model]['radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
     VEHICLE[model]['speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
