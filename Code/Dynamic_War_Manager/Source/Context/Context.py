@@ -28,7 +28,6 @@ PRODUCTION_WEIGHT = {
 
 
 GROUND_ACTION  = {
-
     'Attack':   'Attack',
     'Defense':  'Defense',
     'Maintain': 'Maintain',
@@ -109,7 +108,6 @@ class Ground_Vehicle_Asset_Type(Enum):
    
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
-# dovresti integrare per artillery con il caliro: Artillery_Fix.Howitzer_Big, Artillery_Fix.Howitzer_Small, Artillery_Semovent.Self_Propelled_Big, ........
 WEIGHT_FORCE_GROUND_ASSET = {
 
     Ground_Vehicle_Asset_Type.TANK: 7,
@@ -224,6 +222,27 @@ AREA_FOR_VOLUME = {
     SHAPE2D.HEXAGON : {SHAPE3D.PRISM}
 }
 
+class Parked_Asset_Type(Enum):
+    Transport_Aircraft = 'Parked_Transport_Aircraft'
+    Transport_Aircraft_Big = 'Parked_Transport_Aircraft_Big'
+    Transport_Helicopter = 'Parked_Transport_Helicopter'
+    Transport_Helicopter_Big = 'Parked_Transport_Helicopter_Big'
+    Aircraft_Fighter = 'Parked_Aircraft_Fighter'
+    Aircraft_Fighter_Bomber = 'Parked_Aircraft_Fighter_Bomber'
+    Aircraft_Bomber = 'Parked_Aircraft_Bomber'
+    Helicopter = 'Parked_Helicopter'
+    Helicopter_Big = 'Parked_Helicopter_Big'
+    Transport_Ship_Large = 'Parked_Transport_Ship_Large'
+    Transport_Ship_Medium = 'Parked_Transport_Ship_Medium'
+    Transport_Ship_Small = 'Parked_Transport_Ship_Small'
+    Tank = 'Parked_Tank'
+    Armored_Vehicle = 'Parked_Armored_Vehicle'
+    Motorized_Vehicle = 'Parked_Motorized_Vehicle'
+    Train = 'Parked_Train'
+    Truck = 'Parked_Truck'
+    Generic_Vehicle = 'Parked_Generic_Vehicle'
+
+
 # key: asset type
 AIR_MILITARY_CRAFT_ASSET = {
     'Fighter':          {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -336,14 +355,15 @@ GROUND_MILITARY_VEHICLE_ASSET = {
 # key: asset type
 SEA_MILITARY_CRAFT_ASSET = {
      
-    'Carrier':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
-    'Destroyer':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Cruiser':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Frigate':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Fast_Attack':      {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},    
-    'Submarine':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Transport':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Civilian':         {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Carrier':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
+    'Destroyer':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Cruiser':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Frigate':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Fast_Attack':              {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},    
+    'Submarine':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Amphibious_Assault_Ship':  {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Transport':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    'Civilian':                 {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
 
 }
 
@@ -355,28 +375,29 @@ BLOCK_INFRASTRUCTURE_ASSET = {
     'Transport':             {  'Road': {
                                     'Bridge': {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Check_Point': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Truck': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Railway': {
                                     'Station': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Railway_Interchange': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Train': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    Parked_Asset_Type.Train.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                    
                                 },
                                 'Port': {
                                     'Port': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Ship_L': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Ship_M': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Ship_B': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    Parked_Asset_Type.Transport_Ship_Large.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Ship_Medium.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Ship_Small.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Airport': {
                                     'Airbase': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Aircraft': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Aircraft_B': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    Parked_Asset_Type.Aircraft_Fighter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Aircraft_Fighter_Bomber.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Aircraft_Bomber.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Helibase': {
                                     'Helibase': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Helicopter': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Helicopter_B': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    Parked_Asset_Type.Transport_Helicopter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Helicopter_Big.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Electric': {
                                     'Electric_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
@@ -384,6 +405,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                 'Fuel_Line': {
                                     'Gas_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                
                                     'Petrol_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}  
                                 }
                             },                    
 
@@ -419,19 +441,24 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Service_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Oil_Tank': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },                                                                                                                            
                             },
 
     'Storage':              {   'Administrative': {
                                     'Administrative_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
-                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                 },                                
                                 'Service': {
                                     'Energy_Infrastructure': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                     'Oil_Tank': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                 },                                                                                                                            
                             },
 
@@ -440,14 +467,23 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Hangar': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                                        
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Tank.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Armored_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                                                                             
                                 },
                                 'Farp': {
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                     'Oil_Tank': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    'Parked_Helicopter': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    'Parked_Helicopter_Big': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Tank.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Armored_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                                                                             
                                 },
                                 'Airbase': {
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -456,6 +492,17 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                      
+                                    Parked_Asset_Type.Transport_Aircraft.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Aircraft_Big.value: {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Aircraft_Fighter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Aircraft_Fighter_Bomber.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Aircraft_Bomber.value: {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Helicopter.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Helicopter_Big.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Tank.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Armored_Vehicle.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                                                                             
                                 },
                                 'Port': {
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -464,6 +511,12 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                      
+                                    Parked_Asset_Type.Transport_Ship_Large.value: {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Ship_Medium.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Transport_Ship_Small.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+
                                 },
                                 'Shipyard': {
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -472,16 +525,72 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Building': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                      
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                 },
                                 'Air_defense': {#Roccaforte: Brigade, 2 Regiment, 6 Battallion (5 Company)
                                     'Command_&_Control': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     'Barrack': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
                                     'Depot': {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                                                                                    
+                                    Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    Parked_Asset_Type.Armored_Vehicle.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                                                                             
                                 },                                                                                                
                             },
 
                     
 }
+
+TARGET_CLASSIFICATION = {
+    'Soft':         {   Parked_Asset_Type.Transport_Aircraft.value, 
+                        Parked_Asset_Type.Transport_Aircraft_Big.value,
+                        Parked_Asset_Type.Transport_Helicopter.value,
+                        Parked_Asset_Type.Transport_Helicopter_Big.value,
+                        Parked_Asset_Type.Motorized_Vehicle.value, 
+                        Parked_Asset_Type.Truck.value,
+                        Parked_Asset_Type.Generic_Vehicle.value,
+                        Parked_Asset_Type.Aircraft_Bomber.value,
+                        Parked_Asset_Type.Aircraft_Fighter.value,
+                        Parked_Asset_Type.Aircraft_Fighter_Bomber.value, # Transport, Helicopter, Aircraft
+                        Parked_Asset_Type.Helicopter.value,
+                        Parked_Asset_Type.Helicopter_Big.value,
+                        Ground_Vehicle_Asset_Type.MOTORIZED.value, 
+                        Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value,                        
+                        Ground_Vehicle_Asset_Type.EWR.value
+
+                        }, # Motorized, Infantry
+    'Armored':      {   Ground_Vehicle_Asset_Type.ARMORED.value, 
+                        Ground_Vehicle_Asset_Type.TANK.value, 
+                        Ground_Vehicle_Asset_Type.AAA.value, 
+                        Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value,                    
+                     }, # Tank, Armored Vehicle
+    'Hard':         {   'Bridge', 'Bunker', 'Hangar', 'Depot'},
+    'Structure':    {   'Building', 'Oil_Tank', 'Railway_Interchange', 'Power_Plant', 'Factory', 'Gas_Infrastructure', 'Petrol_Infrastructure', 'Administrative_Infrastructure', 'Energy_Infrastructure', 'Service_Infrastructure'}, # Building, Factory, Depot, ...
+    'Air_Defense':  {   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
+                        Ground_Vehicle_Asset_Type.SAM_SMALL.value,
+                        Ground_Vehicle_Asset_Type.SAM_BIG.value,
+                        Ground_Vehicle_Asset_Type.AAA.value},
+    'Airbase':      {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Air_Base']},
+    'Port':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Port']},
+    'Shipyard':     {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard']},
+    'Farp':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp']},
+    'Stronghold':   {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold']},
+    'ship':         {   Parked_Asset_Type.Transport_Ship_Large.value,
+                        Parked_Asset_Type.Transport_Ship_Medium.value,
+                        Parked_Asset_Type.Transport_Ship_Small.value,
+                        SEA_MILITARY_CRAFT_ASSET['Carrier'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Amphibious_Assault_Ship'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Cruiser'].value,  
+                        SEA_MILITARY_CRAFT_ASSET['Destroyer'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Corvette'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Submarine'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Frigate'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Transport'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Fast_Attack'].value,
+                        SEA_MILITARY_CRAFT_ASSET['Civilian'].value
+                    }
+}
+
 
 BLOCK_ASSET_CATEGORY = {
     'Block_Infrastructure_Asset': {},
@@ -531,7 +640,7 @@ for k1, v1 in AIR_DEFENSE_ASSET.items():
         BLOCK_ASSET_CATEGORY[k][cat] = {} #asset Category
 
         for k3, v3 in v2.items():            
-            BLOCK_ASSET_CATEGORY[k][cat][k3] = k3 # asset type
+            BLOCK_ASSET_CATEGORY[k][cat][k3] = k3 # asset typShipe
 
 
 # Generate AIR_MILITARY_CRAFT_ASSET
