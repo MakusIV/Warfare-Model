@@ -1,7 +1,9 @@
 from functools import lru_cache
+import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK #GROUND_ACTION, ACTION_TASKS,
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -54,6 +56,12 @@ WEAPON_PARAM = {
                         'fire_rate': 0.4/500,
                         'range': 0.2/1000,                        
                         },
+
+    'BOMBS':            {'tnt': 0.7/2000,
+                        'accuracy': 0.3/1,
+
+                        },
+
 }
 
 AMMO_PARAM = {
@@ -231,7 +239,6 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
 
     if not weapon_model or not isinstance(weapon_model, str):
         raise TypeError(f"weapon_model must be a str")
-
     
     if weapon_type == 'CANNONS':
         return get_cannon_score(model=weapon_model)
@@ -258,14 +265,66 @@ GROUND_WEAPONS = {
         # combat_power cb = caliber *  
         '2A46M': {
             'model': '2A46M',
-            "start_service": 1974,
-            "end_service": 3000,
+            'start_service': 1974,
+            'end_service': 3000,
+            'cost': 500, # k$
             'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
             'caliber': 125, # mm
             'muzzle_speed': 1750, # m/s 
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2120, 'indirect': 10000 }, # m
-            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],            
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 1, "destroy_capacity": 0.4},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
+                    "mix": {"accuracy": 0.8, "destroy_capacity": 0.42}
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
+                },                
+                "Hard": {
+                    "big": {"accuracy": 1, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
+                    "mix": {"accuracy": 0.85, "destroy_capacity": 0.4}
+                },
+                "Structure": {
+                    "big": {"accuracy": 1, "destroy_capacity": 0.001},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},
+                    "mix": {"accuracy": 0.8, "destroy_capacity": 0.005}
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 10E-9},                    
+                },
+                "ship": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.42},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                    "small": {"accuracy": 0.3, "destroy_capacity": 0.5},
+                    "mix": {"accuracy": 0.5, "destroy_capacity": 0.4}
+                },
+                
+                
+                "Parked Aircraft": {
+                    "med": {"accuracy": 0.93, "destroy_capacity": 1},
+                    "small": {"accuracy": 0.83, "destroy_capacity": 1},
+                    "mix": {"accuracy": 0.93, "destroy_capacity": 1}
+                }                
+            }
             
         }, 
         '2A28 Grom': {
@@ -348,8 +407,8 @@ GROUND_WEAPONS = {
     'BOMBS': {}
 
 } 
-        
-'''
+'''        
+GROUND_WEAPONS['BOMBS'] = {
         "Mk-83": {
             "type": "Bombs",
             "task": ["Strike", "Anti-ship Strike"],
@@ -1474,6 +1533,7 @@ GROUND_WEAPONS = {
                 },
             },
         },
+        
         "Zuni-Mk71": {  # Rockets 127 mm soft target
             "type": "Rockets",
             "task": ["Strike", "Anti-ship Strike"],

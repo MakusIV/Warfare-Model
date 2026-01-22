@@ -1,0 +1,11 @@
+Il compito è valutare ed implementare informazioni contenute nel dizionario weapon_db nel dizionario AIRCRAFT_WEAPON.
+
+Nello specifico dovresti valutare e implementare le informazioni per i dizionari 'air_task', 'efficiency' e per il valore di 'perc_efficiency_variability'.
+
+'air_task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate dall'omologo dizionario 
+presente in weapon_db.
+
+'efficiency' rappresenta l'efficienza delle armi riguardo differenti bersagli ('Soft', 'Armored', 'Hard', ....) e alle dimensioni degli item da cui è composto l'obiettivo ('big', 'med', ...). La struttura dei dati da considerare per efficiency è quella definita nel dizionario 'efficiency' relativo al dizionario '< DA INSERIRE >' contenuto in AIRCRAFT_WEAPON. Nel dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+'accuracy' varia da 0: nessuna precisione nel colpire il bersaglio a 1: precisione assoluta nel colpire il bersaglio (il bersaglio viene sicuramente colpito con l'utilizzo dell'arma). 'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+
+
