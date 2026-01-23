@@ -34,6 +34,13 @@ GROUND_ACTION  = {
     'Retrait':  'Retrait' 
 }
 
+GROUND_WEAPON_TASK = {
+    'Anti_Tank': 'Anti_Tank',
+    'Anti_Air':  'Anti_Air',
+    'Artillery': 'Artillery',
+    'Infantry_Support': 'Infantry_Support'
+}
+
 AIR_TASK = {
     
     'CAP': 'CAP',  

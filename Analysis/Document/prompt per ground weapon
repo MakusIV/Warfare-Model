@@ -1,11 +1,27 @@
-Il compito è valutare ed implementare informazioni mancanti in alcune armi specificate nel dizionario GROUND_WEAPON.
+Il compito è valutare ed implementare le informazioni mancanti in alcune armi specificate nel dizionario GROUND_WEAPONS.
 
-Nello specifico dovresti valutare e implementare le informazioni per i dizionari 'task', 'efficiency' e per il valore di 'perc_efficiency_variability'.
+Nello specifico dovresti valutare e implementare le informazioni per i dizionari 'task', 'efficiency' e il valore di 'perc_efficiency_variability'.
 
-'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate dall'omologo dizionario 
-presente in weapon_db.
+Come riferimento per le strutture dati di 'task', 'efficiency' e 'perc_efficiency_variability' considera quelle implementate nel dizionario '2A46M' contenuto in GROUND_WEAPON.
 
-'efficiency' rappresenta l'efficienza delle armi riguardo differenti bersagli ('Soft', 'Armored', 'Hard', ....) e alle dimensioni degli item da cui è composto l'obiettivo ('big', 'med', ...). La struttura dei dati da considerare per efficiency è quella definita nel dizionario 'efficiency' relativo al dizionario '2A46M' contenuto in GROUND_WEAPON. Nel dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
-'accuracy' varia da 0: nessuna precisione nel colpire il bersaglio a 1: precisione assoluta nel colpire il bersaglio (il bersaglio viene sicuramente colpito con l'utilizzo dell'arma). 'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+'task' rappresenta i task in cui l'arma può essere utilizzata. I valori ammissibili sono specificati nel dizionario GROUND_WEAPON_TASK implementato in Context.py.
+
+'efficiency' rappresenta l'efficienza delle armi riguardo differenti bersagli ('Soft', 'Armored', 'Hard', ....) e alle dimensioni degli asset da cui è composto l'obiettivo ('big', 'med', ...). 
+La struttura dei dati da considerare per efficiency è quella definita nel dizionario 'efficiency' relativo al dizionario '2A46M' contenuto in GROUND_WEAPON: per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli asset da cui è composto il bersaglio ('big', 'med', ...), sono specificate: 'accuracy' cioè il livello di precisione nel colpire quel tipo di bersaglio e 'destroy_capacity' cioè la capacità distruttiva rappresentata, indicativamente, da una stima della quantità di singoli asset che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+'accuracy' varia da 0: nessuna precisione nel colpire il bersaglio a 1: precisione assoluta nel colpire il bersaglio (il bersaglio viene sicuramente colpito con l'utilizzo dell'arma). 'destroy_capacity' varia da sys.float_info.min fino al numero di asset del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+
+'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency' che verrà calcolato in base ai due parametri 'accuracy' e 'destroy_capacity'.
+
+In base a quanto sopra detto: 
+implementa i dizionari 'task', 'efficiency' e il valore di 'perc_efficiency_variability' valutando le informazioni necessarie per tutte le armi specificate nel dizionario GROUND_WEAPONS revisionando anche i valori specificati per il dizionario '2A46M'. Per le tue valutazioni utilizza le informazioni disponibili in internet sulle armi da considerare e gli effetti di queste sugli asset di riferimento. La descrizione degli asset di riferimento che costituiscono un obiettivo è specificata nel dizionario TARGET_CLASSIFICATION implementato in Context.py. 
+
+implementa una funzione che calcola la weapon_efficiency in base alla tipologia di target, alla percentuale di distribuzione delle dimensioni asset che costituiscono l'obiettivo
+
+Per quanto riguarda le dimensioni dell'asset ('big', 'med', ..) considera i seguenti aspetti: 
+Soft: rappresentano obiettivi costituiti prevalentemente da mezzi (veicoli, aeromobili) militari senza particolari protezioni dove la variazione delle dimensioni non influisce significativamente nella resistenza all'arma
+Armored, Air_Defense: rappresentano obiettivi costituiti prevalentemente da mezzi (veicoli, aeromobili) militari con particolari protezioni dove la variazione delle dimensioni non influisce significativamente nella resistenza all'arma
+Hard, Structure: rappresentano obiettivi costituiti prevalentemente da costruzioni, edifici, strutture industriali dove la variazione delle dimensioni influisce significativamente nella resistenza all'arma. Gli obiettivi 'Hard' sono più resistenti all'arma per le caratteristiche costruttive degli asset o per una specifica protezione.
+Airbase, Port, Shipyard, Farp, Stronghold: rappresentano obiettivi costituiti da costruzioni, edifici, strutture industriali dove la variazione delle dimensioni influisce significativamente nella resistenza all'arma e da mezzi (veicoli, aeromobili) militari dove la variazione delle dimensioni non influisce significativamente nella resistenza all'arma. 
+Ship: rappresentano obiettivi costituiti da navi prevalentemente militari e alcune navi civili. Per questi obiettivi la tipologia di nave e la sua dimensione influisce significativamente nella resistenza all'arma.
 
 

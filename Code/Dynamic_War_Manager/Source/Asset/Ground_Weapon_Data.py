@@ -3,7 +3,7 @@ import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK #GROUND_ACTION, ACTION_TASKS,
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, GROUND_WEAPON_TASK #GROUND_ACTION, ACTION_TASKS,
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -273,9 +273,10 @@ GROUND_WEAPONS = {
             'muzzle_speed': 1750, # m/s 
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2120, 'indirect': 10000 }, # m
-            'ammo_type': ['HEAT', 'HE', 'APFSDS'],            
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],    
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],      
+            'perc_efficiency_variability': 0.1,
+            'efficiency': {
                 "Soft": {
                     "big": {"accuracy": 1, "destroy_capacity": 0.4},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
