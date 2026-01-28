@@ -280,32 +280,27 @@ GROUND_WEAPONS = {
                 "Soft": {
                     "big": {"accuracy": 1, "destroy_capacity": 0.4},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 0.42}
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},                    
                 },
                 "Armored": {
                     "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                     "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},                    
                 },                
                 "Hard": {
                     "big": {"accuracy": 1, "destroy_capacity": 0.35},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
-                    "mix": {"accuracy": 0.85, "destroy_capacity": 0.4}
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},                    
                 },
                 "Structure": {
                     "big": {"accuracy": 1, "destroy_capacity": 0.001},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.01},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},
-                    "mix": {"accuracy": 0.8, "destroy_capacity": 0.005}
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},                    
                 },
                 "Air_Defense": {
                     "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                     "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},                    
                 },
                 "Airbase": {
                     "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
@@ -315,15 +310,13 @@ GROUND_WEAPONS = {
                 "ship": {
                     "big": {"accuracy": 0.7, "destroy_capacity": 0.42},
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.5},
-                    "small": {"accuracy": 0.3, "destroy_capacity": 0.5},
-                    "mix": {"accuracy": 0.5, "destroy_capacity": 0.4}
+                    "small": {"accuracy": 0.3, "destroy_capacity": 0.5},                    
                 },
                 
                 
                 "Parked Aircraft": {
                     "med": {"accuracy": 0.93, "destroy_capacity": 1},
                     "small": {"accuracy": 0.83, "destroy_capacity": 1},
-                    "mix": {"accuracy": 0.93, "destroy_capacity": 1}
                 }                
             }
             
