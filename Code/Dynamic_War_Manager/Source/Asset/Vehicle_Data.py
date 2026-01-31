@@ -1083,6 +1083,853 @@ BMP1_data = {
     },
 }
 
+# ========================================
+# MAIN BATTLE TANKS - Nuovi veicoli aggiunti
+# ========================================
+
+# ===== T-55 =====
+T55_data = {
+    'constructor': 'Uralvagonzavod',
+    'model': 'T-55',
+    'made': 'USSR',
+    'start_service': 1958,
+    'end_service': 1990,
+    'category': 'Tank',
+    'cost': 1.5,  # M$
+    'range': 500,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'V-55 V-12',
+        'capabilities': {'thrust': 580, 'fuel_efficiency': 0.6, 'type': 'diesel'},
+        'reliability': {'mtbf': 25, 'mttr': 10}
+    },
+    'weapons': {
+        'CANNONS': [('D-10T2S-100mm', 34)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('DShK-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.2, 'communication_range': 80},
+        'reliability': {'mtbf': 40, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 200, 'AP': 200}),
+            'lateral': (True, {'AP': 80}),
+            'back': (True, {'AP': 45}),
+            'turret': (True, {'HEAT': 240, 'AP': 200}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 50, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 32, 'consume': 0.7},
+    },
+}
+
+# ===== Chieftain MK.3 =====
+Chieftain_MK3_data = {
+    'constructor': 'Leyland Motors',
+    'model': 'Chieftain-MK3',
+    'made': 'UK',
+    'start_service': 1969,
+    'end_service': 1995,
+    'category': 'Tank',
+    'cost': 2.5,  # M$
+    'range': 450,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'Leyland L60',
+        'capabilities': {'thrust': 750, 'fuel_efficiency': 0.65, 'type': 'multifuel'},
+        'reliability': {'mtbf': 35, 'mttr': 7}
+    },
+    'weapons': {
+        'CANNONS': [('L11A5-120mm', 64)],
+        'MACHINE_GUNS': [('L8A1-7.62', 1), ('L37A1-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 150},
+        'reliability': {'mtbf': 55, 'mttr': 2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 400, 'APFSDS': 300}),
+            'lateral': (True, {'AP': 88}),
+            'back': (True, {'AP': 38}),
+            'turret': (True, {'HEAT': 450, 'APFSDS': 350}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2800, 'fluid_capacity': 45},
+        'reliability': {'mtbf': 70, 'mttr': 1.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 48, 'consume': 0.65},
+        'off_road': {'metric': 'metric', 'speed': 28, 'consume': 0.8},
+    },
+}
+
+# ===== Leopard 1A3 =====
+Leopard_1A3_data = {
+    'constructor': 'Krauss-Maffei',
+    'model': 'Leopard-1A3',
+    'made': 'Germany',
+    'start_service': 1973,
+    'end_service': 2000,
+    'category': 'Tank',
+    'cost': 1.8,  # M$
+    'range': 600,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'MTU MB 838 CaM 500',
+        'capabilities': {'thrust': 830, 'fuel_efficiency': 0.75, 'type': 'multifuel'},
+        'reliability': {'mtbf': 50, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('L7A3-105mm', 60)],
+        'MACHINE_GUNS': [('MG3-7.62', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 180},
+        'reliability': {'mtbf': 65, 'mttr': 1.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 100, 'AP': 70}),
+            'lateral': (True, {'AP': 35}),
+            'back': (True, {'AP': 25}),
+            'turret': (True, {'HEAT': 100, 'AP': 65}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3200, 'fluid_capacity': 50},
+        'reliability': {'mtbf': 80, 'mttr': 1.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.6},
+    },
+}
+
+# ===== M60A3 Patton =====
+M60A3_data = {
+    'constructor': 'Chrysler Defense',
+    'model': 'M60A3-Patton',
+    'made': 'USA',
+    'start_service': 1978,
+    'end_service': 1997,
+    'category': 'Tank',
+    'cost': 2.5,  # M$
+    'range': 480,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'Continental AVDS-1790-2C',
+        'capabilities': {'thrust': 750, 'fuel_efficiency': 0.68, 'type': 'diesel'},
+        'reliability': {'mtbf': 40, 'mttr': 6}
+    },
+    'weapons': {
+        'CANNONS': [('M68-105mm', 63)],
+        'MACHINE_GUNS': [('M240-7.62', 1), ('M2HB-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 160},
+        'reliability': {'mtbf': 60, 'mttr': 2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 350, 'APFSDS': 250}),
+            'lateral': (True, {'AP': 76}),
+            'back': (True, {'AP': 40}),
+            'turret': (True, {'HEAT': 400, 'APFSDS': 280}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2900, 'fluid_capacity': 48},
+        'reliability': {'mtbf': 75, 'mttr': 1.6},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 48, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 33, 'consume': 0.75},
+    },
+}
+
+# ===== Leopard 2A4 =====
+Leopard_2A4_data = {
+    'constructor': 'Krauss-Maffei Wegmann',
+    'model': 'Leopard-2A4',
+    'made': 'Germany',
+    'start_service': 1985,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 5.5,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'MTU MB 873 Ka-501',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.85, 'type': 'multifuel'},
+        'reliability': {'mtbf': 60, 'mttr': 3}
+    },
+    'weapons': {
+        'CANNONS': [('Rheinmetall-120mm-L44', 42)],
+        'MACHINE_GUNS': [('MG3-7.62', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.7, 'communication_range': 220},
+        'reliability': {'mtbf': 80, 'mttr': 1}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 600, 'APFSDS': 400}),
+            'lateral': (True, {'AP': 200}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 800, 'APFSDS': 600}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3500, 'fluid_capacity': 55},
+        'reliability': {'mtbf': 95, 'mttr': 0.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.3},
+        'max': {'metric': 'metric', 'speed': 72, 'consume': 0.45},
+        'off_road': {'metric': 'metric', 'speed': 48, 'consume': 0.55},
+    },
+}
+
+# ===== Leopard 2A5 =====
+Leopard_2A5_data = {
+    'constructor': 'Krauss-Maffei Wegmann',
+    'model': 'Leopard-2A5',
+    'made': 'Germany',
+    'start_service': 1995,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 6.5,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'MTU MB 873 Ka-501',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.85, 'type': 'multifuel'},
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'weapons': {
+        'CANNONS': [('Rheinmetall-120mm-L44', 42)],
+        'MACHINE_GUNS': [('MG3-7.62', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 230},
+        'reliability': {'mtbf': 85, 'mttr': 0.9}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 700, 'APFSDS': 600}),
+            'lateral': (True, {'AP': 250}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 900, 'APFSDS': 800}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3500, 'fluid_capacity': 55},
+        'reliability': {'mtbf': 95, 'mttr': 0.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.3},
+        'max': {'metric': 'metric', 'speed': 72, 'consume': 0.45},
+        'off_road': {'metric': 'metric', 'speed': 48, 'consume': 0.55},
+    },
+}
+
+# ===== Leopard 2A6M =====
+Leopard_2A6M_data = {
+    'constructor': 'Krauss-Maffei Wegmann',
+    'model': 'Leopard-2A6M',
+    'made': 'Germany',
+    'start_service': 2007,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 9.0,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'MTU MB 873 Ka-501',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.85, 'type': 'multifuel'},
+        'reliability': {'mtbf': 70, 'mttr': 2}
+    },
+    'weapons': {
+        'CANNONS': [('Rheinmetall-120mm-L55', 42)],
+        'MACHINE_GUNS': [('MG3-7.62', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.8, 'communication_range': 250},
+        'reliability': {'mtbf': 90, 'mttr': 0.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 700, 'APFSDS': 600}),
+            'lateral': (True, {'HEAT': 300, 'AP': 250}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 900, 'APFSDS': 800}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3500, 'fluid_capacity': 55},
+        'reliability': {'mtbf': 100, 'mttr': 0.7},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 58, 'consume': 0.32},
+        'max': {'metric': 'metric', 'speed': 72, 'consume': 0.47},
+        'off_road': {'metric': 'metric', 'speed': 43, 'consume': 0.6},
+    },
+}
+
+# ===== M1A2 Abrams =====
+M1A2_Abrams_data = {
+    'constructor': 'General Dynamics Land Systems',
+    'model': 'M1A2-Abrams',
+    'made': 'USA',
+    'start_service': 1992,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 8.5,  # M$
+    'range': 426,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'Honeywell AGT1500C',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.7, 'type': 'turbine'},
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('M256-120mm', 42)],
+        'MACHINE_GUNS': [('M240-7.62', 2), ('M2HB-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.85, 'communication_range': 280},
+        'reliability': {'mtbf': 95, 'mttr': 0.7}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 800, 'APFSDS': 600}),
+            'lateral': (True, {'AP': 150}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 1000, 'APFSDS': 800}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3800, 'fluid_capacity': 60},
+        'reliability': {'mtbf': 100, 'mttr': 0.6},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.5},
+        'max': {'metric': 'metric', 'speed': 67, 'consume': 0.7},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.85},
+    },
+}
+
+# ===== Leclerc =====
+Leclerc_data = {
+    'constructor': 'Nexter Systems',
+    'model': 'Leclerc',
+    'made': 'France',
+    'start_service': 1992,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 9.0,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'SACM V8X-1500',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.82, 'type': 'diesel'},
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'weapons': {
+        'CANNONS': [('CN120-26-120mm', 40)],
+        'MACHINE_GUNS': [('M693-12.7', 1), ('ANF1-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.8, 'communication_range': 260},
+        'reliability': {'mtbf': 90, 'mttr': 0.8}
+    },
+    'protections': {
+        'active': {
+            'model': 'GALIX',
+            'threath_countermeasure': ['Laser', 'Infrared']
+        },
+        'armor': {
+            'front': (True, {'HEAT': 700, 'APFSDS': 600}),
+            'lateral': (True, {'AP': 200}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 800, 'APFSDS': 700}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3600, 'fluid_capacity': 58},
+        'reliability': {'mtbf': 98, 'mttr': 0.7},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.28},
+        'max': {'metric': 'metric', 'speed': 71, 'consume': 0.42},
+        'off_road': {'metric': 'metric', 'speed': 50, 'consume': 0.5},
+    },
+}
+
+# ===== Challenger II =====
+Challenger_II_data = {
+    'constructor': 'BAE Systems',
+    'model': 'Challenger-II',
+    'made': 'UK',
+    'start_service': 1998,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 6.0,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'Perkins CV12 Condor',
+        'capabilities': {'thrust': 1200, 'fuel_efficiency': 0.75, 'type': 'diesel'},
+        'reliability': {'mtbf': 70, 'mttr': 2}
+    },
+    'weapons': {
+        'CANNONS': [('L30A1-120mm', 52)],
+        'MACHINE_GUNS': [('L94A1-7.62', 1), ('L37A2-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 240},
+        'reliability': {'mtbf': 88, 'mttr': 0.9}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 900, 'APFSDS': 650}),
+            'lateral': (True, {'AP': 200}),
+            'back': (True, {'AP': 50}),
+            'turret': (True, {'HEAT': 1000, 'APFSDS': 700}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3400, 'fluid_capacity': 54},
+        'reliability': {'mtbf': 92, 'mttr': 0.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 59, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.65},
+    },
+}
+
+# ===== Merkava IV =====
+Merkava_IV_data = {
+    'constructor': 'Israel Military Industries',
+    'model': 'Merkava-IV',
+    'made': 'Israel',
+    'start_service': 2004,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 6.5,  # M$
+    'range': 500,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'MTU MT883 Ka-501',
+        'capabilities': {'thrust': 1500, 'fuel_efficiency': 0.78, 'type': 'diesel'},
+        'reliability': {'mtbf': 68, 'mttr': 2.2}
+    },
+    'weapons': {
+        'CANNONS': [('MG251-120mm', 48)],
+        'MACHINE_GUNS': [('M2HB-12.7', 1), ('FN MAG-7.62', 3)],
+        'MORTARS': [('M933-60mm', 12)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.82, 'communication_range': 270},
+        'reliability': {'mtbf': 92, 'mttr': 0.75}
+    },
+    'protections': {
+        'active': {
+            'model': 'Trophy APS',
+            'threath_countermeasure': ['ATGM', 'RPG', 'Tank rounds']
+        },
+        'armor': {
+            'front': (True, {'HEAT': 900, 'APFSDS': 700}),
+            'lateral': (True, {'HEAT': 600, 'AP': 300}),
+            'back': (True, {'AP': 100}),
+            'turret': (True, {'HEAT': 950, 'APFSDS': 750}),
+        },
+        'reactive': {
+            'model': 'Modular ERA',
+            'increment_thickness': {
+                'front': (True, {'HEAT': 300, 'APFSDS': 150}),
+                'lateral': (True, {'HEAT': 300, 'APFSDS': 150}),
+                'back': (False, {}),
+                'turret': (True, {'HEAT': 200, 'APFSDS': 100}),
+            },
+        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3600, 'fluid_capacity': 56},
+        'reliability': {'mtbf': 96, 'mttr': 0.72},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.32},
+        'max': {'metric': 'metric', 'speed': 64, 'consume': 0.48},
+        'off_road': {'metric': 'metric', 'speed': 50, 'consume': 0.58},
+    },
+}
+
+# ===== Type 59 =====
+Type_59_data = {
+    'constructor': 'Norinco',
+    'model': 'Type-59',
+    'made': 'China',
+    'start_service': 1958,
+    'end_service': 1985,
+    'category': 'Tank',
+    'cost': 0.8,  # M$
+    'range': 500,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'Model 12150L V-12',
+        'capabilities': {'thrust': 520, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 22, 'mttr': 12}
+    },
+    'weapons': {
+        'CANNONS': [('Type-59-100mm', 34)],
+        'MACHINE_GUNS': [('Type-59T-7.62', 1), ('DShK-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.15, 'communication_range': 60},
+        'reliability': {'mtbf': 35, 'mttr': 4}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 200}),
+            'lateral': (True, {'AP': 80}),
+            'back': (True, {'AP': 45}),
+            'turret': (True, {'AP': 200}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2400, 'fluid_capacity': 38},
+        'reliability': {'mtbf': 45, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.62},
+        'off_road': {'metric': 'metric', 'speed': 32, 'consume': 0.75},
+    },
+}
+
+# ===== T-80U =====
+T80U_data = {
+    'constructor': 'Omsktransmash',
+    'model': 'T-80U',
+    'made': 'USSR',
+    'start_service': 1985,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 4.0,  # M$
+    'range': 335,  # km (500 with external tanks)
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'GTD-1250 gas turbine',
+        'capabilities': {'thrust': 1250, 'fuel_efficiency': 0.55, 'type': 'turbine'},
+        'reliability': {'mtbf': 35, 'mttr': 6}
+    },
+    'weapons': {
+        'CANNONS': [('2A46M-125mm', 45)],
+        'MISSILES': [('9M119-Refleks', 6)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 190},
+        'reliability': {'mtbf': 65, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'HEAT': 500, 'APFSDS': 400}),
+            'lateral': (True, {'AP': 80}),
+            'back': (True, {'AP': 45}),
+            'turret': (True, {'HEAT': 600, 'APFSDS': 450}),
+        },
+        'reactive': {
+            'model': 'Kontakt-5',
+            'increment_thickness': {
+                'front': (True, {'HEAT': 400, 'APFSDS': 200}),
+                'lateral': (True, {'HEAT': 300, 'APFSDS': 150}),
+                'back': (True, {'HEAT': 200, 'APFSDS': 100}),
+                'turret': (True, {'HEAT': 400, 'APFSDS': 200}),
+            },
+        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3200, 'fluid_capacity': 52},
+        'reliability': {'mtbf': 85, 'mttr': 1.1},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.55},
+        'max': {'metric': 'metric', 'speed': 70, 'consume': 0.75},
+        'off_road': {'metric': 'metric', 'speed': 48, 'consume': 0.85},
+    },
+}
+
+# ===== T-90 (base) =====
+T90_base_data = {
+    'constructor': 'Uralvagonzavod',
+    'model': 'T-90',
+    'made': 'Russia',
+    'start_service': 1992,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 4.5,  # M$
+    'range': 550,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'V-84MS',
+        'capabilities': {'thrust': 840, 'fuel_efficiency': 0.78, 'type': 'diesel'},
+        'reliability': {'mtbf': 42, 'mttr': 5}
+    },
+    'weapons': {
+        'CANNONS': [('2A46M-125mm', 43)],
+        'MISSILES': [('9M119-Refleks', 6)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.52, 'communication_range': 200},
+        'reliability': {'mtbf': 68, 'mttr': 1.6}
+    },
+    'protections': {
+        'active': {
+            'model': 'Shtora-1',
+            'threath_countermeasure': ['Laser', 'ATGM']
+        },
+        'armor': {
+            'front': (True, {'HEAT': 550, 'APFSDS': 450}),
+            'lateral': (True, {'AP': 85}),
+            'back': (True, {'AP': 45}),
+            'turret': (True, {'HEAT': 700, 'APFSDS': 550}),
+        },
+        'reactive': {
+            'model': 'Kontakt-5',
+            'increment_thickness': {
+                'front': (True, {'HEAT': 450, 'APFSDS': 220}),
+                'lateral': (True, {'HEAT': 350, 'APFSDS': 170}),
+                'back': (True, {'HEAT': 250, 'APFSDS': 120}),
+                'turret': (True, {'HEAT': 450, 'APFSDS': 220}),
+            },
+        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3100, 'fluid_capacity': 51},
+        'reliability': {'mtbf': 88, 'mttr': 1.0},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 63, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 43, 'consume': 0.62},
+    },
+}
+
+# ===== T-72B3 =====
+T72B3_data = {
+    'constructor': 'Uralvagonzavod',
+    'model': 'T-72B3',
+    'made': 'Russia',
+    'start_service': 2013,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 1.8,  # M$ (modernization cost)
+    'range': 500,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': 'V-84-1',
+        'capabilities': {'thrust': 840, 'fuel_efficiency': 0.76, 'type': 'diesel'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'CANNONS': [('2A46M5-125mm', 45)],
+        'MISSILES': [('9M119M-Refleks-M', 6)],
+        'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 210},
+        'reliability': {'mtbf': 72, 'mttr': 1.4}
+    },
+    'protections': {
+        'active': {
+            'model': 'Shtora-1',
+            'threath_countermeasure': ['Laser', 'ATGM']
+        },
+        'armor': {
+            'front': (True, {'HEAT': 500, 'APFSDS': 400}),
+            'lateral': (True, {'AP': 80}),
+            'back': (True, {'AP': 40}),
+            'turret': (True, {'HEAT': 600, 'APFSDS': 450}),
+        },
+        'reactive': {
+            'model': 'Kontakt-5',
+            'increment_thickness': {
+                'front': (True, {'HEAT': 400, 'APFSDS': 200}),
+                'lateral': (True, {'HEAT': 300, 'APFSDS': 150}),
+                'back': (True, {'HEAT': 200, 'APFSDS': 100}),
+                'turret': (True, {'HEAT': 400, 'APFSDS': 200}),
+            },
+        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 50},
+        'reliability': {'mtbf': 82, 'mttr': 1.15},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 52, 'consume': 0.36},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.54},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.65},
+    },
+}
+
+# ===== ZTZ-96B =====
+ZTZ_96B_data = {
+    'constructor': 'Norinco',
+    'model': 'ZTZ-96B',
+    'made': 'China',
+    'start_service': 2017,
+    'end_service': None,
+    'category': 'Tank',
+    'cost': 2.8,  # M$
+    'range': 400,  # km
+    'roles': ['Tank'],
+    'engine': {
+        'model': '12150ZL',
+        'capabilities': {'thrust': 1000, 'fuel_efficiency': 0.72, 'type': 'diesel'},
+        'reliability': {'mtbf': 45, 'mttr': 4.5}
+    },
+    'weapons': {
+        'CANNONS': [('ZPT-98-125mm', 42)],
+        'MACHINE_GUNS': [('Type-86-7.62', 1), ('QJC88-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 215},
+        'reliability': {'mtbf': 75, 'mttr': 1.3}
+    },
+    'protections': {
+        'active': {
+            'model': 'GL-5 APS',
+            'threath_countermeasure': ['Laser', 'Infrared']
+        },
+        'armor': {
+            'front': (True, {'HEAT': 600, 'APFSDS': 500}),
+            'lateral': (True, {'AP': 80}),
+            'back': (True, {'AP': 45}),
+            'turret': (True, {'HEAT': 650, 'APFSDS': 500}),
+        },
+        'reactive': {
+            'model': 'FY-4 ERA',
+            'increment_thickness': {
+                'front': (True, {'HEAT': 350, 'APFSDS': 180}),
+                'lateral': (True, {'HEAT': 300, 'APFSDS': 150}),
+                'back': (True, {'HEAT': 200, 'APFSDS': 100}),
+                'turret': (True, {'HEAT': 350, 'APFSDS': 180}),
+            },
+        },
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3100, 'fluid_capacity': 52},
+        'reliability': {'mtbf': 80, 'mttr': 1.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 57, 'consume': 0.56},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.68},
+    },
+}
+
 # SETUP DICTIONARY VALUE 
 SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
@@ -1091,6 +1938,24 @@ Vehicle_Data(**T90_data)
 Vehicle_Data(**T72_data)
 Vehicle_Data(**T130_data)
 Vehicle_Data(**BMP1_data)
+
+# Nuovi Main Battle Tanks
+Vehicle_Data(**T55_data)
+Vehicle_Data(**Chieftain_MK3_data)
+Vehicle_Data(**Leopard_1A3_data)
+Vehicle_Data(**M60A3_data)
+Vehicle_Data(**Leopard_2A4_data)
+Vehicle_Data(**Leopard_2A5_data)
+Vehicle_Data(**Leopard_2A6M_data)
+Vehicle_Data(**M1A2_Abrams_data)
+Vehicle_Data(**Leclerc_data)
+Vehicle_Data(**Challenger_II_data)
+Vehicle_Data(**Merkava_IV_data)
+Vehicle_Data(**Type_59_data)
+Vehicle_Data(**T80U_data)
+Vehicle_Data(**T90_base_data)
+Vehicle_Data(**T72B3_data)
+Vehicle_Data(**ZTZ_96B_data)
 
 # Load scores in dict
 # specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria

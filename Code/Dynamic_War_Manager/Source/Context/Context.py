@@ -131,11 +131,12 @@ WEIGHT_FORCE_GROUND_ASSET = {
 # Fatto (?): è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
 # Fatto(?): Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
 # Max value = 5, min value = 1
+# NOTA: Probabilmente dovrebbe essore più specifiche: Rapid_Retrait, Tactical_Retrait, , Fire_Saturation (per artillery, Tank) 
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
     GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
     GROUND_ACTION['Maintain']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 4, 'Artillery_Semovent': 2, 'Artillery_Fixed': 3},    
-    GROUND_ACTION['Retrait']: {'Tank': 5, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 3, 'Artillery_Fixed': 1},    
+    GROUND_ACTION['Retrait']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 2, 'Artillery_Fixed': 1},    
 }
 
 
@@ -577,7 +578,7 @@ TARGET_CLASSIFICATION = {
                         Ground_Vehicle_Asset_Type.SAM_SMALL.value,
                         Ground_Vehicle_Asset_Type.SAM_BIG.value,
                         Ground_Vehicle_Asset_Type.AAA.value},
-    'Airbase':      {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Air_Base']},
+    'Airbase':      {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase']},
     'Port':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Port']},
     'Shipyard':     {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard']},
     'Farp':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp']},
