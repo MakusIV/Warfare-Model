@@ -550,7 +550,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 }
 
 TARGET_CLASSIFICATION = {
-    'Soft':         {   Parked_Asset_Type.Transport_Aircraft.value, 
+    'Soft':         [   Parked_Asset_Type.Transport_Aircraft.value, 
                         Parked_Asset_Type.Transport_Aircraft_Big.value,
                         Parked_Asset_Type.Transport_Helicopter.value,
                         Parked_Asset_Type.Transport_Helicopter_Big.value,
@@ -566,37 +566,28 @@ TARGET_CLASSIFICATION = {
                         Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value,                        
                         Ground_Vehicle_Asset_Type.EWR.value
 
-                        }, # Motorized, Infantry
-    'Armored':      {   Ground_Vehicle_Asset_Type.ARMORED.value, 
+                    ], # Motorized, Infantry
+    'Armored':      [   Ground_Vehicle_Asset_Type.ARMORED.value, 
                         Ground_Vehicle_Asset_Type.TANK.value, 
                         Ground_Vehicle_Asset_Type.AAA.value, 
                         Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value,                    
-                     }, # Tank, Armored Vehicle
-    'Hard':         {   'Bridge', 'Bunker', 'Hangar', 'Depot'},
-    'Structure':    {   'Building', 'Oil_Tank', 'Railway_Interchange', 'Power_Plant', 'Factory', 'Gas_Infrastructure', 'Petrol_Infrastructure', 'Administrative_Infrastructure', 'Energy_Infrastructure', 'Service_Infrastructure'}, # Building, Factory, Depot, ...
-    'Air_Defense':  {   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
+                    ], # Tank, Armored Vehicle
+    'Hard':         [   'Bridge', 'Bunker', 'Hangar', 'Depot' ],
+    'Structure':    [   'Building', 'Oil_Tank', 'Railway_Interchange', 'Power_Plant', 'Factory', 'Gas_Infrastructure', 'Petrol_Infrastructure', 'Administrative_Infrastructure', 'Energy_Infrastructure', 'Service_Infrastructure'], # Building, Factory, Depot, ...
+    'Air_Defense':  [   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
                         Ground_Vehicle_Asset_Type.SAM_SMALL.value,
                         Ground_Vehicle_Asset_Type.SAM_BIG.value,
-                        Ground_Vehicle_Asset_Type.AAA.value},
-    'Airbase':      {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase']},
-    'Port':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Port']},
-    'Shipyard':     {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard']},
-    'Farp':         {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp']},
-    'Stronghold':   {   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold']},
-    'ship':         {   Parked_Asset_Type.Transport_Ship_Large.value,
+                        Ground_Vehicle_Asset_Type.AAA.value],
+    'Airbase':      [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase'].keys()],
+    'Port':         [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Port'].keys()],
+    'Shipyard':     [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard'].keys()],
+    'Farp':         [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp'].keys()],
+    'Stronghold':   [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()],
+    'ship':         [   Parked_Asset_Type.Transport_Ship_Large.value,
                         Parked_Asset_Type.Transport_Ship_Medium.value,
                         Parked_Asset_Type.Transport_Ship_Small.value,
-                        SEA_MILITARY_CRAFT_ASSET['Carrier'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Amphibious_Assault_Ship'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Cruiser'].value,  
-                        SEA_MILITARY_CRAFT_ASSET['Destroyer'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Corvette'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Submarine'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Frigate'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Transport'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Fast_Attack'].value,
-                        SEA_MILITARY_CRAFT_ASSET['Civilian'].value
-                    }
+                        SEA_MILITARY_CRAFT_ASSET.keys()                        
+                    ]
 }
 
 

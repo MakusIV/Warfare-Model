@@ -1930,6 +1930,2314 @@ ZTZ_96B_data = {
     },
 }
 
+
+# ========================================
+# NUOVI VEICOLI AGGIUNTI
+# ========================================
+
+# ========================================
+# INFANTRY FIGHTING VEHICLES (IFV)
+# Da aggiungere a Vehicle_Data.py
+# ========================================
+
+# ===== Marder =====
+Marder_data = {
+    'constructor': 'Rheinmetall Landsysteme',
+    'model': 'Marder',
+    'made': 'Germany',
+    'start_service': 1971,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 3.5,  # M$
+    'range': 520,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'MTU MB 833 Ea-500',
+        'capabilities': {'thrust': 600, 'fuel_efficiency': 0.75, 'type': 'diesel'},
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('MK-20-Rh-202-20mm', 1250)],
+        'MACHINE_GUNS': [('MG3-7.62', 2)],
+        'MISSILES': [('MILAN', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 180},
+        'reliability': {'mtbf': 65, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 35}),
+            'lateral': (True, {'AP': 30}),
+            'back': (True, {'AP': 20}),
+            'turret': (True, {'AP': 35}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2900, 'fluid_capacity': 46},
+        'reliability': {'mtbf': 75, 'mttr': 1.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.32},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.45},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.55},
+    },
+}
+
+# ===== BMP-2 =====
+BMP2_data = {
+    'constructor': 'Kurganmashzavod',
+    'model': 'BMP-2',
+    'made': 'USSR',
+    'start_service': 1980,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.8,  # M$
+    'range': 600,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'UTD-20',
+        'capabilities': {'thrust': 300, 'fuel_efficiency': 0.72, 'type': 'diesel'},
+        'reliability': {'mtbf': 45, 'mttr': 5}
+    },
+    'weapons': {
+        'CANNONS': [('2A42-30mm', 500)],
+        'MACHINE_GUNS': [('PKT-7.62', 1)],
+        'MISSILES': [('9M113-Konkurs', 4)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 140},
+        'reliability': {'mtbf': 50, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 33}),
+            'lateral': (True, {'AP': 25}),
+            'back': (True, {'AP': 18}),
+            'turret': (True, {'AP': 33}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2700, 'fluid_capacity': 42},
+        'reliability': {'mtbf': 65, 'mttr': 2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.6},
+    },
+}
+
+# ===== BMD-1 =====
+BMD1_data = {
+    'constructor': 'Volgograd Tractor Plant',
+    'model': 'BMD-1',
+    'made': 'USSR',
+    'start_service': 1969,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.2,  # M$
+    'range': 600,  # km
+    'roles': ['IFV', 'Airborne'],
+    'engine': {
+        'model': '5D-20',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.68, 'type': 'diesel'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'CANNONS': [('2A28-Grom-73mm', 40)],
+        'MACHINE_GUNS': [('PKT-7.62', 3)],
+        'MISSILES': [('9M14-Malyutka', 3)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 120},
+        'reliability': {'mtbf': 45, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 23}),
+            'lateral': (True, {'AP': 15}),
+            'back': (True, {'AP': 12}),
+            'turret': (True, {'AP': 23}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 38},
+        'reliability': {'mtbf': 55, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 70, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.62},
+    },
+}
+
+# ===== M-2 Bradley =====
+M2_Bradley_data = {
+    'constructor': 'BAE Systems',
+    'model': 'M2-Bradley',
+    'made': 'USA',
+    'start_service': 1981,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 3.8,  # M$
+    'range': 400,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'Cummins VTA-903T',
+        'capabilities': {'thrust': 600, 'fuel_efficiency': 0.7, 'type': 'diesel'},
+        'reliability': {'mtbf': 52, 'mttr': 4.5}
+    },
+    'weapons': {
+        'CANNONS': [('M242-Bushmaster-25mm', 900)],
+        'MACHINE_GUNS': [('M240C-7.62', 1)],
+        'MISSILES': [('BGM-71-TOW', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.7, 'communication_range': 200},
+        'reliability': {'mtbf': 75, 'mttr': 1.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 30}),
+            'lateral': (True, {'AP': 25}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 30}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 48},
+        'reliability': {'mtbf': 80, 'mttr': 1.3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 56, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 66, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.6},
+    },
+}
+
+# ===== BMP-3 =====
+BMP3_data = {
+    'constructor': 'Kurganmashzavod',
+    'model': 'BMP-3',
+    'made': 'USSR',
+    'start_service': 1987,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 2.5,  # M$
+    'range': 600,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'UTD-29',
+        'capabilities': {'thrust': 500, 'fuel_efficiency': 0.76, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 4.5}
+    },
+    'weapons': {
+        'CANNONS': [('2A70-100mm', 40), ('2A72-30mm', 500)],
+        'MACHINE_GUNS': [('PKT-7.62', 3)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 160},
+        'reliability': {'mtbf': 58, 'mttr': 2.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 43}),
+            'lateral': (True, {'AP': 25}),
+            'back': (True, {'AP': 18}),
+            'turret': (True, {'AP': 43}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2850, 'fluid_capacity': 45},
+        'reliability': {'mtbf': 70, 'mttr': 1.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 60, 'consume': 0.33},
+        'max': {'metric': 'metric', 'speed': 70, 'consume': 0.48},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.58},
+    },
+}
+
+# ===== Warrior =====
+Warrior_data = {
+    'constructor': 'BAE Systems',
+    'model': 'Warrior',
+    'made': 'UK',
+    'start_service': 1987,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 3.7,  # M$
+    'range': 660,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'Perkins CV8 TCA Condor',
+        'capabilities': {'thrust': 550, 'fuel_efficiency': 0.73, 'type': 'diesel'},
+        'reliability': {'mtbf': 53, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('L21A1-RARDEN-30mm', 230)],
+        'MACHINE_GUNS': [('L94A1-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 190},
+        'reliability': {'mtbf': 72, 'mttr': 1.6}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 80}),
+            'lateral': (True, {'AP': 30}),
+            'back': (True, {'AP': 20}),
+            'turret': (True, {'AP': 80}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2950, 'fluid_capacity': 47},
+        'reliability': {'mtbf': 78, 'mttr': 1.4},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.32},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.46},
+        'off_road': {'metric': 'metric', 'speed': 43, 'consume': 0.56},
+    },
+}
+
+# ===== LAV-25 =====
+LAV25_data = {
+    'constructor': 'General Dynamics Land Systems',
+    'model': 'LAV-25',
+    'made': 'USA',
+    'start_service': 1983,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.8,  # M$
+    'range': 660,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'Detroit Diesel 6V53T',
+        'capabilities': {'thrust': 275, 'fuel_efficiency': 0.78, 'type': 'diesel'},
+        'reliability': {'mtbf': 58, 'mttr': 3.5}
+    },
+    'weapons': {
+        'CANNONS': [('M242-Bushmaster-25mm', 630)],
+        'MACHINE_GUNS': [('M240-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.62, 'communication_range': 175},
+        'reliability': {'mtbf': 68, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 16}),
+            'lateral': (True, {'AP': 10}),
+            'back': (True, {'AP': 10}),
+            'turret': (True, {'AP': 16}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2650, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 72, 'mttr': 1.6},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 85, 'consume': 0.28},
+        'max': {'metric': 'metric', 'speed': 100, 'consume': 0.4},
+        'off_road': {'metric': 'metric', 'speed': 55, 'consume': 0.5},
+    },
+}
+
+# ===== M1126 Stryker ICV =====
+M1126_Stryker_data = {
+    'constructor': 'General Dynamics Land Systems',
+    'model': 'M1126-Stryker-ICV',
+    'made': 'USA',
+    'start_service': 2002,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 5.0,  # M$
+    'range': 500,  # km
+    'roles': ['IFV', 'APC'],
+    'engine': {
+        'model': 'Caterpillar C7',
+        'capabilities': {'thrust': 350, 'fuel_efficiency': 0.75, 'type': 'diesel'},
+        'reliability': {'mtbf': 62, 'mttr': 3}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('M2HB-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 210},
+        'reliability': {'mtbf': 80, 'mttr': 1.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 14}),
+            'lateral': (True, {'AP': 12}),
+            'back': (True, {'AP': 10}),
+            'turret': (True, {'AP': 14}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2750, 'fluid_capacity': 43},
+        'reliability': {'mtbf': 85, 'mttr': 1.1},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 85, 'consume': 0.3},
+        'max': {'metric': 'metric', 'speed': 100, 'consume': 0.42},
+        'off_road': {'metric': 'metric', 'speed': 60, 'consume': 0.52},
+    },
+}
+
+# ===== BTR-82A =====
+BTR82A_data = {
+    'constructor': 'Military Industrial Company',
+    'model': 'BTR-82A',
+    'made': 'Russia',
+    'start_service': 2012,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.7,  # M$
+    'range': 600,  # km
+    'roles': ['IFV', 'APC'],
+    'engine': {
+        'model': 'KAMAZ-7403 V8',
+        'capabilities': {'thrust': 300, 'fuel_efficiency': 0.72, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 4.2}
+    },
+    'weapons': {
+        'CANNONS': [('2A72-30mm', 500)],
+        'MACHINE_GUNS': [('PKTM-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.58, 'communication_range': 170},
+        'reliability': {'mtbf': 65, 'mttr': 1.9}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 13}),
+            'lateral': (True, {'AP': 9}),
+            'back': (True, {'AP': 7}),
+            'turret': (True, {'AP': 13}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2650, 'fluid_capacity': 41},
+        'reliability': {'mtbf': 68, 'mttr': 1.7},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 85, 'consume': 0.3},
+        'max': {'metric': 'metric', 'speed': 100, 'consume': 0.43},
+        'off_road': {'metric': 'metric', 'speed': 55, 'consume': 0.53},
+    },
+}
+
+# ===== ZBD-04A =====
+ZBD04A_data = {
+    'constructor': 'Norinco',
+    'model': 'ZBD-04A',
+    'made': 'China',
+    'start_service': 2004,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 3.2,  # M$
+    'range': 500,  # km
+    'roles': ['IFV'],
+    'engine': {
+        'model': 'Deutz BF8L 413FC',
+        'capabilities': {'thrust': 590, 'fuel_efficiency': 0.74, 'type': 'diesel'},
+        'reliability': {'mtbf': 50, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('ZPT-99-30mm', 500)],
+        'MACHINE_GUNS': [('Type-86-7.62', 1)],
+        'MISSILES': [('HJ-73C', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.63, 'communication_range': 185},
+        'reliability': {'mtbf': 70, 'mttr': 1.7}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 30}),
+            'lateral': (True, {'AP': 20}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 35}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2850, 'fluid_capacity': 46},
+        'reliability': {'mtbf': 75, 'mttr': 1.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.31},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.45},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.55},
+    },
+}
+# Nuovi APC (Armored Personnel Carrier) da aggiungere a Vehicle_Data.py
+# Generato automaticamente per il progetto Warfare-Model
+
+# ===== Sd.Kfz 251 Halftrack =====
+SdKfz_251_data = {
+    'constructor': 'Hanomag',
+    'model': 'Sd.Kfz-251',
+    'made': 'Germany',
+    'start_service': 1939,
+    'end_service': 1945,
+    'category': 'Armored',
+    'cost': 0.8,  # M$
+    'range': 300,  # km
+    'roles': ['APC'],
+    'engine': {
+        'model': 'Maybach HL 42 TUKRM',
+        'capabilities': {'thrust': 100, 'fuel_efficiency': 0.45, 'type': 'gasoline'},
+        'reliability': {'mtbf': 15, 'mttr': 8}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('MG34-7.92', 2)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.1, 'communication_range': 30},
+        'reliability': {'mtbf': 20, 'mttr': 5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 14.5}),
+            'lateral': (True, {'AP': 8}),
+            'back': (True, {'AP': 8}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 1500, 'fluid_capacity': 25},
+        'reliability': {'mtbf': 25, 'mttr': 4},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 45, 'consume': 0.5},
+        'max': {'metric': 'metric', 'speed': 52, 'consume': 0.7},
+        'off_road': {'metric': 'metric', 'speed': 25, 'consume': 0.9},
+    },
+}
+
+# ===== MTLB =====
+MTLB_data = {
+    'constructor': 'Kharkiv Tractor Plant',
+    'model': 'MT-LB',
+    'made': 'USSR',
+    'start_service': 1966,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 0.6,  # M$
+    'range': 500,  # km
+    'roles': ['APC', 'Transport'],
+    'engine': {
+        'model': 'YaMZ-238V',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.55, 'type': 'diesel'},
+        'reliability': {'mtbf': 30, 'mttr': 6}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.25, 'communication_range': 50},
+        'reliability': {'mtbf': 35, 'mttr': 4}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 7}),
+            'back': (True, {'AP': 7}),
+            'turret': (True, {'AP': 7}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2000, 'fluid_capacity': 30},
+        'reliability': {'mtbf': 40, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 61, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.65},
+    },
+}
+
+# ===== M2A1 Halftrack =====
+M2A1_Halftrack_data = {
+    'constructor': 'White Motor Company',
+    'model': 'M2A1-Halftrack',
+    'made': 'USA',
+    'start_service': 1940,
+    'end_service': 1960,
+    'category': 'Armored',
+    'cost': 0.7,  # M$
+    'range': 280,  # km
+    'roles': ['APC'],
+    'engine': {
+        'model': 'White 160AX',
+        'capabilities': {'thrust': 147, 'fuel_efficiency': 0.42, 'type': 'gasoline'},
+        'reliability': {'mtbf': 18, 'mttr': 7}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('M2HB-12.7', 1), ('M1919-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.15, 'communication_range': 35},
+        'reliability': {'mtbf': 22, 'mttr': 5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 12.7}),
+            'lateral': (True, {'AP': 6.35}),
+            'back': (True, {'AP': 6.35}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 1600, 'fluid_capacity': 22},
+        'reliability': {'mtbf': 28, 'mttr': 4},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 40, 'consume': 0.55},
+        'max': {'metric': 'metric', 'speed': 48, 'consume': 0.75},
+        'off_road': {'metric': 'metric', 'speed': 24, 'consume': 0.95},
+    },
+}
+
+# ===== M-113 =====
+M113_data = {
+    'constructor': 'FMC Corporation',
+    'model': 'M-113',
+    'made': 'USA',
+    'start_service': 1960,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.2,  # M$
+    'range': 480,  # km
+    'roles': ['APC'],
+    'engine': {
+        'model': 'Detroit Diesel 6V53',
+        'capabilities': {'thrust': 275, 'fuel_efficiency': 0.6, 'type': 'diesel'},
+        'reliability': {'mtbf': 45, 'mttr': 5}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('M2HB-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 100},
+        'reliability': {'mtbf': 50, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 38}),
+            'lateral': (True, {'AP': 32}),
+            'back': (True, {'AP': 28}),
+            'turret': (True, {'AP': 25}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2200, 'fluid_capacity': 35},
+        'reliability': {'mtbf': 55, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 67, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.68},
+    },
+}
+
+# ===== AAV7 Amphibious =====
+AAV7_data = {
+    'constructor': 'FMC Corporation',
+    'model': 'AAV7',
+    'made': 'USA',
+    'start_service': 1972,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 2.0,  # M$
+    'range': 480,  # km
+    'roles': ['APC', 'Amphibious'],
+    'engine': {
+        'model': 'Cummins VT400',
+        'capabilities': {'thrust': 400, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('M2HB-12.7', 1), ('M240-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 120},
+        'reliability': {'mtbf': 48, 'mttr': 3.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 45}),
+            'lateral': (True, {'AP': 35}),
+            'back': (True, {'AP': 25}),
+            'turret': (True, {'AP': 30}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2400, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 50, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 64, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 32, 'consume': 0.75},
+    },
+}
+
+# ===== TPz Fuchs =====
+TPz_Fuchs_data = {
+    'constructor': 'Thyssen-Henschel',
+    'model': 'TPz-Fuchs',
+    'made': 'Germany',
+    'start_service': 1979,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.5,  # M$
+    'range': 800,  # km
+    'roles': ['APC', 'NBC'],
+    'engine': {
+        'model': 'Mercedes-Benz OM 402A',
+        'capabilities': {'thrust': 320, 'fuel_efficiency': 0.72, 'type': 'diesel'},
+        'reliability': {'mtbf': 60, 'mttr': 4}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('MG3-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 140},
+        'reliability': {'mtbf': 65, 'mttr': 2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 30}),
+            'lateral': (True, {'AP': 15}),
+            'back': (True, {'AP': 15}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2600, 'fluid_capacity': 38},
+        'reliability': {'mtbf': 70, 'mttr': 2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 85, 'consume': 0.32},
+        'max': {'metric': 'metric', 'speed': 105, 'consume': 0.48},
+        'off_road': {'metric': 'metric', 'speed': 50, 'consume': 0.6},
+    },
+}
+
+# ===== BTR-80 =====
+BTR80_data = {
+    'constructor': 'GAZ',
+    'model': 'BTR-80',
+    'made': 'USSR',
+    'start_service': 1986,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 1.0,  # M$
+    'range': 600,  # km
+    'roles': ['APC'],
+    'engine': {
+        'model': 'KamAZ-7403',
+        'capabilities': {'thrust': 260, 'fuel_efficiency': 0.62, 'type': 'diesel'},
+        'reliability': {'mtbf': 42, 'mttr': 5}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('KPVT-14.5', 1), ('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 130},
+        'reliability': {'mtbf': 55, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 7}),
+            'back': (True, {'AP': 7}),
+            'turret': (True, {'AP': 9}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2300, 'fluid_capacity': 34},
+        'reliability': {'mtbf': 52, 'mttr': 2.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 70, 'consume': 0.36},
+        'max': {'metric': 'metric', 'speed': 80, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.62},
+    },
+}
+
+# ===== BTR-RD =====
+BTR_RD_data = {
+    'constructor': 'GAZ',
+    'model': 'BTR-RD',
+    'made': 'USSR',
+    'start_service': 1984,
+    'end_service': None,
+    'category': 'Armored',
+    'cost': 0.9,  # M$
+    'range': 580,  # km
+    'roles': ['APC', 'Airborne'],
+    'engine': {
+        'model': 'GAZ-49B',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.58, 'type': 'gasoline'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'MACHINE_GUNS': [('KPVT-14.5', 1), ('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
+        'reliability': {'mtbf': 45, 'mttr': 3.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 8}),
+            'lateral': (True, {'AP': 5}),
+            'back': (True, {'AP': 5}),
+            'turret': (True, {'AP': 7}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2100, 'fluid_capacity': 30},
+        'reliability': {'mtbf': 48, 'mttr': 3.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.68},
+    },
+}
+# Nuovi veicoli Artillery (SPH, MLRS, SPM) da aggiungere a Vehicle_Data.py
+# Generato automaticamente dalle ricerche degli agent
+
+# ===== BM-21 Grad 122mm MLRS =====
+BM21_Grad_data = {
+    'constructor': 'Splav State Research',
+    'model': 'BM-21-Grad',
+    'made': 'USSR',
+    'start_service': 1963,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 1.5,  # M$
+    'range': 450,  # km
+    'roles': ['MLRS'],
+    'engine': {
+        'model': 'ZIL-375 V8',
+        'capabilities': {'thrust': 180, 'fuel_efficiency': 0.4, 'type': 'gasoline'},
+        'reliability': {'mtbf': 35, 'mttr': 6}
+    },
+    'weapons': {
+        'ARTILLERY': [('122mm-Grad-Rocket', 40)],
+        'MACHINE_GUNS': [('PKM-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 80},
+        'reliability': {'mtbf': 40, 'mttr': 4}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 8}),
+            'lateral': (True, {'AP': 5}),
+            'back': (True, {'AP': 5}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2000, 'fluid_capacity': 30},
+        'reliability': {'mtbf': 45, 'mttr': 3.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.5},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.7},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.85},
+    },
+}
+
+# ===== 2S3 Akatsia 152mm SPH =====
+S2S3_Akatsia_data = {
+    'constructor': 'Uraltransmash',
+    'model': '2S3-Akatsia',
+    'made': 'USSR',
+    'start_service': 1971,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 2.5,  # M$
+    'range': 500,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'YaMZ-238V V8',
+        'capabilities': {'thrust': 520, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 42, 'mttr': 5}
+    },
+    'weapons': {
+        'ARTILLERY': [('2A33-152mm', 46)],
+        'MACHINE_GUNS': [('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
+        'reliability': {'mtbf': 50, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 20}),
+            'lateral': (True, {'AP': 15}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 15}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2400, 'fluid_capacity': 38},
+        'reliability': {'mtbf': 55, 'mttr': 2.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.58},
+        'off_road': {'metric': 'metric', 'speed': 30, 'consume': 0.75},
+    },
+}
+
+# ===== 2S1 Gvozdika 122mm SPH =====
+S2S1_Gvozdika_data = {
+    'constructor': 'Uraltransmash',
+    'model': '2S1-Gvozdika',
+    'made': 'USSR',
+    'start_service': 1972,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 1.8,  # M$
+    'range': 500,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'YaMZ-238V V8',
+        'capabilities': {'thrust': 300, 'fuel_efficiency': 0.55, 'type': 'diesel'},
+        'reliability': {'mtbf': 40, 'mttr': 5}
+    },
+    'weapons': {
+        'ARTILLERY': [('2A31-122mm', 40)],
+        'MACHINE_GUNS': [('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.32, 'communication_range': 95},
+        'reliability': {'mtbf': 48, 'mttr': 3.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 20}),
+            'lateral': (True, {'AP': 15}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 15}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2300, 'fluid_capacity': 35},
+        'reliability': {'mtbf': 52, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.7},
+    },
+}
+
+# ===== BM-27 Uragan 220mm MLRS =====
+BM27_Uragan_data = {
+    'constructor': 'Splav State Research',
+    'model': 'BM-27-Uragan',
+    'made': 'USSR',
+    'start_service': 1975,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 3.5,  # M$
+    'range': 500,  # km
+    'roles': ['MLRS'],
+    'engine': {
+        'model': 'ZIL-375 V8',
+        'capabilities': {'thrust': 180, 'fuel_efficiency': 0.42, 'type': 'gasoline'},
+        'reliability': {'mtbf': 32, 'mttr': 7}
+    },
+    'weapons': {
+        'ARTILLERY': [('220mm-Uragan-Rocket', 16)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.33, 'communication_range': 85},
+        'reliability': {'mtbf': 42, 'mttr': 4}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 5}),
+            'back': (True, {'AP': 5}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2100, 'fluid_capacity': 32},
+        'reliability': {'mtbf': 48, 'mttr': 3.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.52},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.7},
+        'off_road': {'metric': 'metric', 'speed': 30, 'consume': 0.88},
+    },
+}
+
+# ===== Dana vz77 152mm SPH =====
+Dana_vz77_data = {
+    'constructor': 'Konštrukta Trenčín',
+    'model': 'Dana-vz77',
+    'made': 'Czechoslovakia',
+    'start_service': 1980,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 4.5,  # M$
+    'range': 600,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'Tatra T3-930-51 V12',
+        'capabilities': {'thrust': 345, 'fuel_efficiency': 0.62, 'type': 'diesel'},
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'weapons': {
+        'ARTILLERY': [('Dana-152mm', 60)],
+        'MACHINE_GUNS': [('DShK-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 130},
+        'reliability': {'mtbf': 60, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 12.7}),
+            'lateral': (True, {'AP': 8}),
+            'back': (True, {'AP': 8}),
+            'turret': (True, {'AP': 12}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2700, 'fluid_capacity': 42},
+        'reliability': {'mtbf': 65, 'mttr': 2.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 70, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 80, 'consume': 0.48},
+        'off_road': {'metric': 'metric', 'speed': 45, 'consume': 0.62},
+    },
+}
+
+# ===== 2S9 Nona 120mm SPM =====
+S2S9_Nona_data = {
+    'constructor': 'Uraltransmash',
+    'model': '2S9-Nona',
+    'made': 'USSR',
+    'start_service': 1981,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 1.2,  # M$
+    'range': 500,  # km
+    'roles': ['SPM', 'Airborne'],
+    'engine': {
+        'model': 'UTD-20',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'ARTILLERY': [('2A51-120mm', 22)],
+        'MACHINE_GUNS': [('PKT-7.62', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 90},
+        'reliability': {'mtbf': 45, 'mttr': 3.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 15}),
+            'lateral': (True, {'AP': 10}),
+            'back': (True, {'AP': 10}),
+            'turret': (True, {'AP': 10}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2200, 'fluid_capacity': 32},
+        'reliability': {'mtbf': 50, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 30, 'consume': 0.72},
+    },
+}
+
+# ===== M270 MLRS =====
+M270_MLRS_data = {
+    'constructor': 'Lockheed Martin',
+    'model': 'M270-MLRS',
+    'made': 'USA',
+    'start_service': 1983,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 2.8,  # M$
+    'range': 640,  # km
+    'roles': ['MLRS'],
+    'engine': {
+        'model': 'Cummins VTA-903',
+        'capabilities': {'thrust': 500, 'fuel_efficiency': 0.68, 'type': 'diesel'},
+        'reliability': {'mtbf': 60, 'mttr': 4}
+    },
+    'weapons': {
+        'ARTILLERY': [('227mm-MLRS-Rocket', 12)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 180},
+        'reliability': {'mtbf': 75, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 25}),
+            'lateral': (True, {'AP': 12}),
+            'back': (True, {'AP': 12}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2800, 'fluid_capacity': 45},
+        'reliability': {'mtbf': 80, 'mttr': 1.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 64, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.68},
+    },
+}
+
+# ===== 9A52 Smerch 300mm MLRS =====
+A9A52_Smerch_data = {
+    'constructor': 'NPO Splav',
+    'model': '9A52-Smerch',
+    'made': 'USSR',
+    'start_service': 1989,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 6.0,  # M$
+    'range': 850,  # km
+    'roles': ['MLRS'],
+    'engine': {
+        'model': 'YaMZ-238V',
+        'capabilities': {'thrust': 525, 'fuel_efficiency': 0.62, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 5}
+    },
+    'weapons': {
+        'ARTILLERY': [('300mm-Smerch-Rocket', 12)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 150},
+        'reliability': {'mtbf': 62, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 5}),
+            'back': (True, {'AP': 5}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 68, 'mttr': 2.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 32, 'consume': 0.78},
+    },
+}
+
+# ===== 2S19 Msta 152mm SPH =====
+S2S19_Msta_data = {
+    'constructor': 'Uraltransmash',
+    'model': '2S19-Msta',
+    'made': 'USSR',
+    'start_service': 1989,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 3.0,  # M$
+    'range': 500,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'V-84A',
+        'capabilities': {'thrust': 780, 'fuel_efficiency': 0.65, 'type': 'diesel'},
+        'reliability': {'mtbf': 52, 'mttr': 4.5}
+    },
+    'weapons': {
+        'ARTILLERY': [('2A64-152mm', 50)],
+        'MACHINE_GUNS': [('NSVT-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
+        'reliability': {'mtbf': 65, 'mttr': 2.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 30}),
+            'lateral': (True, {'AP': 20}),
+            'back': (True, {'AP': 20}),
+            'turret': (True, {'AP': 25}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 48},
+        'reliability': {'mtbf': 70, 'mttr': 2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.58},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.72},
+    },
+}
+
+# ===== M109 Paladin 155mm SPH =====
+M109_Paladin_data = {
+    'constructor': 'BAE Systems',
+    'model': 'M109-Paladin',
+    'made': 'USA',
+    'start_service': 1992,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 5.5,  # M$
+    'range': 350,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'Detroit Diesel 8V71T',
+        'capabilities': {'thrust': 440, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'weapons': {
+        'ARTILLERY': [('M284-155mm', 39)],
+        'MACHINE_GUNS': [('M2HB-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 200},
+        'reliability': {'mtbf': 80, 'mttr': 1.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 40}),
+            'lateral': (True, {'AP': 30}),
+            'back': (True, {'AP': 25}),
+            'turret': (True, {'AP': 35}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3200, 'fluid_capacity': 52},
+        'reliability': {'mtbf': 85, 'mttr': 1.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 48, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 56, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 32, 'consume': 0.7},
+    },
+}
+
+# ===== PLZ-05 155mm SPH =====
+PLZ05_data = {
+    'constructor': 'Norinco',
+    'model': 'PLZ-05',
+    'made': 'China',
+    'start_service': 2008,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 3.5,  # M$
+    'range': 450,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': '12150L-7BW',
+        'capabilities': {'thrust': 730, 'fuel_efficiency': 0.64, 'type': 'diesel'},
+        'reliability': {'mtbf': 58, 'mttr': 3.5}
+    },
+    'weapons': {
+        'ARTILLERY': [('PL-45-155mm', 30)],
+        'MACHINE_GUNS': [('QJC88-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 170},
+        'reliability': {'mtbf': 72, 'mttr': 2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 35}),
+            'lateral': (True, {'AP': 25}),
+            'back': (True, {'AP': 20}),
+            'turret': (True, {'AP': 30}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3100, 'fluid_capacity': 50},
+        'reliability': {'mtbf': 78, 'mttr': 1.6},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.68},
+    },
+}
+
+# ===== T155 Firtina 155mm SPH =====
+T155_Firtina_data = {
+    'constructor': 'FNSS Defence Systems',
+    'model': 'T155-Firtina',
+    'made': 'Turkey',
+    'start_service': 2004,
+    'end_service': None,
+    'category': 'Artillery_Semovent',
+    'cost': 4.0,  # M$
+    'range': 480,  # km
+    'roles': ['SPH'],
+    'engine': {
+        'model': 'MTU MT 881 Ka-500',
+        'capabilities': {'thrust': 1000, 'fuel_efficiency': 0.72, 'type': 'diesel'},
+        'reliability': {'mtbf': 65, 'mttr': 3}
+    },
+    'weapons': {
+        'ARTILLERY': [('Firtina-155mm', 48)],
+        'MACHINE_GUNS': [('K6-12.7', 1)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.68, 'communication_range': 190},
+        'reliability': {'mtbf': 78, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 40}),
+            'lateral': (True, {'AP': 30}),
+            'back': (True, {'AP': 25}),
+            'turret': (True, {'AP': 35}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3300, 'fluid_capacity': 55},
+        'reliability': {'mtbf': 82, 'mttr': 1.4},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.36},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.65},
+    },
+}
+# Nuovi veicoli AAA (Anti-Aircraft Artillery) semoventi da aggiungere a Vehicle_Data.py
+# Generato automaticamente dalle ricerche degli agent
+
+# ===== ZSU-57-2 Sparka =====
+ZSU_57_2_data = {
+    'constructor': 'Uraltransmash',
+    'model': 'ZSU-57-2',
+    'made': 'USSR',
+    'start_service': 1957,
+    'end_service': 1990,
+    'category': 'AAA',
+    'cost': 1.5,  # M$
+    'range': 420,  # km
+    'roles': ['AAA'],
+    'engine': {
+        'model': 'V-54',
+        'capabilities': {'thrust': 520, 'fuel_efficiency': 0.52, 'type': 'diesel'},
+        'reliability': {'mtbf': 35, 'mttr': 6}
+    },
+    'weapons': {
+        'CANNONS': [('S-68-57mm', 300)],  # Twin 57mm
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.25, 'communication_range': 70},
+        'reliability': {'mtbf': 38, 'mttr': 4}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 15}),
+            'lateral': (True, {'AP': 8}),
+            'back': (True, {'AP': 8}),
+            'turret': (True, {'AP': 12}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2200, 'fluid_capacity': 35},
+        'reliability': {'mtbf': 42, 'mttr': 3.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 42, 'consume': 0.48},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.65},
+        'off_road': {'metric': 'metric', 'speed': 28, 'consume': 0.8},
+    },
+}
+
+# ===== ZSU-23-4 Shilka =====
+ZSU_23_4_data = {
+    'constructor': 'Mytishchi Machine Building Plant',
+    'model': 'ZSU-23-4-Shilka',
+    'made': 'USSR',
+    'start_service': 1965,
+    'end_service': None,
+    'category': 'AAA',
+    'cost': 1.8,  # M$
+    'range': 450,  # km
+    'roles': ['AAA'],
+    'engine': {
+        'model': 'V-6R',
+        'capabilities': {'thrust': 280, 'fuel_efficiency': 0.55, 'type': 'diesel'},
+        'reliability': {'mtbf': 40, 'mttr': 5}
+    },
+    'weapons': {
+        'CANNONS': [('AZP-23-23mm', 2000)],  # Quad 23mm
+    },
+    'radar': {
+        'model': '1RL33 Gun Dish',
+        'capabilities': {
+            'air': (True, {'tracking_range': 8, 'acquisition_range': 20, 'engagement_range': 8, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 45, 'mttr': 4}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 95},
+        'reliability': {'mtbf': 48, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 15}),
+            'lateral': (True, {'AP': 9}),
+            'back': (True, {'AP': 9}),
+            'turret': (True, {'AP': 12}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2400, 'fluid_capacity': 38},
+        'reliability': {'mtbf': 52, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 42, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 30, 'consume': 0.75},
+    },
+}
+
+# ===== M163 VADS =====
+M163_VADS_data = {
+    'constructor': 'General Electric',
+    'model': 'M163-VADS',
+    'made': 'USA',
+    'start_service': 1969,
+    'end_service': 1998,
+    'category': 'AAA',
+    'cost': 1.0,  # M$
+    'range': 480,  # km
+    'roles': ['AAA'],
+    'engine': {
+        'model': 'Detroit Diesel 6V53',
+        'capabilities': {'thrust': 215, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 4.5}
+    },
+    'weapons': {
+        'CANNONS': [('M61-Vulcan-20mm', 2100)],
+    },
+    'radar': None,
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 110},
+        'reliability': {'mtbf': 55, 'mttr': 2.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 38}),
+            'lateral': (True, {'AP': 32}),
+            'back': (True, {'AP': 28}),
+            'turret': (True, {'AP': 25}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 60, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 67, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.68},
+    },
+}
+
+# ===== Flakpanzer Gepard =====
+Flakpanzer_Gepard_data = {
+    'constructor': 'Krauss-Maffei',
+    'model': 'Flakpanzer-Gepard',
+    'made': 'Germany',
+    'start_service': 1976,
+    'end_service': None,
+    'category': 'AAA',
+    'cost': 5.5,  # M$
+    'range': 550,  # km
+    'roles': ['AAA'],
+    'engine': {
+        'model': 'MTU MB 838 CaM 500',
+        'capabilities': {'thrust': 830, 'fuel_efficiency': 0.7, 'type': 'diesel'},
+        'reliability': {'mtbf': 58, 'mttr': 3.5}
+    },
+    'weapons': {
+        'CANNONS': [('Oerlikon-KDA-35mm', 680)],  # Twin 35mm
+    },
+    'radar': {
+        'model': 'Search and Tracking Radar',
+        'capabilities': {
+            'air': (True, {'tracking_range': 12, 'acquisition_range': 15, 'engagement_range': 12, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.55, 'communication_range': 160},
+        'reliability': {'mtbf': 70, 'mttr': 2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 40}),
+            'lateral': (True, {'AP': 20}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 30}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 3000, 'fluid_capacity': 48},
+        'reliability': {'mtbf': 75, 'mttr': 1.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.36},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.65},
+    },
+}
+
+# ===== 2K22 Tunguska =====
+K2K22_Tunguska_data = {
+    'constructor': 'KBP Instrument Design Bureau',
+    'model': '2K22-Tunguska',
+    'made': 'USSR',
+    'start_service': 1982,
+    'end_service': None,
+    'category': 'AAA',
+    'cost': 16.0,  # M$
+    'range': 500,  # km
+    'roles': ['AAA', 'SHORAD'],
+    'engine': {
+        'model': 'V-46-2',
+        'capabilities': {'thrust': 780, 'fuel_efficiency': 0.62, 'type': 'diesel'},
+        'reliability': {'mtbf': 52, 'mttr': 4}
+    },
+    'weapons': {
+        'CANNONS': [('2A38M-30mm', 1904)],  # Quad 30mm
+        'MISSILES': [('9M311-SAM', 8)],
+    },
+    'radar': {
+        'model': '1RL144 Search + 1A26 Tracking',
+        'capabilities': {
+            'air': (True, {'tracking_range': 13, 'acquisition_range': 18, 'engagement_range': 10, 'multi_target_capacity': 2}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 60, 'mttr': 3}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 20}),
+            'lateral': (True, {'AP': 9}),
+            'back': (True, {'AP': 9}),
+            'turret': (True, {'AP': 15}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2800, 'fluid_capacity': 45},
+        'reliability': {'mtbf': 68, 'mttr': 2.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.7},
+    },
+}
+# Nuovi veicoli SAM (Surface-to-Air Missile) montati su veicoli da aggiungere a Vehicle_Data.py
+# Generato automaticamente dalle ricerche degli agent
+
+# ===== Strela-1 9P31 (SA-9 Gaskin) =====
+Strela1_9P31_data = {
+    'constructor': 'KBM Kolomna',
+    'model': 'Strela-1-9P31',
+    'made': 'USSR',
+    'start_service': 1968,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 1.2,  # M$
+    'range': 500,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'GAZ-49B',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.55, 'type': 'gasoline'},
+        'reliability': {'mtbf': 38, 'mttr': 6}
+    },
+    'weapons': {
+        'MISSILES': [('9M31-SAM', 4)],
+    },
+    'radar': None,
+    'TVD': {
+        'model': 'Optical sight',
+        'capabilities': {
+            'air': (True, {'tracking_range': 5, 'acquisition_range': 8, 'engagement_range': 5, 'multi_target_capacity': 1}),
+            'ground': (True, {'tracking_range': 5, 'acquisition_range': 8, 'engagement_range': 5, 'multi_target_capacity': 1}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 50, 'mttr': 3}
+    },
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 80},
+        'reliability': {'mtbf': 45, 'mttr': 3.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 7}),
+            'back': (True, {'AP': 7}),
+            'turret': (True, {'AP': 8}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2200, 'fluid_capacity': 32},
+        'reliability': {'mtbf': 48, 'mttr': 3.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 65, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 75, 'consume': 0.58},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.72},
+    },
+}
+
+# ===== MIM-72G Chaparral =====
+MIM72G_Chaparral_data = {
+    'constructor': 'Ford Aerospace',
+    'model': 'MIM-72G-Chaparral',
+    'made': 'USA',
+    'start_service': 1969,
+    'end_service': 1998,
+    'category': 'SAM_Small',
+    'cost': 1.5,  # M$
+    'range': 480,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'Detroit Diesel 6V53',
+        'capabilities': {'thrust': 215, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 4.5}
+    },
+    'weapons': {
+        'MISSILES': [('MIM-72-SAM', 4)],
+    },
+    'radar': None,
+    'TVD': {
+        'model': 'Forward Looking Infrared',
+        'capabilities': {
+            'air': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
+            'ground': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 52, 'mttr': 3}
+    },
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 110},
+        'reliability': {'mtbf': 55, 'mttr': 2.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 38}),
+            'lateral': (True, {'AP': 32}),
+            'back': (True, {'AP': 28}),
+            'turret': (True, {'AP': 25}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 60, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.38},
+        'max': {'metric': 'metric', 'speed': 67, 'consume': 0.52},
+        'off_road': {'metric': 'metric', 'speed': 40, 'consume': 0.68},
+    },
+}
+
+# ===== 9A33 Osa (SA-8 Gecko) =====
+A9A33_Osa_data = {
+    'constructor': 'NPO Almaz',
+    'model': '9A33-Osa',
+    'made': 'USSR',
+    'start_service': 1971,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 5.0,  # M$
+    'range': 500,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'D-20',
+        'capabilities': {'thrust': 210, 'fuel_efficiency': 0.52, 'type': 'diesel'},
+        'reliability': {'mtbf': 42, 'mttr': 5}
+    },
+    'weapons': {
+        'MISSILES': [('9M33-SAM', 6)],
+    },
+    'radar': {
+        'model': 'Land Roll',
+        'capabilities': {
+            'air': (True, {'tracking_range': 20, 'acquisition_range': 30, 'engagement_range': 15, 'multi_target_capacity': 2}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 50, 'mttr': 4}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
+        'reliability': {'mtbf': 52, 'mttr': 3.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 12}),
+            'lateral': (True, {'AP': 8}),
+            'back': (True, {'AP': 8}),
+            'turret': (True, {'AP': 10}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2600, 'fluid_capacity': 42},
+        'reliability': {'mtbf': 55, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.75},
+    },
+}
+
+# ===== 9K35 Strela-10 (SA-13 Gopher) =====
+K9K35_Strela10_data = {
+    'constructor': 'KBM Kolomna',
+    'model': '9K35-Strela-10',
+    'made': 'USSR',
+    'start_service': 1976,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 2.5,  # M$
+    'range': 500,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'YaMZ-238V',
+        'capabilities': {'thrust': 240, 'fuel_efficiency': 0.56, 'type': 'diesel'},
+        'reliability': {'mtbf': 40, 'mttr': 5.5}
+    },
+    'weapons': {
+        'MISSILES': [('9M37-SAM', 8)],
+    },
+    'radar': None,
+    'TVD': {
+        'model': 'Optical-IR tracker',
+        'capabilities': {
+            'air': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
+            'ground': (True, {'tracking_range': 6, 'acquisition_range': 10, 'engagement_range': 6, 'multi_target_capacity': 1}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 48, 'mttr': 3.5}
+    },
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 95},
+        'reliability': {'mtbf': 50, 'mttr': 3.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 10}),
+            'lateral': (True, {'AP': 7}),
+            'back': (True, {'AP': 7}),
+            'turret': (True, {'AP': 8}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2300, 'fluid_capacity': 35},
+        'reliability': {'mtbf': 52, 'mttr': 3},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 61, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 35, 'consume': 0.7},
+    },
+}
+
+# ===== MIM-115 Roland =====
+MIM115_Roland_data = {
+    'constructor': 'Euromissile',
+    'model': 'MIM-115-Roland',
+    'made': 'France',
+    'start_service': 1977,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 3.5,  # M$
+    'range': 450,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'Mercedes-Benz OM 402A',
+        'capabilities': {'thrust': 320, 'fuel_efficiency': 0.68, 'type': 'diesel'},
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'weapons': {
+        'MISSILES': [('Roland-SAM', 10)],
+    },
+    'radar': {
+        'model': 'MPDR 16',
+        'capabilities': {
+            'air': (True, {'tracking_range': 15, 'acquisition_range': 18, 'engagement_range': 10, 'multi_target_capacity': 2}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 60, 'mttr': 3}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 15}),
+            'lateral': (True, {'AP': 10}),
+            'back': (True, {'AP': 10}),
+            'turret': (True, {'AP': 12}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2700, 'fluid_capacity': 44},
+        'reliability': {'mtbf': 68, 'mttr': 2.5},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 75, 'consume': 0.35},
+        'max': {'metric': 'metric', 'speed': 90, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 50, 'consume': 0.62},
+    },
+}
+
+# ===== 9K331 Tor (SA-15 Gauntlet) =====
+K9K331_Tor_data = {
+    'constructor': 'NPO Almaz',
+    'model': '9K331-Tor',
+    'made': 'USSR',
+    'start_service': 1986,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 25.0,  # M$
+    'range': 500,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'V-46-2',
+        'capabilities': {'thrust': 780, 'fuel_efficiency': 0.6, 'type': 'diesel'},
+        'reliability': {'mtbf': 50, 'mttr': 4.5}
+    },
+    'weapons': {
+        'MISSILES': [('9M331-SAM', 8)],
+    },
+    'radar': {
+        'model': 'Multifunction 3D Radar',
+        'capabilities': {
+            'air': (True, {'tracking_range': 20, 'acquisition_range': 25, 'engagement_range': 15, 'multi_target_capacity': 4}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 62, 'mttr': 3.5}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.55, 'communication_range': 150},
+        'reliability': {'mtbf': 68, 'mttr': 2.2}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 20}),
+            'lateral': (True, {'AP': 12}),
+            'back': (True, {'AP': 12}),
+            'turret': (True, {'AP': 15}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2900, 'fluid_capacity': 48},
+        'reliability': {'mtbf': 72, 'mttr': 2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.4},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.55},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.7},
+    },
+}
+
+# ===== M6 Linebacker =====
+M6_Linebacker_data = {
+    'constructor': 'Boeing',
+    'model': 'M6-Linebacker',
+    'made': 'USA',
+    'start_service': 1997,
+    'end_service': None,
+    'category': 'SAM_Small',
+    'cost': 3.0,  # M$
+    'range': 480,  # km
+    'roles': ['SHORAD'],
+    'engine': {
+        'model': 'Cummins VTA-903T',
+        'capabilities': {'thrust': 600, 'fuel_efficiency': 0.65, 'type': 'diesel'},
+        'reliability': {'mtbf': 60, 'mttr': 3.5}
+    },
+    'weapons': {
+        'CANNONS': [('M242-25mm', 900)],
+        'MISSILES': [('FIM-92-Stinger', 4)],
+    },
+    'radar': None,
+    'TVD': {
+        'model': 'FLIR and targeting system',
+        'capabilities': {
+            'air': (True, {'tracking_range': 8, 'acquisition_range': 12, 'engagement_range': 8, 'multi_target_capacity': 1}),
+            'ground': (True, {'tracking_range': 8, 'acquisition_range': 12, 'engagement_range': 8, 'multi_target_capacity': 1}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 65, 'mttr': 2.5}
+    },
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 180},
+        'reliability': {'mtbf': 75, 'mttr': 1.8}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 32}),
+            'lateral': (True, {'AP': 20}),
+            'back': (True, {'AP': 15}),
+            'turret': (True, {'AP': 25}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2800, 'fluid_capacity': 46},
+        'reliability': {'mtbf': 78, 'mttr': 1.6},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 58, 'consume': 0.36},
+        'max': {'metric': 'metric', 'speed': 66, 'consume': 0.5},
+        'off_road': {'metric': 'metric', 'speed': 42, 'consume': 0.65},
+    },
+}
+
+# ===== 2K12 Kub (SA-6 Gainful) =====
+K2K12_Kub_data = {
+    'constructor': 'NPO Novator',
+    'model': '2K12-Kub',
+    'made': 'USSR',
+    'start_service': 1967,
+    'end_service': None,
+    'category': 'SAM_Medium',
+    'cost': 8.0,  # M$
+    'range': 450,  # km
+    'roles': ['MERAD'],
+    'engine': {
+        'model': 'V-6R',
+        'capabilities': {'thrust': 300, 'fuel_efficiency': 0.54, 'type': 'diesel'},
+        'reliability': {'mtbf': 42, 'mttr': 5.5}
+    },
+    'weapons': {
+        'MISSILES': [('3M9-SAM', 3)],
+    },
+    'radar': {
+        'model': '1S91 Straight Flush',
+        'capabilities': {
+            'air': (True, {'tracking_range': 28, 'acquisition_range': 75, 'engagement_range': 28, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 48, 'mttr': 4.5}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 120},
+        'reliability': {'mtbf': 52, 'mttr': 3.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 15}),
+            'lateral': (True, {'AP': 10}),
+            'back': (True, {'AP': 10}),
+            'turret': (True, {'AP': 12}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2500, 'fluid_capacity': 40},
+        'reliability': {'mtbf': 55, 'mttr': 3.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 42, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 50, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 28, 'consume': 0.78},
+    },
+}
+
+# ===== 9K37 Buk (SA-11 Gadfly) =====
+K9K37_Buk_data = {
+    'constructor': 'NPO Almaz',
+    'model': '9K37-Buk',
+    'made': 'USSR',
+    'start_service': 1979,
+    'end_service': None,
+    'category': 'SAM_Medium',
+    'cost': 12.0,  # M$
+    'range': 500,  # km
+    'roles': ['MERAD'],
+    'engine': {
+        'model': 'GTD-1000T',
+        'capabilities': {'thrust': 1000, 'fuel_efficiency': 0.58, 'type': 'diesel'},
+        'reliability': {'mtbf': 48, 'mttr': 5}
+    },
+    'weapons': {
+        'MISSILES': [('9M38-SAM', 4)],
+    },
+    'radar': {
+        'model': '9S35 Fire Dome',
+        'capabilities': {
+            'air': (True, {'tracking_range': 45, 'acquisition_range': 85, 'engagement_range': 45, 'multi_target_capacity': 1}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 55, 'mttr': 4}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 150},
+        'reliability': {'mtbf': 62, 'mttr': 3}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 18}),
+            'lateral': (True, {'AP': 12}),
+            'back': (True, {'AP': 12}),
+            'turret': (True, {'AP': 15}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2700, 'fluid_capacity': 45},
+        'reliability': {'mtbf': 65, 'mttr': 2.8},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 55, 'consume': 0.42},
+        'max': {'metric': 'metric', 'speed': 65, 'consume': 0.58},
+        'off_road': {'metric': 'metric', 'speed': 38, 'consume': 0.72},
+    },
+}
+
+# ===== S-300PS (SA-10 Grumble) =====
+S300PS_data = {
+    'constructor': 'NPO Almaz',
+    'model': 'S-300PS',
+    'made': 'USSR',
+    'start_service': 1982,
+    'end_service': None,
+    'category': 'SAM_Big',
+    'cost': 20.0,  # M$
+    'range': 600,  # km
+    'roles': ['LORAD'],
+    'engine': {
+        'model': 'MAZ-543 Engine',
+        'capabilities': {'thrust': 525, 'fuel_efficiency': 0.55, 'type': 'diesel'},
+        'reliability': {'mtbf': 45, 'mttr': 5.5}
+    },
+    'weapons': {
+        'MISSILES': [('5V55R-SAM', 4)],
+    },
+    'radar': {
+        'model': '30N6 Flap Lid',
+        'capabilities': {
+            'air': (True, {'tracking_range': 90, 'acquisition_range': 150, 'engagement_range': 90, 'multi_target_capacity': 6}),
+            'ground': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0}),
+        },
+        'reliability': {'mtbf': 58, 'mttr': 4.5}
+    },
+    'TVD': None,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 200},
+        'reliability': {'mtbf': 68, 'mttr': 2.5}
+    },
+    'protections': {
+        'active': None,
+        'armor': {
+            'front': (True, {'AP': 12}),
+            'lateral': (True, {'AP': 8}),
+            'back': (True, {'AP': 8}),
+            'turret': (False, {}),
+        },
+        'reactive': {},
+    },
+    'hydraulic': {
+        'model': 'Generic Hydraulic System',
+        'capabilities': {'pressure': 2600, 'fluid_capacity': 42},
+        'reliability': {'mtbf': 62, 'mttr': 3.2},
+    },
+    'speed_data': {
+        'sustained': {'metric': 'metric', 'speed': 50, 'consume': 0.45},
+        'max': {'metric': 'metric', 'speed': 60, 'consume': 0.6},
+        'off_road': {'metric': 'metric', 'speed': 30, 'consume': 0.78},
+    },
+}
+
+
 # SETUP DICTIONARY VALUE 
 SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
@@ -1956,6 +4264,62 @@ Vehicle_Data(**T80U_data)
 Vehicle_Data(**T90_base_data)
 Vehicle_Data(**T72B3_data)
 Vehicle_Data(**ZTZ_96B_data)
+
+# Nuovi IFV
+Vehicle_Data(**Marder_data)
+Vehicle_Data(**BMP2_data)
+Vehicle_Data(**BMD1_data)
+Vehicle_Data(**M2_Bradley_data)
+Vehicle_Data(**BMP3_data)
+Vehicle_Data(**Warrior_data)
+Vehicle_Data(**LAV25_data)
+Vehicle_Data(**M1126_Stryker_data)
+Vehicle_Data(**BTR82A_data)
+Vehicle_Data(**ZBD04A_data)
+
+# Nuovi APC
+Vehicle_Data(**SdKfz_251_data)
+Vehicle_Data(**MTLB_data)
+Vehicle_Data(**M2A1_Halftrack_data)
+Vehicle_Data(**M113_data)
+Vehicle_Data(**AAV7_data)
+Vehicle_Data(**TPz_Fuchs_data)
+Vehicle_Data(**BTR80_data)
+Vehicle_Data(**BTR_RD_data)
+
+# Nuovi Artillery
+Vehicle_Data(**BM21_Grad_data)
+Vehicle_Data(**S2S3_Akatsia_data)
+Vehicle_Data(**S2S1_Gvozdika_data)
+Vehicle_Data(**BM27_Uragan_data)
+Vehicle_Data(**Dana_vz77_data)
+Vehicle_Data(**S2S9_Nona_data)
+Vehicle_Data(**M270_MLRS_data)
+Vehicle_Data(**A9A52_Smerch_data)
+Vehicle_Data(**S2S19_Msta_data)
+Vehicle_Data(**M109_Paladin_data)
+Vehicle_Data(**PLZ05_data)
+Vehicle_Data(**T155_Firtina_data)
+
+# Nuovi AAA
+Vehicle_Data(**ZSU_57_2_data)
+Vehicle_Data(**ZSU_23_4_data)
+Vehicle_Data(**M163_VADS_data)
+Vehicle_Data(**Flakpanzer_Gepard_data)
+Vehicle_Data(**K2K22_Tunguska_data)
+
+# Nuovi SAM
+Vehicle_Data(**Strela1_9P31_data)
+Vehicle_Data(**MIM72G_Chaparral_data)
+Vehicle_Data(**A9A33_Osa_data)
+Vehicle_Data(**K9K35_Strela10_data)
+Vehicle_Data(**MIM115_Roland_data)
+Vehicle_Data(**K9K331_Tor_data)
+Vehicle_Data(**M6_Linebacker_data)
+Vehicle_Data(**K2K12_Kub_data)
+Vehicle_Data(**K9K37_Buk_data)
+Vehicle_Data(**S300PS_data)
+
 
 # Load scores in dict
 # specificando   nell'argomento la category, lo score viene calcolato in base agli score dei veicoli di pari categoria
