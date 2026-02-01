@@ -249,6 +249,12 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
     elif weapon_type == 'ROCKETS':
         return 0
 
+    elif weapon_type == 'MORTARS':
+        return 0
+
+    elif weapon_type == 'ARTILLERY':
+        return 0
+
     elif weapon_type == 'MACHINE_GUNS':
         return get_machine_gun_score(model=weapon_model)
 
@@ -493,10 +499,332 @@ GROUND_WEAPONS = {
             "end_service": 3000,
             'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
             'caliber': 100, # mm
-            'muzzle_speed': 895, # m/s 
+            'muzzle_speed': 895, # m/s
             'fire_rate': 5, # shot per minute
             'range': {'direct': 2000, 'indirect': 8000 }, # m
-            'ammo_type': ['HEAT', 'HE', 'APFSDS'],  
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        # --- MBT Cannons ---
+        '2A28 Grom': { # BMP-1 (MBT variant)
+            'model': '2A28 Grom',
+            "start_service": 1966,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 73, # mm - low-pressure smoothbore
+            'muzzle_speed': 665, # m/s (PG-15V HEAT round)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 1300, 'indirect': 4400 }, # m
+            'ammo_type': ['HEAT', 'HE'],
+        },
+        'D-10T2S-100mm': { # T-55A - stabilized variant of D-10T
+            'model': 'D-10T2S-100mm',
+            "start_service": 1963,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 100, # mm
+            'muzzle_speed': 895, # m/s (BR-412D AP)
+            'fire_rate': 7, # shot per minute
+            'range': {'direct': 2000, 'indirect': 16000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+        },
+        'L11A5-120mm': { # Chieftain
+            'model': 'L11A5-120mm',
+            "start_service": 1966,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 120, # mm - rifled
+            'muzzle_speed': 1534, # m/s (L23A1 APFSDS)
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 2500, 'indirect': 9000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'L7A3-105mm': { # Leopard 1
+            'model': 'L7A3-105mm',
+            "start_service": 1965,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 105, # mm - rifled (Rheinmetall variant of Royal Ordnance L7)
+            'muzzle_speed': 1501, # m/s (DM63 APFSDS)
+            'fire_rate': 10, # shot per minute
+            'range': {'direct': 2500, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+        },
+        'M68-105mm': { # M60 Patton
+            'model': 'M68-105mm',
+            "start_service": 1959,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 105, # mm - rifled (US variant of L7)
+            'muzzle_speed': 1470, # m/s (M735 APFSDS)
+            'fire_rate': 10, # shot per minute
+            'range': {'direct': 2500, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+        },
+        'Rheinmetall-120mm-L44': { # Leopard 2A4
+            'model': 'Rheinmetall-120mm-L44',
+            "start_service": 1979,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 120, # mm - smoothbore (Rh-120 L/44)
+            'muzzle_speed': 1750, # m/s (DM53 APFSDS)
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 3000, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'Rheinmetall-120mm-L55': { # Leopard 2A6
+            'model': 'Rheinmetall-120mm-L55',
+            "start_service": 2001,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 120, # mm - smoothbore (Rh-120 L/55, longer barrel)
+            'muzzle_speed': 1800, # m/s (DM63 APFSDS)
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 3500, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'M256-120mm': { # M1A1/M1A2 Abrams
+            'model': 'M256-120mm',
+            "start_service": 1985,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 120, # mm - smoothbore (US variant of Rh-120 L/44)
+            'muzzle_speed': 1750, # m/s (M829A3 APFSDS)
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 2100, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'CN120-26-120mm': { # Leclerc
+            'model': 'CN120-26-120mm',
+            "start_service": 1992,
+            "end_service": 3000,
+            'reload': 'Automatic', # autoloader (bustle-mounted, 22 rounds)
+            'caliber': 120, # mm - smoothbore (GIAT CN120-26, L/52)
+            'muzzle_speed': 1790, # m/s (OFL 120 F2 APFSDS)
+            'fire_rate': 12, # shot per minute (autoloader)
+            'range': {'direct': 3000, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'L30A1-120mm': { # Challenger 2
+            'model': 'L30A1-120mm',
+            "start_service": 1994,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 120, # mm - rifled (CHARM gun)
+            'muzzle_speed': 1534, # m/s (L27A1 CHARM 3 APFSDS)
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 3000, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'MG251-120mm': { # Merkava Mk3/Mk4
+            'model': 'MG251-120mm',
+            "start_service": 1989,
+            "end_service": 3000,
+            'reload': 'Automatic', # semi-automatic assisted loading
+            'caliber': 120, # mm - smoothbore (IMI 120mm)
+            'muzzle_speed': 1750, # m/s (IMI M338 APFSDS)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 2200, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'Type-59-100mm': { # Type 59
+            'model': 'Type-59-100mm',
+            "start_service": 1959,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 100, # mm - rifled (Chinese copy of D-10T)
+            'muzzle_speed': 895, # m/s (AP round)
+            'fire_rate': 4, # shot per minute
+            'range': {'direct': 1800, 'indirect': 8000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'AP', 'APFSDS'],
+        },
+        '2A46M-125mm': { # T-72B3, T-80U (same as 2A46M)
+            'model': '2A46M-125mm',
+            "start_service": 1974,
+            "end_service": 3000,
+            'reload': 'Automatic', # carousel autoloader
+            'caliber': 125, # mm - smoothbore
+            'muzzle_speed': 1750, # m/s (3BM42 Mango APFSDS)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 2120, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        '2A46M5-125mm': { # T-90A (same as 2A46M-5)
+            'model': '2A46M5-125mm',
+            "start_service": 2001,
+            "end_service": 3000,
+            'reload': 'Automatic', # carousel autoloader
+            'caliber': 125, # mm - smoothbore (improved barrel)
+            'muzzle_speed': 1780, # m/s (3BM59/3BM60 Svinets APFSDS)
+            'fire_rate': 10, # shot per minute
+            'range': {'direct': 2200, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        'ZPT-98-125mm': { # Type 99
+            'model': 'ZPT-98-125mm',
+            "start_service": 1998,
+            "end_service": 3000,
+            'reload': 'Automatic', # carousel autoloader
+            'caliber': 125, # mm - smoothbore (Chinese, derived from 2A46 family, L/50)
+            'muzzle_speed': 1780, # m/s (DTW-125 APFSDS)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 2200, 'indirect': 10000 }, # m
+            'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+        },
+        # --- IFV/APC Autocannons ---
+        'MK-20-Rh-202-20mm': { # Marder IFV
+            'model': 'MK-20-Rh-202-20mm',
+            "start_service": 1968,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 20, # mm (20x139mm)
+            'muzzle_speed': 1100, # m/s (APDS)
+            'fire_rate': 880, # shot per minute
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        '2A42-30mm': { # BMP-2 (same as 2A42)
+            'model': '2A42-30mm',
+            "start_service": 1980,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30x165mm)
+            'muzzle_speed': 960, # m/s
+            'fire_rate': 300, # shot per minute
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+        },
+        '2A28-Grom-73mm': { # BMP-1 IFV
+            'model': '2A28-Grom-73mm',
+            "start_service": 1966,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 73, # mm - low-pressure smoothbore
+            'muzzle_speed': 665, # m/s (PG-15V HEAT round)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 1300, 'indirect': 4400 }, # m
+            'ammo_type': ['HEAT', 'HE'],
+        },
+        'M242-Bushmaster-25mm': { # M2 Bradley, LAV-25 (same as M242 Bushmaster)
+            'model': 'M242-Bushmaster-25mm',
+            "start_service": 1981,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 25, # mm (25x137mm NATO)
+            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
+            'fire_rate': 200, # shot per minute
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+        },
+        '2A70-100mm': { # BMP-3 (same as 2A70)
+            'model': '2A70-100mm',
+            "start_service": 1980,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 100, # mm - low-pressure rifled
+            'muzzle_speed': 250, # m/s
+            'fire_rate': 4, # shot per minute
+            'range': {'direct': 1700, 'indirect': 4000 }, # m
+            'ammo_type': ['HE'],
+        },
+        '2A72-30mm': { # BMP-3, BTR-82A
+            'model': '2A72-30mm',
+            "start_service": 1986,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30x165mm, single-barrel, simpler than 2A42)
+            'muzzle_speed': 960, # m/s (AP-T)
+            'fire_rate': 330, # shot per minute
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        'ZPT-99-30mm': { # ZBD-04 (Chinese 30mm autocannon)
+            'model': 'ZPT-99-30mm',
+            "start_service": 1999,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30mm, dual-feed)
+            'muzzle_speed': 960, # m/s
+            'fire_rate': 350, # shot per minute
+            'range': {'direct': 3500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        'L21A1-RARDEN-30mm': { # Warrior IFV
+            'model': 'L21A1-RARDEN-30mm',
+            "start_service": 1974,
+            "end_service": 3000,
+            'reload': 'Automatic', # semi-automatic (3-round clips)
+            'caliber': 30, # mm (30x170mm)
+            'muzzle_speed': 1175, # m/s (L14A3 APDS)
+            'fire_rate': 90, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP', 'APFSDS'],
+        },
+        'M242-25mm': { # LAV-AD (same as M242 Bushmaster)
+            'model': 'M242-25mm',
+            "start_service": 1981,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 25, # mm (25x137mm NATO)
+            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
+            'fire_rate': 200, # shot per minute
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+        },
+        # --- AA/SPAAG Cannons ---
+        'S-68-57mm': { # ZSU-57-2 (twin 57mm)
+            'model': 'S-68-57mm',
+            "start_service": 1950,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 57, # mm (57x348mmSR, twin mount)
+            'muzzle_speed': 1000, # m/s
+            'fire_rate': 240, # shot per minute (combined twin barrels, 120 each)
+            'range': {'direct': 4000, 'indirect': 12000 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        'AZP-23-23mm': { # ZSU-23-4 Shilka (quad 23mm)
+            'model': 'AZP-23-23mm',
+            "start_service": 1960,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 23, # mm (23x152mmB, quad mount)
+            'muzzle_speed': 970, # m/s
+            'fire_rate': 3400, # shot per minute (combined quad barrels, ~850 each)
+            'range': {'direct': 2500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        'M61-Vulcan-20mm': { # M163 VADS
+            'model': 'M61-Vulcan-20mm',
+            "start_service": 1959,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 20, # mm (20x102mm NATO, 6-barrel rotary)
+            'muzzle_speed': 1030, # m/s (M56 HEI)
+            'fire_rate': 3000, # shot per minute (M163 VADS configuration)
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        'Oerlikon-KDA-35mm': { # Gepard SPAAG (twin 35mm)
+            'model': 'Oerlikon-KDA-35mm',
+            "start_service": 1959,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 35, # mm (35x228mm, twin mount)
+            'muzzle_speed': 1175, # m/s (APDS-T)
+            'fire_rate': 1100, # shot per minute (combined twin barrels, 550 each)
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+        },
+        '2A38M-30mm': { # Tunguska 2K22 (dual 30mm)
+            'model': '2A38M-30mm',
+            "start_service": 1982,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30x165mm, twin barrels)
+            'muzzle_speed': 960, # m/s
+            'fire_rate': 5000, # shot per minute (combined twin barrels, 2500 each)
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
         },
     },
     'MISSILES': {
@@ -584,13 +912,350 @@ GROUND_WEAPONS = {
             'guide': 'SACLOS', # SACLOS: Semi-Automatic Command to Line Of Sight
             'caliber': 152, # mm
             'warhead': 4.5, # kg
-            'speed': 278, # m/s             
+            'speed': 278, # m/s
             'range': {'direct': 3750, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
         },
+        # --- ATGMs referenced with dash naming ---
+        '9M119-Refleks': { # AT-11 Sniper (original)
+            'model': '9M119-Refleks',
+            "start_service": 1985,
+            "end_service": 3000,
+            'guide': 'Laser',
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 370, # m/s
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        '9M119M-Refleks-M': { # AT-11 Sniper (improved, tandem warhead)
+            'model': '9M119M-Refleks-M',
+            "start_service": 1992,
+            "end_service": 3000,
+            'guide': 'Laser',
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 390, # m/s
+            'range': {'direct': 5000, 'indirect': 0 }, # m
+            'ammo_type': ['2HEAT'],
+        },
+        '9M113-Konkurs': { # AT-5 Spandrel (dash naming variant)
+            'model': '9M113-Konkurs',
+            "start_service": 1974,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 135, # mm
+            'warhead': 4.6, # kg
+            'speed': 208, # m/s
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        '9M14-Malyutka': { # AT-3 Sagger (dash naming variant)
+            'model': '9M14-Malyutka',
+            "start_service": 1965,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 125, # mm
+            'warhead': 3, # kg
+            'speed': 115, # m/s
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        'BGM-71-TOW': { # BGM-71 TOW (alternate key)
+            'model': 'BGM-71-TOW',
+            "start_service": 1970,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 152, # mm
+            'warhead': 3.9, # kg
+            'speed': 278, # m/s
+            'range': {'direct': 3750, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        'MILAN': { # MILAN 2 ATGM (French/German)
+            'model': 'MILAN',
+            "start_service": 1972,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 115, # mm
+            'warhead': 2.4, # kg
+            'speed': 200, # m/s
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        'HJ-73C': { # Red Arrow 73C (Chinese ATGM based on AT-3)
+            'model': 'HJ-73C',
+            "start_service": 1985,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 120, # mm
+            'warhead': 2.5, # kg
+            'speed': 120, # m/s
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HEAT'],
+        },
+        # --- Surface-to-Air Missiles ---
+        '9M311-SAM': { # SA-19 Grison (Tunguska SAM)
+            'model': '9M311-SAM',
+            "start_service": 1982,
+            "end_service": 3000,
+            'guide': 'Radio_Command',
+            'caliber': 76, # mm
+            'warhead': 9, # kg
+            'speed': 900, # m/s
+            'range': {'direct': 8000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '9M31-SAM': { # SA-9 Gaskin (Strela-1)
+            'model': '9M31-SAM',
+            "start_service": 1968,
+            "end_service": 3000,
+            'guide': 'IR',
+            'caliber': 120, # mm
+            'warhead': 3, # kg
+            'speed': 430, # m/s
+            'range': {'direct': 4200, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        'MIM-72-SAM': { # MIM-72 Chaparral
+            'model': 'MIM-72-SAM',
+            "start_service": 1969,
+            "end_service": 3000,
+            'guide': 'IR',
+            'caliber': 127, # mm
+            'warhead': 11, # kg
+            'speed': 760, # m/s
+            'range': {'direct': 9000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '9M33-SAM': { # SA-8 Gecko (Osa)
+            'model': '9M33-SAM',
+            "start_service": 1971,
+            "end_service": 3000,
+            'guide': 'Radio_Command',
+            'caliber': 210, # mm
+            'warhead': 19, # kg
+            'speed': 500, # m/s
+            'range': {'direct': 10000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '9M37-SAM': { # SA-13 Gopher (Strela-10)
+            'model': '9M37-SAM',
+            "start_service": 1976,
+            "end_service": 3000,
+            'guide': 'IR',
+            'caliber': 120, # mm
+            'warhead': 3, # kg
+            'speed': 517, # m/s
+            'range': {'direct': 5000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        'Roland-SAM': { # Roland (French/German SAM)
+            'model': 'Roland-SAM',
+            "start_service": 1977,
+            "end_service": 3000,
+            'guide': 'SACLOS',
+            'caliber': 160, # mm
+            'warhead': 6.5, # kg
+            'speed': 500, # m/s
+            'range': {'direct': 6300, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '9M331-SAM': { # SA-15 Gauntlet (Tor)
+            'model': '9M331-SAM',
+            "start_service": 1986,
+            "end_service": 3000,
+            'guide': 'Radio_Command',
+            'caliber': 235, # mm
+            'warhead': 15, # kg
+            'speed': 850, # m/s
+            'range': {'direct': 12000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        'FIM-92-Stinger': { # FIM-92 Stinger MANPADS
+            'model': 'FIM-92-Stinger',
+            "start_service": 1981,
+            "end_service": 3000,
+            'guide': 'IR',
+            'caliber': 70, # mm
+            'warhead': 3, # kg
+            'speed': 750, # m/s
+            'range': {'direct': 4800, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '3M9-SAM': { # SA-6 Gainful (Kub)
+            'model': '3M9-SAM',
+            "start_service": 1967,
+            "end_service": 3000,
+            'guide': 'SARH',
+            'caliber': 330, # mm
+            'warhead': 59, # kg
+            'speed': 600, # m/s
+            'range': {'direct': 24000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '9M38-SAM': { # SA-11 Gadfly (Buk)
+            'model': '9M38-SAM',
+            "start_service": 1979,
+            "end_service": 3000,
+            'guide': 'SARH',
+            'caliber': 400, # mm
+            'warhead': 70, # kg
+            'speed': 850, # m/s
+            'range': {'direct': 35000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
+        '5V55R-SAM': { # SA-10 Grumble (S-300PS)
+            'model': '5V55R-SAM',
+            "start_service": 1982,
+            "end_service": 3000,
+            'guide': 'SARH',
+            'caliber': 508, # mm
+            'warhead': 133, # kg
+            'speed': 1700, # m/s
+            'range': {'direct': 75000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'FRAG'],
+        },
     },
         
-    'ROCKETS': {}, 
+    'ROCKETS': {},
+
+    'MORTARS': {
+        'M933-60mm': { # Merkava internal mortar (Soltam 60mm)
+            'model': 'M933-60mm',
+            "start_service": 1989,
+            "end_service": 3000,
+            'caliber': 60, # mm
+            'fire_rate': 18, # shot per minute
+            'range': {'direct': 0, 'indirect': 2600 }, # m - mortar, indirect fire only
+            'ammo_type': ['HE'],
+        },
+    },
+
+    'ARTILLERY': {
+        # --- Tube Artillery ---
+        '2A33-152mm': { # 2S3 Akatsiya
+            'model': '2A33-152mm',
+            "start_service": 1971,
+            "end_service": 3000,
+            'caliber': 152, # mm
+            'muzzle_speed': 655, # m/s
+            'fire_rate': 4, # shot per minute
+            'range': {'direct': 0, 'indirect': 18500 }, # m
+            'ammo_type': ['HE'],
+        },
+        '2A31-122mm': { # 2S1 Gvozdika
+            'model': '2A31-122mm',
+            "start_service": 1971,
+            "end_service": 3000,
+            'caliber': 122, # mm
+            'muzzle_speed': 690, # m/s
+            'fire_rate': 5, # shot per minute
+            'range': {'direct': 0, 'indirect': 15300 }, # m
+            'ammo_type': ['HE'],
+        },
+        '2A51-120mm': { # 2S9 Nona (gun-mortar)
+            'model': '2A51-120mm',
+            "start_service": 1981,
+            "end_service": 3000,
+            'caliber': 120, # mm
+            'muzzle_speed': 367, # m/s
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 1000, 'indirect': 8850 }, # m
+            'ammo_type': ['HE', 'HEAT'],
+        },
+        '2A64-152mm': { # 2S19 Msta
+            'model': '2A64-152mm',
+            "start_service": 1989,
+            "end_service": 3000,
+            'caliber': 152, # mm
+            'muzzle_speed': 810, # m/s
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 0, 'indirect': 24700 }, # m
+            'ammo_type': ['HE'],
+        },
+        'Dana-152mm': { # Dana SpGH (Czech)
+            'model': 'Dana-152mm',
+            "start_service": 1977,
+            "end_service": 3000,
+            'caliber': 152, # mm
+            'muzzle_speed': 690, # m/s
+            'fire_rate': 4, # shot per minute
+            'range': {'direct': 0, 'indirect': 18700 }, # m
+            'ammo_type': ['HE'],
+        },
+        'M284-155mm': { # M109 Paladin
+            'model': 'M284-155mm',
+            "start_service": 1992,
+            "end_service": 3000,
+            'caliber': 155, # mm (M284 cannon on M109A6 Paladin)
+            'muzzle_speed': 827, # m/s
+            'fire_rate': 4, # shot per minute
+            'range': {'direct': 0, 'indirect': 24000 }, # m
+            'ammo_type': ['HE'],
+        },
+        'PL-45-155mm': { # PLZ-05 (Chinese)
+            'model': 'PL-45-155mm',
+            "start_service": 2005,
+            "end_service": 3000,
+            'caliber': 155, # mm (52 calibre barrel)
+            'muzzle_speed': 897, # m/s
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 0, 'indirect': 39000 }, # m
+            'ammo_type': ['HE'],
+        },
+        'Firtina-155mm': { # T-155 Firtina (Turkish)
+            'model': 'Firtina-155mm',
+            "start_service": 2002,
+            "end_service": 3000,
+            'caliber': 155, # mm (52 calibre barrel, based on K9 Thunder)
+            'muzzle_speed': 897, # m/s
+            'fire_rate': 6, # shot per minute
+            'range': {'direct': 0, 'indirect': 40000 }, # m
+            'ammo_type': ['HE'],
+        },
+        # --- MLRS / Rocket Artillery ---
+        '122mm-Grad-Rocket': { # BM-21 Grad
+            'model': '122mm-Grad-Rocket',
+            "start_service": 1963,
+            "end_service": 3000,
+            'caliber': 122, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 2, # ripple fire, full salvo (40 rockets) in ~20 seconds
+            'range': {'direct': 0, 'indirect': 20380 }, # m
+            'ammo_type': ['HE'],
+        },
+        '220mm-Uragan-Rocket': { # BM-27 Uragan
+            'model': '220mm-Uragan-Rocket',
+            "start_service": 1975,
+            "end_service": 3000,
+            'caliber': 220, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (16 rockets) in ~20 seconds
+            'range': {'direct': 0, 'indirect': 35800 }, # m
+            'ammo_type': ['HE'],
+        },
+        '300mm-Smerch-Rocket': { # BM-30 Smerch
+            'model': '300mm-Smerch-Rocket',
+            "start_service": 1987,
+            "end_service": 3000,
+            'caliber': 300, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (12 rockets) in ~38 seconds
+            'range': {'direct': 0, 'indirect': 70000 }, # m
+            'ammo_type': ['HE'],
+        },
+        '227mm-MLRS-Rocket': { # M270 MLRS
+            'model': '227mm-MLRS-Rocket',
+            "start_service": 1983,
+            "end_service": 3000,
+            'caliber': 227, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (12 rockets) in ~60 seconds
+            'range': {'direct': 0, 'indirect': 32000 }, # m
+            'ammo_type': ['HE'],
+        },
+    },
 
     'MACHINE_GUNS': {
         'PKT-7.62': {
@@ -644,13 +1309,157 @@ GROUND_WEAPONS = {
         'DShK-12.7': { # T-55
             'model': 'DShK-12.7',
             "start_service": 1938,
-            "end_service": 3000,            
+            "end_service": 3000,
             'caliber': 12.7, # mm
             'fire_rate': 600, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
         },
+        # --- British MGs ---
+        'L8A1-7.62': { # Chieftain coaxial
+            'model': 'L8A1-7.62',
+            "start_service": 1966,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - coaxial variant of L7A2 GPMG
+            'fire_rate': 750, # shot per minute
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+        },
+        'L37A1-7.62': { # Chieftain commander's MG
+            'model': 'L37A1-7.62',
+            "start_service": 1966,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - pintle-mounted GPMG variant
+            'fire_rate': 750, # shot per minute
+            'range': {'direct': 1100, 'indirect': 0 }, # m
+        },
+        'L37A2-7.62': { # Challenger 2 commander's MG
+            'model': 'L37A2-7.62',
+            "start_service": 1994,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - improved L37A1
+            'fire_rate': 750, # shot per minute
+            'range': {'direct': 1100, 'indirect': 0 }, # m
+        },
+        'L94A1-7.62': { # Challenger 2, Warrior - Hughes 7.62mm chain gun
+            'model': 'L94A1-7.62',
+            "start_service": 1987,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - EX-34 chain gun
+            'fire_rate': 550, # shot per minute
+            'range': {'direct': 1100, 'indirect': 0 }, # m
+        },
+        # --- German MGs ---
+        'MG3-7.62': { # Leopard 1, Leopard 2, Marder
+            'model': 'MG3-7.62',
+            "start_service": 1968,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - Rheinmetall MG3 GPMG
+            'fire_rate': 1200, # shot per minute
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+        },
+        'MG34-7.92': { # WW2/early Cold War vehicles
+            'model': 'MG34-7.92',
+            "start_service": 1936,
+            "end_service": 3000,
+            'caliber': 7.92, # mm (7.92x57mm Mauser)
+            'fire_rate': 900, # shot per minute
+            'range': {'direct': 1000, 'indirect': 0 }, # m
+        },
+        # --- US MGs ---
+        'M240C-7.62': { # M2 Bradley coaxial variant
+            'model': 'M240C-7.62',
+            "start_service": 1977,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - coaxial variant of M240
+            'fire_rate': 650, # shot per minute
+            'range': {'direct': 1100, 'indirect': 0 }, # m
+        },
+        'M1919-7.62': { # M48 Patton, older US vehicles
+            'model': 'M1919-7.62',
+            "start_service": 1919,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - Browning M1919 .30 cal
+            'fire_rate': 500, # shot per minute
+            'range': {'direct': 900, 'indirect': 0 }, # m
+        },
+        # --- Belgian MGs ---
+        'FN MAG-7.62': { # Merkava, many NATO vehicles
+            'model': 'FN MAG-7.62',
+            "start_service": 1958,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - FN Herstal MAG GPMG
+            'fire_rate': 650, # shot per minute
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+        },
+        # --- French MGs ---
+        'ANF1-7.62': { # Leclerc
+            'model': 'ANF1-7.62',
+            "start_service": 1979,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - AA-NF1 7.62mm MG
+            'fire_rate': 900, # shot per minute
+            'range': {'direct': 600, 'indirect': 0 }, # m
+        },
+        'M693-12.7': { # Leclerc coaxial 12.7mm
+            'model': 'M693-12.7',
+            "start_service": 1992,
+            "end_service": 3000,
+            'caliber': 12.7, # mm
+            'fire_rate': 550, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+        },
+        # --- Russian MGs ---
+        'PKM-7.62': { # infantry / pintle mount
+            'model': 'PKM-7.62',
+            "start_service": 1969,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - Kalashnikov PKM GPMG
+            'fire_rate': 650, # shot per minute
+            'range': {'direct': 1000, 'indirect': 0 }, # m
+        },
+        'PKTM-7.62': { # BTR-82A - modernized coaxial
+            'model': 'PKTM-7.62',
+            "start_service": 1998,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - modernized PKT
+            'fire_rate': 750, # shot per minute
+            'range': {'direct': 1200, 'indirect': 0 }, # m
+        },
+        # --- Chinese MGs ---
+        'Type-59T-7.62': { # Type 59 coaxial
+            'model': 'Type-59T-7.62',
+            "start_service": 1959,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - Chinese copy of SGMT
+            'fire_rate': 600, # shot per minute
+            'range': {'direct': 800, 'indirect': 0 }, # m
+        },
+        'Type-86-7.62': { # Type 99, ZBD-04 coaxial
+            'model': 'Type-86-7.62',
+            "start_service": 1986,
+            "end_service": 3000,
+            'caliber': 7.62, # mm - Chinese 7.62mm coaxial MG
+            'fire_rate': 700, # shot per minute
+            'range': {'direct': 1000, 'indirect': 0 }, # m
+        },
+        'QJC88-12.7': { # Type 99 commander's MG
+            'model': 'QJC88-12.7',
+            "start_service": 1988,
+            "end_service": 3000,
+            'caliber': 12.7, # mm - W85/QJC88 HMG
+            'fire_rate': 650, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+        },
+        # --- South Korean MGs ---
+        'K6-12.7': { # K1/K2 tank commander's MG
+            'model': 'K6-12.7',
+            "start_service": 1984,
+            "end_service": 3000,
+            'caliber': 12.7, # mm - licensed M2HB variant
+            'fire_rate': 550, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+        },
 
-    }, 
+    },
 
     'FLAME_TRHOWERS': {},
 
