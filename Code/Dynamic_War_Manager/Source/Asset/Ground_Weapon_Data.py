@@ -52,9 +52,22 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2,
                         },
 
-    'MACHINE_GUNS':     {'caliber': 0.4/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato                        
+    'MORTARS':          {'caliber': 0.35/155, # coeff / max value
+                        'fire_rate': 0.25/20,
+                        'range': 0.2/10000,
+                        'ammo_type': 0.2,
+                        },
+
+    'ARTILLERY':        {'caliber': 0.3/300, # coeff / max value (same structure as CANNONS)
+                        'muzzle_speed': 0.15/1000,
+                        'fire_rate': 0.25/10,
+                        'range': 0.1/70000,
+                        'ammo_type': 0.2,
+                        },
+
+    'MACHINE_GUNS':     {'caliber': 0.4/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato
                         'fire_rate': 0.4/500,
-                        'range': 0.2/1000,                        
+                        'range': 0.2/1000,
                         },
 
     'BOMBS':            {'tnt': 0.7/2000,
@@ -228,7 +241,134 @@ def get_machine_gun_score(model: str) -> float:
         else:
             weapon_power +=  weapon[param_name] * coeff_value
 
-    return weapon_power 
+    return weapon_power
+
+def get_rockets_score(model: str) -> float:
+    """
+    returns rocket score (same logic as get_missiles_score)
+
+    Args:
+        model (str): rocket model
+
+    Returns:
+        float: rocket score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'ROCKETS'
+    weapon = GROUND_WEAPONS[weapon_name].get(model)
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
+
+def get_mortars_score(model: str) -> float:
+    """
+    returns mortar score (same logic as get_cannon_score, without muzzle_speed)
+
+    Args:
+        model (str): mortar model
+
+    Returns:
+        float: mortar score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'MORTARS'
+    weapon = GROUND_WEAPONS[weapon_name].get(model)
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
+
+def get_artillery_score(model: str) -> float:
+    """
+    returns artillery score (same logic as get_cannon_score)
+
+    Args:
+        model (str): artillery model
+
+    Returns:
+        float: artillery score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'ARTILLERY'
+    weapon = GROUND_WEAPONS[weapon_name].get(model)
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
 
 def get_weapon_score(weapon_type: str, weapon_model: str):
 
@@ -247,13 +387,13 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
         return get_missiles_score(model=weapon_model)
 
     elif weapon_type == 'ROCKETS':
-        return 0
+        return get_rockets_score(model=weapon_model)
 
     elif weapon_type == 'MORTARS':
-        return 0
+        return get_mortars_score(model=weapon_model)
 
     elif weapon_type == 'ARTILLERY':
-        return 0
+        return get_artillery_score(model=weapon_model)
 
     elif weapon_type == 'MACHINE_GUNS':
         return get_machine_gun_score(model=weapon_model)

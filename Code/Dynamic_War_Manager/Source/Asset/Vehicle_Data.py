@@ -24,7 +24,7 @@ from dataclasses import dataclass
 # LOGGING --
  
 logger = Logger(module_name = __name__, class_name = 'Vehicle_Data').logger
-
+#logger.level = Logger.LEVEL_INFO
 
 VEHICLE_TASK = GROUND_ACTION
 MODES = ACTION_TASKS.keys()
@@ -97,7 +97,11 @@ class Vehicle_Data:
         Returns:
             float: radar score value
         """
-        if not self.radar:
+
+        if self.radar == False:
+            return 0.0
+
+        if self.radar == None:
             logger.warning(f"{self.made} {self.model} (category:{self.category}) - Radar not defined.")
             return 0.0
         
@@ -127,7 +131,10 @@ class Vehicle_Data:
     
     def _TVD_eval(self, modes: Optional[List] = None) -> float:
         """Evaluates the radar capabilities of the vehicle based on predefined weights."""
-        if not self.TVD:
+        if self.TVD == False:
+            return 0.0
+        
+        if self.TVD == None:
             logger.warning(f"{self.made} {self.model} (category:{self.category}) - TVD not defined.")
             return 0.0
         
@@ -162,11 +169,11 @@ class Vehicle_Data:
         """                
         components = [
             self.engine.get('reliability', {}).get('mtbf', 0) if self.engine is not None and self.engine.get('reliability') else None,
-            self.radar.get('reliability', {}).get('mtbf', 0) if self.radar is not None and self.radar.get('reliability') else None,
-            self.TVD.get('reliability', {}).get('mtbf', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
-            self.communication.get('reliability', {}).get('mtbf', 0) if self.communication is not None and self.communication.get('reliability') else None,
-            self.protections.get('reliability', {}).get('mtbf', 0) if self.protections is not None and self.protections.get('reliability') else None,            
-            self.hydraulic.get('reliability', {}).get('mtbf', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
+            self.radar.get('reliability', {}).get('mtbf', 0) if self.radar and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mtbf', 0) if self.TVD and self.TVD.get('reliability') else None,
+            self.communication.get('reliability', {}).get('mtbf', 0) if self.communication and self.communication.get('reliability') else None,
+            self.protections.get('reliability', {}).get('mtbf', 0) if self.protections and self.protections.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mtbf', 0) if self.hydraulic and self.hydraulic.get('reliability') else None
         ]
         filtered_components = [x for x in components if x is not None]
         # l'mtbf del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
@@ -179,12 +186,12 @@ class Vehicle_Data:
             float: hour quantity rappresentative of maintenance job
         """
         components = [
-            self.engine.get('reliability', {}).get('mttr', 0) if self.engine is not None and self.engine.get('reliability') else None,
-            self.radar.get('reliability', {}).get('mttr', 0) if self.radar is not None and self.radar.get('reliability') else None,
-            self.TVD.get('reliability', {}).get('mttr', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
-            self.communication.get('reliability', {}).get('mttr', 0) if self.communication is not None and self.communication.get('reliability') else None,
-            self.protections.get('reliability', {}).get('mttr', 0) if self.protections is not None and self.protections.get('reliability') else None,            
-            self.hydraulic.get('reliability', {}).get('mttr', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
+            self.engine.get('reliability', {}).get('mttr', 0) if self.engine and self.engine.get('reliability') else None,
+            self.radar.get('reliability', {}).get('mttr', 0) if self.radar and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mttr', 0) if self.TVD and self.TVD.get('reliability') else None,
+            self.communication.get('reliability', {}).get('mttr', 0) if self.communication and self.communication.get('reliability') else None,
+            self.protections.get('reliability', {}).get('mttr', 0) if self.protections and self.protections.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mttr', 0) if self.hydraulic and self.hydraulic.get('reliability') else None
         ]
         filtered_components = [x for x in components if x is not None]
         # l'mttr del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
@@ -262,7 +269,7 @@ class Vehicle_Data:
             for weapon_item in weapon:
                 factor_ammo_quantity = 1
 
-                if weapon_type == 'CANNONS':
+                if weapon_type == 'CANNONS' or weapon_type == 'ARTILLERY':
                     factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
 
                 elif weapon_type == 'MISSILES':
@@ -270,6 +277,12 @@ class Vehicle_Data:
                 
                 elif weapon_type == 'ROCKETS':
                     factor_ammo_quantity += weapon_item[1] / 8 # 8 reference for rockets (16 rockets -> factor_ammo_quantity = 2) 
+                
+                elif weapon_type == 'MORTARS':
+                    factor_ammo_quantity += weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
+                
+                elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo
+                    factor_ammo_quantity += weapon_item[1] # 2 reference for machine_guns (2  -> factor_ammo_quantity = 2) 
                 
                 #else:
                 #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
@@ -288,7 +301,10 @@ class Vehicle_Data:
         Returns:
             float: protection score
         """
-        if not self.protections:
+        if self.protections == False:
+            return 0.0
+        
+        if self.protections == None:
             logger.warning(f"{self.made} {self.model} (category:{self.category}) - Protections not defined.")
             return 0.0
 
@@ -376,7 +392,10 @@ class Vehicle_Data:
         Returns:
             float: communication score
         """
-        if not self.communication:
+        if self.communication == False:
+            return 0.0
+        
+        if self.communication == None:
             logger.warning(f"{self.made} {self.model} (category:{self.category}) - Communication not defined.")
             return 0.0
 
@@ -416,7 +435,10 @@ class Vehicle_Data:
         Returns:
             float: hydraulic system score
         """
-        if not self.hydraulic:
+        if self.hydraulic == False:
+            return 0.0
+        
+        if self.hydraulic == None:
             logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic system not defined.")
             return 0.0
 
@@ -831,7 +853,7 @@ class Vehicle_Data:
 # metric = metric - > speed: km/h, altitude: m, radar/TVD/radioNav range: km 
 # metric = imperial - > speed: mph, altitude: feet, radar/TVD/radioNav range: nm
 
-T90_data = {
+T90M_data = {
     'constructor': 'UVTZ',    
     'model': 'T-90M',
     'made': 'Russia',
@@ -852,8 +874,8 @@ T90_data = {
         'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
             
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model', 
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 200},
@@ -914,8 +936,8 @@ T72_data = {
         'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
             
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model', 
         'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 130},
@@ -955,87 +977,6 @@ T72_data = {
     },
 }
 
-T130_data = {
-    'constructor': 'UVTZ',    
-    'model': 'T130',
-    'made': 'Russia',
-    'start_service': 2030,
-    'end_service': None,
-    'category': 'Tank', # Main Battle Tank
-    'cost': 4, # M$
-    'range': 1200, # km
-    'roles': ['Tank'],
-    'engine': {
-        'model': 'Multifuel 12 Cylinders', 
-        'capabilities': {'thrust': 840, 'fuel_efficiency': 0.8, 'type': 'multifuel'}, 
-        'reliability': {'mtbf': 40, 'mttr': 5}
-    },
-    'weapons': {
-        'CANNONS': [('2A46M', 42)],
-        'MISSILES': [('9K119M', 6)],
-        'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
-            
-    },
-    'radar': {
-        'model': 'AN/APG-68(V)9',
-        'capabilities': {
-            'air': (False, {'tracking_range': 160, 'acquisition_range': 70, 'engagement_range': 50, 'multi_target_capacity': 6}),
-            'ground': (True, {'tracking_range': 80, 'acquisition_range': 60, 'engagement_range': 20, 'multi_target_capacity': 3}),
-            'sea': (False, {'tracking_range': 50, 'acquisition_range': 60, 'engagement_range': 50, 'multi_target_capacity': 3})            
-        },
-        'reliability': {'mtbf': 60, 'mttr': 4},
-        'type': 'pulse-doppler'
-            
-    },
-    'TVD': {
-        'model': 'AN/AAQ-28 LITENING',
-        'capabilities': {
-            'air': (True, {'tracking_range': 100, 'acquisition_range': 120, 'engagement_range': 100, 'multi_target_capacity': 5}),
-            'ground': (True, {'tracking_range': 80, 'acquisition_range': 100, 'engagement_range': 80, 'multi_target_capacity': 4}),
-            'sea': (False, {'tracking_range': 0, 'acquisition_range': 0, 'engagement_range': 0, 'multi_target_capacity': 0})      
-        },
-        'reliability': {'mtbf': 40, 'mttr': 3},
-        'type': 'thermal and optical'
-    },
-    'communication': {
-        'model': 'AN/ARN-118', 
-        'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 200},
-        'reliability': {'mtbf': 60, 'mttr': 1.5}
-        },
-    'protections': {
-        # HE: Esplosivo, HEAT: carica cava, 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
-        'active':       {
-                            'model': 'Shtora-1',
-                            'threath_countermeasure': ['Laser', 'Infrared', 'TVD', 'Radar']
-                        },
-        'armor':        {  
-                            'front': (True, {'HEAT': 1070, 'APFSDS': 710}),
-                            'lateral': (True, {'HEAT': 1070, 'APFSDS': 710}),
-                            'back': (True, {'HEAT': 1070, 'APFSDS': 710}),
-                            'turret': (True, {'HEAT': 1340, 'APFSDS': 920}), 
-                        },
-        'reactive':     {
-                            'model': 'Kontact5',
-                            'increment_thickness': {
-                                'front': (True, {'HEAT': 600, 'APFSDS': 250}),
-                                'lateral': (True, {'HEAT': 600, 'APFSDS': 250}),
-                                'back': (True, {'HEAT': 600, 'APFSDS': 250}),
-                                'turret': (True, {'HEAT': 600, 'APFSDS': 250}),      
-                            },                                                
-                        },
-    },
-    'hydraulic': {
-        'model': 'Generic Hydraulic System',
-        'capabilities': {'pressure': 3000, 'fluid_capacity': 50},
-        'reliability': {'mtbf': 90, 'mttr': 1.0},
-    },
-    'speed_data': {
-        'sustained': {'metric': 'metric', 'speed': 45, 'consume': 0.15},
-        'max': {'metric': 'metric', 'speed': 70, 'consume': 0.3},
-        'off_road': {'metric': 'metric', 'speed': 50, 'consume': 0.4},
-    },
-}
-
 BMP1_data = {
     'constructor': 'Kurganmashzavod',    
     'model': 'BMP-1',
@@ -1057,9 +998,13 @@ BMP1_data = {
         'MACHINE_GUNS': [('PKT-7.62', 1)], #type, units
             #['air', 'ground', 'sea']
     },
-    'radar': None,
-    'TVD': None,
-    'communication': None,
+    'radar': False,
+    'TVD': False,
+    'communication': {
+        'model': 'generic comm model',
+        'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 140},
+        'reliability': {'mtbf': 50, 'mttr': 2.5}
+    },
     'protections': {
         # HE: Esplosivo, HEAT: carica cava, 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
         'active':       None,
@@ -1107,8 +1052,8 @@ T55_data = {
         'CANNONS': [('D-10T2S-100mm', 34)],
         'MACHINE_GUNS': [('PKT-7.62', 1), ('DShK-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.2, 'communication_range': 80},
@@ -1156,8 +1101,8 @@ Chieftain_MK3_data = {
         'CANNONS': [('L11A5-120mm', 64)],
         'MACHINE_GUNS': [('L8A1-7.62', 1), ('L37A1-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 150},
@@ -1205,8 +1150,8 @@ Leopard_1A3_data = {
         'CANNONS': [('L7A3-105mm', 60)],
         'MACHINE_GUNS': [('MG3-7.62', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 180},
@@ -1254,8 +1199,8 @@ M60A3_data = {
         'CANNONS': [('M68-105mm', 63)],
         'MACHINE_GUNS': [('M240-7.62', 1), ('M2HB-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 160},
@@ -1303,8 +1248,8 @@ Leopard_2A4_data = {
         'CANNONS': [('Rheinmetall-120mm-L44', 42)],
         'MACHINE_GUNS': [('MG3-7.62', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.7, 'communication_range': 220},
@@ -1352,8 +1297,8 @@ Leopard_2A5_data = {
         'CANNONS': [('Rheinmetall-120mm-L44', 42)],
         'MACHINE_GUNS': [('MG3-7.62', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 230},
@@ -1401,8 +1346,8 @@ Leopard_2A6M_data = {
         'CANNONS': [('Rheinmetall-120mm-L55', 42)],
         'MACHINE_GUNS': [('MG3-7.62', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.8, 'communication_range': 250},
@@ -1450,8 +1395,8 @@ M1A2_Abrams_data = {
         'CANNONS': [('M256-120mm', 42)],
         'MACHINE_GUNS': [('M240-7.62', 2), ('M2HB-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.85, 'communication_range': 280},
@@ -1499,8 +1444,8 @@ Leclerc_data = {
         'CANNONS': [('CN120-26-120mm', 40)],
         'MACHINE_GUNS': [('M693-12.7', 1), ('ANF1-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.8, 'communication_range': 260},
@@ -1551,8 +1496,8 @@ Challenger_II_data = {
         'CANNONS': [('L30A1-120mm', 52)],
         'MACHINE_GUNS': [('L94A1-7.62', 1), ('L37A2-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 240},
@@ -1601,8 +1546,8 @@ Merkava_IV_data = {
         'MACHINE_GUNS': [('M2HB-12.7', 1), ('FN MAG-7.62', 3)],
         'MORTARS': [('M933-60mm', 12)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.82, 'communication_range': 270},
@@ -1661,8 +1606,8 @@ Type_59_data = {
         'CANNONS': [('Type-59-100mm', 34)],
         'MACHINE_GUNS': [('Type-59T-7.62', 1), ('DShK-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.15, 'communication_range': 60},
@@ -1711,8 +1656,8 @@ T80U_data = {
         'MISSILES': [('9M119-Refleks', 6)],
         'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 190},
@@ -1769,8 +1714,8 @@ T90_base_data = {
         'MISSILES': [('9M119-Refleks', 6)],
         'MACHINE_GUNS': [('PKT-7.62', 1), ('NSVT-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.52, 'communication_range': 200},
@@ -1830,8 +1775,8 @@ T72B3_data = {
         'MISSILES': [('9M119M-Refleks-M', 6)],
         'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 210},
@@ -1890,8 +1835,8 @@ ZTZ_96B_data = {
         'CANNONS': [('ZPT-98-125mm', 42)],
         'MACHINE_GUNS': [('Type-86-7.62', 1), ('QJC88-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 215},
@@ -1961,8 +1906,8 @@ Marder_data = {
         'MACHINE_GUNS': [('MG3-7.62', 2)],
         'MISSILES': [('MILAN', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 180},
@@ -2011,8 +1956,8 @@ BMP2_data = {
         'MACHINE_GUNS': [('PKT-7.62', 1)],
         'MISSILES': [('9M113-Konkurs', 4)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 140},
@@ -2061,8 +2006,8 @@ BMD1_data = {
         'MACHINE_GUNS': [('PKT-7.62', 3)],
         'MISSILES': [('9M14-Malyutka', 3)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 120},
@@ -2111,8 +2056,8 @@ M2_Bradley_data = {
         'MACHINE_GUNS': [('M240C-7.62', 1)],
         'MISSILES': [('BGM-71-TOW', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.7, 'communication_range': 200},
@@ -2160,8 +2105,8 @@ BMP3_data = {
         'CANNONS': [('2A70-100mm', 40), ('2A72-30mm', 500)],
         'MACHINE_GUNS': [('PKT-7.62', 3)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 160},
@@ -2209,8 +2154,8 @@ Warrior_data = {
         'CANNONS': [('L21A1-RARDEN-30mm', 230)],
         'MACHINE_GUNS': [('L94A1-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 190},
@@ -2258,8 +2203,8 @@ LAV25_data = {
         'CANNONS': [('M242-Bushmaster-25mm', 630)],
         'MACHINE_GUNS': [('M240-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.62, 'communication_range': 175},
@@ -2306,8 +2251,8 @@ M1126_Stryker_data = {
     'weapons': {
         'MACHINE_GUNS': [('M2HB-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.75, 'communication_range': 210},
@@ -2355,8 +2300,8 @@ BTR82A_data = {
         'CANNONS': [('2A72-30mm', 500)],
         'MACHINE_GUNS': [('PKTM-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.58, 'communication_range': 170},
@@ -2405,8 +2350,8 @@ ZBD04A_data = {
         'MACHINE_GUNS': [('Type-86-7.62', 1)],
         'MISSILES': [('HJ-73C', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.63, 'communication_range': 185},
@@ -2455,8 +2400,8 @@ SdKfz_251_data = {
     'weapons': {
         'MACHINE_GUNS': [('MG34-7.92', 2)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.1, 'communication_range': 30},
@@ -2503,8 +2448,8 @@ MTLB_data = {
     'weapons': {
         'MACHINE_GUNS': [('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.25, 'communication_range': 50},
@@ -2551,8 +2496,8 @@ M2A1_Halftrack_data = {
     'weapons': {
         'MACHINE_GUNS': [('M2HB-12.7', 1), ('M1919-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.15, 'communication_range': 35},
@@ -2599,8 +2544,8 @@ M113_data = {
     'weapons': {
         'MACHINE_GUNS': [('M2HB-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 100},
@@ -2647,8 +2592,8 @@ AAV7_data = {
     'weapons': {
         'MACHINE_GUNS': [('M2HB-12.7', 1), ('M240-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 120},
@@ -2695,8 +2640,8 @@ TPz_Fuchs_data = {
     'weapons': {
         'MACHINE_GUNS': [('MG3-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 140},
@@ -2743,8 +2688,8 @@ BTR80_data = {
     'weapons': {
         'MACHINE_GUNS': [('KPVT-14.5', 1), ('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 130},
@@ -2791,8 +2736,8 @@ BTR_RD_data = {
     'weapons': {
         'MACHINE_GUNS': [('KPVT-14.5', 1), ('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
@@ -2842,8 +2787,8 @@ BM21_Grad_data = {
         'ARTILLERY': [('122mm-Grad-Rocket', 40)],
         'MACHINE_GUNS': [('PKM-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.3, 'communication_range': 80},
@@ -2891,8 +2836,8 @@ S2S3_Akatsia_data = {
         'ARTILLERY': [('2A33-152mm', 46)],
         'MACHINE_GUNS': [('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
@@ -2940,8 +2885,8 @@ S2S1_Gvozdika_data = {
         'ARTILLERY': [('2A31-122mm', 40)],
         'MACHINE_GUNS': [('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.32, 'communication_range': 95},
@@ -2988,8 +2933,8 @@ BM27_Uragan_data = {
     'weapons': {
         'ARTILLERY': [('220mm-Uragan-Rocket', 16)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.33, 'communication_range': 85},
@@ -3037,8 +2982,8 @@ Dana_vz77_data = {
         'ARTILLERY': [('Dana-152mm', 60)],
         'MACHINE_GUNS': [('DShK-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.45, 'communication_range': 130},
@@ -3086,8 +3031,8 @@ S2S9_Nona_data = {
         'ARTILLERY': [('2A51-120mm', 22)],
         'MACHINE_GUNS': [('PKT-7.62', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 90},
@@ -3134,8 +3079,8 @@ M270_MLRS_data = {
     'weapons': {
         'ARTILLERY': [('227mm-MLRS-Rocket', 12)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 180},
@@ -3182,8 +3127,8 @@ A9A52_Smerch_data = {
     'weapons': {
         'ARTILLERY': [('300mm-Smerch-Rocket', 12)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 150},
@@ -3231,8 +3176,8 @@ S2S19_Msta_data = {
         'ARTILLERY': [('2A64-152mm', 50)],
         'MACHINE_GUNS': [('NSVT-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
@@ -3280,8 +3225,8 @@ M109_Paladin_data = {
         'ARTILLERY': [('M284-155mm', 39)],
         'MACHINE_GUNS': [('M2HB-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.65, 'communication_range': 200},
@@ -3329,8 +3274,8 @@ PLZ05_data = {
         'ARTILLERY': [('PL-45-155mm', 30)],
         'MACHINE_GUNS': [('QJC88-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 170},
@@ -3378,8 +3323,8 @@ T155_Firtina_data = {
         'ARTILLERY': [('Firtina-155mm', 48)],
         'MACHINE_GUNS': [('K6-12.7', 1)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.68, 'communication_range': 190},
@@ -3428,8 +3373,8 @@ ZSU_57_2_data = {
     'weapons': {
         'CANNONS': [('S-68-57mm', 300)],  # Twin 57mm
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.25, 'communication_range': 70},
@@ -3485,7 +3430,7 @@ ZSU_23_4_data = {
         },
         'reliability': {'mtbf': 45, 'mttr': 4}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 95},
@@ -3532,8 +3477,8 @@ M163_VADS_data = {
     'weapons': {
         'CANNONS': [('M61-Vulcan-20mm', 2100)],
     },
-    'radar': None,
-    'TVD': None,
+    'radar': False,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 110},
@@ -3589,7 +3534,7 @@ Flakpanzer_Gepard_data = {
         },
         'reliability': {'mtbf': 65, 'mttr': 2.5}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.55, 'communication_range': 160},
@@ -3646,7 +3591,7 @@ K2K22_Tunguska_data = {
         },
         'reliability': {'mtbf': 60, 'mttr': 3}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
@@ -3695,7 +3640,7 @@ Strela1_9P31_data = {
     'weapons': {
         'MISSILES': [('9M31-SAM', 4)],
     },
-    'radar': None,
+    'radar': False,
     'TVD': {
         'model': 'Optical sight',
         'capabilities': {
@@ -3751,7 +3696,7 @@ MIM72G_Chaparral_data = {
     'weapons': {
         'MISSILES': [('MIM-72-SAM', 4)],
     },
-    'radar': None,
+    'radar': False,
     'TVD': {
         'model': 'Forward Looking Infrared',
         'capabilities': {
@@ -3816,7 +3761,7 @@ A9A33_Osa_data = {
         },
         'reliability': {'mtbf': 50, 'mttr': 4}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.35, 'communication_range': 100},
@@ -3863,7 +3808,7 @@ K9K35_Strela10_data = {
     'weapons': {
         'MISSILES': [('9M37-SAM', 8)],
     },
-    'radar': None,
+    'radar': False,
     'TVD': {
         'model': 'Optical-IR tracker',
         'capabilities': {
@@ -3928,7 +3873,7 @@ MIM115_Roland_data = {
         },
         'reliability': {'mtbf': 60, 'mttr': 3}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 140},
@@ -3984,7 +3929,7 @@ K9K331_Tor_data = {
         },
         'reliability': {'mtbf': 62, 'mttr': 3.5}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.55, 'communication_range': 150},
@@ -4032,7 +3977,7 @@ M6_Linebacker_data = {
         'CANNONS': [('M242-25mm', 900)],
         'MISSILES': [('FIM-92-Stinger', 4)],
     },
-    'radar': None,
+    'radar': False,
     'TVD': {
         'model': 'FLIR and targeting system',
         'capabilities': {
@@ -4097,7 +4042,7 @@ K2K12_Kub_data = {
         },
         'reliability': {'mtbf': 48, 'mttr': 4.5}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.4, 'communication_range': 120},
@@ -4153,7 +4098,7 @@ K9K37_Buk_data = {
         },
         'reliability': {'mtbf': 55, 'mttr': 4}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.5, 'communication_range': 150},
@@ -4209,7 +4154,7 @@ S300PS_data = {
         },
         'reliability': {'mtbf': 58, 'mttr': 4.5}
     },
-    'TVD': None,
+    'TVD': False,
     'communication': {
         'model': 'generic comm model',
         'capabilities': {'navigation_accuracy': 0.6, 'communication_range': 200},
@@ -4242,9 +4187,8 @@ S300PS_data = {
 SCORES = ('combat score', 'radar score', 'radar score air', 'radar score ground', 'speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 VEHICLE = {}
 
-Vehicle_Data(**T90_data)
+Vehicle_Data(**T90M_data)
 Vehicle_Data(**T72_data)
-Vehicle_Data(**T130_data)
 Vehicle_Data(**BMP1_data)
 
 # Nuovi Main Battle Tanks
@@ -4431,29 +4375,38 @@ print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', 
 '''
 STAMPA = True
 if STAMPA:
-    # Prepara i dati per la tabella
-    table_data = []
+    VEHICLES_PER_TABLE = 7
 
-    # Itera sui dati per costruire le righe della tabella
-    for model, data in VEHICLE.items():
-        for name, score in data.items():
-            for score_name, score_value in score.items():
-                table_data.append([model, name, score_name, score_value])
+    # Raccoglie tutti i modelli in ordine
+    all_models = list(VEHICLE.keys())
+    num_groups = (len(all_models) + VEHICLES_PER_TABLE - 1) // VEHICLES_PER_TABLE
 
-    # Crea un DataFrame con i dati
-    df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
+    for group in range(num_groups):
+        start = group * VEHICLES_PER_TABLE
+        end = min(start + VEHICLES_PER_TABLE, len(all_models))
+        group_models = all_models[start:end]
 
-    # Crea la tabella pivot
-    pivot_table = df.pivot_table(
-        index=["Name", "Score Name"],  # Indici delle righe
-        columns=["Model"],              # Colonne della tabella
-        values="Score Value",         # Valori da visualizzare
-        aggfunc="first"               # Funzione di aggregazione (non necessaria qui)
-    )
+        # Costruisce le righe per questo gruppo
+        table_data = []
+        for model in group_models:
+            data = VEHICLE[model]
+            for name, score in data.items():
+                for score_name, score_value in score.items():
+                    table_data.append([model, name, score_name, score_value])
 
-    # Riformatta le colonne per ottenere un layout leggibile
-    pivot_table = pivot_table.sort_index(axis=1, level=[0, 1])  # Ordina le colonne per Model e Score Name
+        # Crea un DataFrame e la tabella pivot
+        df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
 
+        pivot_table = df.pivot_table(
+            index=["Name", "Score Name"],
+            columns=["Model"],
+            values="Score Value",
+            aggfunc="first"
+        )
 
-    # Stampa la tabella pivot in formato leggibile
-    print(tabulate(pivot_table, headers="keys", tablefmt="grid"))
+        # Riordina le colonne secondo l'ordine originale dei modelli
+        pivot_table = pivot_table[group_models]
+
+        print(f"\n--- Vehicles {start+1}-{end} of {len(all_models)} ---")
+        print(tabulate(pivot_table, headers="keys", tablefmt="grid"))
+        print()
