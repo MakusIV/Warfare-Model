@@ -4410,3 +4410,113 @@ if STAMPA:
         print(f"\n--- Vehicles {start+1}-{end} of {len(all_models)} ---")
         print(tabulate(pivot_table, headers="keys", tablefmt="grid"))
         print()
+
+    # --- PDF generation ---
+    import os
+    from reportlab.lib.pagesizes import A3, landscape
+    from reportlab.lib import colors
+    from reportlab.lib.units import mm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+    # Percorso di output
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+    out_dir = os.path.join(project_root, 'out')
+    os.makedirs(out_dir, exist_ok=True)
+    pdf_path = os.path.join(out_dir, 'Vehicle_Scores.pdf')
+
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=landscape(A3),
+        leftMargin=15*mm,
+        rightMargin=15*mm,
+        topMargin=15*mm,
+        bottomMargin=15*mm
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TableTitle', parent=styles['Heading2'], alignment=TA_CENTER, spaceAfter=6)
+    header_style = ParagraphStyle('Header', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_CENTER, textColor=colors.whitesmoke)
+    cell_style = ParagraphStyle('Cell', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_CENTER)
+    index_style = ParagraphStyle('Index', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_LEFT)
+
+    elements = []
+    elements.append(Paragraph("Vehicle Scores Report", styles['Title']))
+    elements.append(Spacer(1, 10*mm))
+
+    for group in range(num_groups):
+        start = group * VEHICLES_PER_TABLE
+        end = min(start + VEHICLES_PER_TABLE, len(all_models))
+        group_models = all_models[start:end]
+
+        # Ricostruisce la pivot table per questo gruppo
+        table_data = []
+        for model in group_models:
+            data = VEHICLE[model]
+            for name, score in data.items():
+                for score_name, score_value in score.items():
+                    table_data.append([model, name, score_name, score_value])
+
+        df = pd.DataFrame(table_data, columns=["Model", "Name", "Score Name", "Score Value"])
+        pivot_table = df.pivot_table(
+            index=["Name", "Score Name"],
+            columns=["Model"],
+            values="Score Value",
+            aggfunc="first"
+        )
+        pivot_table = pivot_table[group_models]
+
+        # Titolo del gruppo
+        elements.append(Paragraph(f"Vehicles {start+1}-{end} of {len(all_models)}", title_style))
+        elements.append(Spacer(1, 3*mm))
+
+        # Costruisce la tabella per ReportLab
+        # Header: Name | Score Name | Model1 | Model2 | ...
+        header_row = [
+            Paragraph("Name", header_style),
+            Paragraph("Score Name", header_style)
+        ] + [Paragraph(m, header_style) for m in group_models]
+
+        pdf_table_data = [header_row]
+        prev_name = None
+        for (name, score_name) in pivot_table.index:
+            display_name = name if name != prev_name else ""
+            row = [
+                Paragraph(display_name, index_style),
+                Paragraph(score_name, index_style)
+            ]
+            for model in group_models:
+                val = pivot_table.loc[(name, score_name), model]
+                row.append(Paragraph(f"{val:.4f}" if pd.notna(val) else "", cell_style))
+            pdf_table_data.append(row)
+            prev_name = name
+
+        # Calcola larghezze colonne
+        available_width = landscape(A3)[0] - 30*mm
+        index_col_width = 55*mm
+        score_col_width = 35*mm
+        remaining = available_width - index_col_width - score_col_width
+        model_col_width = remaining / len(group_models)
+        col_widths = [index_col_width, score_col_width] + [model_col_width] * len(group_models)
+
+        t = Table(pdf_table_data, colWidths=col_widths, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('ALIGN', (2, 1), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 1), (1, -1), 'LEFT'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#f8f9fa'), colors.white]),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]))
+        elements.append(t)
+
+        if group < num_groups - 1:
+            elements.append(PageBreak())
+
+    doc.build(elements)
+    print(f"\nPDF saved to: {pdf_path}")

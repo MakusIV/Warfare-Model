@@ -1,4 +1,5 @@
 from functools import lru_cache
+import random
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
@@ -96,6 +97,662 @@ RELOAD_PARAM = {
     'Manual': 0.4
 }
 '''
+
+
+# ---------------------------------------------------------------------------
+# Efficiency templates — target_type -> {big, med, small} -> {accuracy, dc}
+# Shared across weapons of the same class to avoid duplicating large dicts.
+# ---------------------------------------------------------------------------
+
+_INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
+
+_EFF_MBT_CANNON_120_125MM = {
+    "Soft":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.4},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.5}},
+    "Armored":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                       "med": {"accuracy": 0.8,  "destroy_capacity": 1.0},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1.0}},
+    "Hard":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.4}},
+    "Structure":      {"big": {"accuracy": 0.95, "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.1}},
+    "Air_Defense":    {"big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                       "med": {"accuracy": 0.8,  "destroy_capacity": 1.0},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1.0}},
+    "Airbase":        {"big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.9, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.9, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.9, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.9, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.9, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.42},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.5},
+                       "small": {"accuracy": 0.35, "destroy_capacity": 0.5}},
+}
+
+_EFF_MBT_CANNON_100_105MM = {
+    "Soft":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.4},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.5}},
+    "Armored":        {"big": {"accuracy": 0.8,  "destroy_capacity": 0.85},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.9}},
+    "Hard":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.12},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.2},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.35}},
+    "Structure":      {"big": {"accuracy": 0.9,  "destroy_capacity": 0.004},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.015},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.08}},
+    "Air_Defense":    {"big": {"accuracy": 0.8,  "destroy_capacity": 0.85},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.9}},
+    "Airbase":        {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.65, "destroy_capacity": 0.38},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.3,  "destroy_capacity": 0.45}},
+}
+
+_EFF_MBT_CANNON_73MM = {
+    "Soft":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.4},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.5}},
+    "Armored":        {"big": {"accuracy": 0.7,  "destroy_capacity": 0.7},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.75}},
+    "Hard":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.08},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.15},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.25}},
+    "Structure":      {"big": {"accuracy": 0.8,  "destroy_capacity": 0.003},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.01},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.06}},
+    "Air_Defense":    {"big": {"accuracy": 0.7,  "destroy_capacity": 0.7},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.75}},
+    "Airbase":        {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.35, "destroy_capacity": 0.35},
+                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.35}},
+}
+
+_EFF_AUTOCANNON = {
+    "Soft":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.5},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.6},
+                       "small": {"accuracy": 0.9,  "destroy_capacity": 0.7}},
+    "Armored":        {"big": {"accuracy": 0.8,  "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.35}},
+    "Hard":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.08}},
+    "Structure":      {"big": {"accuracy": 0.9,  "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.005},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.02}},
+    "Air_Defense":    {"big": {"accuracy": 0.8,  "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.4}},
+    "Airbase":        {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.6,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.04},
+                       "small": {"accuracy": 0.35, "destroy_capacity": 0.06}},
+}
+
+_EFF_AA_CANNON = {
+    "Soft":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.6},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.9,  "destroy_capacity": 0.9}},
+    "Armored":        {"big": {"accuracy": 0.7,  "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.1},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.15}},
+    "Hard":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.05}},
+    "Structure":      {"big": {"accuracy": 0.8,  "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.003},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.01}},
+    "Air_Defense":    {"big": {"accuracy": 0.7,  "destroy_capacity": 0.08},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.12},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.18}},
+    "Airbase":        {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.3,  "destroy_capacity": 0.03}},
+}
+
+_EFF_AA_CANNON_57MM = {
+    "Soft":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.7},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.85},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1.0}},
+    "Armored":        {"big": {"accuracy": 0.7,  "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.35}},
+    "Hard":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.06},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.1}},
+    "Structure":      {"big": {"accuracy": 0.8,  "destroy_capacity": 0.002},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.006},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.02}},
+    "Air_Defense":    {"big": {"accuracy": 0.7,  "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.35}},
+    "Airbase":        {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.8, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.3,  "destroy_capacity": 0.08}},
+}
+
+_EFF_ATGM_LASER = {
+    "Soft":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.5},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.6},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.65}},
+    "Armored":        {"big": {"accuracy": 0.95, "destroy_capacity": 0.9},
+                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.95},
+                       "small": {"accuracy": 0.9,  "destroy_capacity": 1.0}},
+    "Hard":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.4},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.5}},
+    "Structure":      {"big": {"accuracy": 0.9,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.1}},
+    "Air_Defense":    {"big": {"accuracy": 0.9,  "destroy_capacity": 0.85},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.9},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 0.95}},
+    "Airbase":        {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.6,  "destroy_capacity": 0.35},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.5}},
+}
+
+_EFF_ATGM_SACLOS = {
+    "Soft":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.5},
+                       "med": {"accuracy": 0.8,  "destroy_capacity": 0.6},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 0.65}},
+    "Armored":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.85},
+                       "med": {"accuracy": 0.8,  "destroy_capacity": 0.9},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.95}},
+    "Hard":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.28},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.38},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 0.48}},
+    "Structure":      {"big": {"accuracy": 0.8,  "destroy_capacity": 0.008},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.025},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 0.08}},
+    "Air_Defense":    {"big": {"accuracy": 0.8,  "destroy_capacity": 0.8},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.85},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 0.9}},
+    "Airbase":        {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.4},
+                       "small": {"accuracy": 0.3,  "destroy_capacity": 0.45}},
+}
+
+_EFF_ATGM_OLD = {
+    "Soft":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.55},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.6}},
+    "Armored":        {"big": {"accuracy": 0.75, "destroy_capacity": 0.75},
+                       "med": {"accuracy": 0.7,  "destroy_capacity": 0.8},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.85}},
+    "Hard":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.4}},
+    "Structure":      {"big": {"accuracy": 0.7,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.06}},
+    "Air_Defense":    {"big": {"accuracy": 0.7,  "destroy_capacity": 0.7},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.8}},
+    "Airbase":        {"big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.4,  "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.35},
+                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.4}},
+}
+
+_EFF_SAM_SHORAD = {
+    "Soft":           {"big": {"accuracy": 0.15, "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.1,  "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.08, "destroy_capacity": 0.3}},
+    "Armored":        {"big": {"accuracy": 0.1,  "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.08},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 0.1}},
+    "Hard":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 0.05}},
+    "Structure":      {"big": {"accuracy": 0.1,  "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.003},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 0.01}},
+    "Air_Defense":    {"big": {"accuracy": 0.1,  "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.08},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 0.1}},
+    "Airbase":        {"big": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.05, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.05, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.05, "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.03, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.05}},
+}
+
+_EFF_SAM_MERAD = {
+    "Soft":           {"big": {"accuracy": 0.08, "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.05, "destroy_capacity": 0.2},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 0.25}},
+    "Armored":        {"big": {"accuracy": 0.05, "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.03, "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.08}},
+    "Hard":           {"big": {"accuracy": 0.05, "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.03, "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.03}},
+    "Structure":      {"big": {"accuracy": 0.05, "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.03, "destroy_capacity": 0.002},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.005}},
+    "Air_Defense":    {"big": {"accuracy": 0.05, "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.03, "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.08}},
+    "Airbase":        {"big": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.03, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.03, "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.02, "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.03}},
+}
+
+_EFF_SAM_LORAD = {
+    "Soft":           {"big": {"accuracy": 0.03, "destroy_capacity": 0.1},
+                       "med": {"accuracy": 0.02, "destroy_capacity": 0.15},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.2}},
+    "Armored":        {"big": {"accuracy": 0.02, "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.01, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.05}},
+    "Hard":           {"big": {"accuracy": 0.02, "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.01, "destroy_capacity": 0.01},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.02}},
+    "Structure":      {"big": {"accuracy": 0.02, "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.01, "destroy_capacity": 0.001},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.003}},
+    "Air_Defense":    {"big": {"accuracy": 0.02, "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.01, "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.05}},
+    "Airbase":        {"big": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.01, "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.01, "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.01, "destroy_capacity": 0.01},
+                       "small": {"accuracy": 0.01, "destroy_capacity": 0.02}},
+}
+
+_EFF_TUBE_ARTILLERY = {
+    "Soft":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.5},
+                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.65},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.8}},
+    "Armored":        {"big": {"accuracy": 0.4,  "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.22},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.3}},
+    "Hard":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.45}},
+    "Structure":      {"big": {"accuracy": 0.5,  "destroy_capacity": 0.1},
+                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.2},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.35}},
+    "Air_Defense":    {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
+    "Airbase":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "Port":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "Shipyard":       {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "Farp":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "Stronghold":     {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "ship":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.15, "destroy_capacity": 0.2},
+                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.3}},
+}
+
+_EFF_MLRS = {
+    "Soft":           {"big": {"accuracy": 0.35, "destroy_capacity": 0.6},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.9}},
+    "Armored":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.3},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.4}},
+    "Hard":           {"big": {"accuracy": 0.35, "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.35},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
+    "Structure":      {"big": {"accuracy": 0.35, "destroy_capacity": 0.12},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.22},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.38}},
+    "Air_Defense":    {"big": {"accuracy": 0.3,  "destroy_capacity": 0.35},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.55}},
+    "Airbase":        {"big": {"accuracy": 0.2,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.1}},
+    "Port":           {"big": {"accuracy": 0.2,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.1}},
+    "Shipyard":       {"big": {"accuracy": 0.2,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.1}},
+    "Farp":           {"big": {"accuracy": 0.2,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.1}},
+    "Stronghold":     {"big": {"accuracy": 0.2,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.1}},
+    "ship":           {"big": {"accuracy": 0.08, "destroy_capacity": 0.2},
+                       "med": {"accuracy": 0.12, "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.18, "destroy_capacity": 0.35}},
+}
+
+_EFF_MORTAR_60MM = {
+    "Soft":           {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
+    "Armored":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.04},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.06}},
+    "Hard":           {"big": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.06},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.1}},
+    "Structure":      {"big": {"accuracy": 0.4,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.015},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.04}},
+    "Air_Defense":    {"big": {"accuracy": 0.3,  "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.1},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.15}},
+    "Airbase":        {"big": {"accuracy": 0.2,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-8}},
+    "Port":           {"big": {"accuracy": 0.2,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-8}},
+    "Shipyard":       {"big": {"accuracy": 0.2,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-8}},
+    "Farp":           {"big": {"accuracy": 0.2,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-8}},
+    "Stronghold":     {"big": {"accuracy": 0.2,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.3,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-8}},
+    "ship":           {"big": {"accuracy": 0.05, "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.02},
+                       "small": {"accuracy": 0.1,  "destroy_capacity": 0.03}},
+}
+
+_EFF_HMG = {
+    "Soft":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.3},
+                       "med": {"accuracy": 0.8,  "destroy_capacity": 0.4},
+                       "small": {"accuracy": 0.75, "destroy_capacity": 0.5}},
+    "Armored":        {"big": {"accuracy": 0.6,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.04},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.06}},
+    "Hard":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.01},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.02}},
+    "Structure":      {"big": {"accuracy": 0.7,  "destroy_capacity": 0.001},
+                       "med": {"accuracy": 0.65, "destroy_capacity": 0.003},
+                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.008}},
+    "Air_Defense":    {"big": {"accuracy": 0.6,  "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+    "Airbase":        {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.25, "destroy_capacity": 0.008},
+                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.01}},
+}
+
+_EFF_MMG = {
+    "Soft":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.22},
+                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.3}},
+    "Armored":        {"big": {"accuracy": 0.5,  "destroy_capacity": 0.0},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.0},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.0}},
+    "Hard":           {"big": {"accuracy": 0.6,  "destroy_capacity": 0.0},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.001},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.002}},
+    "Structure":      {"big": {"accuracy": 0.6,  "destroy_capacity": 0.0},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.0},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.001}},
+    "Air_Defense":    {"big": {"accuracy": 0.5,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.01},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 0.015}},
+    "Airbase":        {"big": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-10}},
+    "Port":           {"big": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-10}},
+    "Shipyard":       {"big": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-10}},
+    "Farp":           {"big": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-10}},
+    "Stronghold":     {"big": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.4,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.4,  "destroy_capacity": 1e-10}},
+    "ship":           {"big": {"accuracy": 0.2,  "destroy_capacity": 0.0},
+                       "med": {"accuracy": 0.15, "destroy_capacity": 0.001},
+                       "small": {"accuracy": 0.1,  "destroy_capacity": 0.002}},
+}
+
+_EFF_GRENADE_LAUNCHER = {
+    "Soft":           {"big": {"accuracy": 0.75, "destroy_capacity": 0.4},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.5},
+                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.6}},
+    "Armored":        {"big": {"accuracy": 0.6,  "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.04},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.06}},
+    "Hard":           {"big": {"accuracy": 0.65, "destroy_capacity": 0.01},
+                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.03},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.05}},
+    "Structure":      {"big": {"accuracy": 0.65, "destroy_capacity": 0.002},
+                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.008},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.02}},
+    "Air_Defense":    {"big": {"accuracy": 0.6,  "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.08},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.12}},
+    "Airbase":        {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Port":           {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Shipyard":       {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Farp":           {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "Stronghold":     {"big": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "med": {"accuracy": 0.5,  "destroy_capacity": _INFRA_MIN},
+                       "small": {"accuracy": 0.5,  "destroy_capacity": 1e-9}},
+    "ship":           {"big": {"accuracy": 0.2,  "destroy_capacity": 0.005},
+                       "med": {"accuracy": 0.15, "destroy_capacity": 0.008},
+                       "small": {"accuracy": 0.1,  "destroy_capacity": 0.01}},
+}
 
 #@dataclass
 #Class Weapon_Data:
@@ -370,6 +1027,7 @@ def get_artillery_score(model: str) -> float:
 
     return weapon_power
 
+# da utilizzare per il confronto tra veicoli. Perla verifica sull'efficienza rispetto un determinato target utilizza calc_weapon_efficiency
 def get_weapon_score(weapon_type: str, weapon_model: str):
 
     if not weapon_type:
@@ -406,6 +1064,79 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
         return 0
 
 
+
+def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
+                           target_type: str,
+                           target_dimension_distribution: dict) -> float:
+    """Calculate weapon efficiency against a target type given a dimension distribution.
+
+    Formula:
+        raw = SUM over dim in {big, med, small}:
+                distribution[dim] * accuracy[dim] * destroy_capacity[dim]
+        variability = random.uniform(0, perc_efficiency_variability)
+        result = raw * (1 - variability)
+
+    Args:
+        weapon_type: weapon category key in GROUND_WEAPONS (e.g. 'CANNONS', 'MISSILES')
+        weapon_model: specific weapon model key (e.g. '2A46M')
+        target_type: target classification key (e.g. 'Armored', 'Soft', 'ship')
+        target_dimension_distribution: dict with keys 'big', 'med', 'small' (and
+            optionally 'mix') mapping to float weights that should sum to ~1.0.
+
+    Returns:
+        float: efficiency value in [0, 1] range (approximately)
+
+    Raises:
+        TypeError: if argument types are wrong
+        ValueError: if weapon_type is not a valid key in GROUND_WEAPONS
+    """
+    if not isinstance(weapon_type, str) or not isinstance(weapon_model, str):
+        raise TypeError(f"weapon_type and weapon_model must be str, got "
+                        f"{type(weapon_type).__name__} and {type(weapon_model).__name__}")
+    if not isinstance(target_type, str):
+        raise TypeError(f"target_type must be str, got {type(target_type).__name__}")
+    if not isinstance(target_dimension_distribution, dict):
+        raise TypeError(f"target_dimension_distribution must be dict, got "
+                        f"{type(target_dimension_distribution).__name__}")
+
+    if weapon_type not in GROUND_WEAPONS:
+        raise ValueError(f"weapon_type must be in {list(GROUND_WEAPONS.keys())}. "
+                         f"Got \'{weapon_type}\'")
+
+    weapon_category = GROUND_WEAPONS[weapon_type]
+    weapon = weapon_category.get(weapon_model)
+    if weapon is None:
+        logger.warning(f"weapon model \'{weapon_model}\' not found in \'{weapon_type}\'")
+        return 0.0
+
+    efficiency_data = weapon.get('efficiency')
+    if efficiency_data is None:
+        logger.warning(f"no efficiency data for \'{weapon_type}\' / \'{weapon_model}\'")
+        return 0.0
+
+    target_eff = efficiency_data.get(target_type)
+    if target_eff is None:
+        logger.warning(f"target_type \'{target_type}\' not in efficiency data "
+                       f"for \'{weapon_model}\'")
+        return 0.0
+
+    raw = 0.0
+    for dim in ('big', 'med', 'small'):
+        dist_weight = target_dimension_distribution.get(dim, 0.0)
+        if dist_weight == 0.0:
+            continue
+        dim_data = target_eff.get(dim)
+        if dim_data is None:
+            continue
+        raw += dist_weight * dim_data['accuracy'] * dim_data['destroy_capacity']
+
+    perc_var = weapon.get('perc_efficiency_variability', 0.0)
+    variability = random.uniform(0, perc_var)
+    result = raw * (1 - variability)
+
+    return result
+
+
 GROUND_WEAPONS = {
     'CANNONS': {
         # combat_power cb = caliber *  
@@ -425,46 +1156,60 @@ GROUND_WEAPONS = {
             'perc_efficiency_variability': 0.1,
             'efficiency': {
                 "Soft": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.4},
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.4},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},                    
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
                 },
                 "Armored": {
                     "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                     "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},                    
-                },                
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                },
                 "Hard": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.35},
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.35},
                     "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},                    
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
                 },
                 "Structure": {
-                    "big": {"accuracy": 1, "destroy_capacity": 0.001},
-                    "med": {"accuracy": 0.9, "destroy_capacity": 0.01},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},                    
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},
                 },
                 "Air_Defense": {
                     "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                     "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.7, "destroy_capacity": 1},                    
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
                     "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
                     "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.9, "destroy_capacity": 10E-9},                    
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
                     "big": {"accuracy": 0.7, "destroy_capacity": 0.42},
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.5},
-                    "small": {"accuracy": 0.3, "destroy_capacity": 0.5},                    
+                    "small": {"accuracy": 0.3, "destroy_capacity": 0.5},
                 },
-                
-                
-                "Parked Aircraft": {
-                    "med": {"accuracy": 0.93, "destroy_capacity": 1},
-                    "small": {"accuracy": 0.83, "destroy_capacity": 1},
-                }                
             }
             
         }, 
@@ -478,6 +1223,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1300, 'indirect': 4500 }, # m
             'ammo_type': ['HEAT', 'HE'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         }, 
         'U-5TS "Molot"': {  # T-62
             'model': 'U-5TS "Molot"',
@@ -488,6 +1236,9 @@ GROUND_WEAPONS = {
             'muzzle_speed': 600, # m/s (HEAT) 
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1300, 'indirect': 4500 },
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         },
         '2A42': {
             'model': '2A42',
@@ -499,6 +1250,9 @@ GROUND_WEAPONS = {
             'fire_rate': 300, # shot per minute
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         '2A46M-5': {
             'model': '2A46M-5',
@@ -510,6 +1264,9 @@ GROUND_WEAPONS = {
             'fire_rate': 10, # shot per minute
             'range': {'direct': 2200, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         '2A46': {
             'model': '2A46',
@@ -521,6 +1278,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2120, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         '2A61': {
             'model': '2A61',
@@ -532,6 +1292,9 @@ GROUND_WEAPONS = {
             'fire_rate': 14, # shot per minute
             'range': {'direct': 1700, 'indirect': 15000 }, # m
             'ammo_type': ['HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         '2A64': {
             'model': '2A64',
@@ -543,6 +1306,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 1800, 'indirect': 24000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         '2A70': {
             'model': '2A70',
@@ -554,6 +1320,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 1700, 'indirect': 4000 }, # m
             'ammo_type': ['HE'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         },
         'APV-23': {
             'model': 'APV-23',
@@ -565,6 +1334,9 @@ GROUND_WEAPONS = {
             'fire_rate': 400, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'M68A1': {
             'model': 'M68A1',
@@ -576,6 +1348,9 @@ GROUND_WEAPONS = {
             'fire_rate': 10, # shot per minute
             'range': {'direct': 2100, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         'M242 Bushmaster': {
             'model': 'M242 Bushmaster',
@@ -588,6 +1363,9 @@ GROUND_WEAPONS = {
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
 
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'M230 Chain Gun': {
             'model': 'M230 Chain Gun',  
@@ -599,6 +1377,9 @@ GROUND_WEAPONS = {
             'fire_rate': 625, # shot per minute
             'range': {'direct': 1500, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'M256': {
             'model': 'M256',
@@ -610,6 +1391,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 2100, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'M255': {
             'model': 'M255',
@@ -621,6 +1405,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 2100, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE'],    
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         'D30': {
             'model': 'D30',
@@ -632,6 +1419,9 @@ GROUND_WEAPONS = {
             'fire_rate': 15, # shot per minute
             'range': {'direct': 12000, 'indirect': 12000 }, # m
             'ammo_type': ['HE', 'AP'],    
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         'D-10T': { # T-55
             'model': 'D-10T',
@@ -643,6 +1433,9 @@ GROUND_WEAPONS = {
             'fire_rate': 5, # shot per minute
             'range': {'direct': 2000, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         # --- MBT Cannons ---
         '2A28 Grom': { # BMP-1 (MBT variant)
@@ -655,6 +1448,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1300, 'indirect': 4400 }, # m
             'ammo_type': ['HEAT', 'HE'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         },
         'D-10T2S-100mm': { # T-55A - stabilized variant of D-10T
             'model': 'D-10T2S-100mm',
@@ -666,6 +1462,9 @@ GROUND_WEAPONS = {
             'fire_rate': 7, # shot per minute
             'range': {'direct': 2000, 'indirect': 16000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         'L11A5-120mm': { # Chieftain
             'model': 'L11A5-120mm',
@@ -677,6 +1476,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 2500, 'indirect': 9000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'L7A3-105mm': { # Leopard 1
             'model': 'L7A3-105mm',
@@ -688,6 +1490,9 @@ GROUND_WEAPONS = {
             'fire_rate': 10, # shot per minute
             'range': {'direct': 2500, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         'M68-105mm': { # M60 Patton
             'model': 'M68-105mm',
@@ -699,6 +1504,9 @@ GROUND_WEAPONS = {
             'fire_rate': 10, # shot per minute
             'range': {'direct': 2500, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         'Rheinmetall-120mm-L44': { # Leopard 2A4
             'model': 'Rheinmetall-120mm-L44',
@@ -710,6 +1518,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 3000, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'Rheinmetall-120mm-L55': { # Leopard 2A6
             'model': 'Rheinmetall-120mm-L55',
@@ -721,6 +1532,12 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 3500, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': {**_EFF_MBT_CANNON_120_125MM,
+                "Armored": {"big": {"accuracy": 0.87, "destroy_capacity": 0.95},
+                            "med": {"accuracy": 0.82, "destroy_capacity": 1.0},
+                            "small": {"accuracy": 0.77, "destroy_capacity": 1.0}}},
         },
         'M256-120mm': { # M1A1/M1A2 Abrams
             'model': 'M256-120mm',
@@ -732,6 +1549,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 2100, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'CN120-26-120mm': { # Leclerc
             'model': 'CN120-26-120mm',
@@ -743,6 +1563,12 @@ GROUND_WEAPONS = {
             'fire_rate': 12, # shot per minute (autoloader)
             'range': {'direct': 3000, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': {**_EFF_MBT_CANNON_120_125MM,
+                "Armored": {"big": {"accuracy": 0.86, "destroy_capacity": 0.95},
+                            "med": {"accuracy": 0.81, "destroy_capacity": 1.0},
+                            "small": {"accuracy": 0.76, "destroy_capacity": 1.0}}},
         },
         'L30A1-120mm': { # Challenger 2
             'model': 'L30A1-120mm',
@@ -754,6 +1580,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 3000, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'MG251-120mm': { # Merkava Mk3/Mk4
             'model': 'MG251-120mm',
@@ -765,6 +1594,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2200, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'Type-59-100mm': { # Type 59
             'model': 'Type-59-100mm',
@@ -776,6 +1608,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 1800, 'indirect': 8000 }, # m
             'ammo_type': ['HEAT', 'HE', 'AP', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MBT_CANNON_100_105MM,
         },
         '2A46M-125mm': { # T-72B3, T-80U (same as 2A46M)
             'model': '2A46M-125mm',
@@ -787,6 +1622,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2120, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         '2A46M5-125mm': { # T-90A (same as 2A46M-5)
             'model': '2A46M5-125mm',
@@ -798,6 +1636,9 @@ GROUND_WEAPONS = {
             'fire_rate': 10, # shot per minute
             'range': {'direct': 2200, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         'ZPT-98-125mm': { # Type 99
             'model': 'ZPT-98-125mm',
@@ -809,6 +1650,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 2200, 'indirect': 10000 }, # m
             'ammo_type': ['HEAT', 'HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
         # --- IFV/APC Autocannons ---
         'MK-20-Rh-202-20mm': { # Marder IFV
@@ -821,6 +1665,9 @@ GROUND_WEAPONS = {
             'fire_rate': 880, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         '2A42-30mm': { # BMP-2 (same as 2A42)
             'model': '2A42-30mm',
@@ -832,6 +1679,9 @@ GROUND_WEAPONS = {
             'fire_rate': 300, # shot per minute
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         '2A28-Grom-73mm': { # BMP-1 IFV
             'model': '2A28-Grom-73mm',
@@ -843,6 +1693,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1300, 'indirect': 4400 }, # m
             'ammo_type': ['HEAT', 'HE'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         },
         'M242-Bushmaster-25mm': { # M2 Bradley, LAV-25 (same as M242 Bushmaster)
             'model': 'M242-Bushmaster-25mm',
@@ -854,6 +1707,9 @@ GROUND_WEAPONS = {
             'fire_rate': 200, # shot per minute
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         '2A70-100mm': { # BMP-3 (same as 2A70)
             'model': '2A70-100mm',
@@ -865,6 +1721,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 1700, 'indirect': 4000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
         },
         '2A72-30mm': { # BMP-3, BTR-82A
             'model': '2A72-30mm',
@@ -876,6 +1735,9 @@ GROUND_WEAPONS = {
             'fire_rate': 330, # shot per minute
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'ZPT-99-30mm': { # ZBD-04 (Chinese 30mm autocannon)
             'model': 'ZPT-99-30mm',
@@ -887,6 +1749,9 @@ GROUND_WEAPONS = {
             'fire_rate': 350, # shot per minute
             'range': {'direct': 3500, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'L21A1-RARDEN-30mm': { # Warrior IFV
             'model': 'L21A1-RARDEN-30mm',
@@ -898,6 +1763,9 @@ GROUND_WEAPONS = {
             'fire_rate': 90, # shot per minute
             'range': {'direct': 1500, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         'M242-25mm': { # LAV-AD (same as M242 Bushmaster)
             'model': 'M242-25mm',
@@ -909,6 +1777,9 @@ GROUND_WEAPONS = {
             'fire_rate': 200, # shot per minute
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
         },
         # --- AA/SPAAG Cannons ---
         'S-68-57mm': { # ZSU-57-2 (twin 57mm)
@@ -921,6 +1792,9 @@ GROUND_WEAPONS = {
             'fire_rate': 240, # shot per minute (combined twin barrels, 120 each)
             'range': {'direct': 4000, 'indirect': 12000 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_AA_CANNON_57MM,
         },
         'AZP-23-23mm': { # ZSU-23-4 Shilka (quad 23mm)
             'model': 'AZP-23-23mm',
@@ -932,6 +1806,9 @@ GROUND_WEAPONS = {
             'fire_rate': 3400, # shot per minute (combined quad barrels, ~850 each)
             'range': {'direct': 2500, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_AA_CANNON,
         },
         'M61-Vulcan-20mm': { # M163 VADS
             'model': 'M61-Vulcan-20mm',
@@ -943,6 +1820,9 @@ GROUND_WEAPONS = {
             'fire_rate': 3000, # shot per minute (M163 VADS configuration)
             'range': {'direct': 1200, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_AA_CANNON,
         },
         'Oerlikon-KDA-35mm': { # Gepard SPAAG (twin 35mm)
             'model': 'Oerlikon-KDA-35mm',
@@ -954,6 +1834,9 @@ GROUND_WEAPONS = {
             'fire_rate': 1100, # shot per minute (combined twin barrels, 550 each)
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_AA_CANNON,
         },
         '2A38M-30mm': { # Tunguska 2K22 (dual 30mm)
             'model': '2A38M-30mm',
@@ -965,6 +1848,9 @@ GROUND_WEAPONS = {
             'fire_rate': 5000, # shot per minute (combined twin barrels, 2500 each)
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_AA_CANNON,
         },
     },
     'MISSILES': {
@@ -978,6 +1864,9 @@ GROUND_WEAPONS = {
             'speed': 390, # m/s             
             'range': {'direct': 4500, 'indirect': 0 }, # m
             'ammo_type': ['2HEAT'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_ATGM_LASER,
         }, 
         '99K120': { # AT-11 Sniper
             'model': '9K119M',
@@ -989,6 +1878,9 @@ GROUND_WEAPONS = {
             'speed': 300, # m/s             
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_ATGM_LASER,
         }, 
         '9M14 Malyutka': { # AT-3 Sagger
             'model': '9M14 Malyutka',
@@ -1000,6 +1892,9 @@ GROUND_WEAPONS = {
             'speed': 115, # m/s             
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_ATGM_OLD,
         }, 
         '9M113 Konkurs': { # AT-5 Spandrel
             'model': '9M113 Konkurs',
@@ -1011,6 +1906,9 @@ GROUND_WEAPONS = {
             'speed': 208, # m/s             
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_ATGM_SACLOS,
         },
         '9M35 Kornet': { # AT-14 Spriggan
             'model': '9M35 Kornet',
@@ -1022,6 +1920,9 @@ GROUND_WEAPONS = {
             'speed': 300, # m/s             
             'range': {'direct': 5500, 'indirect': 0 }, # m
             'ammo_type': ['HEAT', '2HEAT'],            
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.08,
+            'efficiency': _EFF_ATGM_LASER,
         },
         '9M37M': { # AT-15 Springer
             'model': '9M37M',
@@ -1033,6 +1934,9 @@ GROUND_WEAPONS = {
             'speed': 400, # m/s             
             'range': {'direct': 7000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT', '2HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.08,
+            'efficiency': _EFF_ATGM_LASER,
         },
         '9M331': { # AT-15 Springer
             'model': '9M331',
@@ -1044,6 +1948,9 @@ GROUND_WEAPONS = {
             'speed': 400, # m/s             
             'range': {'direct': 7000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT', '2HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.08,
+            'efficiency': _EFF_ATGM_LASER,
         }, 
         'TOW-2': { # BGM-71 TOW
             'model': 'TOW-2',
@@ -1055,6 +1962,9 @@ GROUND_WEAPONS = {
             'speed': 278, # m/s
             'range': {'direct': 3750, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_ATGM_SACLOS,
         },
         # --- ATGMs referenced with dash naming ---
         '9M119-Refleks': { # AT-11 Sniper (original)
@@ -1067,6 +1977,9 @@ GROUND_WEAPONS = {
             'speed': 370, # m/s
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_ATGM_LASER,
         },
         '9M119M-Refleks-M': { # AT-11 Sniper (improved, tandem warhead)
             'model': '9M119M-Refleks-M',
@@ -1078,6 +1991,12 @@ GROUND_WEAPONS = {
             'speed': 390, # m/s
             'range': {'direct': 5000, 'indirect': 0 }, # m
             'ammo_type': ['2HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': {**_EFF_ATGM_LASER,
+                "Armored": {"big": {"accuracy": 0.95, "destroy_capacity": 0.95},
+                            "med": {"accuracy": 0.9, "destroy_capacity": 1.0},
+                            "small": {"accuracy": 0.9, "destroy_capacity": 1.0}}},
         },
         '9M113-Konkurs': { # AT-5 Spandrel (dash naming variant)
             'model': '9M113-Konkurs',
@@ -1089,6 +2008,9 @@ GROUND_WEAPONS = {
             'speed': 208, # m/s
             'range': {'direct': 4000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_ATGM_SACLOS,
         },
         '9M14-Malyutka': { # AT-3 Sagger (dash naming variant)
             'model': '9M14-Malyutka',
@@ -1100,6 +2022,9 @@ GROUND_WEAPONS = {
             'speed': 115, # m/s
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_ATGM_OLD,
         },
         'BGM-71-TOW': { # BGM-71 TOW (alternate key)
             'model': 'BGM-71-TOW',
@@ -1111,6 +2036,9 @@ GROUND_WEAPONS = {
             'speed': 278, # m/s
             'range': {'direct': 3750, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_ATGM_SACLOS,
         },
         'MILAN': { # MILAN 2 ATGM (French/German)
             'model': 'MILAN',
@@ -1122,6 +2050,9 @@ GROUND_WEAPONS = {
             'speed': 200, # m/s
             'range': {'direct': 2000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_ATGM_SACLOS,
         },
         'HJ-73C': { # Red Arrow 73C (Chinese ATGM based on AT-3)
             'model': 'HJ-73C',
@@ -1133,6 +2064,9 @@ GROUND_WEAPONS = {
             'speed': 120, # m/s
             'range': {'direct': 3000, 'indirect': 0 }, # m
             'ammo_type': ['HEAT'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_ATGM_OLD,
         },
         # --- Surface-to-Air Missiles ---
         '9M311-SAM': { # SA-19 Grison (Tunguska SAM)
@@ -1145,6 +2079,9 @@ GROUND_WEAPONS = {
             'speed': 900, # m/s
             'range': {'direct': 8000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_SAM_MERAD,
         },
         '9M31-SAM': { # SA-9 Gaskin (Strela-1)
             'model': '9M31-SAM',
@@ -1156,6 +2093,9 @@ GROUND_WEAPONS = {
             'speed': 430, # m/s
             'range': {'direct': 4200, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_SAM_SHORAD,
         },
         'MIM-72-SAM': { # MIM-72 Chaparral
             'model': 'MIM-72-SAM',
@@ -1167,6 +2107,9 @@ GROUND_WEAPONS = {
             'speed': 760, # m/s
             'range': {'direct': 9000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_SAM_SHORAD,
         },
         '9M33-SAM': { # SA-8 Gecko (Osa)
             'model': '9M33-SAM',
@@ -1178,6 +2121,9 @@ GROUND_WEAPONS = {
             'speed': 500, # m/s
             'range': {'direct': 10000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_SAM_MERAD,
         },
         '9M37-SAM': { # SA-13 Gopher (Strela-10)
             'model': '9M37-SAM',
@@ -1189,6 +2135,9 @@ GROUND_WEAPONS = {
             'speed': 517, # m/s
             'range': {'direct': 5000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_SAM_SHORAD,
         },
         'Roland-SAM': { # Roland (French/German SAM)
             'model': 'Roland-SAM',
@@ -1200,6 +2149,9 @@ GROUND_WEAPONS = {
             'speed': 500, # m/s
             'range': {'direct': 6300, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_SAM_MERAD,
         },
         '9M331-SAM': { # SA-15 Gauntlet (Tor)
             'model': '9M331-SAM',
@@ -1211,6 +2163,9 @@ GROUND_WEAPONS = {
             'speed': 850, # m/s
             'range': {'direct': 12000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_SAM_MERAD,
         },
         'FIM-92-Stinger': { # FIM-92 Stinger MANPADS
             'model': 'FIM-92-Stinger',
@@ -1222,6 +2177,9 @@ GROUND_WEAPONS = {
             'speed': 750, # m/s
             'range': {'direct': 4800, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_SAM_SHORAD,
         },
         '3M9-SAM': { # SA-6 Gainful (Kub)
             'model': '3M9-SAM',
@@ -1233,6 +2191,9 @@ GROUND_WEAPONS = {
             'speed': 600, # m/s
             'range': {'direct': 24000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_SAM_MERAD,
         },
         '9M38-SAM': { # SA-11 Gadfly (Buk)
             'model': '9M38-SAM',
@@ -1244,6 +2205,9 @@ GROUND_WEAPONS = {
             'speed': 850, # m/s
             'range': {'direct': 35000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_SAM_LORAD,
         },
         '5V55R-SAM': { # SA-10 Grumble (S-300PS)
             'model': '5V55R-SAM',
@@ -1255,6 +2219,9 @@ GROUND_WEAPONS = {
             'speed': 1700, # m/s
             'range': {'direct': 75000, 'indirect': 0 }, # m
             'ammo_type': ['HE', 'FRAG'],
+            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'perc_efficiency_variability': 0.1,
+            'efficiency': _EFF_SAM_LORAD,
         },
     },
         
@@ -1269,6 +2236,9 @@ GROUND_WEAPONS = {
             'fire_rate': 18, # shot per minute
             'range': {'direct': 0, 'indirect': 2600 }, # m - mortar, indirect fire only
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_MORTAR_60MM,
         },
     },
 
@@ -1283,6 +2253,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 0, 'indirect': 18500 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         '2A31-122mm': { # 2S1 Gvozdika
             'model': '2A31-122mm',
@@ -1293,6 +2266,9 @@ GROUND_WEAPONS = {
             'fire_rate': 5, # shot per minute
             'range': {'direct': 0, 'indirect': 15300 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         '2A51-120mm': { # 2S9 Nona (gun-mortar)
             'model': '2A51-120mm',
@@ -1303,6 +2279,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1000, 'indirect': 8850 }, # m
             'ammo_type': ['HE', 'HEAT'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         '2A64-152mm': { # 2S19 Msta
             'model': '2A64-152mm',
@@ -1313,6 +2292,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 0, 'indirect': 24700 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         'Dana-152mm': { # Dana SpGH (Czech)
             'model': 'Dana-152mm',
@@ -1323,6 +2305,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 0, 'indirect': 18700 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         'M284-155mm': { # M109 Paladin
             'model': 'M284-155mm',
@@ -1333,6 +2318,9 @@ GROUND_WEAPONS = {
             'fire_rate': 4, # shot per minute
             'range': {'direct': 0, 'indirect': 24000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         'PL-45-155mm': { # PLZ-05 (Chinese)
             'model': 'PL-45-155mm',
@@ -1343,6 +2331,9 @@ GROUND_WEAPONS = {
             'fire_rate': 8, # shot per minute
             'range': {'direct': 0, 'indirect': 39000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         'Firtina-155mm': { # T-155 Firtina (Turkish)
             'model': 'Firtina-155mm',
@@ -1353,6 +2344,9 @@ GROUND_WEAPONS = {
             'fire_rate': 6, # shot per minute
             'range': {'direct': 0, 'indirect': 40000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.25,
+            'efficiency': _EFF_TUBE_ARTILLERY,
         },
         # --- MLRS / Rocket Artillery ---
         '122mm-Grad-Rocket': { # BM-21 Grad
@@ -1364,6 +2358,9 @@ GROUND_WEAPONS = {
             'fire_rate': 2, # ripple fire, full salvo (40 rockets) in ~20 seconds
             'range': {'direct': 0, 'indirect': 20380 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
         },
         '220mm-Uragan-Rocket': { # BM-27 Uragan
             'model': '220mm-Uragan-Rocket',
@@ -1374,6 +2371,9 @@ GROUND_WEAPONS = {
             'fire_rate': 1, # full salvo (16 rockets) in ~20 seconds
             'range': {'direct': 0, 'indirect': 35800 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
         },
         '300mm-Smerch-Rocket': { # BM-30 Smerch
             'model': '300mm-Smerch-Rocket',
@@ -1384,6 +2384,9 @@ GROUND_WEAPONS = {
             'fire_rate': 1, # full salvo (12 rockets) in ~38 seconds
             'range': {'direct': 0, 'indirect': 70000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
         },
         '227mm-MLRS-Rocket': { # M270 MLRS
             'model': '227mm-MLRS-Rocket',
@@ -1394,6 +2397,9 @@ GROUND_WEAPONS = {
             'fire_rate': 1, # full salvo (12 rockets) in ~60 seconds
             'range': {'direct': 0, 'indirect': 32000 }, # m
             'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
         },
     },
 
@@ -1405,6 +2411,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm
             'fire_rate': 700, # shot per minute
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         }, 
         'Kord-12.7': {
             'model': 'Kord-12.7',
@@ -1413,6 +2422,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm
             'fire_rate': 750, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         }, 
         'NSVT-12.7': {
             'model': 'Kord-12.7',
@@ -1421,6 +2433,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm
             'fire_rate': 800, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         }, 
         'M2HB-12.7': {
             'model': 'M2HB-12.7',
@@ -1429,6 +2444,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm
             'fire_rate': 600, # shot per minute
             'range': {'direct': 1800, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         },
         'M240-7.62': {
             'model': 'M240-7.62',
@@ -1437,6 +2455,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm
             'fire_rate': 650, # shot per minute
             'range': {'direct': 1100, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'KPVT-14.5': {
             'model': 'KPVT-14.5',
@@ -1445,6 +2466,12 @@ GROUND_WEAPONS = {
             'caliber': 14.5, # mm
             'fire_rate': 600, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': {**_EFF_HMG,
+                "Armored": {"big": {"accuracy": 0.6, "destroy_capacity": 0.04},
+                            "med": {"accuracy": 0.55, "destroy_capacity": 0.06},
+                            "small": {"accuracy": 0.5, "destroy_capacity": 0.09}}},
         },
         'DShK-12.7': { # T-55
             'model': 'DShK-12.7',
@@ -1453,6 +2480,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm
             'fire_rate': 600, # shot per minute
             'range': {'direct': 2000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         },
         # --- British MGs ---
         'L8A1-7.62': { # Chieftain coaxial
@@ -1462,6 +2492,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - coaxial variant of L7A2 GPMG
             'fire_rate': 750, # shot per minute
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'L37A1-7.62': { # Chieftain commander's MG
             'model': 'L37A1-7.62',
@@ -1470,6 +2503,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - pintle-mounted GPMG variant
             'fire_rate': 750, # shot per minute
             'range': {'direct': 1100, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'L37A2-7.62': { # Challenger 2 commander's MG
             'model': 'L37A2-7.62',
@@ -1478,6 +2514,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - improved L37A1
             'fire_rate': 750, # shot per minute
             'range': {'direct': 1100, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'L94A1-7.62': { # Challenger 2, Warrior - Hughes 7.62mm chain gun
             'model': 'L94A1-7.62',
@@ -1486,6 +2525,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - EX-34 chain gun
             'fire_rate': 550, # shot per minute
             'range': {'direct': 1100, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         # --- German MGs ---
         'MG3-7.62': { # Leopard 1, Leopard 2, Marder
@@ -1495,6 +2537,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - Rheinmetall MG3 GPMG
             'fire_rate': 1200, # shot per minute
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'MG34-7.92': { # WW2/early Cold War vehicles
             'model': 'MG34-7.92',
@@ -1503,6 +2548,9 @@ GROUND_WEAPONS = {
             'caliber': 7.92, # mm (7.92x57mm Mauser)
             'fire_rate': 900, # shot per minute
             'range': {'direct': 1000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         # --- US MGs ---
         'M240C-7.62': { # M2 Bradley coaxial variant
@@ -1512,6 +2560,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - coaxial variant of M240
             'fire_rate': 650, # shot per minute
             'range': {'direct': 1100, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'M1919-7.62': { # M48 Patton, older US vehicles
             'model': 'M1919-7.62',
@@ -1520,6 +2571,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - Browning M1919 .30 cal
             'fire_rate': 500, # shot per minute
             'range': {'direct': 900, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         # --- Belgian MGs ---
         'FN MAG-7.62': { # Merkava, many NATO vehicles
@@ -1529,6 +2583,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - FN Herstal MAG GPMG
             'fire_rate': 650, # shot per minute
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         # --- French MGs ---
         'ANF1-7.62': { # Leclerc
@@ -1538,6 +2595,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - AA-NF1 7.62mm MG
             'fire_rate': 900, # shot per minute
             'range': {'direct': 600, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'M693-12.7': { # Leclerc coaxial 12.7mm
             'model': 'M693-12.7',
@@ -1546,6 +2606,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm
             'fire_rate': 550, # shot per minute
             'range': {'direct': 1500, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         },
         # --- Russian MGs ---
         'PKM-7.62': { # infantry / pintle mount
@@ -1555,6 +2618,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - Kalashnikov PKM GPMG
             'fire_rate': 650, # shot per minute
             'range': {'direct': 1000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'PKTM-7.62': { # BTR-82A - modernized coaxial
             'model': 'PKTM-7.62',
@@ -1563,6 +2629,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - modernized PKT
             'fire_rate': 750, # shot per minute
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         # --- Chinese MGs ---
         'Type-59T-7.62': { # Type 59 coaxial
@@ -1572,6 +2641,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - Chinese copy of SGMT
             'fire_rate': 600, # shot per minute
             'range': {'direct': 800, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'Type-86-7.62': { # Type 99, ZBD-04 coaxial
             'model': 'Type-86-7.62',
@@ -1580,6 +2652,9 @@ GROUND_WEAPONS = {
             'caliber': 7.62, # mm - Chinese 7.62mm coaxial MG
             'fire_rate': 700, # shot per minute
             'range': {'direct': 1000, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_MMG,
         },
         'QJC88-12.7': { # Type 99 commander's MG
             'model': 'QJC88-12.7',
@@ -1588,6 +2663,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm - W85/QJC88 HMG
             'fire_rate': 650, # shot per minute
             'range': {'direct': 1500, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         },
         # --- South Korean MGs ---
         'K6-12.7': { # K1/K2 tank commander's MG
@@ -1597,6 +2675,9 @@ GROUND_WEAPONS = {
             'caliber': 12.7, # mm - licensed M2HB variant
             'fire_rate': 550, # shot per minute
             'range': {'direct': 1500, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_HMG,
         },
 
     },
@@ -1612,6 +2693,9 @@ GROUND_WEAPONS = {
             'fire_rate': 400, # shot per minute
             'TNT_equivalent': 0.25, # kg
             'range': {'direct': 1700, 'indirect': 0 }, # m
+            'task': [GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_GRENADE_LAUNCHER,
         },
     },
 } 

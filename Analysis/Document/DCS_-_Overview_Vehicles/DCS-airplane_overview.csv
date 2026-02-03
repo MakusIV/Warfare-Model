@@ -1,0 +1,67 @@
+Model,Link,Category,Role,Country,In service,In DCS?
+A-10A,Fairchild Republic A-10 Thunderbolt II,Bomber,CAS,USA,1977,Y
+A-10C,Fairchild Republic A-10 Thunderbolt II,Bomber,CAS,USA,2005,Y
+A-10C II,Fairchild Republic A-10 Thunderbolt II,Bomber,CAS,USA,2005,Y
+A-20G,Douglas A-20 Havoc,Bomber,CAS,USA,1941,Y
+A4E-C,Douglas A-4 Skyhawk,Bomber,Attack aircraft,USA,1956,Y
+A-50,Beriev A-50,AWACS,AWACS,USSR,1984,Y
+AN-26B,Antonov An-26,Transport,Transport,USSR,1970,Y
+An-30M,Antonov An-30,Transport,Transport,USSR,1968,Y
+ASJ37,Saab 37 Viggen,Fighter,"Attack, fighter, reconnaissance",Sweden,1971,Y
+B1B,Rockwell B-1 Lancer,Bomber,Heavy bomber,USA,1986,Y
+B-52H,Boeing B-52 Stratofortress,Bomber,Heavy bomber,USA,1961,Y
+C-130,Lockheed C-130 Hercules,Transport,Transport,USA,1956,Y
+C-17A,Boeing C-17 Globemaster III,Transport,Transport,USA,1995,Y
+E-2D,Northrop Grumman E-2 Hawkeye,AWACS,AWACS,USA,1964,Y
+E-3A,Boeing E-3 Sentry,AWACS,AWACS,USA,1977,Y
+F/A-18A,McDonnell Douglas F/A-18 Hornet,Fighter,Multirole,USA,1983,Y
+F/A-18C,McDonnell Douglas F/A-18 Hornet,Fighter,Multirole,USA,1987,Y
+F/A-18C Lot 20,McDonnell Douglas F/A-18 Hornet,Fighter,Multirole,USA,1998,Y
+F-117,Lockheed F-117 Nighthawk,Bomber,Bomber (stealth),USA,1983,Y
+F-14A,Grumman F-14 Tomcat,Fighter,Interceptor,USA,1974,Y
+F-14B,Grumman F-14 Tomcat,Fighter,Interceptor,USA,1991,Y
+F-15C,McDonnell Douglas F-15 Eagle,Fighter,Air Superiority,USA,1974,Y
+F-15E,McDonnell Douglas F-15E Strike Eagle,Fighter,Multirole,USA,1989,Y
+F-16A,General Dynamics F-16 Fighting Falcon,Fighter,Multirole,USA,1978,Y
+F-16A MLU,General Dynamics F-16 Fighting Falcon,Fighter,Multirole,USA,1998,Y
+F-16C Bl. 50,General Dynamics F-16 Fighting Falcon,Fighter,Multirole,USA,1984,Y
+F-16C Bl. 52d,General Dynamics F-16 Fighting Falcon,Fighter,Multirole,USA,1991,Y
+F-16CM Bl. 50,General Dynamics F-16 Fighting Falcon,Fighter,Multirole,USA,1991,Y
+F4E,McDonnell Douglas F-4 Phantom II,Bomber,Fighter bomber,USA,1961,Y
+F-5E(3),Northrop F-5,Fighter,Light Fighter,USA,1972,Y
+F-86E,North American/Canadair/CAC F-86 Sabre,Fighter,Fighter,USA,1950,Y
+IL-76MD,Ilyushin Il-76,Transport,Transport,USSR,1974,Y
+IL-78M,Ilyushin Il-78,Refueling,Refueling,USSR,1984,Y
+KC130,Lockheed Martin KC-130,Refueling,Refueling,USA,1962,Y
+KC135,Boeing KC-135 Stratotanker,Refueling,Refueling,USA,1957,Y
+KC-135 MPRS,Boeing KC-135 Stratotanker,Refueling,Refueling,USA,1985,Y
+M-2000C,Dassault Mirage 2000,Fighter,Multirole,France,1984,Y
+Mig15,Mikoyan-Gurevich MiG-15,Fighter,Fighter,USSR,1949,Y
+Mig19 P,Mikoyan-Gurevich MiG-19,Fighter,Fighter,USSR,1955,Y
+Mig21 Bis,Mikoyan-Gurevich MiG-21,Fighter,Fighter,USSR,1959,Y
+Mig23 MLD,Mikoyan-Gurevich MiG-23,Fighter,Ground Attack,USSR,1983,Y
+Mig25 PD,Mikoyan-Gurevich MiG-25,Fighter,Interceptor,USSR,1978,Y
+Mig25 RB,Mikoyan-Gurevich MiG-25,Recon,Recon,USSR,1972,Y
+Mig27 K,Mikoyan MiG-27,Bomber,Ground Attack,USSR,1975,Y
+Mig29 A,Mikoyan MiG-29,Fighter,Multirole,USSR,1982,Y
+Mig29 S,Mikoyan MiG-29,Fighter,Multirole,USSR,1985,Y
+Mig31,Mikoyan MiG-31,Fighter,Fighter,USSR,1981,Y
+MQ1A-Predator,General Atomics MQ-1 Predator,Recon,Recon,USA,1995,Y
+MQ9-Reaper,General Atomics MQ-9 Reaper,Recon,Recon,USA,2007,Y
+S-3B,Lockheed S-3 Viking,Bomber,Maritime patrol,USA,1974,Y
+S-3B Tanker,Lockheed S-3 Viking,Refueling,Refueling,USA,1974,Y
+SU-17 M4,Sukhoi Su-17,Bomber,Ground Attack,USSR,1970,Y
+SU-24 M,Sukhoi Su-24,Bomber,Ground Attack,USSR,1979,Y
+SU-24 MR,Sukhoi Su-24,Recon,Recon,USSR,1983,Y
+SU-25,Sukhoi Su-25,Bomber,Ground Attack,USSR,1981,Y
+SU-25T,Sukhoi Su-25,Bomber,Ground Attack,USSR,1990,Y
+SU-25TM,Sukhoi Su-25TM (Su-39),Bomber,Ground Attack,USSR,2008,Y
+SU-27,Sukhoi Su-27,Fighter,Multirole,USSR,1985,Y
+SU-30,Sukhoi Su-30,Fighter,Multirole,USSR,1996,Y
+SU-33,Sukhoi Su-33,Fighter,Multirole (Carrier-based),USSR,1998,Y
+SU-34,Sukhoi Su-34,Bomber,Fighter bomber,USSR,2014,Y
+TU-142,Tupolev Tu-142,Bomber,Maritime patrol,USSR,1972,Y
+TU-160,Tupolev Tu-160,Bomber,Supersonic strategic heavy bomber,USSR,1987,Y
+TU-22M,Tupolev Tu-22M,Bomber,Heavy bomber/Maritime strike,USSR,1972,Y
+TU-95 MS,Tupolev Tu-95,Bomber,Heavy bomber,USSR,1981,Y
+Yak40,Yakovlev Yak-40,Transport,Transport,USSR,1968,Y
