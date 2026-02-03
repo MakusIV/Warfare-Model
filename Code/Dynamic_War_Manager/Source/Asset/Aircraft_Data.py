@@ -92,8 +92,11 @@ class Aircraft_Data:
         Returns:
             float: radar score value
         """
-        if not self.radar:
-            logger.warning("Radar not defined.")
+        if self.radar == False:
+            return 0.0
+
+        if self.radar == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Radar not defined.")
             return 0.0
         
         if not modes:
@@ -122,8 +125,11 @@ class Aircraft_Data:
     
     def _TVD_eval(self, modes: Optional[List] = None) -> float:
         """Evaluates the radar capabilities of the aircraft based on predefined weights."""
-        if not self.TVD:
-            logger.warning("TVD not defined.")
+        if self.TVD == False:
+            return 0.0
+        
+        if self.TVD == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - TVD not defined.")
             return 0.0
         
         if not modes:
@@ -229,11 +235,11 @@ class Aircraft_Data:
         """                
         components = [
             self.engine.get('reliability', {}).get('mtbf', 0) if self.engine is not None and self.engine.get('reliability') else None,
-            self.radar.get('reliability', {}).get('mtbf', 0) if self.radar is not None and self.radar.get('reliability') else None,
-            self.TVD.get('reliability', {}).get('mtbf', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
-            self.avionics.get('reliability', {}).get('mtbf', 0) if self.avionics is not None and self.avionics.get('reliability') else None,
-            self.radio_nav.get('reliability', {}).get('mtbf', 0) if self.radio_nav is not None and self.radio_nav.get('reliability') else None,            
-            self.hydraulic.get('reliability', {}).get('mtbf', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
+            self.radar.get('reliability', {}).get('mtbf', 0) if self.radar and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mtbf', 0) if self.TVD and self.TVD.get('reliability') else None,
+            self.avionics.get('reliability', {}).get('mtbf', 0) if self.avionics and self.avionics.get('reliability') else None,
+            self.radio_nav.get('reliability', {}).get('mtbf', 0) if self.radio_nav and self.radio_nav.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mtbf', 0) if self.hydraulic and self.hydraulic.get('reliability') else None
         ]
         filtered_components = [x for x in components if x is not None]
         # l'mtbf del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
@@ -247,11 +253,11 @@ class Aircraft_Data:
         """
         components = [
             self.engine.get('reliability', {}).get('mttr', 0) if self.engine is not None and self.engine.get('reliability') else None,
-            self.radar.get('reliability', {}).get('mttr', 0) if self.radar is not None and self.radar.get('reliability') else None,
-            self.TVD.get('reliability', {}).get('mttr', 0) if self.TVD is not None and self.TVD.get('reliability') else None,
-            self.avionics.get('reliability', {}).get('mttr', 0) if self.avionics is not None and self.avionics.get('reliability') else None,
-            self.radio_nav.get('reliability', {}).get('mttr', 0) if self.radio_nav is not None and self.radio_nav.get('reliability') else None,            
-            self.hydraulic.get('reliability', {}).get('mttr', 0) if self.hydraulic is not None and self.hydraulic.get('reliability') else None
+            self.radar.get('reliability', {}).get('mttr', 0) if self.radar and self.radar.get('reliability') else None,
+            self.TVD.get('reliability', {}).get('mttr', 0) if self.TVD and self.TVD.get('reliability') else None,
+            self.avionics.get('reliability', {}).get('mttr', 0) if self.avionics and self.avionics.get('reliability') else None,
+            self.radio_nav.get('reliability', {}).get('mttr', 0) if self.radio_nav and self.radio_nav.get('reliability') else None,            
+            self.hydraulic.get('reliability', {}).get('mttr', 0) if self.hydraulic and self.hydraulic.get('reliability') else None
         ]
         filtered_components = [x for x in components if x is not None]
         # l'mttr del singolo sottosistema incide nel valore finale del 30% mentre il valore medio del 70%
@@ -393,7 +399,7 @@ class Aircraft_Data:
 # metric = metric - > speed: km/h, altitude: m, radar/TVD/radioNav range: km 
 # metric = imperial - > speed: mph, altitude: feet, radar/TVD/radioNav range: nm
 
-f16_data = {
+f16_data_example = {
     "constructor": "Lockheed Martin",
     "made": "USA",
     "model": "F-16C Block 50",
@@ -450,7 +456,7 @@ f16_data = {
     },
 }
 
-f18_data = {
+f18_data_example = {
     "constructor": "Lockheed Martin",
     "made": "USA",
     "model": "F-18C Block 50",
@@ -506,7 +512,7 @@ f18_data = {
     },
 }
 
-f14_data = {
+f14_data_example = {
     "constructor": "Grumman",
     "made": "USA",
     "model": "F-14A Tomcat",
@@ -563,7 +569,7 @@ f14_data = {
     
 }
 
-f15_data = {
+f15_data_example = {
     "constructor": "McDonnell Douglas",
     "made": "USA",
     "model": "F-15C Eagle",
@@ -627,10 +633,10 @@ SCORES = ('Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manu
 AIRCRAFT = {}
 
 
-Aircraft_Data(**f16_data)
-Aircraft_Data(**f18_data)
-Aircraft_Data(**f14_data)
-Aircraft_Data(**f15_data)
+Aircraft_Data(**f16_data_example)
+Aircraft_Data(**f18_data_example)
+Aircraft_Data(**f14_data_example)
+Aircraft_Data(**f15_data_example)
 
 for aircraft in Aircraft_Data._registry.values():    
     model = aircraft.model
