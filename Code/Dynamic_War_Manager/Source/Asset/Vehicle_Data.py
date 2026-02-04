@@ -265,30 +265,48 @@ class Vehicle_Data:
         score = 0.0
 
         for weapon_type, weapon in self.weapons.items():
+            machine_gun_score = 0
 
-            for weapon_item in weapon:
-                factor_ammo_quantity = 1
+            for weapon_item in weapon:                
+                factor_ammo_quantity = 1.0
+                
+                if weapon_type == 'CANNONS' or weapon_type == 'ARTILLERY':                    
+                    if self.category in [Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value, Ground_Vehicle_Asset_Type.TANK.value]:
+                        factor_ammo_quantity = weapon_item[1] / 30 # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
+                    elif self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value:
+                        factor_ammo_quantity = weapon_item[1] / 50 # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
 
-                if weapon_type == 'CANNONS' or weapon_type == 'ARTILLERY':
-                    factor_ammo_quantity += weapon_item[1] / 40 # 40 reference for cannons (42 cannons ammo -> factor_ammo_quantity = 1.05) 
+                elif weapon_type == 'AA_CANNONS':
+                    if not self.category == Ground_Vehicle_Asset_Type.AAA.value:
+                        logger.warning(f"vehicle: {self.model} weapon_type 'AA_CANNONS' installed on non AAA vehicle category:{self.category}")
+                    factor_ammo_quantity = weapon_item[1] / 600 # 600 reference for AAA cannons
+
+                elif weapon_type == 'AUTO_CANNONS':                    
+                    factor_ammo_quantity = weapon_item[1] / 500 # 500 reference for auto-cannons
 
                 elif weapon_type == 'MISSILES':
-                    factor_ammo_quantity += weapon_item[1] / 3 # 3 reference for missiles (6 missiles -> factor_ammo_quantity = 1.5) 
+                    if self.category in [Ground_Vehicle_Asset_Type.SAM_BIG.value, Ground_Vehicle_Asset_Type.SAM_MEDIUM.value, Ground_Vehicle_Asset_Type.SAM_SMALL.value, Ground_Vehicle_Asset_Type.AAA.value]:
+                        factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)     
+                    elif self.category in [Ground_Vehicle_Asset_Type.TANK.value, Ground_Vehicle_Asset_Type.ARMORED.value, Ground_Vehicle_Asset_Type.MOTORIZED.value]:
+                        factor_ammo_quantity = weapon_item[1] / 2 # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3) 
                 
                 elif weapon_type == 'ROCKETS':
-                    factor_ammo_quantity += weapon_item[1] / 8 # 8 reference for rockets (16 rockets -> factor_ammo_quantity = 2) 
+                    factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2) 
                 
                 elif weapon_type == 'MORTARS':
-                    factor_ammo_quantity += weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
+                    factor_ammo_quantity = weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
                 
-                elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo
-                    factor_ammo_quantity += weapon_item[1] # 2 reference for machine_guns (2  -> factor_ammo_quantity = 2) 
+                elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo                    
+                    machine_gun_score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * weapon_item[1]
                 
-                #else:
+                # else:
                 #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
-                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * (1 + factor_ammo_quantity * 0.1) # incremento del 10% del punteggio dell'arma in base alla quantità di munizionamento disponibile
+                
+                factor_ammo_quantity = max(0.80, min(1.2, factor_ammo_quantity)) # limit to +-20%                                
+                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity # incremento del 10% del punteggio dell'arma in base alla quantità di munizionamento disponibile
+                
 
-        return score
+        return score + machine_gun_score * 0.33 # riduco il peso delle mitragliatrici al 33% dello score totale in quanto armi di supporto se presente score (arma principale)
 
     def _protection_eval(self):
         """Evaluates the protection capabilities of the vehicle.
@@ -1902,7 +1920,7 @@ Marder_data = {
         'reliability': {'mtbf': 55, 'mttr': 4}
     },
     'weapons': {
-        'CANNONS': [('MK-20-Rh-202-20mm', 1250)],
+        'AUTO_CANNONS': [('MK-20-Rh-202-20mm', 1250)],
         'MACHINE_GUNS': [('MG3-7.62', 2)],
         'MISSILES': [('MILAN', 2)],
     },
@@ -1952,7 +1970,7 @@ BMP2_data = {
         'reliability': {'mtbf': 45, 'mttr': 5}
     },
     'weapons': {
-        'CANNONS': [('2A42-30mm', 500)],
+        'AUTO_CANNONS': [('2A42-30mm', 500)],
         'MACHINE_GUNS': [('PKT-7.62', 1)],
         'MISSILES': [('9M113-Konkurs', 4)],
     },
@@ -2052,7 +2070,7 @@ M2_Bradley_data = {
         'reliability': {'mtbf': 52, 'mttr': 4.5}
     },
     'weapons': {
-        'CANNONS': [('M242-Bushmaster-25mm', 900)],
+        'AUTO_CANNONS': [('M242-Bushmaster-25mm', 900)],
         'MACHINE_GUNS': [('M240C-7.62', 1)],
         'MISSILES': [('BGM-71-TOW', 2)],
     },
@@ -2102,7 +2120,8 @@ BMP3_data = {
         'reliability': {'mtbf': 48, 'mttr': 4.5}
     },
     'weapons': {
-        'CANNONS': [('2A70-100mm', 40), ('2A72-30mm', 500)],
+        'CANNONS': [('2A70-100mm', 40)],
+        'AUTO_CANNONS': [('2A72-30mm', 500)],
         'MACHINE_GUNS': [('PKT-7.62', 3)],
     },
     'radar': False,
@@ -2151,7 +2170,7 @@ Warrior_data = {
         'reliability': {'mtbf': 53, 'mttr': 4}
     },
     'weapons': {
-        'CANNONS': [('L21A1-RARDEN-30mm', 230)],
+        'AUTO_CANNONS': [('L21A1-RARDEN-30mm', 230)],
         'MACHINE_GUNS': [('L94A1-7.62', 1)],
     },
     'radar': False,
@@ -2200,7 +2219,7 @@ LAV25_data = {
         'reliability': {'mtbf': 58, 'mttr': 3.5}
     },
     'weapons': {
-        'CANNONS': [('M242-Bushmaster-25mm', 630)],
+        'AUTO_CANNONS': [('M242-Bushmaster-25mm', 630)],
         'MACHINE_GUNS': [('M240-7.62', 1)],
     },
     'radar': False,
@@ -2297,7 +2316,7 @@ BTR82A_data = {
         'reliability': {'mtbf': 48, 'mttr': 4.2}
     },
     'weapons': {
-        'CANNONS': [('2A72-30mm', 500)],
+        'AUTO_CANNONS': [('2A72-30mm', 500)],
         'MACHINE_GUNS': [('PKTM-7.62', 1)],
     },
     'radar': False,
@@ -2346,7 +2365,7 @@ ZBD04A_data = {
         'reliability': {'mtbf': 50, 'mttr': 4}
     },
     'weapons': {
-        'CANNONS': [('ZPT-99-30mm', 500)],
+        'AUTO_CANNONS': [('ZPT-99-30mm', 500)],
         'MACHINE_GUNS': [('Type-86-7.62', 1)],
         'MISSILES': [('HJ-73C', 2)],
     },
@@ -3371,7 +3390,7 @@ ZSU_57_2_data = {
         'reliability': {'mtbf': 35, 'mttr': 6}
     },
     'weapons': {
-        'CANNONS': [('S-68-57mm', 300)],  # Twin 57mm
+        'AA_CANNONS': [('S-68-57mm', 300)],  # Twin 57mm
     },
     'radar': False,
     'TVD': False,
@@ -3419,7 +3438,7 @@ ZSU_23_4_data = {
         'reliability': {'mtbf': 40, 'mttr': 5}
     },
     'weapons': {
-        'CANNONS': [('AZP-23-23mm', 2000)],  # Quad 23mm
+        'AA_CANNONS': [('AZP-23-23mm', 2000)],  # Quad 23mm
     },
     'radar': {
         'model': '1RL33 Gun Dish',
@@ -3475,7 +3494,7 @@ M163_VADS_data = {
         'reliability': {'mtbf': 48, 'mttr': 4.5}
     },
     'weapons': {
-        'CANNONS': [('M61-Vulcan-20mm', 2100)],
+        'AA_CANNONS': [('M61-Vulcan-20mm', 2100)],
     },
     'radar': False,
     'TVD': False,
@@ -3523,7 +3542,7 @@ Flakpanzer_Gepard_data = {
         'reliability': {'mtbf': 58, 'mttr': 3.5}
     },
     'weapons': {
-        'CANNONS': [('Oerlikon-KDA-35mm', 680)],  # Twin 35mm
+        'AA_CANNONS': [('Oerlikon-KDA-35mm', 680)],  # Twin 35mm
     },
     'radar': {
         'model': 'Search and Tracking Radar',
@@ -3579,7 +3598,7 @@ K2K22_Tunguska_data = {
         'reliability': {'mtbf': 52, 'mttr': 4}
     },
     'weapons': {
-        'CANNONS': [('2A38M-30mm', 1904)],  # Quad 30mm
+        'AA_CANNONS': [('2A38M-30mm', 1904)],  # Quad 30mm
         'MISSILES': [('9M311-SAM', 8)],
     },
     'radar': {
@@ -3974,7 +3993,7 @@ M6_Linebacker_data = {
         'reliability': {'mtbf': 60, 'mttr': 3.5}
     },
     'weapons': {
-        'CANNONS': [('M242-25mm', 900)],
+        'AUTO_CANNONS': [('M242-25mm', 900)],
         'MISSILES': [('FIM-92-Stinger', 4)],
     },
     'radar': False,

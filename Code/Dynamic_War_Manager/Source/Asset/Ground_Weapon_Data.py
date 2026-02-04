@@ -30,8 +30,8 @@ Calibro (mm)	Calibro (pollici)	Esempi di mitragliatrici	Note
 12,7 × 108 mm	~0.50	DShK, NSV (ex URSS)	Calibro sovietico equivalente al .50 BMG
 14,5 × 114 mm	~0.57	KPV (Russia)	Calibro più grande, elevata potenza'''
 
-# HE: Esplosivo, HEAT: High Explosive Anti Tank (carica cava), 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
 
+# Usato in get_<weapon_type>_score
 WEAPON_PARAM = {
 
     'CANNONS':          {'caliber': 0.3/300, # coeff / max value
@@ -66,6 +66,20 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2,
                         },
 
+    'AA_CANNONS':       {'caliber': 0.3/60, # coeff / max value (max ~60mm, ZSU-57-2)
+                        'muzzle_speed': 0.15/1200, # max ~1200 m/s
+                        'fire_rate': 0.25/6000, # max ~6000 rpm (2A38M Tunguska combined)
+                        'range': 0.1/5000, # max ~5000 (weighted direct+indirect)
+                        'ammo_type': 0.2,
+                        },
+
+    'AUTO_CANNONS':      {'caliber': 0.3/27, # coeff / max value (max ~30mm, BMP-3)
+                        'muzzle_speed': 0.15/800, # max ~800 m/s
+                        'fire_rate': 0.25/300, # max ~1000 rpm 
+                        'range': 0.1/3000, # max ~5000 (weighted direct+indirect)
+                        'ammo_type': 0.2,
+                        },
+
     'MACHINE_GUNS':     {'caliber': 0.4/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato
                         'fire_rate': 0.4/500,
                         'range': 0.2/1000,
@@ -78,6 +92,8 @@ WEAPON_PARAM = {
 
 }
 
+# HE: Esplosivo, HEAT: High Explosive Anti Tank (carica cava), 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
+# Usato in get_cannon_score e get_missile_score
 AMMO_PARAM = {
     'HE': 0.2,
     'HEAT': 0.4,
@@ -455,6 +471,7 @@ _EFF_ATGM_OLD = {
                        "small": {"accuracy": 0.2,  "destroy_capacity": 0.4}},
 }
 
+# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
 _EFF_SAM_SHORAD = {
     "Soft":           {"big": {"accuracy": 0.15, "destroy_capacity": 0.2},
                        "med": {"accuracy": 0.1,  "destroy_capacity": 0.25},
@@ -491,6 +508,7 @@ _EFF_SAM_SHORAD = {
                        "small": {"accuracy": 0.02, "destroy_capacity": 0.05}},
 }
 
+# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
 _EFF_SAM_MERAD = {
     "Soft":           {"big": {"accuracy": 0.08, "destroy_capacity": 0.15},
                        "med": {"accuracy": 0.05, "destroy_capacity": 0.2},
@@ -527,6 +545,7 @@ _EFF_SAM_MERAD = {
                        "small": {"accuracy": 0.01, "destroy_capacity": 0.03}},
 }
 
+# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
 _EFF_SAM_LORAD = {
     "Soft":           {"big": {"accuracy": 0.03, "destroy_capacity": 0.1},
                        "med": {"accuracy": 0.02, "destroy_capacity": 0.15},
@@ -884,7 +903,89 @@ def get_cannon_score(model: str) -> float:
         else:
             weapon_power +=  weapon[param_name] * coeff_value
 
-    return weapon_power 
+    return weapon_power
+
+def get_aa_cannon_score(model: str) -> float:
+    """Returns AA cannon score.
+
+    Args:
+        model (str): AA cannon model
+
+    Returns:
+        float: AA cannon score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'AA_CANNONS'
+    weapon = GROUND_WEAPONS[weapon_name][model]
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
+
+def get_auto_cannon_score(model: str) -> float:
+    """Returns auto-cannon score.
+
+    Args:
+        model (str): auto-cannon cannon model
+
+    Returns:
+        float: AA cannon score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'AUTO_CANNONS'
+    weapon = GROUND_WEAPONS[weapon_name][model]
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
 
 def get_missiles_score(model: str) -> float:
     
@@ -1116,7 +1217,13 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
     
     if weapon_type == 'CANNONS':
         return get_cannon_score(model=weapon_model)
-        
+
+    elif weapon_type == 'AA_CANNONS':
+        return get_aa_cannon_score(model=weapon_model)
+    
+    elif weapon_type == 'AUTO_CANNONS':
+        return get_auto_cannon_score(model=weapon_model)
+
     elif weapon_type == 'MISSILES':
         return get_missiles_score(model=weapon_model)
 
@@ -1255,8 +1362,180 @@ def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
 
 
 GROUND_WEAPONS = {
+    'AUTO_CANNONS': {
+        '2A42': {
+            'model': '2A42',
+            "start_service": 1980,
+            "end_service": 3000,
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
+            'caliber': 30, # mm
+            'muzzle_speed': 960, # m/s 
+            'fire_rate': 300, # shot per minute
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'APV-23': {
+            'model': 'APV-23',
+            "start_service": 1960,
+            "end_service": 3000,
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
+            'caliber': 23, # mm
+            'muzzle_speed': 970, # m/s 
+            'fire_rate': 400, # shot per minute
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'M242 Bushmaster': {
+            'model': 'M242 Bushmaster',
+            "start_service": 1981,
+            "end_service": 3000,
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
+            'caliber': 25, # mm
+            'muzzle_speed': 1100, # m/s 
+            'fire_rate': 200, # shot per minute
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'M230 Chain Gun': {
+            'model': 'M230 Chain Gun',  
+            "start_service": 1987,
+            "end_service": 3000,          
+            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
+            'caliber': 30, # mm
+            'muzzle_speed': 805, # m/s 
+            'fire_rate': 625, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],  
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        '2A42-30mm': { # BMP-2 (same as 2A42)
+            'model': '2A42-30mm',
+            "start_service": 1980,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30x165mm)
+            'muzzle_speed': 960, # m/s
+            'fire_rate': 300, # shot per minute
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },        
+        'M242-Bushmaster-25mm': { # M2 Bradley, LAV-25 (same as M242 Bushmaster)
+            'model': 'M242-Bushmaster-25mm',
+            "start_service": 1981,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 25, # mm (25x137mm NATO)
+            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
+            'fire_rate': 200, # shot per minute
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        '2A72-30mm': { # BMP-3, BTR-82A
+            'model': '2A72-30mm',
+            "start_service": 1986,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30x165mm, single-barrel, simpler than 2A42)
+            'muzzle_speed': 960, # m/s (AP-T)
+            'fire_rate': 330, # shot per minute
+            'range': {'direct': 4000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'ZPT-99-30mm': { # ZBD-04 (Chinese 30mm autocannon)
+            'model': 'ZPT-99-30mm',
+            "start_service": 1999,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 30, # mm (30mm, dual-feed)
+            'muzzle_speed': 960, # m/s
+            'fire_rate': 350, # shot per minute
+            'range': {'direct': 3500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'L21A1-RARDEN-30mm': { # Warrior IFV
+            'model': 'L21A1-RARDEN-30mm',
+            "start_service": 1974,
+            "end_service": 3000,
+            'reload': 'Automatic', # semi-automatic (3-round clips)
+            'caliber': 30, # mm (30x170mm)
+            'muzzle_speed': 1175, # m/s (L14A3 APDS)
+            'fire_rate': 90, # shot per minute
+            'range': {'direct': 1500, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'M242-25mm': { # LAV-AD (same as M242 Bushmaster)
+            'model': 'M242-25mm',
+            "start_service": 1981,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 25, # mm (25x137mm NATO)
+            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
+            'fire_rate': 200, # shot per minute
+            'range': {'direct': 3000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'APFSDS'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        },
+        'MK-20-Rh-202-20mm': { # Marder IFV
+            'model': 'MK-20-Rh-202-20mm',
+            "start_service": 1968,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 20, # mm (20x139mm)
+            'muzzle_speed': 1100, # m/s (APDS)
+            'fire_rate': 880, # shot per minute
+            'range': {'direct': 2000, 'indirect': 0 }, # m
+            'ammo_type': ['HE', 'AP'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.15,
+            'efficiency': _EFF_AUTOCANNON,
+        }, 
+    },
+    
     'CANNONS': {
         # combat_power cb = caliber *  
+        '2A28-Grom-73mm': { # BMP-1 IFV
+            'model': '2A28-Grom-73mm',
+            "start_service": 1966,
+            "end_service": 3000,
+            'reload': 'Automatic',
+            'caliber': 73, # mm - low-pressure smoothbore
+            'muzzle_speed': 665, # m/s (PG-15V HEAT round)
+            'fire_rate': 8, # shot per minute
+            'range': {'direct': 1300, 'indirect': 4400 }, # m
+            'ammo_type': ['HEAT', 'HE'],
+            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'perc_efficiency_variability': 0.2,
+            'efficiency': _EFF_MBT_CANNON_73MM,
+        },
         '2A46M': {
             'model': '2A46M',
             'users': ['Russia', 'India', 'China', 'Egypt', 'Syria', 'Algeria', 'Iraq', 'Libya', 'Vietnam'],
@@ -1356,21 +1635,7 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_MBT_CANNON_73MM,
-        },
-        '2A42': {
-            'model': '2A42',
-            "start_service": 1980,
-            "end_service": 3000,
-            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
-            'caliber': 30, # mm
-            'muzzle_speed': 960, # m/s 
-            'fire_rate': 300, # shot per minute
-            'range': {'direct': 4000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
+        },        
         '2A46M-5': {
             'model': '2A46M-5',
             "start_service": 2001,
@@ -1440,21 +1705,7 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_MBT_CANNON_73MM,
-        },
-        'APV-23': {
-            'model': 'APV-23',
-            "start_service": 1960,
-            "end_service": 3000,
-            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
-            'caliber': 23, # mm
-            'muzzle_speed': 970, # m/s 
-            'fire_rate': 400, # shot per minute
-            'range': {'direct': 2000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
+        },        
         'M68A1': {
             'model': 'M68A1',
             "start_service": 1959,
@@ -1468,36 +1719,7 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.15,
             'efficiency': _EFF_MBT_CANNON_100_105MM,
-        },
-        'M242 Bushmaster': {
-            'model': 'M242 Bushmaster',
-            "start_service": 1981,
-            "end_service": 3000,
-            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
-            'caliber': 25, # mm
-            'muzzle_speed': 1100, # m/s 
-            'fire_rate': 200, # shot per minute
-            'range': {'direct': 3000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        'M230 Chain Gun': {
-            'model': 'M230 Chain Gun',  
-            "start_service": 1987,
-            "end_service": 3000,          
-            'reload': 'Automatic', # Semi_Automatic, Manual non dovrebbe servire in quanto incorporato nel fire_rate
-            'caliber': 30, # mm
-            'muzzle_speed': 805, # m/s 
-            'fire_rate': 625, # shot per minute
-            'range': {'direct': 1500, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],  
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
+        },        
         'M256': {
             'model': 'M256',
             "start_service": 1985,
@@ -1771,63 +1993,7 @@ GROUND_WEAPONS = {
             'perc_efficiency_variability': 0.1,
             'efficiency': _EFF_MBT_CANNON_120_125MM,
         },
-        # --- IFV/APC Autocannons ---
-        'MK-20-Rh-202-20mm': { # Marder IFV
-            'model': 'MK-20-Rh-202-20mm',
-            "start_service": 1968,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 20, # mm (20x139mm)
-            'muzzle_speed': 1100, # m/s (APDS)
-            'fire_rate': 880, # shot per minute
-            'range': {'direct': 2000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'AP'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        '2A42-30mm': { # BMP-2 (same as 2A42)
-            'model': '2A42-30mm',
-            "start_service": 1980,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 30, # mm (30x165mm)
-            'muzzle_speed': 960, # m/s
-            'fire_rate': 300, # shot per minute
-            'range': {'direct': 4000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        '2A28-Grom-73mm': { # BMP-1 IFV
-            'model': '2A28-Grom-73mm',
-            "start_service": 1966,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 73, # mm - low-pressure smoothbore
-            'muzzle_speed': 665, # m/s (PG-15V HEAT round)
-            'fire_rate': 8, # shot per minute
-            'range': {'direct': 1300, 'indirect': 4400 }, # m
-            'ammo_type': ['HEAT', 'HE'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.2,
-            'efficiency': _EFF_MBT_CANNON_73MM,
-        },
-        'M242-Bushmaster-25mm': { # M2 Bradley, LAV-25 (same as M242 Bushmaster)
-            'model': 'M242-Bushmaster-25mm',
-            "start_service": 1981,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 25, # mm (25x137mm NATO)
-            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
-            'fire_rate': 200, # shot per minute
-            'range': {'direct': 3000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
+        # --- IFV/APC Autocannons ---                     
         '2A70-100mm': { # BMP-3 (same as 2A70)
             'model': '2A70-100mm',
             "start_service": 1980,
@@ -1841,64 +2007,10 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_MBT_CANNON_73MM,
-        },
-        '2A72-30mm': { # BMP-3, BTR-82A
-            'model': '2A72-30mm',
-            "start_service": 1986,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 30, # mm (30x165mm, single-barrel, simpler than 2A42)
-            'muzzle_speed': 960, # m/s (AP-T)
-            'fire_rate': 330, # shot per minute
-            'range': {'direct': 4000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'AP'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        'ZPT-99-30mm': { # ZBD-04 (Chinese 30mm autocannon)
-            'model': 'ZPT-99-30mm',
-            "start_service": 1999,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 30, # mm (30mm, dual-feed)
-            'muzzle_speed': 960, # m/s
-            'fire_rate': 350, # shot per minute
-            'range': {'direct': 3500, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'AP'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        'L21A1-RARDEN-30mm': { # Warrior IFV
-            'model': 'L21A1-RARDEN-30mm',
-            "start_service": 1974,
-            "end_service": 3000,
-            'reload': 'Automatic', # semi-automatic (3-round clips)
-            'caliber': 30, # mm (30x170mm)
-            'muzzle_speed': 1175, # m/s (L14A3 APDS)
-            'fire_rate': 90, # shot per minute
-            'range': {'direct': 1500, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'AP', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        'M242-25mm': { # LAV-AD (same as M242 Bushmaster)
-            'model': 'M242-25mm',
-            "start_service": 1981,
-            "end_service": 3000,
-            'reload': 'Automatic',
-            'caliber': 25, # mm (25x137mm NATO)
-            'muzzle_speed': 1100, # m/s (M919 APFSDS-T)
-            'fire_rate': 200, # shot per minute
-            'range': {'direct': 3000, 'indirect': 0 }, # m
-            'ammo_type': ['HE', 'APFSDS'],
-            'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
-            'perc_efficiency_variability': 0.15,
-            'efficiency': _EFF_AUTOCANNON,
-        },
-        # --- AA/SPAAG Cannons ---
+        },        
+    },
+    
+    'AA_CANNONS': {
         'S-68-57mm': { # ZSU-57-2 (twin 57mm)
             'model': 'S-68-57mm',
             "start_service": 1950,
@@ -1970,6 +2082,7 @@ GROUND_WEAPONS = {
             'efficiency': _EFF_AA_CANNON,
         },
     },
+    
     'MISSILES': {
         '9K119M': { # AT-11 Sniper
             'model': '9K119M',
