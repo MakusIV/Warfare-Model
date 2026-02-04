@@ -18852,3 +18852,5 @@
 2026-02-01 20:45:29,087 - Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data - WARNING - get_missiles_score - weapon MISSILES 5V55R-SAM unknow
 2026-02-03 09:57:57,739 - Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data - WARNING - calc_weapon_efficiency - weapon model 'NONEXISTENT' not found in 'CANNONS'
 2026-02-03 10:37:51,511 - Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data - WARNING - calc_weapon_efficiency - weapon model 'NONEXISTENT' not found in 'CANNONS'
+2026-02-04 12:02:02,746 - Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data - WARNING - calc_weapon_efficiency - weapon model 'ARMA_INESISTENTE' not found in 'CANNONS'
+2026-02-04 12:02:02,747 - Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data - WARNING - calc_weapon_efficiency - target_type 'TARGET_FAKE' not in efficiency data for '2A46M'
