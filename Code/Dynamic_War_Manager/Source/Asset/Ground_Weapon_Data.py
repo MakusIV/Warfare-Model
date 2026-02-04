@@ -86,8 +86,33 @@ AMMO_PARAM = {
     'APFSDS': 0.6,
 }
 
+# Efficacia di ogni tipo di munizione per tipo di bersaglio (scala 0..1).
+# Usato in calc_weapon_efficiency per calcolare l'ammo_factor.
+# Per ogni arma si seleziona la munizione migliore disponibile contro il target.
+AMMO_TARGET_EFFECTIVENESS = {
+    #                Soft  Armrd Hard  Struc AirDf Airbas Port  Shipy Farp  Strng ship
+    'HE':     {'Soft': 1.0,  'Armored': 0.15, 'Hard': 0.5,  'Structure': 0.8,
+               'Air_Defense': 0.5,  'Airbase': 0.6, 'Port': 0.6, 'Shipyard': 0.6,
+               'Farp': 0.6, 'Stronghold': 0.5, 'ship': 0.4},
+    'HEAT':   {'Soft': 0.6,  'Armored': 0.85, 'Hard': 0.6,  'Structure': 0.4,
+               'Air_Defense': 0.75, 'Airbase': 0.3, 'Port': 0.3, 'Shipyard': 0.3,
+               'Farp': 0.3, 'Stronghold': 0.35, 'ship': 0.65},
+    '2HEAT':  {'Soft': 0.6,  'Armored': 1.0,  'Hard': 0.7,  'Structure': 0.45,
+               'Air_Defense': 0.85, 'Airbase': 0.35, 'Port': 0.35, 'Shipyard': 0.35,
+               'Farp': 0.35, 'Stronghold': 0.4, 'ship': 0.75},
+    'AP':     {'Soft': 0.35, 'Armored': 0.7,  'Hard': 0.55, 'Structure': 0.3,
+               'Air_Defense': 0.6,  'Airbase': 0.2, 'Port': 0.2, 'Shipyard': 0.2,
+               'Farp': 0.2, 'Stronghold': 0.25, 'ship': 0.5},
+    'APFSDS': {'Soft': 0.4,  'Armored': 1.0,  'Hard': 0.65, 'Structure': 0.25,
+               'Air_Defense': 0.85, 'Airbase': 0.2, 'Port': 0.2, 'Shipyard': 0.2,
+               'Farp': 0.2, 'Stronghold': 0.25, 'ship': 0.6},
+    'FRAG':   {'Soft': 0.9,  'Armored': 0.05, 'Hard': 0.2,  'Structure': 0.5,
+               'Air_Defense': 0.3,  'Airbase': 0.4, 'Port': 0.4, 'Shipyard': 0.4,
+               'Farp': 0.4, 'Stronghold': 0.35, 'ship': 0.2},
+}
+
 GUIDE_PARAM = {
-    
+
 }
 '''
 RELOAD_PARAM = {
@@ -754,6 +779,57 @@ _EFF_GRENADE_LAUNCHER = {
                        "small": {"accuracy": 0.1,  "destroy_capacity": 0.01}},
 }
 
+# ---------------------------------------------------------------------------
+# Calibro di riferimento per ogni template di efficienza.
+# Usato in calc_weapon_efficiency per calcolare il caliber_factor:
+# armi con calibro superiore al riferimento ottengono un leggero bonus,
+# armi con calibro inferiore una leggera penalità.
+# ---------------------------------------------------------------------------
+_TEMPLATE_REF_CALIBERS = [
+    (_EFF_MBT_CANNON_120_125MM, 125),   # cannoni MBT 120-152mm
+    (_EFF_MBT_CANNON_100_105MM, 105),   # cannoni MBT 100-105mm
+    (_EFF_MBT_CANNON_73MM,       76),   # cannoni bassa pressione 73-100mm
+    (_EFF_AUTOCANNON,             27),   # autocannoni 20-30mm
+    (_EFF_AA_CANNON,              25),   # cannoni AA 20-35mm
+    (_EFF_AA_CANNON_57MM,         57),   # cannone AA 57mm
+    (_EFF_ATGM_LASER,           140),   # ATGM guida laser 125-152mm
+    (_EFF_ATGM_SACLOS,          135),   # ATGM SACLOS 115-152mm
+    (_EFF_ATGM_OLD,             125),   # ATGM vecchia gen 115-152mm
+    (_EFF_SAM_SHORAD,           125),   # SAM corto raggio 120-127mm
+    (_EFF_SAM_MERAD,            150),   # SAM medio raggio 76-210mm
+    (_EFF_SAM_LORAD,            455),   # SAM lungo raggio 400-508mm
+    (_EFF_TUBE_ARTILLERY,       152),   # artiglieria a canna 122-155mm
+    (_EFF_MLRS,                 220),   # lanciarazzi multiplo 122-300mm
+    (_EFF_MORTAR_60MM,           60),   # mortaio 60mm
+    (_EFF_HMG,                 12.7),   # mitragliatrice pesante 12.7-14.5mm
+    (_EFF_MMG,                  7.62),  # mitragliatrice media 7.62-7.92mm
+    (_EFF_GRENADE_LAUNCHER,      30),   # lanciagranate 30mm
+]
+
+
+def _get_ref_caliber(efficiency_data: dict) -> float:
+    """Trova il calibro di riferimento del template di efficienza dell'arma.
+
+    Controlla prima per identità (stessa istanza dict), poi verifica se
+    l'efficiency è una personalizzazione del template ({**template, ...})
+    confrontando le sotto-dict dei target type condivisi.
+
+    Returns:
+        calibro di riferimento in mm, oppure None se non trovato.
+    """
+    # Match diretto: l'arma usa il template senza modifiche
+    for template, ref_cal in _TEMPLATE_REF_CALIBERS:
+        if efficiency_data is template:
+            return ref_cal
+    # Match indiretto: l'arma usa {**template, "target": {...}} —
+    # i target_type non sovrascritti sono ancora gli stessi oggetti
+    for template, ref_cal in _TEMPLATE_REF_CALIBERS:
+        for target_type, dim_data in template.items():
+            if efficiency_data.get(target_type) is dim_data:
+                return ref_cal
+    return None
+
+
 #@dataclass
 #Class Weapon_Data:
 
@@ -1073,8 +1149,18 @@ def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
     Formula:
         raw = SUM over dim in {big, med, small}:
                 distribution[dim] * accuracy[dim] * destroy_capacity[dim]
+
+        caliber_factor = clamp((weapon_caliber / ref_caliber) ** 0.3, 0.85, 1.15)
+            — corregge per le differenze di calibro rispetto al calibro di
+              riferimento del template di efficienza condiviso.
+
+        ammo_factor = 0.85 + 0.3 * best_ammo_effectiveness(target_type)
+            — seleziona la munizione migliore disponibile per il tipo di
+              bersaglio, usando AMMO_TARGET_EFFECTIVENESS.
+
         variability = random.uniform(0, perc_efficiency_variability)
-        result = raw * (1 - variability)
+
+        result = raw * caliber_factor * ammo_factor * (1 - variability)
 
     Args:
         weapon_type: weapon category key in GROUND_WEAPONS (e.g. 'CANNONS', 'MISSILES')
@@ -1120,6 +1206,7 @@ def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
                        f"for \'{weapon_model}\'")
         return 0.0
 
+    # --- raw efficiency dal template ---
     raw = 0.0
     for dim in ('big', 'med', 'small'):
         dist_weight = target_dimension_distribution.get(dim, 0.0)
@@ -1130,9 +1217,39 @@ def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
             continue
         raw += dist_weight * dim_data['accuracy'] * dim_data['destroy_capacity']
 
+    # --- caliber_factor: correzione per differenza di calibro ---
+    # Confronta il calibro dell'arma con il calibro di riferimento del template.
+    # Esponente 0.3 → effetto smorzato (es. +20% calibro → ~+5.5% efficienza).
+    # Clamped a [0.85, 1.15] per evitare distorsioni eccessive.
+    caliber_factor = 1.0
+    weapon_caliber = weapon.get('caliber')
+    if weapon_caliber is not None and weapon_caliber > 0:
+        ref_caliber = _get_ref_caliber(efficiency_data)
+        if ref_caliber is not None and ref_caliber > 0:
+            ratio = weapon_caliber / ref_caliber
+            caliber_factor = max(0.85, min(1.15, ratio ** 0.3))
+
+    # --- ammo_factor: correzione per tipo di munizione vs target ---
+    # Per ogni munizione disponibile, cerca l'efficacia contro il target_type
+    # in AMMO_TARGET_EFFECTIVENESS; seleziona la migliore.
+    # Scalato a [0.85, 1.15]: ammo_factor = 0.85 + 0.3 * best_effectiveness.
+    ammo_factor = 1.0
+    ammo_types = weapon.get('ammo_type')
+    if ammo_types:
+        best_eff = 0.5  # default se il tipo di munizione non è in tabella
+        for ammo in ammo_types:
+            ammo_data = AMMO_TARGET_EFFECTIVENESS.get(ammo)
+            if ammo_data is not None:
+                eff = ammo_data.get(target_type, 0.5)
+                if eff > best_eff:
+                    best_eff = eff
+        ammo_factor = 0.85 + 0.3 * best_eff
+
+    # --- variabilità stocastica ---
     perc_var = weapon.get('perc_efficiency_variability', 0.0)
     variability = random.uniform(0, perc_var)
-    result = raw * (1 - variability)
+
+    result = raw * caliber_factor * ammo_factor * (1 - variability)
 
     return result
 
