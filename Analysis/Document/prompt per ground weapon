@@ -28,6 +28,9 @@ Per quanto riguarda la valutazione delle dimensioni dell'asset in base alla clas
 
 
 Aggiornamento da richiedere a claude per la funzione Ground_Weapon_Data.alc_weapon_efficiency:
-Ho notato che hai effettuato un raggruppamento dei template dei dizionari di  efficienza in modo che uno stesso template possa essere utilizzato per diverse       
-  armi di tipologia simile. Puoi introdurre nel calcolo dell'efficienza implementato nella funzione calc_weapon_efficiency dei fattori che tengano conto  anche      
-  delle differenza di efficienza dovuta alle differente di calibro e del tipo di munizioni usate (specificate nel dizionario 'ammo_type').                    
+Nella precedente sessione di lavoro, durante l'implementazione della funzione calc_weapon_efficiency nel modulo Ground_Weapon_Data.py,  hai effettuato un raggruppamento dei template dei dizionari di efficienza in modo che uno stesso template possa essere utilizzato per diverse armi. Puoi includere nel valore restituito dalla funzione calc_weapon_efficiency dei fattori che tengano conto anche delle differente di calibro e del tipo di munizioni usate (specificate nel dizionario 'ammo_type').     
+
+
+Il problema della super valutazione del fire rate è presente anche in alcuni cannoni presenti in veicoli ARMORED, per esempio il Marder o il   
+ BMP-3 che hanno weapon score (global_score) pari a 1 e 0.4410 rispetto a TANK quali il T-90M o M1A2-Abrams che hanno score di 0.1641 e 0.1449.  
+ Valuta se differenziare il calcolo del  anche il tipo di cannoni montato su questi veicoli considerando il calibro     
