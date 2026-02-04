@@ -156,6 +156,81 @@ class Aircraft_Data:
         
         return score
 
+    def _radio_nav_eval(self) -> float:
+        """Evaluates the radio navigation capabilities of the aircraft based on predefined weights.
+
+        Returns:
+            float: radio navigation score value
+        """
+        if self.radio_nav == False:
+            return 0.0
+        
+        if self.radio_nav == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Radio Navigation not defined.")
+            return 0.0
+        
+        weights = {
+            'navigation_accuracy': 0.6,
+            'communication_range': 0.4 / 500 # weights / reference distance (km)
+        }
+        score = 0.0
+        
+        score += self.radio_nav['capabilities'].get('navigation_accuracy', 0) * weights['navigation_accuracy']
+        score += self.radio_nav['capabilities'].get('communication_range', 0) * weights['communication_range']
+        
+        return score
+
+    def _avionics_eval(self) -> float:
+        """Evaluates the avionics capabilities of the aircraft based on predefined weights.
+
+        Returns:
+            float: avionics score value
+        """
+        if self.avionics == False:
+            return 0.0
+        
+        if self.avionics == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Avionics not defined.")
+            return 0.0
+        
+        weights = {
+            'flight_control': 0.4,
+            'navigation_system': 0.3,
+            'communication_system': 0.3
+        }
+        score = 0.0
+        
+        score += self.avionics['capabilities'].get('flight_control', 0) * weights['flight_control']
+        score += self.avionics['capabilities'].get('navigation_system', 0) * weights['navigation_system']
+        score += self.avionics['capabilities'].get('communication_system', 0) * weights['communication_system']
+        
+        return score
+
+    def _hydraulic_eval(self) -> float:
+        """Evaluates the hydraulic capabilities of the aircraft based on predefined weights.
+
+        Returns:
+            float: hydraulic score value
+        """
+        if self.hydraulic == False:
+            return 0.0
+        
+        if self.hydraulic == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic not defined.")
+            return 0.0
+        
+        weights = {
+            'pressure': 0.5 / 5000, # weights / reference pressure (psi)
+            'fluid_capacity': 0.5 / 100 # weights / reference capacity (liters)
+        }
+        score = 0.0
+        
+        score += self.hydraulic['capabilities'].get('pressure', 0) * weights['pressure']
+        score += self.hydraulic['capabilities'].get('fluid_capacity', 0) * weights['fluid_capacity']
+        
+        return score
+
+
     #@lru_cache
     def _speed_at_altitude_eval(self, metric: str, altitude: Optional[float] = None):
         """Evaluates the speed of the aircraft at a given altitude based on predefined speed data.
@@ -298,6 +373,34 @@ class Aircraft_Data:
         scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._TVD_eval(modes = modes), scores)
     
+    def get_normalized_radio_nav_score(self):
+        """returns radio navigation score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized radio navigation score
+        """
+        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._radio_nav_eval(), scores)
+    
+    def get_normalized_avionics_score(self):
+        """returns avionics score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized avionics score
+        """
+        scores = [ac._avionics_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._avionics_eval(), scores)
+    
+    def get_normalized_hydraulic_score(self):
+        """returns hydraulic score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized hydraulic score
+        """
+        scores = [ac._hydraulic_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._hydraulic_eval(), scores)
+    
+
     def get_normalized_speed_score(self):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
@@ -352,6 +455,9 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
+
+
+
     # VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
     def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
         
@@ -383,6 +489,10 @@ class Aircraft_Data:
 
         return target_destroyed * score_radar
     
+
+
+
+
     #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
     def task_score_cost_ratio(self):
         
