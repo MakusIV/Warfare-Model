@@ -1,4 +1,4 @@
-Il compito è valutare ed implementare informazioni contenute nel dizionario weapon_db nel dizionario AIRCRAFT_WEAPON.
+Considera il modulo Aircraft_WIl compito è valutare ed implementare informazioni contenute nel dizionario weapon_db nel dizionario AIRCRAFT_WEAPON.
 
 Nello specifico dovresti valutare e implementare le informazioni per i dizionari 'air_task', 'efficiency' e per il valore di 'perc_efficiency_variability'.
 
