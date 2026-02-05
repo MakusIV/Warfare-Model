@@ -17,7 +17,7 @@ NO:
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK 
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, Ground_Vehicle_Asset_Type
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -80,7 +80,7 @@ class Aircraft_Data:
     
     # --- Implementazioni predefinite delle formule ---
     #@lru_cache
-    def _radar_eval(self, modes: Optional[List] = None) -> float:
+    def _radar_eval(self, modes: Optional[List] = None, category: Optional[str] = None) -> float:
         """Evaluates the radar capabilities of the aircraft based on predefined weights.
 
         Params:
@@ -155,81 +155,6 @@ class Aircraft_Data:
                 score += cap[1].get('multi_target_capacity', 0) * weights['multi_target']
         
         return score
-
-    def _radio_nav_eval(self) -> float:
-        """Evaluates the radio navigation capabilities of the aircraft based on predefined weights.
-
-        Returns:
-            float: radio navigation score value
-        """
-        if self.radio_nav == False:
-            return 0.0
-        
-        if self.radio_nav == None:
-            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Radio Navigation not defined.")
-            return 0.0
-        
-        weights = {
-            'navigation_accuracy': 0.6,
-            'communication_range': 0.4 / 500 # weights / reference distance (km)
-        }
-        score = 0.0
-        
-        score += self.radio_nav['capabilities'].get('navigation_accuracy', 0) * weights['navigation_accuracy']
-        score += self.radio_nav['capabilities'].get('communication_range', 0) * weights['communication_range']
-        
-        return score
-
-    def _avionics_eval(self) -> float:
-        """Evaluates the avionics capabilities of the aircraft based on predefined weights.
-
-        Returns:
-            float: avionics score value
-        """
-        if self.avionics == False:
-            return 0.0
-        
-        if self.avionics == None:
-            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Avionics not defined.")
-            return 0.0
-        
-        weights = {
-            'flight_control': 0.4,
-            'navigation_system': 0.3,
-            'communication_system': 0.3
-        }
-        score = 0.0
-        
-        score += self.avionics['capabilities'].get('flight_control', 0) * weights['flight_control']
-        score += self.avionics['capabilities'].get('navigation_system', 0) * weights['navigation_system']
-        score += self.avionics['capabilities'].get('communication_system', 0) * weights['communication_system']
-        
-        return score
-
-    def _hydraulic_eval(self) -> float:
-        """Evaluates the hydraulic capabilities of the aircraft based on predefined weights.
-
-        Returns:
-            float: hydraulic score value
-        """
-        if self.hydraulic == False:
-            return 0.0
-        
-        if self.hydraulic == None:
-            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic not defined.")
-            return 0.0
-        
-        weights = {
-            'pressure': 0.5 / 5000, # weights / reference pressure (psi)
-            'fluid_capacity': 0.5 / 100 # weights / reference capacity (liters)
-        }
-        score = 0.0
-        
-        score += self.hydraulic['capabilities'].get('pressure', 0) * weights['pressure']
-        score += self.hydraulic['capabilities'].get('fluid_capacity', 0) * weights['fluid_capacity']
-        
-        return score
-
 
     #@lru_cache
     def _speed_at_altitude_eval(self, metric: str, altitude: Optional[float] = None):
@@ -354,6 +279,59 @@ class Aircraft_Data:
         ratio = mtbf / mttr if mttr > 0 else 0.0        
         return ratio
 
+    def _weapon_eval(self):
+        """Returns the score of all installed weapons
+
+        Returns:
+            float: weapons combat score
+        """
+              
+        '''
+        'weapons': {
+            'cannons': [('2A46M', 42)],
+            'missiles': [('9K119M', 6)],
+            'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+        '''
+        score = 0.0
+
+        for weapon_type, weapon in self.weapons.items():
+            machine_gun_score = 0
+
+            for weapon_item in weapon:                
+                factor_ammo_quantity = 1.0
+                
+                if weapon_type == 'CANNONS':                    
+                    if self.category in [Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value, Ground_Vehicle_Asset_Type.TANK.value]:
+                        factor_ammo_quantity = weapon_item[1] / 30 # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
+                    elif self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value:
+                        factor_ammo_quantity = weapon_item[1] / 50 # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
+
+                elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo                    
+                    machine_gun_score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * weapon_item[1]
+                               
+                elif weapon_type == 'MISSILES':
+                    if self.category in [Ground_Vehicle_Asset_Type.SAM_BIG.value, Ground_Vehicle_Asset_Type.SAM_MEDIUM.value, Ground_Vehicle_Asset_Type.SAM_SMALL.value, Ground_Vehicle_Asset_Type.AAA.value]:
+                        factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)     
+                    elif self.category in [Ground_Vehicle_Asset_Type.TANK.value, Ground_Vehicle_Asset_Type.ARMORED.value, Ground_Vehicle_Asset_Type.MOTORIZED.value]:
+                        factor_ammo_quantity = weapon_item[1] / 2 # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3) 
+                
+                elif weapon_type == 'ROCKETS':
+                    factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2) 
+                
+                elif weapon_type == 'BOMBS':
+                    factor_ammo_quantity = weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
+                
+                 
+                # else:
+                #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
+                
+                factor_ammo_quantity = max(0.80, min(1.2, factor_ammo_quantity)) # limit to +-20%                                
+                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity # incremento del 10% del punteggio dell'arma in base alla quantità di munizionamento disponibile
+                
+
+        return score + machine_gun_score * 0.33 # riduco il peso delle mitragliatrici al 33% dello score totale in quanto armi di supporto se presente score (arma principale)
+
+
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[List] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
@@ -373,34 +351,6 @@ class Aircraft_Data:
         scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._TVD_eval(modes = modes), scores)
     
-    def get_normalized_radio_nav_score(self):
-        """returns radio navigation score normalized from 0 (min score) 1 (max score)
-
-        Returns:
-            float: normalized radio navigation score
-        """
-        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._radio_nav_eval(), scores)
-    
-    def get_normalized_avionics_score(self):
-        """returns avionics score normalized from 0 (min score) 1 (max score)
-
-        Returns:
-            float: normalized avionics score
-        """
-        scores = [ac._avionics_eval() for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._avionics_eval(), scores)
-    
-    def get_normalized_hydraulic_score(self):
-        """returns hydraulic score normalized from 0 (min score) 1 (max score)
-
-        Returns:
-            float: normalized hydraulic score
-        """
-        scores = [ac._hydraulic_eval() for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._hydraulic_eval(), scores)
-    
-
     def get_normalized_speed_score(self):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
@@ -455,9 +405,6 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-
-
-
     # VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
     def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
         
@@ -489,10 +436,6 @@ class Aircraft_Data:
 
         return target_destroyed * score_radar
     
-
-
-
-
     #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
     def task_score_cost_ratio(self):
         
