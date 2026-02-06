@@ -43,6 +43,8 @@ AIR_WEAPONS = {
             },
             "AIM-54A-MK47": {
                 "type": "AAM",
+                "model": "AIM-54A-MK47",
+                "users": ["USA", "Iran"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1974,
@@ -55,10 +57,13 @@ AIR_WEAPONS = {
                 "active_range": 18,
                 "max_height": 24.8,
                 "max_speed": 3.8,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.75
             },
             "AIM-54A-MK60": {
                 "type": "AAM",
+                "model": "AIM-54A-MK60",
+                "users": ["USA", "Iran"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -71,10 +76,13 @@ AIR_WEAPONS = {
                 "active_range": 18,
                 "max_height": 24.8,
                 "max_speed": 3.8,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.75
             },
             "AIM-54C-MK47": {
                 "type": "AAM",
+                "model": "AIM-54C-MK47",
+                "users": ["USA", "Iran"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1982,
@@ -87,10 +95,13 @@ AIR_WEAPONS = {
                 "active_range": 18,
                 "max_height": 24.8,
                 "max_speed": 4.5,
-                "manouvrability": 0.73
+                "manouvrability": 0.73,
+                "accuracy": 0.8
             },
             "AIM-54C-MK60": {
                 "type": "AAM",
+                "model": "AIM-54C-MK60",
+                "users": ["USA", "Iran"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1982,
@@ -103,10 +114,13 @@ AIR_WEAPONS = {
                 "active_range": 18,
                 "max_height": 24.8,
                 "max_speed": 4.5,
-                "manouvrability": 0.73
+                "manouvrability": 0.73,
+                "accuracy": 0.8
             },
             "AIM-7E": {
                 "type": "AAM",
+                "model": "AIM-7E",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "South Korea", "Taiwan"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1970,
@@ -119,10 +133,13 @@ AIR_WEAPONS = {
                 "active_range": None,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.6
             },
             "AIM-7F": {
                 "type": "AAM",
+                "model": "AIM-7F",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "South Korea", "Taiwan"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -135,10 +152,13 @@ AIR_WEAPONS = {
                 "active_range": None,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.65
             },
             "AIM-7M": {
                 "type": "AAM",
+                "model": "AIM-7M",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "South Korea", "Taiwan", "Saudi Arabia"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1982,
@@ -151,10 +171,13 @@ AIR_WEAPONS = {
                 "active_range": None,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.65
+                "manouvrability": 0.65,
+                "accuracy": 0.7
             },
             "AIM-7MH": {
                 "type": "AAM",
+                "model": "AIM-7MH",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "South Korea", "Taiwan", "Saudi Arabia"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1985,
@@ -167,10 +190,13 @@ AIR_WEAPONS = {
                 "active_range": None,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.66
+                "manouvrability": 0.66,
+                "accuracy": 0.72
             },
             "AIM-7P": {
                 "type": "AAM",
+                "model": "AIM-7P",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "South Korea", "Taiwan", "Saudi Arabia"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1987,
@@ -183,10 +209,13 @@ AIR_WEAPONS = {
                 "active_range": None,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.75
             },
             "AIM-9B": {
                 "type": "AAM",
+                "model": "AIM-9B",
+                "users": ["USA", "UK", "Germany", "France", "Italy", "Japan", "Turkey", "Greece", "Israel", "Taiwan", "South Korea"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1956,
@@ -197,10 +226,13 @@ AIR_WEAPONS = {
                 "range": 4.6,
                 "max_height": 18,
                 "max_speed": 1.7,
-                "manouvrability": 0.5
+                "manouvrability": 0.5,
+                "accuracy": 0.45
             },
             "AIM-9P": {
                 "type": "AAM",
+                "model": "AIM-9P",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "Taiwan", "South Korea", "Indonesia", "Pakistan"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -211,10 +243,13 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2,
-                "manouvrability": 0.5
+                "manouvrability": 0.5,
+                "accuracy": 0.55
             },
             "AIM-9P5": {
                 "type": "AAM",
+                "model": "AIM-9P5",
+                "users": ["USA", "Germany", "Italy", "Turkey", "Greece", "Israel", "Taiwan", "South Korea", "Indonesia"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -225,10 +260,13 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.58
             },
             "AIM-9L": {
                 "type": "AAM",
+                "model": "AIM-9L",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "Taiwan", "South Korea", "Saudi Arabia", "Australia"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -239,10 +277,13 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2.5,
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.7
             },
             "AIM-9M": {
                 "type": "AAM",
+                "model": "AIM-9M",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "Taiwan", "South Korea", "Saudi Arabia", "Australia"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1982,
@@ -253,10 +294,13 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2.5,
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.75
             },
             "AIM-9X": {
                 "type": "AAM",
+                "model": "AIM-9X",
+                "users": ["USA", "UK", "Germany", "Italy", "Japan", "Turkey", "Greece", "Israel", "Taiwan", "South Korea", "Saudi Arabia", "Australia", "Poland"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 2003,
@@ -267,10 +311,13 @@ AIR_WEAPONS = {
                 "range": 37,
                 "max_height": 25,
                 "max_speed": 2.9,
-                "manouvrability": 0.9
+                "manouvrability": 0.9,
+                "accuracy": 0.9
             },
             "R-550": {
                 "type": "AAM",
+                "model": "R-550",
+                "users": ["France", "Argentina", "Brazil", "Chile", "Ecuador", "Egypt", "India", "Iraq", "Kuwait", "Pakistan", "Peru", "Qatar", "UAE"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -281,10 +328,13 @@ AIR_WEAPONS = {
                 "range": 10,
                 "max_height": 18,
                 "max_speed": 2.8,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.65
             },
             "R-530IR": {
                 "type": "AAM",
+                "model": "R-530IR",
+                "users": ["France", "Argentina", "Australia", "Brazil", "Israel", "Pakistan", "South Africa", "Spain"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -295,10 +345,13 @@ AIR_WEAPONS = {
                 "range": 18,
                 "max_height": 18,
                 "max_speed": 3,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.55
             },
             "R-530EM": {
                 "type": "AAM",
+                "model": "R-530EM",
+                "users": ["France", "Argentina", "Australia", "Brazil", "Israel", "Pakistan", "South Africa", "Spain"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -310,10 +363,13 @@ AIR_WEAPONS = {
                 "semiactive_range": 40,
                 "max_height": 20,
                 "max_speed": 4,
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.6
             },
             "RB-24": {
                 "type": "AAM",
+                "model": "RB-24",
+                "users": ["Sweden"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1956,
@@ -324,10 +380,13 @@ AIR_WEAPONS = {
                 "range": 4.6,
                 "max_height": 18,
                 "max_speed": 1.7,
-                "manouvrability": 0.5
+                "manouvrability": 0.5,
+                "accuracy": 0.45
             },
             "RB-24J": {
                 "type": "AAM",
+                "model": "RB-24J",
+                "users": ["Sweden"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -338,10 +397,13 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2,
-                "manouvrability": 0.6
+                "manouvrability": 0.6,
+                "accuracy": 0.6
             },
             "RB-74": {
                 "type": "AAM",
+                "model": "RB-74",
+                "users": ["Sweden"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -352,14 +414,17 @@ AIR_WEAPONS = {
                 "range": 18.5,
                 "max_height": 18,
                 "max_speed": 2.5,
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.7
             },            
         },  
         'MISSILES_ASM': {
             "RB-05A": {
                 "type": "ASM",
+                "model": "RB-05A",
+                "users": ["Sweden"],
                 "seeker": "electro-optical",
-                "task": ["A2A"],
+                "task": ["Anti-ship Strike", "Strike", "SEAD"],
                 "start_service": 1972,
                 "end_service": 2005,
                 "cost": 180,
@@ -368,10 +433,34 @@ AIR_WEAPONS = {
                 "range": 9,
                 "max_height": 18,
                 "max_speed": 1,
-                "manouvrability": 0.4
+                "manouvrability": 0.4,
+                 "efficiency": {
+                    "ship": {
+                        "big": {"accuracy": 0.8, "destroy_capacity": 0.6},
+                        "med": {"accuracy": 0.7, "destroy_capacity": 0.8},
+                        "small": {"accuracy": 0.5, "destroy_capacity": 1}
+                    },
+                    "soft": {
+                        "big": {"accuracy": 0.8, "destroy_capacity": 0.9},
+                        "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 1}
+                    },
+                    "armor": {
+                        "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
+                        "med": {"accuracy": 0.7, "destroy_capacity": 0.9},
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
+                    },
+                    "SAM": {
+                        "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
+                        "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
+                    }
+                }
             },
             "RB-15F": {
                 "type": "ASM",
+                "model": "RB-15F",
+                "users": ["Sweden"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1985,
                 "end_service": None,
@@ -392,16 +481,14 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 1,
                             "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 1,
-                            "destroy_capacity": 0.85
                         }
                     }
                 }
             },
             "AGM-45": {
                 "type": "ASM",
+                "model": "AGM-45",
+                "users": ["USA", "Israel", "UK"],
                 "task": ["SEAD"],
                 "start_service": 1966,
                 "end_service": 1992,
@@ -413,13 +500,14 @@ AIR_WEAPONS = {
                     "SAM": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.7},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
                     }
                 }
             },
             "AGM-84A": {
                 "type": "ASM",
+                "model": "AGM-84A",
+                "users": ["USA", "UK", "Germany", "Denmark", "Australia", "Japan", "South Korea", "Taiwan", "Egypt", "Saudi Arabia"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1970,
                 "end_service": None,
@@ -431,13 +519,14 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     }
                 }
             },
             "AGM-88": {
                 "type": "ASM",
+                "model": "AGM-88",
+                "users": ["USA", "Germany", "Italy", "Spain", "Greece", "Turkey", "Israel", "Australia", "South Korea", "Taiwan"],
                 "task": ["SEAD"],
                 "start_service": 1966,
                 "end_service": 1992,
@@ -449,13 +538,14 @@ AIR_WEAPONS = {
                     "SAM": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.77},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.88},
-                        "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
                     }
                 }
             },
             "Kormoran": {
                 "type": "ASM",
+                "model": "Kormoran",
+                "users": ["Germany", "Italy"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1973,
                 "end_service": None,
@@ -467,13 +557,14 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.45},
                         "med": {"accuracy": 1, "destroy_capacity": 0.7},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.70}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     }
                 }
             },
             "RB-05E": {
                 "type": "ASM",
+                "model": "RB-05E",
+                "users": ["Sweden"],
                 "task": ["Anti-ship Strike", "Strike", "SEAD"],
                 "start_service": 1972,
                 "end_service": 2005,
@@ -485,37 +576,29 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.6},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 0.5, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.68, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.5, "destroy_capacity": 1}
                     },
                     "soft": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.9},
                         "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.95}
+                        "small": {"accuracy": 0.65, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.9}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "med": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.6, "destroy_capacity": 1}
                     }
                 }
             },
             "RB-04E": {
                 "type": "ASM",
+                "model": "RB-04E",
+                "users": ["Sweden"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1975,
                 "end_service": 2000,
@@ -527,13 +610,14 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.94}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     }
                 }
             },
             "Sea Eagle": {
                 "type": "ASM",
+                "model": "Sea Eagle",
+                "users": ["UK", "India", "Saudi Arabia"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1985,
                 "end_service": None,
@@ -545,13 +629,14 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.6},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.7},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.8},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.8}
                     }
                 }
             },
             "RB-75T": {
                 "type": "ASM",
+                "model": "RB-75T",
+                "users": ["Sweden"],
                 "task": ["Anti-ship Strike", "Strike", "SEAD"],
                 "start_service": 1972,
                 "end_service": None,
@@ -563,37 +648,29 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     },
                     "soft": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 1},
                         "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 1, "destroy_capacity": 1},
                         "med": {"accuracy": 1, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     }
                 }
             },
             "RB-15": {
                 "type": "ASM",
+                "model": "RB-15",
+                "users": ["Sweden", "Finland", "Croatia"],
                 "task": ["Anti-ship Strike"],
                 "start_service": 1989,
                 "end_service": None,
@@ -605,13 +682,14 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     }
                 }
             },
             "AGM-65D": {
                 "type": "ASM",
+                "model": "AGM-65D",
+                "users": ["USA", "UK", "Germany", "Italy", "Spain", "Greece", "Turkey", "Israel", "Egypt", "South Korea", "Taiwan"],
                 "task": ["Anti-ship Strike", "Strike", "SEAD"],
                 "start_service": 1967,
                 "end_service": None,
@@ -623,37 +701,29 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     },
                     "soft": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 1},
                         "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 1, "destroy_capacity": 1},
                         "med": {"accuracy": 1, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     }
                 }
             },
             "AGM-65K": {
                 "type": "ASM",
+                "model": "AGM-65K",
+                "users": ["USA", "South Korea", "Taiwan"],
                 "task": ["Anti-ship Strike", "Strike", "SEAD"],
                 "start_service": 1970,
                 "end_service": None,
@@ -665,37 +735,29 @@ AIR_WEAPONS = {
                     "ship": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 1, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 1, "destroy_capacity": 1}
                     },
                     "soft": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 1},
                         "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "med": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 1, "destroy_capacity": 1},
                         "med": {"accuracy": 1, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     }
                 }
             },
             "AGM-114": {
                 "type": "ASM",
+                "model": "AGM-114",
+                "users": ["USA", "UK", "Germany", "France", "Italy", "Israel", "Saudi Arabia", "UAE", "Japan", "South Korea", "Australia"],
                 "task": ["Strike", "SEAD", "Anti-ship Strike"],
                 "start_service": 1984,
                 "end_service": None,
@@ -707,25 +769,24 @@ AIR_WEAPONS = {
                     "soft": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.5},
                         "med": {"accuracy": 1, "destroy_capacity": 0.6},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 0.7},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.6}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 0.7}
                     },
                     "armor": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.4},
                         "med": {"accuracy": 1, "destroy_capacity": 0.5},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 0.6},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.5}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 0.6}
                     },
                     "SAM": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.6},
                         "med": {"accuracy": 1, "destroy_capacity": 0.7},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 0.8},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.7}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 0.8}
                     }
                 }
             },
             "BGM-71D": {
                 "type": "ASM",
+                "model": "BGM-71D",
+                "users": ["USA", "UK", "Germany", "Italy", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Iran", "Pakistan"],
                 "task": ["Strike", "SEAD"],
                 "start_service": 1970,
                 "end_service": None,
@@ -737,25 +798,95 @@ AIR_WEAPONS = {
                     "soft": {
                         "big": {"accuracy": 1, "destroy_capacity": 1},
                         "med": {"accuracy": 1, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.9, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.8},
                         "med": {"accuracy": 1, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.9, "destroy_capacity": 0.95}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.8},
                         "med": {"accuracy": 1, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.9, "destroy_capacity": 0.95}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     }
                 }
             }, 
         },       
         'BOMBS': {
+            "Riferimento Bomb": {
+                "type": "Bombs",
+                "model": "Riferimento Bomb",
+                "users": ["USA", "UK", "Germany", "Italy", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Iran", "Pakistan"],
+                "task": ["Strike", "Anti-ship Strike"],
+                "start_service": 1950,
+                "end_service": None,
+                "cost": 4.4,
+                "tnt": 429,
+                "perc_efficiency_variability": 0.1,
+                'efficiency': {
+                    "Soft": {
+                        "big": {"accuracy": 0.95, "destroy_capacity": 0.4},
+                        "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
+                    },
+                    "Armored": {
+                        "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                        "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                    },
+                    "Hard": {
+                        "big": {"accuracy": 0.95, "destroy_capacity": 0.35},
+                        "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
+                    },
+                    "Structure": {
+                        "big": {"accuracy": 0.95, "destroy_capacity": 0.005},
+                        "med": {"accuracy": 0.9, "destroy_capacity": 0.02},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.1},
+                    },
+                    "Air_Defense": {
+                        "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                        "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                    },
+                    "Airbase": {
+                        "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                    },
+                    "Port": {
+                        "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                    },
+                    "Shipyard": {
+                        "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                    },
+                    "Farp": {
+                        "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                    },
+                    "Stronghold": {
+                        "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                    },
+                    "ship": {
+                        "big": {"accuracy": 0.7, "destroy_capacity": 0.42},
+                        "med": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.5},
+                    },
+                    "SAM": {
+                        "big": {"accuracy": 1, "destroy_capacity": 0.8},
+                        "med": {"accuracy": 1, "destroy_capacity": 0.9},
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
+                    }
+                }
+            },            
             "Mk-84": {
                 "type": "Bombs",
                 "task": ["Strike", "Anti-ship Strike"],
@@ -768,40 +899,29 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.8},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 1}
                     },
                     "Bridge": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.7},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.9},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.9}
                     },
                     "ship": {
                         "big": {"accuracy": 0.5, "destroy_capacity": 0.85},
                         "med": {"accuracy": 0.4, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.2, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.3, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.2, "destroy_capacity": 1}
                     },
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.85},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.85}
-                    },
-                    "Parked Aircraft": {
-                        "med": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.9, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95}
                     },
                     "SAM": {
                         "med": {"accuracy": 0.85, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 1}
                     },
                     "armor": {
                         "med": {"accuracy": 0.85, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 1}
                     }
                 }
             },
@@ -817,42 +937,31 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.4},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.42}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.5}
                     },
                     "Bridge": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.35},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.4}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.45}
                     },
                     "ship": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.42},
                         "med": {"accuracy": 0.5, "destroy_capacity": 0.5},
-                        "small": {"accuracy": 0.3, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 0.5, "destroy_capacity": 0.4}
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.5}
                     },
                     "soft": {
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.95},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.9, "destroy_capacity": 0.95}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 1}
                     },
                     "armor": {
                         "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                         "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
-                    },
-                    "Parked Aircraft": {
-                        "med": {"accuracy": 0.93, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.83, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.93, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                         "med": {"accuracy": 0.75, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.98}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 1}
                     }
                 }
             },
@@ -868,42 +977,30 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.13},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.21},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.52},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.21}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.52}
                     },
                     "Bridge": {
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.21},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.31},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.27}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.31}
                     },
                     "ship": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.21},
                         "med": {"accuracy": 0.5, "destroy_capacity": 0.25},
-                        "small": {"accuracy": 0.3, "destroy_capacity": 0.33},
-                        "mix": {"accuracy": 0.4, "destroy_capacity": 0.3}
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.33}
                     },
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.85},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.9}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.95, "destroy_capacity": 0.94},
-                        "med": {"accuracy": 0.87, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.77, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.69},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.74},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.79},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.74}
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.79}
                     },
                     "armor": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.39},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.44},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.49},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.44}
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.49}
                     }
                 }
             },
@@ -919,42 +1016,30 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.13},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.21},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.52},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.21}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.52}
                     },
                     "Bridge": {
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.21},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.31},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.27}
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.31}
                     },
                     "ship": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.21},
                         "med": {"accuracy": 0.5, "destroy_capacity": 0.25},
-                        "small": {"accuracy": 0.3, "destroy_capacity": 0.33},
-                        "mix": {"accuracy": 0.4, "destroy_capacity": 0.3}
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.33}
                     },
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.85},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.9}
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.95, "destroy_capacity": 0.94},
-                        "med": {"accuracy": 0.87, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.77, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 1}
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.69},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.74},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.79},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.74}
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.79}
                     },
                     "armor": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.39},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.44},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.49},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.44}
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.49}
                     }
                 }
             },
@@ -970,20 +1055,17 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.8},
                         "med": {"accuracy": 1, "destroy_capacity": 0.9},
-                        "small": {"accuracy": 0.95, "destroy_capacity": 1},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.85}
+                        "small": {"accuracy": 0.95, "destroy_capacity": 1}
                     },
                     "Bridge": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.7},
                         "med": {"accuracy": 1, "destroy_capacity": 0.8},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 0.9},
-                        "mix": {"accuracy": 0.95, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 0.9}
                     },
                     "ship": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.85},
                         "med": {"accuracy": 0.6, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.4, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.5, "destroy_capacity": 0.8}
+                        "small": {"accuracy": 0.4, "destroy_capacity": 1}
                     }
                 }
             },
@@ -999,20 +1081,17 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.4},
                         "med": {"accuracy": 1, "destroy_capacity": 0.45},
-                        "small": {"accuracy": 0.95, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.42}
+                        "small": {"accuracy": 0.95, "destroy_capacity": 0.5}
                     },
                     "Bridge": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.35},
                         "med": {"accuracy": 1, "destroy_capacity": 0.4},
-                        "small": {"accuracy": 0.9, "destroy_capacity": 0.45},
-                        "mix": {"accuracy": 0.95, "destroy_capacity": 0.4}
+                        "small": {"accuracy": 0.9, "destroy_capacity": 0.45}
                     },
                     "ship": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.42},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.5},
-                        "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.4}
+                        "small": {"accuracy": 0.5, "destroy_capacity": 0.5}
                     }
                 }
             },
@@ -1027,14 +1106,12 @@ AIR_WEAPONS = {
                 "efficiency": {
                     "Structure": {
                         "med": {"accuracy": 1, "destroy_capacity": 0.21},
-                        "small": {"accuracy": 0.95, "destroy_capacity": 0.25},
-                        "mix": {"accuracy": 1, "destroy_capacity": 0.21}
+                        "small": {"accuracy": 0.95, "destroy_capacity": 0.25}
                     },
                     "ship": {
                         "big": {"accuracy": 0.8, "destroy_capacity": 0.21},
                         "med": {"accuracy": 0.7, "destroy_capacity": 0.25},
-                        "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.2}
+                        "small": {"accuracy": 0.5, "destroy_capacity": 0.25}
                     }
                 }
             },        
@@ -1059,11 +1136,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.85,
-                        },
+                        }
                     },
                     "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1077,11 +1150,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.9,
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.8,
-                        },
+                        }
                     },
                     "ship": {  # mobile target
                         "big": {
@@ -1095,11 +1164,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.2,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.3,
-                            "destroy_capacity": 0.8,
-                        },
+                        }
                     },
                 },
             },
@@ -1124,11 +1189,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.85,
-                        },
+                        }
                     },
                     "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1142,11 +1203,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.9,
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.8,
-                        },
+                        }
                     },
                     "ship": {  # mobile target
                         "big": {
@@ -1160,11 +1217,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.2,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.3,
-                            "destroy_capacity": 0.8,
-                        },
+                        }
                     },
                 },
             },
@@ -1189,29 +1242,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 4,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1225,11 +1256,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                     "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                         "big": {
@@ -1243,11 +1270,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -1272,29 +1295,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 4.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 4,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3.2,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 4.5,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 6.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 5,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1308,11 +1309,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 6.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 5.5,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1326,11 +1323,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 2,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 1.5,
-                        },
+                        }
                     },
                 },
             },
@@ -1355,29 +1348,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 4.4,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3.7,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 5,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 5.5,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1391,11 +1362,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -1420,11 +1387,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 3,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1438,29 +1401,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 3,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 3,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1474,11 +1415,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -1503,11 +1440,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 3,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1521,29 +1454,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 3,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1557,11 +1468,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -1586,11 +1493,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 3,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1604,29 +1507,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 3,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 5,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 4,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1640,11 +1521,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -1658,10 +1535,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
                 "efficiency": {
                     "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.3,
-                        },
                     },
                     "ship": {  # mobile target
                         "big": {
@@ -1675,11 +1548,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.3,
                             "destroy_capacity": 0.25,
-                        },
-                        "mix": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.2,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -1693,11 +1562,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                         "big": {
@@ -1711,30 +1576,8 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.45,
-                        },
-                    },
-                    "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                        "big": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1,
-                        },
-                        "med": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1,
-                        },
-                    },
+                        }
+                    }
                 },
             },
             "SAMP-400LD": {  # SAMP-21 400 kg (Mk-83)
@@ -1758,11 +1601,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.42,
-                        },
+                        }
                     },
                     "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -1776,11 +1615,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.45,
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.4,
-                        },
+                        }
                     },
                     "ship": {  # mobile target
                         "big": {
@@ -1794,11 +1629,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.3,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4,
-                        },
+                        }
                     },
                     "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "med": {
@@ -1808,25 +1639,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.9,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.9,
-                            "destroy_capacity": 0.95,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "med": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.83,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "med": {
@@ -1836,11 +1649,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.75,
                             "destroy_capacity": 0.9,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.75,
-                        },
+                        }
                     },
                 },
             },
@@ -1861,11 +1670,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.52,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.21,
-                        },
+                        }
                     },
                     "ship": {  # mobile target
                         "big": {
@@ -1879,11 +1684,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.3,
                             "destroy_capacity": 0.25,
-                        },
-                        "mix": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.2,
-                        },
+                        }
                     },
                     "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "med": {
@@ -1893,25 +1694,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.8,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.7,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "med": {
-                            "accuracy": 0.9,
-                            "destroy_capacity": 0.9,
-                        },
-                        "small": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.9,
-                            "destroy_capacity": 0.85,
-                        },
+                        }
                     },
                     "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "med": {
@@ -1921,11 +1704,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.8,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.65,
-                        },
+                        }
                     },
                 },
             },
@@ -1955,11 +1734,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.12,
-                            },
-                            "mix": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.1,
-                            },
+                            }
                         },
                         "soft": {  # mobile target(artillery group)
                             "big": {
@@ -1973,11 +1748,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.5,
-                            },
+                            }
                         },
                         "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                             "big": {
@@ -1991,30 +1762,8 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.5,
-                            },
-                        },
-                        "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                            "big": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.3,
-                            },
-                            "med": {
-                                "accuracy": 0.6,
-                                "destroy_capacit": 0.5,
-                            },
-                            "small": {
-                                "accuracy": 0.5,
-                                "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.55,
-                            },
-                        },
+                            }
+                        }
                     },
                 },
                 "Hydra-70MK5": {  # Rockets 70 mm Mk-5 hard target
@@ -2041,11 +1790,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.6,
                                 "destroy_capacity": 0.15,
-                            },
-                            "mix": {
-                                "accuracy": 0.65,
-                                "destroy_capacity": 0.1,
-                            },
+                            }
                         },
                         "soft": {  # mobile target(artillery group)
                             "big": {
@@ -2059,11 +1804,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.5,
-                            },
+                            }
                         },
                         "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                             "big": {
@@ -2077,30 +1818,8 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.4,
-                            },
-                            "mix": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.35,
-                            },
-                        },
-                        "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                            "big": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.4,
-                            },
-                            "med": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.5,
-                            },
-                            "small": {
-                                "accuracy": 0.5,
-                                "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.55,
-                            },
-                        },
+                            }
+                        }
                     },
                 },
                 "Hydra-70MK1": {  # Rockets 70 mm Mk-1 soft target
@@ -2127,11 +1846,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.6,
                                 "destroy_capacity": 0.1,
-                            },
-                            "mix": {
-                                "accuracy": 0.65,
-                                "destroy_capacity": 0.1,
-                            },
+                            }
                         },
                         "soft": {  # mobile target(artillery group)
                             "big": {
@@ -2145,30 +1860,8 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.5,
-                            },
-                        },
-                        "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                            "big": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.1,
-                            },
-                            "med": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.3,
-                            },
-                            "small": {
-                                "accuracy": 0.5,
-                                "destroy_capacity": 0.4,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.35,
-                            },
-                        },
+                            }
+                        }
                     },
                 },
                 "SNEB-256": {  # Rockets 68 mm HE_DEFR
@@ -2185,11 +1878,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.6,
                                 "destroy_capacity": 0.15,
-                            },
-                            "mix": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.15,
-                            },
+                            }
                         },
                         "ship": {  # mobile target
                             "med": {
@@ -2199,11 +1888,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.6,
                                 "destroy_capacity": 0.2,
-                            },
-                            "mix": {
-                                "accuracy": 0.65,
-                                "destroy_capacity": 0.15,
-                            },
+                            }
                         },
                         "soft": {  # mobile target(artillery group)
                             "big": {
@@ -2217,11 +1902,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.5,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.55,
-                            },
+                            }
                         },
                         "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                             "big": {
@@ -2235,30 +1916,8 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.4,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.35,
-                            },
-                        },
-                        "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                            "big": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.4,
-                            },
-                            "med": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.5,
-                            },
-                            "small": {
-                                "accuracy": 0.5,
-                                "destroy_capacity": 0.6,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.55,
-                            },
-                        },
+                            }
+                        }
                     },
                 },
                 "SNEB-253": {  # Rockets ? mm HE , aka Matra f1
@@ -2275,21 +1934,13 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.7,
                                 "destroy_capacity": 0.07,
-                            },
-                            "mix": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.07,
-                            },
+                            }
                         },
                         "ship": {  # mobile target
                             "small": {
                                 "accuracy": 0.6,
                                 "destroy_capacity": 0.08,
-                            },
-                            "mix": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.07,
-                            },
+                            }
                         },
                         "soft": {  # mobile target(artillery group)
                             "big": {
@@ -2303,11 +1954,7 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.5,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.45,
-                            },
+                            }
                         },
                         "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                             "big": {
@@ -2321,30 +1968,8 @@ AIR_WEAPONS = {
                             "small": {
                                 "accuracy": 0.5,
                                 "destroy_capacity": 0.3,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.25,
-                            },
-                        },
-                        "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                            "big": {
-                                "accuracy": 0.7,
-                                "destroy_capacity": 0.3,
-                            },
-                            "med": {
-                                "accuracy": 0.6,
-                                "destroy_capacity": 0.4,
-                            },
-                            "small": {
-                                "accuracy": 0.5,
-                                "destroy_capacity": 0.5,
-                            },
-                            "mix": {
-                                "accuracy": 0.55,
-                                "destroy_capacity": 0.45,
-                            },
-                        },
+                            }
+                        }
                     },
                 },
         },
@@ -2354,6 +1979,8 @@ AIR_WEAPONS = {
 
             "R-13M": {
                 "type": "AAM",
+                "model": "R-13M",
+                "users": ["USSR", "Russia", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1974,
@@ -2364,11 +1991,14 @@ AIR_WEAPONS = {
                 "range": 15,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.7,  # mach
-                "manouvrability": 0.8
+                "manouvrability": 0.8,
+                "accuracy": 0.55
             },
             
             "R-13M1": {
                 "type": "AAM",
+                "model": "R-13M1",
+                "users": ["USSR", "Russia", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,  # 1976
@@ -2379,11 +2009,14 @@ AIR_WEAPONS = {
                 "range": 17,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.4,  # mach
-                "manouvrability": 0.8
+                "manouvrability": 0.8,
+                "accuracy": 0.58
             },
 
             "R-60": {
                 "type": "AAM",
+                "model": "R-60",
+                "users": ["USSR", "Russia", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India", "Libya", "Algeria"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1974,
@@ -2394,11 +2027,14 @@ AIR_WEAPONS = {
                 "range": 8,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.7,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.6
             },
 
             "R-60M": {
                 "type": "AAM",
+                "model": "R-60M",
+                "users": ["USSR", "Russia", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India", "Libya", "Algeria"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1974,  # 1982?
@@ -2409,11 +2045,14 @@ AIR_WEAPONS = {
                 "range": 8,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.7,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.65
             },
 
             "R-73": {
                 "type": "AAM",
+                "model": "R-73",
+                "users": ["USSR", "Russia", "India", "China", "Malaysia", "Algeria", "Syria", "Iran", "North Korea", "Vietnam", "Cuba"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1984,
@@ -2424,11 +2063,14 @@ AIR_WEAPONS = {
                 "range": 30,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.7,  # mach
-                "manouvrability": 0.85
+                "manouvrability": 0.85,
+                "accuracy": 0.85
             },
 
             "R-3S": {  # aka K-13A
                 "type": "AAM",
+                "model": "R-3S",
+                "users": ["USSR", "Russia", "China", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India", "Libya", "Algeria"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1960,
@@ -2439,11 +2081,14 @@ AIR_WEAPONS = {
                 "range": 8,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.85,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.45
             },
-        
+
             "R-3R": {
                 "type": "AAM",
+                "model": "R-3R",
+                "users": ["USSR", "Russia", "Poland", "East Germany", "Czechoslovakia", "Cuba", "North Korea", "Vietnam", "Syria", "Egypt", "Iraq", "India"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1966,
@@ -2455,11 +2100,14 @@ AIR_WEAPONS = {
                 "semiactive_range": 8,  # km
                 "max_height": 20,  # km
                 "max_speed": 2.85,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.5
             },
             
             "R-24R": {
                 "type": "AAM",
+                "model": "R-24R",
+                "users": ["USSR", "Russia", "India", "Syria", "Libya", "Iraq", "Algeria"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -2471,11 +2119,14 @@ AIR_WEAPONS = {
                 "semiactive_range": 50,  # km
                 "max_height": 25,  # km
                 "max_speed": 3.42,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.65
             },
             
             "R-24T": {
                 "type": "AAM",
+                "model": "R-24T",
+                "users": ["USSR", "Russia", "India", "Syria", "Libya", "Iraq", "Algeria"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1975,
@@ -2486,11 +2137,14 @@ AIR_WEAPONS = {
                 "range": 15,  # km
                 "max_height": 25,  # km
                 "max_speed": 3.42,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.6
             },
             
             "R-40R": {
                 "type": "AAM",
+                "model": "R-40R",
+                "users": ["USSR", "Russia", "Syria", "Libya", "Iraq", "Algeria", "North Korea"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1972,
@@ -2502,11 +2156,14 @@ AIR_WEAPONS = {
                 "semiactive_range": 50,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.6
             },
             
             "R-40T": {
                 "type": "AAM",
+                "model": "R-40T",
+                "users": ["USSR", "Russia", "Syria", "Libya", "Iraq", "Algeria", "North Korea"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1972,
@@ -2517,11 +2174,14 @@ AIR_WEAPONS = {
                 "range": 30,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.55
             },
             
             "R-27R": {
                 "type": "AAM",
+                "model": "R-27R",
+                "users": ["USSR", "Russia", "Ukraine", "India", "China", "Malaysia", "Algeria", "Syria", "Iran", "Vietnam"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1983,
@@ -2533,11 +2193,14 @@ AIR_WEAPONS = {
                 "semiactive_range": 50,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.7
             },
 
             "R-27T": {
                 "type": "AAM",
+                "model": "R-27T",
+                "users": ["USSR", "Russia", "Ukraine", "India", "China", "Malaysia", "Algeria", "Syria", "Iran", "Vietnam"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1984,
@@ -2548,11 +2211,14 @@ AIR_WEAPONS = {
                 "range": 40,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.65
             },
             
             "R-27ER": {
                 "type": "AAM",
+                "model": "R-27ER",
+                "users": ["USSR", "Russia", "Ukraine", "India", "China", "Malaysia", "Algeria", "Syria", "Iran", "Vietnam"],
                 "seeker": "radar",
                 "task": ["A2A"],
                 "start_service": 1983,
@@ -2564,11 +2230,14 @@ AIR_WEAPONS = {
                 "semiactive_range": 50,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.72
             },
             
             "R-27ET": {
                 "type": "AAM",
+                "model": "R-27ET",
+                "users": ["USSR", "Russia", "Ukraine", "India", "China", "Malaysia", "Algeria", "Syria", "Iran", "Vietnam"],
                 "seeker": "infrared",
                 "task": ["A2A"],
                 "start_service": 1984,
@@ -2579,12 +2248,15 @@ AIR_WEAPONS = {
                 "range": 130,  # km
                 "max_height": 25,  # km
                 "max_speed": 4.5,  # mach
-                "manouvrability": 0.7
+                "manouvrability": 0.7,
+                "accuracy": 0.68
             },
         },        
         'MISSILES_ASM':{
             "9M120-F": {
                 "type": "ASM",
+                "model": "9M120-F",
+                "users": ["Russia", "Belarus", "Kazakhstan", "Algeria"],
                 "task": ["Strike", "Anti-ship Strike"],
                 "start_service": 1980,
                 "end_service": None,
@@ -2594,10 +2266,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.5,
-                        },
                     },
                     "ship": {
                         "med": {
@@ -2607,11 +2275,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.15,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.1,
-                        },
+                        }
                     },
                     "soft": {
                         "big": {
@@ -2625,11 +2289,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.5,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -2643,34 +2303,14 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.3,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.25,
-                        },
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.4,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacit": 0.5,
-                        },
-                        "small": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.55,
-                        },
-                    },
+                        }
+                    }
                 },
             },
             "9M120": {
                 "type": "ASM",
+                "model": "9M120",
+                "users": ["Russia", "Belarus", "Kazakhstan", "Algeria", "Syria"],
                 "task": ["Strike", "Anti-ship Strike"],
                 "start_service": 1980,
                 "end_service": None,
@@ -2680,10 +2320,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.1,
-                        },
                     },
                     "ship": {
                         "med": {
@@ -2693,11 +2329,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.15,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.1,
-                        },
+                        }
                     },
                     "soft": {
                         "big": {
@@ -2711,11 +2343,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.5,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -2729,35 +2357,15 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.55,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.45,
-                        },
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.4,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacit": 0.5,
-                        },
-                        "small": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.55,
-                        },
-                    },
+                        }
+                    }
                 },
             },
 
             "9M114": {
                 "type": "ASM",
+                "model": "9M114",
+                "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
                 "task": ["Strike", "Anti-ship Strike"],
                 "start_service": 1975,
                 "end_service": None,
@@ -2767,10 +2375,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.1,
-                        },
                     },
                     "ship": {
                         "med": {
@@ -2780,11 +2384,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1,
-                        },
+                        }
                     },
                     "soft": {
                         "big": {
@@ -2798,11 +2398,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.5,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -2816,35 +2412,15 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35,
-                        },
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.4,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.5,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.6,
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.55,
-                        },
-                    },
+                        }
+                    }
                 },
             },
 
             "Hot-3": {
-                "type": "ASM",
+            "type": "ASM",
+            "model": "Hot-3",
+            "users": ["France", "Germany", "Egypt", "Iraq", "Saudi Arabia", "UAE", "Syria"],
                 "task": ["Strike", "Anti-ship Strike"],
                 "start_service": 1978,
                 "end_service": None,
@@ -2854,10 +2430,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.12,
-                        },
                     },
                     "ship": {
                         "med": {
@@ -2867,11 +2439,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.2,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.17,
-                        },
+                        }
                     },
                     "soft": {
                         "big": {
@@ -2885,11 +2453,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.9,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.7,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -2903,35 +2467,15 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.8,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.6,
-                        },
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.9,
-                            "destroy_capacity": 0.8,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacit": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.95,
-                        },
-                    },
+                        }
+                    }
                 },
             },
 
             "Mistral": {
             "type": "ASM",
+            "model": "Mistral",
+            "users": ["France", "Belgium", "Brazil", "Chile", "Cyprus", "Egypt", "Finland", "Indonesia", "South Korea", "Norway", "Singapore"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1985,
             "end_service": None,
@@ -2941,20 +2485,12 @@ AIR_WEAPONS = {
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
-                    "mix": {
-                        "accuracy": 0.85,
-                        "destroy_capacity": 0.3,
-                    },
                 },
                 "ship": {
                     "small": {
                         "accuracy": 0.8,
                         "destroy_capacity": 0.1,
-                    },
-                    "mix": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 0.17,
-                    },
+                    }
                 },
                 "soft": {
                     "big": {
@@ -2968,11 +2504,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.6,
                         "destroy_capacity": 0.4,
-                    },
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.35,
-                    },
+                    }
                 },
                 "armor": {
                     "big": {
@@ -2986,35 +2518,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.6,
                         "destroy_capacity": 0.4,
-                    },
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                },
-                "Parked Aircraft": {
-                    "big": {
-                        "accuracy": 0.9,
-                        "destroy_capacity": 0.4,
-                    },
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacit": 0.5,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.7,
-                    },
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.6,
-                    },
-                },
+                    }
+                }
             },
             },
                     
         "Kh-22N": {  # radar antiship
             "type": "ASM",
+            "model": "Kh-22N",
+            "users": ["USSR", "Russia", "Ukraine"],
             "task": ["Anti-ship Strike"],
             "start_service": 1967,
             "end_service": None,
@@ -3035,17 +2547,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.95,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
             },
         },
         
         "Kh-58": {  # antiradiation
             "type": "ASM",
+            "model": "Kh-58",
+            "users": ["USSR", "Russia", "India", "Syria", "Libya", "Iraq", "Algeria"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
@@ -3066,17 +2576,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.6,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
             },
         },
         
         "Kh-66": {  # radar
             "type": "ASM",
+            "model": "Kh-66",
+            "users": ["USSR", "Russia", "Syria", "Libya", "Iraq", "Egypt"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1967,
             "end_service": None,
@@ -3097,11 +2605,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.53,
-                    },
-                    "mix": {
-                        "accuracy": 0.96,
-                        "destroy_capacity": 0.24,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3111,11 +2615,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.33,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.28,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3129,11 +2629,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.8,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.85,
-                    },
+                    }
                 },
                 "soft": {  # mobile target(artillery group)
                     "big": {
@@ -3147,11 +2643,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.7,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
                 "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                     "big": {
@@ -3165,29 +2657,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.7,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
-                },
-                "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
-                    "med": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
-                    "small": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
                 "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3201,17 +2671,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.7,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.8,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
             },
         },
         
         "Kh-59": {  # TV guided, vers. M -> 1990
             "type": "ASM",
+            "model": "Kh-59",
+            "users": ["USSR", "Russia", "India", "China", "Algeria"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
@@ -3232,11 +2700,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.7,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.5,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3246,11 +2710,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.5,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3264,11 +2724,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.8,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3278,29 +2734,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 1,
-                    },
-                },
-                "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "big": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
-                    "med": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
-                    "small": {
-                        "accuracy": 0.9,
-                        "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.96,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
                 "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3314,11 +2748,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.75,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3332,17 +2762,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.8,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.75,
-                    },
+                    }
                 },
             },
         },
     
         "Kh-25ML": {  # laser guided
             "type": "ASM",
+            "model": "Kh-25ML",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "Vietnam"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1975,
             "end_service": None,
@@ -3363,11 +2791,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.53,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.24,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3377,11 +2801,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.33,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.28,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3395,11 +2815,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.35,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.3,
-                    },
+                    }
                 },
                 "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3409,29 +2825,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.95,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.9,
-                    },
-                },
-                "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "big": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.95,
-                    },
-                    "med": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
-                    "small": {
-                        "accuracy": 0.9,
-                        "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.96,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
                 "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3445,11 +2839,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.75,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3463,17 +2853,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.8,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.75,
-                    },
+                    }
                 },
             },
         },
 
         "Kh-25MR": {  # radar guided
             "type": "ASM",
+            "model": "Kh-25MR",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1975,
             "end_service": None,
@@ -3494,11 +2882,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.78,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.6,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3508,11 +2892,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.45,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.4,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3526,11 +2906,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 0.52,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.45,
-                    },
+                    }
                 },
                 "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3540,29 +2916,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 1,
-                    },
-                },
-                "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "big": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
-                    "med": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
-                    "small": {
-                        "accuracy": 0.9,
-                        "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.96,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
                 "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3576,11 +2930,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.98,
-                    },
+                    }
                 },
                 "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "big": {
@@ -3594,17 +2944,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.9,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.95,
-                        "destroy_capacity": 0.98,
-                    },
+                    }
                 },
             },
         },
 
         "Kh-25MPU": {  # antiradiation
             "type": "ASM",
+            "model": "Kh-25MPU",
+            "users": ["USSR", "Russia", "India", "Syria"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
@@ -3625,17 +2973,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.75,
                         "destroy_capacity": 0.8,
-                    },
-                    "mix": {
-                        "accuracy": 0.82,
-                        "destroy_capacity": 0.75,
-                    },
+                    }
                 },
             },
         },
 
         "Kh-25MP": {  # antiradiation
             "type": "ASM",
+            "model": "Kh-25MP",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya"],
             "task": ["SEAD"],
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
@@ -3656,17 +3002,15 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.6,
                         "destroy_capacity": 0.8,
-                    },
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.75,
-                    },
+                    }
                 },
             },
         },
 
         "Kh-29L": {  # laser guided
             "type": "ASM",
+            "model": "Kh-29L",
+            "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
@@ -3687,11 +3031,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.95,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3701,11 +3041,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.95,
                         "destroy_capacity": 0.95,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.85,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3715,17 +3051,15 @@ AIR_WEAPONS = {
                     "med": {
                         "accuracy": 1,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
             },
         },
 
         "Kh-29T": {  # TV guided
             "type": "ASM",
+            "model": "Kh-29T",
+            "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
             "task": ["Anti-ship Strike", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
@@ -3746,11 +3080,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.95,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.7,
-                    },
+                    }
                 },
                 "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                     "med": {
@@ -3760,11 +3090,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.95,
                         "destroy_capacity": 0.95,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 0.85,
-                    },
+                    }
                 },
                 "ship": {  # mobile target
                     "big": {
@@ -3774,11 +3100,7 @@ AIR_WEAPONS = {
                     "med": {
                         "accuracy": 1,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 1,
-                        "destroy_capacity": 1,
-                    },
+                    }
                 },
             },
         },
@@ -3806,10 +3128,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 1
                         }
                     },
                     "Bridge": {
@@ -3823,10 +3141,6 @@ AIR_WEAPONS = {
                         },
                         "small": {
                             "accuracy": 0.8,
-                            "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
                             "destroy_capacity": 1
                         }
                     }
@@ -3854,10 +3168,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.5
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.42
                         }
                     },
                     "Bridge": {
@@ -3872,10 +3182,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.45
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.4
                         }
                     },
                     "ship": {
@@ -3890,10 +3196,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.3,
                             "destroy_capacity": 0.5
-                        },
-                        "mix": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4
                         }
                     },
                     "soft": {
@@ -3907,10 +3209,6 @@ AIR_WEAPONS = {
                         },
                         "small": {
                             "accuracy": 0.65,
-                            "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
                             "destroy_capacity": 1
                         }
                     },
@@ -3926,24 +3224,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.95
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "med": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1
-                        },
-                        "small": {
-                            "accuracy": 0.83,
-                            "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1
                         }
                     },
                     "SAM": {
@@ -3958,10 +3238,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.98
                         }
                     }
                 }
@@ -3988,10 +3264,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.53
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 0.24
                         }
                     },
                     "Bridge": {
@@ -4002,10 +3274,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.8,
                             "destroy_capacity": 0.33
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 0.28
                         }
                     },
                     "ship": {
@@ -4020,10 +3288,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.3,
                             "destroy_capacity": 0.35
-                        },
-                        "mix": {
-                            "accuracy": 0.4,
-                            "destroy_capacity": 0.3
                         }
                     },
                     "soft": {
@@ -4034,28 +3298,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.95
-                        },
-                        "mix": {
-                            "accuracy": 0.74,
-                            "destroy_capacity": 0.9
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.95,
-                            "destroy_capacity": 0.95
-                        },
-                        "med": {
-                            "accuracy": 0.87,
-                            "destroy_capacity": 1
-                        },
-                        "small": {
-                            "accuracy": 0.77,
-                            "destroy_capacity": 1
-                        },
-                        "mix": {
-                            "accuracy": 0.85,
-                            "destroy_capacity": 1
                         }
                     },
                     "armor": {
@@ -4070,10 +3312,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 0.75
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.7
                         }
                     },
                     "SAM": {
@@ -4088,10 +3326,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.75,
                             "destroy_capacity": 0.8
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.75
                         }
                     }
                 }
@@ -4108,36 +3342,25 @@ AIR_WEAPONS = {
                 "efficiency": {
                     "Structure": {
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.1},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.20},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.13},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.20}
                     },
                     "ship": {
                         "med": {"accuracy": 0.5, "destroy_capacity": 0.1},
-                        "small": {"accuracy": 0.3, "destroy_capacity": 0.2},
-                        "mix": {"accuracy": 0.4, "destroy_capacity": 0.15},
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.2}
                     },
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.4},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 0.74, "destroy_capacity": 0.4},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.95, "destroy_capacity": 0.33},
-                        "med": {"accuracy": 0.87, "destroy_capacity": 0.4},
-                        "small": {"accuracy": 0.77, "destroy_capacity": 0.5},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.55},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.5}
                     },
                     "armor": {
                         "big": {"accuracy": 0.85, "destroy_capacity": 0.2},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.25},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.35},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.30},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.35}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.25},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.3},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.4},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.35},
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.4}
                     },
                 },
             },
@@ -4153,26 +3376,17 @@ AIR_WEAPONS = {
                 "efficiency": {
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.2},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.25},
-                        "mix": {"accuracy": 0.74, "destroy_capacity": 0.2},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.95, "destroy_capacity": 0.16},
-                        "med": {"accuracy": 0.87, "destroy_capacity": 0.2},
-                        "small": {"accuracy": 0.77, "destroy_capacity": 0.2},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.25},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.25}
                     },
                     "armor": {
                         "big": {"accuracy": 0.85, "destroy_capacity": 0.08},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.12},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.17},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.17}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.12},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.15},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.2},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.17},
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.2}
                     },
                 },
             },
@@ -4189,20 +3403,12 @@ AIR_WEAPONS = {
                     "SAM": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 2},
                         "med": {"accuracy": 0.7, "destroy_capacity": 3},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 4},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 3.5},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.75, "destroy_capacity": 3.2},
-                        "med": {"accuracy": 0.7, "destroy_capacity": 4.3},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 7},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 5.5},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 4}
                     },
                     "soft": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 3.2},
                         "med": {"accuracy": 0.7, "destroy_capacity": 4.3},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 7.5},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 6.3},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 7.5}
                     },
                 },
             },
@@ -4219,20 +3425,12 @@ AIR_WEAPONS = {
                     "SAM": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 3},
                         "med": {"accuracy": 0.7, "destroy_capacity": 4},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 5},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 4.5},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.75, "destroy_capacity": 4},
-                        "med": {"accuracy": 0.7, "destroy_capacity": 5},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 7.5},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 6},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 5}
                     },
                     "soft": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 4},
                         "med": {"accuracy": 0.7, "destroy_capacity": 6},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 8},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 7},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 8}
                     },
                 },
             },
@@ -4249,26 +3447,17 @@ AIR_WEAPONS = {
                     "SAM": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 3},
                         "med": {"accuracy": 0.7, "destroy_capacity": 4},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 5},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 4.5},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.75, "destroy_capacity": 4},
-                        "med": {"accuracy": 0.7, "destroy_capacity": 5},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 7.5},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 6},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 5}
                     },
                     "soft": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 4},
                         "med": {"accuracy": 0.7, "destroy_capacity": 6},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 8},
-                        "mix": {"accuracy": 0.67, "destroy_capacity": 7},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 8}
                     },
                     "armor": {
                         "big": {"accuracy": 0.75, "destroy_capacity": 3.2},
                         "med": {"accuracy": 0.8, "destroy_capacity": 4.3},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 6},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 5},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 6}
                     },
                 },
             },
@@ -4285,42 +3474,30 @@ AIR_WEAPONS = {
                     "Structure": {
                         "big": {"accuracy": 1, "destroy_capacity": 0.15},
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.22},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.53},
-                        "mix": {"accuracy": 0.8, "destroy_capacity": 0.24},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.53}
                     },
                     "Bridge": {
                         "med": {"accuracy": 0.9, "destroy_capacity": 0.22},
-                        "small": {"accuracy": 0.8, "destroy_capacity": 0.33},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 0.28},
+                        "small": {"accuracy": 0.8, "destroy_capacity": 0.33}
                     },
                     "ship": {
                         "big": {"accuracy": 0.7, "destroy_capacity": 0.22},
                         "med": {"accuracy": 0.5, "destroy_capacity": 0.27},
-                        "small": {"accuracy": 0.3, "destroy_capacity": 0.35},
-                        "mix": {"accuracy": 0.4, "destroy_capacity": 0.3},
+                        "small": {"accuracy": 0.3, "destroy_capacity": 0.35}
                     },
                     "soft": {
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.85},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95},
-                        "mix": {"accuracy": 0.74, "destroy_capacity": 0.9},
-                    },
-                    "Parked Aircraft": {
-                        "big": {"accuracy": 0.95, "destroy_capacity": 0.95},
-                        "med": {"accuracy": 0.87, "destroy_capacity": 1},
-                        "small": {"accuracy": 0.77, "destroy_capacity": 1},
-                        "mix": {"accuracy": 0.85, "destroy_capacity": 1},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.95}
                     },
                     "armor": {
                         "big": {"accuracy": 0.85, "destroy_capacity": 0.65},
                         "med": {"accuracy": 0.8, "destroy_capacity": 0.7},
-                        "small": {"accuracy": 0.7, "destroy_capacity": 0.75},
-                        "mix": {"accuracy": 0.7, "destroy_capacity": 0.7},
+                        "small": {"accuracy": 0.7, "destroy_capacity": 0.75}
                     },
                     "SAM": {
                         "big": {"accuracy": 0.9, "destroy_capacity": 0.7},
                         "med": {"accuracy": 0.85, "destroy_capacity": 0.75},
-                        "small": {"accuracy": 0.75, "destroy_capacity": 0.8},
-                        "mix": {"accuracy": 0.75, "destroy_capacity": 0.75},
+                        "small": {"accuracy": 0.75, "destroy_capacity": 0.8}
                     },
                 },
             },
@@ -4346,11 +3523,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.9,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.95,
-                            "destroy_capacity": 0.42,
-                        },
+                        }
                     },
                     "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4364,11 +3537,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.9,
                             "destroy_capacity": 0.45,
-                        },
-                        "mix": {
-                            "accuracy": 0.95,
-                            "destroy_capacity": 0.4,
-                        },
+                        }
                     },
                     "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4382,11 +3551,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4400,29 +3565,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.95,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.97,
-                            "destroy_capacity": 1,
-                        },
-                        "med": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.83,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4436,11 +3579,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.98,
-                        },
+                        }
                     },
                 },
             },
@@ -4466,11 +3605,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.9,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.95,
-                            "destroy_capacity": 0.42,
-                        },
+                        }
                     },
                     "Bridge": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4484,11 +3619,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.9,
                             "destroy_capacity": 0.45,
-                        },
-                        "mix": {
-                            "accuracy": 0.95,
-                            "destroy_capacity": 0.4,
-                        },
+                        }
                     },
                     "soft": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4502,11 +3633,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "armor": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4520,29 +3647,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.95,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.97,
-                            "destroy_capacity": 1,
-                        },
-                        "med": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.83,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.93,
-                            "destroy_capacity": 1,
-                        },
+                        }
                     },
                     "SAM": {  # fixed target (guided bombs and agm missile are more efficiency)
                         "big": {
@@ -4556,11 +3661,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 0.98,
-                        },
+                        }
                     },
                 },
             },
@@ -4586,29 +3687,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 3.5,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3.2,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 4.3,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 5.5,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -4622,11 +3701,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6.3,
-                        },
+                        }
                     },
                 },
             },
@@ -4652,29 +3727,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 3.5,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3.2,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 4.3,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 5.5,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -4688,11 +3741,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6.3,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -4706,11 +3755,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.7,
                             "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.8,
-                            "destroy_capacity": 6,
-                        },
+                        }
                     },
                 },
             },
@@ -4736,29 +3781,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 4,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 3.5,
-                        },
-                    },
-                    "Parked Aircraft": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "big": {
-                            "accuracy": 0.75,
-                            "destroy_capacity": 3.2,
-                        },
-                        "med": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 4.3,
-                        },
-                        "small": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 7,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 5.5,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -4772,11 +3795,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.65,
                             "destroy_capacity": 7.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.67,
-                            "destroy_capacity": 6.3,
-                        },
+                        }
                     },
                 },
             },
@@ -4796,11 +3815,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1,
-                        },
+                        }
                     },
                     "soft": {
                         "big": {
@@ -4814,11 +3829,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.4,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35,
-                        },
+                        }
                     },
                     "armor": {
                         "big": {
@@ -4832,30 +3843,8 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.2,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.15,
-                        },
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.2,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.3,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4,
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.35,
-                        },
-                    },
+                        }
+                    }
                 },
             },
         
@@ -4873,10 +3862,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1
                         }
                     },
                     "soft": {
@@ -4891,10 +3876,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35
                         }
                     },
                     "armor": {
@@ -4909,28 +3890,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.2
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.15
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.2
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.3
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.35
                         }
                     }
                 }
@@ -4947,10 +3906,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.15
-                        }
                     },
                     "ship": {
                         "med": {
@@ -4960,10 +3915,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1
                         }
                     },
                     "soft": {
@@ -4978,10 +3929,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.5
                         }
                     },
                     "armor": {
@@ -4996,28 +3943,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.4
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.5
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.55
                         }
                     }
                 }
@@ -5034,10 +3959,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.15
-                        }
                     },
                     "ship": {
                         "med": {
@@ -5047,10 +3968,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1
                         }
                     },
                     "soft": {
@@ -5065,10 +3982,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.5
                         }
                     },
                     "armor": {
@@ -5083,28 +3996,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.4
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.5
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.55
                         }
                     }
                 }
@@ -5121,10 +4012,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.08
-                        }
                     },
                     "ship": {
                         "med": {
@@ -5133,10 +4020,6 @@ AIR_WEAPONS = {
                         },
                         "small": {
                             "accuracy": 0.6,
-                            "destroy_capacity": 0.1
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
                             "destroy_capacity": 0.1
                         }
                     },
@@ -5152,28 +4035,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.5
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.1
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.3
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.35
                         }
                     }
                 }
@@ -5190,10 +4051,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,
                 "efficiency": {
                     "Structure": {
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.15
-                        }
                     },
                     "ship": {
                         "med": {
@@ -5203,10 +4060,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.15
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.1
                         }
                     },
                     "soft": {
@@ -5221,10 +4074,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.5
                         }
                     },
                     "armor": {
@@ -5239,28 +4088,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.4
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.35
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.4
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.5
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.6
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.55
                         }
                     }
                 }
@@ -5288,28 +4115,6 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.15
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.13
-                        }
-                    },
-                    "Parked Aircraft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.05
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 0.1
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.2
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 0.17
                         }
                     }
                 }
@@ -5326,10 +4131,6 @@ AIR_WEAPONS = {
                 "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
                 "efficiency": {
                     "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                        "mix": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.3,
-                        },
                     },
                     "ship": {  # mobile target
                         "med": {
@@ -5339,11 +4140,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.6,
                             "destroy_capacity": 0.5,
-                        },
-                        "mix": {
-                            "accuracy": 0.65,
-                            "destroy_capacity": 0.45,
-                        },
+                        }
                     },
                     "soft": {  # mobile target(artillery group)
                         "big": {
@@ -5357,11 +4154,7 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.9,
-                        },
+                        }
                     },
                     "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                         "big": {
@@ -5375,30 +4168,8 @@ AIR_WEAPONS = {
                         "small": {
                             "accuracy": 0.5,
                             "destroy_capacity": 0.8,
-                        },
-                        "mix": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.7,
-                        },
-                    },
-                    "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 1,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacit": 1,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 1,
-                        },
-                        "mix": {
-                            "accuracy": 0.55,
-                            "destroy_capacity": 1,
-                        },
-                    },
+                        }
+                    }
                 },
             },
 
@@ -5413,10 +4184,6 @@ AIR_WEAPONS = {
             "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "mix": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
                 },
                 "ship": {  # mobile target
                     "med": {
@@ -5426,11 +4193,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.6,
                         "destroy_capacity": 0.4,
-                    },
-                    "mix": {
-                        "accuracy": 0.65,
-                        "destroy_capacity": 0.4,
-                    },
+                    }
                 },
                 "soft": {  # mobile target(artillery group)
                     "big": {
@@ -5444,11 +4207,7 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.5,
                         "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.95,
-                    },
+                    }
                 },
                 "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
                     "big": {
@@ -5462,30 +4221,8 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.5,
                         "destroy_capacity": 0.4,
-                    },
-                    "mix": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.35,
-                    },
-                },
-                "Parked Aircraft": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.8,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacit": 1,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 1,
-                    },
-                    "mix": {
-                        "accuracy": 0.55,
-                        "destroy_capacity": 0.9,
-                    },
-                },
+                    }
+                }
             },
         },
         },        

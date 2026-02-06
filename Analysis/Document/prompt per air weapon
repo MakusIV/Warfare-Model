@@ -1,6 +1,40 @@
-Considera il modulo Aircraft_WIl compito è valutare ed implementare informazioni contenute nel dizionario weapon_db nel dizionario AIRCRAFT_WEAPON.
+-------------------------
+Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
 
-Nello specifico dovresti valutare e implementare le informazioni per i dizionari 'air_task', 'efficiency' e per il valore di 'perc_efficiency_variability'.
+Missili AAM
+Considera il dizionario MISSILES_AAM nel quale sono presenti i dizionari dei missili air to air, la chiave del dizionario definisce il modello specifico del missile. nello specifico, utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento AAM", dovresti verificare le informazioni già definite per ogni missile e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users' e 'accuracy'. Model coincide con la chiave del dizionario, users sono i principlai paesi utilizzatori dell'arma e accuracy rappresenta la capacità del missile di colpire il bersaglio previsto con precisione, con 1 che rappresenta un missile che colpisce sempre il bersaglio previsto. Nella valutazione di accuracy considera il livello tecnologico dei seguenti sistemi interni al missile: propulsivo, controllo, comunicazione e inseguimento.
+'air_task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate dall'omologo dizionario 
+presente in weapon_db.
+
+
+------------------------
+Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
+
+Missili ASM
+Considera il dizionario MISSILES_ASM nel quale sono presenti i dizionari dei missili air to surface nelle diverse specializzazioni anti-radar, anti-ship, ecc.. La chiave del dizionario definisce il modello specifico del missile. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento ASM", dovresti verificare le informazioni già specificate per ogni missile e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'accuracy' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
+Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+come detto 'accuracy' rappresenta la capacità del missile di colpire il bersaglio previsto con precisione, con 1 che rappresenta un missile che colpisce sempre il bersaglio previsto. Nella valutazione di 'accuracy' considera il livello tecnologico dei seguenti sistemi interni al missile: propulsivo, controllo, comunicazione e inseguimento.
+'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+
+
+
+
+QUESTO
+Nel dizionario 'MISSILES_ASM', aggiorna il dizionario 'efficiency' includendo i dizionari: 'Hard', 'Structure', 'Airbase', 'Port', 'Shipyard', 'Farp', 'Stronghold', 'ship'. Sostituisci la chiave 'SAM' con la chiave 'Air_Defense'
+
+
+POI QUESTO
+-----------------------
+Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
+
+Bombe
+Considera il dizionario BOMBS nel quale sono presenti i dizionari delle bombe nelle diverse specializzazioni anti-radar, anti-ship, ecc.. La chiave del dizionario definisce il modello specifico del missile. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento Bombs", dovresti verificare le informazioni già specificate per ogni bomba e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'accuracy' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
+Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+come detto 'accuracy' rappresenta la capacità della bomba di colpire il bersaglio previsto con precisione, con 1 che rappresenta che la bomba colpisce sempre il bersaglio previsto. Nella valutazione di 'accuracy' considera il livello tecnologico dei seguenti sistemi interni alla bomba: controllo, comunicazione e inseguimento.
+'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+
+Missili ASM
+le informazioni già definite per ogni missile e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario) e accuracy. Per la valutazione di accuracy considera il livello tecnologico dei seguenti sistemi interni al missile: propulsivo, controllo, comunicazione e inseguimento.
 
 'air_task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate dall'omologo dizionario 
 presente in weapon_db.
