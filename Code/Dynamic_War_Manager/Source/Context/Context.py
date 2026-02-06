@@ -597,6 +597,12 @@ TARGET_CLASSIFICATION = {
                         Parked_Asset_Type.Transport_Ship_Medium.value,
                         Parked_Asset_Type.Transport_Ship_Small.value,
                         SEA_MILITARY_CRAFT_ASSET.keys()                        
+                    ],
+    'SAM':          [   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
+                        Ground_Vehicle_Asset_Type.SAM_SMALL.value,
+                        Ground_Vehicle_Asset_Type.SAM_BIG.value,
+                        Ground_Vehicle_Asset_Type.AAA.value,
+                        Ground_Vehicle_Asset_Type.EWR.value
                     ]
 }
 
