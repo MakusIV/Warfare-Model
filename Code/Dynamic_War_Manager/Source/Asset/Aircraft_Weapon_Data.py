@@ -4595,688 +4595,1060 @@ AIR_WEAPONS = {
         },        
     },
     'ROCKETS': {   
-        "Zuni-Mk71": {  # Rockets 127 mm soft target
+        "Riferimento ROCKETS": {  # Rockets 127 mm soft target
             "type": "Rockets",
+            "model": "Riferimento ROCKETS",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1956,
             "end_service": None,
             "cost": 0.4,  # k$
+            "caliber": 127,  # mm
             "tnt": 6.8,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
-            "efficiency": {  # for single rocket
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15,
-                    },
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.64},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.12,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.12,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.55},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 0.7},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.4,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.5,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.45},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 0.1},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 1},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.32},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.45},
+                    "small": {"accuracy": 0.3, "destroy_capacity": 0.7},
+                }, 
             },
         },
-        "Hydra-70MK5": {  # Rockets 70 mm Mk-5 hard target
+        "Zuni-Mk71": {  # Rockets 127 mm HE
             "type": "Rockets",
+            "model": "Zuni-Mk71",
+            "users": ["USA"],
+            "task": ["Strike", "Anti-ship Strike"],
+            "start_service": 1956,
+            "end_service": None,
+            "cost": 0.4,  # k$
+            "caliber": 127,  # mm
+            "tnt": 6.8,  # kg
+            "range": 8,  # Km
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.4},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.5},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.003},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.4},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.5},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                },
+            },
+        },
+        "Hydra-70MK5": {  # Rockets 70 mm Mk-5 HEAT hard target
+            "type": "Rockets",
+            "model": "Hydra-70MK5",
+            "users": ["USA", "Israel", "Turkey", "South Korea"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1956,
             "end_service": None,
             "cost": 2.8,  # k$
-            "tnt": 6.2,  # kg ?? (not applicable?)
+            "caliber": 70,  # mm
+            "tnt": 6.2,  # kg
             "range": 8,  # Km
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "small": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.15,
-                    },
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.2},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.003},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                },
             },
         },
-        "Hydra-70MK1": {  # Rockets 70 mm Mk-1 soft target
+        "Hydra-70MK1": {  # Rockets 70 mm Mk-1 HE soft target
             "type": "Rockets",
+            "model": "Hydra-70MK1",
+            "users": ["USA", "Israel", "Turkey", "South Korea"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1956,
             "end_service": None,
             "cost": 2.8,  # k$
-            "tnt": 6.2,  # kg ?? (not applicable?)
+            "caliber": 70,  # mm
+            "tnt": 6.2,  # kg
             "range": 8,  # Km
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "small": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.08,
-                    },
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.08,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.1,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.2},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6,
-                    }
-                }
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.06},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.002},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                },
             },
         },
-        "SNEB-256": {  # Rockets 68 mm HE_DEFR
+        "SNEB-256": {  # Rockets 68 mm HE-FRAG
             "type": "Rockets",
+            "model": "SNEB-256",
+            "users": ["France"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1955,
             "end_service": None,
             "cost": 2.5,  # k$
-            "tnt": 6.8,  # kg ???
-            "range": 8,  # Km ??
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "caliber": 68,  # mm
+            "tnt": 6.8,  # kg
+            "range": 8,  # Km
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15,
-                    }
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.12,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.2,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.2},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.5,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.1},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.002},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.008},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                },
             },
         },
-        "SNEB-253": {  # Rockets ? mm HE , aka Matra f1
+        "SNEB-253": {  # Rockets 68 mm HE, aka Matra F1
             "type": "Rockets",
+            "model": "SNEB-253",
+            "users": ["France"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1955,
             "end_service": None,
             "cost": 1.7,  # k$
-            "tnt": 3,  # kg ???
-            "range": 8,  # Km ??
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "caliber": 68,  # mm
+            "tnt": 3,  # kg
+            "range": 8,  # Km
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
-                    "small": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.07,
-                    }
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
-                "ship": {  # mobile target
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.08,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.3},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.5,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.07},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.2,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.3,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.001},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.004},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.07},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.45},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.4, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.06},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                },
             },
         },
 
-        #red
-        "UPK-23": {
-                "type": "Rockets",
-                "task": ["Strike", "Anti-ship Strike"],
-                "start_service": 1972,
-                "end_service": None,
-                "cost": None,  # k$
-                "tnt": None,  # kg
-                "range": 2,  # Km
-                "perc_efficiency_variability": 0.1,
-                "efficiency": {
-                    "ship": {
-                        "small": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.15,
-                        }
-                    },
-                    "soft": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.1,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.2,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.4,
-                        }
-                    },
-                    "armor": {
-                        "big": {
-                            "accuracy": 0.7,
-                            "destroy_capacity": 0.05,
-                        },
-                        "med": {
-                            "accuracy": 0.6,
-                            "destroy_capacity": 0.1,
-                        },
-                        "small": {
-                            "accuracy": 0.5,
-                            "destroy_capacity": 0.2,
-                        }
-                    }
-                },
-        },    
-        "Gsh-23L": {
+        "UPK-23": {  # 23 mm gun pod
             "type": "Rockets",
+            "model": "UPK-23",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
+            "task": ["Strike", "Anti-ship Strike"],
+            "start_service": 1972,
+            "end_service": None,
+            "cost": None,  # k$
+            "caliber": 23,  # mm
+            "tnt": None,  # kg
+            "range": 2,  # Km
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.2},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.03},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                },
+            },
+        },    
+        "Gsh-23L": {  # 23 mm twin-barrel autocannon
+            "type": "Rockets",
+            "model": "Gsh-23L",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq"],
             "task": ["Strike"],
             "start_service": 1972,
             "end_service": None,
             "cost": None,
+            "caliber": 23,  # mm
             "tnt": None,
             "range": 2,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.2},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.03},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                },
                 "ship": {
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15
-                    }
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.2
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4
-                    }
-                },
-                "armor": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.05
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.1
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.2
-                    }
-                }
-            }
+            },
         },            
-        "S-5 M": {
+        "S-5 M": {  # Rockets 57 mm HE-FRAG
             "type": "Rockets",
+            "model": "S-5 M",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "Egypt"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1960,
             "end_service": None,
             "cost": 0.4,
+            "caliber": 57,  # mm
             "tnt": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.2},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.06},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
                 "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.001},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "ship": {
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15
-                    }
+                    "big": {"accuracy": 0.4, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6
-                    }
-                },
-                "armor": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4
-                    }
-                }
-            }
+            },
         },          
-        "S-5 KO": {
+        "S-5 KO": {  # Rockets 57 mm HEAT
             "type": "Rockets",
+            "model": "S-5 KO",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.8,
+            "caliber": 57,  # mm
             "tnt": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.1},
+                },
                 "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.001},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "ship": {
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15
-                    }
+                    "big": {"accuracy": 0.4, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6
-                    }
-                },
-                "armor": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4
-                    }
-                }
-            }
+            },
         },         
-        "S-8 OFP2": {
+        "S-8 OFP2": {  # Rockets 80 mm HE-FRAG
             "type": "Rockets",
+            "model": "S-8 OFP2",
+            "users": ["USSR", "Russia", "India", "Syria"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.6,
+            "caliber": 80,  # mm
             "tnt": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.25},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.07},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.09},
+                },
                 "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.002},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.006},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.06},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "ship": {
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.08
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.1
-                    }
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.1},
                 },
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6
-                    }
-                }
-            }
+            },
         },           
-        "S-8 KOM": {
+        "S-8 KOM": {  # Rockets 80 mm HEAT
             "type": "Rockets",
+            "model": "S-8 KOM",
+            "users": ["USSR", "Russia", "India", "Syria"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1973,
             "end_service": None,
             "cost": 1,
+            "caliber": 80,  # mm
             "tnt": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.07},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.09},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                },
                 "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.002},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.006},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.06},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "ship": {
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.15
-                    }
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.07},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.6
-                    }
-                },
-                "armor": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4
-                    }
-                }
-            }
+            },
         },           
-        "S-13": {
+        "S-13": {  # Rockets 122 mm
             "type": "Rockets",
+            "model": "S-13",
+            "users": ["USSR", "Russia", "India"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.8,
+            "caliber": 122,  # mm
             "tnt": 1.9,
             "range": 3,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "soft": {
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.1
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.13
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.15
-                    }
-                }
-            }
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.13},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.1},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.002},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.008},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.1},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.13},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.4, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.1},
+                },
+            },
         },
-        "S-25L": {  # Rockets 340 mm hard target (antitank), 250OFM, Launcher O-25 (qty: 1)
+        "S-25L": {  # Rockets 340 mm laser-guided, hard target (antitank), 250OFM, Launcher O-25 (qty: 1)
             "type": "Rockets",
+            "model": "S-25L",
+            "users": ["USSR", "Russia"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1975,
             "end_service": None,
             "cost": 2.8,  # k$
+            "caliber": 340,  # mm
             "tnt": 20,
             "range": 7,  # Km
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
+                "Soft": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.8},
+                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.4,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.5,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.4},
+                    "med": {"accuracy": 0.8, "destroy_capacity": 0.6},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 0.8},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.8,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.9,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 1,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.8, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 0.35},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.4,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.6,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.8,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.004},
+                    "med": {"accuracy": 0.8, "destroy_capacity": 0.015},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.8},
+                    "med": {"accuracy": 0.8, "destroy_capacity": 0.9},
+                    "small": {"accuracy": 0.7, "destroy_capacity": 1},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.4},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.5},
+                },
             },
         },
-        "S-24": {  # (Vers. A/B) Rockets 240 mm soft target, launcher: PU-12-40U (qty: 1), APU-7D, APU-68U
+        "S-24": {  # (Vers. A/B) Rockets 240 mm HE, launcher: PU-12-40U (qty: 1), APU-7D, APU-68U
             "type": "Rockets",
+            "model": "S-24",
+            "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya"],
             "task": ["Strike", "Anti-ship Strike"],
             "start_service": 1960,
             "end_service": None,
             "cost": 1.5,  # k$
-            "tnt": 25.5,  # kg ?? (not applicable?)
+            "caliber": 240,  # mm
+            "tnt": 25.5,  # kg
             "range": 3,  # Km
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
+            "perc_efficiency_variability": 0.1,
             "efficiency": {
-                "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.8},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.9},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1},
                 },
-                "ship": {  # mobile target
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.3,
-                    },
-                    "small": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.4,
-                    }
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.2},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.4},
                 },
-                "soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.8,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.9,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 1,
-                    }
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.2},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
                 },
-                "armor": {  # mobile target armor non è presente in targetlist, cmq valuta se inserirlo x distinguerlo da soft
-                    "big": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 0.2,
-                    },
-                    "med": {
-                        "accuracy": 0.6,
-                        "destroy_capacity": 0.3,
-                    },
-                    "small": {
-                        "accuracy": 0.5,
-                        "destroy_capacity": 0.4,
-                    }
-                }
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.003},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.012},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.07},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.7},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 1},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.2},
+                    "med": {"accuracy": 0.7, "destroy_capacity": 0.3},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.4},
+                },
             },
         },        
     },
 }
+
 
 
 
