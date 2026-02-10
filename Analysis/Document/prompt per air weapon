@@ -1,23 +1,48 @@
+DA FARE
+
+
+speed per ASM e. eventualmente, Rockets:
+Ricerva ed implementa la chiave 'speed' nel dizionario 'MISSILES_ASM' interno al dizionario 'AIR_WEAPONS' implementato nel modulo Aircraft_Data.py. 'speed' rappresenta la velocità massima che il missile può raggiungere
+
+
+
+GUNS 
+Considera il dizionario CANNONS nel quale sono presenti i dizionari in dotazione di un aeroplano. La chiave del dizionario definisce il modello specifico del cannone. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento CANNONS", dovresti verificare le informazioni già specificate per ogni cannone e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'caliber', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'caliber' il calibro del razzo, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
+Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio previsto con precisione, con 1 che rappresenta un razzo che colpisce sempre il bersaglio previsto.
+'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
+
+
+AAM e ROCKETS Controlla e verifica i pesi delle warhead eventualmente aggiornandoli - NOTA: il prompt ti elenca le modifiche da effettuare, modifica il file tu (risparmi calcolo)
+
+
+Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per ogni arma, le caratteristiche specificate nell'argomento.
+
+Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
+
+
+
+
+
+ESEGUITI
+
 -------------------------
 Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
 
-Missili AAM
+Missili AAM  - Fatto
 Considera il dizionario MISSILES_AAM nel quale sono presenti i dizionari dei missili air to air, la chiave del dizionario definisce il modello specifico del missile. nello specifico, utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento AAM", dovresti verificare le informazioni già definite per ogni missile e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users' e 'accuracy'. Model coincide con la chiave del dizionario, users sono i principlai paesi utilizzatori dell'arma e accuracy rappresenta la capacità del missile di colpire il bersaglio previsto con precisione, con 1 che rappresenta un missile che colpisce sempre il bersaglio previsto. Nella valutazione di accuracy considera il livello tecnologico dei seguenti sistemi interni al missile: propulsivo, controllo, comunicazione e inseguimento.
 'air_task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate dall'omologo dizionario 
 presente in weapon_db.
 
-
-------------------------
-Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
-
-Missili ASM
+Missili ASM  - Fatto
 Considera il dizionario MISSILES_ASM nel quale sono presenti i dizionari dei missili air to surface nelle diverse specializzazioni anti-radar, anti-ship, ecc.. La chiave del dizionario definisce il modello specifico del missile. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento ASM", dovresti verificare le informazioni già specificate per ogni missile e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
 Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
 come detto 'accuracy' rappresenta la capacità del missile di colpire il bersaglio previsto con precisione, con 1 che rappresenta un missile che colpisce sempre il bersaglio previsto. Nella valutazione di 'accuracy' considera il livello tecnologico dei seguenti sistemi interni al missile: propulsivo, controllo, comunicazione e inseguimento.
 'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
 'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
 
-ROCKETS
+ROCKETS - Fatto
 Considera il dizionario ROCKETS nel quale sono presenti i dizionari dei Razzi. La chiave del dizionario definisce il modello specifico del razzo. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento ROCKETS", dovresti verificare le informazioni già specificate per ogni razzo e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'caliber', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'caliber' il calibro del razzo, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
 Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
 Come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio previsto con precisione, con 1 che rappresenta un razzo che colpisce sempre il bersaglio previsto.
@@ -33,15 +58,3 @@ come detto 'accuracy' rappresenta la capacità dell'arma di colpire il bersaglio
 
 
 
-GUNS
-Considera il dizionario CANNONS nel quale sono presenti i dizionari in dotazione di un aeroplano. La chiave del dizionario definisce il modello specifico del cannone. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento CANNONS", dovresti verificare le informazioni già specificate per ogni cannone e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'caliber', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'caliber' il calibro del razzo, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
-Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
-come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio previsto con precisione, con 1 che rappresenta un razzo che colpisce sempre il bersaglio previsto.
-'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
-'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
-
-
-
-Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per ogni arma, le caratteristiche specificate nell'argomento.
-
-Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
