@@ -41,10 +41,11 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2, # coefficente utilizzato per valuatare il peso del munizionamento nel calcolo del punteggio dell'arma
                         },
 
-    'MISSILES':         {'caliber': 0.2/300, 
-                        'warhead': 0.4/250,
+    'MISSILES':         {'caliber': 0.1/300, 
+                        'warhead': 0.3/250,
                         'range': 0.2/4000,
                         'ammo_type': 0.2,
+                        'speed': 0.2/400, # max ~2000 m/s (missili ipersonici)
                         },
 
     'ROCKETS':         {'caliber': 0.2/240, 
@@ -1018,7 +1019,7 @@ def get_missiles_score(model: str) -> float:
 
         if param_name == 'range':
             weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
-        
+                        
         elif param_name == 'ammo_type':
             max = min(AMMO_PARAM.values())
 
@@ -1577,28 +1578,28 @@ GROUND_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {

@@ -30,8 +30,10 @@ VEHICLE_TASK = GROUND_ACTION
 MODES = ACTION_TASKS.keys()
 # AVAILABLE CATEGORIES : Tank, Armored, Motorized, Artillery_Fixed, Artillery_Semovent, SAM_Big, SAM_Medium, SAM_Small, EWR, AAA from Context BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"], BLOCK_ASSET_CATEGORY["Air_Defense_Asset"].
 # Sostituisce le due righe sottostanti con Ground_Vehicle_Asset_Type Enum
-CATEGORY = set(BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys())
-CATEGORY.update(BLOCK_ASSET_CATEGORY['Air_Defense_Asset'].keys())
+#CATEGORY = set(BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys())
+#CATEGORY.update(BLOCK_ASSET_CATEGORY['Air_Defense_Asset'].keys())
+
+CATEGORY = set( item.value for item in Ground_Vehicle_Asset_Type )
 
 @dataclass
 class Vehicle_Data:
@@ -3588,7 +3590,7 @@ K2K22_Tunguska_data = {
     'made': 'USSR',
     'start_service': 1982,
     'end_service': None,
-    'category': 'AAA',
+    'category': 'SAM_Small',
     'cost': 16.0,  # M$
     'range': 500,  # km
     'roles': ['AAA', 'SHORAD'],
@@ -4426,6 +4428,11 @@ if STAMPA:
         # Riordina le colonne secondo l'ordine originale dei modelli
         pivot_table = pivot_table[group_models]
 
+        # Rinomina le colonne per includere la categoria sotto al nome modello
+        pivot_table.columns = [
+            f"{m}\n({Vehicle_Data._registry[m].category})" for m in group_models
+        ]
+
         print(f"\n--- Vehicles {start+1}-{end} of {len(all_models)} ---")
         print(tabulate(pivot_table, headers="keys", tablefmt="grid"))
         print()
@@ -4491,11 +4498,11 @@ if STAMPA:
         elements.append(Spacer(1, 3*mm))
 
         # Costruisce la tabella per ReportLab
-        # Header: Name | Score Name | Model1 | Model2 | ...
+        # Header: Name | Score Name | Model1 (category) | Model2 (category) | ...
         header_row = [
             Paragraph("Name", header_style),
             Paragraph("Score Name", header_style)
-        ] + [Paragraph(m, header_style) for m in group_models]
+        ] + [Paragraph(f"{m}<br/>({Vehicle_Data._registry[m].category})", header_style) for m in group_models]
 
         pdf_table_data = [header_row]
         prev_name = None

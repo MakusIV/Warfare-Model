@@ -16,10 +16,137 @@ logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 AIRCRAFT_ROLE = Context.AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = Context.AIR_TASK
 
-#@dataclass
-#Class Weapon_Data:
+_INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
-AIR_WEAPONS = {}
+# Usato in get_<weapon_type>_score
+WEAPON_PARAM = {
+
+    'CANNONS':          {'caliber': 0.3/27, # coeff / max value (max ~30mm, BMP-3)
+                        'muzzle_speed': 0.15/800, # max ~800 m/s
+                        'fire_rate': 0.25/300, # max ~1000 rpm 
+                        'range': 0.1/3000, # max ~5000 (weighted direct+indirect)
+                        'ammo_type': 0.2,
+                        },
+
+    'MISSILES':         {'caliber': 0.2/300, 
+                        'warhead': 0.4/250,
+                        'range': 0.2/4000,
+                        'ammo_type': 0.2,
+                        },
+
+    'ROCKETS':         {'caliber': 0.2/240, 
+                        'warhead': 0.4/150,
+                        'range': 0.2/300,
+                        'ammo_type': 0.2,
+                        },
+    
+    'MACHINE_GUNS':     {'caliber': 0.4/9.14, # coeff / max value (caliber in mm 9.14-> 0.36 "  nato
+                        'fire_rate': 0.4/500,
+                        'range': 0.2/1000,
+                        },
+
+    'BOMBS':            {'tnt': 0.7/2000,
+                        'accuracy': 0.3/1,
+                        },
+
+}
+
+# HE: Esplosivo, HEAT: High Explosive Anti Tank (carica cava), 2HEAT: carica a cava doppia, AP: 'Armour Piercing', APFSDS = AP a energia cinetica 
+# Usato in get_cannon_score e get_missile_score
+AMMO_PARAM = {
+    'HE': 0.2,
+    'HEAT': 0.4,
+    'AP': 0.2,
+    '2HEAT': 0.9,
+    'APFSDS': 0.6,
+}
+
+# Efficacia di ogni tipo di munizione per tipo di bersaglio (scala 0..1).
+# Usato in calc_weapon_efficiency per calcolare l'ammo_factor.
+# Per ogni arma si seleziona la munizione migliore disponibile contro il target.
+AMMO_TARGET_EFFECTIVENESS = {
+    #                Soft  Armrd Hard  Struc AirDf Airbas Port  Shipy Farp  Strng ship
+    'HE':     {'Soft': 1.0,  'Armored': 0.15, 'Hard': 0.5,  'Structure': 0.8,
+               'Air_Defense': 0.5,  'Airbase': 0.6, 'Port': 0.6, 'Shipyard': 0.6,
+               'Farp': 0.6, 'Stronghold': 0.5, 'ship': 0.4},
+    'HEAT':   {'Soft': 0.6,  'Armored': 0.85, 'Hard': 0.6,  'Structure': 0.4,
+               'Air_Defense': 0.75, 'Airbase': 0.3, 'Port': 0.3, 'Shipyard': 0.3,
+               'Farp': 0.3, 'Stronghold': 0.35, 'ship': 0.65},
+    '2HEAT':  {'Soft': 0.6,  'Armored': 1.0,  'Hard': 0.7,  'Structure': 0.45,
+               'Air_Defense': 0.85, 'Airbase': 0.35, 'Port': 0.35, 'Shipyard': 0.35,
+               'Farp': 0.35, 'Stronghold': 0.4, 'ship': 0.75},
+    'AP':     {'Soft': 0.35, 'Armored': 0.7,  'Hard': 0.55, 'Structure': 0.3,
+               'Air_Defense': 0.6,  'Airbase': 0.2, 'Port': 0.2, 'Shipyard': 0.2,
+               'Farp': 0.2, 'Stronghold': 0.25, 'ship': 0.5},
+    'APFSDS': {'Soft': 0.4,  'Armored': 1.0,  'Hard': 0.65, 'Structure': 0.25,
+               'Air_Defense': 0.85, 'Airbase': 0.2, 'Port': 0.2, 'Shipyard': 0.2,
+               'Farp': 0.2, 'Stronghold': 0.25, 'ship': 0.6},
+    'FRAG':   {'Soft': 0.9,  'Armored': 0.05, 'Hard': 0.2,  'Structure': 0.5,
+               'Air_Defense': 0.3,  'Airbase': 0.4, 'Port': 0.4, 'Shipyard': 0.4,
+               'Farp': 0.4, 'Stronghold': 0.35, 'ship': 0.2},
+}
+
+GUIDE_PARAM = {
+
+}
+'''
+RELOAD_PARAM = {
+
+    'Automatic': 1,
+    'Semi_Automatic': 0.7,
+    'Manual': 0.4
+}
+'''
+
+
+def get_missiles_AAM_score(model: str) -> float:
+    
+    '''9K119M ': { # AT-11 Sniper
+            'model': '9K119M',
+            "start_service": 1974,
+            "end_service": int('inf'),
+            'guide': 'Laser', # Semi_Automatic, Manual
+            'caliber': 125, # mm
+            'warhead': 4.5, # kg
+            'speed': 1300, # m/s             
+            'range': 4500, # m
+            'ammo_type': ['2HEAT'],'''
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'MISSILES_AAM'
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+   
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+
+        if param_name == 'range':
+            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
+        
+        elif param_name == 'ammo_type':
+            max = min(AMMO_PARAM.values())
+
+            for ammo_type in weapon[param_name]:
+                found = AMMO_PARAM.get(ammo_type)
+
+                if found and max < found:
+                    max = found
+
+            weapon_power += max * coeff_value
+
+        else:
+            weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power 
+
+
 
 
 AIR_WEAPONS = {
@@ -724,28 +851,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -798,28 +925,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.6, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -971,28 +1098,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.6, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1078,28 +1205,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1166,28 +1293,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1235,28 +1362,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.85, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.85, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.85, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.85, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.85, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.85, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.85, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1304,28 +1431,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 0.8},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1373,28 +1500,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
             }
@@ -1434,28 +1561,28 @@ AIR_WEAPONS = {
                 "small": {"accuracy": 0.6, "destroy_capacity": 0.01},
             },
             "Airbase": {
-                "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                 "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
             },
             "Port": {
-                "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                 "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
             },
             "Shipyard": {
-                "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                 "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
             },
             "Farp": {
-                "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                 "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
             },
             "Stronghold": {
-                "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                 "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
             },
             "ship": {
@@ -1497,28 +1624,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.01},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1560,28 +1687,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.008},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1623,28 +1750,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.01},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1686,28 +1813,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -1809,28 +1936,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -1882,28 +2009,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 0.8},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -1955,28 +2082,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 0.8},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2028,28 +2155,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2157,28 +2284,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.95, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2229,28 +2356,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.95, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2303,28 +2430,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -2376,28 +2503,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2449,28 +2576,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2522,28 +2649,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.75, "destroy_capacity": 0.79},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2594,28 +2721,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.75, "destroy_capacity": 0.79},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2666,28 +2793,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2739,28 +2866,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.85, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2811,28 +2938,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.85, "destroy_capacity": 0.8},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2883,28 +3010,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -2956,28 +3083,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.9, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.95, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.95, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.95, "destroy_capacity": 1e-8},
                 },
                 "Bridge": {
@@ -3380,28 +3507,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.75, "destroy_capacity": 0.35},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
             },
@@ -3490,28 +3617,28 @@ AIR_WEAPONS = {
                     }
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
             },
@@ -3585,28 +3712,28 @@ AIR_WEAPONS = {
                     }
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
             },
@@ -3678,28 +3805,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.3, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
             }
@@ -3805,28 +3932,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.65, "destroy_capacity": 0.55},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
             }
@@ -3924,28 +4051,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 0.3},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
             }
@@ -3991,28 +4118,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 0.1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.75, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.75, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.75, "destroy_capacity": 1e-8},
                 },
             },
@@ -4049,28 +4176,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 0.08},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.7, "destroy_capacity": 1e-8},
                 },
             },
@@ -4194,28 +4321,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 0.65},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-8},
                 },
             },
@@ -4312,28 +4439,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.2, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
             },
@@ -4430,28 +4557,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.2, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
             },
@@ -4634,28 +4761,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.9, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.9, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.9, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -4704,28 +4831,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.6},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -4774,28 +4901,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -4844,28 +4971,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -4914,28 +5041,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -4984,28 +5111,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.45},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5045,7 +5172,7 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.03},
                 },
                 "Structure": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
                 },
@@ -5055,29 +5182,29 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "ship": {
                     "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
@@ -5115,7 +5242,7 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.03},
                 },
                 "Structure": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
                     "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
                 },
@@ -5125,29 +5252,29 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "small": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                 },
                 "ship": {
                     "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
@@ -5195,28 +5322,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5265,28 +5392,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.5, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.5, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5335,28 +5462,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5405,28 +5532,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.5},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.55, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.55, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.55, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5475,28 +5602,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.6, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.6, "destroy_capacity": 1e-8},
                 },
                 "ship": {
@@ -5545,28 +5672,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.7, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.8, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.8, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.8, "destroy_capacity": 1e-7},
                 },
                 "ship": {
@@ -5615,28 +5742,28 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.5, "destroy_capacity": 1},
                 },
                 "Airbase": {
-                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
                 },
                 "Port": {
-                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
                 },
                 "Shipyard": {
-                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
                 },
                 "Farp": {
-                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
                 },
                 "Stronghold": {
-                    "big": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
-                    "med": {"accuracy": 0.65, "destroy_capacity": sys.float_info.min},
+                    "big": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.65, "destroy_capacity": _INFRA_MIN},
                     "small": {"accuracy": 0.65, "destroy_capacity": 1e-7},
                 },
                 "ship": {
