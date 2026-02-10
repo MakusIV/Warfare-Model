@@ -28,11 +28,19 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2,
                         },
 
-    'MISSILES':         {'caliber': 0.2/300, 
-                        'warhead': 0.4/250,
-                        'range': 0.2/4000,
-                        'ammo_type': 0.2,
+    'MISSILES_AAM':     {'warhead': 0.25/250,
+                        'range': 0.1/4000,
+                        'semiactive_range': 0.1/4000,
+                        'active_range': 0.2/4000,                        
+                        'max_speed': 0.25/1000, # max ~2000 m/s (missili ipersonici)
+                        'max_height': 0.1/30, # max ~30 km
                         },
+
+    'MISSILES_ASM':     {'warhead': 0.3/250,
+                        'range': 0.35/4000,                                           
+                        'max_speed': 0.35/1000, # max ~2000 m/s (missili ipersonici)                    
+                        },
+
 
     'ROCKETS':         {'caliber': 0.2/240, 
                         'warhead': 0.4/150,
@@ -45,9 +53,7 @@ WEAPON_PARAM = {
                         'range': 0.2/1000,
                         },
 
-    'BOMBS':            {'tnt': 0.7/2000,
-                        'accuracy': 0.3/1,
-                        },
+    'BOMBS':            {'warhead': 1/500} # in kg, ref ~500 kg (GBU-43/B MOAB),
 
 }
 
@@ -99,52 +105,89 @@ RELOAD_PARAM = {
 '''
 
 
-def get_missiles_AAM_score(model: str) -> float:
+def get_missiles_score(model: str) -> float:
+    """
+    Returns an effectiveness score for a missile, based on its key parameters and the weights defined in WEAPON_PARAM.
+
+    Restituisce un punteggio di efficacia per un missile, basato sui suoi parametri chiave e sui pesi definiti in WEAPON_PARAM.
     
-    '''9K119M ': { # AT-11 Sniper
-            'model': '9K119M',
-            "start_service": 1974,
-            "end_service": int('inf'),
-            'guide': 'Laser', # Semi_Automatic, Manual
-            'caliber': 125, # mm
-            'warhead': 4.5, # kg
-            'speed': 1300, # m/s             
-            'range': 4500, # m
-            'ammo_type': ['2HEAT'],'''
+    :param model: model of missile / il modello del missile da valutare
+    :type model: str
+    :return: missile's score / punteggio di efficacia del missile, calcolato come somma pesata dei suoi parametri chiave
+    :rtype: float
+    """
     
     if not isinstance(model, str):
         raise TypeError(f"model is not str, got {type(model).__name__}")    
 
-    weapon_name = 'MISSILES_AAM'
+    weapon_name = 'MISSILES_AAM'    
     weapon = AIR_WEAPONS[weapon_name].get(model)#
-   
+    
+    if not weapon:
+        weapon_name = 'MISSILES_ASM'
+        weapon = AIR_WEAPONS[weapon_name].get(model)#
 
     if not weapon:
-        logger.warning(f"weapon {weapon_name} {model} unknow")
+        logger.warning(f"weapon {model} unknow")
         return 0.0
 
     weapon_power = 0.0
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
-
-        if param_name == 'range':
-            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
-        
-        elif param_name == 'ammo_type':
-            max = min(AMMO_PARAM.values())
-
-            for ammo_type in weapon[param_name]:
-                found = AMMO_PARAM.get(ammo_type)
-
-                if found and max < found:
-                    max = found
-
-            weapon_power += max * coeff_value
-
-        else:
-            weapon_power +=  weapon[param_name] * coeff_value
+        weapon_power +=  weapon[param_name] * coeff_value
 
     return weapon_power 
+
+def get_bombs_score(model: str) -> float:
+    """
+    Returns an effectiveness score for a bomb, based on its key parameters and the weights defined in WEAPON_PARAM.
+
+    Restituisce un punteggio di efficacia per una bomba, basato sui suoi parametri chiave e sui pesi definiti in WEAPON_PARAM.
+    
+    :param model: model of bomb / il modello della bomba da valutare
+    :type model: str
+    :return: bomb's score / punteggio di efficacia della bomba, calcolato come somma pesata dei suoi parametri chiave
+    :rtype: float
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'BOMBS'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+    
+    if not weapon:
+        logger.warning(f"weapon {model} unknow")
+        return 0.0
+
+    bomb_type = weapon.get('type', 'type_not_specified')
+
+    if bomb_type != 'type_not_specified':
+        logger.warning(f"weapon_type {model} - type_not_specified")
+        return 0.0
+    
+    small_structure_efficiency_param = weapon.get('efficiency').get('Structure').get('small')
+
+
+    weapon_power = 0.0
+
+    if bomb_type == 'Bombs':
+        precision_factor = 1.0
+        damage_factor = 1.0
+
+    elif bomb_type == 'Guided Bombs':
+        precision_factor = 1.2
+        damage_factor = 1.0
+
+    elif bomb_type == 'Cluster_bombs':
+        precision_factor = 0.8
+        damage_factor = 1.3
+
+    
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+        weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power * precision_factor * damage_factor
 
 
 
@@ -159,7 +202,7 @@ AIR_WEAPONS = {
             "start_service": 1974,
             "end_service": 2004,
             "cost": 400,
-            "tnt": 61,
+            "warhead": 61,
             "reliability": 0.8,
             "range": 160,
             "semiactive_range": 130,
@@ -177,7 +220,7 @@ AIR_WEAPONS = {
             "start_service": 1974,
             "end_service": 2004,
             "cost": 400,
-            "tnt": 61,
+            "warhead": 61,
             "reliability": 0.8,
             "range": 160,
             "semiactive_range": 130,
@@ -196,7 +239,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": 2004,
             "cost": 400,
-            "tnt": 61,
+            "warhead": 61,
             "reliability": 0.8,
             "range": 160,
             "semiactive_range": 130,
@@ -215,7 +258,7 @@ AIR_WEAPONS = {
             "start_service": 1982,
             "end_service": 2004,
             "cost": 477,
-            "tnt": 61,
+            "warhead": 61,
             "reliability": 0.8,
             "range": 160,
             "semiactive_range": 148,
@@ -234,7 +277,7 @@ AIR_WEAPONS = {
             "start_service": 1982,
             "end_service": 2004,
             "cost": 477,
-            "tnt": 61,
+            "warhead": 61,
             "reliability": 0.8,
             "range": 160,
             "semiactive_range": 148,
@@ -253,7 +296,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 125,
-            "tnt": 40,
+            "warhead": 40,
             "reliability": 0.8,
             "range": 45,
             "semiactive_range": 45,
@@ -272,7 +315,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 130,
-            "tnt": 40,
+            "warhead": 40,
             "reliability": 0.8,
             "range": 70,
             "semiactive_range": 70,
@@ -291,7 +334,7 @@ AIR_WEAPONS = {
             "start_service": 1982,
             "end_service": None,
             "cost": 150,
-            "tnt": 40,
+            "warhead": 40,
             "reliability": 0.8,
             "range": 70,
             "semiactive_range": 70,
@@ -310,7 +353,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 160,
-            "tnt": 40,
+            "warhead": 40,
             "reliability": 0.8,
             "range": 70,
             "semiactive_range": 70,
@@ -329,7 +372,7 @@ AIR_WEAPONS = {
             "start_service": 1987,
             "end_service": None,
             "cost": 170,
-            "tnt": 40,
+            "warhead": 40,
             "reliability": 0.8,
             "range": 70,
             "semiactive_range": 70,
@@ -348,7 +391,7 @@ AIR_WEAPONS = {
             "start_service": 1956,
             "end_service": None,
             "cost": 60,
-            "tnt": 4.5,
+            "warhead": 4.5,
             "reliability": 0.5,
             "range": 4.6,
             "max_height": 18,
@@ -365,7 +408,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 70,
-            "tnt": 4.5,
+            "warhead": 4.5,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -382,7 +425,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 73,
-            "tnt": 4.5,
+            "warhead": 4.5,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -399,7 +442,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 75,
-            "tnt": 9.4,
+            "warhead": 9.4,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -416,7 +459,7 @@ AIR_WEAPONS = {
             "start_service": 1982,
             "end_service": None,
             "cost": 80,
-            "tnt": 9.4,
+            "warhead": 9.4,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -433,7 +476,7 @@ AIR_WEAPONS = {
             "start_service": 2003,
             "end_service": None,
             "cost": 100,
-            "tnt": 9.4,
+            "warhead": 9.4,
             "reliability": 0.6,
             "range": 37,
             "max_height": 25,
@@ -450,7 +493,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 27.5,
-            "tnt": 12.5,
+            "warhead": 12.5,
             "reliability": 0.6,
             "range": 10,
             "max_height": 18,
@@ -467,7 +510,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 157,
-            "tnt": 27,
+            "warhead": 27,
             "reliability": 0.6,
             "range": 18,
             "max_height": 18,
@@ -484,7 +527,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 157,
-            "tnt": 30,
+            "warhead": 30,
             "reliability": 0.7,
             "range": 40,
             "semiactive_range": 40,
@@ -502,7 +545,7 @@ AIR_WEAPONS = {
             "start_service": 1956,
             "end_service": None,
             "cost": 60,
-            "tnt": 4.5,
+            "warhead": 4.5,
             "reliability": 0.5,
             "range": 4.6,
             "max_height": 18,
@@ -519,7 +562,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 75,
-            "tnt": 4.5,
+            "warhead": 4.5,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -536,7 +579,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 73,
-            "tnt": 9.4,
+            "warhead": 9.4,
             "reliability": 0.6,
             "range": 18.5,
             "max_height": 18,
@@ -554,7 +597,7 @@ AIR_WEAPONS = {
             "start_service": 1974,
             "end_service": None,
             "cost": 70,  # k$
-            "tnt": 5.5,  # kg
+            "warhead": 5.5,  # kg
             "reliability": 0.6,
             "range": 15,  # km
             "max_height": 20,  # km
@@ -571,7 +614,7 @@ AIR_WEAPONS = {
             "start_service": 1975,  # 1976
             "end_service": None,
             "cost": 77,  # k$
-            "tnt": 5.5,  # kg
+            "warhead": 5.5,  # kg
             "reliability": 0.6,
             "range": 17,  # km
             "max_height": 20,  # km
@@ -588,7 +631,7 @@ AIR_WEAPONS = {
             "start_service": 1974,
             "end_service": None,
             "cost": 50,  # k$
-            "tnt": 3,  # kg
+            "warhead": 3,  # kg
             "reliability": 0.6,
             "range": 8,  # km
             "max_height": 20,  # km
@@ -605,7 +648,7 @@ AIR_WEAPONS = {
             "start_service": 1974,  # 1982?
             "end_service": None,
             "cost": 60,  # k$
-            "tnt": 3,  # kg
+            "warhead": 3,  # kg
             "reliability": 0.6,
             "range": 8,  # km
             "max_height": 20,  # km
@@ -622,7 +665,7 @@ AIR_WEAPONS = {
             "start_service": 1984,
             "end_service": None,
             "cost": 90,  # k$
-            "tnt": 7,  # kg
+            "warhead": 7,  # kg
             "reliability": 0.8,
             "range": 30,  # km
             "max_height": 20,  # km
@@ -639,7 +682,7 @@ AIR_WEAPONS = {
             "start_service": 1960,
             "end_service": None,
             "cost": 30,  # k$
-            "tnt": 8.8,  # kg
+            "warhead": 8.8,  # kg
             "reliability": 0.6,
             "range": 8,  # km
             "max_height": 20,  # km
@@ -656,7 +699,7 @@ AIR_WEAPONS = {
             "start_service": 1966,
             "end_service": None,
             "cost": 30,  # k$
-            "tnt": 8.8,  # kg
+            "warhead": 8.8,  # kg
             "reliability": 0.6,
             "range": 8,  # km
             "semiactive_range": 8,  # km
@@ -674,7 +717,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": 1992,
             "cost": 125,  # k$
-            "tnt": 35,  # kg
+            "warhead": 35,  # kg
             "reliability": 0.6,
             "range": 50,  # km
             "semiactive_range": 50,  # km
@@ -692,7 +735,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": 1992,
             "cost": 125,  # k$
-            "tnt": 35,  # kg
+            "warhead": 35,  # kg
             "reliability": 0.6,
             "range": 15,  # km
             "max_height": 25,  # km
@@ -709,7 +752,7 @@ AIR_WEAPONS = {
             "start_service": 1972,
             "end_service": None,
             "cost": 200,  # k$
-            "tnt": 70,  # kg
+            "warhead": 70,  # kg
             "reliability": 0.6,
             "range": 50,  # km
             "semiactive_range": 50,  # km
@@ -727,7 +770,7 @@ AIR_WEAPONS = {
             "start_service": 1972,
             "end_service": None,
             "cost": 180,  # k$
-            "tnt": 70,  # kg
+            "warhead": 70,  # kg
             "reliability": 0.6,
             "range": 30,  # km
             "max_height": 25,  # km
@@ -744,7 +787,7 @@ AIR_WEAPONS = {
             "start_service": 1983,
             "end_service": None,
             "cost": 230,  # k$
-            "tnt": 39,  # kg
+            "warhead": 39,  # kg
             "reliability": 0.6,
             "range": 50,  # km
             "semiactive_range": 50,  # km
@@ -762,7 +805,7 @@ AIR_WEAPONS = {
             "start_service": 1984,
             "end_service": None,
             "cost": 230,  # k$
-            "tnt": 39,  # kg
+            "warhead": 39,  # kg
             "reliability": 0.6,
             "range": 40,  # km
             "max_height": 25,  # km
@@ -779,7 +822,7 @@ AIR_WEAPONS = {
             "start_service": 1983,
             "end_service": None,
             "cost": 230,  # k$
-            "tnt": 39,  # kg
+            "warhead": 39,  # kg
             "reliability": 0.6,
             "range": 120,  # km
             "semiactive_range": 50,  # km
@@ -797,7 +840,7 @@ AIR_WEAPONS = {
             "start_service": 1984,
             "end_service": None,
             "cost": 230,  # k$
-            "tnt": 39,  # kg
+            "warhead": 39,  # kg
             "reliability": 0.6,
             "range": 130,  # km
             "max_height": 25,  # km
@@ -816,14 +859,14 @@ AIR_WEAPONS = {
             "task": ["Anti-ship Strike", "Strike", "Pinpoint_Strike", "SEAD"],
             "start_service": 1972,
             "end_service": 2005,
-            "cost": 180,
-            "tnt": 160,
-            "reliability": 0.5,
-            "range": 9,
-            "max_height": 18,
-            "max_speed": 1,
-            "manouvrability": 0.4,
-            'perc_efficiency_variability': 0.1,
+            "cost": 180, # in k$
+            "warhead": 160, # in kg
+            "reliability": 0.5,# from 0 to 1
+            "range": 9, # in km
+            "max_height": 18, # in km
+            "max_speed": 1, # in mach
+            "manouvrability": 0.4, # from 0 to 1
+            'perc_efficiency_variability': 0.1, # percentage of variability in efficiency due to factors like weather, countermeasures, etc.
             "efficiency": {
                 "Soft": {
                 "big": {"accuracy": 0.95, "destroy_capacity": 0.64},
@@ -891,7 +934,7 @@ AIR_WEAPONS = {
             "start_service": 1972,
             "end_service": 2005,
             "cost": 180,
-            "tnt": 160,
+            "warhead": 160,
             "reliability": 0.5,
             "range": 9,
             "max_height": 18,
@@ -964,7 +1007,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 720,
-            "tnt": 220,
+            "warhead": 200,  # kg
             "range": 75,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -992,7 +1035,7 @@ AIR_WEAPONS = {
             "start_service": 1966,
             "end_service": 1992,
             "cost": 32,
-            "tnt": 66,
+            "warhead": 66,
             "range": 10,
             "perc_efficiency_variability": 0.2,
             "efficiency": {
@@ -1011,7 +1054,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 720,
-            "tnt": 221,
+            "warhead": 221,
             "range": 50,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1030,7 +1073,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 200,
-            "tnt": 88,
+            "warhead": 66,  # kg - WDU-21/B blast-fragmentation
             "range": 80,
             "perc_efficiency_variability": 0.2,
             "efficiency": {
@@ -1049,7 +1092,7 @@ AIR_WEAPONS = {
             "start_service": 1973,
             "end_service": None,
             "cost": 200,
-            "tnt": 165,
+            "warhead": 165,
             "range": 30,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1068,7 +1111,7 @@ AIR_WEAPONS = {
             "start_service": 1972,
             "end_service": 2005,
             "cost": 300,
-            "tnt": 160,
+            "warhead": 160,
             "range": 9,
             "perc_efficiency_variability": 0.2,
             "efficiency": {
@@ -1137,7 +1180,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": 2000,
             "cost": 700,
-            "tnt": 300,
+            "warhead": 300,
             "range": 32,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1156,7 +1199,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 700,
-            "tnt": 230,
+            "warhead": 230,
             "range": 100,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1175,7 +1218,7 @@ AIR_WEAPONS = {
             "start_service": 1972,
             "end_service": None,
             "cost": 160,
-            "tnt": 52,
+            "warhead": 57,  # kg - WDU-20/B shaped-charge
             "range": 15,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1244,7 +1287,7 @@ AIR_WEAPONS = {
             "start_service": 1989,
             "end_service": None,
             "cost": 350,
-            "tnt": 200,
+            "warhead": 200,
             "range": 70,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1263,7 +1306,7 @@ AIR_WEAPONS = {
             "start_service": 1986,
             "end_service": None,
             "cost": 160,
-            "tnt": 52,
+            "warhead": 57,  # kg - WDU-20/B shaped-charge
             "range": 15,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1332,7 +1375,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 160,
-            "tnt": 52,
+            "warhead": 136,  # kg - WDU-24/B penetrating blast-fragmentation
             "range": 15,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1401,7 +1444,7 @@ AIR_WEAPONS = {
             "start_service": 1984,
             "end_service": None,
             "cost": 80,
-            "tnt": 9,
+            "warhead": 9,
             "range": 8,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1470,7 +1513,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 12,
-            "tnt": 6.14,
+            "warhead": 6.14,
             "range": 3,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1536,7 +1579,7 @@ AIR_WEAPONS = {
         "start_service": 1980,
         "end_service": None,
         "cost": 50,  # k$
-        "tnt": 7.4,  # kg
+        "warhead": 7.4,  # kg
         "range": 6,  # Km
         "perc_efficiency_variability": 0.1,
         "efficiency": {
@@ -1599,7 +1642,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 50,  # k$
-            "tnt": 7.4,  # kg
+            "warhead": 7.4,  # kg
             "range": 6,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1662,7 +1705,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 35,  # k$
-            "tnt": 5,  # kg
+            "warhead": 5,  # kg
             "range": 7,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1725,7 +1768,7 @@ AIR_WEAPONS = {
             "start_service": 1978,
             "end_service": None,
             "cost": 35,  # k$
-            "tnt": 6,  # kg
+            "warhead": 6,  # kg
             "range": 4,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1788,7 +1831,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 40,  # k$
-            "tnt": 3,  # kg
+            "warhead": 3,  # kg
             "range": 6,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -1850,7 +1893,7 @@ AIR_WEAPONS = {
             "start_service": 1967,
             "end_service": None,
             "cost": 1000,  # k$
-            "tnt": 1000,  # kg
+            "warhead": 1000,  # kg
             "range": 330,
             "perc_efficiency_variability": 0.05,  # efficiecy variability 0-1 (100%)
             "efficiency": {
@@ -1878,7 +1921,7 @@ AIR_WEAPONS = {
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
             "cost": 700,  # k$
-            "tnt": 149,  # kg
+            "warhead": 149,  # kg
             "range": 250,
             "perc_efficiency_variability": 0.2,  # efficiecy variability(0-1): firepower_max = firepower_max * ( 1 + perc_efficiency_variability )
             "efficiency": {
@@ -1906,7 +1949,7 @@ AIR_WEAPONS = {
             "start_service": 1967,
             "end_service": None,
             "cost": 200,  # k$
-            "tnt": 111,  # kg
+            "warhead": 111,  # kg
             "range": 10,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -1979,7 +2022,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 600,  # k$
-            "tnt": 142,  # kg
+            "warhead": 148,  # kg
             "range": 90,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -2052,7 +2095,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 160,  # k$
-            "tnt": 90,  # kg
+            "warhead": 90,  # kg
             "range": 11,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -2125,7 +2168,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 160,  # k$
-            "tnt": 140,  # kg
+            "warhead": 140,  # kg
             "range": 11,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -2198,7 +2241,7 @@ AIR_WEAPONS = {
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
             "cost": 300,  # k$
-            "tnt": 90,  # kg
+            "warhead": 90,  # kg
             "range": 30,  # Km
             "perc_efficiency_variability": 0.1,  # efficiency variability(0-1): firepower_max = firepower_max * (1 + perc_efficiency_variability)
             "efficiency": {
@@ -2226,7 +2269,7 @@ AIR_WEAPONS = {
             "start_service": 1975,  # 1978 --1982 vers. U
             "end_service": None,
             "cost": 200,  # k$
-            "tnt": 90,  # kg
+            "warhead": 90,  # kg
             "range": 18,  # Km
             "perc_efficiency_variability": 0.2,  # efficiency variability(0-1): firepower_max = firepower_max * (1 + perc_efficiency_variability)
             "efficiency": {
@@ -2254,7 +2297,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 160,  # k$
-            "tnt": 320,  # kg
+            "warhead": 320,  # kg
             "range": 10,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -2326,7 +2369,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 160,  # k$
-            "tnt": 320,  # kg
+            "warhead": 320,  # kg
             "range": 12,  # Km
             "perc_efficiency_variability": 0.05,
             "efficiency": {
@@ -2401,7 +2444,7 @@ AIR_WEAPONS = {
             "start_service": 1950,
             "end_service": None,
             "cost": 4.4,
-            "tnt": 429,
+            "warhead": 429,
             "perc_efficiency_variability": 0.1,
             'efficiency': {
                 "Soft": {
@@ -2474,7 +2517,7 @@ AIR_WEAPONS = {
             "start_service": 1954,
             "end_service": None,
             "cost": 4.4,
-            "tnt": 429,
+            "warhead": 429,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2547,7 +2590,7 @@ AIR_WEAPONS = {
             "start_service": 1954,
             "end_service": None,
             "cost": 3.3,
-            "tnt": 202,
+            "warhead": 202,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2620,7 +2663,7 @@ AIR_WEAPONS = {
             "start_service": 1954,
             "end_service": None,
             "cost": 2.7,
-            "tnt": 92,
+            "warhead": 92,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2692,7 +2735,7 @@ AIR_WEAPONS = {
             "start_service": 1965,
             "end_service": None,
             "cost": 4,
-            "tnt": 92,
+            "warhead": 92,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2764,7 +2807,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 27,
-            "tnt": 428,
+            "warhead": 428,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2837,7 +2880,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 25,
-            "tnt": 202,
+            "warhead": 202,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2910,7 +2953,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 22,
-            "tnt": 90,
+            "warhead": 90,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2981,7 +3024,7 @@ AIR_WEAPONS = {
             "start_service": 1983,
             "end_service": None,
             "cost": 55,
-            "tnt": 429,
+            "warhead": 429,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -3054,7 +3097,7 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 55,
-            "tnt": 429,
+            "warhead": 429,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -3448,7 +3491,7 @@ AIR_WEAPONS = {
             "start_service": 1970,
             "end_service": None,
             "cost": 2,  # k$
-            "tnt": 40,  # kg
+            "warhead": 40,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -3541,7 +3584,7 @@ AIR_WEAPONS = {
             "start_service": 1950,
             "end_service": None,
             "cost": 3.3,  # k$
-            "tnt": 202,  # kg
+            "warhead": 202,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -3651,7 +3694,7 @@ AIR_WEAPONS = {
             "start_service": 1950,
             "end_service": None,
             "cost": 2.7,  # k$
-            "tnt": 92,  # kg
+            "warhead": 92,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -3748,7 +3791,7 @@ AIR_WEAPONS = {
             "start_service": 1962,
             "end_service": None,
             "cost": 6,  # k$
-            "tnt": 667,  # kg
+            "warhead": 667,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -3839,7 +3882,7 @@ AIR_WEAPONS = {
             "start_service": 1962,
             "end_service": None,
             "cost": 3.3,  # k$
-            "tnt": 201,  # kg
+            "warhead": 201,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -3966,7 +4009,7 @@ AIR_WEAPONS = {
             "start_service": 1962,
             "end_service": None,
             "cost": 2.7,  # k$
-            "tnt": 94,  # kg
+            "warhead": 94,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -4085,7 +4128,7 @@ AIR_WEAPONS = {
             "start_service": 1962,
             "end_service": None,
             "cost": 1.5,  # k$
-            "tnt": 39,  # kg
+            "warhead": 39,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -4152,7 +4195,7 @@ AIR_WEAPONS = {
             "start_service": 1950,
             "end_service": None,
             "cost": 1,  # k$
-            "tnt": 20,  # kg
+            "warhead": 20,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -4284,7 +4327,7 @@ AIR_WEAPONS = {
             "start_service": 1962,
             "end_service": None,
             "cost": 2.7,  # k$
-            "tnt": 92,  # kg
+            "warhead": 92,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -4355,7 +4398,7 @@ AIR_WEAPONS = {
             "start_service": 1975,
             "end_service": None,
             "cost": 25,  # k$
-            "tnt": 201,  # kg
+            "warhead": 201,  # kg
             "perc_efficiency_variability": 0.05,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4473,7 +4516,7 @@ AIR_WEAPONS = {
             "start_service": 1980,
             "end_service": None,
             "cost": 23,  # k$
-            "tnt": 201,  # kg
+            "warhead": 201,  # kg
             "perc_efficiency_variability": 0.05,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4731,7 +4774,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.4,  # k$
             "caliber": 127,  # mm
-            "tnt": 6.8,  # kg
+            "warhead": 6.8,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
@@ -4801,7 +4844,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.4,  # k$
             "caliber": 127,  # mm
-            "tnt": 6.8,  # kg
+            "warhead": 6.8,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -4871,7 +4914,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.8,  # k$
             "caliber": 70,  # mm
-            "tnt": 6.2,  # kg
+            "warhead": 6.2,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -4941,7 +4984,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.8,  # k$
             "caliber": 70,  # mm
-            "tnt": 6.2,  # kg
+            "warhead": 6.2,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5011,7 +5054,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.5,  # k$
             "caliber": 68,  # mm
-            "tnt": 6.8,  # kg
+            "warhead": 6.8,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5081,7 +5124,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 1.7,  # k$
             "caliber": 68,  # mm
-            "tnt": 3,  # kg
+            "warhead": 3,  # kg
             "range": 8,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5152,7 +5195,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": None,  # k$
             "caliber": 23,  # mm
-            "tnt": None,  # kg
+            "warhead": None,  # kg
             "range": 2,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5222,7 +5265,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": None,
             "caliber": 23,  # mm
-            "tnt": None,
+            "warhead": None,
             "range": 2,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5292,7 +5335,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.4,
             "caliber": 57,  # mm
-            "tnt": 6,
+            "warhead": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5362,7 +5405,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.8,
             "caliber": 57,  # mm
-            "tnt": 6,
+            "warhead": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5432,7 +5475,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.6,
             "caliber": 80,  # mm
-            "tnt": 6,
+            "warhead": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5502,7 +5545,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 1,
             "caliber": 80,  # mm
-            "tnt": 6,
+            "warhead": 6,
             "range": 4,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5572,7 +5615,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 0.8,
             "caliber": 122,  # mm
-            "tnt": 1.9,
+            "warhead": 1.9,
             "range": 3,
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5642,7 +5685,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.8,  # k$
             "caliber": 340,  # mm
-            "tnt": 20,
+            "warhead": 20,
             "range": 7,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5712,7 +5755,7 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 1.5,  # k$
             "caliber": 240,  # mm
-            "tnt": 25.5,  # kg
+            "warhead": 25.5,  # kg
             "range": 3,  # Km
             "perc_efficiency_variability": 0.1,
             "efficiency": {
@@ -5779,15 +5822,4 @@ AIR_WEAPONS = {
 
 
 
-#for side in weapon_db:
-#    for weapon_name, weapon_data in side:        
-#        AIR_WEAPONS[side][weapon_data['type']][weapon_name] = weapon_data
-
-                
-
-
-
-
-# Nota: Ho notato che in alcuni dizionari c'è "manouvrability" e in altri "manouvrability" (con una 'a' in più)
-# Sarebbe meglio uniformare l'ortografia per mantenere la coerenza nel codice
 

@@ -41,11 +41,11 @@ WEAPON_PARAM = {
                         'ammo_type': 0.2, # coefficente utilizzato per valuatare il peso del munizionamento nel calcolo del punteggio dell'arma
                         },
 
-    'MISSILES':         {'caliber': 0.1/300, 
-                        'warhead': 0.3/250,
+    'MISSILES':         {'caliber': 0.2/300, # caliber e warhead sono correlati, ma calibro è più facile da reperire, quindi lo uso come proxy per valutare la potenza dell'arma. caliber+warhead pesano complessivamento 0.4
+                        'warhead': 0.2/250,
                         'range': 0.2/4000,
-                        'ammo_type': 0.2,
-                        'speed': 0.2/400, # max ~2000 m/s (missili ipersonici)
+                        'ammo_type': 0.1,
+                        'speed': 0.3/400, # max ~2000 m/s (missili ipersonici)
                         },
 
     'ROCKETS':         {'caliber': 0.2/240, 
