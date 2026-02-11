@@ -1,8 +1,8 @@
 DA FARE
 
 
-speed per ASM e. eventualmente, Rockets:
-Ricerva ed implementa la chiave 'speed' nel dizionario 'MISSILES_ASM' interno al dizionario 'AIR_WEAPONS' implementato nel modulo Aircraft_Data.py. 'speed' rappresenta la velocità massima che il missile può raggiungere
+
+
 
 
 
@@ -14,10 +14,10 @@ come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio
 'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
 
 
-AAM e ROCKETS Controlla e verifica i pesi delle warhead eventualmente aggiornandoli - NOTA: il prompt ti elenca le modifiche da effettuare, modifica il file tu (risparmi calcolo)
 
 
-Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per ogni arma, le caratteristiche specificate nell'argomento.
+
+Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per tutte le armi appartenenti ad una determinata categoria specificata negli argomenti, le caratteristiche specificate nell'argomento. Negli argomenti includi la possibilità di scegliere la categoria dell'arma (MI
 
 Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
 
@@ -26,6 +26,15 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+Controlla e verifica i pesi delle warhead nei dizionari 'AAM' e 'ROCKETS' presenti nel dizionario 'AIR_WEAPONS'  implementato nel modulo Aircraft_Weapon_Data.py. aggiornandoli - NOTA: il prompt ti elenca le modifiche da effettuare, modifica il file tu (risparmi calcolo)
+
+Implementa la chiave 'warhead_type' nel dizionario 'ROCKETS' interno al dizionario 'AIR_WEAPONS' presente nel modulo Aircraft_Weapon_Data.py. 'warhead_type' rappresenta il tipo della testata del missile specificato nelle chiavi del dizionario 'WARHEAD_TYPE_PARAM'.
+
+Ricerca ed implementa la chiave 'speed' nel dizionario 'ROCKETS' interno al dizionario 'AIR_WEAPONS' implementato nel modulo Aircraft_Weapon_Data.py. 'speed' rappresenta la velocità massima che il missile può raggiungere.
+
+Ricerca ed implementa la chiave 'speed' nel dizionario 'MISSILES_ASM' interno al dizionario 'AIR_WEAPONS' implementato nel modulo Aircraft_Weapon_Data.py. 'speed' rappresenta la velocità massima che il missile può raggiungere.
+
 
 -------------------------
 Nel modulo Aircraft_Weapon_Data.py è implementato il dizionario AIR_WEAPONS Il compito è analizzare e implementare informazioni dei seguenti armamenti:
