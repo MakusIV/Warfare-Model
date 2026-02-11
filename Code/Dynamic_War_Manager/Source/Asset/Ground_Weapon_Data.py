@@ -1088,6 +1088,8 @@ def get_rockets_score(model: str) -> float:
     Returns:
         float: rocket score
     """
+
+    # da rivedere prendendo spunto da quanto realizzato in Aircraft_Weapon_Data.py
     if not isinstance(model, str):
         raise TypeError(f"model is not str, got {type(model).__name__}")
 
@@ -1102,10 +1104,7 @@ def get_rockets_score(model: str) -> float:
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
 
-        if param_name == 'range':
-            weapon_power += ( weapon[param_name]['direct'] * 0.7 + weapon[param_name]['indirect'] * 0.3 ) * coeff_value
-
-        elif param_name == 'ammo_type':
+        if param_name == 'ammo_type':
             max = min(AMMO_PARAM.values())
 
             for ammo_type in weapon[param_name]:
