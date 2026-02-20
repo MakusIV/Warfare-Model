@@ -1,17 +1,9 @@
 DA FARE
 
+Considera la lista di aerei presente nel file DCS-airplane_overview.csv e inseriscili come dizionari nel modulo Aircraft_Data.py seguendo l'esempio del dizionario f16_data_example. Compila tutte le chiavi ed i relativi valori presenti nel dizionario, considerando che le seguenti chiavi rappresentano: "Manouvrability": la capacità dell'aereo di manovrare, "resilience": la capacità dell'aereo di resistere al fuoco nemico, "roles": i ruoli in cui l'aereo è impiegabile selezionati nel dizionario AIR_TASK presente nel modulo Context.py, "category": le categorie di apparteneza dell'aereo selezionate in base alla classe Air_Asset_Type(Enum) presente nel modulo Context.py.
 
 
 
-
-
-
-GUNS 
-Considera il dizionario CANNONS nel quale sono presenti i dizionari in dotazione di un aeroplano. La chiave del dizionario definisce il modello specifico del cannone. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento CANNONS", dovresti verificare le informazioni già specificate per ogni cannone e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'caliber', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'caliber' il calibro del razzo, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
-Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
-come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio previsto con precisione, con 1 che rappresenta un razzo che colpisce sempre il bersaglio previsto.
-'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
-'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
 
 
 
@@ -26,6 +18,19 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+Considera la lista di aerei presente nel file DCS-airplane_overview.csv, cerca quali cannoni/mitragliatrici possono montare e inseriscili nel dizionario CANNONS presente nel dizionario AIR_WEAPONS implementato nel file Aircraft_Weapon_Data.py
+
+GUNS 
+Considera il dizionario CANNONS nel quale sono presenti i dizionari in dotazione di un aeroplano. La chiave del dizionario definisce il modello specifico del cannone. Utilizzando come struttura dati di riferimento quella definita nel dizionario "Riferimento CANNONS", dovresti verificare le informazioni già specificate per ogni cannone e implementare le informazioni per le proprietà aggiuntive: 'model' (= chiave del dizionario), 'users', 'caliber', 'accuracy', 'perc_efficiency_variability' ed 'efficiency'. 'model' coincide con la chiave del dizionario, 'users' sono i principali paesi utilizzatori dell'arma, 'caliber' il calibro del razzo, 'task' rappresenta i task in cui l'arma può essere utilizzata le cui informazioni possono essere ricavate nel dizionario AIR_TASK. 
+Per quanto riguarda il dizionario efficiency, per ogni tipologia di obiettivo ('Soft', 'Armored', 'Hard', ....) e in relazione alle dimensioni degli item da cui è composto il bersaglio ('big', 'med', ...), sono sono specificati: il livello di precisione nel colpire quel tipo di bersaglio (accuracy) e la capacità distruttiva (destroy_capacity) che rappresenta indicativamente la quantità di bersagli che l'arma distrugge al singolo utilizzo o ad ogni colpo. 
+come detto 'accuracy' rappresenta la capacità del razzo di colpire il bersaglio previsto con precisione, con 1 che rappresenta un razzo che colpisce sempre il bersaglio previsto.
+'destroy_capacity' varia da sys.float_info.min fino al numero di item del bersaglio che un singolo colpo o la singola arma è in grado di distruggere.
+'perc_efficiency_variability' varia da 0 a 1 e rappresenta la percentuale di variabilità da applicare successivamente al valore di 'efficiency'-
+
+
+
+
 
 Controlla e verifica i pesi delle warhead nei dizionari 'AAM' e 'ROCKETS' presenti nel dizionario 'AIR_WEAPONS'  implementato nel modulo Aircraft_Weapon_Data.py. aggiornandoli - NOTA: il prompt ti elenca le modifiche da effettuare, modifica il file tu (risparmi calcolo)
 
