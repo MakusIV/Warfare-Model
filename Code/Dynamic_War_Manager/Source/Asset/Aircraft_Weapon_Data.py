@@ -5689,7 +5689,1087 @@ AIR_WEAPONS = {
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
             },
-        },        
+        },
+        "GAU-8/A": {  # 30mm 7-barrel rotary cannon - A-10A, A-10C, A-10C II
+            "type": "Cannon",
+            "model": "GAU-8/A",
+            "users": ["USA"],
+            "task": ["Strike", "CAS"],
+            "start_service": 1977,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm
+            "warhead": None,  # kg
+            "warhead_type": "APFSDS",  # PGU-14/B API with Depleted Uranium core
+            "range": 1.2,  # km (effective strafing range ~1219 m)
+            "speed": 1013,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.30},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.55},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.20},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.40},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.70},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.002},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.20},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.38},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.60},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.25},
+                },
+            },
+        },
+        "M61A1": {  # 20mm 6-barrel rotary Vulcan - F/A-18A/C, F-14A/B, F-15C/E, F-16A/C variants, F-4E
+            "type": "Cannon",
+            "model": "M61A1",
+            "users": ["USA", "Israel", "Netherlands", "Belgium", "Denmark", "Norway", "Greece", "Turkey", "Japan", "South Korea", "Taiwan", "Saudi Arabia", "Egypt"],
+            "task": ["Strike"],
+            "start_service": 1959,
+            "end_service": None,
+            "cost": None,
+            "caliber": 20,  # mm (20x102mm)
+            "warhead": None,
+            "warhead_type": "HE",  # M56A3 HEI primary round; SAPHEI (PGU-28/B) also available
+            "range": 1.5,  # km
+            "speed": 1030,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.42},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.38},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.12},
+                },
+            },
+        },
+        "M39A3": {  # 20mm 5-chamber revolver cannon - F-5E(3), 2 guns
+            "type": "Cannon",
+            "model": "M39A3",
+            "users": ["USA", "Iran", "Switzerland", "Norway", "Brazil", "Chile", "South Korea", "Taiwan", "Saudi Arabia", "Morocco", "Ethiopia", "Kenya", "Thailand"],
+            "task": ["Strike"],
+            "start_service": 1955,
+            "end_service": None,
+            "cost": None,
+            "caliber": 20,  # mm (20x102mm)
+            "warhead": None,
+            "warhead_type": "HE",
+            "range": 1.2,  # km
+            "speed": 1030,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.10},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.18},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.36},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.10},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.18},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.32},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.04},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.10},
+                },
+            },
+        },
+        "Mk-12": {  # 20mm semi-automatic cannon - A-4E Skyhawk (A4E-C), 2 guns
+            "type": "Cannon",
+            "model": "Mk-12",
+            "users": ["USA"],
+            "task": ["Strike"],
+            "start_service": 1955,
+            "end_service": None,
+            "cost": None,
+            "caliber": 20,  # mm (20x110mm USN)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, SAPHEI rounds
+            "range": 1.2,  # km
+            "speed": 1020,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.16},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.32},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.015},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.28},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.03},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                },
+            },
+        },
+        "AN-M2": {  # 12.7mm (.50 cal) aircraft machine gun - A-20G (6 nose guns)
+            "type": "Cannon",
+            "model": "AN-M2",
+            "users": ["USA"],
+            "task": ["Strike"],
+            "start_service": 1939,
+            "end_service": None,
+            "cost": None,
+            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm)
+            "warhead": None,
+            "warhead_type": "AP",  # API, AP, HEI rounds
+            "range": 0.8,  # km effective strafing range
+            "speed": 866,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.20},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+            },
+        },
+        "M3-Browning": {  # 12.7mm (.50 cal) high-rate aircraft MG - F-86E Sabre (6 guns)
+            "type": "Cannon",
+            "model": "M3-Browning",
+            "users": ["USA", "UK", "Canada", "Australia", "Japan", "West Germany", "Spain", "Pakistan", "South Korea", "Taiwan"],
+            "task": ["Strike"],
+            "start_service": 1945,
+            "end_service": None,
+            "cost": None,
+            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm); ~1200-1250 rpm vs 800 rpm of AN/M2
+            "warhead": None,
+            "warhead_type": "AP",  # API, AP, HEI rounds
+            "range": 0.8,  # km effective strafing range
+            "speed": 875,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.07},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+            },
+        },
+        "DEFA-554": {  # 30mm revolver cannon - M-2000C Mirage 2000C (2 guns, 125 rds/gun)
+            "type": "Cannon",
+            "model": "DEFA-554",
+            "users": ["France", "India", "UAE", "Taiwan", "Greece", "Egypt", "Peru", "Qatar"],
+            "task": ["Strike"],
+            "start_service": 1984,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x113mm B)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, APHEI-SD rounds
+            "range": 1.5,  # km
+            "speed": 815,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.13},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.24},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.45},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.28},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.04},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.13},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.24},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.40},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
+                },
+            },
+        },
+        "N-37": {  # 37mm autocannon - MiG-15bis (1 gun, 40 rounds)
+            "type": "Cannon",
+            "model": "N-37",
+            "users": ["USSR"],
+            "task": ["Strike"],
+            "start_service": 1946,
+            "end_service": None,
+            "cost": None,
+            "caliber": 37,  # mm (37x155mm OZ)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI-T, AP-T rounds; ~400 rpm, low fire rate
+            "range": 1.0,  # km
+            "speed": 690,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.10},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.20},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.40},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.04},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
+                },
+            },
+        },
+        "NR-23": {  # 23mm autocannon - MiG-15bis (2 guns, 80 rds/gun)
+            "type": "Cannon",
+            "model": "NR-23",
+            "users": ["USSR", "China", "North Korea", "Egypt", "Syria", "Cuba", "Poland", "Czechoslovakia", "East Germany", "Romania", "Bulgaria", "Hungary"],
+            "task": ["Strike"],
+            "start_service": 1949,
+            "end_service": None,
+            "cost": None,
+            "caliber": 23,  # mm (23x115mm)
+            "warhead": None,
+            "warhead_type": "AP",  # HEI, API, AP-T rounds; lower muzzle vel. than GSh-23L
+            "range": 1.2,  # km
+            "speed": 690,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.09},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.18},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.36},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.09},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.18},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.03},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.09},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.18},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.32},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.07},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.14},
+                },
+            },
+        },
+        "NR-30": {  # 30mm autocannon - MiG-19P (3 guns), Su-17 M4 (2 guns)
+            "type": "Cannon",
+            "model": "NR-30",
+            "users": ["USSR", "China", "Egypt", "Syria", "Iraq", "Cuba", "Afghanistan", "India"],
+            "task": ["Strike"],
+            "start_service": 1954,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x155mm Soviet)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, AP rounds
+            "range": 2.0,  # km
+            "speed": 780,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.42},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.28},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.04},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.38},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
+                },
+            },
+        },
+        "GSh-30-1": {  # 30mm single-barrel cannon - MiG-29A, MiG-29S, Su-27, Su-30, Su-33, Su-34
+            "type": "Cannon",
+            "model": "GSh-30-1",
+            "users": ["USSR", "Russia", "Algeria", "India", "Indonesia", "Malaysia", "Serbia", "Syria", "Cuba", "Belarus", "Ukraine", "Kazakhstan"],
+            "task": ["Strike"],
+            "start_service": 1983,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x165mm)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, API rounds; ~1500-1800 rpm
+            "range": 1.8,  # km
+            "speed": 860,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.24},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.45},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.04},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.24},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.42},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
+                },
+            },
+        },
+        "GSh-30-2": {  # 30mm twin-barrel (Gast) cannon - Su-25, Su-25T, Su-25TM (VPU-17A mount, 250 rds)
+            "type": "Cannon",
+            "model": "GSh-30-2",
+            "users": ["USSR", "Russia", "Bulgaria", "Czech Republic", "North Korea", "Peru", "Ethiopia", "Belarus", "Ukraine"],
+            "task": ["Strike", "CAS"],
+            "start_service": 1981,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x165mm)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, API rounds; ~3000 rpm via Gast principle
+            "range": 1.8,  # km
+            "speed": 900,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.28},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.50},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.42},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.06},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.28},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.46},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                },
+            },
+        },
+        "GSh-6-23M": {  # 23mm 6-barrel rotary cannon - MiG-31 (260 rds), Su-24M/Su-24MR (500 rds)
+            "type": "Cannon",
+            "model": "GSh-6-23M",
+            "users": ["USSR", "Russia"],
+            "task": ["Strike"],
+            "start_service": 1974,
+            "end_service": None,
+            "cost": None,
+            "caliber": 23,  # mm (23x115mm)
+            "warhead": None,
+            "warhead_type": "AP",  # HEI, API rounds; ~8000-10000 rpm fire rate
+            "range": 2.0,  # km
+            "speed": 715,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.28},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.52},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.22},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.03},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.06},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.28},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.50},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.16},
+                },
+            },
+        },
+        "GSh-6-30": {  # 30mm 6-barrel rotary cannon - MiG-27K (260 rds in ventral gondola)
+            "type": "Cannon",
+            "model": "GSh-6-30",
+            "users": ["USSR", "Russia", "India"],
+            "task": ["Strike", "CAS"],
+            "start_service": 1975,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x165mm)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, API, HE-T rounds; ~4000-6000 rpm fire rate
+            "range": 2.0,  # km
+            "speed": 850,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.30},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.55},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.40},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.03},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.07},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.14},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.002},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.30},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.50},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                },
+            },
+        },
+        "Oerlikon-KCA": {  # 30mm cannon in AKAN m/75 gun pod - AJS 37 Viggen (ASJ37, 150 rounds)
+            "type": "Cannon",
+            "model": "Oerlikon-KCA",
+            "users": ["Sweden"],
+            "task": ["Strike"],
+            "start_service": 1979,
+            "end_service": None,
+            "cost": None,
+            "caliber": 30,  # mm (30x173mm - same cartridge as GAU-8/A)
+            "warhead": None,
+            "warhead_type": "HE",  # HEI, SAPHE rounds; exceptionally high muzzle velocity for 30mm
+            "range": 2.5,  # km (effective range ~2500 m)
+            "speed": 1030,  # m/s muzzle velocity
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.42},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.10},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.18},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.35},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.02},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.05},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.001},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.12},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.38},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.3, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
+                },
+            },
+        },
     }
 }
 
