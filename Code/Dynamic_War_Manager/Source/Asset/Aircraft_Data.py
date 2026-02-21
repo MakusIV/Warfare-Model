@@ -1616,6 +1616,227 @@ mq9_data = {
     },
 }
 
+# ==================== US TRANSPORT & TANKERS ====================
+
+c130_data = {
+    "constructor": "Lockheed", "made": "USA", "model": "C-130 Hercules",
+    "users": ["USA", "UK", "many"], "start_service": 1956, "end_service": None,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "roles": [],
+    "manouvrability": 0.35, "resilience": 0.55,
+    "engine": {"model": "Allison T56-A-15", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
+    "radar": {
+        "model": "none",
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 0, "mttr": 0}, "type": "none",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "countermeasures": 0.40, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 540, "altitude": 6700, "consume": 3000},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 643, "altitude": 6700, "consume": 4500, "time": 480},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 643, "altitude": 6700, "consume": 5500, "time": 60},
+    },
+}
+
+c17a_data = {
+    "constructor": "Boeing", "made": "USA", "model": "C-17A Globemaster III",
+    "users": ["USA", "UK", "Canada", "Australia"], "start_service": 1995, "end_service": None,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "roles": [],
+    "manouvrability": 0.30, "resilience": 0.50,
+    "engine": {"model": "Pratt & Whitney F117-PW-100", "capabilities": {"thrust": 185000, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "radar": {
+        "model": "none",
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 0, "mttr": 0}, "type": "none",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 400, "accuracy": 0.88}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "Advanced Transport Avionics", "capabilities": {"flight_control": 0.88, "countermeasures": 0.50, "self_defense": 0.35}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 100}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 750, "altitude": 10000, "consume": 8000},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 833, "altitude": 10000, "consume": 11000, "time": 480},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 833, "altitude": 10000, "consume": 14000, "time": 60},
+    },
+}
+
+kc130_data = {
+    "constructor": "Lockheed Martin", "made": "USA", "model": "KC-130",
+    "users": ["USA", "many"], "start_service": 1962, "end_service": None,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "roles": [],
+    "manouvrability": 0.32, "resilience": 0.55,
+    "engine": {"model": "Allison T56-A-16", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
+    "radar": {
+        "model": "none",
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 0, "mttr": 0}, "type": "none",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "countermeasures": 0.40, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 540, "altitude": 6700, "consume": 3200},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 643, "altitude": 6700, "consume": 4700, "time": 360},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 643, "altitude": 6700, "consume": 5700, "time": 60},
+    },
+}
+
+kc135_data = {
+    "constructor": "Boeing", "made": "USA", "model": "KC-135 Stratotanker",
+    "users": ["USA", "France", "Turkey", "Singapore"], "start_service": 1957, "end_service": None,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "roles": [],
+    "manouvrability": 0.28, "resilience": 0.50,
+    "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
+    "radar": {
+        "model": "none",
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 0, "mttr": 0}, "type": "none",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.78, "countermeasures": 0.45, "self_defense": 0.30}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 10700, "consume": 5500},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 933, "altitude": 10700, "consume": 8000, "time": 480},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 933, "altitude": 10700, "consume": 10000, "time": 60},
+    },
+}
+
+kc135_mprs_data = {
+    "constructor": "Boeing", "made": "USA", "model": "KC-135 MPRS",
+    "users": ["USA"], "start_service": 1985, "end_service": None,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "roles": [],
+    "manouvrability": 0.28, "resilience": 0.50,
+    "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
+    "radar": {
+        "model": "none",
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 0, "mttr": 0}, "type": "none",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "MPRS Avionics", "capabilities": {"flight_control": 0.80, "countermeasures": 0.45, "self_defense": 0.30}, "reliability": {"mtbf": 72, "mttr": 2}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 10700, "consume": 5500},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 933, "altitude": 10700, "consume": 8000, "time": 480},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 933, "altitude": 10700, "consume": 10000, "time": 60},
+    },
+}
+
+# ==================== NATO/ALLIED AIRCRAFT ====================
+
+asj37_data = {
+    "constructor": "Saab", "made": "Sweden", "model": "AJ/ASJ 37 Viggen",
+    "users": ["Sweden"], "start_service": 1971, "end_service": 2005,
+    "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 0,
+    "roles": ["Strike", "CAS", "Fighter_Sweep", "CAP"],
+    "manouvrability": 0.78, "resilience": 0.68,
+    "engine": {"model": "Volvo Flygmotor RM8B", "capabilities": {"thrust": 125000, "fuel_efficiency": 0.40, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
+    "radar": {
+        "model": "Ericsson PS-46/A",
+        "capabilities": {
+            "air": (True, {"tracking_range": 60, "acquisition_range": 45, "engagement_range": 30, "multi_target_capacity": 1}),
+            "ground": (True, {"tracking_range": 80, "acquisition_range": 60, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 35, "mttr": 4}, "type": "pulse-doppler",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "Swedish TILS", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 55, "mttr": 3}},
+    "avionics": {"model": "Swedish ECM suite", "capabilities": {"flight_control": 0.78, "countermeasures": 0.70, "self_defense": 0.65}, "reliability": {"mtbf": 40, "mttr": 3}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1100, "altitude": 11000, "consume": 3000},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2231, "altitude": 11000, "consume": 8000, "time": 60},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2231, "altitude": 11000, "consume": 12000, "time": 30},
+    },
+}
+
+m2000c_data = {
+    "constructor": "Dassault", "made": "France", "model": "Mirage 2000C",
+    "users": ["France", "India", "Egypt", "UAE", "Greece", "Qatar", "Taiwan", "Peru"], "start_service": 1984, "end_service": None,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 0,
+    "roles": ["CAP", "Intercept", "Fighter_Sweep"],
+    "manouvrability": 0.85, "resilience": 0.65,
+    "engine": {"model": "SNECMA M53-P2", "capabilities": {"thrust": 95100, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
+    "radar": {
+        "model": "Thomson-CSF RDI",
+        "capabilities": {
+            "air": (True, {"tracking_range": 100, "acquisition_range": 80, "engagement_range": 60, "multi_target_capacity": 1}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 40, "mttr": 3}, "type": "pulse-doppler",
+    },
+    "TVD": {
+        "model": "none",
+        "capabilities": {"type": "none", "resolution": 0, "range": 0},
+        "reliability": {"mtbf": 0, "mttr": 0},
+    },
+    "radio_nav": {"model": "TACAN", "capabilities": {"range": 400, "accuracy": 0.85}, "reliability": {"mtbf": 60, "mttr": 2.5}},
+    "avionics": {"model": "SERVAL ECM", "capabilities": {"flight_control": 0.85, "countermeasures": 0.72, "self_defense": 0.68}, "reliability": {"mtbf": 45, "mttr": 2.5}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 85, "mttr": 1.5}},
+    "speed_data": {
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1100, "altitude": 11000, "consume": 2000},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2338, "altitude": 11000, "consume": 7000, "time": 60},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2338, "altitude": 11000, "consume": 10000, "time": 30},
+    },
+}
+
 # ==================== SOVIET/RUSSIAN FIGHTERS ====================
 
 mig15_data = {

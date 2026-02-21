@@ -1,8 +1,5 @@
 DA FARE
 
-Considera la lista di aerei presente nel file DCS-airplane_overview.csv e inseriscili come dizionari nel modulo Aircraft_Data.py seguendo l'esempio del dizionario f16_data_example. Compila tutte le chiavi ed i relativi valori presenti nel dizionario, considerando che le seguenti chiavi rappresentano: "Manouvrability": la capacità dell'aereo di manovrare, "resilience": la capacità dell'aereo di resistere al fuoco nemico, "roles": i ruoli in cui l'aereo è impiegabile selezionati nel dizionario AIR_TASK presente nel modulo Context.py, "category": le categorie di apparteneza dell'aereo selezionate in base alla classe Air_Asset_Type(Enum) presente nel modulo Context.py.
-
-
 
 
 
@@ -18,6 +15,12 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+
+Considera la lista di aerei presente nel file DCS-airplane_overview.csv e inseriscili come dizionari nel modulo Aircraft_Data.py seguendo l'esempio del dizionario f16_data_example. Compila tutte le chiavi ed i relativi valori presenti nel dizionario, considerando che le seguenti chiavi rappresentano: "Manouvrability": la capacità dell'aereo di manovrare, "resilience": la capacità dell'aereo di resistere al fuoco nemico, "roles": i ruoli in cui l'aereo è impiegabile selezionati nel dizionario AIR_TASK presente nel modulo Context.py, "category": le categorie di apparteneza dell'aereo selezionate in base alla classe Air_Asset_Type(Enum) presente nel modulo Context.py.
+
+
+
 
 Considera la lista di aerei presente nel file DCS-airplane_overview.csv, cerca quali cannoni/mitragliatrici possono montare e inseriscili nel dizionario CANNONS presente nel dizionario AIR_WEAPONS implementato nel file Aircraft_Weapon_Data.py
 
