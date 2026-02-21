@@ -30,12 +30,35 @@ logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
 AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
 
+SYSTEM_WEIGHTS = {
+
+    "radar_weights": {
+            'tracking_range': 0.2 / 400, # weights / reference distance (km)
+            'acquisition_range': 0.1 / 200,
+            'engagement_range': 0.3 / 100,
+            'multi_target': 0.4 / 5 # weights / reference multi targets
+    },
+
+    "tvd_weights": {
+            'tracking_range': 0.2 / 130, # weights / reference distance (km)
+            'acquisition_range': 0.1 / 130,
+            'engagement_range': 0.3 / 100,
+            'multi_target': 0.4 / 1, # weights / reference multi targets
+    },
+    "speed_weights": {
+        'sustained': 0.2,
+        'combat': 0.4,
+        'emergency': 0.3
+    }
+}
+
 @dataclass
 class Aircraft_Data:
     _registry = {}
         
-    def __init__(self, constructor: str, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, manouvrability: float, resilience: float, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
         self.constructor = constructor
+        self.users = users
         self.made = made
         self.model = model
         self.start_service = start_service
@@ -43,6 +66,8 @@ class Aircraft_Data:
         self.category = category
         self.cost = cost
         self.roles = roles
+        self.manouvrability = manouvrability
+        self.resilience = resilience
         self.engine = engine
         self.radar = radar
         self.TVD = TVD
@@ -105,21 +130,15 @@ class Aircraft_Data:
         elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
             raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
         
-        weights = {
-            'tracking_range': 0.2 / 400, # weights / reference distance (km)
-            'acquisition_range': 0.1 / 200,
-            'engagement_range': 0.3 / 100,
-            'multi_target': 0.4 / 5 # weights / reference multi targets
-        }
         score = 0.0
         
         for m in modes:
             cap = self.radar['capabilities'][m]
             if cap[0]: 
-                score += cap[1].get('tracking_range', 0) * weights['tracking_range']
-                score += cap[1].get('acquisition_range', 0) * weights['acquisition_range']
-                score += cap[1].get('engagement_range', 0) * weights['engagement_range']
-                score += cap[1].get('multi_target_capacity', 0) * weights['multi_target']
+                score += cap[1].get('tracking_range', 0) * SYSTEM_WEIGHTS["radar_weights"].get('tracking_range', 0)
+                score += cap[1].get('acquisition_range', 0) * SYSTEM_WEIGHTS["radar_weights"].get('acquisition_range', 0)
+                score += cap[1].get('engagement_range', 0) * SYSTEM_WEIGHTS["radar_weights"].get('engagement_range', 0)
+                score += cap[1].get('multi_target_capacity', 0) * SYSTEM_WEIGHTS["radar_weights"].get('multi_target', 0)
         
         return score
     
@@ -138,21 +157,15 @@ class Aircraft_Data:
         elif not isinstance(modes, List) or not all ( m in ['air', 'ground', 'sea'] for m in modes ):
             raise TypeError(f"Il parametro 'modes' must be a List of string with value:  ['air', 'ground', 'sea'], got {modes!r}.")
         
-        weights = {
-            'tracking_range': 0.2,
-            'acquisition_range': 0.1,
-            'engagement_range': 0.3,
-            'multi_target': 0.4
-        }
         score = 0.0
         
         for m in modes:
             cap = self.TVD['capabilities'][m]
             if cap[0]: 
-                score += cap[1].get('tracking_range', 0) * weights['tracking_range']
-                score += cap[1].get('acquisition_range', 0) * weights['acquisition_range']
-                score += cap[1].get('engagement_range', 0) * weights['engagement_range']
-                score += cap[1].get('multi_target_capacity', 0) * weights['multi_target']
+                score += cap[1].get('tracking_range', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('tracking_range', 0)
+                score += cap[1].get('acquisition_range', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('acquisition_range', 0)
+                score += cap[1].get('engagement_range', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('engagement_range', 0)
+                score += cap[1].get('multi_target_capacity', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('multi_target', 0)
         
         return score
 
@@ -183,11 +196,9 @@ class Aircraft_Data:
         if metric not in ['metric', 'imperial']:
             raise ValueError(f"Metric must be 'metric' or 'imperial', got {metric!r}.")
 
-
-        weights = {'sustained': 0.2, 'combat': 0.4, 'emergency': 0.3}
         score = 0
 
-        for speed_type, weight in weights.items():
+        for speed_type, weight in SYSTEM_WEIGHTS["speed_weights"].items():
             data = self.speed_data.get(speed_type, {})
             speed = data.get('airspeed', 0)
                       
@@ -453,236 +464,39 @@ class Aircraft_Data:
 # metric = imperial - > speed: mph, altitude: feet, radar/TVD/radioNav range: nm
 
 f16_data_example = {
-    "constructor": "Lockheed Martin",
-    "made": "USA",
-    "model": "F-16C Block 50",
-    "users": ["USA", "Iran"],
-    "start_service": 1978,
-    "end_service": None,
-    "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER],
-    "cost": 10, # M$
-    "roles": ["CAP", "Intercept", "SEAD"],
-    "manouvrability": 0.8, # 0-1, 1 is the best
-    "resilience": 0.7, # 0-1, 1 is the best
-    "engine": {
-        "model": "F110-GE-129", 
-        "capabilities": {"thrust": 13000, "fuel_efficiency": 0.8, "type": "jet"}, 
-        "reliability": {"mtbf": 40, "mttr": 5}
-    },
+    "constructor": "General Dynamics", "made": "USA", "model": "F-16A Fighting Falcon",
+    "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
+    "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
+    "roles": ["CAP", "Intercept", "Strike", "SEAD"],
+    "manouvrability": 0.82, "resilience": 0.68,
+    "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
-        "model": "AN/APG-68(V)9",
+        "model": "AN/APG-66",
         "capabilities": {
-            "air": (True, {"tracking_range": 160, "acquisition_range": 70, "engagement_range": 50, "multi_target_capacity": 6}),
-            "ground": (True, {"tracking_range": 80, "acquisition_range": 60, "engagement_range": 20, "multi_target_capacity": 3}),
-            "sea": (False, {"tracking_range": 50, "acquisition_range": 60, "engagement_range": 50, "multi_target_capacity": 3})            
+            "air": (True, {"tracking_range": 130, "acquisition_range": 65, "engagement_range": 46, "multi_target_capacity": 4}),
+            "ground": (True, {"tracking_range": 70, "acquisition_range": 45, "engagement_range": 15, "multi_target_capacity": 2}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
         },
-        "reliability": {"mtbf": 60, "mttr": 4},
-        "type": "pulse-doppler"
-            
+        "reliability": {"mtbf": 45, "mttr": 5}, "type": "pulse-doppler",
     },
     "TVD": {
-        "model": "AN/AAQ-28 LITENING",
+        "model": "none",
         "capabilities": {
-            "air": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 5}),
-            "ground": (True, {"tracking_range": 80, "acquisition_range": 100, "engagement_range": 80, "multi_target_capacity": 4}),
-            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})      
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
         },
-        "reliability": {"mtbf": 40, "mttr": 3},
-        "type": "thermal and optical"
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
-    "radio_nav": {
-        "model": "AN/ARN-118", 
-        "capabilities": {"navigation_system": 0.83, "communication_system": 0.85, "communication_range": 200},
-        "reliability": {"mtbf": 60, "mttr": 1.5}
-    },
-    "avionics": {
-        "model": "AN/ALR-69A",
-        "capabilities": {"flight_control": 0.9, "countermeasures": 0.7, "self_defense": 0.6},
-        "reliability": {"mtbf": 40, "mttr": 1.2}
-    },    
-    "hydraulic": {
-        "model": "Generic Hydraulic System",
-        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
-        "reliability": {"mtbf": 90, "mttr": 1.0},
-    },
+    "radio_nav": {"model": "AN/ARN-108", "capabilities": {"navigation_system": 0.75, "communication_system": 0.78, "communication_range": 200}, "reliability": {"mtbf": 55, "mttr": 2}},
+    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.82, "countermeasures": 0.62, "self_defense": 0.56}, "reliability": {"mtbf": 38, "mttr": 4}},
+    "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 88, "mttr": 5}},
     "speed_data": {
-        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 1200},
-        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 2500, "time": 120},  # time in minutes
-        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2414, "altitude": 12200, "consume": 4500, "time": 120}  # time in minutes   
+        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 950, "altitude": 10000, "consume": 1100},
+        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2120, "altitude": 12200, "consume": 2300, "time": 120},
+        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2120, "altitude": 12200, "consume": 4200, "time": 60},
     },
 }
-""" 
-f18_data_example = {
-    "constructor": "Lockheed Martin",
-    "made": "USA",
-    "model": "F-18C Block 50",
-    "start_service": 1978,
-    "end_service": None,
-    "category": "fighter",
-    "cost": 10, # M$
-    "roles": ["CAP", "Intercept", "SEAD"],
-    "engine": {
-        "model": "F110-GE-129", 
-        "capabilities": {"thrust": 13000, "fuel_efficiency": 0.8, "type": "jet"}, 
-        "reliability": {"mtbf": 35, "mttr": 8}
-    },
-    "radar": {
-        "model": "AN/APG-68(V)9",
-        "capabilities": {
-            "air": (True, {"tracking_range": 150, "acquisition_range": 70, "engagement_range": 70, "multi_target_capacity": 10}),
-            "ground": (True, {"tracking_range": 80, "acquisition_range": 40, "engagement_range": 30, "multi_target_capacity": 5}),
-            "sea": (True, {"tracking_range": 50, "acquisition_range": 30, "engagement_range": 30, "multi_target_capacity": 3})    
-        },
-        "reliability": {"mtbf": 65, "mttr": 6},
-        "type": "pulse-doppler"
-    },
-    "TVD": {
-        "model": "AN/AAQ-28 LITENING",
-        "capabilities": {
-            "air": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 5}),
-            "ground": (True, {"tracking_range": 80, "acquisition_range": 100, "engagement_range": 80, "multi_target_capacity": 4}),
-            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})        
-        },
-        "reliability": {"mtbf": 55, "mttr": 5},
-        "type": "thermal and optical"
-    },
-    "radio_nav": {
-        "model": "AN/ARN-118", 
-        "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
-        "reliability": {"mtbf": 60, "mttr": 4.5}
-        },
-    "avionics": {
-        "model": "AN/ALR-69A",
-        "capabilities": {"flight_control": 0.9, "navigation_system": 0.8, "communication_system": 0.85},
-        "reliability": {"mtbf": 80, "mttr": 3.2}
-    },
-    "hydraulic": {
-        "model": "Generic Hydraulic System",
-        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
-        "reliability": {"mtbf": 100, "mttr": 1.0},
-    },
-    "speed_data": {
-        "sustained": {"metric": "imperial", "type_speed": "indicated_airspeed", "airspeed": 350, "altitude": 29000, "consume": 1400},
-        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 2700, "time": 120},  # time in minutes
-        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1915, "altitude": 12200, "consume": 4900, "time": 120}  # time in minutes   
-    },
-}
-
-f14_data_example = {
-    "constructor": "Grumman",
-    "made": "USA",
-    "model": "F-14A Tomcat",
-    "start_service": 1978,
-    "end_service": None,
-    "category": "fighter",
-    "cost": 10,
-    "roles": ["CAP", "Intercept", "SEAD"],
-    "engine": {
-        "model": "TF30-P-414A", 
-        "capabilities": {"thrust": 20000, "fuel_efficiency": 0.7, "type": "jet"}, 
-        "reliability": {"mtbf": 30, "mttr": 10}
-    },
-    "radar": {
-        "model": "AN/AWG-9",
-        "capabilities": {
-            "air": (True, {"tracking_range": 185, "acquisition_range": 120, "engagement_range": 120, "multi_target_capacity": 20}),
-            "ground": (False, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 10}),
-            "sea": (False, {"tracking_range": 70, "acquisition_range": 80, "engagement_range": 70, "multi_target_capacity": 5})            
-        },
-        "reliability": {"mtbf": 43, "mttr": 8},
-        "type": "pulse-doppler"
-    },
-    "TVD": {
-        "model": "AN/AAX-1 TCS",
-        "capabilities": {
-            "air": (True, {"tracking_range": 150, "acquisition_range": 180, "engagement_range": 150, "multi_target_capacity": 10}),
-            "ground": (True, {"tracking_range": 100, "acquisition_range": 120, "engagement_range": 100, "multi_target_capacity": 8}),
-            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})        
-        },
-        "reliability": {"mtbf": 36, "mttr": 8},
-        "type": "thermal and optical"
-    },
-    "radio_nav": {
-        "model": "AN/ARN-92", 
-        "capabilities": {"navigation_accuracy": 0.6, "communication_range": 250},
-        "reliability": {"mtbf": 50, "mttr": 2}
-        },
-    "avionics": {
-        "model": "AN/ALR-45",
-        "capabilities": {"flight_control": 0.85, "navigation_system": 0.75, "communication_system": 0.8},
-        "reliability": {"mtbf": 45, "mttr": 6}
-    },
-    "hydraulic": {
-        "model": "Generic Hydraulic System",
-        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
-        "reliability": {"mtbf": 105, "mttr": 12},
-    },
-    "speed_data": {
-        "sustained": {"metric": "imperial", "type_speed": "indicated_airspeed", "airspeed": 540, "altitude": 30000, "consume": 1300},
-        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 2600, "time": 120},  # time in minutes
-        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2485, "altitude": 12200, "consume": 4800, "time": 120}  # time in minutes   
-    },
-    
-}
-
-f15_data_example = {
-    "constructor": "McDonnell Douglas",
-    "made": "USA",
-    "model": "F-15C Eagle",
-    "start_service": 1978,
-    "end_service": None,
-    "category": "fighter",
-    "cost": 10,
-    "roles": ["CAP", "Intercept", "SEAD"],
-    "engine": {
-        "model": "F100-PW-220", 
-        "capabilities": {"thrust": 15000, "fuel_efficiency": 0.75, "type": "jet"}, 
-        "reliability": {"mtbf": 60, "mttr": 12}
-    },
-    "radar": {
-        "model": "AN/APG-63(V)1",
-        "capabilities": {
-            "air": (True, {"tracking_range": 170, "acquisition_range": 80, "engagement_range": 60, "multi_target_capacity": 15}),
-            "ground": (True, {"tracking_range": 90, "acquisition_range": 110, "engagement_range": 90, "multi_target_capacity": 7}),
-            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})            
-        },
-        "reliability": {"mtbf": 45, "mttr": 7},
-        "type": "pulse-doppler"
-    },
-    "TVD": {
-        "model": "AN/AAQ-13 LANTIRN",
-        "capabilities": {
-            "air": (True, {"tracking_range": 120, "acquisition_range": 140, "engagement_range": 120, "multi_target_capacity": 6}),
-            "ground": (True, {"tracking_range": 90, "acquisition_range": 110, "engagement_range": 90, "multi_target_capacity": 5}),
-            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0})            
-        },
-        "reliability": {"mtbf": 40, "mttr": 10},
-        "type": 'thermal and optical'
-    },
-    "radio_nav": {
-        "model": "AN/ARN-118", 
-        "capabilities": {"navigation_accuracy": 0.5, "communication_range": 200},
-        "reliability": {"mtbf": 38, "mttr": 4}
-        },
-    "avionics": {
-        "model": "AN/ALR-56C",
-        "capabilities": {"flight_control": 0.9, "navigation_system": 0.85, "communication_system": 0.9},
-        "reliability": {"mtbf": 45, "mttr": 9}
-    },
-    "hydraulic": {
-        "model": "Generic Hydraulic System",
-        "capabilities": {"pressure": 3000, "fluid_capacity": 50},
-        "reliability": {"mtbf": 58, "mttr": 8},
-    },
-    "speed_data": {
-        "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 1500},
-        "combat": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 2800, "time": 120},  # time in minutes
-        "emergency": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 2650, "altitude": 11000, "consume": 5000, "time": 120}  # time in minutes   
-    },
-   
-}
-
- """
 
 # ==================== US FIGHTERS ====================
 
