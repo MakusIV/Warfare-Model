@@ -1,6 +1,6 @@
 DA FARE
 
-
+I range calcolati sembrano non tener conto dell'incremento di carburante dovuto ai serbatoi ausiliari presenti in alcuni loadout. Analizza questi loadout e aggiorna ecventualmente i range calcolati nei dizionari "cruise" e "attack"
 
 
 
@@ -15,6 +15,88 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+
+Considerando tutti gli aerei presenti come dizionari nel modulo Aircraft_Data.py e le armi specificate nel dizionario AIR_WEAPONS implementato nel modulo Aircraft_Weapon_Data.py, crea un nuovo modulo con nome Aircraft_Loadouts.py con implementato il dizionario AIRCRAFT_LOADOUTS dove, per ogni aereo, sono specificati tutti i possibili loadouts di armi. 
+Di seguito un esempio della struttura del dizionario AIRCRAFT_LOADOUTS sulla quale puoi proporre dei miglioramenti. Considera che nei commenti sono riportate le informazioni relative a: descrizione del dato, unità di misura, considerazioni, riferimenti e fonti per la sua valutazione.
+
+AIRCRAFT_LOADOUTS = {
+
+	<aircraft model>: { # equivalente al "model" specificato per l'aereo in questione
+				
+		<loadout name>: {  
+			
+			"loadout_code": string, # unique key string
+			
+			"tasks":[<task_name>, ...], # presi dal dizionario AIR_TASK definito nel modulo Context.py. I task da considerare sono specificati nella lista "roles" implementata nell'aereo
+			
+			"attributes" = {			# custom loadout attributes. Only used by A-G tasks. Any target attribute must be matched in this array for the loadout to be eligible for the target.
+				1 = "Anti-tank",      		# String, custom attribute to be matched for target attribute
+				2 = "Stand-off Missile",	# String, custom attribute to be matched for target attribute
+				........,
+			},
+									
+			"Lock_Down_Shoot_Down_Capability": Boolean, # specifico per task quali Cap, Intercept. ... tasks
+			
+			"cruise": { # parametri da valuatare considerando le prestazioni che consentono la maggiore autonomia con il loadout caricato
+				"speed": float, # km/h
+				"reference_altitude":  float, # metri				
+				"altitude_max":  float, # metri
+				"altitude_min":  float, # metri
+				"range": { # range calcolato in base alla percentuale della quantità complessiva carburante, tenendo conto anche di eventuali serbatoi ausiliari, caricato sull'aereo
+					"fuel_25%": float, # metri 
+					"fuel_50%": float, # metri
+					"fuel_75%": float, # metri
+					"fuel_100%": float, # metri
+				}							
+			},
+			
+			"attack": { # parametri da valuatare considerando le massime prestazioni che è possibile avere con il loadout caricato e nel rispetto dei parametri di utilizzo degli armamenti
+				"speed": float, # km/h
+				"reference_altitude":  float, # metri				
+				"altitude_max":  float, # metri
+				"altitude_min":  float, # metri
+				
+				"range": { # range calcolato in base alla percentuale della quantità complessiva carburante, tenendo conto anche di eventuali serbatoi ausiliari, caricato sull'aereo
+					"fuel_25%": float, # metri 
+					"fuel_50%": float, # metri
+					"fuel_75%": float, # metri
+					"fuel_100%": float, # metri
+				}							
+			}
+			
+			"usability": { # condizioni per l'utilizzo delle armi
+				"day": Boolean,
+				"night": Boolean,
+				"adverse_weather": Boolean,
+			}
+			
+			"mandatory_support": { # supporto obbligatorio, valutato in base ai dispositivi ed agli armamenti previsti nell'aereo e nel loadout
+				"Escort" = boolean,		# Fighter escort
+				"SEAD" = boolean,		# SEAD	escort
+				"Escort Jammer" = boolean,	# Jammer escort
+				"Flare Illumination" = boolean,	# Target area flare illumination (mandatory support for loadout to be eligible)
+				"Laser Illumination" = boolean,	# Target laser illumination (mandatory support for loadout to be eligible)
+			},
+				
+			"stores": { # dispositivi ed armi che caricate sull'aereo 
+			
+				"pylons": { # Armi montate sui punti di attacco (piloni) dell'aereo
+					"pylon_number": [<weapon_name>, quantity (int)] # nome arma e quantità
+					"pylon_number": [<device_name>, quantity (int)] # nome dispositivo e quantita
+					"pylon_number": ["model_fuel_tank", quantity (int), fuel_quantity (kg)] # nome/modello di serbatoio ausiliario di carburante, numero dei serbatoi e quantità totale di carburante dei serbatoi
+					........
+				},										
+				"fuel_internal_max" = int, # in kg
+				"flare" = int, # Numero di flare caricabile
+				"chaff" = int, # Numero di chaff caricabile
+				"gun_rounds" = int, # Numero di colpi caricabile
+			},
+	}
+			
+
+
+
 
 
 Considera la lista di aerei presente nel file DCS-airplane_overview.csv e inseriscili come dizionari nel modulo Aircraft_Data.py seguendo l'esempio del dizionario f16_data_example. Compila tutte le chiavi ed i relativi valori presenti nel dizionario, considerando che le seguenti chiavi rappresentano: "Manouvrability": la capacità dell'aereo di manovrare, "resilience": la capacità dell'aereo di resistere al fuoco nemico, "roles": i ruoli in cui l'aereo è impiegabile selezionati nel dizionario AIR_TASK presente nel modulo Context.py, "category": le categorie di apparteneza dell'aereo selezionate in base alla classe Air_Asset_Type(Enum) presente nel modulo Context.py.
