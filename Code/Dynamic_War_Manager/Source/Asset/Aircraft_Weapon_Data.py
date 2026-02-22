@@ -1,7 +1,7 @@
 from functools import lru_cache
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context import Context 
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK, TARGET_CLASSIFICATION
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -13,19 +13,19 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 
-AIRCRAFT_ROLE = Context.AIR_MILITARY_CRAFT_ASSET.keys()
-AIRCRAFT_TASK = Context.AIR_TASK
-
+AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
+AIRCRAFT_TASK = AIR_TASK
+TARGET_CLASSIFICATION = TARGET_CLASSIFICATION.keys()
+TARGET_DIMENSION = ['small', 'medium', 'large']
 _INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
 # Usato in get_<weapon_type>_score
 WEAPON_PARAM = {
 
-    'CANNONS':          {'caliber':         7 / ( 27 * 29 ), # coeff / max value (max ~30mm, BMP-3)
-                        'muzzle_speed':     7 / ( 800 * 29 ), # 800 m/s
-                        'fire_rate':        8 / ( 300 * 29 ), # 300 rpm 
-                        'range':            5 / ( 3000 * 29 ), # 3000
-                        'ammo_type':        2 /  ( 29 ),
+    'CANNONS':          {'caliber':         7 / ( 27 * 27 ), # coeff / max value (max ~30mm, BMP-3)
+                        'speed':            7 / ( 800 * 27 ), # 800 m/s
+                        'fire_rate':        8 / ( 300 * 27 ), # 300 rpm 
+                        'range':            5 / ( 3000 * 27 ), # 3000                        
                         },
 
     'MISSILES_AAM_RAD': {'warhead':         3 / ( 250 * 36 ), # in kg, ref ~250 kg (AIM-54C)
@@ -111,6 +111,130 @@ RELOAD_PARAM = {
 }
 '''
 
+def get_weapon(model: str) -> Optional[Dict[str, Any]]:
+    """
+    Returns the weapon category ("BOMBS", "MISSILES_AAM", ....), weapons type ("cluster_bomb", ASM, ...) and weapon data dictionary for a given weapon model, by looking it up in the AIR_WEAPONS data structure.
+
+    Restituisce la categoria dell'arma ("BOMBS", "MISSILES_AAM", ....), il tipo ("cluster_bomb", ASM, ...) e il dizionario dei dati per un dato modello di arma, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: Dict with keys: weapon_category, weapon_type and weapond data dictionary of weapon if found, None otherwise / Dizionario con le chiavi weapon_category, weapon_type and weapond data dictionary dell'arma se trovato, None altrimenti
+    :rtype: Optional[Dict[str, Any]]
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    for weapons_key, weapons in AIR_WEAPONS.items():
+        if model in weapons:
+            return {"weapons_category": weapons_key, "weapons_type": weapons[model].get('type', 'type_not_specified'), "weapons_data": weapons[model]}
+
+    return None
+
+def is_missile(model: str) -> bool:
+    """
+    Checks if the given model is a missile, by looking it up in the AIR_WEAPONS data structure.
+
+    Controlla se il modello dato è un missile, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: True if the model is a missile, False otherwise / True se il modello è un missile, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'MISSILES_AAM'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    if not weapon:
+        weapon_name = 'MISSILES_ASM'
+        weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    return weapon is not None
+
+def is_bomb(model: str) -> bool:
+    """
+    Checks if the given model is a bomb, by looking it up in the AIR_WEAPONS data structure.
+
+    Controlla se il modello dato è una bomba, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: True if the model is a bomb, False otherwise / True se il modello è una bomba, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'BOMBS'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    return weapon is not None
+
+def is_rocket(model: str) -> bool:
+    """
+    Checks if the given model is a rocket, by looking it up in the AIR_WEAPONS data structure.
+
+    Controlla se il modello dato è un razzo, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: True if the model is a rocket, False otherwise / True se il modello è un razzo, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'ROCKETS'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    return weapon is not None
+
+def is_cannon(model: str) -> bool:
+    """
+    Checks if the given model is a cannon, by looking it up in the AIR_WEAPONS data structure.
+
+    Controlla se il modello dato è un cannone, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: True if the model is a cannon, False otherwise / True se il modello è un cannone, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'CANNONS'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    return weapon is not None
+
+def is_machine_gun(model: str) -> bool:
+    """
+    Checks if the given model is a machine gun, by looking it up in the AIR_WEAPONS data structure.
+
+    Controlla se il modello dato è una mitragliatrice, cercandolo nella struttura dati AIR_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: True if the model is a machine gun, False otherwise / True se il modello è una mitragliatrice, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    weapon_name = 'MACHINE_GUNS'    
+    weapon = AIR_WEAPONS[weapon_name].get(model)#
+
+    return weapon is not None   
 
 def get_missiles_score(model: str) -> float:
     """
@@ -239,6 +363,157 @@ def get_rockets_score(model: str) -> float:
             weapon_power +=  weapon[param_name] * coeff_value
 
     return weapon_power
+
+def get_cannons_score(model: str) -> float:
+    """
+    returns cannon score (same logic as get_missiles_score)
+
+    Args:
+        model (str): cannon model
+
+    Returns:
+        float: cannon score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'CANNONS'
+    weapon = AIR_WEAPONS[weapon_name].get(model)
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+        weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
+
+def get_machine_guns_score(model: str) -> float:
+    """
+    returns machine gun score (same logic as get_missiles_score)
+
+    Args:
+        model (str): machine gun model
+
+    Returns:
+        float: machine gun score
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")
+
+    weapon_name = 'MACHINE_GUNS'
+    weapon = AIR_WEAPONS[weapon_name].get(model)
+
+    if not weapon:
+        logger.warning(f"weapon {weapon_name} {model} unknow")
+        return 0.0
+
+    weapon_power = 0.0
+
+    for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
+        weapon_power +=  weapon[param_name] * coeff_value
+
+    return weapon_power
+
+
+def get_weapon_score(model: str) -> float:
+    """
+    Returns an effectiveness score for a weapon, based on its type and key parameters.
+
+    Restituisce un punteggio di efficacia per un'arma, basato sul suo tipo e sui suoi parametri chiave.
+    
+    :param model: model of weapon / il modello dell'arma da valutare
+    :type model: str
+    :return: weapon's score / punteggio di efficacia dell'arma, calcolato come somma pesata dei suoi parametri chiave
+    :rtype: float
+    """
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+
+    weapon_dict = get_weapon(model)
+    weapon_category = weapon_dict.get('weapons_category') if weapon_dict else 'unknown'
+
+    if weapon_category == 'MISSILES_AAM' or weapon_category == 'MISSILES_ASM':
+        return get_missiles_score(model)
+    elif weapon_category == 'BOMBS':
+        return get_bombs_score(model)
+    elif weapon_category == 'ROCKETS':
+        return get_rockets_score(model)
+    elif weapon_category == 'CANNONS':
+        return get_cannons_score(model)
+    elif weapon_category == 'MACHINE_GUNS':
+        return get_machine_guns_score(model)        
+    elif weapon_category == 'unknown':
+        logger.warning(f"weapon {model} dict is None, return 0.0")
+        return 0.0
+    else:
+        logger.error(f"weapon {model} category unknow, return 0.0")
+        return 0.0
+    
+def get_weapon_score_target(model: str, target_type: List, target_dimension: List) -> float:
+    """
+    Returns an effectiveness score for a weapons against a specific target, based on the weapons's parameters and the target's characteristics.
+
+    Restituisce un punteggio di efficacia per una bomba contro un bersaglio specifico, basato sui parametri della bomba e sulle caratteristiche del bersaglio.
+    
+    :param model: model of WEAPON / il modello dell'ARMA da valutare
+    :type model: str
+    :param target_type: type of target (e.g., 'Soft', 'Armored', 'Structure') / tipo di bersaglio (es. 'Soft', 'Armored', 'Structure')
+    :type target_type: List
+    :param target_dimension: dimension of target (e.g., 'small', 'medium', 'large') / dimensione del bersaglio (es. 'small', 'medium', 'large')
+    :type target_dimension: List
+    :return: weapon's score against the target / punteggio di efficacia della bomba contro il bersaglio, calcolato come prodotto del punteggio base della bomba e dell'efficacia della testata contro quel tipo e dimensione di bersaglio
+    :rtype: float
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+
+    weapon_dict = get_weapon(model)
+
+    #weapon = AIR_WEAPONS[weapon_type].get(model)#
+    
+    if not weapon_dict:
+        logger.warning(f"weapon {model} unknow")
+        return 0.0
+    else:        
+        if weapon_dict.get('weapons_category') == 'MISSILES_AAM':
+            logger.warning(f"weapon {model} is a a2a missile, get_weapon_score_target is not implemented for missiles yet, return 0.0")
+            return 0.0
+    
+        logger.debug(f"weapon {model} found in category {weapon_dict['weapons_category']} with type {weapon_dict['weapons_type']}")
+
+    
+
+    weapon = weapon_dict.get('weapons_data', {})
+
+    target_evaluation_count = 0
+
+    for t_type in target_type:
+
+        if t_type not in TARGET_CLASSIFICATION:
+            logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
+            continue
+        
+        for t_dim in target_dimension:
+
+            if t_dim not in TARGET_DIMENSION:
+                logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
+                continue
+
+            efficiency_param = weapon.get('efficiency').get(target_type).get(target_dimension, {})
+            accuracy = efficiency_param.get('accuracy', 0.0)
+            destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
+            score += accuracy * destroy_capacity
+            target_evaluation_count += 1
+            # base_score = get_bombs_score(model) no solo per una valutazione sensa considerare target
+
+    return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
 AIR_WEAPONS = {
    
@@ -5559,6 +5834,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",
             "range": 2,  # Km
             "speed": 715, # m/s (muzzle velocity)
+            "fire_rate": 3000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5631,6 +5907,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",
             "range": 2,
             "speed": 715, # m/s (muzzle velocity)
+            "fire_rate": 3000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5703,6 +5980,7 @@ AIR_WEAPONS = {
             "warhead_type": "APFSDS",  # PGU-14/B API with Depleted Uranium core
             "range": 1.2,  # km (effective strafing range ~1219 m)
             "speed": 1013,  # m/s muzzle velocity
+            "fire_rate": 4200,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5775,6 +6053,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # M56A3 HEI primary round; SAPHEI (PGU-28/B) also available
             "range": 1.5,  # km
             "speed": 1030,  # m/s muzzle velocity
+            "fire_rate": 6000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5847,6 +6126,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",
             "range": 1.2,  # km
             "speed": 1030,  # m/s muzzle velocity
+            "fire_rate": 1500,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5919,6 +6199,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, SAPHEI rounds
             "range": 1.2,  # km
             "speed": 1020,  # m/s muzzle velocity
+            "fire_rate": 750,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5991,6 +6272,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",  # API, AP, HEI rounds
             "range": 0.8,  # km effective strafing range
             "speed": 866,  # m/s muzzle velocity
+            "fire_rate": 800,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6063,6 +6345,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",  # API, AP, HEI rounds
             "range": 0.8,  # km effective strafing range
             "speed": 875,  # m/s muzzle velocity
+            "fire_rate": 1200,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6135,6 +6418,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, APHEI-SD rounds
             "range": 1.5,  # km
             "speed": 815,  # m/s muzzle velocity
+            "fire_rate": 1300,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6207,6 +6491,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI-T, AP-T rounds; ~400 rpm, low fire rate
             "range": 1.0,  # km
             "speed": 690,  # m/s muzzle velocity
+            "fire_rate": 400,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6279,6 +6564,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",  # HEI, API, AP-T rounds; lower muzzle vel. than GSh-23L
             "range": 1.2,  # km
             "speed": 690,  # m/s muzzle velocity
+            "fire_rate": 950,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6351,6 +6637,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, AP rounds
             "range": 2.0,  # km
             "speed": 780,  # m/s muzzle velocity
+            "fire_rate": 900,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6423,6 +6710,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, API rounds; ~1500-1800 rpm
             "range": 1.8,  # km
             "speed": 860,  # m/s muzzle velocity
+            "fire_rate": 1500,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6495,6 +6783,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, API rounds; ~3000 rpm via Gast principle
             "range": 1.8,  # km
             "speed": 900,  # m/s muzzle velocity
+            "fire_rate": 3000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6567,6 +6856,7 @@ AIR_WEAPONS = {
             "warhead_type": "AP",  # HEI, API rounds; ~8000-10000 rpm fire rate
             "range": 2.0,  # km
             "speed": 715,  # m/s muzzle velocity
+            "fire_rate": 8000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6639,6 +6929,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, API, HE-T rounds; ~4000-6000 rpm fire rate
             "range": 2.0,  # km
             "speed": 850,  # m/s muzzle velocity
+            "fire_rate": 6000,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6711,6 +7002,7 @@ AIR_WEAPONS = {
             "warhead_type": "HE",  # HEI, SAPHE rounds; exceptionally high muzzle velocity for 30mm
             "range": 2.5,  # km (effective range ~2500 m)
             "speed": 1030,  # m/s muzzle velocity
+            "fire_rate": 1350,  # rpm
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -6770,6 +7062,154 @@ AIR_WEAPONS = {
                 },
             },
         },
+    },
+    "MACHINE_GUNS": {
+        "AN-M2": {  # 12.7mm (.50 cal) aircraft machine gun - A-20G (6 nose guns)
+            "type": "Cannon",
+            "model": "AN-M2",
+            "users": ["USA"],
+            "task": ["Strike"],
+            "start_service": 1939,
+            "end_service": None,
+            "cost": None,
+            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm)
+            "warhead": None,
+            "warhead_type": "AP",  # API, AP, HEI rounds
+            "range": 0.8,  # km effective strafing range
+            "speed": 866,  # m/s muzzle velocity
+            "fire_rate": 800,  # rpm
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.05},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.20},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+            },
+        },
+        "M3-Browning": {  # 12.7mm (.50 cal) high-rate aircraft MG - F-86E Sabre (6 guns)
+            "type": "Cannon",
+            "model": "M3-Browning",
+            "users": ["USA", "UK", "Canada", "Australia", "Japan", "West Germany", "Spain", "Pakistan", "South Korea", "Taiwan"],
+            "task": ["Strike"],
+            "start_service": 1945,
+            "end_service": None,
+            "cost": None,
+            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm); ~1200-1250 rpm vs 800 rpm of AN/M2
+            "warhead": None,
+            "warhead_type": "AP",  # API, AP, HEI rounds
+            "range": 0.8,  # km effective strafing range
+            "speed": 875,  # m/s muzzle velocity
+            "fire_rate": 1200,  # rpm
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
+                },
+                "Armored": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+                "Hard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
+                },
+                "Structure": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Air_Defense": {
+                    "big": {"accuracy": 0.6, "destroy_capacity": 0.07},
+                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
+                },
+                "Airbase": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Port": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Shipyard": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Farp": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "Stronghold": {
+                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
+                },
+                "ship": {
+                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
+                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
+                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
+                },
+            },
+        },        
     }
 }
 
