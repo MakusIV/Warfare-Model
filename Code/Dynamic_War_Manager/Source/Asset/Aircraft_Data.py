@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, Ground_Vehicle_Asset_Type
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness
 from sympy import Point3D
 from dataclasses import dataclass
 
@@ -290,57 +291,24 @@ class Aircraft_Data:
         ratio = mtbf / mttr if mttr > 0 else 0.0        
         return ratio
 
-    def _weapon_eval(self):
-        """Returns the score of all installed weapons
+    def _loadout_eval(self, loadout: str) -> float: # questo lo usi per verificare come l'aereo performa per la missione senza considerare la tipologia del target
+        """Returns the score of installed loadout
 
         Returns:
             float: weapons combat score
         """
-              
-        '''
-        'weapons': {
-            'cannons': [('2A46M', 42)],
-            'missiles': [('9K119M', 6)],
-            'machine_guns': [('PKT-7.62', 1), ('Kord-12.7', 1)],
-        '''
-        score = 0.0
+        
+        return loadout_eval(aircraft_name = self.model, loadout_name = loadout)
 
-        for weapon_type, weapon in self.weapons.items():
-            machine_gun_score = 0
+    def _loadout_target_effectiveness(self, loadout: str, target_type: List, target_dimension: List) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+        """Returns the score of installed loadout against a specific target
 
-            for weapon_item in weapon:                
-                factor_ammo_quantity = 1.0
-                
-                if weapon_type == 'CANNONS':                    
-                    if self.category in [Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value, Ground_Vehicle_Asset_Type.TANK.value]:
-                        factor_ammo_quantity = weapon_item[1] / 30 # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
-                    elif self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value:
-                        factor_ammo_quantity = weapon_item[1] / 50 # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
-
-                elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo                    
-                    machine_gun_score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * weapon_item[1]
-                               
-                elif weapon_type == 'MISSILES':
-                    if self.category in [Ground_Vehicle_Asset_Type.SAM_BIG.value, Ground_Vehicle_Asset_Type.SAM_MEDIUM.value, Ground_Vehicle_Asset_Type.SAM_SMALL.value, Ground_Vehicle_Asset_Type.AAA.value]:
-                        factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)     
-                    elif self.category in [Ground_Vehicle_Asset_Type.TANK.value, Ground_Vehicle_Asset_Type.ARMORED.value, Ground_Vehicle_Asset_Type.MOTORIZED.value]:
-                        factor_ammo_quantity = weapon_item[1] / 2 # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3) 
-                
-                elif weapon_type == 'ROCKETS':
-                    factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2) 
-                
-                elif weapon_type == 'BOMBS':
-                    factor_ammo_quantity = weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
-                
-                 
-                # else:
-                #    logger.warning(f"weapon_type unknow, got {weapon_type}"                                   
-                
-                factor_ammo_quantity = max(0.80, min(1.2, factor_ammo_quantity)) # limit to +-20%                                
-                score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * factor_ammo_quantity # incremento del 10% del punteggio dell'arma in base alla quantità di munizionamento disponibile
-                
-
-        return score + machine_gun_score * 0.33 # riduco il peso delle mitragliatrici al 33% dello score totale in quanto armi di supporto se presente score (arma principale)
+        Returns:
+            float: weapons combat score against the target
+        """
+        
+        return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension)
+    
 
 
     # --- Metodi di confronto normalizzati ---

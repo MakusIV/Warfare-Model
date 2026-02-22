@@ -27,7 +27,9 @@
 #   stores                : full list of carried stores and internal resources
 # =============================================================================
 
+from typing import List
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target
 
 # ---------------------------------------------------------------------------
 # Shared helper comment: range values are combat radius in km
@@ -86,12 +88,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 800, "reference_altitude": 9000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 220, "fuel_50%": 450, "fuel_75%": 680, "fuel_100%": 950},
+                "range": {"fuel_25%": 265, "fuel_50%": 540, "fuel_75%": 815, "fuel_100%": 1135},
             },
             "attack": {
                 "speed": 1600, "reference_altitude": 8000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 160, "fuel_50%": 340, "fuel_75%": 520, "fuel_100%": 720},
+                "range": {"fuel_25%": 190, "fuel_50%": 405, "fuel_75%": 620, "fuel_100%": 860},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -120,12 +122,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 900, "reference_altitude": 8000,
                 "altitude_max": 15000, "altitude_min": 100,
-                "range": {"fuel_25%": 250, "fuel_50%": 500, "fuel_75%": 760, "fuel_100%": 1000},
+                "range": {"fuel_25%": 300, "fuel_50%": 600, "fuel_75%": 910, "fuel_100%": 1195},
             },
             "attack": {
                 "speed": 1800, "reference_altitude": 5000,
                 "altitude_max": 15000, "altitude_min": 100,
-                "range": {"fuel_25%": 180, "fuel_50%": 380, "fuel_75%": 570, "fuel_100%": 780},
+                "range": {"fuel_25%": 215, "fuel_50%": 455, "fuel_75%": 680, "fuel_100%": 935},
             },
             "usability": {"day": True, "night": True, "adverse_weather": False},
             "mandatory_support": {
@@ -191,12 +193,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 820, "reference_altitude": 9000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 230, "fuel_50%": 470, "fuel_75%": 710, "fuel_100%": 980},
+                "range": {"fuel_25%": 275, "fuel_50%": 560, "fuel_75%": 850, "fuel_100%": 1170},
             },
             "attack": {
                 "speed": 1600, "reference_altitude": 8000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 170, "fuel_50%": 360, "fuel_75%": 540, "fuel_100%": 740},
+                "range": {"fuel_25%": 205, "fuel_50%": 430, "fuel_75%": 645, "fuel_100%": 885},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -225,12 +227,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 800, "reference_altitude": 7000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 190, "fuel_50%": 390, "fuel_75%": 600, "fuel_100%": 820},
+                "range": {"fuel_25%": 210, "fuel_50%": 430, "fuel_75%": 665, "fuel_100%": 910},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 300,
-                "range": {"fuel_25%": 140, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 640},
+                "range": {"fuel_25%": 155, "fuel_50%": 335, "fuel_75%": 510, "fuel_100%": 710},
             },
             "usability": {"day": True, "night": True, "adverse_weather": False},
             "mandatory_support": {
@@ -296,12 +298,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 870, "reference_altitude": 9000,
                 "altitude_max": 18000, "altitude_min": 1000,
-                "range": {"fuel_25%": 280, "fuel_50%": 570, "fuel_75%": 870, "fuel_100%": 1200},
+                "range": {"fuel_25%": 425, "fuel_50%": 870, "fuel_75%": 1325, "fuel_100%": 1830},
             },
             "attack": {
                 "speed": 1800, "reference_altitude": 9000,
                 "altitude_max": 18000, "altitude_min": 1000,
-                "range": {"fuel_25%": 200, "fuel_50%": 420, "fuel_75%": 640, "fuel_100%": 880},
+                "range": {"fuel_25%": 305, "fuel_50%": 640, "fuel_75%": 975, "fuel_100%": 1340},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -473,12 +475,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 9000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 180, "fuel_50%": 380, "fuel_75%": 580, "fuel_100%": 780},
+                "range": {"fuel_25%": 215, "fuel_50%": 455, "fuel_75%": 695, "fuel_100%": 935},
             },
             "attack": {
                 "speed": 1800, "reference_altitude": 10000,
                 "altitude_max": 15000, "altitude_min": 500,
-                "range": {"fuel_25%": 135, "fuel_50%": 285, "fuel_75%": 440, "fuel_100%": 600},
+                "range": {"fuel_25%": 160, "fuel_50%": 340, "fuel_75%": 525, "fuel_100%": 720},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -539,12 +541,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 800, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 100,
-                "range": {"fuel_25%": 140, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 620},
+                "range": {"fuel_25%": 165, "fuel_50%": 360, "fuel_75%": 550, "fuel_100%": 740},
             },
             "attack": {
                 "speed": 850, "reference_altitude": 1500,
                 "altitude_max": 5000, "altitude_min": 100,
-                "range": {"fuel_25%": 110, "fuel_50%": 230, "fuel_75%": 360, "fuel_100%": 490},
+                "range": {"fuel_25%": 130, "fuel_50%": 275, "fuel_75%": 430, "fuel_100%": 585},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -572,12 +574,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 830, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 100,
-                "range": {"fuel_25%": 155, "fuel_50%": 330, "fuel_75%": 510, "fuel_100%": 690},
+                "range": {"fuel_25%": 185, "fuel_50%": 395, "fuel_75%": 610, "fuel_100%": 825},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 100,
                 "altitude_max": 5000, "altitude_min": 30,
-                "range": {"fuel_25%": 110, "fuel_50%": 240, "fuel_75%": 370, "fuel_100%": 510},
+                "range": {"fuel_25%": 130, "fuel_50%": 285, "fuel_75%": 445, "fuel_100%": 610},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -609,12 +611,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 9000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 185, "fuel_50%": 385, "fuel_75%": 590, "fuel_100%": 790},
+                "range": {"fuel_25%": 220, "fuel_50%": 460, "fuel_75%": 705, "fuel_100%": 945},
             },
             "attack": {
                 "speed": 1800, "reference_altitude": 10000,
                 "altitude_max": 15000, "altitude_min": 500,
-                "range": {"fuel_25%": 140, "fuel_50%": 290, "fuel_75%": 450, "fuel_100%": 610},
+                "range": {"fuel_25%": 170, "fuel_50%": 345, "fuel_75%": 540, "fuel_100%": 730},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -642,12 +644,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 1000,
-                "range": {"fuel_25%": 170, "fuel_50%": 360, "fuel_75%": 550, "fuel_100%": 740},
+                "range": {"fuel_25%": 205, "fuel_50%": 430, "fuel_75%": 660, "fuel_100%": 885},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 4000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 130, "fuel_50%": 275, "fuel_75%": 420, "fuel_100%": 580},
+                "range": {"fuel_25%": 155, "fuel_50%": 330, "fuel_75%": 505, "fuel_100%": 695},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -675,12 +677,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 830, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 100,
-                "range": {"fuel_25%": 160, "fuel_50%": 340, "fuel_75%": 520, "fuel_100%": 700},
+                "range": {"fuel_25%": 190, "fuel_50%": 405, "fuel_75%": 620, "fuel_100%": 840},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 100,
                 "altitude_max": 5000, "altitude_min": 30,
-                "range": {"fuel_25%": 115, "fuel_50%": 245, "fuel_75%": 380, "fuel_100%": 520},
+                "range": {"fuel_25%": 140, "fuel_50%": 295, "fuel_75%": 455, "fuel_100%": 625},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -745,12 +747,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 860, "reference_altitude": 9000,
                 "altitude_max": 15000, "altitude_min": 1000,
-                "range": {"fuel_25%": 190, "fuel_50%": 395, "fuel_75%": 600, "fuel_100%": 810},
+                "range": {"fuel_25%": 225, "fuel_50%": 475, "fuel_75%": 720, "fuel_100%": 970},
             },
             "attack": {
                 "speed": 1800, "reference_altitude": 10000,
                 "altitude_max": 15000, "altitude_min": 500,
-                "range": {"fuel_25%": 145, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 625},
+                "range": {"fuel_25%": 175, "fuel_50%": 360, "fuel_75%": 550, "fuel_100%": 750},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -778,12 +780,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 7000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 160, "fuel_50%": 340, "fuel_75%": 520, "fuel_100%": 700},
+                "range": {"fuel_25%": 190, "fuel_50%": 405, "fuel_75%": 620, "fuel_100%": 840},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 4000,
                 "altitude_max": 9000, "altitude_min": 300,
-                "range": {"fuel_25%": 120, "fuel_50%": 260, "fuel_75%": 400, "fuel_100%": 550},
+                "range": {"fuel_25%": 145, "fuel_50%": 310, "fuel_75%": 480, "fuel_100%": 660},
             },
             "usability": {"day": True, "night": True, "adverse_weather": False},
             "mandatory_support": {
@@ -812,12 +814,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 1000,
-                "range": {"fuel_25%": 175, "fuel_50%": 365, "fuel_75%": 560, "fuel_100%": 755},
+                "range": {"fuel_25%": 210, "fuel_50%": 435, "fuel_75%": 670, "fuel_100%": 905},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 4000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 130, "fuel_50%": 280, "fuel_75%": 430, "fuel_100%": 590},
+                "range": {"fuel_25%": 155, "fuel_50%": 335, "fuel_75%": 515, "fuel_100%": 705},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -845,12 +847,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 830, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 100,
-                "range": {"fuel_25%": 160, "fuel_50%": 345, "fuel_75%": 530, "fuel_100%": 715},
+                "range": {"fuel_25%": 190, "fuel_50%": 415, "fuel_75%": 635, "fuel_100%": 855},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 100,
                 "altitude_max": 5000, "altitude_min": 30,
-                "range": {"fuel_25%": 115, "fuel_50%": 250, "fuel_75%": 385, "fuel_100%": 530},
+                "range": {"fuel_25%": 140, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 635},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -878,12 +880,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 830, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 200,
-                "range": {"fuel_25%": 155, "fuel_50%": 330, "fuel_75%": 505, "fuel_100%": 680},
+                "range": {"fuel_25%": 185, "fuel_50%": 395, "fuel_75%": 605, "fuel_100%": 815},
             },
             "attack": {
                 "speed": 850, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 200,
-                "range": {"fuel_25%": 115, "fuel_50%": 245, "fuel_75%": 375, "fuel_100%": 510},
+                "range": {"fuel_25%": 140, "fuel_50%": 295, "fuel_75%": 450, "fuel_100%": 610},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -916,12 +918,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 870, "reference_altitude": 9000,
                 "altitude_max": 18000, "altitude_min": 1000,
-                "range": {"fuel_25%": 200, "fuel_50%": 430, "fuel_75%": 660, "fuel_100%": 900},
+                "range": {"fuel_25%": 260, "fuel_50%": 555, "fuel_75%": 855, "fuel_100%": 1165},
             },
             "attack": {
                 "speed": 2300, "reference_altitude": 12000,
                 "altitude_max": 18000, "altitude_min": 1000,
-                "range": {"fuel_25%": 145, "fuel_50%": 310, "fuel_75%": 475, "fuel_100%": 650},
+                "range": {"fuel_25%": 190, "fuel_50%": 400, "fuel_75%": 615, "fuel_100%": 840},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -951,12 +953,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 7000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 175, "fuel_50%": 375, "fuel_75%": 575, "fuel_100%": 780},
+                "range": {"fuel_25%": 225, "fuel_50%": 485, "fuel_75%": 745, "fuel_100%": 1010},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 300,
-                "range": {"fuel_25%": 130, "fuel_50%": 280, "fuel_75%": 430, "fuel_100%": 590},
+                "range": {"fuel_25%": 170, "fuel_50%": 365, "fuel_75%": 555, "fuel_100%": 765},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1022,12 +1024,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 900, "reference_altitude": 8000,
                 "altitude_max": 15000, "altitude_min": 500,
-                "range": {"fuel_25%": 130, "fuel_50%": 280, "fuel_75%": 430, "fuel_100%": 580},
+                "range": {"fuel_25%": 170, "fuel_50%": 365, "fuel_75%": 560, "fuel_100%": 755},
             },
             "attack": {
                 "speed": 1700, "reference_altitude": 10000,
                 "altitude_max": 15000, "altitude_min": 500,
-                "range": {"fuel_25%": 95, "fuel_50%": 205, "fuel_75%": 315, "fuel_100%": 430},
+                "range": {"fuel_25%": 125, "fuel_50%": 270, "fuel_75%": 410, "fuel_100%": 560},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1122,12 +1124,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 870, "reference_altitude": 9000,
                 "altitude_max": 16000, "altitude_min": 1000,
-                "range": {"fuel_25%": 140, "fuel_50%": 295, "fuel_75%": 455, "fuel_100%": 610},
+                "range": {"fuel_25%": 185, "fuel_50%": 390, "fuel_75%": 605, "fuel_100%": 810},
             },
             "attack": {
                 "speed": 2100, "reference_altitude": 12000,
                 "altitude_max": 16000, "altitude_min": 500,
-                "range": {"fuel_25%": 100, "fuel_50%": 215, "fuel_75%": 330, "fuel_100%": 450},
+                "range": {"fuel_25%": 135, "fuel_50%": 285, "fuel_75%": 440, "fuel_100%": 600},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1155,12 +1157,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 125, "fuel_50%": 265, "fuel_75%": 405, "fuel_100%": 550},
+                "range": {"fuel_25%": 165, "fuel_50%": 350, "fuel_75%": 540, "fuel_100%": 730},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 300,
-                "range": {"fuel_25%": 90, "fuel_50%": 195, "fuel_75%": 300, "fuel_100%": 410},
+                "range": {"fuel_25%": 120, "fuel_50%": 260, "fuel_75%": 400, "fuel_100%": 545},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1188,12 +1190,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 500,
-                "range": {"fuel_25%": 135, "fuel_50%": 280, "fuel_75%": 430, "fuel_100%": 585},
+                "range": {"fuel_25%": 180, "fuel_50%": 370, "fuel_75%": 570, "fuel_100%": 780},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 4000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 97, "fuel_50%": 208, "fuel_75%": 318, "fuel_100%": 435},
+                "range": {"fuel_25%": 130, "fuel_50%": 275, "fuel_75%": 425, "fuel_100%": 580},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1225,12 +1227,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 880, "reference_altitude": 9000,
                 "altitude_max": 16000, "altitude_min": 1000,
-                "range": {"fuel_25%": 145, "fuel_50%": 305, "fuel_75%": 465, "fuel_100%": 630},
+                "range": {"fuel_25%": 195, "fuel_50%": 405, "fuel_75%": 620, "fuel_100%": 840},
             },
             "attack": {
                 "speed": 2100, "reference_altitude": 12000,
                 "altitude_max": 16000, "altitude_min": 500,
-                "range": {"fuel_25%": 105, "fuel_50%": 225, "fuel_75%": 345, "fuel_100%": 465},
+                "range": {"fuel_25%": 140, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 620},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1258,12 +1260,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 130, "fuel_50%": 275, "fuel_75%": 420, "fuel_100%": 570},
+                "range": {"fuel_25%": 175, "fuel_50%": 365, "fuel_75%": 560, "fuel_100%": 760},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 300,
-                "range": {"fuel_25%": 94, "fuel_50%": 200, "fuel_75%": 310, "fuel_100%": 420},
+                "range": {"fuel_25%": 125, "fuel_50%": 265, "fuel_75%": 410, "fuel_100%": 560},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1291,12 +1293,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 500,
-                "range": {"fuel_25%": 138, "fuel_50%": 290, "fuel_75%": 445, "fuel_100%": 600},
+                "range": {"fuel_25%": 185, "fuel_50%": 385, "fuel_75%": 590, "fuel_100%": 800},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 4000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 100, "fuel_50%": 215, "fuel_75%": 330, "fuel_100%": 450},
+                "range": {"fuel_25%": 135, "fuel_50%": 285, "fuel_75%": 440, "fuel_100%": 600},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1328,12 +1330,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 890, "reference_altitude": 9000,
                 "altitude_max": 16000, "altitude_min": 1000,
-                "range": {"fuel_25%": 148, "fuel_50%": 312, "fuel_75%": 476, "fuel_100%": 640},
+                "range": {"fuel_25%": 195, "fuel_50%": 415, "fuel_75%": 635, "fuel_100%": 850},
             },
             "attack": {
                 "speed": 2100, "reference_altitude": 12000,
                 "altitude_max": 16000, "altitude_min": 500,
-                "range": {"fuel_25%": 108, "fuel_50%": 230, "fuel_75%": 352, "fuel_100%": 475},
+                "range": {"fuel_25%": 145, "fuel_50%": 305, "fuel_75%": 470, "fuel_100%": 630},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1361,12 +1363,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 7000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 128, "fuel_50%": 270, "fuel_75%": 415, "fuel_100%": 560},
+                "range": {"fuel_25%": 170, "fuel_50%": 360, "fuel_75%": 550, "fuel_100%": 745},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 4000,
                 "altitude_max": 9000, "altitude_min": 300,
-                "range": {"fuel_25%": 93, "fuel_50%": 197, "fuel_75%": 303, "fuel_100%": 410},
+                "range": {"fuel_25%": 125, "fuel_50%": 260, "fuel_75%": 405, "fuel_100%": 545},
             },
             "usability": {"day": True, "night": True, "adverse_weather": False},
             "mandatory_support": {
@@ -1394,12 +1396,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 860, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 500,
-                "range": {"fuel_25%": 140, "fuel_50%": 295, "fuel_75%": 452, "fuel_100%": 610},
+                "range": {"fuel_25%": 185, "fuel_50%": 390, "fuel_75%": 600, "fuel_100%": 810},
             },
             "attack": {
                 "speed": 1000, "reference_altitude": 5000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 102, "fuel_50%": 218, "fuel_75%": 334, "fuel_100%": 450},
+                "range": {"fuel_25%": 135, "fuel_50%": 290, "fuel_75%": 445, "fuel_100%": 600},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1427,12 +1429,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 200,
-                "range": {"fuel_25%": 135, "fuel_50%": 285, "fuel_75%": 437, "fuel_100%": 590},
+                "range": {"fuel_25%": 180, "fuel_50%": 380, "fuel_75%": 580, "fuel_100%": 785},
             },
             "attack": {
                 "speed": 850, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 200,
-                "range": {"fuel_25%": 98, "fuel_50%": 208, "fuel_75%": 319, "fuel_100%": 430},
+                "range": {"fuel_25%": 130, "fuel_50%": 275, "fuel_75%": 425, "fuel_100%": 570},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1465,12 +1467,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 900, "reference_altitude": 9000,
                 "altitude_max": 16000, "altitude_min": 1000,
-                "range": {"fuel_25%": 150, "fuel_50%": 318, "fuel_75%": 485, "fuel_100%": 652},
+                "range": {"fuel_25%": 200, "fuel_50%": 425, "fuel_75%": 645, "fuel_100%": 865},
             },
             "attack": {
                 "speed": 2100, "reference_altitude": 12000,
                 "altitude_max": 16000, "altitude_min": 500,
-                "range": {"fuel_25%": 110, "fuel_50%": 234, "fuel_75%": 358, "fuel_100%": 483},
+                "range": {"fuel_25%": 145, "fuel_50%": 310, "fuel_75%": 475, "fuel_100%": 640},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1498,12 +1500,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 850, "reference_altitude": 7000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 132, "fuel_50%": 278, "fuel_75%": 425, "fuel_100%": 573},
+                "range": {"fuel_25%": 175, "fuel_50%": 370, "fuel_75%": 565, "fuel_100%": 760},
             },
             "attack": {
                 "speed": 900, "reference_altitude": 4000,
                 "altitude_max": 9000, "altitude_min": 300,
-                "range": {"fuel_25%": 96, "fuel_50%": 203, "fuel_75%": 311, "fuel_100%": 420},
+                "range": {"fuel_25%": 130, "fuel_50%": 270, "fuel_75%": 415, "fuel_100%": 560},
             },
             "usability": {"day": True, "night": True, "adverse_weather": False},
             "mandatory_support": {
@@ -1531,12 +1533,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 870, "reference_altitude": 7000,
                 "altitude_max": 14000, "altitude_min": 500,
-                "range": {"fuel_25%": 143, "fuel_50%": 302, "fuel_75%": 461, "fuel_100%": 622},
+                "range": {"fuel_25%": 190, "fuel_50%": 400, "fuel_75%": 615, "fuel_100%": 825},
             },
             "attack": {
                 "speed": 1000, "reference_altitude": 5000,
                 "altitude_max": 12000, "altitude_min": 500,
-                "range": {"fuel_25%": 104, "fuel_50%": 222, "fuel_75%": 340, "fuel_100%": 458},
+                "range": {"fuel_25%": 140, "fuel_50%": 295, "fuel_75%": 450, "fuel_100%": 610},
             },
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {
@@ -1564,12 +1566,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 840, "reference_altitude": 6000,
                 "altitude_max": 12000, "altitude_min": 300,
-                "range": {"fuel_25%": 130, "fuel_50%": 274, "fuel_75%": 420, "fuel_100%": 567},
+                "range": {"fuel_25%": 175, "fuel_50%": 365, "fuel_75%": 560, "fuel_100%": 755},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 3000,
                 "altitude_max": 8000, "altitude_min": 300,
-                "range": {"fuel_25%": 94, "fuel_50%": 200, "fuel_75%": 307, "fuel_100%": 415},
+                "range": {"fuel_25%": 125, "fuel_50%": 265, "fuel_75%": 410, "fuel_100%": 550},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -1921,12 +1923,12 @@ AIRCRAFT_LOADOUTS = {
             "cruise": {
                 "speed": 820, "reference_altitude": 100,
                 "altitude_max": 3000, "altitude_min": 30,
-                "range": {"fuel_25%": 140, "fuel_50%": 300, "fuel_75%": 460, "fuel_100%": 620},
+                "range": {"fuel_25%": 155, "fuel_50%": 335, "fuel_75%": 515, "fuel_100%": 695},
             },
             "attack": {
                 "speed": 950, "reference_altitude": 30,
                 "altitude_max": 1000, "altitude_min": 15,
-                "range": {"fuel_25%": 100, "fuel_50%": 215, "fuel_75%": 330, "fuel_100%": 450},
+                "range": {"fuel_25%": 110, "fuel_50%": 240, "fuel_75%": 370, "fuel_100%": 505},
             },
             "usability": {"day": True, "night": False, "adverse_weather": False},
             "mandatory_support": {
@@ -3680,4 +3682,114 @@ AIRCRAFT_LOADOUTS = {
 }  # end AIRCRAFT_LOADOUTS
 
 
+
+# =========================================================================
+# Methods to retrieve loadout information
+# =========================================================================
+
+def get_loadout(aircraft_name, loadout_name):
+    """Retrieve the loadout configuration for a specific aircraft and loadout name."""
+    try:
+        return AIRCRAFT_LOADOUTS[aircraft_name][loadout_name]
+    except KeyError:
+        raise ValueError(f"Loadout '{loadout_name}' not found for aircraft '{aircraft_name}'")
+    
+def get_loadout_tasks(aircraft_name, loadout_name):
+    """Get the list of tasks associated with a specific loadout."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    return loadout.get("tasks", [])
+
+def get_loadout_attributes(aircraft_name, loadout_name):
+    """Get the list of attributes associated with a specific loadout."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    return loadout.get("attributes", [])
+
+def evaluate_loadout_usability(aircraft_name, loadout_name, conditions):
+    """Evaluate if a loadout is usable under given conditions (day/night/adverse weather)."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    usability = loadout.get("usability", {})
+    for condition in conditions:
+        if not usability.get(condition, False):
+            return False
+    return True
+
+def evaluate_loadout_support_requirements(aircraft_name, loadout_name, support_available):
+    """Evaluate if the mandatory support requirements for a loadout are met."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    mandatory_support = loadout.get("mandatory_support", {})
+    for support_type, required in mandatory_support.items():
+        if required and not support_available.get(support_type, False):
+            return False
+    return True
+
+def evaluate_loadout_range(aircraft_name, loadout_name, fuel_percentage, phase):
+    """Evaluate the range of a loadout based on fuel percentage and mission phase (cruise/attack)."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    phase_data = loadout.get(phase, {})
+    range_data = phase_data.get("range", {})
+    return range_data.get(f"fuel_{fuel_percentage}%", 0)
+
+def evaluate_loadout_speed(aircraft_name, loadout_name, phase):
+    """Evaluate the speed of a loadout based on mission phase (cruise/attack)."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    phase_data = loadout.get(phase, {})
+    return phase_data.get("speed", 0)
+
+def evaluate_loadout_altitude(aircraft_name, loadout_name, phase):
+    """Evaluate the altitude parameters of a loadout based on mission phase (cruise/attack)."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    phase_data = loadout.get(phase, {})
+    return {
+        "reference_altitude": phase_data.get("reference_altitude", 0),
+        "altitude_max": phase_data.get("altitude_max", 0),
+        "altitude_min": phase_data.get("altitude_min", 0),
+    }
+
+def calc_loadout_effectiveness(aircraft_name, loadout_name, conditions, support_available, fuel_percentage, phase):
+    """Calculate an overall effectiveness score for a loadout based on various factors."""
+    usability_score = 1 if evaluate_loadout_usability(aircraft_name, loadout_name, conditions) else 0
+    support_score = 1 if evaluate_loadout_support_requirements(aircraft_name, loadout_name, support_available) else 0
+    range_score = evaluate_loadout_range(aircraft_name, loadout_name, fuel_percentage, phase) / 1000  # Normalize range
+    speed_score = evaluate_loadout_speed(aircraft_name, loadout_name, phase) / 1000  # Normalize speed
+    
+    # Simple weighted average of factors (weights can be adjusted as needed)
+    effectiveness = (0.4 * usability_score) + (0.3 * support_score) + (0.2 * range_score) + (0.1 * speed_score)
+    return effectiveness
+
+
+def loadout_eval(aircraft_name: str, loadout_name: str) -> float: # questo lo usi per verificare come l'aereo performa per la missione senza considerare la tipologia del target
+    """Evaluate the overall effectiveness of a loadout based on its attributes, range, speed, and weaponry."""
+    
+    score = 0.0
+    weapons_score = 0.0
+
+    loadout = get_loadout(aircraft_name, loadout_name)
+    cruise_data = loadout.get("cruise", {})
+    attack_data = loadout.get("attack", {})
+    pylons = loadout.get("stores", {}).get("pylons", {})
+    attack_range_data = attack_data.get("range", {})
+    attack_speed = attack_data.get("speed", 0)
+    cruise_range_data = cruise_data.get("range", {})
+    cruise_speed = cruise_data.get("speed", 0)
+
+    for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
+        weapons_score += get_weapon_score( weapon_model = weapon[0] ) * weapon[1] # punteggio base dell'arma in base al modello
+        
+    score_phases = attack_speed / 1000 + cruise_speed / 1000 # normalizzo la velocità a 1000 km/h per avere un punteggio più gestibile
+    score_ranges = (attack_range_data.get("fuel_100%", 0) + cruise_range_data.get("fuel_100%", 0)) / 2000 # normalizzo la gittata a 2000 km per avere un punteggio più gestibile
+    score += weapons_score * 0.5 + score_phases * 0.3 + score_ranges * 0.2 # peso del punteggio delle armi al 50%, della velocità al 30% e della gittata al 20%            
+
+    return score
+
+def loadout_target_effectiveness(aircraft_name: str, loadout_name: str, target_type: List, target_dimension: List) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+    """Evaluate the effectiveness of a loadout against specific target types and dimensions."""
+    
+    score = 0.0
+    loadout = get_loadout(aircraft_name, loadout_name)
+    pylons = loadout.get("stores", {}).get("pylons", {})
+
+    for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
+        weapons_score += get_weapon_score_target(weapon[0]) * weapon[1] # punteggio base dell'arma in base al modello
+                
+    return score
 

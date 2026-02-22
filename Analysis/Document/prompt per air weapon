@@ -1,10 +1,5 @@
 DA FARE
 
-I range calcolati sembrano non tener conto dell'incremento di carburante dovuto ai serbatoi ausiliari presenti in alcuni loadout. Analizza questi loadout e aggiorna ecventualmente i range calcolati nei dizionari "cruise" e "attack"
-
-
-
-
 
 Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per tutte le armi appartenenti ad una determinata categoria specificata negli argomenti, le caratteristiche specificate nell'argomento. Negli argomenti includi la possibilità di scegliere la categoria dell'arma (MI
 
@@ -15,6 +10,14 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+Nel dizionario AIRCRAFT_LOADOUTS presente nel modulo Aircraft_Loadouts.py i valori assegnati alle chiavi "range" dei dizionari "cruise" ed "attack", sembrano non tener conto dell'incremento di carburante dovuto ai serbatoi ausiliari presenti in alcuni loadout. Analizza questi loadout e aggiorna eventualmente i valori dei range
+
+NOTA
+Metodologia applicata da CLAUDE:
+  - 1 serbatoio ausiliario: factor = 1 + F_aux × 0.88 / F_int (penalità drag 12%)
+  - 2 serbatoi ausiliari: factor = 1 + F_aux_total × 0.80 / F_int (penalità drag 20%)
+
 
 
 Considerando tutti gli aerei presenti come dizionari nel modulo Aircraft_Data.py e le armi specificate nel dizionario AIR_WEAPONS implementato nel modulo Aircraft_Weapon_Data.py, crea un nuovo modulo con nome Aircraft_Loadouts.py con implementato il dizionario AIRCRAFT_LOADOUTS dove, per ogni aereo, sono specificati tutti i possibili loadouts di armi. 
