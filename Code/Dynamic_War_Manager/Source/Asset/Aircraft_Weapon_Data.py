@@ -252,29 +252,79 @@ def get_missiles_score(model: str) -> float:
         raise TypeError(f"model is not str, got {type(model).__name__}")    
 
     weapon_name = 'MISSILES_AAM'    
+    accuracy = 0.0
+    destroy_capacity = 0.0
+    count_task = 1
+
     weapon = AIR_WEAPONS[weapon_name].get(model)#
 
     if not weapon:
         weapon_name = 'MISSILES_ASM'
         weapon = AIR_WEAPONS[weapon_name].get(model)#
 
+        if weapon:
+
+            task = weapon.get("task")
+            count_task = 0
+            reference_efficiency_param = []
+
+            #if task is None or task not in AIR_TASK:
+            #    logger.error(f"weapon {model} has task {task} unknow")
+            #    raise ValueError(f"weapon {model} has task {task} unknow")
+
+            if "Strike" in task or 'Pinpoint_Strike' in task:
+                count_task += 4
+                reference_efficiency_param.extend([weapon.get('efficiency').get('Structure').get('med'),
+                                                   weapon.get('efficiency').get('Structure').get('small'),
+                                                   weapon.get('efficiency').get('Hard', {}).get('med'),
+                                                   weapon.get('efficiency').get('Hard', {}).get('small')])
+
+            if "CAS" in task:
+                count_task += 8
+                reference_efficiency_param.extend([weapon.get('efficiency').get('Armored').get('med'),
+                                                   weapon.get('efficiency').get('Armored').get('small'),
+                                                   weapon.get('efficiency').get('Armored').get('big'),
+                                                   weapon.get('efficiency').get('Air_Defense').get('med'),
+                                                   weapon.get('efficiency').get('Air_Defense').get('small'),
+                                                   weapon.get('efficiency').get('Soft').get('big'),
+                                                   weapon.get('efficiency').get('Soft').get('med'),
+                                                   weapon.get('efficiency').get('Soft').get('small')])
+
+            if "Anti-ship Strike" in task:
+                count_task += 3
+                reference_efficiency_param.extend([weapon.get('efficiency').get('ship').get('big'),
+                                                   weapon.get('efficiency').get('ship').get('med'),
+                                                   weapon.get('efficiency').get('ship').get('small')])
+
+            if "SEAD" in task:
+                count_task += 3
+                reference_efficiency_param.extend([weapon.get('efficiency').get('Air_Defense').get('big'),
+                                                   weapon.get('efficiency').get('Air_Defense').get('med'),
+                                                   weapon.get('efficiency').get('Air_Defense').get('small')])
+
+            for i in range(count_task):
+                if reference_efficiency_param[i]:
+                    accuracy += reference_efficiency_param[i].get('accuracy', 0.0)
+                    destroy_capacity += reference_efficiency_param[i].get('destroy_capacity', 0.0)
+
+        else:
+            logger.warning(f"weapon {model} unknow")
+            return 0.0
+
     else:
         if weapon.get('seeker') == 'radar':
             weapon_name = 'MISSILES_AAM_RAD'
         elif weapon.get('seeker') == 'infrared':
             weapon_name = 'MISSILES_AAM_INF'
-    
-    if not weapon:
-        logger.warning(f"weapon {model} unknow")
-        return 0.0
-
-
+        
     weapon_power = 0.0
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
         param_value = weapon.get(param_name) or 0.0
         weapon_power += param_value * coeff_value
 
+    if count_task > 0:
+        weapon_power *= (1 + (accuracy + destroy_capacity) / (2 * count_task))
     return weapon_power
 
 def get_bombs_score(model: str) -> float:
@@ -308,7 +358,9 @@ def get_bombs_score(model: str) -> float:
     destroy_capacity = 0.0
 
     if bomb_type in ["Bombs", "Guided bombs"]:
-        reference_efficiency_param = [weapon.get('efficiency').get('Structure').get('med'), weapon.get('efficiency').get('Structure').get('small'), weapon.get('efficiency').get('Armored').get('med')]    
+        reference_efficiency_param = [weapon.get('efficiency').get('Structure').get('med'), 
+                                      weapon.get('efficiency').get('Structure').get('small'), 
+                                      weapon.get('efficiency').get('Armored').get('med')]    
         
         if reference_efficiency_param[0]:
             accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
@@ -324,14 +376,15 @@ def get_bombs_score(model: str) -> float:
 
         if bomb_type == 'Bombs':
             precision_factor = 1.0
-            damage_factor = 1.0
-            
+                    
         elif bomb_type == 'Guided bombs':
             precision_factor = 1.2
-            damage_factor = 1.0
+        
         
     elif bomb_type == 'Cluster bombs':
-        reference_efficiency_param = [weapon.get('efficiency').get('Soft').get('med'), weapon.get('efficiency').get('Soft').get('small'), weapon.get('efficiency').get('Armored').get('med')]    
+        reference_efficiency_param = [weapon.get('efficiency').get('Soft').get('med'), 
+                                      weapon.get('efficiency').get('Soft').get('small'), 
+                                      weapon.get('efficiency').get('Armored').get('med')]    
         
         if reference_efficiency_param[0]:
             accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
@@ -346,14 +399,12 @@ def get_bombs_score(model: str) -> float:
             destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)
 
         precision_factor = 0.8
-        damage_factor = 1.3    
-    
-
+            
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
         param_value = weapon.get(param_name, 0.0)        
         weapon_power +=  param_value * coeff_value
 
-    return weapon_power * accuracy * destroy_capacity * precision_factor * damage_factor / 9
+    return weapon_power * precision_factor * ( 1 + (accuracy + destroy_capacity ) / 6 )
 
 def get_rockets_score(model: str) -> float:
     """
@@ -376,7 +427,36 @@ def get_rockets_score(model: str) -> float:
         return 0.0
 
     weapon_power = 0.0
+    accuracy = 0.0
+    destroy_capacity = 0.0
 
+    reference_efficiency_param = [weapon.get('efficiency').get('Structure').get('small'), 
+                                  weapon.get('efficiency').get('Armored').get('med'), 
+                                  weapon.get('efficiency').get('Armored').get('small'), 
+                                  weapon.get('efficiency').get('Air_Defense').get('med'),
+                                  weapon.get('efficiency').get('Soft').get('med')]    
+        
+    if reference_efficiency_param[0]:
+        accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[0].get('destroy_capacity', 0.0)    
+
+    if reference_efficiency_param[1]:
+        accuracy += reference_efficiency_param[1].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[1].get('destroy_capacity', 0.0)    
+
+    if reference_efficiency_param[2]:
+        accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)   
+    
+    if reference_efficiency_param[2]:
+        accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)   
+
+    if reference_efficiency_param[3]:
+        accuracy += reference_efficiency_param[3].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[3].get('destroy_capacity', 0.0)   
+
+    
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
 
         if param_name == 'warhead_type':
@@ -394,7 +474,7 @@ def get_rockets_score(model: str) -> float:
         else:
             weapon_power +=  weapon[param_name] * coeff_value
 
-    return weapon_power
+    return weapon_power * ( 1 + (accuracy + destroy_capacity) / 10 )
 
 def get_cannons_score(model: str) -> float:
     """
@@ -417,11 +497,34 @@ def get_cannons_score(model: str) -> float:
         return 0.0
 
     weapon_power = 0.0
+    accuracy = 0.0
+    destroy_capacity = 0.0
+
+    reference_efficiency_param = [weapon.get('efficiency').get('Armored').get('med'), 
+                                  weapon.get('efficiency').get('Armored').get('small'), 
+                                  weapon.get('efficiency').get('Air_Defense').get('small'), 
+                                  weapon.get('efficiency').get('Soft').get('med')]    
+        
+    if reference_efficiency_param[0]:
+        accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[0].get('destroy_capacity', 0.0)    
+
+    if reference_efficiency_param[1]:
+        accuracy += reference_efficiency_param[1].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[1].get('destroy_capacity', 0.0)    
+
+    if reference_efficiency_param[2]:
+        accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)   
+    
+    if reference_efficiency_param[2]:
+        accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+        destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
         weapon_power +=  weapon[param_name] * coeff_value
 
-    return weapon_power
+    return weapon_power * ( 1 + (accuracy + destroy_capacity ) / 8)
 
 def get_machine_guns_score(model: str) -> float:
     """
