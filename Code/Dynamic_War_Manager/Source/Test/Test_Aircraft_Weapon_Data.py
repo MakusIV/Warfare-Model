@@ -21,9 +21,15 @@ Bug nel modulo Aircraft_Weapon_Data (documentati nei test):
       AIM-7 (SARH) che hanno `active_range: None`.
       [CORRETTO: sostituito con `weapon.get(param_name) or 0.0`]
   B2. get_weapon_score_target(): `score` non inizializzata → NameError.
-  B3. get_weapon_score_target(): usa la lista `target_type` come chiave del
+      [CORRETTO: aggiunta inizializzazione `score = 0.0`]
+  B3. get_weapon_score_target(): usava la lista `target_type` come chiave del
       dizionario efficiency invece della variabile di loop `t_type` → TypeError.
+      [CORRETTO: sostituito con `.get(t_type, {})`]
   B4. get_weapon_score_target(): stessa issue con `target_dimension` vs `t_dim`.
+      [CORRETTO: sostituito con `.get(t_dim, {})`]
+  B6. TARGET_DIMENSION = ['small','medium','large'] non corrispondeva alle chiavi
+      efficiency 'small'/'med'/'big' → validazione sempre falliva → ritornava 0.
+      [CORRETTO: aggiornato a ['small','med','big']]
 """
 
 import os
@@ -502,14 +508,13 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
     Unit test per get_weapon_score_target().
     Logger mockato per isolare i test dal Bug B0.
 
-    Bug documentati:
-      B2. `score` non inizializzata prima del loop → NameError.
-      B3. `weapon.get('efficiency').get(target_type)` usa la *lista* target_type
-          invece della variabile di loop t_type → TypeError (unhashable list).
-      B4. Stessa issue con target_dimension vs t_dim.
-      B6. Le chiavi efficiency ("big"/"med"/"small") non corrispondono a
-          TARGET_DIMENSION del modulo ['small','medium','large'] → "big" e "med"
-          non superano la validazione e vengono sempre saltati.
+    Bug corretti:
+      B2. `score` non inizializzata → inizializzata a 0.0 prima del loop.
+      B3. `weapon.get('efficiency').get(target_type)` usava la lista target_type
+          invece della variabile t_type → corretto in .get(t_type, {}).
+      B4. Stessa correzione per target_dimension → .get(t_dim, {}).
+      B6. TARGET_DIMENSION era ['small','medium','large'] mentre le chiavi
+          efficiency sono 'small'/'med'/'big' → corretto in ['small','med','big'].
     """
 
     def setUp(self):
@@ -551,20 +556,20 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
             get_weapon_score_target("RB-05A", ["Soft"], ["UNKNOWN_DIM_XYZ"]), 0.0
         )
 
-    def test_target_dim_big_skipped_due_to_bug_b6(self):
+    def test_target_dim_big_valid(self):
         """
-        Bug B6: "big" non è in TARGET_DIMENSION = ['small','medium','large'] →
-        il loop interno lo salta → target_evaluation_count resta 0 → 0.0.
+        Bug B6 corretto: "big" è ora in TARGET_DIMENSION = ['small','med','big'] →
+        il loop elabora la dimensione e restituisce un punteggio >= 0.
         """
-        self.assertEqual(
-            get_weapon_score_target("RB-05A", ["Soft"], ["big"]), 0.0
-        )
+        score = get_weapon_score_target("RB-05A", ["Soft"], ["big"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
-    def test_target_dim_med_skipped_due_to_bug_b6(self):
-        """Bug B6: "med" non è in TARGET_DIMENSION → 0.0."""
-        self.assertEqual(
-            get_weapon_score_target("RB-05A", ["Soft"], ["med"]), 0.0
-        )
+    def test_target_dim_med_valid(self):
+        """Bug B6 corretto: "med" è ora in TARGET_DIMENSION → punteggio >= 0."""
+        score = get_weapon_score_target("RB-05A", ["Soft"], ["med"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
     def test_unknown_model_returns_zero(self):
         """Arma sconosciuta → get_weapon restituisce None → 0.0."""
@@ -572,31 +577,33 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
             get_weapon_score_target("WEAPON_NOT_EXISTING_XYZ", ["Soft"], ["small"]), 0.0
         )
 
-    # ── casi che evidenziano i bug B3/B4 ────────────────────────
-    def test_valid_asm_valid_target_raises_error_bug_b3(self):
+    # ── test post-correzione B2/B3/B4 ────────────────────────────
+    def test_valid_asm_valid_target_returns_score(self):
         """
-        Bug B3: con un target_dim valido ("small" è in TARGET_DIMENSION),
-        il loop interno avanza e chiama:
-            weapon.get('efficiency').get(target_type)
-        dove target_type = ['Soft'] (lista, non stringa) → TypeError.
+        Bug B2/B3/B4 corretti: get_weapon_score_target su un ASM con target
+        valido deve restituire un float >= 0 senza eccezioni.
         """
-        with self.assertRaises((TypeError, NameError, AttributeError)):
-            get_weapon_score_target("RB-05A", ["Soft"], ["small"])
+        score = get_weapon_score_target("RB-05A", ["Soft"], ["small"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
-    def test_valid_cannon_valid_target_raises_error_bug_b3(self):
-        """Bug B3: stesso errore per un cannone."""
-        with self.assertRaises((TypeError, NameError, AttributeError)):
-            get_weapon_score_target("UPK-23", ["Armored"], ["small"])
+    def test_valid_cannon_valid_target_returns_score(self):
+        """Bug B2/B3/B4 corretti: stesso test per un cannone."""
+        score = get_weapon_score_target("UPK-23", ["Armored"], ["small"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
-    def test_valid_bomb_valid_target_raises_error_bug_b3(self):
-        """Bug B3: stesso errore per una bomba."""
-        with self.assertRaises((TypeError, NameError, AttributeError)):
-            get_weapon_score_target("Mk-84", ["Soft"], ["small"])
+    def test_valid_bomb_valid_target_returns_score(self):
+        """Bug B2/B3/B4 corretti: stesso test per una bomba."""
+        score = get_weapon_score_target("Mk-84", ["Soft"], ["small"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
-    def test_valid_rocket_valid_target_raises_error_bug_b3(self):
-        """Bug B3: stesso errore per un razzo."""
-        with self.assertRaises((TypeError, NameError, AttributeError)):
-            get_weapon_score_target("Zuni-Mk71", ["Soft"], ["small"])
+    def test_valid_rocket_valid_target_returns_score(self):
+        """Bug B2/B3/B4 corretti: stesso test per un razzo."""
+        score = get_weapon_score_target("Zuni-Mk71", ["Soft"], ["small"])
+        self.assertIsInstance(score, float)
+        self.assertGreaterEqual(score, 0.0)
 
     # ── validazione tipo parametro ───────────────────────────────
     def test_type_error_non_string_model_int(self):

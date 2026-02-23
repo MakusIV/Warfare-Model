@@ -16,7 +16,7 @@ logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
 AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
 TARGET_CLASSIFICATION = TARGET_CLASSIFICATION.keys()
-TARGET_DIMENSION = ['small', 'medium', 'large']
+TARGET_DIMENSION = ['small', 'med', 'big']
 _INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
 # Usato in get_<weapon_type>_score
@@ -627,6 +627,7 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
 
     weapon = weapon_dict.get('weapons_data', {})
 
+    score = 0.0
     target_evaluation_count = 0
 
     for t_type in target_type:
@@ -634,14 +635,14 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
         if t_type not in TARGET_CLASSIFICATION:
             logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
             continue
-        
+
         for t_dim in target_dimension:
 
             if t_dim not in TARGET_DIMENSION:
                 logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
                 continue
 
-            efficiency_param = weapon.get('efficiency').get(target_type).get(target_dimension, {})
+            efficiency_param = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
             accuracy = efficiency_param.get('accuracy', 0.0)
             destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
             score += accuracy * destroy_capacity
