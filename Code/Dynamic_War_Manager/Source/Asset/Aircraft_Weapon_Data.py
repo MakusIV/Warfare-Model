@@ -272,9 +272,10 @@ def get_missiles_score(model: str) -> float:
     weapon_power = 0.0
 
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
-        weapon_power +=  weapon[param_name] * coeff_value
+        param_value = weapon.get(param_name) or 0.0
+        weapon_power += param_value * coeff_value
 
-    return weapon_power 
+    return weapon_power
 
 def get_bombs_score(model: str) -> float:
     """
@@ -298,30 +299,61 @@ def get_bombs_score(model: str) -> float:
         return 0.0
     bomb_type = weapon.get('type', 'type_not_specified')
 
-    if bomb_type != 'type_not_specified':
+    if bomb_type == 'type_not_specified':
         logger.warning(f"weapon_type {model} - type_not_specified")
         return 0.0
-    small_structure_efficiency_param = weapon.get('efficiency').get('Structure').get('small')    
-    accuracy = small_structure_efficiency_param.get('accuracy', 0.5)
-    destroy_capacity = small_structure_efficiency_param.get('destroy_capacity', 0.5)
+    
     weapon_power = 0.0
+    accuracy = 0.0
+    destroy_capacity = 0.0
 
-    if bomb_type == 'Bombs':
-        precision_factor = 1.0
-        damage_factor = 1.0
+    if bomb_type in ["Bombs", "Guided bombs"]:
+        reference_efficiency_param = [weapon.get('efficiency').get('Structure').get('med'), weapon.get('efficiency').get('Structure').get('small'), weapon.get('efficiency').get('Armored').get('med')]    
         
-    elif bomb_type == 'Guided Bombs':
-        precision_factor = 1.2
-        damage_factor = 1.0
+        if reference_efficiency_param[0]:
+            accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[0].get('destroy_capacity', 0.0)    
+
+        if reference_efficiency_param[1]:
+            accuracy += reference_efficiency_param[1].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[1].get('destroy_capacity', 0.0)    
+
+        if reference_efficiency_param[2]:
+            accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)    
+
+        if bomb_type == 'Bombs':
+            precision_factor = 1.0
+            damage_factor = 1.0
+            
+        elif bomb_type == 'Guided bombs':
+            precision_factor = 1.2
+            damage_factor = 1.0
         
-    elif bomb_type == 'Cluster_bombs':
+    elif bomb_type == 'Cluster bombs':
+        reference_efficiency_param = [weapon.get('efficiency').get('Soft').get('med'), weapon.get('efficiency').get('Soft').get('small'), weapon.get('efficiency').get('Armored').get('med')]    
+        
+        if reference_efficiency_param[0]:
+            accuracy += reference_efficiency_param[0].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[0].get('destroy_capacity', 0.0)    
+
+        if reference_efficiency_param[1]:
+            accuracy += reference_efficiency_param[1].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[1].get('destroy_capacity', 0.0)    
+
+        if reference_efficiency_param[2]:
+            accuracy += reference_efficiency_param[2].get('accuracy', 0.0)
+            destroy_capacity += reference_efficiency_param[2].get('destroy_capacity', 0.0)
+
         precision_factor = 0.8
         damage_factor = 1.3    
     
+
     for param_name, coeff_value in WEAPON_PARAM[weapon_name].items():
         param_value = weapon.get(param_name, 0.0)        
         weapon_power +=  param_value * coeff_value
-    return weapon_power * accuracy * destroy_capacity * precision_factor * damage_factor
+
+    return weapon_power * accuracy * destroy_capacity * precision_factor * damage_factor / 9
 
 def get_rockets_score(model: str) -> float:
     """
@@ -1243,7 +1275,7 @@ AIR_WEAPONS = {
             "cost": 720,
             "warhead": 200,  # kg
             "range": 75,
-            "speed": 306, # m/s
+            "max_speed": 306, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "ship": {
@@ -1272,7 +1304,7 @@ AIR_WEAPONS = {
             "cost": 32,
             "warhead": 66,
             "range": 10,
-            "speed": 680, # m/s
+            "max_speed": 680, # m/s
             "perc_efficiency_variability": 0.2,
             "efficiency": {
                 "Air_Defense": {
@@ -1292,7 +1324,7 @@ AIR_WEAPONS = {
             "cost": 720,
             "warhead": 221,
             "range": 50,
-            "speed": 240, # m/s
+            "max_speed": 240, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "ship": {
@@ -1312,7 +1344,7 @@ AIR_WEAPONS = {
             "cost": 200,
             "warhead": 66,  # kg - WDU-21/B blast-fragmentation
             "range": 80,
-            "speed": 680, # m/s
+            "max_speed": 680, # m/s
             "perc_efficiency_variability": 0.2,
             "efficiency": {
                 "Air_Defense": {
@@ -1332,7 +1364,7 @@ AIR_WEAPONS = {
             "cost": 200,
             "warhead": 165,
             "range": 30,
-            "speed": 313, # m/s
+            "max_speed": 313, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "ship": {
@@ -1352,7 +1384,7 @@ AIR_WEAPONS = {
             "cost": 300,
             "warhead": 160,
             "range": 9,
-            "speed": 340, # m/s
+            "max_speed": 340, # m/s
             "perc_efficiency_variability": 0.2,
             "efficiency": {
                 "Soft": {
@@ -1422,7 +1454,7 @@ AIR_WEAPONS = {
             "cost": 700,
             "warhead": 300,
             "range": 32,
-            "speed": 306, # m/s
+            "max_speed": 306, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "ship": {
@@ -1442,7 +1474,7 @@ AIR_WEAPONS = {
             "cost": 700,
             "warhead": 230,
             "range": 100,
-            "speed": 315, # m/s
+            "max_speed": 315, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "ship": {
@@ -1462,7 +1494,7 @@ AIR_WEAPONS = {
             "cost": 160,
             "warhead": 57,  # kg - WDU-20/B shaped-charge
             "range": 15,
-            "speed": 320, # m/s
+            "max_speed": 320, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -1532,7 +1564,7 @@ AIR_WEAPONS = {
             "cost": 350,
             "warhead": 200,
             "range": 70,
-            "speed": 306, # m/s
+            "max_speed": 306, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "ship": {
@@ -1552,7 +1584,7 @@ AIR_WEAPONS = {
             "cost": 160,
             "warhead": 57,  # kg - WDU-20/B shaped-charge
             "range": 15,
-            "speed": 320, # m/s
+            "max_speed": 320, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -1622,7 +1654,7 @@ AIR_WEAPONS = {
             "cost": 160,
             "warhead": 136,  # kg - WDU-24/B penetrating blast-fragmentation
             "range": 15,
-            "speed": 320, # m/s
+            "max_speed": 320, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -1692,7 +1724,7 @@ AIR_WEAPONS = {
             "cost": 80,
             "warhead": 9,
             "range": 8,
-            "speed": 425, # m/s
+            "max_speed": 425, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -1762,7 +1794,7 @@ AIR_WEAPONS = {
             "cost": 12,
             "warhead": 6.14,
             "range": 3,
-            "speed": 278, # m/s
+            "max_speed": 278, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -1829,7 +1861,7 @@ AIR_WEAPONS = {
         "cost": 50,  # k$
         "warhead": 7.4,  # kg
         "range": 6,  # Km
-        "speed": 550, # m/s
+        "max_speed": 550, # m/s
         "perc_efficiency_variability": 0.1,
         "efficiency": {
             "Soft": {
@@ -1893,7 +1925,7 @@ AIR_WEAPONS = {
             "cost": 50,  # k$
             "warhead": 7.4,  # kg
             "range": 6,  # Km
-            "speed": 550, # m/s
+            "max_speed": 550, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -1957,7 +1989,7 @@ AIR_WEAPONS = {
             "cost": 35,  # k$
             "warhead": 5,  # kg
             "range": 7,  # Km
-            "speed": 530, # m/s
+            "max_speed": 530, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2021,7 +2053,7 @@ AIR_WEAPONS = {
             "cost": 35,  # k$
             "warhead": 6,  # kg
             "range": 4,  # Km
-            "speed": 260, # m/s
+            "max_speed": 260, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2085,7 +2117,7 @@ AIR_WEAPONS = {
             "cost": 40,  # k$
             "warhead": 3,  # kg
             "range": 6,  # Km
-            "speed": 930, # m/s
+            "max_speed": 930, # m/s
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -2148,7 +2180,7 @@ AIR_WEAPONS = {
             "cost": 1000,  # k$
             "warhead": 1000,  # kg
             "range": 330,
-            "speed": 1190, # m/s
+            "max_speed": 1190, # m/s
             "perc_efficiency_variability": 0.05,  # efficiecy variability 0-1 (100%)
             "efficiency": {
                 "ship": {  # mobile target
@@ -2177,7 +2209,7 @@ AIR_WEAPONS = {
             "cost": 700,  # k$
             "warhead": 149,  # kg
             "range": 250,
-            "speed": 1190, # m/s
+            "max_speed": 1190, # m/s
             "perc_efficiency_variability": 0.2,  # efficiecy variability(0-1): firepower_max = firepower_max * ( 1 + perc_efficiency_variability )
             "efficiency": {
                 "Air_Defense": {
@@ -2206,7 +2238,7 @@ AIR_WEAPONS = {
             "cost": 200,  # k$
             "warhead": 111,  # kg
             "range": 10,  # Km
-            "speed": 600, # m/s
+            "max_speed": 600, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2280,7 +2312,7 @@ AIR_WEAPONS = {
             "cost": 600,  # k$
             "warhead": 148,  # kg
             "range": 90,  # Km
-            "speed": 310, # m/s
+            "max_speed": 310, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2354,7 +2386,7 @@ AIR_WEAPONS = {
             "cost": 160,  # k$
             "warhead": 90,  # kg
             "range": 11,  # Km
-            "speed": 870, # m/s
+            "max_speed": 870, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2428,7 +2460,7 @@ AIR_WEAPONS = {
             "cost": 160,  # k$
             "warhead": 140,  # kg
             "range": 11,  # Km
-            "speed": 870, # m/s
+            "max_speed": 870, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2502,7 +2534,7 @@ AIR_WEAPONS = {
             "cost": 300,  # k$
             "warhead": 90,  # kg
             "range": 30,  # Km
-            "speed": 870, # m/s
+            "max_speed": 870, # m/s
             "perc_efficiency_variability": 0.1,  # efficiency variability(0-1): firepower_max = firepower_max * (1 + perc_efficiency_variability)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -2531,7 +2563,7 @@ AIR_WEAPONS = {
             "cost": 200,  # k$
             "warhead": 90,  # kg
             "range": 18,  # Km
-            "speed": 870, # m/s
+            "max_speed": 870, # m/s
             "perc_efficiency_variability": 0.2,  # efficiency variability(0-1): firepower_max = firepower_max * (1 + perc_efficiency_variability)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -2560,7 +2592,7 @@ AIR_WEAPONS = {
             "cost": 160,  # k$
             "warhead": 320,  # kg
             "range": 10,  # Km
-            "speed": 900, # m/s
+            "max_speed": 900, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -2633,7 +2665,7 @@ AIR_WEAPONS = {
             "cost": 160,  # k$
             "warhead": 320,  # kg
             "range": 12,  # Km
-            "speed": 900, # m/s
+            "max_speed": 900, # m/s
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -3516,7 +3548,7 @@ AIR_WEAPONS = {
             "start_service": 1990,
             "end_service": None,
             "cost": 15,  # k$
-            "weight": None,  # kg
+            "weight": 598,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -3571,7 +3603,7 @@ AIR_WEAPONS = {
             "start_service": 1990,
             "end_service": None,
             "cost": 15,  # k$
-            "weight": None,  # kg
+            "weight": 605,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -3626,7 +3658,7 @@ AIR_WEAPONS = {
             "start_service": 1990,
             "end_service": None,
             "cost": 15,  # k$
-            "weight": None,  # kg
+            "weight": 605,  # kg
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4456,6 +4488,20 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.7, "destroy_capacity": 4.3},
                     "small": {"accuracy": 0.65, "destroy_capacity": 7.5}
                 },
+                "Armored": {  # mobile target armor
+                    "big": {
+                        "accuracy": 0.75,
+                        "destroy_capacity": 1,
+                    },
+                    "med": {
+                        "accuracy": 0.7,
+                        "destroy_capacity": 3,
+                    },
+                    "small": {
+                        "accuracy": 0.65,
+                        "destroy_capacity": 6,
+                    }
+                },
             },
         },
         "RBK-500AO": {
@@ -4478,6 +4524,20 @@ AIR_WEAPONS = {
                     "big": {"accuracy": 0.75, "destroy_capacity": 4},
                     "med": {"accuracy": 0.7, "destroy_capacity": 6},
                     "small": {"accuracy": 0.65, "destroy_capacity": 8}
+                },
+                "Armored": {  # mobile target armor
+                    "big": {
+                        "accuracy": 0.75,
+                        "destroy_capacity": 2,
+                    },
+                    "med": {
+                        "accuracy": 0.7,
+                        "destroy_capacity": 4,
+                    },
+                    "small": {
+                        "accuracy": 0.65,
+                        "destroy_capacity": 7,
+                    }
                 },
             },
         },
@@ -4855,6 +4915,20 @@ AIR_WEAPONS = {
                         "destroy_capacity": 7.5,
                     }
                 },
+                 "Armored": {  # mobile target armor
+                    "big": {
+                        "accuracy": 0.75,
+                        "destroy_capacity": 1.3,
+                    },
+                    "med": {
+                        "accuracy": 0.7,
+                        "destroy_capacity": 2.4,
+                    },
+                    "small": {
+                        "accuracy": 0.65,
+                        "destroy_capacity": 3.5,
+                    }
+                },
             },
         },            
         "KGBU-2PTAB": {  # cluster bomb armor target
@@ -4949,6 +5023,20 @@ AIR_WEAPONS = {
                     "small": {
                         "accuracy": 0.65,
                         "destroy_capacity": 7.5,
+                    }
+                },
+                "Armored": {  # mobile target armor
+                    "big": {
+                        "accuracy": 0.75,
+                        "destroy_capacity": 1,
+                    },
+                    "med": {
+                        "accuracy": 0.7,
+                        "destroy_capacity": 2,
+                    },
+                    "small": {
+                        "accuracy": 0.65,
+                        "destroy_capacity": 3,
                     }
                 },
             },
@@ -6256,152 +6344,6 @@ AIR_WEAPONS = {
                     "big": {"accuracy": 0.3, "destroy_capacity": 0.01},
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.03},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.08},
-                },
-            },
-        },
-        "AN-M2": {  # 12.7mm (.50 cal) aircraft machine gun - A-20G (6 nose guns)
-            "type": "Cannon",
-            "model": "AN-M2",
-            "users": ["USA"],
-            "task": ["Strike"],
-            "start_service": 1939,
-            "end_service": None,
-            "cost": None,
-            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm)
-            "warhead": None,
-            "warhead_type": "AP",  # API, AP, HEI rounds
-            "range": 0.8,  # km effective strafing range
-            "speed": 866,  # m/s muzzle velocity
-            "fire_rate": 800,  # rpm
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "Soft": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": 0.06},
-                    "med": {"accuracy": 0.6, "destroy_capacity": 0.12},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
-                },
-                "Armored": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
-                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
-                },
-                "Hard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
-                },
-                "Structure": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Air_Defense": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": 0.05},
-                    "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.20},
-                },
-                "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "ship": {
-                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
-                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
-                },
-            },
-        },
-        "M3-Browning": {  # 12.7mm (.50 cal) high-rate aircraft MG - F-86E Sabre (6 guns)
-            "type": "Cannon",
-            "model": "M3-Browning",
-            "users": ["USA", "UK", "Canada", "Australia", "Japan", "West Germany", "Spain", "Pakistan", "South Korea", "Taiwan"],
-            "task": ["Strike"],
-            "start_service": 1945,
-            "end_service": None,
-            "cost": None,
-            "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm); ~1200-1250 rpm vs 800 rpm of AN/M2
-            "warhead": None,
-            "warhead_type": "AP",  # API, AP, HEI rounds
-            "range": 0.8,  # km effective strafing range
-            "speed": 875,  # m/s muzzle velocity
-            "fire_rate": 1200,  # rpm
-            "perc_efficiency_variability": 0.1,
-            "efficiency": {
-                "Soft": {
-                    "big": {"accuracy": 0.7, "destroy_capacity": 0.08},
-                    "med": {"accuracy": 0.6, "destroy_capacity": 0.15},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.30},
-                },
-                "Armored": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": 0.01},
-                    "med": {"accuracy": 0.5, "destroy_capacity": 0.02},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
-                },
-                "Hard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.005},
-                },
-                "Structure": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Air_Defense": {
-                    "big": {"accuracy": 0.6, "destroy_capacity": 0.07},
-                    "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.25},
-                },
-                "Airbase": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Port": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Shipyard": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Farp": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "Stronghold": {
-                    "big": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "med": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                    "small": {"accuracy": 0.5, "destroy_capacity": _INFRA_MIN},
-                },
-                "ship": {
-                    "big": {"accuracy": 0.2, "destroy_capacity": 0.005},
-                    "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
-                    "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
                 },
             },
         },

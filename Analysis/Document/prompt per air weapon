@@ -6,7 +6,9 @@ Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta 
 Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
 
 
-
+Realizza il modulo di test Test_Aircraft_Weapon_Data.py basato sulla libreria unittest. Il modulo deve implementare i test di unità per tutte le funzioni presenti. Inoltre, deve essere implementato il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
+- tabella di confronto del punteggio, calcolato con la funzione get_weapon_score(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Bombe, Missili AAM, ....). Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["MISSILES_ASM", "BOMBS", ...]. 
+- tabella di confronto del punteggio, calcolato con la funzione get_weapon_score_target(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Bombe, Missili AAM, ....) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["MISSILES_ASM", "BOMBS", ...]. 
 
 
 ESEGUITI
