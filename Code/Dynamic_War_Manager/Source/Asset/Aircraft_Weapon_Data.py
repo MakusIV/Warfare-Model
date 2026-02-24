@@ -28,17 +28,19 @@ WEAPON_PARAM = {
                         'range':            5 / ( 3000 * 27 ), # 3000                        
                         },
 
-    'MISSILES_AAM_RAD': {'warhead':         3 / ( 250 * 36 ), # in kg, ref ~250 kg (AIM-54C)
-                        'range':            5 / ( 100 * 36 ), # in km, ref ~50000 m (AIM-54C)
-                        'semiactive_range': 7 / ( 15 * 36 ), # in km, ref ~15000 m (AIM-54C)
-                        'active_range':     9 / ( 8 * 36 ),  # in km, ref ~8000 m (AIM-54C)                      
-                        'max_speed':        9 / ( 3 * 36 ), # in mach 
-                        'max_height':       3 / ( 30 * 36 ), # max ~30 km
+    'MISSILES_AAM_RAD': {'warhead':         3 / ( 250 * 43 ), # in kg, ref ~250 kg (AIM-54C)
+                        'range':            5 / ( 100 * 43 ), # in km, ref ~50000 m (AIM-54C)
+                        'semiactive_range': 7 / ( 15 * 43 ), # in km, ref ~15000 m (AIM-54C)
+                        'active_range':     9 / ( 8 * 43 ),  # in km, ref ~8000 m (AIM-54C)                      
+                        'max_speed':        9 / ( 3 * 43 ), # in mach 
+                        'max_height':       3 / ( 30 * 43 ), # max ~30 km
+                        'manouvrability':   7 / ( 10 * 43 ), # coeff, ref 10
                         },
-    'MISSILES_AAM_INF': {'warhead':         5 / ( 250 * 21 ), # in kg, ref ~250 kg (AIM-54C)
-                        'range':            5 / ( 5 * 21 ), # in km, ref ~50000 m (AIM-54C)                        
-                        'max_speed':        9 / ( 3 * 21 ), # in mach 
-                        'max_height':       2 / ( 30 * 21 ), # max ~30 km
+    'MISSILES_AAM_INF': {'warhead':         5 / ( 250 * 28 ), # in kg, ref ~250 kg (AIM-54C)
+                        'range':            5 / ( 5 * 28 ), # in km, ref ~50000 m (AIM-54C)                        
+                        'max_speed':        9 / ( 3 * 28 ), # in mach 
+                        'max_height':       2 / ( 30 * 28 ), # max ~30 km
+                        'manouvrability':   7 / ( 10 * 28 ), # coeff, ref 10
                         },
     
     'MISSILES_ASM':     {'warhead':         7 / ( 150 * 21 ), # in kg, ref 50 kg 
@@ -290,7 +292,7 @@ def get_missiles_score(model: str) -> float:
                                                    weapon.get('efficiency').get('Soft').get('med'),
                                                    weapon.get('efficiency').get('Soft').get('small')])
 
-            if "Anti-ship Strike" in task:
+            if "Anti_Ship" in task:
                 count_task += 3
                 reference_efficiency_param.extend([weapon.get('efficiency').get('ship').get('big'),
                                                    weapon.get('efficiency').get('ship').get('med'),
@@ -591,9 +593,9 @@ def get_weapon_score(model: str) -> float:
     
 def get_weapon_score_target(model: str, target_type: List, target_dimension: List) -> float:
     """
-    Returns an effectiveness score for a weapons against a specific target, based on the weapons's parameters and the target's characteristics.
+    Returns an effectiveness score for a weapons against a list of specific target, based on the weapons's parameters and the target's characteristics.
 
-    Restituisce un punteggio di efficacia per una bomba contro un bersaglio specifico, basato sui parametri della bomba e sulle caratteristiche del bersaglio.
+    Restituisce un punteggio di efficacia per una bomba valutando gli effetti in base ad una lista di bersagli con dimensioni specificate in una lista. Il calcolo è basato sui parametri della bomba e sulle caratteristiche del bersaglio.
     
     :param model: model of WEAPON / il modello dell'ARMA da valutare
     :type model: str
@@ -622,11 +624,8 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
             return 0.0
     
         logger.debug(f"weapon {model} found in category {weapon_dict['weapons_category']} with type {weapon_dict['weapons_type']}")
-
     
-
     weapon = weapon_dict.get('weapons_data', {})
-
     score = 0.0
     target_evaluation_count = 0
 
@@ -646,8 +645,7 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
             accuracy = efficiency_param.get('accuracy', 0.0)
             destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
             score += accuracy * destroy_capacity
-            target_evaluation_count += 1
-            # base_score = get_bombs_score(model) no solo per una valutazione sensa considerare target
+            target_evaluation_count += 1            
 
     return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
@@ -1299,7 +1297,7 @@ AIR_WEAPONS = {
             "model": "RB-05A",
             "users": ["Sweden"],
             "seeker": "electro-optical",
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1972,
             "end_service": 2005,
             "cost": 180,
@@ -1373,7 +1371,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "RB-15F",
             "users": ["Sweden"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1985,
             "end_service": None,
             "cost": 720,
@@ -1422,7 +1420,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "AGM-84A",
             "users": ["USA", "UK", "Germany", "Denmark", "Australia", "Japan", "South Korea", "Taiwan", "Egypt", "Saudi Arabia"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1970,
             "end_service": None,
             "cost": 720,
@@ -1462,7 +1460,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kormoran",
             "users": ["Germany", "Italy"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1973,
             "end_service": None,
             "cost": 200,
@@ -1482,7 +1480,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "RB-05E",
             "users": ["Sweden"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1972,
             "end_service": 2005,
             "cost": 300,
@@ -1552,7 +1550,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "RB-04E",
             "users": ["Sweden"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1975,
             "end_service": 2000,
             "cost": 700,
@@ -1572,7 +1570,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Sea Eagle",
             "users": ["UK", "India", "Saudi Arabia"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1985,
             "end_service": None,
             "cost": 700,
@@ -1592,7 +1590,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "RB-75T",
             "users": ["Sweden"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1972,
             "end_service": None,
             "cost": 160,
@@ -1662,7 +1660,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "RB-15",
             "users": ["Sweden", "Finland", "Croatia"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1989,
             "end_service": None,
             "cost": 350,
@@ -1682,7 +1680,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "AGM-65D",
             "users": ["USA", "UK", "Germany", "Italy", "Spain", "Greece", "Turkey", "Israel", "Egypt", "South Korea", "Taiwan"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1986,
             "end_service": None,
             "cost": 160,
@@ -1752,7 +1750,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "AGM-65K",
             "users": ["USA", "South Korea", "Taiwan"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1970,
             "end_service": None,
             "cost": 160,
@@ -1822,7 +1820,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "AGM-114",
             "users": ["USA", "UK", "Germany", "France", "Italy", "Israel", "Saudi Arabia", "UAE", "Japan", "South Korea", "Australia"],
-            "task": ["Strike", "SEAD", "Anti-ship Strike"],
+            "task": ["Strike", "SEAD", "Anti_Ship"],
             "start_service": 1984,
             "end_service": None,
             "cost": 80,
@@ -1959,7 +1957,7 @@ AIR_WEAPONS = {
         "type": "ASM",
         "model": "9M120-F",
         "users": ["Russia", "Belarus", "Kazakhstan", "Algeria"],
-        "task": ["Strike", "Anti-ship Strike"],
+        "task": ["Strike", "Anti_Ship"],
         "start_service": 1980,
         "end_service": None,
         "cost": 50,  # k$
@@ -2023,7 +2021,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "9M120",
             "users": ["Russia", "Belarus", "Kazakhstan", "Algeria", "Syria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1980,
             "end_service": None,
             "cost": 50,  # k$
@@ -2087,7 +2085,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "9M114",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1975,
             "end_service": None,
             "cost": 35,  # k$
@@ -2151,7 +2149,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Hot-3",
             "users": ["France", "Germany", "Egypt", "Iraq", "Saudi Arabia", "UAE", "Syria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1978,
             "end_service": None,
             "cost": 35,  # k$
@@ -2215,7 +2213,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Mistral",
             "users": ["France", "Belgium", "Brazil", "Chile", "Cyprus", "Egypt", "Finland", "Indonesia", "South Korea", "Norway", "Singapore"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1985,
             "end_service": None,
             "cost": 40,  # k$
@@ -2278,7 +2276,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-22N",
             "users": ["USSR", "Russia", "Ukraine"],
-            "task": ["Anti-ship Strike"],
+            "task": ["Anti_Ship"],
             "start_service": 1967,
             "end_service": None,
             "cost": 1000,  # k$
@@ -2336,7 +2334,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-66",
             "users": ["USSR", "Russia", "Syria", "Libya", "Iraq", "Egypt"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1967,
             "end_service": None,
             "cost": 200,  # k$
@@ -2410,7 +2408,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-59",
             "users": ["USSR", "Russia", "India", "China", "Algeria"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
             "cost": 600,  # k$
@@ -2484,7 +2482,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-25ML",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "Vietnam"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1975,
             "end_service": None,
             "cost": 160,  # k$
@@ -2558,7 +2556,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-25MR",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1975,
             "end_service": None,
             "cost": 160,  # k$
@@ -2690,7 +2688,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-29L",
             "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
             "cost": 160,  # k$
@@ -2763,7 +2761,7 @@ AIR_WEAPONS = {
             "type": "ASM",
             "model": "Kh-29T",
             "users": ["USSR", "Russia", "India", "China", "Syria", "Algeria"],
-            "task": ["Anti-ship Strike", "Strike", "SEAD"],
+            "task": ["Anti_Ship", "Strike", "SEAD"],
             "start_service": 1980,
             "end_service": None,
             "cost": 160,  # k$
@@ -2839,7 +2837,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "Mk-84",
             "users": ["USA", "UK", "Germany", "Italy", "France", "Spain", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Australia", "South Korea", "Japan", "Pakistan", "Iran"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1954,
             "end_service": None,
             "cost": 4.4,
@@ -2912,7 +2910,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "Mk-83",
             "users": ["USA", "UK", "Germany", "Italy", "France", "Spain", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Australia", "South Korea", "Japan", "Pakistan"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1954,
             "end_service": None,
             "cost": 3.3,
@@ -2985,7 +2983,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "Mk-82",
             "users": ["USA", "UK", "Germany", "Italy", "France", "Spain", "Turkey", "Greece", "Israel", "Egypt", "Saudi Arabia", "Australia", "South Korea", "Japan", "Pakistan"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1954,
             "end_service": None,
             "cost": 2.7,
@@ -3057,7 +3055,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "Mk-82AIR",
             "users": ["USA", "UK", "Italy", "Israel", "South Korea", "Australia"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1965,
             "end_service": None,
             "cost": 4,
@@ -3129,7 +3127,7 @@ AIR_WEAPONS = {
             "type": "Guided bombs",
             "model": "GBU-10",
             "users": ["USA", "UK", "Germany", "Italy", "France", "Israel", "Saudi Arabia", "Australia", "South Korea", "Turkey"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1980,
             "end_service": None,
             "cost": 27,
@@ -3202,7 +3200,7 @@ AIR_WEAPONS = {
             "type": "Guided bombs",
             "model": "GBU-16",
             "users": ["USA", "UK", "Germany", "Italy", "France", "Israel", "Saudi Arabia", "Australia", "South Korea", "Turkey"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1970,
             "end_service": None,
             "cost": 25,
@@ -3813,7 +3811,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "M/71",
             "users": ["Sweden"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1970,
             "end_service": None,
             "cost": 2,  # k$
@@ -3906,7 +3904,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "SAMP-400LD",
             "users": ["France", "Greece"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1950,
             "end_service": None,
             "cost": 3.3,  # k$
@@ -4016,7 +4014,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "SAMP-250HD",
             "users": ["France", "Greece"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1950,
             "end_service": None,
             "cost": 2.7,  # k$
@@ -4204,7 +4202,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "FAB-500M62",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "North Korea"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1962,
             "end_service": None,
             "cost": 3.3,  # k$
@@ -4331,7 +4329,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "FAB-250M54",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "North Korea"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1962,
             "end_service": None,
             "cost": 2.7,  # k$
@@ -4450,7 +4448,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "FAB-100",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "North Korea"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1962,
             "end_service": None,
             "cost": 1.5,  # k$
@@ -4677,7 +4675,7 @@ AIR_WEAPONS = {
             "type": "Bombs",
             "model": "BetAB-500",
             "users": ["USSR", "Russia", "India", "Syria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1962,
             "end_service": None,
             "cost": 2.7,  # k$
@@ -5151,7 +5149,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "Zuni-Mk71",
             "users": ["USA"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1956,
             "end_service": None,
             "cost": 0.4,  # k$
@@ -5223,7 +5221,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "Hydra-70MK5",
             "users": ["USA", "Israel", "Turkey", "South Korea"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1956,
             "end_service": None,
             "cost": 2.8,  # k$
@@ -5295,7 +5293,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "Hydra-70MK1",
             "users": ["USA", "Israel", "Turkey", "South Korea"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1956,
             "end_service": None,
             "cost": 2.8,  # k$
@@ -5367,7 +5365,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "SNEB-256",
             "users": ["France"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1955,
             "end_service": None,
             "cost": 2.5,  # k$
@@ -5439,7 +5437,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "SNEB-253",
             "users": ["France"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1955,
             "end_service": None,
             "cost": 1.7,  # k$
@@ -5511,7 +5509,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-5 M",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria", "Egypt"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1960,
             "end_service": None,
             "cost": 0.4,
@@ -5583,7 +5581,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-5 KO",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.8,
@@ -5655,7 +5653,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-8 OFP2",
             "users": ["USSR", "Russia", "India", "Syria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.6,
@@ -5727,7 +5725,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-8 KOM",
             "users": ["USSR", "Russia", "India", "Syria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1973,
             "end_service": None,
             "cost": 1,
@@ -5799,7 +5797,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-13",
             "users": ["USSR", "Russia", "India"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1973,
             "end_service": None,
             "cost": 0.8,
@@ -5871,7 +5869,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-25L",
             "users": ["USSR", "Russia"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1975,
             "end_service": None,
             "cost": 2.8,  # k$
@@ -5943,7 +5941,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "S-24",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1960,
             "end_service": None,
             "cost": 1.5,  # k$
@@ -6017,7 +6015,7 @@ AIR_WEAPONS = {
             "type": "Rockets",
             "model": "UPK-23",
             "users": ["USSR", "Russia", "India", "Syria", "Iraq", "Libya", "Algeria"],
-            "task": ["Strike", "Anti-ship Strike"],
+            "task": ["Strike", "Anti_Ship"],
             "start_service": 1972,
             "end_service": None,
             "cost": None,  # k$
