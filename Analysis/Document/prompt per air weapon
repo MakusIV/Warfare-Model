@@ -6,12 +6,24 @@ Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta 
 Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
 
 
+
+
+ESEGUITI
+
+Realizza il modulo di test Test_Aircraft_Loadouts.py basato sulla libreria unittest. Il modulo deve implementare i test di unità per tutte le funzioni presenti. 
+Inoltre, deve essere implementato il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
+- tabella di confronto del punteggio, calcolato con la funzione loadout_eval(), per tutti i loadout appartenenti a diversi task specificati in una lista modificabile: LOADOUTS = ["Strike", "Escort", ...] definiti per tutti gli aerei presenti nel dizionario AIRCRAF_LOADOUTS.  Per ogni task analizzato, la tabella deve riportare: il nome dell'aereo, il nome del loadout (la chiave del dizionario), il 'loadout_code' e lo score calcolato.
+- tabella di confronto del punteggio, calcolato con la funzione loadout_target_effectiveness(), per tutti i loadout appartenenti a diversi task specificati in una lista modificabile: LOADOUTS = ["Strike", "Escort", ...] definiti per tutti gli aerei presenti nel dizionario AIRCRAF_LOADOUTS. I valori da considerare per gli argomenti della funzione: target_type e target_dimension sono delle liste modificabili  contenenti ciascuna i valori ammessi per gli argomenti (TARGET_TYPE_LIST = ["Structure", "Hard", ....], TARGET_DIMENSION_LIST = ["big", "small", ...]), per gli argomenti route_lenght e route_speed sono i valori che consentono l'impiego di tutti i loadout da considerare.  Per ogni task analizzato, la tabella deve riportare: il nome dell'aereo, il nome del loadout (la chiave del dizionario), il 'loadout_code' e lo score calcolato.
+
+
+
+Analizza le funzioni loadout_eval() e loadout_target_effectiveness() che ho implementato nel Aircraft_Loadouts.py per verificare se ci sono errori logici o sintattici
+
 Realizza il modulo di test Test_Aircraft_Weapon_Data.py basato sulla libreria unittest. Il modulo deve implementare i test di unità per tutte le funzioni presenti. Inoltre, deve essere implementato il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
 - tabella di confronto del punteggio, calcolato con la funzione get_weapon_score(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Bombe, Missili AAM, ....). Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["MISSILES_ASM", "BOMBS", ...]. 
 - tabella di confronto del punteggio, calcolato con la funzione get_weapon_score_target(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Bombe, Missili AAM, ....) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["MISSILES_ASM", "BOMBS", ...]. 
 
 
-ESEGUITI
 
 Nel dizionario AIRCRAFT_LOADOUTS presente nel modulo Aircraft_Loadouts.py i valori assegnati alle chiavi "range" dei dizionari "cruise" ed "attack", sembrano non tener conto dell'incremento di carburante dovuto ai serbatoi ausiliari presenti in alcuni loadout. Analizza questi loadout e aggiorna eventualmente i valori dei range
 

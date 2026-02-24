@@ -28,6 +28,7 @@
 # =============================================================================
 
 from typing import List
+from venv import logger
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target
 
@@ -2568,7 +2569,7 @@ AIRCRAFT_LOADOUTS = {
 
         "Anti-Ship Strike": {
             "loadout_code": "ASJ37-ANTISHIP-1",
-            "tasks": ["Strike"],
+            "tasks": ["Anti_Ship"],
             "attributes": ["Anti-ship", "Stand-off"],
             "Lock_Down_Shoot_Down": False,
             "self_escort_capability": True,
@@ -2671,7 +2672,7 @@ AIRCRAFT_LOADOUTS = {
         },
         "Rocket CAS": {
             "loadout_code": "MIG15-CAS-1",
-            "tasks": ["CAP"],
+            "tasks": ["CAS"],
             "attributes": ["Close Air Support"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": True,
             "cruise": {"speed": 750, "reference_altitude": 5000, "altitude_max": 12000, "altitude_min": 100,
@@ -3745,6 +3746,7 @@ def evaluate_loadout_altitude(aircraft_name, loadout_name, phase):
         "altitude_min": phase_data.get("altitude_min", 0),
     }
 
+# eliminare.
 def calc_loadout_effectiveness(aircraft_name, loadout_name, conditions, support_available, fuel_percentage, phase):
     """Calculate an overall effectiveness score for a loadout based on various factors."""
     usability_score = 1 if evaluate_loadout_usability(aircraft_name, loadout_name, conditions) else 0
@@ -3773,7 +3775,7 @@ def loadout_eval(aircraft_name: str, loadout_name: str) -> float: # questo lo us
     cruise_speed = cruise_data.get("speed", 0)
 
     for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
-        weapons_score += get_weapon_score( weapon_model = weapon[0] ) * weapon[1] # punteggio base dell'arma in base al modello
+        weapons_score += get_weapon_score( weapon[0] ) * weapon[1] # punteggio base dell'arma in base al modello
         
     score_phases = attack_speed / 1000 + cruise_speed / 1000 # normalizzo la velocità a 1000 km/h per avere un punteggio più gestibile
     score_ranges = (attack_range_data.get("fuel_100%", 0) + cruise_range_data.get("fuel_100%", 0)) / 2000 # normalizzo la gittata a 2000 km per avere un punteggio più gestibile
@@ -3781,15 +3783,36 @@ def loadout_eval(aircraft_name: str, loadout_name: str) -> float: # questo lo us
 
     return score
 
-def loadout_target_effectiveness(aircraft_name: str, loadout_name: str, target_type: List, target_dimension: List) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+def loadout_target_effectiveness(aircraft_name: str, loadout_name: str, target_type: List, target_dimension: List, route_length: float, route_speed: float) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
     """Evaluate the effectiveness of a loadout against specific target types and dimensions."""
-    
+
     score = 0.0
     loadout = get_loadout(aircraft_name, loadout_name)
+    loadout_approval = False
+    effective_range = 0.0
+
+    reference = [ [loadout.get("cruise", {}).get("speed", 0), loadout.get("cruise", {}).get("range", {}).get("fuel_100%", 0)], [loadout.get("attack", {}).get("speed", 0), loadout.get("attack", {}).get("range", {}).get("fuel_100%", 0)]]
+
     pylons = loadout.get("stores", {}).get("pylons", {})
 
-    for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
-        weapons_score += get_weapon_score_target(weapon[0]) * weapon[1] # punteggio base dell'arma in base al modello
-                
+    for i, ref in enumerate(reference): # confronto la velocità di crociera e di attacco del loadout con la velocità della rotta, se la velocità della rotta è inferiore o uguale alla velocità di crociera del loadout, allora il loadout è approvato per la rotta, altrimenti non è approvato
+        speed = ref[0]
+        ref_range = ref[1]
+        if route_speed <= speed:
+            factor_range_increment = min (1.3, 1 + speed * 0.1 / route_speed if route_speed > 0 else 0 ) # fattore di incremento della gittata in base alla velocità di crociera di riferimento rispetto alla velocità effettiva della rotta, con un limite massimo del 30% di incremento
+            effective_range  = ref_range * factor_range_increment # incremento della gittata in base alla velocità di crociera rispetto alla velocità della rotta
+
+            if route_length <= effective_range:
+                loadout_approval = True
+                break # se la velocità della rotta è inferiore o uguale alla velocità di crociera o di attacco del loadout e la gittata effettiva è superiore o uguale alla lunghezza della rotta, allora il loadout è approvato per la rotta e si esce dal ciclo
+
+    if not loadout_approval:
+        logger.info(f"Loadout '{loadout_name}' for aircraft '{aircraft_name}' is not approved for the route due to insufficient range (effective range: {effective_range:.2f} km, route length: {route_length:.2f} km).")
+        return 0.0 # se la gittata effettiva è inferiore alla lunghezza della rotta, il loadout non è approvato e restituisce un punteggio di efficacia pari a 0
+
+    # continuiamo con la valutazione dell'efficacia del loadout contro il target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+    for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]
+       score += get_weapon_score_target(weapon[0], target_type, target_dimension) * weapon[1] # punteggio base dell'arma in base al modello
+
     return score
 

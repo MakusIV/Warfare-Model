@@ -70,10 +70,6 @@ class Aircraft_Loadout:
 	
 
 
-
-
-
-
 db_loadouts = {
 	# Nato
 	"Tornado IDS": {# 1971  SI  
