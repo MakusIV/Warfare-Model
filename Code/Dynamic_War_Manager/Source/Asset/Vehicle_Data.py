@@ -12,7 +12,7 @@ siano ridotte causa il valutazione sottostimata delle score totale
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import get_weapon_score
+from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import get_weapon_score, get_weapon_score_target
 from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_ACTION, ACTION_TASKS, BLOCK_ASSET_CATEGORY, Ground_Vehicle_Asset_Type
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import convert_mph_to_kmh
@@ -32,6 +32,17 @@ MODES = ACTION_TASKS.keys()
 # Sostituisce le due righe sottostanti con Ground_Vehicle_Asset_Type Enum
 #CATEGORY = set(BLOCK_ASSET_CATEGORY['Ground_Military_Vehicle_Asset'].keys())
 #CATEGORY.update(BLOCK_ASSET_CATEGORY['Air_Defense_Asset'].keys())
+
+AMMO_LOAD_REFERENCE = {
+    'CANNONS': 30, # riferimento per cannoni (32 cannoni ammo -> factor_ammo_quantity = 1.05)
+    'ARTILLERY': 50, # riferimento per artiglieria (100 cannoni ammo -> factor_ammo_quantity = 2)
+    'AA_CANNONS': 600, # riferimento per cannoni AAA (600 cannoni ammo -> factor_ammo_quantity = 1)
+    'AUTO_CANNONS': 500, # riferimento per auto-cannoni (500 auto-cannoni ammo -> factor_ammo_quantity = 1)
+    'MISSILES_SAM': 4, # riferimento per missili (4 missili -> factor_ammo_quantity = 1)
+    'MISSILES_TANK': 2, # riferimento per missili (4 missili -> factor_ammo_quantity = 1)
+    'ROCKETS': 4, # riferimento per razzi (4 razzi -> factor_ammo_quantity = 1)
+    'MORTARS': 10 # riferimento per mortai (10 bobms -> factor_ammo_quantity = 1)
+}
 
 CATEGORY = set( item.value for item in Ground_Vehicle_Asset_Type )
 
@@ -274,29 +285,29 @@ class Vehicle_Data:
                 
                 if weapon_type == 'CANNONS' or weapon_type == 'ARTILLERY':                    
                     if self.category in [Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value, Ground_Vehicle_Asset_Type.TANK.value]:
-                        factor_ammo_quantity = weapon_item[1] / 30 # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['CANNONS'] # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
                     elif self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value:
-                        factor_ammo_quantity = weapon_item[1] / 50 # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['ARTILLERY'] # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
 
                 elif weapon_type == 'AA_CANNONS':
                     if not self.category == Ground_Vehicle_Asset_Type.AAA.value:
                         logger.warning(f"vehicle: {self.model} weapon_type 'AA_CANNONS' installed on non AAA vehicle category:{self.category}")
-                    factor_ammo_quantity = weapon_item[1] / 600 # 600 reference for AAA cannons
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['AA_CANNONS'] # 600 reference for AAA cannons
 
                 elif weapon_type == 'AUTO_CANNONS':                    
-                    factor_ammo_quantity = weapon_item[1] / 500 # 500 reference for auto-cannons
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['AUTO_CANNONS'] # 500 reference for auto-cannons
 
                 elif weapon_type == 'MISSILES':
                     if self.category in [Ground_Vehicle_Asset_Type.SAM_BIG.value, Ground_Vehicle_Asset_Type.SAM_MEDIUM.value, Ground_Vehicle_Asset_Type.SAM_SMALL.value, Ground_Vehicle_Asset_Type.AAA.value]:
-                        factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)     
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MISSILES_SAM'] # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)     
                     elif self.category in [Ground_Vehicle_Asset_Type.TANK.value, Ground_Vehicle_Asset_Type.ARMORED.value, Ground_Vehicle_Asset_Type.MOTORIZED.value]:
-                        factor_ammo_quantity = weapon_item[1] / 2 # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3) 
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MISSILES_TANK'] # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3) 
                 
                 elif weapon_type == 'ROCKETS':
-                    factor_ammo_quantity = weapon_item[1] / 4 # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2) 
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['ROCKETS'] # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2) 
                 
                 elif weapon_type == 'MORTARS':
-                    factor_ammo_quantity = weapon_item[1] / 10 # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MORTARS'] # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1) 
                 
                 elif weapon_type == 'MACHINE_GUNS': # non sono ammo ma numero di mitragliatrici dello stesso tipo                    
                     machine_gun_score += get_weapon_score( weapon_type = weapon_type, weapon_model = weapon_item[0] ) * weapon_item[1]
@@ -617,6 +628,85 @@ class Vehicle_Data:
         
         tot_weights = sum( data['weights'][self.category] for param, data in params.items() )
         return sum( data['score'] * data['weights'][self.category] for param, data in params.items() ) / tot_weights
+    
+    def _weapon_target_effectiveness(self, target_type: List, target_dimension: List) -> float:
+        """Returns the weapon effectiveness score against specific target types and dimensions.
+
+        Follows the same ammo-quantity weighting logic as _weapon_eval(), but replaces
+        the generic get_weapon_score() with the target-specific get_weapon_score_target().
+
+        Args:
+            target_type (List): target type strings, e.g. ['Soft'], ['Armored', 'Soft']
+            target_dimension (List): target size strings, e.g. ['big'], ['med', 'small']
+
+        Returns:
+            float: weapon effectiveness score against the specified target
+        """
+        score = 0.0
+
+        for weapon_type, weapon in self.weapons.items():
+            machine_gun_score = 0
+
+            for weapon_item in weapon:
+                factor_ammo_quantity = 1.0
+
+                if weapon_type == 'CANNONS' or weapon_type == 'ARTILLERY':
+                    if self.category in [Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value, Ground_Vehicle_Asset_Type.TANK.value]:
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['CANNONS'] # 30 reference for cannons (32 cannons ammo -> factor_ammo_quantity = 1.05)
+                    elif self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value:
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['ARTILLERY'] # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
+
+                elif weapon_type == 'AA_CANNONS':
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['AA_CANNONS'] # 600 reference for AAA cannons
+
+                elif weapon_type == 'AUTO_CANNONS':
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['AUTO_CANNONS'] # 500 reference for auto-cannons
+
+                elif weapon_type == 'MISSILES':
+                    if self.category in [Ground_Vehicle_Asset_Type.SAM_BIG.value, Ground_Vehicle_Asset_Type.SAM_MEDIUM.value, Ground_Vehicle_Asset_Type.SAM_SMALL.value, Ground_Vehicle_Asset_Type.AAA.value]:
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MISSILES_SAM'] # 4 reference for missiles (4 missiles -> factor_ammo_quantity = 1)
+                    elif self.category in [Ground_Vehicle_Asset_Type.TANK.value, Ground_Vehicle_Asset_Type.ARMORED.value, Ground_Vehicle_Asset_Type.MOTORIZED.value]:
+                        factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MISSILES_TANK'] # 2 reference for missiles (6 missiles -> factor_ammo_quantity = 3)
+
+                elif weapon_type == 'ROCKETS':
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['ROCKETS'] # 4 reference for rockets (8 rockets -> factor_ammo_quantity = 2)
+
+                elif weapon_type == 'MORTARS':
+                    factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['MORTARS'] # 10 reference for mortar bombs (10 bobms -> factor_ammo_quantity = 1)   
+
+                elif weapon_type == 'MACHINE_GUNS':
+                    machine_gun_score += get_weapon_score_target(weapon_item[0], target_type, target_dimension) * weapon_item[1]
+
+                factor_ammo_quantity = max(0.80, min(1.2, factor_ammo_quantity))
+                score += get_weapon_score_target(weapon_item[0], target_type, target_dimension) * factor_ammo_quantity
+
+        return score + machine_gun_score * 0.33
+
+    def get_normalized_weapon_target_effectiveness(self, target_type: List, target_dimension: List, category: Optional[str] = None) -> float:
+        """Returns weapon target effectiveness score normalized from 0 (min) to 1 (max).
+
+        Compares this vehicle against all vehicles of the same category (or all categories
+        if category is None), using the same normalization logic as other get_normalized_*
+        methods.
+
+        Args:
+            target_type (List): target type strings, e.g. ['Soft'], ['Armored']
+            target_dimension (List): target size strings, e.g. ['big'], ['med']
+            category (Optional[str]): vehicle category to compare against;
+                                      if None, all categories are used
+
+        Returns:
+            float: normalized weapon target effectiveness score in [0, 1]
+        """
+        if not category:
+            category = CATEGORY
+        elif not isinstance(category, str) or not category in CATEGORY:
+            raise ValueError(f"category be string with value:  {CATEGORY!r}, got {category!r}.")
+
+        vehicles = [ac for ac in Vehicle_Data._registry.values() if ac.category in category]
+
+        scores = [ac._weapon_target_effectiveness(target_type, target_dimension) for ac in vehicles]
+        return self._normalize(self._weapon_target_effectiveness(target_type, target_dimension), scores)
 
     # --- Metodi di confronto normalizzati ---
     def get_normalized_weapon_score(self, category: Optional[str] = None):
@@ -830,41 +920,7 @@ class Vehicle_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
 
-    def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
-        #VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
-
-        if not task or not isinstance(task, str):
-            raise TypeError ("task must be a string")
-        if task not in GROUND_ACTION:
-            raise ValueError(f"task must be a string with values: {GROUND_ACTION!r}, got {task!r}")
-        
     
-        if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
-            score_radar = self.get_normalized_radar_score(mode = ['air'])
-            target_destroyed  = self._eval_destroyed_quantity_with_ordinance( task = task, loadout = loadout, target = target_dimension)
-            #dovresti anche inserire la valutazione sulle capacità di autodifesa e quelle relative al range
-
-        elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
-            score_radar = self.get_normalized_radar_score(['ground'])
-            pass
-            
-        elif task in ['Anti_Ship']:
-            score_radar = self.get_normalized_radar_score(['sea'])
-            pass
-
-        else:
-            score_radar = 0.0
-            pass
-
-        if target_destroyed < minimum_target_destroyed:
-            return 0.0
-
-        return target_destroyed * score_radar
-    
-    #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
-    def task_score_cost_ratio(self):
-        pass
- 
 
 # VEHICLE DATA
 
@@ -4293,13 +4349,18 @@ Vehicle_Data(**S300PS_data)
 # veicoli di pari caratteristiche.
 # Il calcolo nelle funzioni normalizzate è il valore restituito dalle funzioni eval (punteggio assoluto) normalizzato in base ai valori massimi e minimi della categoria di appartenenza del veicolo in oggetto
 # quindi il valore restituito è sempre relativo alla categoria di appartenenza del veicolo e non confrontabile con veicoli di altre categorie
-# Pertanto quando viene calcolato lo score 
+# Pertanto quando viene calcolato lo score
+
+target_type = ['Armored']
+target_dimension = ['med']
+key_name_weapon_effectiveness = f'weapon target effectiveness {target_type} {target_dimension}'
 
 for vehicle in Vehicle_Data._registry.values():    
     model = vehicle.model
     VEHICLE[model] = {}
     VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
     VEHICLE[model]['weapon score'] = {'global_score': vehicle.get_normalized_weapon_score(), 'category_score': vehicle.get_normalized_weapon_score(category=vehicle.category) }
+    VEHICLE[model][key_name_weapon_effectiveness] = {'global_score': vehicle.get_normalized_weapon_target_effectiveness(target_type, target_dimension), 'category_score': vehicle.get_normalized_weapon_target_effectiveness(target_type, target_dimension, category=vehicle.category) }
     VEHICLE[model]['radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
     VEHICLE[model]['radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
     VEHICLE[model]['speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
