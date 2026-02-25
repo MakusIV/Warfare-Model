@@ -82,6 +82,10 @@ _LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data.logge
 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
     AIR_WEAPONS,
+    WEAPON_PARAM,
+    WARHEAD_TYPE_PARAM,
+    WARHEAD_TYPE_TARGET_EFFECTIVENESS,
+    TARGET_DIMENSION,
     get_weapon,
     is_missile,
     is_bomb,
@@ -100,6 +104,498 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
 # ─────────────────────────────────────────────────────────────────────────────
 #  UNIT TESTS
 # ─────────────────────────────────────────────────────────────────────────────
+
+class TestAircraftWeaponsDataStructure(unittest.TestCase):
+    """Verifica la correttezza strutturale dei dizionari AIR_WEAPONS,
+    WEAPON_PARAM, WARHEAD_TYPE_PARAM, WARHEAD_TYPE_TARGET_EFFECTIVENESS
+    e della costante TARGET_DIMENSION.
+
+    Differenze strutturali rispetto a Ground_Weapon_Data:
+    - Il dizionario principale è AIR_WEAPONS (non GROUND_WEAPONS).
+    - I tipi di testata sono in WARHEAD_TYPE_PARAM (non AMMO_PARAM) e includono
+      FRAG (assente in Ground).
+    - L'efficacia testata/bersaglio è in WARHEAD_TYPE_TARGET_EFFECTIVENESS.
+    - MISSILES_AAM NON ha il campo 'efficiency': il punteggio è calcolato
+      esclusivamente dai parametri balistici via WEAPON_PARAM['MISSILES_AAM_RAD']
+      e WEAPON_PARAM['MISSILES_AAM_INF'], sottocategorie interne al solo scoring.
+    - Tutti gli AAM hanno il campo 'seeker' ('radar'/'infrared'); i missili SARH
+      (AIM-7x) hanno active_range=None — Bug BM documentato e corretto.
+    """
+
+    # ── AIR_WEAPONS: struttura generale ─────────────────────────────────────
+
+    def test_air_weapons_has_expected_categories(self):
+        """AIR_WEAPONS deve contenere le 6 categorie attese."""
+        expected = {
+            "MISSILES_AAM", "MISSILES_ASM", "BOMBS",
+            "ROCKETS", "CANNONS", "MACHINE_GUNS",
+        }
+        for cat in expected:
+            with self.subTest(category=cat):
+                self.assertIn(cat, AIR_WEAPONS)
+
+    def test_all_categories_are_dicts(self):
+        """Ogni categoria deve essere un dizionario."""
+        for cat, content in AIR_WEAPONS.items():
+            with self.subTest(category=cat):
+                self.assertIsInstance(content, dict)
+
+    def test_all_categories_are_non_empty(self):
+        """Tutte le categorie devono contenere almeno un'arma."""
+        for cat, content in AIR_WEAPONS.items():
+            with self.subTest(category=cat):
+                self.assertGreater(len(content), 0, f"Categoria '{cat}' è vuota")
+
+    # ── AIR_WEAPONS: campi obbligatori per categoria ─────────────────────────
+
+    def test_missiles_aam_weapon_has_common_fields(self):
+        """Ogni AAM deve avere i campi comuni (model, type, warhead, range,
+        max_speed, manouvrability, task). NON ha 'efficiency'."""
+        required = {"model", "type", "warhead", "range", "max_speed", "manouvrability", "task"}
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                for field in required:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in MISSILES_AAM/{model}")
+
+    def test_missiles_asm_weapon_has_required_fields(self):
+        """Ogni ASM deve avere model, type, warhead, range, efficiency, task."""
+        required = {"model", "type", "warhead", "range", "efficiency", "task"}
+        for model, data in AIR_WEAPONS["MISSILES_ASM"].items():
+            with self.subTest(model=model):
+                for field in required:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in MISSILES_ASM/{model}")
+
+    def test_bombs_weapon_has_required_fields(self):
+        """Ogni bomba deve avere model, type, efficiency, task; e 'warhead' OPPURE
+        'weight' (le cluster bomb usano 'weight' invece di 'warhead')."""
+        common = {"model", "type", "efficiency", "task"}
+        for model, data in AIR_WEAPONS["BOMBS"].items():
+            with self.subTest(model=model):
+                for field in common:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in BOMBS/{model}")
+                self.assertTrue(
+                    "warhead" in data or "weight" in data,
+                    f"Nessun campo 'warhead' né 'weight' in BOMBS/{model}",
+                )
+
+    def test_rockets_weapon_has_required_fields(self):
+        """Ogni razzo deve avere model, type, caliber, warhead, warhead_type,
+        range, speed, efficiency."""
+        required = {"model", "type", "caliber", "warhead", "warhead_type",
+                    "range", "speed", "efficiency"}
+        for model, data in AIR_WEAPONS["ROCKETS"].items():
+            with self.subTest(model=model):
+                for field in required:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in ROCKETS/{model}")
+
+    def test_cannons_weapon_has_required_fields(self):
+        """Ogni cannone deve avere model, type, caliber, fire_rate, range, efficiency."""
+        required = {"model", "type", "caliber", "fire_rate", "range", "efficiency"}
+        for model, data in AIR_WEAPONS["CANNONS"].items():
+            with self.subTest(model=model):
+                for field in required:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in CANNONS/{model}")
+
+    def test_machine_guns_weapon_has_required_fields(self):
+        """Ogni mitragliatrice deve avere model, type, caliber, fire_rate, range,
+        efficiency."""
+        required = {"model", "type", "caliber", "fire_rate", "range", "efficiency"}
+        for model, data in AIR_WEAPONS["MACHINE_GUNS"].items():
+            with self.subTest(model=model):
+                for field in required:
+                    self.assertIn(field, data,
+                                  f"Campo '{field}' mancante in MACHINE_GUNS/{model}")
+
+    # ── MISSILES_AAM: struttura specifica ────────────────────────────────────
+
+    def test_aam_weapons_have_no_efficiency_field(self):
+        """Gli AAM non devono avere il campo 'efficiency': il loro punteggio è
+        calcolato esclusivamente dai parametri balistici (warhead, range,
+        max_speed, manouvrability, ...) tramite WEAPON_PARAM['MISSILES_AAM_RAD/INF']."""
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                self.assertNotIn(
+                    "efficiency", data,
+                    f"MISSILES_AAM/{model} NON dovrebbe avere 'efficiency'",
+                )
+
+    def test_aam_weapons_have_seeker_field(self):
+        """Tutti gli AAM devono avere il campo 'seeker'."""
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                self.assertIn("seeker", data,
+                              f"Campo 'seeker' mancante in MISSILES_AAM/{model}")
+
+    def test_aam_seeker_values_are_valid(self):
+        """Il campo 'seeker' deve essere 'radar' o 'infrared' per tutti gli AAM."""
+        valid_seekers = {"radar", "infrared"}
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                self.assertIn(
+                    data.get("seeker"), valid_seekers,
+                    f"Seeker non valido per {model}: {data.get('seeker')!r}",
+                )
+
+    def test_aim54c_mk47_is_radar_with_positive_active_range(self):
+        """AIM-54C-MK47 (Phoenix active radar) deve avere seeker='radar' e
+        active_range > 0."""
+        data = AIR_WEAPONS["MISSILES_AAM"]["AIM-54C-MK47"]
+        self.assertEqual(data.get("seeker"), "radar")
+        self.assertIsNotNone(data.get("active_range"))
+        self.assertGreater(data["active_range"], 0)
+
+    def test_aim9l_is_infrared(self):
+        """AIM-9L (Sidewinder IR) deve avere seeker='infrared'."""
+        data = AIR_WEAPONS["MISSILES_AAM"]["AIM-9L"]
+        self.assertEqual(data.get("seeker"), "infrared")
+
+    def test_aim7_sarh_active_range_is_none_documented(self):
+        """Bug BM documentato: i missili AIM-7 (SARH) non hanno guida attiva
+        terminale e hanno active_range=None. Questo causava TypeError in
+        get_missiles_score() per l'accesso diretto weapon['active_range'].
+        [CORRETTO: sostituito con weapon.get(param_name) or 0.0]"""
+        sarh_models = ["AIM-7E", "AIM-7F", "AIM-7M", "AIM-7MH", "AIM-7P"]
+        for model in sarh_models:
+            with self.subTest(model=model):
+                data = AIR_WEAPONS["MISSILES_AAM"][model]
+                self.assertIsNone(
+                    data.get("active_range"),
+                    f"{model} dovrebbe avere active_range=None (SARH puro, nessun terminale attivo)",
+                )
+
+    def test_aam_warhead_positive(self):
+        """Il warhead deve essere > 0 per tutti gli AAM."""
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                self.assertIsInstance(data["warhead"], (int, float))
+                self.assertGreater(data["warhead"], 0)
+
+    def test_aam_range_positive(self):
+        """La gittata massima deve essere > 0 per tutti gli AAM."""
+        for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
+            with self.subTest(model=model):
+                self.assertIsInstance(data["range"], (int, float))
+                self.assertGreater(data["range"], 0)
+
+    # ── efficiency: struttura ────────────────────────────────────────────────
+
+    def test_non_aam_weapons_have_efficiency_field(self):
+        """Tutte le categorie non-AAM devono avere 'efficiency' in ogni arma."""
+        for cat in ("MISSILES_ASM", "BOMBS", "ROCKETS", "CANNONS", "MACHINE_GUNS"):
+            for model, data in AIR_WEAPONS[cat].items():
+                with self.subTest(category=cat, model=model):
+                    self.assertIn(
+                        "efficiency", data,
+                        f"Campo 'efficiency' mancante in {cat}/{model}",
+                    )
+
+    def test_efficiency_structure_has_all_standard_target_types(self):
+        """Per le armi a impiego generale (ROCKETS, CANNONS, MACHINE_GUNS)
+        l'efficiency deve coprire tutti gli 11 target type standard.
+        MISSILES_ASM e BOMBS sono escluse: le armi specializzate (anti-nave,
+        ARM, cluster) coprono solo i target rilevanti per la loro missione."""
+        expected_types = {
+            "Soft", "Armored", "Hard", "Structure", "Air_Defense",
+            "Airbase", "Port", "Shipyard", "Farp", "Stronghold", "ship",
+        }
+        for cat in ("ROCKETS", "CANNONS", "MACHINE_GUNS"):
+            for model, data in AIR_WEAPONS[cat].items():
+                eff = data.get("efficiency", {})
+                for t in expected_types:
+                    with self.subTest(category=cat, model=model, target=t):
+                        self.assertIn(
+                            t, eff,
+                            f"Target '{t}' mancante in efficiency di {cat}/{model}",
+                        )
+
+    def test_missiles_asm_efficiency_is_non_empty(self):
+        """Tutti i MISSILES_ASM devono avere un efficiency dict non vuoto,
+        anche se specializzato per un sottoinsieme di target."""
+        for model, data in AIR_WEAPONS["MISSILES_ASM"].items():
+            with self.subTest(model=model):
+                eff = data.get("efficiency", {})
+                self.assertGreater(
+                    len(eff), 0,
+                    f"efficiency vuota in MISSILES_ASM/{model}",
+                )
+
+    def test_asm_antiship_efficiency_covers_ship_target(self):
+        """I missili anti-nave (RB-15F, AGM-84A, Kormoran, RB-04E, Sea Eagle,
+        Kh-22N) devono avere 'ship' come target type nella loro efficiency."""
+        antiship_models = ["RB-15F", "AGM-84A", "Kormoran", "RB-04E", "Sea Eagle", "Kh-22N"]
+        for model in antiship_models:
+            with self.subTest(model=model):
+                eff = AIR_WEAPONS["MISSILES_ASM"][model].get("efficiency", {})
+                self.assertIn("ship", eff,
+                              f"Missile anti-nave {model}: 'ship' mancante in efficiency")
+
+    def test_asm_arm_efficiency_covers_air_defense_target(self):
+        """I missili anti-radiazione (AGM-45, AGM-88, Kh-58, Kh-25MP, Kh-25MPU)
+        devono avere 'Air_Defense' come target type nella loro efficiency."""
+        arm_models = ["AGM-45", "AGM-88", "Kh-58", "Kh-25MP", "Kh-25MPU"]
+        for model in arm_models:
+            with self.subTest(model=model):
+                eff = AIR_WEAPONS["MISSILES_ASM"][model].get("efficiency", {})
+                self.assertIn("Air_Defense", eff,
+                              f"Missile ARM {model}: 'Air_Defense' mancante in efficiency")
+
+    def test_cluster_bombs_efficiency_covers_area_targets(self):
+        """Le cluster bomb (Mk-20, CBU-52B, BLG66, BK-90MJ1, RBK-*, KGBU-*)
+        devono coprire i target di area (Soft, Armored, Air_Defense)."""
+        cluster_models = [
+            "Mk-20", "CBU-52B", "BLG66", "BK-90MJ1", "BK-90MJ1-2", "BK-90MJ2",
+            "RBK-250AO", "RBK-500AO", "RBK-500PTAB",
+            "KGBU-2AO", "KGBU-2PTAB", "KGBU-96r",
+        ]
+        area_targets = {"Soft", "Armored", "Air_Defense"}
+        for model in cluster_models:
+            with self.subTest(model=model):
+                eff = AIR_WEAPONS["BOMBS"][model].get("efficiency", {})
+                for t in area_targets:
+                    self.assertIn(t, eff,
+                                  f"Cluster bomb {model}: target '{t}' mancante in efficiency")
+
+    def test_efficiency_dims_have_accuracy_and_destroy_capacity(self):
+        """Ogni cella (target_type, dim) nell'efficiency deve contenere
+        'accuracy' e 'destroy_capacity'."""
+        for cat in ("ROCKETS", "CANNONS", "MACHINE_GUNS"):
+            first_model = next(iter(AIR_WEAPONS[cat]))
+            eff = AIR_WEAPONS[cat][first_model]["efficiency"]
+            for t_type, t_data in eff.items():
+                for dim in ("big", "med", "small"):
+                    cell = t_data.get(dim, {})
+                    with self.subTest(cat=cat, model=first_model, target=t_type, dim=dim):
+                        self.assertIn("accuracy", cell)
+                        self.assertIn("destroy_capacity", cell)
+
+    def test_efficiency_accuracy_in_range_0_to_1(self):
+        """accuracy deve essere in [0, 1] per ogni cella efficiency."""
+        for cat in ("MISSILES_ASM", "ROCKETS", "CANNONS", "MACHINE_GUNS"):
+            first_model = next(iter(AIR_WEAPONS[cat]))
+            eff = AIR_WEAPONS[cat][first_model]["efficiency"]
+            for t_type, t_data in eff.items():
+                for dim in ("big", "med", "small"):
+                    cell = t_data.get(dim, {})
+                    acc = cell.get("accuracy")
+                    if acc is not None:
+                        with self.subTest(cat=cat, model=first_model, t=t_type, dim=dim):
+                            self.assertGreaterEqual(acc, 0.0)
+                            self.assertLessEqual(acc, 1.0)
+
+    def test_efficiency_destroy_capacity_non_negative(self):
+        """destroy_capacity deve essere >= 0 (vicino allo zero per infrastrutture)."""
+        for cat in ("CANNONS", "MACHINE_GUNS"):
+            first_model = next(iter(AIR_WEAPONS[cat]))
+            eff = AIR_WEAPONS[cat][first_model]["efficiency"]
+            for t_type, t_data in eff.items():
+                for dim in ("big", "med", "small"):
+                    cell = t_data.get(dim, {})
+                    dc = cell.get("destroy_capacity")
+                    if dc is not None:
+                        with self.subTest(cat=cat, model=first_model, t=t_type, dim=dim):
+                            self.assertGreaterEqual(dc, 0.0)
+
+    def test_caliber_positive_for_cannons(self):
+        """Il calibro deve essere > 0 per tutti i cannoni."""
+        for model, data in AIR_WEAPONS["CANNONS"].items():
+            with self.subTest(model=model):
+                self.assertGreater(data["caliber"], 0)
+
+    def test_caliber_positive_for_rockets(self):
+        """Il calibro deve essere > 0 per tutti i razzi."""
+        for model, data in AIR_WEAPONS["ROCKETS"].items():
+            with self.subTest(model=model):
+                self.assertGreater(data["caliber"], 0)
+
+    def test_perc_efficiency_variability_in_range(self):
+        """perc_efficiency_variability deve essere in [0, 1] per tutte le armi
+        non-AAM che lo definiscono."""
+        for cat in ("MISSILES_ASM", "BOMBS", "ROCKETS", "CANNONS", "MACHINE_GUNS"):
+            for model, data in AIR_WEAPONS[cat].items():
+                pev = data.get("perc_efficiency_variability")
+                if pev is not None:
+                    with self.subTest(cat=cat, model=model):
+                        self.assertGreaterEqual(pev, 0.0)
+                        self.assertLessEqual(pev, 1.0)
+
+    # ── WEAPON_PARAM ─────────────────────────────────────────────────────────
+
+    def test_weapon_param_has_expected_keys(self):
+        """WEAPON_PARAM deve contenere: CANNONS, MISSILES_AAM_RAD, MISSILES_AAM_INF,
+        MISSILES_ASM, ROCKETS, MACHINE_GUNS, BOMBS."""
+        expected = {
+            "CANNONS", "MISSILES_AAM_RAD", "MISSILES_AAM_INF",
+            "MISSILES_ASM", "ROCKETS", "MACHINE_GUNS", "BOMBS",
+        }
+        for key in expected:
+            with self.subTest(key=key):
+                self.assertIn(key, WEAPON_PARAM)
+
+    def test_weapon_param_does_not_have_missiles_aam_key(self):
+        """WEAPON_PARAM usa sottocategorie interne MISSILES_AAM_RAD/INF per il
+        calcolo del punteggio; la chiave generica 'MISSILES_AAM' (uguale ai
+        tasti di AIR_WEAPONS) non deve essere presente direttamente."""
+        self.assertNotIn("MISSILES_AAM", WEAPON_PARAM)
+
+    def test_weapon_param_coefficients_positive(self):
+        """Tutti i coefficienti in WEAPON_PARAM devono essere float > 0."""
+        for cat, params in WEAPON_PARAM.items():
+            for param, coeff in params.items():
+                with self.subTest(category=cat, param=param):
+                    self.assertIsInstance(coeff, float)
+                    self.assertGreater(coeff, 0.0)
+
+    def test_weapon_param_cannons_has_expected_keys(self):
+        """WEAPON_PARAM['CANNONS'] deve avere: caliber, speed, fire_rate, range."""
+        expected = {"caliber", "speed", "fire_rate", "range"}
+        self.assertEqual(set(WEAPON_PARAM["CANNONS"].keys()), expected)
+
+    def test_weapon_param_rockets_has_expected_keys(self):
+        """WEAPON_PARAM['ROCKETS'] deve avere: caliber, warhead, range,
+        warhead_type, speed."""
+        expected = {"caliber", "warhead", "range", "warhead_type", "speed"}
+        self.assertEqual(set(WEAPON_PARAM["ROCKETS"].keys()), expected)
+
+    def test_weapon_param_machine_guns_has_expected_keys(self):
+        """WEAPON_PARAM['MACHINE_GUNS'] deve avere: caliber, fire_rate, range."""
+        expected = {"caliber", "fire_rate", "range"}
+        self.assertEqual(set(WEAPON_PARAM["MACHINE_GUNS"].keys()), expected)
+
+    def test_weapon_param_missiles_asm_has_expected_keys(self):
+        """WEAPON_PARAM['MISSILES_ASM'] deve avere: warhead, range, max_speed."""
+        expected = {"warhead", "range", "max_speed"}
+        self.assertEqual(set(WEAPON_PARAM["MISSILES_ASM"].keys()), expected)
+
+    def test_weapon_param_aam_rad_has_active_range_key(self):
+        """WEAPON_PARAM['MISSILES_AAM_RAD'] deve avere 'active_range' (per i
+        missili radar con guida attiva terminale)."""
+        self.assertIn("active_range", WEAPON_PARAM["MISSILES_AAM_RAD"])
+
+    def test_weapon_param_aam_rad_has_semiactive_range_key(self):
+        """WEAPON_PARAM['MISSILES_AAM_RAD'] deve avere 'semiactive_range' (per
+        i missili SARH e BVR semiattivi)."""
+        self.assertIn("semiactive_range", WEAPON_PARAM["MISSILES_AAM_RAD"])
+
+    def test_weapon_param_bombs_has_warhead_and_weight(self):
+        """WEAPON_PARAM['BOMBS'] deve avere sia 'warhead' che 'weight': le bombe
+        convenzionali usano 'warhead', quelle a submunizioni usano 'weight'."""
+        self.assertIn("warhead", WEAPON_PARAM["BOMBS"])
+        self.assertIn("weight", WEAPON_PARAM["BOMBS"])
+
+    # ── WARHEAD_TYPE_PARAM ───────────────────────────────────────────────────
+
+    def test_warhead_type_param_has_expected_types(self):
+        """WARHEAD_TYPE_PARAM deve contenere: HE, HEAT, AP, 2HEAT, APFSDS, FRAG."""
+        expected = {"HE", "HEAT", "AP", "2HEAT", "APFSDS", "FRAG"}
+        for t in expected:
+            with self.subTest(warhead=t):
+                self.assertIn(t, WARHEAD_TYPE_PARAM)
+
+    def test_warhead_type_param_values_in_range(self):
+        """Tutti i valori di WARHEAD_TYPE_PARAM devono essere float in (0, 1]."""
+        for wt, val in WARHEAD_TYPE_PARAM.items():
+            with self.subTest(warhead=wt):
+                self.assertIsInstance(val, float)
+                self.assertGreater(val, 0.0)
+                self.assertLessEqual(val, 1.0)
+
+    def test_2heat_highest_in_warhead_type_param(self):
+        """2HEAT (carica cava doppia) deve avere il valore più alto in
+        WARHEAD_TYPE_PARAM."""
+        self.assertEqual(max(WARHEAD_TYPE_PARAM, key=WARHEAD_TYPE_PARAM.get), "2HEAT")
+
+    def test_frag_present_in_warhead_type_param(self):
+        """FRAG deve essere presente in WARHEAD_TYPE_PARAM.
+        Differenza rispetto a Ground_Weapon_Data: in quest'ultimo modulo FRAG
+        è solo in AMMO_TARGET_EFFECTIVENESS ma non in AMMO_PARAM."""
+        self.assertIn("FRAG", WARHEAD_TYPE_PARAM)
+
+    # ── WARHEAD_TYPE_TARGET_EFFECTIVENESS ────────────────────────────────────
+
+    def test_warhead_target_effectiveness_has_all_warhead_types(self):
+        """WARHEAD_TYPE_TARGET_EFFECTIVENESS deve contenere tutti i tipi
+        di WARHEAD_TYPE_PARAM."""
+        for wt in WARHEAD_TYPE_PARAM:
+            with self.subTest(warhead=wt):
+                self.assertIn(wt, WARHEAD_TYPE_TARGET_EFFECTIVENESS)
+
+    def test_warhead_target_effectiveness_values_in_range(self):
+        """Tutti i valori di efficacia devono essere float in [0, 1]."""
+        for wt, targets in WARHEAD_TYPE_TARGET_EFFECTIVENESS.items():
+            for t_type, val in targets.items():
+                with self.subTest(warhead=wt, target=t_type):
+                    self.assertIsInstance(val, float)
+                    self.assertGreaterEqual(val, 0.0)
+                    self.assertLessEqual(val, 1.0)
+
+    def test_he_effectiveness_vs_soft_is_max(self):
+        """HE deve avere efficacia 1.0 contro Soft (massimo valore della riga)."""
+        self.assertAlmostEqual(
+            WARHEAD_TYPE_TARGET_EFFECTIVENESS["HE"]["Soft"], 1.0
+        )
+
+    def test_apfsds_effectiveness_vs_armored_high(self):
+        """APFSDS deve avere alta efficacia (>= 0.9) contro Armored."""
+        self.assertGreaterEqual(
+            WARHEAD_TYPE_TARGET_EFFECTIVENESS["APFSDS"]["Armored"], 0.9
+        )
+
+    def test_frag_effectiveness_vs_soft_high(self):
+        """FRAG deve avere alta efficacia (>= 0.8) contro Soft."""
+        self.assertGreaterEqual(
+            WARHEAD_TYPE_TARGET_EFFECTIVENESS["FRAG"]["Soft"], 0.8
+        )
+
+    def test_all_warhead_types_cover_standard_target_types(self):
+        """Ogni tipo di testata in WARHEAD_TYPE_TARGET_EFFECTIVENESS deve coprire
+        tutti i target type standard."""
+        expected_targets = {
+            "Soft", "Armored", "Hard", "Structure", "Air_Defense",
+            "Airbase", "Port", "Shipyard", "Farp", "Stronghold", "ship",
+        }
+        for wt, targets in WARHEAD_TYPE_TARGET_EFFECTIVENESS.items():
+            for t in expected_targets:
+                with self.subTest(warhead=wt, target=t):
+                    self.assertIn(
+                        t, targets,
+                        f"Target '{t}' mancante in WARHEAD_TYPE_TARGET_EFFECTIVENESS['{wt}']",
+                    )
+
+    # ── TARGET_DIMENSION ─────────────────────────────────────────────────────
+
+    def test_target_dimension_contains_correct_keys(self):
+        """TARGET_DIMENSION deve contenere 'small', 'med', 'big'."""
+        for key in ("small", "med", "big"):
+            with self.subTest(key=key):
+                self.assertIn(key, TARGET_DIMENSION)
+
+    def test_target_dimension_does_not_contain_medium_or_large(self):
+        """TARGET_DIMENSION NON deve contenere 'medium' o 'large' (Bug B6 corretto):
+        le chiavi nelle efficiency template sono 'med' e 'big', non le forme estese.
+        Prima della correzione TARGET_DIMENSION = ['small','medium','large'] causava
+        la validazione fallita e il ritorno sistematico di 0 in get_weapon_score_target()."""
+        self.assertNotIn("medium", TARGET_DIMENSION)
+        self.assertNotIn("large", TARGET_DIMENSION)
+
+    def test_efficiency_uses_target_dimension_as_keys(self):
+        """Le chiavi di TARGET_DIMENSION ('big','med','small') devono corrispondere
+        alle chiavi usate nelle efficiency template delle armi non-AAM."""
+        first_cannon = next(iter(AIR_WEAPONS["CANNONS"]))
+        eff = AIR_WEAPONS["CANNONS"][first_cannon]["efficiency"]
+        for t_type, t_data in eff.items():
+            for dim in TARGET_DIMENSION:
+                with self.subTest(target=t_type, dim=dim):
+                    self.assertIn(
+                        dim, t_data,
+                        f"Dimensione '{dim}' di TARGET_DIMENSION non trovata "
+                        f"in efficiency di CANNONS/{first_cannon}/{t_type}",
+                    )
+
 
 class TestGetWeapon(unittest.TestCase):
     """
@@ -908,6 +1404,7 @@ def _run_tests() -> unittest.TestResult:
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     for cls in (
+        TestAircraftWeaponsDataStructure,
         TestGetWeapon,
         TestIsWeaponType,
         TestGetWeaponTypeScores,

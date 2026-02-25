@@ -618,7 +618,6 @@ class Vehicle_Data:
         tot_weights = sum( data['weights'][self.category] for param, data in params.items() )
         return sum( data['score'] * data['weights'][self.category] for param, data in params.items() ) / tot_weights
 
-
     # --- Metodi di confronto normalizzati ---
     def get_normalized_weapon_score(self, category: Optional[str] = None):
         """returns weapon score normalized from 0 (min score) 1 (max score)
@@ -830,7 +829,6 @@ class Vehicle_Data:
         if max_val == min_val:
             return 0.5
         return (value - min_val) / (max_val - min_val)
-
 
     def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
         #VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
