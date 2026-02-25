@@ -44,3 +44,12 @@ Ho implementato le funzioni get_weapon e get_weapon_score_target nel modulo Grou
 - tabella di confronto del punteggio, calcolato con la funzione get_weapon_score_target(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Artiglieria, Missili, ....) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["CANNONS", "MISSILES", "ARTILLERY", ...]. 
  
 
+Nel modulo Vehicle_Data.py implementa le funzioni: 
+ - _weapon_target_effectiveness(self, target_type: List, target_dimension: List) -> float
+ - get_normalized_weapon_target_effectiveness(self, target_type: List, target_dimension: List) -> float
+ 
+ La funzione _weapon_target_effectiveness sviuluppala in modo analogo alla funzione loadout_target_effectiveness implementata nel modulo Aircraft_Loadouts.py, la funzione get_normalized_weapon_target_effectiveness in modo analogo alle altre funzioni normalizzate presenti in Vehicle_Data.py   
+
+
+
+Considerando quanto realizzato nel modulo di test: Test_Ground_Weapon_Data.py 
