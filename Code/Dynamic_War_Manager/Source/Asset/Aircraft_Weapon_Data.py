@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft_Data')
+logger = Logger(module_name = __name__, class_name = 'Aircraft_Weapon_Data')
 
 AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
@@ -554,7 +554,6 @@ def get_machine_guns_score(model: str) -> float:
         weapon_power +=  weapon[param_name] * coeff_value
 
     return weapon_power
-
 
 def get_weapon_score(model: str) -> float:
     """

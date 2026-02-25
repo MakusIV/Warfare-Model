@@ -34,3 +34,13 @@ Nella precedente sessione di lavoro, durante l'implementazione della funzione ca
 Il problema della super valutazione del fire rate è presente anche in alcuni cannoni presenti in veicoli ARMORED, per esempio il Marder o il   
  BMP-3 che hanno weapon score (global_score) pari a 1 e 0.4410 rispetto a TANK quali il T-90M o M1A2-Abrams che hanno score di 0.1641 e 0.1449.  
  Valuta se differenziare il calcolo del  anche il tipo di cannoni montato su questi veicoli considerando il calibro     
+ 
+Realizza il modulo di test Test_Ground_Weapon_Data.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e la verifica delle strutture dati implementate del modulo Ground_Weapon_Data.py. Inoltre, deve essere implementato il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
+- tabella di confronto del punteggio, calcolato con la funzione get_weapon_score(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Artiglieria, Missili, ....). Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["CANNONS", "MISSILES", "ARTILLERY", ...]. 
+- tabella di confronto del punteggio, calcolato con la funzione get_weapon_score_target(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Artiglieria, Missili, ....) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["CANNONS", "MISSILES", "ARTILLERY", ...]. Considera come riferimento non vincolante, quanto realizzato nella funzione Test_Aircraft_Weapon_Data.py
+
+
+Ho implementato le funzioni get_weapon e get_weapon_score_target nel modulo Ground_Weapon_Data.py. Implementa i test di unità per queste due funzioni nel modulo Test_Ground_Weapon_Data.py e implementa il codice per la stampa a terminale ed in pdf per la seguente tabella:
+- tabella di confronto del punteggio, calcolato con la funzione get_weapon_score_target(), per tutte le armi appartenenti ad una determinata categoria di arma (Cannoni, Artiglieria, Missili, ....) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["CANNONS", "MISSILES", "ARTILLERY", ...]. 
+ 
+

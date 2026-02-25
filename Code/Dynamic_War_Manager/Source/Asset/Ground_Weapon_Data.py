@@ -4,7 +4,7 @@ import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, GROUND_WEAPON_TASK #GROUND_ACTION, ACTION_TASKS,
+from Code.Dynamic_War_Manager.Source.Context.Context import TARGET_CLASSIFICATION, GROUND_WEAPON_TASK #GROUND_ACTION, ACTION_TASKS,
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
+logger = Logger(module_name = __name__, class_name = 'Ground_Weapon_Data').logger
 
 
 
@@ -30,6 +30,10 @@ Calibro (mm)	Calibro (pollici)	Esempi di mitragliatrici	Note
 12,7 × 108 mm	~0.50	DShK, NSV (ex URSS)	Calibro sovietico equivalente al .50 BMG
 14,5 × 114 mm	~0.57	KPV (Russia)	Calibro più grande, elevata potenza'''
 
+
+TARGET_CLASSIFICATION = TARGET_CLASSIFICATION.keys()
+TARGET_DIMENSION = ['small', 'med', 'big']
+_INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
 # Usato in get_<weapon_type>_score
 WEAPON_PARAM = {
@@ -149,9 +153,9 @@ RELOAD_PARAM = {
 _INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
 _EFF_MBT_CANNON_120_125MM = {
-    "Soft":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.4},
-                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.45},
-                       "small": {"accuracy": 0.85, "destroy_capacity": 0.5}},
+    "Soft":           {"big": {"accuracy": 0.95, "destroy_capacity": 0.90},
+                       "med": {"accuracy": 0.90, "destroy_capacity": 0.95},
+                       "small": {"accuracy": 0.85, "destroy_capacity": 1.00}},
     "Armored":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.95},
                        "med": {"accuracy": 0.8,  "destroy_capacity": 1.0},
                        "small": {"accuracy": 0.75, "destroy_capacity": 1.0}},
@@ -185,9 +189,9 @@ _EFF_MBT_CANNON_120_125MM = {
 }
 
 _EFF_MBT_CANNON_100_105MM = {
-    "Soft":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.4},
-                       "med": {"accuracy": 0.85, "destroy_capacity": 0.45},
-                       "small": {"accuracy": 0.8,  "destroy_capacity": 0.5}},
+    "Soft":           {"big": {"accuracy": 0.90, "destroy_capacity": 0.85},
+                       "med": {"accuracy": 0.85, "destroy_capacity": 0.90},
+                       "small": {"accuracy": 0.80, "destroy_capacity": 0.95}},
     "Armored":        {"big": {"accuracy": 0.8,  "destroy_capacity": 0.85},
                        "med": {"accuracy": 0.75, "destroy_capacity": 0.9},
                        "small": {"accuracy": 0.7,  "destroy_capacity": 0.9}},
@@ -221,9 +225,9 @@ _EFF_MBT_CANNON_100_105MM = {
 }
 
 _EFF_MBT_CANNON_73MM = {
-    "Soft":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.4},
-                       "med": {"accuracy": 0.75, "destroy_capacity": 0.45},
-                       "small": {"accuracy": 0.7,  "destroy_capacity": 0.5}},
+    "Soft":           {"big": {"accuracy": 0.80, "destroy_capacity": 0.75},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.82},
+                       "small": {"accuracy": 0.70, "destroy_capacity": 0.90}},
     "Armored":        {"big": {"accuracy": 0.7,  "destroy_capacity": 0.7},
                        "med": {"accuracy": 0.65, "destroy_capacity": 0.75},
                        "small": {"accuracy": 0.6,  "destroy_capacity": 0.75}},
@@ -365,12 +369,12 @@ _EFF_AA_CANNON_57MM = {
 }
 
 _EFF_ATGM_LASER = {
-    "Soft":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.5},
-                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.6},
-                       "small": {"accuracy": 0.85, "destroy_capacity": 0.65}},
-    "Armored":        {"big": {"accuracy": 0.95, "destroy_capacity": 0.9},
-                       "med": {"accuracy": 0.9,  "destroy_capacity": 0.95},
-                       "small": {"accuracy": 0.9,  "destroy_capacity": 1.0}},
+    "Soft":           {"big": {"accuracy": 0.93, "destroy_capacity": 0.95},
+                       "med": {"accuracy": 0.93, "destroy_capacity": 0.97},
+                       "small": {"accuracy": 0.92, "destroy_capacity": 1.00}},
+    "Armored":        {"big": {"accuracy": 0.95, "destroy_capacity": 0.90},
+                       "med": {"accuracy": 0.90, "destroy_capacity": 0.95},
+                       "small": {"accuracy": 0.90, "destroy_capacity": 0.97}},
     "Hard":           {"big": {"accuracy": 0.9,  "destroy_capacity": 0.3},
                        "med": {"accuracy": 0.85, "destroy_capacity": 0.4},
                        "small": {"accuracy": 0.85, "destroy_capacity": 0.5}},
@@ -401,9 +405,9 @@ _EFF_ATGM_LASER = {
 }
 
 _EFF_ATGM_SACLOS = {
-    "Soft":           {"big": {"accuracy": 0.8,  "destroy_capacity": 0.5},
-                       "med": {"accuracy": 0.8,  "destroy_capacity": 0.6},
-                       "small": {"accuracy": 0.75, "destroy_capacity": 0.65}},
+    "Soft":           {"big": {"accuracy": 0.83, "destroy_capacity": 0.92},
+                       "med": {"accuracy": 0.83, "destroy_capacity": 0.93},
+                       "small": {"accuracy": 0.82, "destroy_capacity": 0.97}},
     "Armored":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.85},
                        "med": {"accuracy": 0.8,  "destroy_capacity": 0.9},
                        "small": {"accuracy": 0.8,  "destroy_capacity": 0.95}},
@@ -437,9 +441,9 @@ _EFF_ATGM_SACLOS = {
 }
 
 _EFF_ATGM_OLD = {
-    "Soft":           {"big": {"accuracy": 0.7,  "destroy_capacity": 0.45},
-                       "med": {"accuracy": 0.65, "destroy_capacity": 0.55},
-                       "small": {"accuracy": 0.6,  "destroy_capacity": 0.6}},
+    "Soft":           {"big": {"accuracy": 0.72, "destroy_capacity": 0.82},
+                       "med": {"accuracy": 0.70, "destroy_capacity": 0.85},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.95}},
     "Armored":        {"big": {"accuracy": 0.75, "destroy_capacity": 0.75},
                        "med": {"accuracy": 0.7,  "destroy_capacity": 0.8},
                        "small": {"accuracy": 0.65, "destroy_capacity": 0.85}},
@@ -852,6 +856,26 @@ def _get_ref_caliber(efficiency_data: dict) -> float:
 
 #@dataclass
 #Class Weapon_Data:
+def get_weapon(model: str) -> Optional[Dict[str, Any]]:
+    """
+    Returns the weapon category ("CANNONS", "MISSILES", ....) and weapon data dictionary for a given weapon model, by looking it up in the GROUND_WEAPONS data structure.
+
+    Restituisce la categoria dell'arma ("CANNONS", "MISSILES", ....) e il dizionario dei dati per un dato modello di arma, cercandolo nella struttura dati GROUND_WEAPONS.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :return: Dict with keys: weapon_category, weapon_type and weapond data dictionary of weapon if found, None otherwise / Dizionario con le chiavi weapon_category, weapon_type and weapond data dictionary dell'arma se trovato, None altrimenti
+    :rtype: Optional[Dict[str, Any]]
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+    for weapons_key, weapons in GROUND_WEAPONS.items():
+        if model in weapons:
+            return {"weapons_category": weapons_key, "weapons_data": weapons[model]}
+
+    return None
 
 def get_cannon_score(model: str) -> float:
     """
@@ -1246,9 +1270,7 @@ def get_weapon_score(weapon_type: str, weapon_model: str):
         logger.warning(f"weapon_type unknow, got {weapon_type}")
         return 0
 
-
-
-def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
+def get_weapon_score_single_target(weapon_type: str, weapon_model: str,
                            target_type: str,
                            target_dimension_distribution: dict) -> float:
     """Calculate weapon efficiency against a target type given a dimension distribution.
@@ -1324,42 +1346,97 @@ def calc_weapon_efficiency(weapon_type: str, weapon_model: str,
             continue
         raw += dist_weight * dim_data['accuracy'] * dim_data['destroy_capacity']
 
+    # commentate in quanto il calcolo di raw si basa sui valori di accuracy e destroy_capacity, che sono già influenzati dal calibro (es. un'arma con calibro più grande avrà valori di accuracy e destroy_capacity più alti contro certi target). Aggiungere un caliber_factor potrebbe quindi sovrapporsi a questo effetto e distorcere i risultati, soprattutto se il calibro dell'arma è significativamente diverso da quello di riferimento del template. Se in futuro si decidesse di implementare un caliber_factor, sarebbe importante rivedere anche i valori di accuracy e destroy_capacity nei template per assicurarsi che non riflettano già implicitamente le differenze di calibro.
+
     # --- caliber_factor: correzione per differenza di calibro ---
     # Confronta il calibro dell'arma con il calibro di riferimento del template.
     # Esponente 0.3 → effetto smorzato (es. +20% calibro → ~+5.5% efficienza).
     # Clamped a [0.85, 1.15] per evitare distorsioni eccessive.
-    caliber_factor = 1.0
-    weapon_caliber = weapon.get('caliber')
-    if weapon_caliber is not None and weapon_caliber > 0:
-        ref_caliber = _get_ref_caliber(efficiency_data)
-        if ref_caliber is not None and ref_caliber > 0:
-            ratio = weapon_caliber / ref_caliber
-            caliber_factor = max(0.85, min(1.15, ratio ** 0.3))
+    #caliber_factor = 1.0
+    #weapon_caliber = weapon.get('caliber')
+    #if weapon_caliber is not None and weapon_caliber > 0:
+    #    ref_caliber = _get_ref_caliber(efficiency_data)
+    #    if ref_caliber is not None and ref_caliber > 0:
+    #        ratio = weapon_caliber / ref_caliber
+    #        caliber_factor = max(0.85, min(1.15, ratio ** 0.3))
 
     # --- ammo_factor: correzione per tipo di munizione vs target ---
     # Per ogni munizione disponibile, cerca l'efficacia contro il target_type
     # in AMMO_TARGET_EFFECTIVENESS; seleziona la migliore.
     # Scalato a [0.85, 1.15]: ammo_factor = 0.85 + 0.3 * best_effectiveness.
-    ammo_factor = 1.0
-    ammo_types = weapon.get('ammo_type')
-    if ammo_types:
-        best_eff = 0.5  # default se il tipo di munizione non è in tabella
-        for ammo in ammo_types:
-            ammo_data = AMMO_TARGET_EFFECTIVENESS.get(ammo)
-            if ammo_data is not None:
-                eff = ammo_data.get(target_type, 0.5)
-                if eff > best_eff:
-                    best_eff = eff
-        ammo_factor = 0.85 + 0.3 * best_eff
+    #ammo_factor = 1.0
+    #ammo_types = weapon.get('ammo_type')
+    #if ammo_types:
+    #    best_eff = 0.5  # default se il tipo di munizione non è in tabella
+    #    for ammo in ammo_types:
+    #        ammo_data = AMMO_TARGET_EFFECTIVENESS.get(ammo)
+    #        if ammo_data is not None:
+    #            eff = ammo_data.get(target_type, 0.5)
+    #            if eff > best_eff:
+    #                best_eff = eff
+    #    ammo_factor = 0.85 + 0.3 * best_eff
 
     # --- variabilità stocastica ---
     perc_var = weapon.get('perc_efficiency_variability', 0.0)
     variability = random.uniform(0, perc_var)
 
-    result = raw * caliber_factor * ammo_factor * (1 - variability)
+    #result = raw * caliber_factor * ammo_factor * (1 - variability)
+    result = raw * (1 - variability)
 
     return result
 
+def get_weapon_score_target(model: str, target_type: List, target_dimension: List) -> float:
+    """
+    Returns an effectiveness score for a weapons against a list of specific target, based on the weapons's parameters and the target's characteristics.
+
+    Restituisce un punteggio di efficacia per una bomba valutando gli effetti in base ad una lista di bersagli con dimensioni specificate in una lista. Il calcolo è basato sui parametri della bomba e sulle caratteristiche del bersaglio.
+    
+    :param model: model of WEAPON / il modello dell'ARMA da valutare
+    :type model: str
+    :param target_type: type of target (e.g., 'Soft', 'Armored', 'Structure') / tipo di bersaglio (es. 'Soft', 'Armored', 'Structure')
+    :type target_type: List
+    :param target_dimension: dimension of target (e.g., 'small', 'medium', 'large') / dimensione del bersaglio (es. 'small', 'medium', 'large')
+    :type target_dimension: List
+    :return: weapon's score against the target / punteggio di efficacia della bomba contro il bersaglio, calcolato come prodotto del punteggio base della bomba e dell'efficacia della testata contro quel tipo e dimensione di bersaglio
+    :rtype: float
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+
+    weapon_dict = get_weapon(model)
+
+    #weapon = AIR_WEAPONS[weapon_type].get(model)#
+    if not weapon_dict:
+        logger.warning(f"weapon {model} unknow")
+        return 0.0
+    else:                
+        logger.debug(f"weapon {model} found in category {weapon_dict['weapons_category']}")
+    
+    weapon = weapon_dict.get('weapons_data', {})
+    score = 0.0
+    target_evaluation_count = 0
+
+    for t_type in target_type:
+
+        if t_type not in TARGET_CLASSIFICATION:
+            logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
+            continue
+
+        for t_dim in target_dimension:
+
+            if t_dim not in TARGET_DIMENSION:
+                logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
+                continue
+
+            efficiency_param = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
+            accuracy = efficiency_param.get('accuracy', 0.0)
+            destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
+            score += accuracy * destroy_capacity
+            target_evaluation_count += 1            
+
+    return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
 GROUND_WEAPONS = {
     'AUTO_CANNONS': {
@@ -1552,9 +1629,9 @@ GROUND_WEAPONS = {
             'perc_efficiency_variability': 0.1,
             'efficiency': {
                 "Soft": {
-                    "big": {"accuracy": 0.95, "destroy_capacity": 0.4},
-                    "med": {"accuracy": 0.9, "destroy_capacity": 0.45},
-                    "small": {"accuracy": 0.8, "destroy_capacity": 0.5},
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.90},
+                    "med": {"accuracy": 0.9, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.8, "destroy_capacity": 1.00},
                 },
                 "Armored": {
                     "big": {"accuracy": 0.85, "destroy_capacity": 0.95},
@@ -1632,6 +1709,7 @@ GROUND_WEAPONS = {
             'muzzle_speed': 600, # m/s (HEAT) 
             'fire_rate': 8, # shot per minute
             'range': {'direct': 1300, 'indirect': 4500 },
+            'ammo_type': ['HEAT', 'HE'],  
             'task': [GROUND_WEAPON_TASK['Anti_Tank'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_MBT_CANNON_73MM,
@@ -2224,6 +2302,9 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Anti_Tank']],
             'perc_efficiency_variability': 0.1,
             'efficiency': {**_EFF_ATGM_LASER,
+                "Soft":    {"big": {"accuracy": 0.93, "destroy_capacity": 1.00},
+                            "med": {"accuracy": 0.93, "destroy_capacity": 1.00},
+                            "small": {"accuracy": 0.92, "destroy_capacity": 1.00}},
                 "Armored": {"big": {"accuracy": 0.95, "destroy_capacity": 0.95},
                             "med": {"accuracy": 0.9, "destroy_capacity": 1.0},
                             "small": {"accuracy": 0.9, "destroy_capacity": 1.0}}},
