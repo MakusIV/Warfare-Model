@@ -52,10 +52,10 @@ WEAPON_PARAM = {
                         'speed': 0.3/400, # max ~2000 m/s (missili ipersonici)
                         },
 
-    'ROCKETS':         {'caliber': 0.2/240, 
-                        'warhead': 0.4/150,
-                        'range': 0.2/300,
-                        'ammo_type': 0.2,
+    'ROCKETS':         {'caliber': 0.4/240,                         
+                        'range': 0.3/70000,
+                        'fire_rate': 0.15/1,
+                        'ammo_type': 0.15,
                         },
 
     'MORTARS':          {'caliber': 0.35/155, # coeff / max value
@@ -65,10 +65,10 @@ WEAPON_PARAM = {
                         },
 
     'ARTILLERY':        {'caliber': 0.3/300, # coeff / max value (same structure as CANNONS)
-                        'muzzle_speed': 0.15/1000,
-                        'fire_rate': 0.25/10,
-                        'range': 0.1/70000,
-                        'ammo_type': 0.2,
+                        'muzzle_speed': 0.1/1000,
+                        'fire_rate': 0.2/10,
+                        'range': 0.3/70000,
+                        'ammo_type': 0.1,
                         },
 
     'AA_CANNONS':       {'caliber': 0.3/60, # coeff / max value (max ~60mm, ZSU-57-2)
@@ -2584,7 +2584,61 @@ GROUND_WEAPONS = {
         },
     },
         
-    'ROCKETS': {},
+    'ROCKETS': {
+         # --- MLRS / Rocket Artillery ---
+        '122mm-Grad-Rocket': { # BM-21 Grad
+            'model': '122mm-Grad-Rocket',
+            "start_service": 1963,
+            "end_service": 3000,
+            'caliber': 122, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 2, # ripple fire, full salvo (40 rockets) in ~20 seconds
+            'range': 20380, # m
+            'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
+        },
+        '220mm-Uragan-Rocket': { # BM-27 Uragan
+            'model': '220mm-Uragan-Rocket',
+            "start_service": 1975,
+            "end_service": 3000,
+            'caliber': 220, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (16 rockets) in ~20 seconds
+            'range': 35800, # m
+            'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
+        },
+        '300mm-Smerch-Rocket': { # BM-30 Smerch
+            'model': '300mm-Smerch-Rocket',
+            "start_service": 1987,
+            "end_service": 3000,
+            'caliber': 300, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (12 rockets) in ~38 seconds
+            'range': 70000, # m
+            'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
+        },
+        '227mm-MLRS-Rocket': { # M270 MLRS
+            'model': '227mm-MLRS-Rocket',
+            "start_service": 1983,
+            "end_service": 3000,
+            'caliber': 227, # mm
+            'muzzle_speed': 0, # N/A - rocket propelled
+            'fire_rate': 1, # full salvo (12 rockets) in ~60 seconds
+            'range': 32000, # m
+            'ammo_type': ['HE'],
+            'task': [GROUND_WEAPON_TASK['Artillery']],
+            'perc_efficiency_variability': 0.3,
+            'efficiency': _EFF_MLRS,
+        },
+    },
 
     'MORTARS': {
         'M933-60mm': { # Merkava internal mortar (Soltam 60mm)
@@ -2706,60 +2760,7 @@ GROUND_WEAPONS = {
             'task': [GROUND_WEAPON_TASK['Artillery'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.25,
             'efficiency': _EFF_TUBE_ARTILLERY,
-        },
-        # --- MLRS / Rocket Artillery ---
-        '122mm-Grad-Rocket': { # BM-21 Grad
-            'model': '122mm-Grad-Rocket',
-            "start_service": 1963,
-            "end_service": 3000,
-            'caliber': 122, # mm
-            'muzzle_speed': 0, # N/A - rocket propelled
-            'fire_rate': 2, # ripple fire, full salvo (40 rockets) in ~20 seconds
-            'range': {'direct': 0, 'indirect': 20380 }, # m
-            'ammo_type': ['HE'],
-            'task': [GROUND_WEAPON_TASK['Artillery']],
-            'perc_efficiency_variability': 0.3,
-            'efficiency': _EFF_MLRS,
-        },
-        '220mm-Uragan-Rocket': { # BM-27 Uragan
-            'model': '220mm-Uragan-Rocket',
-            "start_service": 1975,
-            "end_service": 3000,
-            'caliber': 220, # mm
-            'muzzle_speed': 0, # N/A - rocket propelled
-            'fire_rate': 1, # full salvo (16 rockets) in ~20 seconds
-            'range': {'direct': 0, 'indirect': 35800 }, # m
-            'ammo_type': ['HE'],
-            'task': [GROUND_WEAPON_TASK['Artillery']],
-            'perc_efficiency_variability': 0.3,
-            'efficiency': _EFF_MLRS,
-        },
-        '300mm-Smerch-Rocket': { # BM-30 Smerch
-            'model': '300mm-Smerch-Rocket',
-            "start_service": 1987,
-            "end_service": 3000,
-            'caliber': 300, # mm
-            'muzzle_speed': 0, # N/A - rocket propelled
-            'fire_rate': 1, # full salvo (12 rockets) in ~38 seconds
-            'range': {'direct': 0, 'indirect': 70000 }, # m
-            'ammo_type': ['HE'],
-            'task': [GROUND_WEAPON_TASK['Artillery']],
-            'perc_efficiency_variability': 0.3,
-            'efficiency': _EFF_MLRS,
-        },
-        '227mm-MLRS-Rocket': { # M270 MLRS
-            'model': '227mm-MLRS-Rocket',
-            "start_service": 1983,
-            "end_service": 3000,
-            'caliber': 227, # mm
-            'muzzle_speed': 0, # N/A - rocket propelled
-            'fire_rate': 1, # full salvo (12 rockets) in ~60 seconds
-            'range': {'direct': 0, 'indirect': 32000 }, # m
-            'ammo_type': ['HE'],
-            'task': [GROUND_WEAPON_TASK['Artillery']],
-            'perc_efficiency_variability': 0.3,
-            'efficiency': _EFF_MLRS,
-        },
+        },       
     },
 
     'MACHINE_GUNS': {

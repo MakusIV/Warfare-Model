@@ -52,6 +52,7 @@ WEAPON_TYPE_SCORE: List[str] = [
     "MISSILES",
     "MORTARS",
     "ARTILLERY",
+    "ROCKETS",
     "MACHINE_GUNS",
 ]
 
@@ -62,6 +63,7 @@ WEAPON_TYPE_TARGET: List[str] = [
     "AUTO_CANNONS",
     "MISSILES",
     "ARTILLERY",
+    "ROCKETS",
     "MACHINE_GUNS",
 ]
 
@@ -102,6 +104,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import (
     get_machine_gun_score,
     get_mortars_score,
     get_artillery_score,
+    get_rockets_score,
     get_weapon_score,
     get_weapon,
     get_weapon_score_target,
@@ -616,12 +619,7 @@ class TestGetArtilleryScore(unittest.TestCase):
         score = get_artillery_score("M284-155mm")
         self.assertIsInstance(score, float)
         self.assertGreater(score, 0.0)
-
-    def test_300mm_smerch_returns_positive(self):
-        """300mm-Smerch-Rocket (MLRS) deve restituire un punteggio > 0."""
-        score = get_artillery_score("300mm-Smerch-Rocket")
-        self.assertIsInstance(score, float)
-        self.assertGreater(score, 0.0)
+    
 
     def test_all_artillery_return_positive(self):
         """Tutta l'artiglieria in GROUND_WEAPONS deve restituire un punteggio > 0."""
@@ -648,6 +646,25 @@ class TestGetArtilleryScore(unittest.TestCase):
         except (KeyError, Exception):
             pass  # comportamento accettabile: eccezione o 0
 
+# ---------------------------------------------------------------------------
+# 7-bis. get_rockets_score
+# ---------------------------------------------------------------------------
+
+class TestGetRocketsScore(unittest.TestCase):
+    """Unit test per get_artillery_score()."""
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    def test_300mm_smerch_returns_positive(self):
+        """300mm-Smerch-Rocket (MLRS) deve restituire un punteggio > 0."""
+        score = get_rockets_score("300mm-Smerch-Rocket")
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
 
 # ---------------------------------------------------------------------------
 # 8. get_machine_gun_score
@@ -809,6 +826,7 @@ class TestGetWeaponScoreDispatcher(unittest.TestCase):
             "MISSILES":     "9K119M",
             "MORTARS":      "M933-60mm",
             "ARTILLERY":    "2A33-152mm",
+            "ROCKETS":      "300mm-Smerch-Rocket",
             "MACHINE_GUNS": "M2HB-12.7",
         }
         for wtype, model in sample_models.items():
@@ -905,6 +923,11 @@ class TestGetWeapon(unittest.TestCase):
         """2A33-152mm deve essere categorizzato come 'ARTILLERY'."""
         result = get_weapon("2A33-152mm")
         self.assertEqual(result["weapons_category"], "ARTILLERY")
+
+    def test_rockets_category_is_correct(self):
+        """300mm-Smerch-Rocket deve essere categorizzato come 'ROCKETS'."""
+        result = get_weapon("300mm-Smerch-Rocket")
+        self.assertEqual(result["weapons_category"], "ROCKETS")
 
     def test_auto_cannon_category_is_correct(self):
         """2A42 deve essere categorizzato come 'AUTO_CANNONS'."""
@@ -1779,6 +1802,7 @@ def _run_tests() -> unittest.TestResult:
         TestGetMissilesScore,
         TestGetMortarsScore,
         TestGetArtilleryScore,
+        TestGetRocketsScore,
         TestGetMachineGunScore,
         TestGetWeaponScoreDispatcher,
         TestGetWeapon,
