@@ -1411,8 +1411,7 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
     if not weapon_dict:
         logger.warning(f"weapon {model} unknow")
         return 0.0
-    else:                
-        logger.debug(f"weapon {model} found in category {weapon_dict['weapons_category']}")
+    
     
     weapon = weapon_dict.get('weapons_data', {})
     score = 0.0
@@ -1437,6 +1436,55 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
             target_evaluation_count += 1            
 
     return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
+
+def get_weapon_score_target_distribuition(model: str, target_type: Dict, target_dimension: Dict) -> float:
+    """
+    Returns an effectiveness score for a weapons against a list of specific target, based on the weapons's parameters and the target's characteristics.
+
+    Restituisce un punteggio di efficacia per una bomba valutando gli effetti in base ad una lista di bersagli con dimensioni specificate in una lista. Il calcolo è basato sui parametri della bomba e sulle caratteristiche del bersaglio.
+    
+    :param model: model of WEAPON / il modello dell'ARMA da valutare
+    :type model: str
+    :param target_type: type of target (e.g., {'Soft': 1.0}, {'Armored':0.7, 'Structure':0.3} ) / tipo di bersaglio (es. {'Soft': 1.0}, {'Armored':0.7, 'Structure':0.3}
+    :type target_type: Dict
+    :param target_dimension: dimension of target (e.g., {'small': 1.0}, {'med':0.7, 'big':0.3}) / dimensione del bersaglio (es. {'small': 1.0}, {'med':0.7, 'big':0.3})
+    :type target_dimension: Dict
+    :return: weapon's score against the target / punteggio di efficacia della bomba contro il bersaglio, calcolato come prodotto del punteggio base della bomba e dell'efficacia della testata contro quel tipo e dimensione di bersaglio
+    :rtype: float
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+
+
+    weapon_dict = get_weapon(model)
+
+    #weapon = AIR_WEAPONS[weapon_type].get(model)#
+    if not weapon_dict:
+        logger.warning(f"weapon {model} unknow")
+        return 0.0
+    
+    weapon = weapon_dict.get('weapons_data', {})
+    score = 0.0
+
+    for t_type, t_type_value in target_type.items():
+
+        if t_type not in TARGET_CLASSIFICATION:
+            logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
+            continue
+
+        for t_dim, t_dim_value in target_dimension.items():
+
+            if t_dim not in TARGET_DIMENSION:
+                logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
+                continue
+
+            efficiency_param = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
+            accuracy = efficiency_param.get('accuracy', 0.0)
+            destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
+            score += accuracy * destroy_capacity * t_type_value * t_dim_value
+
+    return score
 
 GROUND_WEAPONS = {
     'AUTO_CANNONS': {

@@ -51,5 +51,11 @@ Nel modulo Vehicle_Data.py implementa le funzioni:
  La funzione _weapon_target_effectiveness sviuluppala in modo analogo alla funzione loadout_target_effectiveness implementata nel modulo Aircraft_Loadouts.py, la funzione get_normalized_weapon_target_effectiveness in modo analogo alle altre funzioni normalizzate presenti in Vehicle_Data.py   
 
 
-
-Considerando quanto realizzato nel modulo di test: Test_Ground_Weapon_Data.py 
+Nel modulo Ground_Weapon_Data.py ho implementato la funzione                  
+  get_weapon_score_target_distribuition(model: str, target_type: Dict,          
+  target_dimension: Dict) -> float. Verifica se ci sono errori sintattici o     
+  logici e dopo averla, eventualmente, aggiornata, implementa nel file          
+  Test_Ground_Weapon_Data.py i test di unità per questa funzione 
+  
+  
+  Nel modulo Vehicle_Data.py ho implementato le funzioni _weapon_target_effectiveness_distribuition(self, target_type: Dict, target_dimension: Dict) -> float e get_normalized_weapon_target_effectiveness_distribuition(self, target_type: Dict, target_dimension: Dict, category: Optional[str] = None) -> float. Verifica se ci sono errori sintattici o logici nelle funzioni e aggiornale se necessario. Implementa nel file Test_Vehicle_Data.py i test di unità per queste funzioni 

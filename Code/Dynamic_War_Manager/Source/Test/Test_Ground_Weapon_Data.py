@@ -105,6 +105,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import (
     get_weapon_score,
     get_weapon,
     get_weapon_score_target,
+    get_weapon_score_target_distribuition,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1208,6 +1209,280 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
                                    f"{model}: Soft ({score_soft:.4f}) non > Armored ({score_arm:.4f})")
 
 
+# ---------------------------------------------------------------------------
+# 12. get_weapon_score_target_distribuition
+# ---------------------------------------------------------------------------
+
+class TestGetWeaponScoreTargetDistribuition(unittest.TestCase):
+    """Unit test per get_weapon_score_target_distribuition():
+
+        get_weapon_score_target_distribuition(
+            model: str, target_type: Dict, target_dimension: Dict
+        ) -> float
+
+    - model: stringa identificativa del modello (TypeError se non str)
+    - target_type: Dict {tipo: peso} — chiavi validate contro TARGET_CLASSIFICATION
+    - target_dimension: Dict {dimensione: peso} — chiavi validate contro TARGET_DIMENSION
+    - Ritorna la SOMMA PONDERATA di accuracy * destroy_capacity * w_type * w_dim
+      su tutte le combinazioni (t_type, t_dim) valide. I pesi rappresentano una
+      distribuzione di probabilità; il risultato NON è diviso per il numero di
+      combinazioni (a differenza di get_weapon_score_target che calcola una media uniforme).
+    - Ritorna 0.0 se model non trovato, dict vuoti, o nessuna combinazione valida.
+    """
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    # ── validazione tipo model ────────────────────────────────────────────────
+
+    def test_type_error_model_int(self):
+        """model int → TypeError."""
+        with self.assertRaises(TypeError):
+            get_weapon_score_target_distribuition(123, {"Armored": 1.0}, {"big": 1.0})
+
+    def test_type_error_model_none(self):
+        """model None → TypeError."""
+        with self.assertRaises(TypeError):
+            get_weapon_score_target_distribuition(None, {"Armored": 1.0}, {"big": 1.0})
+
+    def test_type_error_model_list(self):
+        """model lista → TypeError."""
+        with self.assertRaises(TypeError):
+            get_weapon_score_target_distribuition(["2A46M"], {"Armored": 1.0}, {"big": 1.0})
+
+    # ── modello sconosciuto ───────────────────────────────────────────────────
+
+    def test_unknown_model_returns_zero(self):
+        """Modello sconosciuto → 0.0."""
+        score = get_weapon_score_target_distribuition(
+            "WEAPON_NOT_EXISTING_XYZ", {"Armored": 1.0}, {"big": 1.0}
+        )
+        self.assertEqual(score, 0.0)
+
+    # ── dict vuoti ────────────────────────────────────────────────────────────
+
+    def test_empty_target_type_dict_returns_zero(self):
+        """Dict target_type vuoto → 0.0 (nessuna combinazione da valutare)."""
+        score = get_weapon_score_target_distribuition("2A46M", {}, {"big": 1.0})
+        self.assertEqual(score, 0.0)
+
+    def test_empty_target_dimension_dict_returns_zero(self):
+        """Dict target_dimension vuoto → 0.0 (nessuna combinazione da valutare)."""
+        score = get_weapon_score_target_distribuition("2A46M", {"Armored": 1.0}, {})
+        self.assertEqual(score, 0.0)
+
+    def test_both_dicts_empty_returns_zero(self):
+        """Entrambi i dict vuoti → 0.0."""
+        score = get_weapon_score_target_distribuition("2A46M", {}, {})
+        self.assertEqual(score, 0.0)
+
+    # ── chiavi non valide (ignorate con warning) ──────────────────────────────
+
+    def test_invalid_target_type_only_returns_zero(self):
+        """target_type sconosciuto (non in TARGET_CLASSIFICATION) → 0.0."""
+        score = get_weapon_score_target_distribuition(
+            "2A46M", {"UNKNOWN_TARGET_XYZ": 1.0}, {"big": 1.0}
+        )
+        self.assertEqual(score, 0.0)
+
+    def test_invalid_target_dimension_only_returns_zero(self):
+        """target_dimension sconosciuta (non in TARGET_DIMENSION) → 0.0."""
+        score = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"UNKNOWN_DIM_XYZ": 1.0}
+        )
+        self.assertEqual(score, 0.0)
+
+    def test_invalid_target_type_ignored_mixed(self):
+        """target_type invalido ignorato; risultato uguale a solo la chiave valida."""
+        score_valid = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"big": 1.0}
+        )
+        score_mixed = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0, "UNKNOWN_XYZ": 0.5}, {"big": 1.0}
+        )
+        self.assertAlmostEqual(score_valid, score_mixed, places=9)
+
+    def test_invalid_target_dimension_ignored_mixed(self):
+        """target_dimension invalida ignorata; risultato uguale a solo la chiave valida."""
+        score_valid = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"big": 1.0}
+        )
+        score_mixed = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"big": 1.0, "UNKNOWN_DIM_XYZ": 0.5}
+        )
+        self.assertAlmostEqual(score_valid, score_mixed, places=9)
+
+    # ── semantica della somma ponderata ──────────────────────────────────────
+
+    def test_single_combination_weight_one_equals_acc_times_dc(self):
+        """Con peso 1.0 per entrambe le chiavi, il risultato è accuracy * destroy_capacity."""
+        model  = "2A46M"
+        t_type = "Armored"
+        t_dim  = "big"
+        eff = GROUND_WEAPONS["CANNONS"][model]["efficiency"][t_type][t_dim]
+        expected = eff["accuracy"] * eff["destroy_capacity"]
+        score = get_weapon_score_target_distribuition(
+            model, {t_type: 1.0}, {t_dim: 1.0}
+        )
+        self.assertAlmostEqual(score, expected, places=9)
+
+    def test_weight_half_halves_single_combination(self):
+        """Un peso 0.5 su t_type dimezza il risultato rispetto a peso 1.0."""
+        model  = "2A46M"
+        t_type = "Armored"
+        t_dim  = "big"
+        score_full = get_weapon_score_target_distribuition(
+            model, {t_type: 1.0}, {t_dim: 1.0}
+        )
+        score_half = get_weapon_score_target_distribuition(
+            model, {t_type: 0.5}, {t_dim: 1.0}
+        )
+        self.assertAlmostEqual(score_half, score_full * 0.5, places=9)
+
+    def test_two_types_weighted_sum(self):
+        """Con due tipi (0.7 + 0.3), il risultato è la somma ponderata, NON la media.
+        Verifica: score == v_soft * 0.7 + v_arm * 0.3 (non diviso per 2)."""
+        model = "2A46M"
+        t_dim = "big"
+        eff = GROUND_WEAPONS["CANNONS"][model]["efficiency"]
+        v_soft = eff["Soft"]["big"]["accuracy"]    * eff["Soft"]["big"]["destroy_capacity"]
+        v_arm  = eff["Armored"]["big"]["accuracy"] * eff["Armored"]["big"]["destroy_capacity"]
+        expected = v_soft * 0.7 + v_arm * 0.3
+        score = get_weapon_score_target_distribuition(
+            model, {"Soft": 0.7, "Armored": 0.3}, {t_dim: 1.0}
+        )
+        self.assertAlmostEqual(score, expected, places=9)
+        # Verifica esplicita che il risultato NON sia diviso per il numero di combinazioni
+        self.assertNotAlmostEqual(score, expected / 2, places=9)
+
+    def test_two_dimensions_weighted_sum(self):
+        """Con due dimensioni (0.6 + 0.4), il risultato è la somma ponderata."""
+        model  = "2A46M"
+        t_type = "Armored"
+        eff = GROUND_WEAPONS["CANNONS"][model]["efficiency"][t_type]
+        v_big   = eff["big"]["accuracy"]   * eff["big"]["destroy_capacity"]
+        v_small = eff["small"]["accuracy"] * eff["small"]["destroy_capacity"]
+        expected = v_big * 0.6 + v_small * 0.4
+        score = get_weapon_score_target_distribuition(
+            model, {t_type: 1.0}, {"big": 0.6, "small": 0.4}
+        )
+        self.assertAlmostEqual(score, expected, places=9)
+
+    def test_weight_zero_returns_zero(self):
+        """Pesi 0.0 su tutte le chiavi → risultato 0.0."""
+        score = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 0.0}, {"big": 0.0}
+        )
+        self.assertEqual(score, 0.0)
+
+    def test_differs_from_uniform_average_with_two_types(self):
+        """La somma ponderata (distribuzione) è diversa dalla media uniforme
+        di get_weapon_score_target quando i pesi non sono uniformi."""
+        model = "2A46M"
+        t_dim = "big"
+        eff = GROUND_WEAPONS["CANNONS"][model]["efficiency"]
+        v_soft = eff["Soft"]["big"]["accuracy"]    * eff["Soft"]["big"]["destroy_capacity"]
+        v_arm  = eff["Armored"]["big"]["accuracy"] * eff["Armored"]["big"]["destroy_capacity"]
+        # Somma ponderata con pesi 0.7/0.3
+        expected_weighted = v_soft * 0.7 + v_arm * 0.3
+        # Media uniforme (get_weapon_score_target con lista)
+        expected_avg = (v_soft + v_arm) / 2
+        score = get_weapon_score_target_distribuition(
+            model, {"Soft": 0.7, "Armored": 0.3}, {t_dim: 1.0}
+        )
+        self.assertAlmostEqual(score, expected_weighted, places=9)
+        # Le due semantiche devono produrre valori diversi (Soft ≠ Armored)
+        self.assertNotAlmostEqual(expected_weighted, expected_avg, places=9)
+
+    # ── valori di ritorno positivi ────────────────────────────────────────────
+
+    def test_cannon_vs_armored_big_returns_positive(self):
+        """2A46M vs Armored/big con peso 1.0 → float > 0."""
+        score = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"big": 1.0}
+        )
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_cannon_vs_soft_small_returns_positive(self):
+        """2A46M vs Soft/small con peso 1.0 → float > 0."""
+        score = get_weapon_score_target_distribuition(
+            "2A46M", {"Soft": 1.0}, {"small": 1.0}
+        )
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_missile_vs_armored_returns_positive(self):
+        """9K119M (ATGM) vs Armored/big con peso 1.0 → float > 0."""
+        score = get_weapon_score_target_distribuition(
+            "9K119M", {"Armored": 1.0}, {"big": 1.0}
+        )
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_machine_gun_vs_soft_small_returns_positive(self):
+        """M2HB-12.7 vs Soft/small con peso 1.0 → float > 0."""
+        score = get_weapon_score_target_distribuition(
+            "M2HB-12.7", {"Soft": 1.0}, {"small": 1.0}
+        )
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_return_is_non_negative_for_sample_models(self):
+        """Il risultato deve essere non negativo per un campione di modelli e categorie."""
+        sample = [
+            ("2A46M",      {"Armored": 0.5, "Soft": 0.5},    {"big": 1.0}),
+            ("9K119M",     {"Armored": 1.0},                  {"big": 0.6, "med": 0.4}),
+            ("M2HB-12.7",  {"Soft": 1.0},                    {"small": 1.0}),
+            ("2A33-152mm", {"Structure": 0.8, "Soft": 0.2},  {"big": 1.0}),
+            ("2A42",       {"Air_Defense": 0.6, "Soft": 0.4}, {"med": 1.0}),
+        ]
+        for model, t_type, t_dim in sample:
+            with self.subTest(model=model):
+                score = get_weapon_score_target_distribuition(model, t_type, t_dim)
+                self.assertGreaterEqual(score, 0.0)
+
+    # ── determinismo ──────────────────────────────────────────────────────────
+
+    def test_deterministic(self):
+        """Stesso risultato su chiamate successive (nessuna componente stocastica)."""
+        score1 = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 0.7, "Soft": 0.3}, {"big": 1.0}
+        )
+        score2 = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 0.7, "Soft": 0.3}, {"big": 1.0}
+        )
+        self.assertEqual(score1, score2)
+
+    # ── confronti ordinativi ──────────────────────────────────────────────────
+
+    def test_soft_score_higher_than_armored(self):
+        """Un cannone MBT: score vs Soft > score vs Armored (bersaglio non blindato
+        più vulnerabile di quello corazzato)."""
+        score_soft = get_weapon_score_target_distribuition(
+            "2A46M", {"Soft": 1.0}, {"big": 1.0}
+        )
+        score_arm = get_weapon_score_target_distribuition(
+            "2A46M", {"Armored": 1.0}, {"big": 1.0}
+        )
+        self.assertGreater(score_soft, score_arm)
+
+    def test_higher_soft_weight_gives_higher_score(self):
+        """Peso maggiore su Soft produce score più alto di peso maggiore su Armored,
+        poiché score(Soft) > score(Armored) per i cannoni MBT."""
+        score_soft_heavy = get_weapon_score_target_distribuition(
+            "2A46M", {"Soft": 0.8, "Armored": 0.2}, {"big": 1.0}
+        )
+        score_arm_heavy = get_weapon_score_target_distribuition(
+            "2A46M", {"Soft": 0.2, "Armored": 0.8}, {"big": 1.0}
+        )
+        self.assertGreater(score_soft_heavy, score_arm_heavy)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  UTILITÀ CONDIVISE PER LA GENERAZIONE DELLE TABELLE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1508,6 +1783,7 @@ def _run_tests() -> unittest.TestResult:
         TestGetWeaponScoreDispatcher,
         TestGetWeapon,
         TestGetWeaponScoreTarget,
+        TestGetWeaponScoreTargetDistribuition,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)

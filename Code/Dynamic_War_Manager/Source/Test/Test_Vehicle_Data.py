@@ -658,6 +658,145 @@ class TestWeaponTargetEffectiveness(unittest.TestCase):
         self.assertAlmostEqual(s1, s2, places=9)
 
 
+class TestWeaponTargetEffectivenessDistribuition(unittest.TestCase):
+    """Unit test per Vehicle_Data._weapon_target_effectiveness_distribuition().
+
+    Analoga a _weapon_target_effectiveness() ma accetta Dict con pesi invece
+    di List: target_type={'Armored': 0.7, 'Soft': 0.3}, target_dimension={'big': 1.0}.
+
+    Con peso 1.0 su un singolo tipo/dimensione il risultato è identico alla
+    versione List (get_weapon_score_target_distribuition con w=1.0 restituisce
+    lo stesso valore di get_weapon_score_target con lista singola).
+    """
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    # ── valori di base ────────────────────────────────────────────────────────
+
+    def test_tank_vs_armored_big_positive(self):
+        """T-90M vs Armored/big → float > 0."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_tank_vs_soft_higher_than_vs_armored(self):
+        """Un MBT è più efficace vs Soft che vs Armored."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        soft    = tank._weapon_target_effectiveness_distribuition({"Soft": 1.0},    {"big": 1.0})
+        armored = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        self.assertGreater(soft, armored)
+
+    def test_aaa_vs_soft_non_negative(self):
+        """AAA vehicle vs Soft → score >= 0."""
+        aaa = next(v for v in Vehicle_Data._registry.values() if v.category == "AAA")
+        score = aaa._weapon_target_effectiveness_distribuition({"Soft": 1.0}, {"big": 1.0})
+        self.assertGreaterEqual(score, 0.0)
+
+    def test_sam_vehicle_vs_soft_non_negative(self):
+        """SAM vehicle vs Soft → score >= 0."""
+        sam = Vehicle_Data._registry[_SAM_MODEL]
+        score = sam._weapon_target_effectiveness_distribuition({"Soft": 1.0}, {"big": 1.0})
+        self.assertGreaterEqual(score, 0.0)
+
+    # ── dict vuoti e chiavi invalide ──────────────────────────────────────────
+
+    def test_empty_target_type_dict_returns_zero(self):
+        """Dict target_type vuoto → 0.0."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank._weapon_target_effectiveness_distribuition({}, {"big": 1.0})
+        self.assertEqual(score, 0.0)
+
+    def test_empty_target_dimension_dict_returns_zero(self):
+        """Dict target_dimension vuoto → 0.0."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {})
+        self.assertEqual(score, 0.0)
+
+    def test_invalid_target_type_only_returns_zero(self):
+        """target_type sconosciuto → 0.0."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank._weapon_target_effectiveness_distribuition({"UNKNOWN_XYZ": 1.0}, {"big": 1.0})
+        self.assertEqual(score, 0.0)
+
+    def test_invalid_target_dimension_only_returns_zero(self):
+        """target_dimension sconosciuta → 0.0."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"UNKNOWN_DIM": 1.0})
+        self.assertEqual(score, 0.0)
+
+    # ── coerenza con la versione List ─────────────────────────────────────────
+
+    def test_single_weight_1_matches_list_version(self):
+        """Con peso 1.0 su un singolo tipo/dimensione il risultato deve essere
+        identico a _weapon_target_effectiveness con la lista corrispondente."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_dist = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        score_list = tank._weapon_target_effectiveness(["Armored"], ["big"])
+        self.assertAlmostEqual(score_dist, score_list, places=9)
+
+    def test_single_weight_1_soft_matches_list_version(self):
+        """Con peso 1.0 su Soft/med, risultato identico alla versione List."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_dist = tank._weapon_target_effectiveness_distribuition({"Soft": 1.0}, {"med": 1.0})
+        score_list = tank._weapon_target_effectiveness(["Soft"], ["med"])
+        self.assertAlmostEqual(score_dist, score_list, places=9)
+
+    # ── semantica della somma ponderata ──────────────────────────────────────
+
+    def test_weight_half_halves_raw_score(self):
+        """Dimezzare il peso di t_type dimezza il punteggio grezzo."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_full = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        score_half = tank._weapon_target_effectiveness_distribuition({"Armored": 0.5}, {"big": 1.0})
+        self.assertAlmostEqual(score_half, score_full * 0.5, places=9)
+
+    def test_two_types_weighted_sum_semantics(self):
+        """Con due tipi, il risultato è la somma ponderata dei contributi individuali."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_soft   = tank._weapon_target_effectiveness_distribuition({"Soft": 1.0},    {"big": 1.0})
+        score_armored = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        score_mixed  = tank._weapon_target_effectiveness_distribuition(
+            {"Soft": 0.7, "Armored": 0.3}, {"big": 1.0}
+        )
+        expected = score_soft * 0.7 + score_armored * 0.3
+        self.assertAlmostEqual(score_mixed, expected, places=9)
+
+    def test_two_dimensions_weighted_sum_semantics(self):
+        """Con due dimensioni, il risultato è la somma ponderata dei contributi."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_big   = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"big": 1.0})
+        score_small = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"small": 1.0})
+        score_mixed = tank._weapon_target_effectiveness_distribuition(
+            {"Armored": 1.0}, {"big": 0.6, "small": 0.4}
+        )
+        expected = score_big * 0.6 + score_small * 0.4
+        self.assertAlmostEqual(score_mixed, expected, places=9)
+
+    # ── tutti i veicoli non negativi ──────────────────────────────────────────
+
+    def test_all_vehicles_non_negative(self):
+        """Per tutti i veicoli registrati il punteggio deve essere >= 0."""
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                score = obj._weapon_target_effectiveness_distribuition({"Soft": 1.0}, {"big": 1.0})
+                self.assertGreaterEqual(score, 0.0)
+
+    # ── determinismo ──────────────────────────────────────────────────────────
+
+    def test_deterministic(self):
+        """Stesso risultato su chiamate successive (nessuna componente stocastica)."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        s1 = tank._weapon_target_effectiveness_distribuition({"Armored": 0.7, "Soft": 0.3}, {"big": 1.0})
+        s2 = tank._weapon_target_effectiveness_distribuition({"Armored": 0.7, "Soft": 0.3}, {"big": 1.0})
+        self.assertAlmostEqual(s1, s2, places=9)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  4. METODO _normalize
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1004,6 +1143,135 @@ class TestGetNormalizedWeaponTargetEffectiveness(unittest.TestCase):
         s1 = tank.get_normalized_weapon_target_effectiveness(["Armored"], ["med"])
         s2 = tank.get_normalized_weapon_target_effectiveness(["Armored"], ["med"])
         self.assertAlmostEqual(s1, s2, places=9)
+
+
+class TestGetNormalizedWeaponTargetEffectivenessDistribuition(unittest.TestCase):
+    """Unit test per get_normalized_weapon_target_effectiveness_distribuition().
+
+    Analoga a get_normalized_weapon_target_effectiveness() ma accetta Dict con
+    pesi: target_type={'Armored': 0.7, 'Soft': 0.3}, target_dimension={'big': 1.0}.
+
+    Con peso 1.0 su un singolo tipo/dimensione il risultato normalizzato deve
+    essere identico a get_normalized_weapon_target_effectiveness con lista.
+
+    La normalizzazione preserva il ranking relativo tra veicoli.
+    """
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    # ── range [0, 1] ──────────────────────────────────────────────────────────
+
+    def test_returns_float_in_range(self):
+        """Punteggio normalizzato T-90M vs Armored/big ∈ [0, 1]."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Armored": 1.0}, {"big": 1.0}
+        )
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_all_vehicles_in_range(self):
+        """Per tutti i veicoli, il punteggio normalizzato deve essere ∈ [0, 1]."""
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                score = obj.get_normalized_weapon_target_effectiveness_distribuition(
+                    {"Soft": 1.0}, {"big": 1.0}
+                )
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_mixed_weights_in_range(self):
+        """Pesi misti su più tipi e dimensioni → score ∈ [0, 1]."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Soft": 0.7, "Armored": 0.3}, {"big": 0.6, "med": 0.4}
+        )
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    # ── filtro per categoria ──────────────────────────────────────────────────
+
+    def test_category_scope_in_range(self):
+        """Con category='Tank', il punteggio normalizzato deve essere ∈ [0, 1]."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Armored": 1.0}, {"big": 1.0}, category="Tank"
+        )
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_none_category_returns_in_range(self):
+        """category=None usa tutti i veicoli → score ∈ [0, 1]."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Soft": 1.0}, {"big": 1.0}, category=None
+        )
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        """Categoria non valida → ValueError."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        with self.assertRaises(ValueError):
+            tank.get_normalized_weapon_target_effectiveness_distribuition(
+                {"Armored": 1.0}, {"big": 1.0}, category="INVALID_CATEGORY_XYZ"
+            )
+
+    # ── coerenza con la versione List ─────────────────────────────────────────
+
+    def test_single_weight_1_matches_list_version(self):
+        """Con peso 1.0 su singolo tipo/dimensione, il risultato normalizzato è
+        identico a get_normalized_weapon_target_effectiveness con lista."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_dist = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Armored": 1.0}, {"big": 1.0}
+        )
+        score_list = tank.get_normalized_weapon_target_effectiveness(["Armored"], ["big"])
+        self.assertAlmostEqual(score_dist, score_list, places=9)
+
+    # ── proprietà di scaling ──────────────────────────────────────────────────
+
+    def test_uniform_weight_scaling_preserves_normalized_score(self):
+        """Scalare uniformemente tutti i pesi (moltiplicare per costante) non cambia
+        il risultato normalizzato: min, max e value scalano dello stesso fattore,
+        quindi (value - min) / (max - min) rimane invariato."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        score_full = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Soft": 1.0}, {"big": 1.0}
+        )
+        score_half = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Soft": 0.5}, {"big": 1.0}
+        )
+        self.assertAlmostEqual(score_full, score_half, places=9)
+
+    # ── determinismo ──────────────────────────────────────────────────────────
+
+    def test_deterministic(self):
+        """Stesso risultato normalizzato su chiamate successive."""
+        tank = Vehicle_Data._registry[_TANK_MODEL]
+        s1 = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Armored": 0.7, "Soft": 0.3}, {"med": 1.0}
+        )
+        s2 = tank.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Armored": 0.7, "Soft": 0.3}, {"med": 1.0}
+        )
+        self.assertAlmostEqual(s1, s2, places=9)
+
+    # ── campione multi-veicolo ────────────────────────────────────────────────
+
+    def test_artillery_model_in_range(self):
+        """Veicolo artiglieria vs Structure/big ∈ [0, 1]."""
+        arty = next(v for v in Vehicle_Data._registry.values() if "Artillery" in v.category)
+        score = arty.get_normalized_weapon_target_effectiveness_distribuition(
+            {"Structure": 1.0}, {"big": 1.0}
+        )
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1566,6 +1834,7 @@ def _run_tests() -> unittest.TestResult:
         TestReliabilityAndMaintenance,
         TestCombatEval,
         TestWeaponTargetEffectiveness,
+        TestWeaponTargetEffectivenessDistribuition,
         TestNormalize,
         TestGetNormalizedWeaponScore,
         TestGetNormalizedRadarScore,
@@ -1577,6 +1846,7 @@ def _run_tests() -> unittest.TestResult:
         TestGetNormalizedReliabilityAndAvailability,
         TestGetNormalizedCombatScore,
         TestGetNormalizedWeaponTargetEffectiveness,
+        TestGetNormalizedWeaponTargetEffectivenessDistribuition,
         TestGetVehicleData,
         TestGetVehicleScores,
     ):
