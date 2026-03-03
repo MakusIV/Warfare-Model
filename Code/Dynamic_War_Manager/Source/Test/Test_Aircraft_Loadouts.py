@@ -98,7 +98,6 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     evaluate_loadout_range,
     evaluate_loadout_speed,
     evaluate_loadout_altitude,
-    calc_loadout_effectiveness,
     loadout_eval,
     loadout_target_effectiveness,
 )
@@ -329,50 +328,6 @@ class TestEvaluateLoadoutAltitude(unittest.TestCase):
         """Aircraft non valido → ValueError."""
         with self.assertRaises(ValueError):
             evaluate_loadout_altitude("INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, "cruise")
-
-
-class TestCalcLoadoutEffectiveness(unittest.TestCase):
-    """Unit test per calc_loadout_effectiveness()."""
-
-    def test_returns_float(self):
-        """Restituisce un float."""
-        result = calc_loadout_effectiveness(
-            _AIRCRAFT_CAP, _LOADOUT_CAP, ["day"], {}, 100, "cruise"
-        )
-        self.assertIsInstance(result, float)
-
-    def test_score_non_negative(self):
-        """Punteggio >= 0."""
-        result = calc_loadout_effectiveness(
-            _AIRCRAFT_CAP, _LOADOUT_CAP, ["day"], {}, 100, "cruise"
-        )
-        self.assertGreaterEqual(result, 0.0)
-
-    def test_score_in_valid_range(self):
-        """Punteggio compreso tra 0 e 5.0 (range atteso per parametri realistici)."""
-        result = calc_loadout_effectiveness(
-            _AIRCRAFT_CAP, _LOADOUT_CAP, ["day"], {}, 100, "cruise"
-        )
-        self.assertGreaterEqual(result, 0.0)
-        self.assertLessEqual(result, 5.0)
-
-    def test_unusable_condition_lowers_score(self):
-        """Condizione non soddisfatta riduce il punteggio rispetto al caso soddisfatto."""
-        score_day = calc_loadout_effectiveness(
-            _AIRCRAFT_CAS, _LOADOUT_CAS, ["day"], {}, 100, "cruise"
-        )
-        score_night = calc_loadout_effectiveness(
-            _AIRCRAFT_CAS, _LOADOUT_CAS, ["night"], {}, 100, "cruise"
-        )
-        self.assertGreaterEqual(score_day, score_night)
-
-    def test_invalid_raises_ValueError(self):
-        """Aircraft non valido → ValueError."""
-        with self.assertRaises(ValueError):
-            calc_loadout_effectiveness(
-                "INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, ["day"], {}, 100, "cruise"
-            )
-
 
 class TestLoadoutEval(unittest.TestCase):
     """
@@ -891,7 +846,6 @@ def _run_tests() -> unittest.TestResult:
         TestEvaluateLoadoutRange,
         TestEvaluateLoadoutSpeed,
         TestEvaluateLoadoutAltitude,
-        TestCalcLoadoutEffectiveness,
         TestLoadoutEval,
         TestLoadoutTargetEffectiveness,
     ):

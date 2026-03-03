@@ -57,7 +57,7 @@ SYSTEM_WEIGHTS = {
 class Aircraft_Data:
     _registry = {}
         
-    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, manouvrability: float, resilience: float, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
         self.constructor = constructor
         self.users = users
         self.made = made
@@ -67,8 +67,7 @@ class Aircraft_Data:
         self.category = category
         self.cost = cost
         self.roles = roles
-        self.manouvrability = manouvrability
-        self.resilience = resilience
+        self.weight = weight
         self.engine = engine
         self.radar = radar
         self.TVD = TVD
@@ -100,6 +99,12 @@ class Aircraft_Data:
     
     def made(self, made):
         self.made = made
+
+    def get_weight(self) -> float:
+        return self.weight
+
+    def set_weight(self, weight: float):
+        self.weight = weight
 
     def get_aircraft(self, model: str):
         return self._registry.get(model)
@@ -168,6 +173,178 @@ class Aircraft_Data:
                 score += cap[1].get('engagement_range', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('engagement_range', 0)
                 score += cap[1].get('multi_target_capacity', 0) * SYSTEM_WEIGHTS["tvd_weights"].get('multi_target', 0)
         
+        return score
+
+    def _radio_nav_eval(self) -> float:
+        """Evaluates the radio_nav capabilities of the vehicle.
+
+        Considers:
+        - navigation_accuracy: precision of navigation system (0-1)
+        - communication_range: radio_nav range in km
+
+        Returns:
+            float: radio_nav score
+        """
+        if self.radio_nav == False:
+            return 0.0
+        
+        if self.radio_nav == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - radio_nav not defined.")
+            return 0.0
+
+        capabilities = self.radio_nav.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - radio_nav capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'navigation_accuracy': 0.4,
+            'communication_range': 0.6
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'navigation_accuracy': 1.0,  # max accuracy
+            'communication_range': 300.0  # km (riferimento per sistemi avanzati)
+        }
+
+        score = 0.0
+        navigation_accuracy = capabilities.get('navigation_accuracy', 0)
+        communication_range = capabilities.get('communication_range', 0)
+
+        # Normalizza e applica i pesi
+        score += (navigation_accuracy / reference_values['navigation_accuracy']) * weights['navigation_accuracy']
+        score += (communication_range / reference_values['communication_range']) * weights['communication_range']
+
+        return score
+
+    def _hydraulic_eval(self) -> float:
+        """Evaluates the hydraulic system capabilities of the vehicle.
+
+        Considers:
+        - pressure: hydraulic system pressure (PSI)
+        - fluid_capacity: hydraulic fluid capacity (liters)
+
+        Returns:
+            float: hydraulic system score
+        """
+        if self.hydraulic == False:
+            return 0.0
+        
+        if self.hydraulic == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic system not defined.")
+            return 0.0
+
+        capabilities = self.hydraulic.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Hydraulic capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'pressure': 0.6,
+            'fluid_capacity': 0.4
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'pressure': 4000.0,  # PSI (riferimento per sistemi ad alta pressione)
+            'fluid_capacity': 80.0  # litri (riferimento per veicoli pesanti)
+        }
+
+        score = 0.0
+        pressure = capabilities.get('pressure', 0)
+        fluid_capacity = capabilities.get('fluid_capacity', 0)
+
+        # Normalizza e applica i pesi
+        score += (pressure / reference_values['pressure']) * weights['pressure']
+        score += (fluid_capacity / reference_values['fluid_capacity']) * weights['fluid_capacity']
+
+        return score
+
+    def _avionics_eval(self) -> float:
+        """Evaluates the avionics system capabilities of the vehicle.
+
+        Considers:
+        - pressure: avionics system pressure (PSI)
+        - fluid_capacity: avionics fluid capacity (liters)
+        "flight_control": 0.82,  "self_defense": 0.56
+        Returns:
+            float: avionics system score
+        """
+        if self.avionics == False:
+            return 0.0
+        
+        if self.avionics == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - avionics system not defined.")
+            return 0.0
+
+        capabilities = self.avionics.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - avionics capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'flight_control': 0.35, # flight control capabilities (stability, maneuvering, etc.)            
+            'self_defense': 0.65  # self-defense capabilities (stealth, electronic countermeasures, etc.)
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'flight_control': 1.0,
+            'self_defense': 1.0
+        }
+
+        score = 0.0
+        flight_control = capabilities.get('flight_control', 0)
+        self_defense = capabilities.get('self_defense', 0)
+
+        # Normalizza e applica i pesi
+        score += (flight_control / reference_values['flight_control']) * weights['flight_control']
+        score += (self_defense / reference_values['self_defense']) * weights['self_defense']
+
+        return score
+
+    def get_engine_eval(self):
+        """Evaluates the engine capabilities of the vehicle.
+
+        Considers:
+        - thrust: engine thrust (kN)
+        - fuel_efficiency: fuel efficiency (km/l)
+
+        Returns:
+            float: engine score
+        """
+        if self.engine == False:
+            return 0.0
+        
+        if self.engine == None:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Engine not defined.")
+            return 0.0
+
+        capabilities = self.engine.get('capabilities')
+        if not capabilities:
+            logger.warning(f"{self.made} {self.model} (category:{self.category}) - Engine capabilities not defined.")
+            return 0.0
+
+        weights = {
+            'thrust': 0.7,
+            'fuel_efficiency': 0.3
+        }
+
+        # Valori di riferimento per normalizzazione
+        reference_values = {
+            'thrust': 10000,  # kN (riferimento per motori ad alta potenza)
+            'fuel_efficiency': 5.0  # km/l (riferimento per motori efficienti)
+        }
+
+        score = 0.0
+        thrust = capabilities.get('thrust', 0)
+        fuel_efficiency = capabilities.get('fuel_efficiency', 0)
+
+        # Normalizza e applica i pesi
+        score += (thrust / reference_values['thrust']) * weights['thrust']
+        score += (fuel_efficiency / reference_values['fuel_efficiency']) * weights['fuel_efficiency']
+
         return score
 
     #@lru_cache
@@ -310,7 +487,6 @@ class Aircraft_Data:
         return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension)
     
 
-
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[List] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
@@ -329,7 +505,52 @@ class Aircraft_Data:
         """
         scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
         return self._normalize(self._TVD_eval(modes = modes), scores)
+
+    def get_normalized_radio_nav_score(self):
+        """returns radio_nav score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized radio_nav score
+        """
+        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._radio_nav_eval(), scores)
     
+    def get_normalized_hydraulic_score(self):
+        """returns hydraulic score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized hydraulic score
+        """
+        scores = [ac._hydraulic_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._hydraulic_eval(), scores)
+    
+    def get_normalized_avionics_score(self):
+        """returns avionics score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized avionics score
+        """
+        scores = [ac._avionics_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._avionics_eval(), scores)
+    
+    def get_normalized_radio_nav_score(self):
+        """returns radio_nav score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized radio_nav score
+        """
+        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self._radio_nav_eval(), scores)
+
+    def get_normalized_engine_score(self):
+        """returns engine score normalized from 0 (min score) 1 (max score)
+
+        Returns:
+            float: normalized engine score
+        """
+        scores = [ac.get_engine_eval() for ac in Aircraft_Data._registry.values()]
+        return self._normalize(self.get_engine_eval(), scores)
+
     def get_normalized_speed_score(self):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
@@ -383,48 +604,84 @@ class Aircraft_Data:
         if max_val == min_val:
             return 0.5
         return (value - min_val) / (max_val - min_val)
+    
+    def task_score_eval(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
+        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout."""    
 
-    # VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL LOADOUT DELLE WEAPON
-    def task_score(self, task: str, loadout: Dict[str, any], target_dimension: Dict[str, any], minimum_target_destroyed: float):
-        
         if not task or not isinstance(task, str):
             raise TypeError ("task must be a string")
         if task not in AIR_TASK:
             raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
         
-    
-        if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
-            score_radar = self.get_normalized_radar_score(mode = ['air'])
-            target_destroyed  = self._eval_destroyed_quantity_with_ordinance( task = task, loadout = loadout, target = target_dimension)
-            #dovresti anche inserire la valutazione sulle capacità di autodifesa e quelle relative al range
+        scores = {
+            'engine':       0.0,
+            'radar':        0.0, 
+            'TVD':          0.0,
+            'radio_nav':    0.0,
+            'hydraulic':    0.0,
+            'avionics':     0.0,
+            'loadout':      0.0, # loadout_score considera anche il range
+            'speed':        0.0,
+        }        
+        sum_weights = sum(scores_weights.values())
 
-        elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
-            score_radar = self.get_normalized_radar_score(['ground'])
-            pass
-            
-        elif task in ['Anti_Ship']:
-            score_radar = self.get_normalized_radar_score(['sea'])
-            pass
+        if calc_scores_options == True: # se è true, il loadout score viene calcolato considerando l'efficacia del loadout contro il target specifico, altrimenti viene calcolato considerando solo le caratteristiche del loadout senza considerare il target specifico
+            scores_weights = {
+            'engine':       2,
+            'radar':        4, 
+            'TVD':          4,
+            'radio_nav':    3,
+            'hydraulic':    1,
+            'avionics':     4,
+            'loadout':      10, # loadout_score considera anche il range
+            'speed':        1,
+            }
+            scores["loadout"] = self._loadout_target_effectiveness(loadout, target_type, target_dimension) * scores_weights['loadout'] / sum_weights
 
         else:
-            score_radar = 0.0
-            pass
+            scores_weights = {
+            'radar':        5, # 1-10
+            'TVD':          5,
+            'radio_nav':    3,
+            'hydraulic':    1,
+            'avionics':     4,
+            'loadout':      7, # loadout_score considera anche il range
+            'speed':        5,
+            }
+            scores["loadout"] = self._loadout_eval(loadout) * scores_weights['loadout'] / sum_weights
 
-        if target_destroyed < minimum_target_destroyed:
+        aircraft_weight = 5000 
+        scores["engine"] = self.get_normalized_engine_score() * scores_weights['engine'] / (sum_weights * aircraft_weight) # 
+        scores["radio_nav"] = self.get_normalized_radio_nav_score() * scores_weights['radio_nav'] / sum_weights
+        scores["hydraulic"] = self.get_normalized_hydraulic_score() * scores_weights['hydraulic'] / sum_weights
+        scores["avionics"] = self.get_normalized_avionics_score() * scores_weights['avionics'] / sum_weights
+
+        if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
+            scores["radar"] = self.get_normalized_radar_score(mode = ['air']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(mode = ['air']) * scores_weights['TVD'] / sum_weights
+
+        elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
+            scores["radar"] = self.get_normalized_radar_score(['ground']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(mode = ['ground']) * scores_weights['TVD'] / sum_weights        
+            
+        elif task in ['Anti_Ship']:
+            scores["radar"] = self.get_normalized_radar_score(['sea']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(mode = ['sea']) * scores_weights['TVD'] / sum_weights
+        else:
+            logger.warning(f"Task {task!r} not recognized for specific score evaluation, returning 0")
             return 0.0
-
-        return target_destroyed * score_radar
+        # lo score è già normalizzato in quanto considera score normalizzati e pesati, quindi è sufficiente sommare i valori per ottenere un punteggio finale rappresentativo dell'efficacia complessiva dell'aereo per il compito specifico
+        return sum(scores.values())
     
-    #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
-    def task_score_cost_ratio(self):
-        
-        pass
-
+    def task_score_target_effectiveness(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
+        """Returns a score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""
+        return self.task_score_eval(task, loadout, True, target_type, target_dimension)
     
-    #  VALUTA SE QUESTA FUNZIONE DEVE ESSERE IMPLEMENTATA NEL MODULO ATO NON QUI CONSIDERANDO CHE DEVE GESTIRE IL PAYLOAD DELLE WEAPON
-    def _eval_destroyed_quantity_with_ordinance( self, task: str, loadout: Dict, target: str):
-     
-        pass
+    def task_score(self, task: str, loadout: Dict[str, any]):                
+        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
+        return self.task_score_eval(task, loadout, False)
+    
+
 
 # AIRCRAFT DATA
 
@@ -435,8 +692,8 @@ f16_data_example = {
     "constructor": "General Dynamics", "made": "USA", "model": "F-16A Fighting Falcon",
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
-    "roles": ["CAP", "Intercept", "Strike", "SEAD"],
-    "manouvrability": 0.82, "resilience": 0.68,
+    "roles": ["CAP", "Intercept", "Strike", "SEAD"],    
+    "weight": 7690,
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
         "model": "AN/APG-66",
@@ -457,7 +714,7 @@ f16_data_example = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-108", "capabilities": {"navigation_system": 0.75, "communication_system": 0.78, "communication_range": 200}, "reliability": {"mtbf": 55, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.82, "countermeasures": 0.62, "self_defense": 0.56}, "reliability": {"mtbf": 38, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.82, "self_defense": 0.56}, "reliability": {"mtbf": 38, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 88, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 950, "altitude": 10000, "consume": 1100},
@@ -472,8 +729,8 @@ f14a_data = {
     "constructor": "Grumman", "made": "USA", "model": "F-14A Tomcat",
     "users": ["USA", "Iran"], "start_service": 1974, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 38,
-    "roles": ["CAP", "Intercept", "Escort"],
-    "manouvrability": 0.72, "resilience": 0.72,
+    "roles": ["CAP", "Intercept", "Escort"],    
+    "weight": 18191,
     "engine": {"model": "TF30-P-414A", "capabilities": {"thrust": 19000, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 28, "mttr": 10}},
     "radar": {
         "model": "AN/AWG-9",
@@ -494,7 +751,7 @@ f14a_data = {
         "reliability": {"mtbf": 30, "mttr": 6}, "type": "optical",
     },
     "radio_nav": {"model": "AN/ARN-84", "capabilities": {"navigation_system": 0.72, "communication_system": 0.75, "communication_range": 250}, "reliability": {"mtbf": 50, "mttr": 2.5}},
-    "avionics": {"model": "AN/ALR-45", "capabilities": {"flight_control": 0.75, "countermeasures": 0.60, "self_defense": 0.55}, "reliability": {"mtbf": 38, "mttr": 5}},
+    "avionics": {"model": "AN/ALR-45", "capabilities": {"flight_control": 0.75, "self_defense": 0.55}, "reliability": {"mtbf": 38, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 75}, "reliability": {"mtbf": 85, "mttr": 8}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 10000, "consume": 1400},
@@ -508,7 +765,8 @@ f14b_data = {
     "users": ["USA"], "start_service": 1991, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 43,
     "roles": ["CAP", "Intercept", "Escort", "Strike"],
-    "manouvrability": 0.75, "resilience": 0.73,
+    "weight": 18951,
+    
     "engine": {"model": "F110-GE-400", "capabilities": {"thrust": 24000, "fuel_efficiency": 0.72, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 7}},
     "radar": {
         "model": "AN/AWG-9 (upgraded)",
@@ -529,7 +787,7 @@ f14b_data = {
         "reliability": {"mtbf": 32, "mttr": 5}, "type": "optical",
     },
     "radio_nav": {"model": "AN/ARN-84", "capabilities": {"navigation_system": 0.75, "communication_system": 0.78, "communication_range": 250}, "reliability": {"mtbf": 52, "mttr": 2.5}},
-    "avionics": {"model": "AN/ALR-67", "capabilities": {"flight_control": 0.78, "countermeasures": 0.65, "self_defense": 0.60}, "reliability": {"mtbf": 42, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-67", "capabilities": {"flight_control": 0.78, "self_defense": 0.60}, "reliability": {"mtbf": 42, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 75}, "reliability": {"mtbf": 90, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1050, "altitude": 10000, "consume": 1300},
@@ -543,7 +801,8 @@ f15c_data = {
     "users": ["USA", "Israel", "Saudi Arabia", "Japan"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 28,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
-    "manouvrability": 0.85, "resilience": 0.80,
+    "weight": 12973,
+    
     "engine": {"model": "F100-PW-220", "capabilities": {"thrust": 21500, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 8}},
     "radar": {
         "model": "AN/APG-63(V)1",
@@ -564,7 +823,7 @@ f15c_data = {
         "reliability": {"mtbf": 40, "mttr": 5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.82, "communication_system": 0.85, "communication_range": 300}, "reliability": {"mtbf": 60, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-56C", "capabilities": {"flight_control": 0.88, "countermeasures": 0.72, "self_defense": 0.65}, "reliability": {"mtbf": 45, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-56C", "capabilities": {"flight_control": 0.88, "self_defense": 0.65}, "reliability": {"mtbf": 45, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 95, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1050, "altitude": 10000, "consume": 1500},
@@ -578,7 +837,8 @@ f15e_data = {
     "users": ["USA", "Saudi Arabia", "Israel", "South Korea", "Singapore"], "start_service": 1989, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 31,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "manouvrability": 0.82, "resilience": 0.80,
+    "weight": 14379,
+    
     "engine": {"model": "F100-PW-229", "capabilities": {"thrust": 26000, "fuel_efficiency": 0.77, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 7}},
     "radar": {
         "model": "AN/APG-70",
@@ -599,7 +859,7 @@ f15e_data = {
         "reliability": {"mtbf": 42, "mttr": 4}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.85, "communication_system": 0.87, "communication_range": 300}, "reliability": {"mtbf": 62, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-56C", "capabilities": {"flight_control": 0.88, "countermeasures": 0.75, "self_defense": 0.68}, "reliability": {"mtbf": 48, "mttr": 3.5}},
+    "avionics": {"model": "AN/ALR-56C", "capabilities": {"flight_control": 0.88, "self_defense": 0.68}, "reliability": {"mtbf": 48, "mttr": 3.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 95, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 980, "altitude": 10000, "consume": 1800},
@@ -613,7 +873,8 @@ fa18a_data = {
     "users": ["USA", "Australia", "Canada", "Spain", "Kuwait"], "start_service": 1983, "end_service": 2020,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 24,
     "roles": ["CAP", "Intercept", "Strike", "CAS", "Anti_Ship"],
-    "manouvrability": 0.80, "resilience": 0.73,
+    "weight": 10455,
+    
     "engine": {"model": "F404-GE-400", "capabilities": {"thrust": 14500, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
     "radar": {
         "model": "AN/APG-65",
@@ -634,7 +895,7 @@ fa18a_data = {
         "reliability": {"mtbf": 38, "mttr": 5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.80, "communication_system": 0.82, "communication_range": 250}, "reliability": {"mtbf": 58, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-67", "capabilities": {"flight_control": 0.82, "countermeasures": 0.70, "self_defense": 0.65}, "reliability": {"mtbf": 45, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-67", "capabilities": {"flight_control": 0.82, "self_defense": 0.65}, "reliability": {"mtbf": 45, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 88, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 1400},
@@ -648,7 +909,8 @@ fa18c_data = {
     "users": ["USA", "Finland", "Switzerland", "Malaysia", "Kuwait"], "start_service": 1987, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 29,
     "roles": ["CAP", "Intercept", "Strike", "SEAD", "Anti_Ship"],
-    "manouvrability": 0.82, "resilience": 0.74,
+    "weight": 10455,
+    
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 5}},
     "radar": {
         "model": "AN/APG-73",
@@ -669,7 +931,7 @@ fa18c_data = {
         "reliability": {"mtbf": 40, "mttr": 4}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.83, "communication_system": 0.85, "communication_range": 250}, "reliability": {"mtbf": 60, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-67(V)2", "capabilities": {"flight_control": 0.85, "countermeasures": 0.73, "self_defense": 0.67}, "reliability": {"mtbf": 48, "mttr": 3.5}},
+    "avionics": {"model": "AN/ALR-67(V)2", "capabilities": {"flight_control": 0.85, "self_defense": 0.67}, "reliability": {"mtbf": 48, "mttr": 3.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 90, "mttr": 5.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 920, "altitude": 10000, "consume": 1350},
@@ -683,7 +945,8 @@ fa18c_lot20_data = {
     "users": ["USA", "Switzerland"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 33,
     "roles": ["CAP", "Intercept", "Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
-    "manouvrability": 0.83, "resilience": 0.75,
+    "weight": 10455,
+    
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 46, "mttr": 5}},
     "radar": {
         "model": "AN/APG-73",
@@ -704,7 +967,7 @@ fa18c_lot20_data = {
         "reliability": {"mtbf": 42, "mttr": 3.5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.85, "communication_system": 0.87, "communication_range": 260}, "reliability": {"mtbf": 62, "mttr": 1.8}},
-    "avionics": {"model": "AN/ALR-67(V)3", "capabilities": {"flight_control": 0.87, "countermeasures": 0.76, "self_defense": 0.70}, "reliability": {"mtbf": 50, "mttr": 3}},
+    "avionics": {"model": "AN/ALR-67(V)3", "capabilities": {"flight_control": 0.87, "self_defense": 0.70}, "reliability": {"mtbf": 50, "mttr": 3}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 92, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 930, "altitude": 10000, "consume": 1350},
@@ -718,7 +981,8 @@ f4e_data = {
     "users": ["USA", "Israel", "Turkey", "Greece", "Germany"], "start_service": 1961, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "CAS"],
-    "manouvrability": 0.55, "resilience": 0.75,
+    "weight": 13757,
+    
     "engine": {"model": "J79-GE-17", "capabilities": {"thrust": 16200, "fuel_efficiency": 0.58, "type": "turbojet"}, "reliability": {"mtbf": 35, "mttr": 9}},
     "radar": {
         "model": "AN/APQ-120",
@@ -739,7 +1003,7 @@ f4e_data = {
         "reliability": {"mtbf": 28, "mttr": 7}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-101", "capabilities": {"navigation_system": 0.62, "communication_system": 0.65, "communication_range": 200}, "reliability": {"mtbf": 42, "mttr": 3}},
-    "avionics": {"model": "AN/ALR-46", "capabilities": {"flight_control": 0.60, "countermeasures": 0.50, "self_defense": 0.45}, "reliability": {"mtbf": 32, "mttr": 6}},
+    "avionics": {"model": "AN/ALR-46", "capabilities": {"flight_control": 0.60, "self_defense": 0.45}, "reliability": {"mtbf": 32, "mttr": 6}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 65}, "reliability": {"mtbf": 80, "mttr": 9}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 950, "altitude": 11000, "consume": 2000},
@@ -753,7 +1017,8 @@ f5e_data = {
     "users": ["USA", "Taiwan", "South Korea", "Iran", "Saudi Arabia", "Switzerland"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept"],
-    "manouvrability": 0.80, "resilience": 0.58,
+    "weight": 4392,
+    
     "engine": {"model": "J85-GE-21", "capabilities": {"thrust": 4500, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
     "radar": {
         "model": "AN/APQ-159",
@@ -774,7 +1039,7 @@ f5e_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.68, "communication_system": 0.70, "communication_range": 180}, "reliability": {"mtbf": 48, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-46", "capabilities": {"flight_control": 0.70, "countermeasures": 0.50, "self_defense": 0.45}, "reliability": {"mtbf": 38, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-46", "capabilities": {"flight_control": 0.70, "self_defense": 0.45}, "reliability": {"mtbf": 38, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 35}, "reliability": {"mtbf": 90, "mttr": 4}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 800, "altitude": 10000, "consume": 800},
@@ -788,7 +1053,8 @@ f86e_data = {
     "users": ["USA", "UK", "Canada", "Australia", "Norway"], "start_service": 1950, "end_service": 1975,
     "category": [Air_Asset_Type.FIGHTER], "cost": 0,
     "roles": ["CAP", "Intercept"],
-    "manouvrability": 0.65, "resilience": 0.62,
+    "weight": 4967,
+    
     "engine": {"model": "J47-GE-27", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 6}},
     "radar": {
         "model": "AN/APG-30",
@@ -809,7 +1075,7 @@ f86e_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-6", "capabilities": {"navigation_system": 0.45, "communication_system": 0.50, "communication_range": 100}, "reliability": {"mtbf": 30, "mttr": 3}},
-    "avionics": {"model": "Generic 1950s avionics", "capabilities": {"flight_control": 0.45, "countermeasures": 0.10, "self_defense": 0.10}, "reliability": {"mtbf": 25, "mttr": 5}},
+    "avionics": {"model": "Generic 1950s avionics", "capabilities": {"flight_control": 0.45, "self_defense": 0.10}, "reliability": {"mtbf": 25, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 25}, "reliability": {"mtbf": 70, "mttr": 4}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 9000, "consume": 1500},
@@ -823,7 +1089,8 @@ f16a_data = {
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
-    "manouvrability": 0.82, "resilience": 0.68,
+    "weight": 7690,
+    
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
         "model": "AN/APG-66",
@@ -844,7 +1111,7 @@ f16a_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-108", "capabilities": {"navigation_system": 0.75, "communication_system": 0.78, "communication_range": 200}, "reliability": {"mtbf": 55, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.82, "countermeasures": 0.62, "self_defense": 0.56}, "reliability": {"mtbf": 38, "mttr": 4}},
+    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.82, "self_defense": 0.56}, "reliability": {"mtbf": 38, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 88, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 950, "altitude": 10000, "consume": 1100},
@@ -858,7 +1125,8 @@ f16a_mlu_data = {
     "users": ["Belgium", "Netherlands", "Denmark", "Norway", "Portugal"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 11,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
-    "manouvrability": 0.83, "resilience": 0.68,
+    "weight": 7690,
+    
     "engine": {"model": "F100-PW-220E", "capabilities": {"thrust": 10900, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
         "model": "AN/APG-66(V)2A",
@@ -879,7 +1147,7 @@ f16a_mlu_data = {
         "reliability": {"mtbf": 40, "mttr": 3.5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.80, "communication_system": 0.82, "communication_range": 220}, "reliability": {"mtbf": 58, "mttr": 1.8}},
-    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.85, "countermeasures": 0.67, "self_defense": 0.60}, "reliability": {"mtbf": 42, "mttr": 3.5}},
+    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.85, "self_defense": 0.60}, "reliability": {"mtbf": 42, "mttr": 3.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 960, "altitude": 10000, "consume": 1100},
@@ -893,7 +1161,8 @@ f16c_bl52d_data = {
     "users": ["USA", "Turkey", "Greece", "Israel"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "manouvrability": 0.80, "resilience": 0.70,
+    "weight": 8663,
+    
     "engine": {"model": "F110-GE-100", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.78, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 5}},
     "radar": {
         "model": "AN/APG-68(V)5",
@@ -914,7 +1183,7 @@ f16c_bl52d_data = {
         "reliability": {"mtbf": 40, "mttr": 3}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.83, "communication_system": 0.85, "communication_range": 200}, "reliability": {"mtbf": 60, "mttr": 1.5}},
-    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.88, "countermeasures": 0.68, "self_defense": 0.60}, "reliability": {"mtbf": 40, "mttr": 3.5}},
+    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.88, "self_defense": 0.60}, "reliability": {"mtbf": 40, "mttr": 3.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 960, "altitude": 10000, "consume": 1150},
@@ -928,7 +1197,8 @@ f16cm_bl50_data = {
     "users": ["USA", "Israel", "South Korea"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 20,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "manouvrability": 0.80, "resilience": 0.70,
+    "weight": 8663,
+    
     "engine": {"model": "F110-GE-129", "capabilities": {"thrust": 13400, "fuel_efficiency": 0.80, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
         "model": "AN/APG-68(V)9",
@@ -949,7 +1219,7 @@ f16cm_bl50_data = {
         "reliability": {"mtbf": 40, "mttr": 3}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"navigation_system": 0.83, "communication_system": 0.85, "communication_range": 200}, "reliability": {"mtbf": 60, "mttr": 1.5}},
-    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.90, "countermeasures": 0.70, "self_defense": 0.60}, "reliability": {"mtbf": 40, "mttr": 1.2}},
+    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.90, "self_defense": 0.60}, "reliability": {"mtbf": 40, "mttr": 1.2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 1.0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 970, "altitude": 12200, "consume": 1200},
@@ -965,7 +1235,8 @@ a10a_data = {
     "users": ["USA"], "start_service": 1977, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 0,
     "roles": ["CAS"],
-    "manouvrability": 0.50, "resilience": 0.88,
+    "weight": 11321,
+    
     "engine": {"model": "GE TF34-GE-100", "capabilities": {"thrust": 40200, "fuel_efficiency": 0.37, "type": "turbofan"}, "reliability": {"mtbf": 60, "mttr": 2.5}},
     "radar": {
         "model": "none",
@@ -982,7 +1253,7 @@ a10a_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.65}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.60, "countermeasures": 0.70, "self_defense": 0.55}, "reliability": {"mtbf": 50, "mttr": 2}},
+    "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.60, "self_defense": 0.55}, "reliability": {"mtbf": 50, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 1.0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 560, "altitude": 0, "consume": 1400},
@@ -996,7 +1267,8 @@ a10c_data = {
     "users": ["USA"], "start_service": 2005, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 0,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "manouvrability": 0.52, "resilience": 0.88,
+    "weight": 11321,
+    
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
     "radar": {
         "model": "none",
@@ -1013,7 +1285,7 @@ a10c_data = {
         "reliability": {"mtbf": 200, "mttr": 3},
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.80}, "reliability": {"mtbf": 90, "mttr": 1.5}},
-    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.75, "countermeasures": 0.80, "self_defense": 0.70}, "reliability": {"mtbf": 55, "mttr": 1.8}},
+    "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.75, "self_defense": 0.70}, "reliability": {"mtbf": 55, "mttr": 1.8}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 1.0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 560, "altitude": 0, "consume": 1400},
@@ -1027,7 +1299,8 @@ a10c2_data = {
     "users": ["USA"], "start_service": 2018, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 0,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "manouvrability": 0.53, "resilience": 0.88,
+    "weight": 11321,
+    
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
     "radar": {
         "model": "none",
@@ -1044,7 +1317,7 @@ a10c2_data = {
         "reliability": {"mtbf": 220, "mttr": 2.5},
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.88}, "reliability": {"mtbf": 90, "mttr": 1.5}},
-    "avionics": {"model": "EGI/DVADR", "capabilities": {"flight_control": 0.82, "countermeasures": 0.85, "self_defense": 0.78}, "reliability": {"mtbf": 60, "mttr": 1.5}},
+    "avionics": {"model": "EGI/DVADR", "capabilities": {"flight_control": 0.82, "self_defense": 0.78}, "reliability": {"mtbf": 60, "mttr": 1.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 90, "mttr": 1.0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 560, "altitude": 0, "consume": 1400},
@@ -1058,7 +1331,8 @@ a20g_data = {
     "users": ["USA", "UK", "USSR"], "start_service": 1941, "end_service": 1954,
     "category": [Air_Asset_Type.ATTACKER], "cost": 0,
     "roles": ["CAS", "Strike"],
-    "manouvrability": 0.45, "resilience": 0.55,
+    "weight": 7918,
+    
     "engine": {"model": "Wright R-2600-23", "capabilities": {"thrust": 1700, "fuel_efficiency": 0.30, "type": "piston"}, "reliability": {"mtbf": 40, "mttr": 6}},
     "radar": {
         "model": "none",
@@ -1075,7 +1349,7 @@ a20g_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-5", "capabilities": {"range": 200, "accuracy": 0.45}, "reliability": {"mtbf": 30, "mttr": 5}},
-    "avionics": {"model": "Basic WWII", "capabilities": {"flight_control": 0.35, "countermeasures": 0.10, "self_defense": 0.15}, "reliability": {"mtbf": 25, "mttr": 6}},
+    "avionics": {"model": "Basic WWII", "capabilities": {"flight_control": 0.35, "self_defense": 0.15}, "reliability": {"mtbf": 25, "mttr": 6}},
     "hydraulic": {"model": "Basic Hydraulic", "capabilities": {"pressure": 1500, "fluid_capacity": 20}, "reliability": {"mtbf": 50, "mttr": 4}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 430, "altitude": 3000, "consume": 700},
@@ -1089,7 +1363,8 @@ a4ec_data = {
     "users": ["USA", "Israel", "Australia", "Singapore"], "start_service": 1956, "end_service": 1998,
     "category": [Air_Asset_Type.ATTACKER], "cost": 0,
     "roles": ["CAS", "Strike", "Anti_Ship"],
-    "manouvrability": 0.70, "resilience": 0.62,
+    "weight": 4469,
+    
     "engine": {"model": "Pratt & Whitney J52-P-8A", "capabilities": {"thrust": 37800, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
     "radar": {
         "model": "none",
@@ -1106,7 +1381,7 @@ a4ec_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/APN-141", "capabilities": {"range": 300, "accuracy": 0.60}, "reliability": {"mtbf": 50, "mttr": 3}},
-    "avionics": {"model": "AN/ALR-45", "capabilities": {"flight_control": 0.60, "countermeasures": 0.50, "self_defense": 0.40}, "reliability": {"mtbf": 40, "mttr": 3}},
+    "avionics": {"model": "AN/ALR-45", "capabilities": {"flight_control": 0.60, "self_defense": 0.40}, "reliability": {"mtbf": 40, "mttr": 3}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 30}, "reliability": {"mtbf": 70, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 0, "consume": 1500},
@@ -1122,7 +1397,8 @@ f117_data = {
     "users": ["USA"], "start_service": 1983, "end_service": 2008,
     "category": [Air_Asset_Type.BOMBER], "cost": 0,
     "roles": ["Pinpoint_Strike"],
-    "manouvrability": 0.40, "resilience": 0.55,
+    "weight": 13381,
+    
     "engine": {"model": "GE F404-GE-F1D2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.40, "type": "turbofan"}, "reliability": {"mtbf": 50, "mttr": 3}},
     "radar": {
         "model": "none",
@@ -1139,7 +1415,7 @@ f117_data = {
         "reliability": {"mtbf": 150, "mttr": 4},
     },
     "radio_nav": {"model": "AN/AAQ-27 FLIR", "capabilities": {"range": 350, "accuracy": 0.95}, "reliability": {"mtbf": 70, "mttr": 2}},
-    "avionics": {"model": "Inertial Nav/GPS", "capabilities": {"flight_control": 0.85, "countermeasures": 0.60, "self_defense": 0.50}, "reliability": {"mtbf": 60, "mttr": 2}},
+    "avionics": {"model": "Inertial Nav/GPS", "capabilities": {"flight_control": 0.85, "self_defense": 0.50}, "reliability": {"mtbf": 60, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 9000, "consume": 2000},
@@ -1153,7 +1429,8 @@ b1b_data = {
     "users": ["USA"], "start_service": 1986, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 0,
     "roles": ["Strike", "Pinpoint_Strike"],
-    "manouvrability": 0.42, "resilience": 0.62,
+    "weight": 87090,
+    
     "engine": {"model": "GE F101-GE-102", "capabilities": {"thrust": 137000, "fuel_efficiency": 0.35, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
         "model": "AN/APQ-164",
@@ -1170,7 +1447,7 @@ b1b_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/APN-218", "capabilities": {"range": 500, "accuracy": 0.90}, "reliability": {"mtbf": 70, "mttr": 2}},
-    "avionics": {"model": "AN/ALQ-161", "capabilities": {"flight_control": 0.88, "countermeasures": 0.90, "self_defense": 0.85}, "reliability": {"mtbf": 55, "mttr": 2}},
+    "avionics": {"model": "AN/ALQ-161", "capabilities": {"flight_control": 0.88, "self_defense": 0.85}, "reliability": {"mtbf": 55, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 100}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 12000, "consume": 8000},
@@ -1184,7 +1461,8 @@ b52h_data = {
     "users": ["USA"], "start_service": 1961, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 0,
     "roles": ["Strike"],
-    "manouvrability": 0.25, "resilience": 0.60,
+    "weight": 83250,
+    
     "engine": {"model": "Pratt & Whitney TF33-P-3/103", "capabilities": {"thrust": 75600, "fuel_efficiency": 0.32, "type": "turbofan"}, "reliability": {"mtbf": 60, "mttr": 3}},
     "radar": {
         "model": "AN/APQ-166",
@@ -1201,7 +1479,7 @@ b52h_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/APN-218", "capabilities": {"range": 600, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "AN/ALQ-172", "capabilities": {"flight_control": 0.80, "countermeasures": 0.85, "self_defense": 0.75}, "reliability": {"mtbf": 50, "mttr": 3}},
+    "avionics": {"model": "AN/ALQ-172", "capabilities": {"flight_control": 0.80, "self_defense": 0.75}, "reliability": {"mtbf": 50, "mttr": 3}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 120}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 819, "altitude": 12200, "consume": 12000},
@@ -1215,7 +1493,8 @@ s3b_data = {
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
     "category": [Air_Asset_Type.BOMBER], "cost": 0,
     "roles": ["Anti_Ship", "Recon"],
-    "manouvrability": 0.48, "resilience": 0.55,
+    "weight": 12088,
+    
     "engine": {"model": "GE TF34-GE-2", "capabilities": {"thrust": 41300, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
         "model": "AN/APS-137",
@@ -1232,7 +1511,7 @@ s3b_data = {
         "reliability": {"mtbf": 120, "mttr": 3},
     },
     "radio_nav": {"model": "AN/APN-200", "capabilities": {"range": 500, "accuracy": 0.85}, "reliability": {"mtbf": 70, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.78, "countermeasures": 0.70, "self_defense": 0.60}, "reliability": {"mtbf": 55, "mttr": 2.5}},
+    "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.78, "self_defense": 0.60}, "reliability": {"mtbf": 55, "mttr": 2.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 700, "altitude": 6000, "consume": 2000},
@@ -1246,7 +1525,8 @@ s3b_tanker_data = {
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.45, "resilience": 0.55,
+    "weight": 12088,
+    
     "engine": {"model": "GE TF34-GE-2", "capabilities": {"thrust": 41300, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
         "model": "AN/APS-137",
@@ -1263,7 +1543,7 @@ s3b_tanker_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/APN-200", "capabilities": {"range": 500, "accuracy": 0.85}, "reliability": {"mtbf": 70, "mttr": 2}},
-    "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.75, "countermeasures": 0.65, "self_defense": 0.55}, "reliability": {"mtbf": 55, "mttr": 2.5}},
+    "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.75, "self_defense": 0.55}, "reliability": {"mtbf": 55, "mttr": 2.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 700, "altitude": 6000, "consume": 2000},
@@ -1279,7 +1559,8 @@ e2d_data = {
     "users": ["USA", "Japan", "France"], "start_service": 1964, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 0,
     "roles": [],
-    "manouvrability": 0.30, "resilience": 0.40,
+    "weight": 17265,
+    
     "engine": {"model": "Allison T56-A-427", "capabilities": {"thrust": 4900, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 70, "mttr": 2}},
     "radar": {
         "model": "AN/APY-9",
@@ -1296,7 +1577,7 @@ e2d_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 400, "accuracy": 0.90}, "reliability": {"mtbf": 80, "mttr": 1.5}},
-    "avionics": {"model": "ACCS", "capabilities": {"flight_control": 0.80, "countermeasures": 0.50, "self_defense": 0.30}, "reliability": {"mtbf": 60, "mttr": 2.5}},
+    "avionics": {"model": "ACCS", "capabilities": {"flight_control": 0.80, "self_defense": 0.30}, "reliability": {"mtbf": 60, "mttr": 2.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 550, "altitude": 9400, "consume": 1500},
@@ -1310,7 +1591,8 @@ e3a_data = {
     "users": ["USA", "NATO", "UK", "France", "Saudi Arabia"], "start_service": 1977, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 0,
     "roles": [],
-    "manouvrability": 0.25, "resilience": 0.40,
+    "weight": 73480,
+    
     "engine": {"model": "Pratt & Whitney TF33-PW-100A", "capabilities": {"thrust": 93400, "fuel_efficiency": 0.33, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.5}},
     "radar": {
         "model": "AN/APY-2",
@@ -1327,7 +1609,7 @@ e3a_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-120", "capabilities": {"range": 500, "accuracy": 0.90}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "AN/ASQ-137", "capabilities": {"flight_control": 0.82, "countermeasures": 0.55, "self_defense": 0.35}, "reliability": {"mtbf": 60, "mttr": 2.5}},
+    "avionics": {"model": "AN/ASQ-137", "capabilities": {"flight_control": 0.82, "self_defense": 0.35}, "reliability": {"mtbf": 60, "mttr": 2.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 750, "altitude": 9000, "consume": 6000},
@@ -1341,7 +1623,8 @@ mq1a_data = {
     "users": ["USA", "Italy", "Morocco"], "start_service": 1995, "end_service": 2018,
     "category": [Air_Asset_Type.RECON], "cost": 0,
     "roles": ["Recon", "CAS"],
-    "manouvrability": 0.20, "resilience": 0.20,
+    "weight": 512,
+    
     "engine": {"model": "Rotax 914F", "capabilities": {"thrust": 75, "fuel_efficiency": 0.55, "type": "piston"}, "reliability": {"mtbf": 100, "mttr": 2}},
     "radar": {
         "model": "none",
@@ -1358,7 +1641,7 @@ mq1a_data = {
         "reliability": {"mtbf": 200, "mttr": 2},
     },
     "radio_nav": {"model": "AN/APX-100", "capabilities": {"range": 300, "accuracy": 0.95}, "reliability": {"mtbf": 100, "mttr": 1}},
-    "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.75, "countermeasures": 0.20, "self_defense": 0.10}, "reliability": {"mtbf": 80, "mttr": 2}},
+    "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.75, "self_defense": 0.10}, "reliability": {"mtbf": 80, "mttr": 2}},
     "hydraulic": {"model": "none", "capabilities": {"pressure": 0, "fluid_capacity": 0}, "reliability": {"mtbf": 0, "mttr": 0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 150, "altitude": 5000, "consume": 50},
@@ -1372,7 +1655,8 @@ mq9_data = {
     "users": ["USA", "UK", "Italy", "France", "Netherlands"], "start_service": 2007, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 0,
     "roles": ["Recon", "CAS", "Strike"],
-    "manouvrability": 0.25, "resilience": 0.25,
+    "weight": 2223,
+    
     "engine": {"model": "Honeywell TPE331-10GD", "capabilities": {"thrust": 671, "fuel_efficiency": 0.52, "type": "turboprop"}, "reliability": {"mtbf": 110, "mttr": 2}},
     "radar": {
         "model": "AN/APY-8 Lynx",
@@ -1389,7 +1673,7 @@ mq9_data = {
         "reliability": {"mtbf": 220, "mttr": 2},
     },
     "radio_nav": {"model": "AN/APX-100", "capabilities": {"range": 400, "accuracy": 0.97}, "reliability": {"mtbf": 110, "mttr": 1}},
-    "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.80, "countermeasures": 0.30, "self_defense": 0.20}, "reliability": {"mtbf": 90, "mttr": 2}},
+    "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.80, "self_defense": 0.20}, "reliability": {"mtbf": 90, "mttr": 2}},
     "hydraulic": {"model": "none", "capabilities": {"pressure": 0, "fluid_capacity": 0}, "reliability": {"mtbf": 0, "mttr": 0}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 300, "altitude": 7600, "consume": 100},
@@ -1405,7 +1689,8 @@ c130_data = {
     "users": ["USA", "UK", "many"], "start_service": 1956, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.35, "resilience": 0.55,
+    "weight": 34400,
+    
     "engine": {"model": "Allison T56-A-15", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
     "radar": {
         "model": "none",
@@ -1422,7 +1707,7 @@ c130_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "countermeasures": 0.40, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 540, "altitude": 6700, "consume": 3000},
@@ -1436,7 +1721,8 @@ c17a_data = {
     "users": ["USA", "UK", "Canada", "Australia"], "start_service": 1995, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.30, "resilience": 0.50,
+    "weight": 128100,
+    
     "engine": {"model": "Pratt & Whitney F117-PW-100", "capabilities": {"thrust": 185000, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2}},
     "radar": {
         "model": "none",
@@ -1453,7 +1739,7 @@ c17a_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 400, "accuracy": 0.88}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "Advanced Transport Avionics", "capabilities": {"flight_control": 0.88, "countermeasures": 0.50, "self_defense": 0.35}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "avionics": {"model": "Advanced Transport Avionics", "capabilities": {"flight_control": 0.88, "self_defense": 0.35}, "reliability": {"mtbf": 70, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 100}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 750, "altitude": 10000, "consume": 8000},
@@ -1467,7 +1753,8 @@ kc130_data = {
     "users": ["USA", "many"], "start_service": 1962, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.32, "resilience": 0.55,
+    "weight": 34686,
+    
     "engine": {"model": "Allison T56-A-16", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
     "radar": {
         "model": "none",
@@ -1484,7 +1771,7 @@ kc130_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "countermeasures": 0.40, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 60}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 540, "altitude": 6700, "consume": 3200},
@@ -1498,7 +1785,8 @@ kc135_data = {
     "users": ["USA", "France", "Turkey", "Singapore"], "start_service": 1957, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.28, "resilience": 0.50,
+    "weight": 44663,
+    
     "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
     "radar": {
         "model": "none",
@@ -1515,7 +1803,7 @@ kc135_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.78, "countermeasures": 0.45, "self_defense": 0.30}, "reliability": {"mtbf": 70, "mttr": 2}},
+    "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.78, "self_defense": 0.30}, "reliability": {"mtbf": 70, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 10700, "consume": 5500},
@@ -1529,7 +1817,8 @@ kc135_mprs_data = {
     "users": ["USA"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
     "roles": [],
-    "manouvrability": 0.28, "resilience": 0.50,
+    "weight": 44663,
+    
     "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
     "radar": {
         "model": "none",
@@ -1546,7 +1835,7 @@ kc135_mprs_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
-    "avionics": {"model": "MPRS Avionics", "capabilities": {"flight_control": 0.80, "countermeasures": 0.45, "self_defense": 0.30}, "reliability": {"mtbf": 72, "mttr": 2}},
+    "avionics": {"model": "MPRS Avionics", "capabilities": {"flight_control": 0.80, "self_defense": 0.30}, "reliability": {"mtbf": 72, "mttr": 2}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 10700, "consume": 5500},
@@ -1562,7 +1851,8 @@ asj37_data = {
     "users": ["Sweden"], "start_service": 1971, "end_service": 2005,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 0,
     "roles": ["Strike", "CAS", "Fighter_Sweep", "CAP"],
-    "manouvrability": 0.78, "resilience": 0.68,
+    "weight": 11800,
+    
     "engine": {"model": "Volvo Flygmotor RM8B", "capabilities": {"thrust": 125000, "fuel_efficiency": 0.40, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
     "radar": {
         "model": "Ericsson PS-46/A",
@@ -1579,7 +1869,7 @@ asj37_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "Swedish TILS", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 55, "mttr": 3}},
-    "avionics": {"model": "Swedish ECM suite", "capabilities": {"flight_control": 0.78, "countermeasures": 0.70, "self_defense": 0.65}, "reliability": {"mtbf": 40, "mttr": 3}},
+    "avionics": {"model": "Swedish ECM suite", "capabilities": {"flight_control": 0.78, "self_defense": 0.65}, "reliability": {"mtbf": 40, "mttr": 3}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 80, "mttr": 2}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1100, "altitude": 11000, "consume": 3000},
@@ -1593,7 +1883,8 @@ m2000c_data = {
     "users": ["France", "India", "Egypt", "UAE", "Greece", "Qatar", "Taiwan", "Peru"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 0,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
-    "manouvrability": 0.85, "resilience": 0.65,
+    "weight": 7500,
+    
     "engine": {"model": "SNECMA M53-P2", "capabilities": {"thrust": 95100, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
     "radar": {
         "model": "Thomson-CSF RDI",
@@ -1610,7 +1901,7 @@ m2000c_data = {
         "reliability": {"mtbf": 0, "mttr": 0},
     },
     "radio_nav": {"model": "TACAN", "capabilities": {"range": 400, "accuracy": 0.85}, "reliability": {"mtbf": 60, "mttr": 2.5}},
-    "avionics": {"model": "SERVAL ECM", "capabilities": {"flight_control": 0.85, "countermeasures": 0.72, "self_defense": 0.68}, "reliability": {"mtbf": 45, "mttr": 2.5}},
+    "avionics": {"model": "SERVAL ECM", "capabilities": {"flight_control": 0.85, "self_defense": 0.68}, "reliability": {"mtbf": 45, "mttr": 2.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 40}, "reliability": {"mtbf": 85, "mttr": 1.5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1100, "altitude": 11000, "consume": 2000},
@@ -1626,7 +1917,8 @@ mig15_data = {
     "users": ["USSR", "China", "North Korea"], "start_service": 1949, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 0,
     "roles": ["CAP", "Intercept"],
-    "manouvrability": 0.68, "resilience": 0.62,
+    "weight": 3635,
+    
     "engine": {"model": "Klimov VK-1", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
     "radar": {
         "model": "SRD-1 Bariy-M",
@@ -1647,7 +1939,7 @@ mig15_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSI-6K", "capabilities": {"navigation_system": 0.38, "communication_system": 0.42, "communication_range": 80}, "reliability": {"mtbf": 22, "mttr": 4}},
-    "avionics": {"model": "Generic 1950s Soviet avionics", "capabilities": {"flight_control": 0.42, "countermeasures": 0.05, "self_defense": 0.05}, "reliability": {"mtbf": 20, "mttr": 5}},
+    "avionics": {"model": "Generic 1950s Soviet avionics", "capabilities": {"flight_control": 0.42, "self_defense": 0.05}, "reliability": {"mtbf": 20, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 20}, "reliability": {"mtbf": 65, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 850, "altitude": 8000, "consume": 1500},
@@ -1661,7 +1953,8 @@ mig19p_data = {
     "users": ["USSR", "China"], "start_service": 1955, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 0,
     "roles": ["CAP", "Intercept"],
-    "manouvrability": 0.72, "resilience": 0.62,
+    "weight": 5447,
+    
     "engine": {"model": "Tumansky RD-9B", "capabilities": {"thrust": 6400, "fuel_efficiency": 0.48, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
     "radar": {
         "model": "RP-5 Izumrud",
@@ -1682,7 +1975,7 @@ mig19p_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSIU-4V", "capabilities": {"navigation_system": 0.42, "communication_system": 0.45, "communication_range": 90}, "reliability": {"mtbf": 25, "mttr": 4}},
-    "avionics": {"model": "Generic 1950s Soviet avionics", "capabilities": {"flight_control": 0.48, "countermeasures": 0.08, "self_defense": 0.08}, "reliability": {"mtbf": 22, "mttr": 5}},
+    "avionics": {"model": "Generic 1950s Soviet avionics", "capabilities": {"flight_control": 0.48, "self_defense": 0.08}, "reliability": {"mtbf": 22, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 25}, "reliability": {"mtbf": 68, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 2000},
@@ -1696,7 +1989,8 @@ mig21bis_data = {
     "users": ["USSR", "Russia", "India", "Finland", "Algeria", "Vietnam"], "start_service": 1959, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept", "Strike"],
-    "manouvrability": 0.78, "resilience": 0.65,
+    "weight": 5843,
+    
     "engine": {"model": "Tumansky R-25-300", "capabilities": {"thrust": 9900, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 6}},
     "radar": {
         "model": "RP-22 Sapfir-21",
@@ -1717,7 +2011,7 @@ mig21bis_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-5S", "capabilities": {"navigation_system": 0.55, "communication_system": 0.58, "communication_range": 130}, "reliability": {"mtbf": 32, "mttr": 4}},
-    "avionics": {"model": "SPO-10 Sirena", "capabilities": {"flight_control": 0.60, "countermeasures": 0.35, "self_defense": 0.30}, "reliability": {"mtbf": 28, "mttr": 5}},
+    "avionics": {"model": "SPO-10 Sirena", "capabilities": {"flight_control": 0.60, "self_defense": 0.30}, "reliability": {"mtbf": 28, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 30}, "reliability": {"mtbf": 72, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 1500},
@@ -1731,7 +2025,8 @@ mig23mld_data = {
     "users": ["USSR", "Russia", "Syria", "Libya", "Algeria"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Strike", "CAS"],
-    "manouvrability": 0.72, "resilience": 0.68,
+    "weight": 10565,
+    
     "engine": {"model": "Tumansky R-35-300", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.55, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 7}},
     "radar": {
         "model": "Sapfir-23MLA-II",
@@ -1752,7 +2047,7 @@ mig23mld_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.65, "communication_system": 0.68, "communication_range": 180}, "reliability": {"mtbf": 38, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "countermeasures": 0.55, "self_defense": 0.48}, "reliability": {"mtbf": 32, "mttr": 5}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "self_defense": 0.48}, "reliability": {"mtbf": 32, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 78, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 1600},
@@ -1766,7 +2061,8 @@ mig25pd_data = {
     "users": ["USSR", "Algeria", "Libya", "Iraq"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 8,
     "roles": ["Intercept", "CAP"],
-    "manouvrability": 0.45, "resilience": 0.72,
+    "weight": 20000,
+    
     "engine": {"model": "Tumansky R-15BD-300", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 25, "mttr": 10}},
     "radar": {
         "model": "Saphir-25 (RP-25)",
@@ -1787,7 +2083,7 @@ mig25pd_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.68, "communication_system": 0.70, "communication_range": 200}, "reliability": {"mtbf": 38, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.60, "countermeasures": 0.48, "self_defense": 0.42}, "reliability": {"mtbf": 30, "mttr": 7}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.60, "self_defense": 0.42}, "reliability": {"mtbf": 30, "mttr": 7}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 80, "mttr": 9}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 13000, "consume": 3500},
@@ -1801,7 +2097,8 @@ mig25rb_data = {
     "users": ["USSR", "Russia"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 8,
     "roles": ["Recon"],
-    "manouvrability": 0.43, "resilience": 0.70,
+    "weight": 20000,
+    
     "engine": {"model": "Tumansky R-15B-300", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 25, "mttr": 10}},
     "radar": {
         "model": "Saphir-25 (RP-25, recon variant)",
@@ -1822,7 +2119,7 @@ mig25rb_data = {
         "reliability": {"mtbf": 35, "mttr": 6}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.70, "communication_system": 0.70, "communication_range": 200}, "reliability": {"mtbf": 38, "mttr": 4}},
-    "avionics": {"model": "Generic Soviet recon avionics", "capabilities": {"flight_control": 0.58, "countermeasures": 0.45, "self_defense": 0.40}, "reliability": {"mtbf": 30, "mttr": 7}},
+    "avionics": {"model": "Generic Soviet recon avionics", "capabilities": {"flight_control": 0.58, "self_defense": 0.40}, "reliability": {"mtbf": 30, "mttr": 7}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 80, "mttr": 9}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 13000, "consume": 3500},
@@ -1836,7 +2133,8 @@ mig27k_data = {
     "users": ["USSR", "Russia", "India"], "start_service": 1975, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS", "Pinpoint_Strike"],
-    "manouvrability": 0.68, "resilience": 0.70,
+    "weight": 11908,
+    
     "engine": {"model": "Tumansky R-29B-300", "capabilities": {"thrust": 11500, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
         "model": "PrNK-23K Kaira-23",
@@ -1857,7 +2155,7 @@ mig27k_data = {
         "reliability": {"mtbf": 30, "mttr": 6}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.65, "communication_system": 0.68, "communication_range": 180}, "reliability": {"mtbf": 36, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "countermeasures": 0.55, "self_defense": 0.48}, "reliability": {"mtbf": 30, "mttr": 6}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "self_defense": 0.48}, "reliability": {"mtbf": 30, "mttr": 6}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 78, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 800, "altitude": 5000, "consume": 1800},
@@ -1871,7 +2169,8 @@ mig29a_data = {
     "users": ["USSR", "Russia", "Germany", "Poland", "Romania", "Hungary"], "start_service": 1982, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 11,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
-    "manouvrability": 0.88, "resilience": 0.72,
+    "weight": 10900,
+    
     "engine": {"model": "Klimov RD-33", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 6}},
     "radar": {
         "model": "NO-193 (N019) Rubin",
@@ -1892,7 +2191,7 @@ mig29a_data = {
         "reliability": {"mtbf": 30, "mttr": 5}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.72, "communication_system": 0.72, "communication_range": 200}, "reliability": {"mtbf": 42, "mttr": 3}},
-    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.80, "countermeasures": 0.62, "self_defense": 0.55}, "reliability": {"mtbf": 35, "mttr": 5}},
+    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.80, "self_defense": 0.55}, "reliability": {"mtbf": 35, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 55}, "reliability": {"mtbf": 82, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 1400},
@@ -1906,7 +2205,8 @@ mig29s_data = {
     "users": ["Russia", "Algeria"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 15,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Strike"],
-    "manouvrability": 0.88, "resilience": 0.72,
+    "weight": 10900,
+    
     "engine": {"model": "Klimov RD-33 Series 3", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.63, "type": "turbofan"}, "reliability": {"mtbf": 37, "mttr": 6}},
     "radar": {
         "model": "N019M Topaz",
@@ -1927,7 +2227,7 @@ mig29s_data = {
         "reliability": {"mtbf": 32, "mttr": 5}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.74, "communication_system": 0.74, "communication_range": 200}, "reliability": {"mtbf": 44, "mttr": 3}},
-    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.82, "countermeasures": 0.65, "self_defense": 0.58}, "reliability": {"mtbf": 37, "mttr": 4.5}},
+    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.82, "self_defense": 0.58}, "reliability": {"mtbf": 37, "mttr": 4.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 55}, "reliability": {"mtbf": 84, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 920, "altitude": 10000, "consume": 1400},
@@ -1941,7 +2241,8 @@ mig31_data = {
     "users": ["USSR", "Russia"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 22,
     "roles": ["Intercept", "CAP"],
-    "manouvrability": 0.50, "resilience": 0.75,
+    "weight": 21820,
+    
     "engine": {"model": "Soloviev D-30F6", "capabilities": {"thrust": 31000, "fuel_efficiency": 0.52, "type": "turbofan"}, "reliability": {"mtbf": 30, "mttr": 9}},
     "radar": {
         "model": "Zaslon S-800",
@@ -1962,7 +2263,7 @@ mig31_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.78, "communication_system": 0.80, "communication_range": 350}, "reliability": {"mtbf": 45, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.70, "countermeasures": 0.60, "self_defense": 0.55}, "reliability": {"mtbf": 35, "mttr": 7}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.70, "self_defense": 0.55}, "reliability": {"mtbf": 35, "mttr": 7}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 90}, "reliability": {"mtbf": 85, "mttr": 9}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 13000, "consume": 4000},
@@ -1978,7 +2279,8 @@ su17m4_data = {
     "users": ["USSR", "Russia", "Syria", "Libya"], "start_service": 1970, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS"],
-    "manouvrability": 0.68, "resilience": 0.70,
+    "weight": 10000,
+    
     "engine": {"model": "AL-21F-3", "capabilities": {"thrust": 11200, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 7}},
     "radar": {
         "model": "Klen-54",
@@ -1999,7 +2301,7 @@ su17m4_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.62, "communication_system": 0.65, "communication_range": 180}, "reliability": {"mtbf": 35, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.65, "countermeasures": 0.50, "self_defense": 0.44}, "reliability": {"mtbf": 30, "mttr": 5}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.65, "self_defense": 0.44}, "reliability": {"mtbf": 30, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 78, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 800, "altitude": 5000, "consume": 1500},
@@ -2013,7 +2315,8 @@ su24m_data = {
     "users": ["USSR", "Russia", "Ukraine", "Algeria", "Libya", "Syria"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.BOMBER], "cost": 24,
     "roles": ["Strike", "Pinpoint_Strike", "SEAD"],
-    "manouvrability": 0.58, "resilience": 0.72,
+    "weight": 22300,
+    
     "engine": {"model": "Saturn AL-21F-3A", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
         "model": "Orion-A",
@@ -2034,7 +2337,7 @@ su24m_data = {
         "reliability": {"mtbf": 32, "mttr": 6}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.72, "communication_system": 0.72, "communication_range": 250}, "reliability": {"mtbf": 40, "mttr": 3.5}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.70, "countermeasures": 0.58, "self_defense": 0.50}, "reliability": {"mtbf": 32, "mttr": 6}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.70, "self_defense": 0.50}, "reliability": {"mtbf": 32, "mttr": 6}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 8}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 3000},
@@ -2048,7 +2351,8 @@ su24mr_data = {
     "users": ["USSR", "Russia", "Ukraine"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 25,
     "roles": ["Recon"],
-    "manouvrability": 0.58, "resilience": 0.72,
+    "weight": 22300,
+    
     "engine": {"model": "Saturn AL-21F-3A", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
         "model": "Shtyk SAR",
@@ -2069,7 +2373,7 @@ su24mr_data = {
         "reliability": {"mtbf": 35, "mttr": 6}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.72, "communication_system": 0.72, "communication_range": 250}, "reliability": {"mtbf": 40, "mttr": 3.5}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "countermeasures": 0.55, "self_defense": 0.48}, "reliability": {"mtbf": 32, "mttr": 6}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "self_defense": 0.48}, "reliability": {"mtbf": 32, "mttr": 6}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 85, "mttr": 8}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 3000},
@@ -2083,7 +2387,8 @@ su25_data = {
     "users": ["USSR", "Russia", "Ukraine", "Georgia", "Belarus", "many others"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 11,
     "roles": ["CAS", "Strike"],
-    "manouvrability": 0.55, "resilience": 0.88,
+    "weight": 9500,
+    
     "engine": {"model": "Tumansky R-95Sh", "capabilities": {"thrust": 9000, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 5}},
     "radar": {
         "model": "none",
@@ -2104,7 +2409,7 @@ su25_data = {
         "reliability": {"mtbf": 40, "mttr": 3}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.60, "communication_system": 0.62, "communication_range": 150}, "reliability": {"mtbf": 38, "mttr": 3}},
-    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.60, "countermeasures": 0.52, "self_defense": 0.46}, "reliability": {"mtbf": 35, "mttr": 4}},
+    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.60, "self_defense": 0.46}, "reliability": {"mtbf": 35, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 50}, "reliability": {"mtbf": 95, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 500, "altitude": 5000, "consume": 1200},
@@ -2118,7 +2423,8 @@ su25t_data = {
     "users": ["USSR", "Russia"], "start_service": 1990, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 14,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "manouvrability": 0.55, "resilience": 0.88,
+    "weight": 9500,
+    
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
         "model": "none",
@@ -2139,7 +2445,7 @@ su25t_data = {
         "reliability": {"mtbf": 38, "mttr": 4}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.68, "communication_system": 0.70, "communication_range": 180}, "reliability": {"mtbf": 42, "mttr": 3}},
-    "avionics": {"model": "Pastel RWR", "capabilities": {"flight_control": 0.68, "countermeasures": 0.60, "self_defense": 0.54}, "reliability": {"mtbf": 38, "mttr": 4}},
+    "avionics": {"model": "Pastel RWR", "capabilities": {"flight_control": 0.68, "self_defense": 0.54}, "reliability": {"mtbf": 38, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 52}, "reliability": {"mtbf": 95, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 520, "altitude": 5000, "consume": 1200},
@@ -2153,7 +2459,8 @@ su25tm_data = {
     "users": ["Russia"], "start_service": 2008, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 17,
     "roles": ["CAS", "Strike", "Pinpoint_Strike", "SEAD"],
-    "manouvrability": 0.56, "resilience": 0.88,
+    "weight": 9500,
+    
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 44, "mttr": 5}},
     "radar": {
         "model": "Kopyo-25 (optional)",
@@ -2174,7 +2481,7 @@ su25tm_data = {
         "reliability": {"mtbf": 40, "mttr": 3.5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.75, "communication_system": 0.75, "communication_range": 200}, "reliability": {"mtbf": 45, "mttr": 3}},
-    "avionics": {"model": "Pastel RWR + L166S-11E IRCM", "capabilities": {"flight_control": 0.72, "countermeasures": 0.68, "self_defense": 0.62}, "reliability": {"mtbf": 42, "mttr": 3.5}},
+    "avionics": {"model": "Pastel RWR + L166S-11E IRCM", "capabilities": {"flight_control": 0.72, "self_defense": 0.62}, "reliability": {"mtbf": 42, "mttr": 3.5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 52}, "reliability": {"mtbf": 95, "mttr": 5}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 530, "altitude": 5000, "consume": 1200},
@@ -2188,7 +2495,8 @@ su27_data = {
     "users": ["USSR", "Russia", "Ukraine", "Kazakhstan", "China"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 30,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
-    "manouvrability": 0.90, "resilience": 0.78,
+    "weight": 16380,
+    
     "engine": {"model": "Saturn AL-31F", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
     "radar": {
         "model": "N001 Myech",
@@ -2209,7 +2517,7 @@ su27_data = {
         "reliability": {"mtbf": 32, "mttr": 5}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.75, "communication_system": 0.75, "communication_range": 280}, "reliability": {"mtbf": 45, "mttr": 3}},
-    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.85, "countermeasures": 0.65, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 5}},
+    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.85, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 88, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 10000, "consume": 1800},
@@ -2223,7 +2531,8 @@ su30_data = {
     "users": ["Russia", "India", "China", "Malaysia", "Algeria"], "start_service": 1996, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 38,
     "roles": ["CAP", "Strike", "SEAD", "Anti_Ship", "Escort"],
-    "manouvrability": 0.92, "resilience": 0.80,
+    "weight": 17700,
+    
     "engine": {"model": "Saturn AL-31FP (TVC)", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 6}},
     "radar": {
         "model": "N011M Bars",
@@ -2244,7 +2553,7 @@ su30_data = {
         "reliability": {"mtbf": 35, "mttr": 4}, "type": "optical",
     },
     "radio_nav": {"model": "A-737 GPS/INS", "capabilities": {"navigation_system": 0.85, "communication_system": 0.82, "communication_range": 350}, "reliability": {"mtbf": 52, "mttr": 2.5}},
-    "avionics": {"model": "SPO-32 Pastel", "capabilities": {"flight_control": 0.88, "countermeasures": 0.72, "self_defense": 0.65}, "reliability": {"mtbf": 42, "mttr": 4}},
+    "avionics": {"model": "SPO-32 Pastel", "capabilities": {"flight_control": 0.88, "self_defense": 0.65}, "reliability": {"mtbf": 42, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 80}, "reliability": {"mtbf": 90, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 10000, "consume": 2000},
@@ -2258,7 +2567,8 @@ su33_data = {
     "users": ["Russia"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 37,
     "roles": ["CAP", "Intercept", "Strike"],
-    "manouvrability": 0.88, "resilience": 0.78,
+    "weight": 18400,
+    
     "engine": {"model": "Saturn AL-31F3", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
     "radar": {
         "model": "N001K Myech-K",
@@ -2279,7 +2589,7 @@ su33_data = {
         "reliability": {"mtbf": 32, "mttr": 5}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.78, "communication_system": 0.78, "communication_range": 280}, "reliability": {"mtbf": 48, "mttr": 3}},
-    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.86, "countermeasures": 0.65, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 5}},
+    "avionics": {"model": "SPO-15LM Beryoza", "capabilities": {"flight_control": 0.86, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 82}, "reliability": {"mtbf": 88, "mttr": 7}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 1000, "altitude": 10000, "consume": 1900},
@@ -2293,7 +2603,8 @@ su34_data = {
     "users": ["Russia"], "start_service": 2014, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 36,
     "roles": ["Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
-    "manouvrability": 0.80, "resilience": 0.80,
+    "weight": 22500,
+    
     "engine": {"model": "Saturn AL-31FM1", "capabilities": {"thrust": 27000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
     "radar": {
         "model": "V004 Leninets (AESA)",
@@ -2314,7 +2625,7 @@ su34_data = {
         "reliability": {"mtbf": 38, "mttr": 4}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "GLONASS/GPS INS", "capabilities": {"navigation_system": 0.92, "communication_system": 0.88, "communication_range": 400}, "reliability": {"mtbf": 58, "mttr": 2}},
-    "avionics": {"model": "Khibiny ECM + Pastel", "capabilities": {"flight_control": 0.90, "countermeasures": 0.80, "self_defense": 0.75}, "reliability": {"mtbf": 45, "mttr": 4}},
+    "avionics": {"model": "Khibiny ECM + Pastel", "capabilities": {"flight_control": 0.90, "self_defense": 0.75}, "reliability": {"mtbf": 45, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 90}, "reliability": {"mtbf": 92, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 950, "altitude": 10000, "consume": 2500},
@@ -2330,7 +2641,8 @@ tu22m_data = {
     "users": ["USSR", "Russia"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 45,
     "roles": ["Strike", "Anti_Ship"],
-    "manouvrability": 0.35, "resilience": 0.72,
+    "weight": 58000,
+    
     "engine": {"model": "NK-25", "capabilities": {"thrust": 50000, "fuel_efficiency": 0.55, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 12}},
     "radar": {
         "model": "PN-A (Leninets)",
@@ -2351,7 +2663,7 @@ tu22m_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.80, "communication_system": 0.80, "communication_range": 500}, "reliability": {"mtbf": 50, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.72, "countermeasures": 0.68, "self_defense": 0.60}, "reliability": {"mtbf": 38, "mttr": 8}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.72, "self_defense": 0.60}, "reliability": {"mtbf": 38, "mttr": 8}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 200}, "reliability": {"mtbf": 110, "mttr": 12}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 10000, "consume": 10000},
@@ -2365,7 +2677,8 @@ tu95ms_data = {
     "users": ["USSR", "Russia"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 36,
     "roles": ["Strike"],
-    "manouvrability": 0.18, "resilience": 0.68,
+    "weight": 90000,
+    
     "engine": {"model": "NK-12M", "capabilities": {"thrust": 51000, "fuel_efficiency": 0.55, "type": "turboprop"}, "reliability": {"mtbf": 40, "mttr": 14}},
     "radar": {
         "model": "Obzor-MS",
@@ -2386,7 +2699,7 @@ tu95ms_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.80, "communication_system": 0.82, "communication_range": 600}, "reliability": {"mtbf": 55, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "countermeasures": 0.65, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 10}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 10}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 300}, "reliability": {"mtbf": 120, "mttr": 14}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 740, "altitude": 12000, "consume": 13000},
@@ -2400,7 +2713,8 @@ tu142_data = {
     "users": ["USSR", "Russia", "India"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.BOMBER], "cost": 30,
     "roles": ["Anti_Ship", "Recon"],
-    "manouvrability": 0.18, "resilience": 0.65,
+    "weight": 90000,
+    
     "engine": {"model": "NK-12MV", "capabilities": {"thrust": 51000, "fuel_efficiency": 0.55, "type": "turboprop"}, "reliability": {"mtbf": 38, "mttr": 14}},
     "radar": {
         "model": "Berkut-95 maritime search",
@@ -2421,7 +2735,7 @@ tu142_data = {
         "reliability": {"mtbf": 38, "mttr": 8}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.78, "communication_system": 0.80, "communication_range": 600}, "reliability": {"mtbf": 52, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.65, "countermeasures": 0.60, "self_defense": 0.52}, "reliability": {"mtbf": 36, "mttr": 10}},
+    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.65, "self_defense": 0.52}, "reliability": {"mtbf": 36, "mttr": 10}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 300}, "reliability": {"mtbf": 115, "mttr": 14}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 700, "altitude": 10000, "consume": 13000},
@@ -2435,7 +2749,8 @@ tu160_data = {
     "users": ["USSR", "Russia"], "start_service": 1987, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 250,
     "roles": ["Strike", "Pinpoint_Strike"],
-    "manouvrability": 0.40, "resilience": 0.75,
+    "weight": 110000,
+    
     "engine": {"model": "NK-32", "capabilities": {"thrust": 100000, "fuel_efficiency": 0.60, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 14}},
     "radar": {
         "model": "Obzor-K + Sopka nav",
@@ -2456,7 +2771,7 @@ tu160_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "GLONASS/INS", "capabilities": {"navigation_system": 0.90, "communication_system": 0.88, "communication_range": 700}, "reliability": {"mtbf": 60, "mttr": 3}},
-    "avionics": {"model": "Baikal-3 EW", "capabilities": {"flight_control": 0.85, "countermeasures": 0.78, "self_defense": 0.72}, "reliability": {"mtbf": 42, "mttr": 10}},
+    "avionics": {"model": "Baikal-3 EW", "capabilities": {"flight_control": 0.85, "self_defense": 0.72}, "reliability": {"mtbf": 42, "mttr": 10}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 5000, "fluid_capacity": 400}, "reliability": {"mtbf": 125, "mttr": 14}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 900, "altitude": 12000, "consume": 18000},
@@ -2472,7 +2787,8 @@ a50_data = {
     "users": ["USSR", "Russia"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 330,
     "roles": [],
-    "manouvrability": 0.22, "resilience": 0.55,
+    "weight": 75000,
+    
     "engine": {"model": "Soloviev D-30KP", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 10}},
     "radar": {
         "model": "Shmel (Bumblebee) AWACS",
@@ -2493,7 +2809,7 @@ a50_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.85, "communication_system": 0.92, "communication_range": 700}, "reliability": {"mtbf": 62, "mttr": 3}},
-    "avionics": {"model": "Generic AWACS avionics", "capabilities": {"flight_control": 0.72, "countermeasures": 0.55, "self_defense": 0.45}, "reliability": {"mtbf": 55, "mttr": 7}},
+    "avionics": {"model": "Generic AWACS avionics", "capabilities": {"flight_control": 0.72, "self_defense": 0.45}, "reliability": {"mtbf": 55, "mttr": 7}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 200}, "reliability": {"mtbf": 118, "mttr": 11}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 700, "altitude": 10000, "consume": 8000},
@@ -2507,7 +2823,8 @@ an26b_data = {
     "users": ["USSR", "Russia", "Ukraine", "Cuba", "Vietnam"], "start_service": 1970, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 2,
     "roles": [],
-    "manouvrability": 0.30, "resilience": 0.48,
+    "weight": 15020,
+    
     "engine": {"model": "AI-24VT", "capabilities": {"thrust": 4000, "fuel_efficiency": 0.58, "type": "turboprop"}, "reliability": {"mtbf": 55, "mttr": 5}},
     "radar": {
         "model": "none",
@@ -2528,7 +2845,7 @@ an26b_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-2S", "capabilities": {"navigation_system": 0.65, "communication_system": 0.65, "communication_range": 200}, "reliability": {"mtbf": 50, "mttr": 3}},
-    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.62, "countermeasures": 0.10, "self_defense": 0.08}, "reliability": {"mtbf": 50, "mttr": 4}},
+    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.62, "self_defense": 0.08}, "reliability": {"mtbf": 50, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 60}, "reliability": {"mtbf": 100, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 430, "altitude": 6000, "consume": 1400},
@@ -2542,7 +2859,8 @@ an30m_data = {
     "users": ["USSR", "Russia", "Ukraine"], "start_service": 1968, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 2,
     "roles": [],
-    "manouvrability": 0.28, "resilience": 0.45,
+    "weight": 15590,
+    
     "engine": {"model": "AI-24A", "capabilities": {"thrust": 4000, "fuel_efficiency": 0.56, "type": "turboprop"}, "reliability": {"mtbf": 52, "mttr": 5}},
     "radar": {
         "model": "none",
@@ -2563,7 +2881,7 @@ an30m_data = {
         "reliability": {"mtbf": 40, "mttr": 4}, "type": "optical",
     },
     "radio_nav": {"model": "RSBN-2S", "capabilities": {"navigation_system": 0.62, "communication_system": 0.62, "communication_range": 200}, "reliability": {"mtbf": 48, "mttr": 3}},
-    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.60, "countermeasures": 0.10, "self_defense": 0.08}, "reliability": {"mtbf": 48, "mttr": 4}},
+    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.60, "self_defense": 0.08}, "reliability": {"mtbf": 48, "mttr": 4}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 55}, "reliability": {"mtbf": 95, "mttr": 6}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 420, "altitude": 6000, "consume": 1400},
@@ -2577,7 +2895,8 @@ il76md_data = {
     "users": ["USSR", "Russia", "India", "China", "Algeria"], "start_service": 1974, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 30,
     "roles": [],
-    "manouvrability": 0.25, "resilience": 0.55,
+    "weight": 89000,
+    
     "engine": {"model": "Soloviev D-30KP-2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 8}},
     "radar": {
         "model": "Kupol-76 (weather)",
@@ -2598,7 +2917,7 @@ il76md_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.80, "communication_system": 0.80, "communication_range": 400}, "reliability": {"mtbf": 62, "mttr": 3}},
-    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.72, "countermeasures": 0.30, "self_defense": 0.25}, "reliability": {"mtbf": 58, "mttr": 5}},
+    "avionics": {"model": "Generic Soviet transport avionics", "capabilities": {"flight_control": 0.72, "self_defense": 0.25}, "reliability": {"mtbf": 58, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 200}, "reliability": {"mtbf": 115, "mttr": 10}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 780, "altitude": 10000, "consume": 6500},
@@ -2612,7 +2931,8 @@ il78m_data = {
     "users": ["Russia"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 35,
     "roles": [],
-    "manouvrability": 0.22, "resilience": 0.52,
+    "weight": 89000,
+    
     "engine": {"model": "Soloviev D-30KP-2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 8}},
     "radar": {
         "model": "Kupol-76 (weather)",
@@ -2633,7 +2953,7 @@ il78m_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.80, "communication_system": 0.80, "communication_range": 400}, "reliability": {"mtbf": 62, "mttr": 3}},
-    "avionics": {"model": "Generic Soviet tanker avionics", "capabilities": {"flight_control": 0.70, "countermeasures": 0.28, "self_defense": 0.22}, "reliability": {"mtbf": 55, "mttr": 5}},
+    "avionics": {"model": "Generic Soviet tanker avionics", "capabilities": {"flight_control": 0.70, "self_defense": 0.22}, "reliability": {"mtbf": 55, "mttr": 5}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 200}, "reliability": {"mtbf": 115, "mttr": 10}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 770, "altitude": 10000, "consume": 7000},
@@ -2647,7 +2967,8 @@ yak40_data = {
     "users": ["USSR", "Russia", "Ukraine", "Cuba"], "start_service": 1968, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 1,
     "roles": [],
-    "manouvrability": 0.32, "resilience": 0.48,
+    "weight": 9400,
+    
     "engine": {"model": "Ivchenko AI-25", "capabilities": {"thrust": 4500, "fuel_efficiency": 0.58, "type": "turbofan"}, "reliability": {"mtbf": 50, "mttr": 4}},
     "radar": {
         "model": "none",
@@ -2668,7 +2989,7 @@ yak40_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-2S", "capabilities": {"navigation_system": 0.62, "communication_system": 0.62, "communication_range": 150}, "reliability": {"mtbf": 48, "mttr": 3}},
-    "avionics": {"model": "Generic Soviet avionics", "capabilities": {"flight_control": 0.60, "countermeasures": 0.05, "self_defense": 0.05}, "reliability": {"mtbf": 45, "mttr": 3}},
+    "avionics": {"model": "Generic Soviet avionics", "capabilities": {"flight_control": 0.60, "self_defense": 0.05}, "reliability": {"mtbf": 45, "mttr": 3}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 1500, "fluid_capacity": 30}, "reliability": {"mtbf": 90, "mttr": 4}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 500, "altitude": 6000, "consume": 1200},

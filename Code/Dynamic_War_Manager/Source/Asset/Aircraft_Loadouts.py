@@ -3746,17 +3746,6 @@ def evaluate_loadout_altitude(aircraft_name, loadout_name, phase):
         "altitude_min": phase_data.get("altitude_min", 0),
     }
 
-# eliminare.
-def calc_loadout_effectiveness(aircraft_name, loadout_name, conditions, support_available, fuel_percentage, phase):
-    """Calculate an overall effectiveness score for a loadout based on various factors."""
-    usability_score = 1 if evaluate_loadout_usability(aircraft_name, loadout_name, conditions) else 0
-    support_score = 1 if evaluate_loadout_support_requirements(aircraft_name, loadout_name, support_available) else 0
-    range_score = evaluate_loadout_range(aircraft_name, loadout_name, fuel_percentage, phase) / 1000  # Normalize range
-    speed_score = evaluate_loadout_speed(aircraft_name, loadout_name, phase) / 1000  # Normalize speed
-    
-    # Simple weighted average of factors (weights can be adjusted as needed)
-    effectiveness = (0.4 * usability_score) + (0.3 * support_score) + (0.2 * range_score) + (0.1 * speed_score)
-    return effectiveness
 
 
 def loadout_eval(aircraft_name: str, loadout_name: str) -> float: # questo lo usi per verificare come l'aereo performa per la missione senza considerare la tipologia del target
