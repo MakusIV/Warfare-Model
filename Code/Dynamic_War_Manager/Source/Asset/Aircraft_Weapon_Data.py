@@ -37,7 +37,7 @@ WEAPON_PARAM = {
                         'manouvrability':   7 / ( 10 * 43 ), # coeff, ref 10
                         },
     'MISSILES_AAM_INF': {'warhead':         5 / ( 250 * 28 ), # in kg, ref ~250 kg (AIM-54C)
-                        'range':            5 / ( 5 * 28 ), # in km, ref ~50000 m (AIM-54C)                        
+                        'range':            5 / ( 30 * 28 ), # in km, ref ~30 km (typical modern IR missile, e.g. AIM-9L/R-73)
                         'max_speed':        9 / ( 3 * 28 ), # in mach 
                         'max_height':       2 / ( 30 * 28 ), # max ~30 km
                         'manouvrability':   7 / ( 10 * 28 ), # coeff, ref 10
@@ -1288,8 +1288,47 @@ AIR_WEAPONS = {
             "manouvrability": 0.7,
             "accuracy": 0.68
         },
-        
-    },  
+
+        "R-33": {
+            "type": "AAM",
+            "model": "R-33",
+            "users": ["USSR", "Russia"],
+            "seeker": "radar",
+            "task": ["A2A"],
+            "start_service": 1981,
+            "end_service": None,
+            "cost": 500,  # k$
+            "warhead": 47,  # kg
+            "reliability": 0.65,
+            "range": 120,  # km
+            "semiactive_range": 60,  # km
+            "active_range": 20,  # km
+            "max_height": 25,  # km
+            "max_speed": 4.5,  # mach
+            "manouvrability": 0.6,
+            "accuracy": 0.7
+        },
+
+        "R-37": {
+            "type": "AAM",
+            "model": "R-37",
+            "users": ["Russia"],
+            "seeker": "radar",
+            "task": ["A2A"],
+            "start_service": 1994,
+            "end_service": None,
+            "cost": 1000,  # k$
+            "warhead": 60,  # kg
+            "reliability": 0.65,
+            "range": 300,  # km
+            "active_range": 40,  # km
+            "max_height": 30,  # km
+            "max_speed": 6.0,  # mach
+            "manouvrability": 0.5,
+            "accuracy": 0.72
+        },
+
+    },
     'MISSILES_ASM': {
         "RB-05A": {
             "type": "ASM",

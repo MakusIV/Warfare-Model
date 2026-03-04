@@ -746,7 +746,6 @@ class Vehicle_Data:
 
         return score
 
-
     def get_normalized_weapon_target_effectiveness_distribuition(self, target_type: Dict, target_dimension: Dict, category: Optional[str] = None) -> float:
         """Returns weapon target effectiveness score normalized from 0 (min) to 1 (max).
 
@@ -772,7 +771,6 @@ class Vehicle_Data:
 
         scores = [ac._weapon_target_effectiveness_distribuition(target_type, target_dimension) for ac in vehicles]
         return self._normalize(self._weapon_target_effectiveness_distribuition(target_type, target_dimension), scores)
-
 
     def get_normalized_weapon_target_effectiveness(self, target_type: List, target_dimension: List, category: Optional[str] = None) -> float:
         """Returns weapon target effectiveness score normalized from 0 (min) to 1 (max).
@@ -4545,7 +4543,7 @@ for model, data in VEHICLE.items():
 
 print(f"T-90 Speed score and avalaibility: {get_vehicle_scores(model = 'T-90M', scores = ['Speed score', 'avalaibility', 'combat score'])}" )
 '''
-STAMPA = True
+STAMPA = False
 if STAMPA:
     VEHICLES_PER_TABLE = 7
 

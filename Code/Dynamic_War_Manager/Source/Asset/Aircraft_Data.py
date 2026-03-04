@@ -47,9 +47,9 @@ SYSTEM_WEIGHTS = {
             'multi_target': 0.4 / 1, # weights / reference multi targets
     },
     "speed_weights": {
-        'sustained': 0.2,
-        'combat': 0.4,
-        'emergency': 0.3
+        'sustained': 0.15,
+        'combat': 0.6,
+        'emergency': 0.25
     }
 }
 
@@ -327,22 +327,24 @@ class Aircraft_Data:
             return 0.0
 
         weights = {
-            'thrust': 0.7,
-            'fuel_efficiency': 0.3
+            'thrust': 0.9,
+            'fuel_efficiency': 0.1            
         }
 
         # Valori di riferimento per normalizzazione
         reference_values = {
-            'thrust': 10000,  # kN (riferimento per motori ad alta potenza)
+            'thrust': 10000/7000,  # kN/kg (riferimento per motori ad alta potenza espresso come thrust/peso dell'aereo)
             'fuel_efficiency': 5.0  # km/l (riferimento per motori efficienti)
         }
 
+
         score = 0.0
+        aircraft_weight = self.get_weight() if self.get_weight() else 5000 # * aircraft_weight se il peso dell'aereo non è definito, consideralo come 7000 kg (caccia pesante)
         thrust = capabilities.get('thrust', 0)
         fuel_efficiency = capabilities.get('fuel_efficiency', 0)
 
         # Normalizza e applica i pesi
-        score += (thrust / reference_values['thrust']) * weights['thrust']
+        score += (thrust / (aircraft_weight * reference_values['thrust'] )) * weights['thrust']
         score += (fuel_efficiency / reference_values['fuel_efficiency']) * weights['fuel_efficiency']
 
         return score
@@ -373,13 +375,12 @@ class Aircraft_Data:
         
         if metric not in ['metric', 'imperial']:
             raise ValueError(f"Metric must be 'metric' or 'imperial', got {metric!r}.")
-
+        
         score = 0
 
         for speed_type, weight in SYSTEM_WEIGHTS["speed_weights"].items():
             data = self.speed_data.get(speed_type, {})
-            speed = data.get('airspeed', 0)
-                      
+            speed = data.get('airspeed', 0)                                  
 
             if data.get('type_speed') == "indicated_airspeed":
                 # converte l'airspeed indicato in velocità vera
@@ -393,28 +394,27 @@ class Aircraft_Data:
             speed = true_air_speed_at_new_altitude(speed, data.get('altitude'), altitude, metric=data.get('metric'))
 
             if not hasattr(data, 'time'):
-                time = 1 # sustained speed
+                time = 0.3 # sustained speed
             else:
                 time = data.get('time')
                 if speed_type == 'combat':
-                    time /=  60  # reference on 60'
+                    time *=  0.5/120  # 06: weight for combat time, 120: reference on 120'(considerato il valore massimo) per normalizzarlo in un range 0-0.6
                  
                 elif speed_type == 'emergency':
-                    time /= 3 # reference on 3'
+                    time *= 0.2/60 # 02: weight for emergency time, 60: reference on 60'(considerato il valore massimo) per normalizzarlo in un range 0-0.2
             
             # Considera anche l'altitudine e il consumo
-            score += (speed * weight) * time # - data.get('consume', 0) * 0.001
+            score += (speed * weight) * (1 + time) # - data.get('consume', 0) * 0.001
         return score
 
     def _speed_eval(self) -> float:
         """evaluate speed score at fixed altitude for comparations
 
         Returns:
-            float: median of speed calculates at 1000 and 6000 meter
+            float: speed calculates at 20000 meter
         """        
-        eval_1000 = self._speed_at_altitude_eval('metric', 1000)  # Default to metric and altitude 1000
-        eval_5000 = self._speed_at_altitude_eval('metric', 6000)  # Default to metric and altitude 6000
-        return (eval_1000 + eval_5000) / 2
+        eval_20000 = self._speed_at_altitude_eval('metric', 20000)  # Default to metric and altitude 1000        
+        return eval_20000
 
     def _reliability_eval(self):
         """evaluate reliability (mtbf) of aircraft subsystem
@@ -477,115 +477,166 @@ class Aircraft_Data:
         
         return loadout_eval(aircraft_name = self.model, loadout_name = loadout)
 
-    def _loadout_target_effectiveness(self, loadout: str, target_type: List, target_dimension: List) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+    def _loadout_target_effectiveness(self, loadout: str, target_type: List, target_dimension: List, route_length: float = 0.0, route_speed: float = 1.0) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
         """Returns the score of installed loadout against a specific target
 
         Returns:
             float: weapons combat score against the target
         """
-        
-        return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension)
+
+        return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension, route_length = route_length, route_speed = route_speed)
     
 
     # --- Metodi di confronto normalizzati ---
-    def get_normalized_radar_score(self, modes: Optional[List] = None):
+    def get_normalized_radar_score(self, modes: Optional[List] = None, category: Optional[str] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized radar score
         """
-        scores = [ac._radar_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._radar_eval(modes = modes), scores)
-    
-    def get_normalized_TVD_score(self, modes: Optional[Dict] = None):
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._radar_eval(modes=modes) for ac in aircraft_list]
+        return self._normalize(self._radar_eval(modes=modes), scores)
+
+    def get_normalized_TVD_score(self, modes: Optional[List] = None, category: Optional[str] = None):
         """returns TVD score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized TVD score
         """
-        scores = [ac._TVD_eval(modes = modes) for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._TVD_eval(modes = modes), scores)
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
 
-    def get_normalized_radio_nav_score(self):
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._TVD_eval(modes=modes) for ac in aircraft_list]
+        return self._normalize(self._TVD_eval(modes=modes), scores)
+
+    def get_normalized_radio_nav_score(self, category: Optional[str] = None):
         """returns radio_nav score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized radio_nav score
         """
-        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._radio_nav_eval() for ac in aircraft_list]
         return self._normalize(self._radio_nav_eval(), scores)
-    
-    def get_normalized_hydraulic_score(self):
+
+    def get_normalized_hydraulic_score(self, category: Optional[str] = None):
         """returns hydraulic score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized hydraulic score
         """
-        scores = [ac._hydraulic_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._hydraulic_eval() for ac in aircraft_list]
         return self._normalize(self._hydraulic_eval(), scores)
-    
-    def get_normalized_avionics_score(self):
+
+    def get_normalized_avionics_score(self, category: Optional[str] = None):
         """returns avionics score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized avionics score
         """
-        scores = [ac._avionics_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._avionics_eval() for ac in aircraft_list]
         return self._normalize(self._avionics_eval(), scores)
-    
-    def get_normalized_radio_nav_score(self):
-        """returns radio_nav score normalized from 0 (min score) 1 (max score)
 
-        Returns:
-            float: normalized radio_nav score
-        """
-        scores = [ac._radio_nav_eval() for ac in Aircraft_Data._registry.values()]
-        return self._normalize(self._radio_nav_eval(), scores)
-
-    def get_normalized_engine_score(self):
+    def get_normalized_engine_score(self, category: Optional[str] = None):
         """returns engine score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized engine score
         """
-        scores = [ac.get_engine_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac.get_engine_eval() for ac in aircraft_list]
         return self._normalize(self.get_engine_eval(), scores)
 
-    def get_normalized_speed_score(self):
+    def get_normalized_speed_score(self, category: Optional[str] = None):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized speed score
         """
-        scores = [ac._speed_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._speed_eval() for ac in aircraft_list]
         return self._normalize(self._speed_eval(), scores)
 
-    def get_normalized_reliability_score(self):
+    def get_normalized_reliability_score(self, category: Optional[str] = None):
         """returns reliability score (mtbf) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized reliability score
         """
-        scores = [ac._reliability_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._reliability_eval() for ac in aircraft_list]
         return self._normalize(self._reliability_eval(), scores)
-    
-    def get_normalized_avalaiability_score(self):
+
+    def get_normalized_avalaiability_score(self, category: Optional[str] = None):
         """returns avalaiability score (mtbf/mttr) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized avalaiability score
         """
-        scores = [ac._avalaiability_eval() for ac in Aircraft_Data._registry.values()]
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._avalaiability_eval() for ac in aircraft_list]
         return self._normalize(self._avalaiability_eval(), scores)
-    
-    def get_normalized_maintenance_score(self):
+
+    def get_normalized_maintenance_score(self, category: Optional[str] = None):
         """returns maintenance score (mttr) normalized from 0 (min score) 1 (max score)
 
         Returns:
             float: normalized maintenance score
         """
-        scores = [ac._maintenance_eval() for ac in Aircraft_Data._registry.values()]
-        return 1- self._normalize(self._maintenance_eval(), scores)        
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac._maintenance_eval() for ac in aircraft_list]
+        return 1 - self._normalize(self._maintenance_eval(), scores)
 
     def _normalize(self, value, scores):
         """Normalize values from 0 to 1
@@ -605,7 +656,7 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
     
-    def task_score_eval(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
+    def combat_score_eval(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
         """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout."""    
 
         if not task or not isinstance(task, str):
@@ -615,20 +666,19 @@ class Aircraft_Data:
         
         scores = {
             'engine':       0.0,
-            'radar':        0.0, 
+            'radar':        0.0,
             'TVD':          0.0,
             'radio_nav':    0.0,
             'hydraulic':    0.0,
             'avionics':     0.0,
             'loadout':      0.0, # loadout_score considera anche il range
             'speed':        0.0,
-        }        
-        sum_weights = sum(scores_weights.values())
+        }
 
         if calc_scores_options == True: # se è true, il loadout score viene calcolato considerando l'efficacia del loadout contro il target specifico, altrimenti viene calcolato considerando solo le caratteristiche del loadout senza considerare il target specifico
-            scores_weights = {
+            scores_weights = {          # In sostanza è utilizzato per valutare esclusivamente task air to ground per i quali i loadout considerano le caratteristiche del target, mentre per gli altri task viene utilizzato un loadout score più generico che considera solo le caratteristiche del loadout senza considerare il target specifico
             'engine':       2,
-            'radar':        4, 
+            'radar':        4,
             'TVD':          4,
             'radio_nav':    3,
             'hydraulic':    1,
@@ -636,10 +686,12 @@ class Aircraft_Data:
             'loadout':      10, # loadout_score considera anche il range
             'speed':        1,
             }
+            sum_weights = sum(scores_weights.values())
             scores["loadout"] = self._loadout_target_effectiveness(loadout, target_type, target_dimension) * scores_weights['loadout'] / sum_weights
 
-        else:
-            scores_weights = {
+        else:            
+            scores_weights = { # 
+            'engine':       2,
             'radar':        5, # 1-10
             'TVD':          5,
             'radio_nav':    3,
@@ -648,40 +700,69 @@ class Aircraft_Data:
             'loadout':      7, # loadout_score considera anche il range
             'speed':        5,
             }
-            scores["loadout"] = self._loadout_eval(loadout) * scores_weights['loadout'] / sum_weights
+            
+            if task in ['Fighter_Sweep']:                
+                scores_weights['radar'] += 2
+                scores_weights['TVD'] += 2
+            
+            elif task in ['Intercept']:
+                scores_weights['speed'] += 5
+                scores_weights['radar'] += 2
 
-        aircraft_weight = 5000 
-        scores["engine"] = self.get_normalized_engine_score() * scores_weights['engine'] / (sum_weights * aircraft_weight) # 
+            sum_weights = sum(scores_weights.values())
+            scores["loadout"] = self._loadout_eval(loadout) * scores_weights['loadout'] / sum_weights
+        
+        scores["engine"] = self.get_normalized_engine_score() * scores_weights['engine'] / (sum_weights ) # 
         scores["radio_nav"] = self.get_normalized_radio_nav_score() * scores_weights['radio_nav'] / sum_weights
         scores["hydraulic"] = self.get_normalized_hydraulic_score() * scores_weights['hydraulic'] / sum_weights
         scores["avionics"] = self.get_normalized_avionics_score() * scores_weights['avionics'] / sum_weights
 
         if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
-            scores["radar"] = self.get_normalized_radar_score(mode = ['air']) * scores_weights['radar'] / sum_weights
-            scores["TVD"] = self.get_normalized_TVD_score(mode = ['air']) * scores_weights['TVD'] / sum_weights
+            scores["radar"] = self.get_normalized_radar_score(modes=['air']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(modes=['air']) * scores_weights['TVD'] / sum_weights
 
         elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
-            scores["radar"] = self.get_normalized_radar_score(['ground']) * scores_weights['radar'] / sum_weights
-            scores["TVD"] = self.get_normalized_TVD_score(mode = ['ground']) * scores_weights['TVD'] / sum_weights        
-            
+            scores["radar"] = self.get_normalized_radar_score(modes=['ground']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(modes=['ground']) * scores_weights['TVD'] / sum_weights
+
         elif task in ['Anti_Ship']:
-            scores["radar"] = self.get_normalized_radar_score(['sea']) * scores_weights['radar'] / sum_weights
-            scores["TVD"] = self.get_normalized_TVD_score(mode = ['sea']) * scores_weights['TVD'] / sum_weights
+            scores["radar"] = self.get_normalized_radar_score(modes=['sea']) * scores_weights['radar'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(modes=['sea']) * scores_weights['TVD'] / sum_weights
         else:
             logger.warning(f"Task {task!r} not recognized for specific score evaluation, returning 0")
             return 0.0
         # lo score è già normalizzato in quanto considera score normalizzati e pesati, quindi è sufficiente sommare i valori per ottenere un punteggio finale rappresentativo dell'efficacia complessiva dell'aereo per il compito specifico
         return sum(scores.values())
-    
-    def task_score_target_effectiveness(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
-        """Returns a score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""
-        return self.task_score_eval(task, loadout, True, target_type, target_dimension)
-    
-    def task_score(self, task: str, loadout: Dict[str, any]):                
-        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
-        return self.task_score_eval(task, loadout, False)
-    
 
+    def combat_score_target_effectiveness(self, task: str, loadout: Dict[str, any], target_type: List = None, target_dimension: List = None):
+        """Returns a score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""
+        return self.combat_score_eval(task, loadout, True, target_type, target_dimension)
+    
+    def combat_score(self, task: str, loadout: Dict[str, any]):                
+        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
+        return self.combat_score_eval(task, loadout, False)
+    
+    def get_normalized_combat_score(self, task: str, loadout: Dict[str, any], category: Optional[str] = None):
+        """Returns a normalized score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac.combat_score(task, loadout) for ac in aircraft_list]
+        return self._normalize(self.combat_score(task, loadout), scores)
+
+    def get_normalized_combat_score_target_effectiveness(self, task: str, loadout: Dict[str, any], target_type: List = None, target_dimension: List = None, category: Optional[str] = None):
+        """Returns a normalized score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""
+        if not category:
+            category = AIRCRAFT_ROLE
+        elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+            raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+        aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+        scores = [ac.combat_score_target_effectiveness(task, loadout, target_type, target_dimension) for ac in aircraft_list]
+        return self._normalize(self.combat_score_target_effectiveness(task, loadout, target_type, target_dimension), scores)
 
 # AIRCRAFT DATA
 
@@ -1249,8 +1330,12 @@ a10a_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.65}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "AN/ALR-69", "capabilities": {"flight_control": 0.60, "self_defense": 0.55}, "reliability": {"mtbf": 50, "mttr": 2}},
@@ -1281,8 +1366,12 @@ a10c_data = {
     },
     "TVD": {
         "model": "LITENING AT",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.85, "range": 30},
-        "reliability": {"mtbf": 200, "mttr": 3},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (True, {"tracking_range": 65, "acquisition_range": 80, "engagement_range": 65, "multi_target_capacity": 2}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 200, "mttr": 3}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.80}, "reliability": {"mtbf": 90, "mttr": 1.5}},
     "avionics": {"model": "AN/ALR-69A", "capabilities": {"flight_control": 0.75, "self_defense": 0.70}, "reliability": {"mtbf": 55, "mttr": 1.8}},
@@ -1313,8 +1402,12 @@ a10c2_data = {
     },
     "TVD": {
         "model": "Sniper ATP",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.92, "range": 40},
-        "reliability": {"mtbf": 220, "mttr": 2.5},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (True, {"tracking_range": 75, "acquisition_range": 90, "engagement_range": 75, "multi_target_capacity": 2}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 220, "mttr": 2.5}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/APN-194", "capabilities": {"range": 400, "accuracy": 0.88}, "reliability": {"mtbf": 90, "mttr": 1.5}},
     "avionics": {"model": "EGI/DVADR", "capabilities": {"flight_control": 0.82, "self_defense": 0.78}, "reliability": {"mtbf": 60, "mttr": 1.5}},
@@ -1345,8 +1438,12 @@ a20g_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-5", "capabilities": {"range": 200, "accuracy": 0.45}, "reliability": {"mtbf": 30, "mttr": 5}},
     "avionics": {"model": "Basic WWII", "capabilities": {"flight_control": 0.35, "self_defense": 0.15}, "reliability": {"mtbf": 25, "mttr": 6}},
@@ -1377,8 +1474,12 @@ a4ec_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/APN-141", "capabilities": {"range": 300, "accuracy": 0.60}, "reliability": {"mtbf": 50, "mttr": 3}},
     "avionics": {"model": "AN/ALR-45", "capabilities": {"flight_control": 0.60, "self_defense": 0.40}, "reliability": {"mtbf": 40, "mttr": 3}},
@@ -1411,8 +1512,12 @@ f117_data = {
     },
     "TVD": {
         "model": "DLIR/FLIR",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.85, "range": 20},
-        "reliability": {"mtbf": 150, "mttr": 4},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (True, {"tracking_range": 40, "acquisition_range": 50, "engagement_range": 40, "multi_target_capacity": 1}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 150, "mttr": 4}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/AAQ-27 FLIR", "capabilities": {"range": 350, "accuracy": 0.95}, "reliability": {"mtbf": 70, "mttr": 2}},
     "avionics": {"model": "Inertial Nav/GPS", "capabilities": {"flight_control": 0.85, "self_defense": 0.50}, "reliability": {"mtbf": 60, "mttr": 2}},
@@ -1443,8 +1548,12 @@ b1b_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/APN-218", "capabilities": {"range": 500, "accuracy": 0.90}, "reliability": {"mtbf": 70, "mttr": 2}},
     "avionics": {"model": "AN/ALQ-161", "capabilities": {"flight_control": 0.88, "self_defense": 0.85}, "reliability": {"mtbf": 55, "mttr": 2}},
@@ -1475,8 +1584,12 @@ b52h_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/APN-218", "capabilities": {"range": 600, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "AN/ALQ-172", "capabilities": {"flight_control": 0.80, "self_defense": 0.75}, "reliability": {"mtbf": 50, "mttr": 3}},
@@ -1507,8 +1620,12 @@ s3b_data = {
     },
     "TVD": {
         "model": "AN/AAS-44",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.78, "range": 25},
-        "reliability": {"mtbf": 120, "mttr": 3},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (True, {"tracking_range": 20, "acquisition_range": 25, "engagement_range": 0, "multi_target_capacity": 2}),
+        },
+        "reliability": {"mtbf": 120, "mttr": 3}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/APN-200", "capabilities": {"range": 500, "accuracy": 0.85}, "reliability": {"mtbf": 70, "mttr": 2}},
     "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.78, "self_defense": 0.60}, "reliability": {"mtbf": 55, "mttr": 2.5}},
@@ -1539,8 +1656,12 @@ s3b_tanker_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/APN-200", "capabilities": {"range": 500, "accuracy": 0.85}, "reliability": {"mtbf": 70, "mttr": 2}},
     "avionics": {"model": "AN/ALR-76", "capabilities": {"flight_control": 0.75, "self_defense": 0.55}, "reliability": {"mtbf": 55, "mttr": 2.5}},
@@ -1573,8 +1694,12 @@ e2d_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 400, "accuracy": 0.90}, "reliability": {"mtbf": 80, "mttr": 1.5}},
     "avionics": {"model": "ACCS", "capabilities": {"flight_control": 0.80, "self_defense": 0.30}, "reliability": {"mtbf": 60, "mttr": 2.5}},
@@ -1605,8 +1730,12 @@ e3a_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-120", "capabilities": {"range": 500, "accuracy": 0.90}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "AN/ASQ-137", "capabilities": {"flight_control": 0.82, "self_defense": 0.35}, "reliability": {"mtbf": 60, "mttr": 2.5}},
@@ -1637,8 +1766,12 @@ mq1a_data = {
     },
     "TVD": {
         "model": "MTS-A",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.80, "range": 10},
-        "reliability": {"mtbf": 200, "mttr": 2},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (True, {"tracking_range": 8, "acquisition_range": 10, "engagement_range": 8, "multi_target_capacity": 1}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 200, "mttr": 2}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/APX-100", "capabilities": {"range": 300, "accuracy": 0.95}, "reliability": {"mtbf": 100, "mttr": 1}},
     "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.75, "self_defense": 0.10}, "reliability": {"mtbf": 80, "mttr": 2}},
@@ -1669,8 +1802,12 @@ mq9_data = {
     },
     "TVD": {
         "model": "MTS-B",
-        "capabilities": {"type": "thermal and optical", "resolution": 0.90, "range": 15},
-        "reliability": {"mtbf": 220, "mttr": 2},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (True, {"tracking_range": 12, "acquisition_range": 15, "engagement_range": 12, "multi_target_capacity": 2}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 220, "mttr": 2}, "type": "thermal and optical",
     },
     "radio_nav": {"model": "AN/APX-100", "capabilities": {"range": 400, "accuracy": 0.97}, "reliability": {"mtbf": 110, "mttr": 1}},
     "avionics": {"model": "Triplex fly-by-wire", "capabilities": {"flight_control": 0.80, "self_defense": 0.20}, "reliability": {"mtbf": 90, "mttr": 2}},
@@ -1703,8 +1840,12 @@ c130_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
@@ -1735,8 +1876,12 @@ c17a_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 400, "accuracy": 0.88}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "Advanced Transport Avionics", "capabilities": {"flight_control": 0.88, "self_defense": 0.35}, "reliability": {"mtbf": 70, "mttr": 2}},
@@ -1767,8 +1912,12 @@ kc130_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.70, "self_defense": 0.25}, "reliability": {"mtbf": 70, "mttr": 2}},
@@ -1799,8 +1948,12 @@ kc135_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "Generic Transport", "capabilities": {"flight_control": 0.78, "self_defense": 0.30}, "reliability": {"mtbf": 70, "mttr": 2}},
@@ -1831,8 +1984,12 @@ kc135_mprs_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "AN/ARN-118", "capabilities": {"range": 450, "accuracy": 0.85}, "reliability": {"mtbf": 80, "mttr": 2}},
     "avionics": {"model": "MPRS Avionics", "capabilities": {"flight_control": 0.80, "self_defense": 0.30}, "reliability": {"mtbf": 72, "mttr": 2}},
@@ -1865,8 +2022,12 @@ asj37_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "Swedish TILS", "capabilities": {"range": 350, "accuracy": 0.80}, "reliability": {"mtbf": 55, "mttr": 3}},
     "avionics": {"model": "Swedish ECM suite", "capabilities": {"flight_control": 0.78, "self_defense": 0.65}, "reliability": {"mtbf": 40, "mttr": 3}},
@@ -1897,8 +2058,12 @@ m2000c_data = {
     },
     "TVD": {
         "model": "none",
-        "capabilities": {"type": "none", "resolution": 0, "range": 0},
-        "reliability": {"mtbf": 0, "mttr": 0},
+        "capabilities": {
+            "air": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "ground": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+            "sea": (False, {"tracking_range": 0, "acquisition_range": 0, "engagement_range": 0, "multi_target_capacity": 0}),
+        },
+        "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "TACAN", "capabilities": {"range": 400, "accuracy": 0.85}, "reliability": {"mtbf": 60, "mttr": 2.5}},
     "avionics": {"model": "SERVAL ECM", "capabilities": {"flight_control": 0.85, "self_defense": 0.68}, "reliability": {"mtbf": 45, "mttr": 2.5}},
@@ -3069,15 +3234,22 @@ Aircraft_Data(**an30m_data)
 Aircraft_Data(**il76md_data)
 Aircraft_Data(**il78m_data)
 Aircraft_Data(**yak40_data)
-#Aircraft_Data(**f18_data_example)
-#Aircraft_Data(**f14_data_example)
-#Aircraft_Data(**f15_data_example)
+
 
 for aircraft in Aircraft_Data._registry.values():    
     model = aircraft.model
     AIRCRAFT[model] = {}
     AIRCRAFT[model]['Radar score'] = aircraft.get_normalized_radar_score() 
     AIRCRAFT[model]['Radar score air'] = aircraft.get_normalized_radar_score(['air']) 
+    AIRCRAFT[model]['Radar score ground'] = aircraft.get_normalized_radar_score(['ground'])
+    AIRCRAFT[model]['Radar score sea'] = aircraft.get_normalized_radar_score(['sea'])
+    AIRCRAFT[model]['TVD score air'] = aircraft.get_normalized_TVD_score(['air'])
+    AIRCRAFT[model]['TVD score ground'] = aircraft.get_normalized_TVD_score(['ground'])
+    AIRCRAFT[model]['TVD score sea'] = aircraft.get_normalized_TVD_score(['sea'])
+    AIRCRAFT[model]['Radio navigation score'] = aircraft.get_normalized_radio_nav_score()
+    AIRCRAFT[model]['Avionics score'] = aircraft.get_normalized_avionics_score()
+    AIRCRAFT[model]['Hydraulic score'] = aircraft.get_normalized_hydraulic_score()
+    AIRCRAFT[model]['Engine score'] = aircraft.get_normalized_engine_score()    
     AIRCRAFT[model]['Speed score'] = aircraft.get_normalized_speed_score() 
     AIRCRAFT[model]['avalaibility'] = aircraft.get_normalized_avalaiability_score()
     AIRCRAFT[model]['manutenability score (mttr)'] = aircraft.get_normalized_maintenance_score()
@@ -3085,7 +3257,7 @@ for aircraft in Aircraft_Data._registry.values():
 
 # STATIC METHODS (API)
 def get_aircraft_data(model: str):
-    return AIRCRAFT
+    return AIRCRAFT[model]
 
 def get_aircraft_scores(model: str, scores: Optional[List]=None):
 
@@ -3107,8 +3279,7 @@ for model, data in AIRCRAFT.items():
         print(f"{model} {name}: {score:.2f}")
     
 
-#print(f"F-14 Speed score and avalaibility: {get_aircraft_scores(model = 'F-14A Tomcat', scores = ['Speed score', 'avalaibility'])}" )
-    
+
 
 
     

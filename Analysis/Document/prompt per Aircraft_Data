@@ -1,10 +1,25 @@
-Realizza il modulo di test Test_Vehicle_Data.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e la verifica delle strutture dati implementate del modulo Vehicle_Data.py. Inoltre, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
 
-Vehicle_Scores.pdf analogalmente a quella realizzata nelle righe: 4354-4607 in Vehicle_Data.py. Utilizza i colori nella stampa a pdf per evidenziare il livello del punteggio (come fatto per le tabelle stampate dal modulo Test_Ground_Vehicle_Data.py: verde punteggio più alto, rosso punteggio più basso) e raggruppa in pagine distinte, con un titolo che indentifica la categoria del veicolo  ("Armored", "Tank", ..) le tabelle relative a veicoli appartenenti ad una specifica categoria.
 
-- tabella di confronto del punteggio, calcolato con la funzione get_normalized_weapon_score(), per tutti i  veicoli appartenenti ad una determinata categoria ("Armored", "Tank", ..). Le categorie di armi in base alle quali effettuare le stampe devono essere specificate in una lista modificabile: weapon_type = ["CANNONS", "MISSILES", "ARTILLERY", ...]. Considera come riferimento non vincolante la realizzazione della tabella weapon_score_tables.pdf creata dal modulo Test_Ground_Weapon_data.py.
 
-- tabella di confronto del punteggio, calcolato con la funzione get_normalized_weapon_target_effectiveness(), per tutti i  veicoli appartenenti ad una determinata categoria ("Armored", "Tank", ..) e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. Considera come riferimento non vincolante la realizzazione della tabella weapon_score_target_tables.pdf creata dal modulo Test_Ground_Weapon_data.py.
 
+FATTO
+
+Realizza il modulo di test Test_Aircraft_Data.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e la verifica delle strutture dati implementate del modulo Aircraft_Data.py. Inoltre, considerando quanto realizzato nel modulo Test_Vehicle_Data.py, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
+
+Aircraft_Sub_System_Scores.pdf con le informazioni stampate a terminale mediante il codice nelle righe: 3181-3198 in Aircraft_Data.py. Utilizza i colori nella stampa a pdf per evidenziare il livello del punteggio (come fatto per le tabelle stampate dal modulo Test_Vehicle_Data.py: verde punteggio più alto, rosso punteggio più basso) e raggruppa in pagine distinte, con un titolo che identifica la categoria dell'aereo ("Fighter", "Bomber", ..), le tabelle relative a veicoli appartenenti ad una specifica categoria.
+
+- tabella di confronto del punteggio per task, calcolato con la funzione get_normalized_combat_score(), per tutti gli aerei appartenenti ad una determinata categoria specificata in una lista modificabile: ["Fighter", "Bomber", ..] in grado di eseguire almeno uno dei task specificati in una lista modificabile di task.I task da inserire nella lista devono appartenere a quelli specificati nel dizionario AIR_TASK ("Intercept", "Strike", .....). I punteggi devono essere calcolati per ogni loadout compatibile con il task considerato presente nei loadouts dell'aereo. Considera come riferimento non vincolante la realizzazione della tabella Vehicle_Scores.pdf creata dal modulo Test_Vehicle_data.py.
+
+- tabella di confronto del punteggio, calcolato con la funzione get_normalized_combat_score_target_effectiveness(), per tutti gli aerei appartenenti ad una determinata categoria specificata in una lista modificabile: ["Fighter_Bomber", "Bomber", ..] in grado di eseguire almeno uno dei task specificati in una lista modificabile di task e in base alle caratteristiche del target impostate mediante due liste modificabili (target_type = ["Soft", "Armored", ...] e target_dimension = ["big", "small", ...]. I task da inserire nella lista devono appartenere a quelli specificati nel dizionario AIR_TASK dedicati, esclusivamente, alle missioni air to ground: "Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship" e "CAS". I punteggi devono essere calcolati per ogni loadout compatibile con il task considerato presente nei loadouts dell'aereo. Considera come riferimento non vincolante la realizzazione della tabella vehicle_weapon_score_target_tables.pdf creata dal modulo Test_Vehicle_data.py. 
+
+
+
+
+Considera i punteggi relativi alla tabella Aircraft_Sub_System_Scores.pdf, per una determinata categoria di aereo (es: Fighter_Bomber) diversi punteggi non assumono i     
+  valori estremi  1.0 e 0.0  per uno specifico sub system per qualsiasi aereop appartenente a quella categoria. Il punteggio è calcolato con funzioni normalizzate che        
+  dovrebbero normalizzarlo tra 0.0 e 1.0 in base ad un confronto del punteggio assoluto calcolato per ogni aereo. Pertanto, per ogni categoria considerata, almeno due aerei  
+  dovrebbero avere un punteggio di 0.0 e  1.0          
 
 COnsidera  il modulo Aircraft_Data.py, aggiungi il peso dell'aereo 'weight' nella classe Aircraft_Data implementando anche i due metodi getter & setter. Imposta in ogni dizionario con le caratteristiche dell'aereo (f14a_data, f14b_data, ..) la proprietà weight con il valore specifico per l'aereo in configurazione pulita.
+
+

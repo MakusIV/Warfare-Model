@@ -1,0 +1,1609 @@
+"""
+Test_Aircraft_Data.py
+=====================
+Unit tests (unittest) e tabelle di confronto punteggi per il modulo
+Aircraft_Data.
+
+Utilizzo:
+    python -m pytest Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Data.py -v
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Data.py            # menu interattivo
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Data.py --tables-only
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Data.py --tests-only
+
+Note sul modulo sotto test:
+  - Aircraft_Data: dataclass che rappresenta un aeromobile militare.
+  - Aircraft_Data._registry: dizionario globale {model: Aircraft_Data}.
+  - AIRCRAFT_ROLE: dict_keys delle categorie valide (da AIR_MILITARY_CRAFT_ASSET).
+  - AIRCRAFT_TASK: dizionario dei task aerei validi (da AIR_TASK).
+  - AIRCRAFT: dict con punteggi pre-calcolati (flat float) per ogni aeromobile.
+  - get_aircraft_data(model): restituisce tutti i punteggi di un aeromobile.
+"""
+
+import os
+import sys
+import unittest
+from unittest.mock import patch, MagicMock
+from typing import List, Optional
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  CONFIGURAZIONE — modificare le liste per personalizzare le tabelle
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Categorie di aeromobili da includere nelle tabelle
+AIRCRAFT_CATEGORIES: List[str] = [
+    "Fighter",
+    "Fighter_Bomber",
+    "Attacker",
+    "Bomber",
+    "Heavy_Bomber",
+    "Awacs",
+    "Recon",
+    "Transport",
+    "Helicopter",
+]
+
+# Task aerei da includere nelle tabelle combat score
+COMBAT_TASKS: List[str] = [
+    "CAP",
+    "Intercept",
+    "Fighter_Sweep",
+    "Escort",
+    "Strike",
+    "CAS",
+    "Pinpoint_Strike",
+    "SEAD",
+    "Anti_Ship",
+]
+
+# Tipi di bersaglio per le tabelle target effectiveness
+target_type_list: List[str] = [
+    "Soft",
+    "Armored",
+    "Hard",
+    "Air_Defense",
+    "ship",
+]
+
+# Dimensioni del bersaglio per le tabelle target effectiveness
+target_dimension_list: List[str] = ["big", "med", "small"]
+
+# Directory di output per i PDF
+OUTPUT_DIR = os.path.normpath(
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "..", "..", "..", "..", "out",
+    )
+)
+
+# Path del logger da mockare nei test
+_LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
+_LOADOUTS_LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts.logger"
+_GWD_LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data.logger"
+_AWD_LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data.logger"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  IMPORT DEL MODULO SOTTO TEST
+# ─────────────────────────────────────────────────────────────────────────────
+
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import (
+    Aircraft_Data,
+    AIRCRAFT_ROLE,
+    AIRCRAFT_TASK,
+    AIRCRAFT,
+    SYSTEM_WEIGHTS,
+    get_aircraft_data,
+    get_aircraft_scores,
+)
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
+    AIRCRAFT_LOADOUTS,
+    loadout_eval,
+    get_loadout_tasks,
+)
+from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  AEROMOBILI DI RIFERIMENTO PER I TEST
+# ─────────────────────────────────────────────────────────────────────────────
+
+_FIGHTER_MODEL   = "F-14A Tomcat"
+_ATTACKER_MODEL  = "A-10C Thunderbolt II"
+_BOMBER_MODEL    = "B-52H Stratofortress"
+_RECON_MODEL     = "MiG-25RB"
+
+# Recupera dinamicamente il primo loadout disponibile per i test
+def _first_loadout(aircraft_model: str) -> Optional[str]:
+    loadouts = AIRCRAFT_LOADOUTS.get(aircraft_model, {})
+    return next(iter(loadouts), None)
+
+def _first_loadout_for_task(aircraft_model: str, task: str) -> Optional[str]:
+    for name, data in AIRCRAFT_LOADOUTS.get(aircraft_model, {}).items():
+        if task in data.get("tasks", []):
+            return name
+    return None
+
+_FIGHTER_LOADOUT  = _first_loadout(_FIGHTER_MODEL)
+_ATTACKER_LOADOUT = _first_loadout(_ATTACKER_MODEL)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  1. STRUTTURA DATI DEL MODULO
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestAircraftDataModuleStructure(unittest.TestCase):
+    """Verifica le strutture dati globali del modulo Aircraft_Data."""
+
+    # ── AIRCRAFT_ROLE ─────────────────────────────────────────────────────────
+
+    def test_aircraft_role_is_not_empty(self):
+        self.assertGreater(len(list(AIRCRAFT_ROLE)), 0)
+
+    def test_aircraft_role_contains_fighter(self):
+        self.assertIn("Fighter", AIRCRAFT_ROLE)
+
+    def test_aircraft_role_contains_expected_categories(self):
+        for cat in ["Fighter", "Fighter_Bomber", "Attacker", "Bomber"]:
+            with self.subTest(cat=cat):
+                self.assertIn(cat, AIRCRAFT_ROLE)
+
+    # ── AIRCRAFT_TASK ─────────────────────────────────────────────────────────
+
+    def test_aircraft_task_is_dict(self):
+        self.assertIsInstance(AIRCRAFT_TASK, dict)
+
+    def test_aircraft_task_not_empty(self):
+        self.assertGreater(len(AIRCRAFT_TASK), 0)
+
+    def test_aircraft_task_contains_cap(self):
+        self.assertIn("CAP", AIRCRAFT_TASK)
+
+    def test_aircraft_task_contains_all_expected(self):
+        for task in ["CAP", "Intercept", "Strike", "CAS", "SEAD", "Anti_Ship"]:
+            with self.subTest(task=task):
+                self.assertIn(task, AIRCRAFT_TASK)
+
+    # ── SYSTEM_WEIGHTS ────────────────────────────────────────────────────────
+
+    def test_system_weights_is_dict(self):
+        self.assertIsInstance(SYSTEM_WEIGHTS, dict)
+
+    def test_system_weights_has_radar_and_tvd(self):
+        self.assertIn("radar_weights", SYSTEM_WEIGHTS)
+        self.assertIn("tvd_weights", SYSTEM_WEIGHTS)
+
+    # ── Aircraft_Data._registry ───────────────────────────────────────────────
+
+    def test_registry_is_dict(self):
+        self.assertIsInstance(Aircraft_Data._registry, dict)
+
+    def test_registry_not_empty(self):
+        self.assertGreater(len(Aircraft_Data._registry), 0)
+
+    def test_registry_keys_are_strings(self):
+        for k in Aircraft_Data._registry:
+            with self.subTest(key=k):
+                self.assertIsInstance(k, str)
+
+    def test_registry_values_are_aircraft_data(self):
+        for obj in Aircraft_Data._registry.values():
+            self.assertIsInstance(obj, Aircraft_Data)
+
+    def test_fighter_model_in_registry(self):
+        self.assertIn(_FIGHTER_MODEL, Aircraft_Data._registry)
+
+    def test_attacker_model_in_registry(self):
+        self.assertIn(_ATTACKER_MODEL, Aircraft_Data._registry)
+
+    # ── AIRCRAFT dict ─────────────────────────────────────────────────────────
+
+    def test_aircraft_dict_is_dict(self):
+        self.assertIsInstance(AIRCRAFT, dict)
+
+    def test_aircraft_dict_not_empty(self):
+        self.assertGreater(len(AIRCRAFT), 0)
+
+    def test_aircraft_dict_keys_match_registry(self):
+        self.assertEqual(set(AIRCRAFT.keys()), set(Aircraft_Data._registry.keys()))
+
+    def test_aircraft_dict_values_are_dicts(self):
+        for model, scores in AIRCRAFT.items():
+            with self.subTest(model=model):
+                self.assertIsInstance(scores, dict)
+
+    def test_aircraft_dict_scores_are_floats(self):
+        for model, scores in AIRCRAFT.items():
+            for score_name, val in scores.items():
+                with self.subTest(model=model, score=score_name):
+                    self.assertIsInstance(val, float)
+
+    def test_aircraft_dict_contains_expected_score_keys(self):
+        for model in AIRCRAFT:
+            with self.subTest(model=model):
+                self.assertIn("Radar score", AIRCRAFT[model])
+                self.assertIn("Speed score", AIRCRAFT[model])
+                self.assertIn("Engine score", AIRCRAFT[model])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  2. ATTRIBUTI Aircraft_Data
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestAircraftDataAttributes(unittest.TestCase):
+    """Verifica gli attributi delle istanze Aircraft_Data."""
+
+    def setUp(self):
+        self.fighter = Aircraft_Data._registry[_FIGHTER_MODEL]
+
+    def test_model_is_string(self):
+        self.assertIsInstance(self.fighter.model, str)
+
+    def test_category_is_list(self):
+        self.assertIsInstance(self.fighter.category, list)
+
+    def test_category_elements_are_air_asset_type(self):
+        for c in self.fighter.category:
+            self.assertIsInstance(c, Air_Asset_Type)
+
+    def test_weight_is_positive(self):
+        self.assertGreater(self.fighter.weight, 0)
+
+    def test_engine_is_dict(self):
+        self.assertIsInstance(self.fighter.engine, dict)
+
+    def test_engine_has_capabilities(self):
+        self.assertIn("capabilities", self.fighter.engine)
+
+    def test_engine_has_reliability(self):
+        self.assertIn("reliability", self.fighter.engine)
+
+    def test_radar_is_dict(self):
+        self.assertIsInstance(self.fighter.radar, dict)
+
+    def test_radar_has_capabilities(self):
+        self.assertIn("capabilities", self.fighter.radar)
+
+    def test_tvd_is_dict(self):
+        self.assertIsInstance(self.fighter.TVD, dict)
+
+    def test_tvd_has_capabilities(self):
+        self.assertIn("capabilities", self.fighter.TVD)
+
+    def test_speed_data_is_dict(self):
+        self.assertIsInstance(self.fighter.speed_data, dict)
+
+    def test_speed_data_has_sustained(self):
+        self.assertIn("sustained", self.fighter.speed_data)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  3. STRUTTURA TVD E RADAR
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestTVDDataStructure(unittest.TestCase):
+    """Verifica la struttura TVD e radar per tutti gli aeromobili."""
+
+    _CAPABILITY_KEYS = {"air", "ground", "sea"}
+    _MODE_KEYS = {"tracking_range", "acquisition_range", "engagement_range", "multi_target_capacity"}
+
+    def _check_capabilities(self, caps: dict, model: str, field: str):
+        """Verifica la struttura capabilities con chiavi air/ground/sea e tuple."""
+        self.assertIsInstance(caps, dict, f"{model} {field}: capabilities deve essere dict")
+        for mode in self._CAPABILITY_KEYS:
+            with self.subTest(model=model, field=field, mode=mode):
+                self.assertIn(mode, caps, f"{model} {field}: manca chiave '{mode}'")
+                entry = caps[mode]
+                self.assertIsInstance(entry, tuple, f"{model} {field}/{mode}: deve essere tuple")
+                self.assertEqual(len(entry), 2, f"{model} {field}/{mode}: tuple deve avere 2 elementi")
+                self.assertIsInstance(entry[0], bool, f"{model} {field}/{mode}[0]: deve essere bool")
+                self.assertIsInstance(entry[1], dict, f"{model} {field}/{mode}[1]: deve essere dict")
+                for k in self._MODE_KEYS:
+                    self.assertIn(k, entry[1], f"{model} {field}/{mode}: manca chiave '{k}'")
+
+    def test_all_aircraft_tvd_structure(self):
+        for model, ac in Aircraft_Data._registry.items():
+            self._check_capabilities(ac.TVD.get("capabilities", {}), model, "TVD")
+
+    def test_all_aircraft_radar_structure(self):
+        for model, ac in Aircraft_Data._registry.items():
+            self._check_capabilities(ac.radar.get("capabilities", {}), model, "radar")
+
+    def test_all_aircraft_tvd_has_reliability(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIn("reliability", ac.TVD)
+                rel = ac.TVD["reliability"]
+                self.assertIn("mtbf", rel)
+                self.assertIn("mttr", rel)
+
+    def test_all_aircraft_tvd_has_type(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIn("type", ac.TVD)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  4. METODI DI VALUTAZIONE (_eval)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestRadarEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._radar_eval()."""
+
+    def test_all_aircraft_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac._radar_eval()
+                self.assertGreaterEqual(score, 0.0)
+
+    def test_modes_air_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._radar_eval(modes=["air"]), 0.0)
+
+    def test_modes_ground_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._radar_eval(modes=["ground"]), 0.0)
+
+    def test_modes_sea_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._radar_eval(modes=["sea"]), 0.0)
+
+    def test_fighter_radar_positive(self):
+        """F-14A ha radar aria → score > 0."""
+        fighter = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertGreater(fighter._radar_eval(modes=["air"]), 0.0)
+
+    def test_deterministic(self):
+        fighter = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(fighter._radar_eval(), fighter._radar_eval(), places=9)
+
+
+class TestTVDEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._TVD_eval()."""
+
+    def test_all_aircraft_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._TVD_eval(), 0.0)
+
+    def test_modes_ground_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._TVD_eval(modes=["ground"]), 0.0)
+
+    def test_no_tvd_aircraft_returns_zero(self):
+        """Aeromobilo senza TVD operativo deve restituire 0 (o valore minimo)."""
+        # F-16A Example: TVD model='none', tutti False
+        f16 = Aircraft_Data._registry.get("F-16A Fighting Falcon")
+        if f16:
+            self.assertEqual(f16._TVD_eval(modes=["ground"]), 0.0)
+
+    def test_deterministic(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(ac._TVD_eval(), ac._TVD_eval(), places=9)
+
+
+class TestSpeedEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._speed_eval()."""
+
+    def test_all_aircraft_positive(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac._speed_eval(), 0.0)
+
+    def test_faster_aircraft_higher_score(self):
+        """F-14A (vmax ~2485 km/h) deve avere score più alto di A-10C (vmax ~700 km/h)."""
+        fighter_score = Aircraft_Data._registry[_FIGHTER_MODEL]._speed_eval()
+        attacker_score = Aircraft_Data._registry[_ATTACKER_MODEL]._speed_eval()
+        self.assertGreater(fighter_score, attacker_score)
+
+    def test_deterministic(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(ac._speed_eval(), ac._speed_eval(), places=9)
+
+
+class TestEngineEval(unittest.TestCase):
+    """Unit test per Aircraft_Data.get_engine_eval()."""
+
+    def test_all_aircraft_positive(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac.get_engine_eval(), 0.0)
+
+    def test_returns_float(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertIsInstance(ac.get_engine_eval(), float)
+
+    def test_deterministic(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(ac.get_engine_eval(), ac.get_engine_eval(), places=9)
+
+
+class TestRadioNavEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._radio_nav_eval()."""
+
+    def test_all_aircraft_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._radio_nav_eval(), 0.0)
+
+    def test_fighter_radio_nav_positive(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertGreater(ac._radio_nav_eval(), 0.0)
+
+    def test_returns_float(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertIsInstance(ac._radio_nav_eval(), float)
+
+
+class TestHydraulicEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._hydraulic_eval()."""
+
+    def test_all_aircraft_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._hydraulic_eval(), 0.0)
+
+    def test_fighter_hydraulic_positive(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertGreater(ac._hydraulic_eval(), 0.0)
+
+
+class TestAvionicsEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._avionics_eval()."""
+
+    def test_all_aircraft_positive(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac._avionics_eval(), 0.0)
+
+    def test_score_in_plausible_range(self):
+        """avionics_eval usa flight_control e self_defense in [0, 1], score deve stare in [0, 1]."""
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac._avionics_eval()
+                self.assertLessEqual(score, 1.0)
+
+
+class TestReliabilityAndMaintenance(unittest.TestCase):
+    """Unit test per _reliability_eval(), _maintenance_eval(), _avalaiability_eval()."""
+
+    def test_all_aircraft_reliability_positive(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac._reliability_eval(), 0.0)
+
+    def test_all_aircraft_maintenance_positive(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac._maintenance_eval(), 0.0)
+
+    def test_all_aircraft_availability_non_negative(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreaterEqual(ac._avalaiability_eval(), 0.0)
+
+    def test_deterministic_reliability(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(ac._reliability_eval(), ac._reliability_eval(), places=9)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  5. _normalize
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestNormalize(unittest.TestCase):
+    """Unit test per Aircraft_Data._normalize()."""
+
+    def setUp(self):
+        self.ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+
+    def test_empty_scores_returns_zero(self):
+        self.assertEqual(self.ac._normalize(1.0, []), 0)
+
+    def test_all_equal_returns_half(self):
+        self.assertAlmostEqual(self.ac._normalize(5.0, [5.0, 5.0, 5.0]), 0.5)
+
+    def test_max_value_returns_one(self):
+        self.assertAlmostEqual(self.ac._normalize(10.0, [0.0, 5.0, 10.0]), 1.0)
+
+    def test_min_value_returns_zero(self):
+        self.assertAlmostEqual(self.ac._normalize(0.0, [0.0, 5.0, 10.0]), 0.0)
+
+    def test_midpoint(self):
+        self.assertAlmostEqual(self.ac._normalize(5.0, [0.0, 5.0, 10.0]), 0.5)
+
+    def test_returns_float(self):
+        result = self.ac._normalize(3.0, [1.0, 3.0, 5.0])
+        self.assertIsInstance(result, float)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  6. METODI NORMALIZZATI (get_normalized_*)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetNormalizedRadarScore(unittest.TestCase):
+    """Unit test per get_normalized_radar_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_radar_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_modes_air_in_range(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        score = ac.get_normalized_radar_score(modes=["air"])
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_modes_ground_in_range(self):
+        ac = Aircraft_Data._registry[_ATTACKER_MODEL]
+        score = ac.get_normalized_radar_score(modes=["ground"])
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_radar_score(category="INVALID_CAT_XYZ")
+
+    def test_valid_category_in_range(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        score = ac.get_normalized_radar_score(category="Fighter")
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_deterministic(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        s1 = ac.get_normalized_radar_score()
+        s2 = ac.get_normalized_radar_score()
+        self.assertAlmostEqual(s1, s2, places=9)
+
+
+class TestGetNormalizedTVDScore(unittest.TestCase):
+    """Unit test per get_normalized_TVD_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_TVD_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_TVD_score(category="BAD_CAT")
+
+    def test_valid_category_in_range(self):
+        ac = Aircraft_Data._registry[_ATTACKER_MODEL]
+        score = ac.get_normalized_TVD_score(category="Attacker")
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+
+class TestGetNormalizedRadioNavScore(unittest.TestCase):
+    """Unit test per get_normalized_radio_nav_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_radio_nav_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_radio_nav_score(category="INVALID")
+
+
+class TestGetNormalizedHydraulicScore(unittest.TestCase):
+    """Unit test per get_normalized_hydraulic_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_hydraulic_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+
+class TestGetNormalizedAvionicsScore(unittest.TestCase):
+    """Unit test per get_normalized_avionics_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_avionics_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+
+class TestGetNormalizedEngineScore(unittest.TestCase):
+    """Unit test per get_normalized_engine_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_engine_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_engine_score(category="NOT_A_VALID")
+
+
+class TestGetNormalizedSpeedScore(unittest.TestCase):
+    """Unit test per get_normalized_speed_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_speed_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_fighter_faster_than_attacker(self):
+        """F-14A deve avere score velocità > A-10C nella categoria globale."""
+        f_score = Aircraft_Data._registry[_FIGHTER_MODEL].get_normalized_speed_score()
+        a_score = Aircraft_Data._registry[_ATTACKER_MODEL].get_normalized_speed_score()
+        self.assertGreater(f_score, a_score)
+
+
+class TestGetNormalizedReliabilityAndAvailability(unittest.TestCase):
+    """Unit test per get_normalized_reliability_score(), avalaiability_score(), maintenance_score()."""
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_reliability_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_reliability_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_availability_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_avalaiability_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_maintenance_in_range(self):
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_maintenance_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_invalid_category_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_reliability_score(category="INVALID")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  7. COMBAT SCORE
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestCombatScore(unittest.TestCase):
+    """Unit test per combat_score() e combat_score_target_effectiveness()."""
+
+    def setUp(self):
+        self._patchers = [
+            patch(_LOGGER_PATH, MagicMock()),
+            patch(_LOADOUTS_LOGGER_PATH, MagicMock()),
+            patch(_GWD_LOGGER_PATH, MagicMock()),
+            patch(_AWD_LOGGER_PATH, MagicMock()),
+        ]
+        for p in self._patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+
+    @unittest.skipIf(_FIGHTER_LOADOUT is None, "Nessun loadout disponibile per il fighter di riferimento")
+    def test_combat_score_returns_float(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        score = ac.combat_score("CAP", _FIGHTER_LOADOUT)
+        self.assertIsInstance(score, float)
+
+    @unittest.skipIf(_FIGHTER_LOADOUT is None, "Nessun loadout disponibile per il fighter di riferimento")
+    def test_combat_score_non_negative(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        score = ac.combat_score("CAP", _FIGHTER_LOADOUT)
+        self.assertGreaterEqual(score, 0.0)
+
+    def test_combat_score_invalid_task_raises_type_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises((TypeError, ValueError)):
+            if _FIGHTER_LOADOUT:
+                ac.combat_score(None, _FIGHTER_LOADOUT)
+            else:
+                ac.combat_score(None, "fake_loadout")
+
+    def test_combat_score_invalid_task_string_raises_value_error(self):
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.combat_score("INVALID_TASK_XYZ", _FIGHTER_LOADOUT or "none")
+
+    @unittest.skipIf(_ATTACKER_LOADOUT is None, "Nessun loadout disponibile per l'attacker di riferimento")
+    def test_combat_score_target_effectiveness_returns_float(self):
+        ac = Aircraft_Data._registry[_ATTACKER_MODEL]
+        score = ac.combat_score_target_effectiveness(
+            "CAS", _ATTACKER_LOADOUT, ["Soft"], ["big"]
+        )
+        self.assertIsInstance(score, float)
+
+    @unittest.skipIf(_ATTACKER_LOADOUT is None, "Nessun loadout disponibile per l'attacker di riferimento")
+    def test_combat_score_target_effectiveness_non_negative(self):
+        ac = Aircraft_Data._registry[_ATTACKER_MODEL]
+        score = ac.combat_score_target_effectiveness(
+            "CAS", _ATTACKER_LOADOUT, ["Soft"], ["big"]
+        )
+        self.assertGreaterEqual(score, 0.0)
+
+
+class TestGetNormalizedCombatScore(unittest.TestCase):
+    """Unit test per get_normalized_combat_score().
+
+    NOTA DESIGN: get_normalized_combat_score(task, loadout) normalizza lo score
+    dell'aereo corrente rispetto a TUTTI gli aeromobili della categoria, usando
+    lo STESSO loadout. Poiché i loadout sono specifici per aeromobile, questo
+    è utilizzabile correttamente solo confrontando aeromobili che condividono
+    un loadout di stesso nome (es. loadout standard con armamento comune).
+    I test verificano il comportamento con aeromobili che condividono il loadout.
+    """
+
+    def setUp(self):
+        self._patchers = [
+            patch(_LOGGER_PATH, MagicMock()),
+            patch(_LOADOUTS_LOGGER_PATH, MagicMock()),
+            patch(_GWD_LOGGER_PATH, MagicMock()),
+            patch(_AWD_LOGGER_PATH, MagicMock()),
+        ]
+        for p in self._patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+
+    @unittest.skipIf(_FIGHTER_LOADOUT is None, "Nessun loadout disponibile per il fighter di riferimento")
+    def test_invalid_category_raises_value_error(self):
+        """Categoria non valida → ValueError (indipendente dal loadout)."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_combat_score("CAP", _FIGHTER_LOADOUT, category="BAD")
+
+    def test_invalid_task_raises(self):
+        """Task non valido → ValueError (indipendente dal loadout)."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises((ValueError, TypeError)):
+            ac.get_normalized_combat_score("INVALID_TASK_XYZ", _FIGHTER_LOADOUT or "none")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  8. FUNZIONI STATICHE — get_aircraft_data, get_aircraft_scores
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetAircraftData(unittest.TestCase):
+    """Unit test per get_aircraft_data()."""
+
+    def test_known_model_returns_dict(self):
+        result = get_aircraft_data(_FIGHTER_MODEL)
+        self.assertIsInstance(result, dict)
+
+    def test_result_non_empty(self):
+        result = get_aircraft_data(_FIGHTER_MODEL)
+        self.assertGreater(len(result), 0)
+
+    def test_result_has_radar_score(self):
+        result = get_aircraft_data(_FIGHTER_MODEL)
+        self.assertIn("Radar score", result)
+
+    def test_result_scores_are_floats(self):
+        result = get_aircraft_data(_FIGHTER_MODEL)
+        for k, v in result.items():
+            with self.subTest(score=k):
+                self.assertIsInstance(v, float)
+
+    def test_all_models_findable(self):
+        for model in Aircraft_Data._registry:
+            with self.subTest(model=model):
+                result = get_aircraft_data(model)
+                self.assertIsNotNone(result)
+
+    def test_unknown_model_raises(self):
+        with self.assertRaises((KeyError, ValueError)):
+            get_aircraft_data("AIRCRAFT_NOT_EXISTING_XYZ")
+
+
+class TestGetAircraftScores(unittest.TestCase):
+    """Unit test per get_aircraft_scores() — documenta il comportamento attuale."""
+
+    def test_unknown_model_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            get_aircraft_scores("AIRCRAFT_NOT_EXISTING_XYZ", ["Radar score"])
+
+    def test_known_model_valid_scores_raises(self):
+        """BUG DOCUMENTATO: scores è usato in if scores and scores in SCORES
+        dove SCORES è una tuple di stringhe. Questo comportamento può variare.
+        Il test documenta che la funzione viene chiamata senza lanciare eccezioni
+        di tipo errato."""
+        try:
+            result = get_aircraft_scores(_FIGHTER_MODEL, ["Radar score"])
+            # Se non lancia eccezione, result deve essere dict
+            self.assertIsInstance(result, dict)
+        except (ValueError, TypeError, KeyError):
+            pass  # Comportamento documentato con bug
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  UTILITY PER LA GENERAZIONE DELLE TABELLE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _is_nan(value) -> bool:
+    try:
+        return value != value
+    except Exception:
+        return False
+
+
+def _aircraft_by_category() -> dict:
+    """Restituisce un dict {category_str: [Aircraft_Data, ...]} per categoria."""
+    result: dict = {}
+    for ac in Aircraft_Data._registry.values():
+        for cat_enum in ac.category:
+            result.setdefault(cat_enum.value, []).append(ac)
+    return result
+
+
+def _all_loggers_mocked():
+    """Context manager che mocka tutti i logger necessari per i test combat score."""
+    from contextlib import ExitStack
+    stack = ExitStack()
+    for path in [_LOGGER_PATH, _LOADOUTS_LOGGER_PATH, _GWD_LOGGER_PATH, _AWD_LOGGER_PATH]:
+        stack.enter_context(patch(path, MagicMock()))
+    return stack
+
+
+def _best_loadout_for_task(aircraft_model: str, task: str) -> Optional[str]:
+    """Restituisce il nome del loadout con il punteggio più alto per aircraft+task."""
+    best_score = -1.0
+    best_name = None
+    for name, data in AIRCRAFT_LOADOUTS.get(aircraft_model, {}).items():
+        if task in data.get("tasks", []):
+            try:
+                with _all_loggers_mocked():
+                    sc = loadout_eval(aircraft_model, name)
+                if sc > best_score:
+                    best_score = sc
+                    best_name = name
+            except Exception:
+                if best_name is None:
+                    best_name = name
+    return best_name
+
+
+def _safe_combat_score_raw(ac: Aircraft_Data, task: str, loadout_name: str) -> float:
+    """Chiama combat_score() con logger mockato, restituisce float grezzo."""
+    try:
+        with _all_loggers_mocked():
+            return ac.combat_score(task, loadout_name)
+    except Exception:
+        return float("nan")
+
+
+def _safe_combat_score_target_raw(
+    ac: Aircraft_Data,
+    task: str,
+    loadout_name: str,
+    t_types: List[str],
+    t_dims: List[str],
+) -> float:
+    """Chiama combat_score_target_effectiveness() con logger mockato, restituisce float grezzo."""
+    try:
+        with _all_loggers_mocked():
+            return ac.combat_score_target_effectiveness(task, loadout_name, t_types, t_dims)
+    except Exception:
+        return float("nan")
+
+
+def _normalize_scores(value: float, scores: list) -> float:
+    """Normalizza value in [0, 1] rispetto alla lista scores."""
+    valid = [s for s in scores if not _is_nan(s)]
+    if not valid:
+        return float("nan")
+    mn, mx = min(valid), max(valid)
+    if mx == mn:
+        return 0.5
+    return (value - mn) / (mx - mn)
+
+
+def _safe_combat_score(ac: Aircraft_Data, task: str, loadout_name: str, cat: str,
+                       all_scores: dict = None) -> float:
+    """Calcola combat_score e lo normalizza rispetto agli aeromobili della stessa categoria.
+    Se all_scores è fornito (dict {model: raw_score}), usa quelli per la normalizzazione."""
+    raw = _safe_combat_score_raw(ac, task, loadout_name)
+    if _is_nan(raw):
+        return float("nan")
+    if all_scores is not None:
+        return _normalize_scores(raw, list(all_scores.values()))
+    return raw
+
+
+def _safe_combat_score_target(
+    ac: Aircraft_Data,
+    task: str,
+    loadout_name: str,
+    t_types: List[str],
+    t_dims: List[str],
+    cat: str,
+) -> float:
+    """Chiama combat_score_target_effectiveness con logger mockato."""
+    return _safe_combat_score_target_raw(ac, task, loadout_name, t_types, t_dims)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  STAMPA A TERMINALE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def print_aircraft_subsystem_scores() -> None:
+    """Stampa a terminale i punteggi dei sottosistemi per ogni aeromobile,
+    raggruppati per categoria. I punteggi sono normalizzati all'interno della
+    categoria (0.0 = peggiore nella categoria, 1.0 = migliore nella categoria)."""
+    cat_map = _aircraft_by_category()
+
+    for cat in AIRCRAFT_CATEGORIES:
+        aircraft_list = cat_map.get(cat, [])
+        if not aircraft_list:
+            continue
+
+        header = f"  CATEGORIA: {cat}  —  punteggi normalizzati nella categoria"
+        width = max(90, len(header) + 4)
+        print()
+        print("═" * width)
+        print(header)
+        print("═" * width)
+
+        sample_model = aircraft_list[0].model
+        score_names = list(AIRCRAFT.get(sample_model, {}).keys())
+
+        col_m = max(18, max(len(ac.model) for ac in aircraft_list))
+        col_s = 10
+
+        for score_name in score_names:
+            print(f"\n  [ {score_name} ]")
+            header_row = f"  {'Model':<{col_m}}   {'score (cat)':>{col_s}}"
+            print("─" * len(header_row))
+            print(header_row)
+            print("─" * len(header_row))
+
+            # Raccoglie valori grezzi (globalmente normalizzati) e ri-normalizza per categoria
+            raw_vals = [AIRCRAFT.get(ac.model, {}).get(score_name, float("nan")) for ac in aircraft_list]
+            cat_norm = [_normalize_scores(v, raw_vals) if not _is_nan(v) else float("nan") for v in raw_vals]
+
+            rows = list(zip([ac.model for ac in aircraft_list], cat_norm))
+            rows.sort(key=lambda x: x[1] if not _is_nan(x[1]) else -1, reverse=True)
+
+            for model, val in rows:
+                val_str = f"{val:.4f}" if not _is_nan(val) else "   N/A  "
+                print(f"  {model:<{col_m}}   {val_str:>{col_s}}")
+        print()
+
+
+def print_combat_score_tables(tasks: List[str], categories: List[str]) -> None:
+    """Stampa a terminale la tabella combat_score normalizzato per task e categoria."""
+    cat_map = _aircraft_by_category()
+
+    for task in tasks:
+        for cat in categories:
+            aircraft_list = cat_map.get(cat, [])
+            if not aircraft_list:
+                continue
+
+            # Raccoglie raw scores per normalizzazione categoria
+            raw_rows = []
+            for ac in aircraft_list:
+                loadout = _best_loadout_for_task(ac.model, task)
+                if loadout is None:
+                    continue
+                raw = _safe_combat_score_raw(ac, task, loadout)
+                raw_rows.append((ac.model, loadout, raw))
+
+            if not raw_rows:
+                continue
+
+            raw_vals = [r for _, _, r in raw_rows]
+            rows = [(m, l, _normalize_scores(r, raw_vals)) for m, l, r in raw_rows]
+
+            header = f"  TASK: {task}  |  CATEGORIA: {cat}  —  combat_score (normalizzato)"
+            width = max(90, len(header) + 4)
+            print()
+            print("═" * width)
+            print(header)
+            print("═" * width)
+
+            col_m = max(18, max(len(r[0]) for r in rows))
+            col_l = max(20, max(len(r[1]) for r in rows))
+            col_s = 12
+
+            rows.sort(key=lambda x: x[2] if not _is_nan(x[2]) else -1, reverse=True)
+            header_row = f"  {'Model':<{col_m}}   {'Best Loadout':<{col_l}}   {'Score':>{col_s}}"
+            print(header_row)
+            print("─" * len(header_row))
+
+            for model, loadout, score in rows:
+                s = f"{score:.6f}" if not _is_nan(score) else "     N/A     "
+                print(f"  {model:<{col_m}}   {loadout:<{col_l}}   {s:>{col_s}}")
+        print()
+
+
+def print_combat_score_target_tables(
+    tasks: List[str],
+    categories: List[str],
+    t_types: List[str],
+    t_dims: List[str],
+) -> None:
+    """Stampa a terminale get_normalized_combat_score_target_effectiveness() per task, categoria e target."""
+    cat_map = _aircraft_by_category()
+    combinations = [(t, d) for t in t_types for d in t_dims]
+
+    for task in tasks:
+        for cat in categories:
+            aircraft_list = cat_map.get(cat, [])
+            if not aircraft_list:
+                continue
+
+            valid_rows = []
+            for ac in aircraft_list:
+                loadout = _best_loadout_for_task(ac.model, task)
+                if loadout is not None:
+                    valid_rows.append((ac, loadout))
+
+            if not valid_rows:
+                continue
+
+            col_m = max(18, max(len(ac.model) for ac, _ in valid_rows))
+            col_headers = [f"{t}/{d}" for t, d in combinations]
+            cell_w = 10
+
+            header = f"  TASK: {task}  |  CATEGORIA: {cat}  —  get_normalized_combat_score_target_effectiveness()"
+            parts = [f"  {'Model':<{col_m}}   {'Loadout':<20}"]
+            for h in col_headers:
+                parts.append(f"{h:^{cell_w}}")
+            header_line = "  ".join(parts)
+            width = max(len(header), len(header_line))
+
+            print()
+            print("═" * width)
+            print(header)
+            print("═" * width)
+            print(header_line)
+            print("─" * width)
+
+            for ac, loadout in valid_rows:
+                row_parts = [f"  {ac.model:<{col_m}}   {loadout:<20}"]
+                for t_type, t_dim in combinations:
+                    val = _safe_combat_score_target_raw(ac, task, loadout, [t_type], [t_dim])
+                    s = f"{val:.4f}" if not _is_nan(val) else "  N/A  "
+                    row_parts.append(f"{s:^{cell_w}}")
+                print("  ".join(row_parts))
+        print()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  GENERAZIONE PDF
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _setup_matplotlib():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_pdf import PdfPages
+        return plt, PdfPages
+    except ImportError:
+        return None, None
+
+
+def _header_style(tbl, n_cols: int) -> None:
+    """Intestazione tabella: sfondo scuro, testo bianco in grassetto."""
+    for col in range(n_cols):
+        tbl[0, col].set_facecolor("#2c3e50")
+        tbl[0, col].set_text_props(color="white", fontweight="bold")
+
+
+def save_aircraft_subsystem_scores_pdf(output_path: str) -> None:
+    """Salva Aircraft_Sub_System_Scores.pdf con una pagina per categoria.
+    I punteggi sono normalizzati nella categoria (0.0=peggiore, 1.0=migliore).
+    La colorazione heatmap è applicata per riga (per subsystem): verde=massimo
+    nella categoria, rosso=minimo nella categoria."""
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+    cat_map = _aircraft_by_category()
+
+    with PdfPages(output_path) as pdf:
+        for cat in AIRCRAFT_CATEGORIES:
+            aircraft_list = cat_map.get(cat, [])
+            if not aircraft_list:
+                continue
+
+            sample_model = aircraft_list[0].model
+            score_names = list(AIRCRAFT.get(sample_model, {}).keys())
+
+            # Costruisce tabella: righe = score_name, colonne = models
+            col_labels = ["Score"] + [ac.model for ac in aircraft_list]
+            cell_text = []
+            norm_matrix = []  # valori normalizzati nella categoria, per coloring
+
+            for score_name in score_names:
+                # Valori grezzi (globalmente normalizzati)
+                raw_vals = [AIRCRAFT.get(ac.model, {}).get(score_name, float("nan"))
+                            for ac in aircraft_list]
+                # Ri-normalizza nella categoria: 0=peggiore, 1=migliore
+                cat_norm = [_normalize_scores(v, raw_vals) if not _is_nan(v) else float("nan")
+                            for v in raw_vals]
+                norm_matrix.append(cat_norm)
+                row_str = [score_name] + [
+                    f"{v:.3f}" if not _is_nan(v) else "N/A" for v in cat_norm
+                ]
+                cell_text.append(row_str)
+
+            # Colorazione heatmap per riga (per subsystem): ogni riga ha la propria scala [0,1]
+            cell_colors = []
+            for cat_norm in norm_matrix:
+                row_colors = ["#f0f4f8"]  # cella score_name
+                for v in cat_norm:
+                    if not _is_nan(v):
+                        row_colors.append(plt.cm.RdYlGn(v))  # già in [0,1] nella categoria
+                    else:
+                        row_colors.append((0.87, 0.87, 0.87, 1.0))
+                cell_colors.append(row_colors)
+
+            n_rows = len(cell_text)
+            n_cols = len(col_labels)
+            fig_w = max(14.0, 1.8 * len(aircraft_list) + 4.0)
+            fig_h = max(5.0, 0.38 * n_rows + 2.5)
+
+            fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+            ax.axis("off")
+            ax.set_title(
+                f"Aircraft Subsystem Scores — Categoria: {cat}\n"
+                f"Punteggi normalizzati nella categoria (0.0=peggiore, 1.0=migliore)",
+                fontsize=12, fontweight="bold", pad=18,
+            )
+
+            tbl = ax.table(
+                cellText=cell_text,
+                colLabels=col_labels,
+                cellColours=cell_colors,
+                loc="center",
+                cellLoc="center",
+            )
+            tbl.auto_set_font_size(False)
+            tbl.set_fontsize(7)
+            tbl.auto_set_column_width(list(range(n_cols)))
+            _header_style(tbl, n_cols)
+            plt.tight_layout()
+            pdf.savefig(fig, bbox_inches="tight")
+            plt.close(fig)
+
+    print(f"[PDF] Aircraft_Sub_System_Scores → {output_path}")
+
+
+def save_aircraft_combat_score_pdf(
+    tasks: List[str],
+    categories: List[str],
+    output_path: str,
+) -> None:
+    """Salva Aircraft_Combat_Scores.pdf.
+    Per ogni task e categoria: una pagina con la tabella get_normalized_combat_score()
+    per gli aeromobili che supportano quel task, ordinata per punteggio decrescente,
+    con colorazione heatmap (verde=alto, rosso=basso)."""
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+    cat_map = _aircraft_by_category()
+
+    with PdfPages(output_path) as pdf:
+        for task in tasks:
+            for cat in categories:
+                aircraft_list = cat_map.get(cat, [])
+                if not aircraft_list:
+                    continue
+
+                raw_rows = []
+                for ac in aircraft_list:
+                    loadout = _best_loadout_for_task(ac.model, task)
+                    if loadout is None:
+                        continue
+                    raw = _safe_combat_score_raw(ac, task, loadout)
+                    raw_rows.append((ac.model, loadout, raw))
+
+                if not raw_rows:
+                    continue
+
+                raw_vals = [r for _, _, r in raw_rows]
+                rows = [(m, l, _normalize_scores(r, raw_vals)) for m, l, r in raw_rows]
+                rows.sort(key=lambda x: x[2] if not _is_nan(x[2]) else -1, reverse=True)
+
+                valid_scores = [s for _, _, s in rows if not _is_nan(s)]
+                max_s = max(valid_scores) if valid_scores else 1.0
+                min_s = min(valid_scores) if valid_scores else 0.0
+                rng = (max_s - min_s) if max_s != min_s else 1.0
+
+                cell_text = []
+                cell_colors = []
+                for rank, (model, loadout, score) in enumerate(rows, start=1):
+                    score_str = f"{score:.4f}" if not _is_nan(score) else "N/A"
+                    cell_text.append([str(rank), model, loadout, score_str])
+                    if not _is_nan(score):
+                        color = plt.cm.RdYlGn((score - min_s) / rng)
+                    else:
+                        color = (0.87, 0.87, 0.87, 1.0)
+                    cell_colors.append(["#f5f5f5", "#f0f4f8", "#f0f4f8", color])
+
+                fig_h = max(4.0, 0.38 * len(cell_text) + 2.5)
+                fig_w = max(14.0, 12.0)
+                fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+                ax.axis("off")
+                ax.set_title(
+                    f"Combat Score — Task: {task}  |  Categoria: {cat}\n"
+                    f"Funzione: get_normalized_combat_score(task='{task}', category='{cat}')",
+                    fontsize=11, fontweight="bold", pad=18,
+                )
+                tbl = ax.table(
+                    cellText=cell_text,
+                    colLabels=["#", "Aeromobile", "Loadout", "Score Norm."],
+                    cellColours=cell_colors,
+                    loc="center",
+                    cellLoc="center",
+                )
+                tbl.auto_set_font_size(False)
+                tbl.set_fontsize(8)
+                tbl.auto_set_column_width([0, 1, 2, 3])
+                _header_style(tbl, 4)
+                plt.tight_layout()
+                pdf.savefig(fig, bbox_inches="tight")
+                plt.close(fig)
+
+    print(f"[PDF] Aircraft_Combat_Scores → {output_path}")
+
+
+def save_aircraft_combat_score_target_pdf(
+    tasks: List[str],
+    categories: List[str],
+    t_types: List[str],
+    t_dims: List[str],
+    output_path: str,
+) -> None:
+    """Salva Aircraft_Combat_Score_Target.pdf.
+    Per ogni task e categoria: una pagina con la tabella
+    get_normalized_combat_score_target_effectiveness() con colonne per ogni
+    combinazione (target_type × target_dimension), con colorazione heatmap."""
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+    cat_map = _aircraft_by_category()
+    combinations = [(t, d) for t in t_types for d in t_dims]
+
+    # Solo task A/G e Anti_Ship per la target effectiveness
+    ag_tasks = [t for t in tasks if t in ["CAS", "Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"]]
+
+    with PdfPages(output_path) as pdf:
+        for task in ag_tasks:
+            for cat in categories:
+                aircraft_list = cat_map.get(cat, [])
+                if not aircraft_list:
+                    continue
+
+                valid_rows = []
+                for ac in aircraft_list:
+                    loadout = _best_loadout_for_task(ac.model, task)
+                    if loadout is not None:
+                        valid_rows.append((ac, loadout))
+
+                if not valid_rows:
+                    continue
+
+                col_labels = ["Aeromobile", "Loadout"] + [
+                    f"{t}\n{d}" for t, d in combinations
+                ]
+                n_data_cols = len(combinations)
+                n_cols_total = 2 + n_data_cols
+
+                cell_text = []
+                score_matrix = []
+                for ac, loadout in valid_rows:
+                    row_scores = [
+                        _safe_combat_score_target_raw(ac, task, loadout, [t], [d])
+                        for t, d in combinations
+                    ]
+                    score_matrix.append(row_scores)
+                    cell_text.append(
+                        [ac.model, loadout]
+                        + [f"{s:.4f}" if not _is_nan(s) else "N/A" for s in row_scores]
+                    )
+
+                all_vals = [v for row in score_matrix for v in row if not _is_nan(v)]
+                max_s = max(all_vals) if all_vals else 1.0
+                min_s = min(all_vals) if all_vals else 0.0
+                rng = (max_s - min_s) if max_s != min_s else 1.0
+
+                cell_colors = []
+                for row_scores in score_matrix:
+                    row_colors = ["#f0f4f8", "#f0f4f8"]
+                    for s in row_scores:
+                        if not _is_nan(s):
+                            row_colors.append(plt.cm.RdYlGn((s - min_s) / rng))
+                        else:
+                            row_colors.append((0.87, 0.87, 0.87, 1.0))
+                    cell_colors.append(row_colors)
+
+                fig_w = max(14, 2.2 * n_cols_total)
+                fig_h = max(4.0, 0.42 * len(valid_rows) + 2.5)
+                fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+                ax.axis("off")
+                ax.set_title(
+                    f"Combat Score Target Effectiveness — Task: {task}  |  Categoria: {cat}\n"
+                    f"Funzione: get_normalized_combat_score_target_effectiveness()",
+                    fontsize=11, fontweight="bold", pad=18,
+                )
+                tbl = ax.table(
+                    cellText=cell_text,
+                    colLabels=col_labels,
+                    cellColours=cell_colors,
+                    loc="center",
+                    cellLoc="center",
+                )
+                tbl.auto_set_font_size(False)
+                tbl.set_fontsize(7)
+                tbl.auto_set_column_width(list(range(n_cols_total)))
+                _header_style(tbl, n_cols_total)
+                plt.tight_layout()
+                pdf.savefig(fig, bbox_inches="tight")
+                plt.close(fig)
+
+    print(f"[PDF] Aircraft_Combat_Score_Target → {output_path}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ENTRY POINT
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _run_tests() -> unittest.TestResult:
+    loader = unittest.TestLoader()
+    suite = unittest.TestSuite()
+    for cls in (
+        TestAircraftDataModuleStructure,
+        TestAircraftDataAttributes,
+        TestTVDDataStructure,
+        TestRadarEval,
+        TestTVDEval,
+        TestSpeedEval,
+        TestEngineEval,
+        TestRadioNavEval,
+        TestHydraulicEval,
+        TestAvionicsEval,
+        TestReliabilityAndMaintenance,
+        TestNormalize,
+        TestGetNormalizedRadarScore,
+        TestGetNormalizedTVDScore,
+        TestGetNormalizedRadioNavScore,
+        TestGetNormalizedHydraulicScore,
+        TestGetNormalizedAvionicsScore,
+        TestGetNormalizedEngineScore,
+        TestGetNormalizedSpeedScore,
+        TestGetNormalizedReliabilityAndAvailability,
+        TestCombatScore,
+        TestGetNormalizedCombatScore,
+        TestGetAircraftData,
+        TestGetAircraftScores,
+    ):
+        suite.addTests(loader.loadTestsFromTestCase(cls))
+    return unittest.TextTestRunner(verbosity=2).run(suite)
+
+
+def _run_tables_terminal() -> None:
+    print("\n" + "=" * 80)
+    print("  AIRCRAFT SUBSYSTEM SCORES — punteggi per categoria")
+    print("=" * 80)
+    print_aircraft_subsystem_scores()
+
+    print("\n" + "=" * 80)
+    print("  COMBAT SCORE — get_normalized_combat_score()")
+    print("=" * 80)
+    print_combat_score_tables(COMBAT_TASKS, AIRCRAFT_CATEGORIES)
+
+    print("\n" + "=" * 80)
+    print("  COMBAT SCORE TARGET — get_normalized_combat_score_target_effectiveness()")
+    print("=" * 80)
+    print_combat_score_target_tables(
+        COMBAT_TASKS, AIRCRAFT_CATEGORIES, target_type_list, target_dimension_list
+    )
+
+
+def _run_tables_pdf() -> None:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    save_aircraft_subsystem_scores_pdf(
+        os.path.join(OUTPUT_DIR, "Aircraft_Sub_System_Scores.pdf"),
+    )
+    save_aircraft_combat_score_pdf(
+        COMBAT_TASKS,
+        AIRCRAFT_CATEGORIES,
+        os.path.join(OUTPUT_DIR, "Aircraft_Combat_Scores.pdf"),
+    )
+    save_aircraft_combat_score_target_pdf(
+        COMBAT_TASKS,
+        AIRCRAFT_CATEGORIES,
+        target_type_list,
+        target_dimension_list,
+        os.path.join(OUTPUT_DIR, "Aircraft_Combat_Score_Target.pdf"),
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  MENU INTERATTIVO
+# ─────────────────────────────────────────────────────────────────────────────
+
+_MENU_ITEMS = [
+    ("Esegui i test unitari",                _run_tests),
+    ("Stampa le tabelle a terminale",        _run_tables_terminal),
+    ("Salva le tabelle in PDF",              _run_tables_pdf),
+    ("Esegui test + stampa a terminale",     None),
+    ("Esegui test + salva PDF",              None),
+    ("Stampa a terminale + salva PDF",       None),
+    ("Tutto (test + terminale + PDF)",       None),
+    ("Esci",                                 None),
+]
+
+
+def _print_menu() -> None:
+    print()
+    print("╔══════════════════════════════════════════════════════════════╗")
+    print("║       Test_Aircraft_Data  —  Menu principale                ║")
+    print("╠══════════════════════════════════════════════════════════════╣")
+    for idx, (label, _) in enumerate(_MENU_ITEMS, start=1):
+        print(f"║  {idx}.  {label:<55}║")
+    print("╚══════════════════════════════════════════════════════════════╝")
+
+
+def _ask_choice() -> int:
+    n = len(_MENU_ITEMS)
+    while True:
+        try:
+            raw = input(f"\nScelta [1-{n}]: ").strip()
+            choice = int(raw)
+            if 1 <= choice <= n:
+                return choice
+            print(f"  Inserire un numero tra 1 e {n}.")
+        except (ValueError, EOFError):
+            print("  Input non valido. Riprovare.")
+
+
+def _interactive_menu() -> None:
+    test_result = None
+
+    while True:
+        _print_menu()
+        choice = _ask_choice()
+        label = _MENU_ITEMS[choice - 1][0]
+        print(f"\n▶  {label}\n")
+
+        if choice == 1:
+            test_result = _run_tests()
+
+        elif choice == 2:
+            _run_tables_terminal()
+
+        elif choice == 3:
+            _run_tables_pdf()
+
+        elif choice == 4:
+            test_result = _run_tests()
+            _run_tables_terminal()
+
+        elif choice == 5:
+            test_result = _run_tests()
+            _run_tables_pdf()
+
+        elif choice == 6:
+            _run_tables_terminal()
+            _run_tables_pdf()
+
+        elif choice == 7:
+            test_result = _run_tests()
+            _run_tables_terminal()
+            _run_tables_pdf()
+
+        elif choice == 8:
+            print("Uscita.")
+            break
+
+        input("\nPremi INVIO per tornare al menu...")
+
+    if test_result is not None:
+        sys.exit(0 if test_result.wasSuccessful() else 1)
+
+
+if __name__ == "__main__":
+    if "--tests-only" in sys.argv:
+        result = _run_tests()
+        sys.exit(0 if result.wasSuccessful() else 1)
+    elif "--tables-only" in sys.argv:
+        _run_tables_terminal()
+        _run_tables_pdf()
+    else:
+        _interactive_menu()

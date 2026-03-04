@@ -1,3 +1,6 @@
+Rinomina la tabella vehicle_weapon_score_target_tables.pdf in vehicle_score_target_effectiveness_tables.pdf
+
+
 Realizza il modulo di test Test_Vehicle_Data.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e la verifica delle strutture dati implementate del modulo Vehicle_Data.py. Inoltre, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
 
 Vehicle_Scores.pdf analogalmente a quella realizzata nelle righe: 4354-4607 in Vehicle_Data.py. Utilizza i colori nella stampa a pdf per evidenziare il livello del punteggio (come fatto per le tabelle stampate dal modulo Test_Ground_Vehicle_Data.py: verde punteggio più alto, rosso punteggio più basso) e raggruppa in pagine distinte, con un titolo che indentifica la categoria del veicolo  ("Armored", "Tank", ..) le tabelle relative a veicoli appartenenti ad una specifica categoria.
