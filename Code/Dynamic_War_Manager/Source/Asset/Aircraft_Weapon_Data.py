@@ -2310,6 +2310,154 @@ AIR_WEAPONS = {
                 },
             },
         },                    
+        "Kh-55": {  # subsonic strategic cruise missile, land attack (AS-15 Kent)
+            "type": "ASM",
+            "model": "Kh-55",
+            "users": ["USSR", "Russia", "Ukraine"],
+            "task": ["Strike"],
+            "start_service": 1983,
+            "end_service": None,
+            "cost": 1500,  # k$
+            "warhead": 400,  # kg conventional (or nuclear option)
+            "range": 2500,  # km
+            "max_speed": 240,  # m/s (~860 km/h, subsonic)
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                "Soft": {
+                    "big":   {"accuracy": 0.72, "destroy_capacity": 0.90},
+                    "med":   {"accuracy": 0.65, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 0.80},
+                },
+                "Armored": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": 0.25},
+                    "med":   {"accuracy": 0.55, "destroy_capacity": 0.30},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 0.35},
+                },
+                "Hard": {
+                    "big":   {"accuracy": 0.55, "destroy_capacity": 0.05},
+                    "med":   {"accuracy": 0.50, "destroy_capacity": 0.08},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.10},
+                },
+                "Structure": {
+                    "big":   {"accuracy": 0.62, "destroy_capacity": 0.40},
+                    "med":   {"accuracy": 0.62, "destroy_capacity": 0.50},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 0.55},
+                },
+                "Air_Defense": {
+                    "big":   {"accuracy": 0.62, "destroy_capacity": 0.55},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": 0.60},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 0.65},
+                },
+                "Airbase": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.60, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 1e-8},
+                },
+                "Bridge": {
+                    "med":   {"accuracy": 0.60, "destroy_capacity": 0.20},
+                    "small": {"accuracy": 0.58, "destroy_capacity": 0.25},
+                },
+                "ship": {
+                    "big":   {"accuracy": 0.60, "destroy_capacity": 0.30},
+                    "med":   {"accuracy": 0.55, "destroy_capacity": 0.35},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 0.40},
+                },
+            },
+        },
+        "Kh-101": {  # precision strategic cruise missile, land attack
+            "type": "ASM",
+            "model": "Kh-101",
+            "users": ["Russia"],
+            "task": ["Strike", "Pinpoint_Strike"],
+            "start_service": 2013,
+            "end_service": None,
+            "cost": 3000,  # k$
+            "warhead": 400,  # kg conventional
+            "range": 5500,  # km
+            "max_speed": 250,  # m/s (~900 km/h, subsonic)
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                "Soft": {
+                    "big":   {"accuracy": 0.97, "destroy_capacity": 1.00},
+                    "med":   {"accuracy": 0.96, "destroy_capacity": 0.98},
+                    "small": {"accuracy": 0.94, "destroy_capacity": 0.95},
+                },
+                "Armored": {
+                    "big":   {"accuracy": 0.90, "destroy_capacity": 0.45},
+                    "med":   {"accuracy": 0.88, "destroy_capacity": 0.55},
+                    "small": {"accuracy": 0.85, "destroy_capacity": 0.65},
+                },
+                "Hard": {
+                    "big":   {"accuracy": 0.88, "destroy_capacity": 0.10},
+                    "med":   {"accuracy": 0.86, "destroy_capacity": 0.15},
+                    "small": {"accuracy": 0.84, "destroy_capacity": 0.20},
+                },
+                "Structure": {
+                    "big":   {"accuracy": 0.95, "destroy_capacity": 0.70},
+                    "med":   {"accuracy": 0.96, "destroy_capacity": 0.80},
+                    "small": {"accuracy": 0.94, "destroy_capacity": 0.85},
+                },
+                "Air_Defense": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": 0.80},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 0.90},
+                },
+                "Airbase": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 1e-8},
+                },
+                "Port": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 1e-8},
+                },
+                "Shipyard": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 1e-8},
+                },
+                "Farp": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 1e-8},
+                },
+                "Stronghold": {
+                    "big":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "med":   {"accuracy": 0.92, "destroy_capacity": _INFRA_MIN},
+                    "small": {"accuracy": 0.90, "destroy_capacity": 1e-8},
+                },
+                "Bridge": {
+                    "med":   {"accuracy": 0.95, "destroy_capacity": 0.40},
+                    "small": {"accuracy": 0.93, "destroy_capacity": 0.50},
+                },
+                "ship": {
+                    "big":   {"accuracy": 0.88, "destroy_capacity": 0.60},
+                    "med":   {"accuracy": 0.88, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.85, "destroy_capacity": 0.75},
+                },
+            },
+        },
         "Kh-22N": {  # radar antiship
             "type": "ASM",
             "model": "Kh-22N",

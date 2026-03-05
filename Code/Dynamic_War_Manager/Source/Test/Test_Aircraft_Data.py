@@ -98,8 +98,27 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
     loadout_eval,
     get_loadout_tasks,
+    loadout_target_effectiveness_by_distribuition,
 )
-from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type
+from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type, COALITIONS
+
+# Parametri fissi per la tabella get_list_of_aircrafts
+_LIST_SIDE = "Red"
+_LIST_TASK = "Strike"
+_LIST_TARGET_DIST: dict = {
+    "Soft": {
+        "perc_type": 0.5,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    },
+    "Armored": {
+        "perc_type": 0.3,
+        "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3},
+    },
+    "Structure": {
+        "perc_type": 0.2,
+        "perc_dimension": {"big": 0.0, "med": 0.2, "small": 0.8},
+    },
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  AEROMOBILI DI RIFERIMENTO PER I TEST
@@ -899,6 +918,264 @@ class TestGetAircraftScores(unittest.TestCase):
             pass  # Comportamento documentato con bug
 
 
+class TestGetLoadouts(unittest.TestCase):
+    """Unit test per Aircraft_Data.get_loadouts(aircraft_name, task=None).
+
+    Il metodo delega a:
+      - get_aircraft_loadouts(aircraft_name)          se task è None
+      - get_aircraft_loadouts_by_task(aircraft_name, task)  se task è fornito
+    Restituisce sempre un dict {loadout_name: config}.
+
+    Validazioni:
+      - aircraft_name non-string → TypeError
+      - aircraft non nel registry → ValueError
+      - task fornito ma non in AIR_TASK → ValueError
+    """
+
+    def setUp(self):
+        self._ac_fighter = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self._ac_bomber  = Aircraft_Data._registry[_BOMBER_MODEL]
+
+    # ── Senza task ────────────────────────────────────────────────────────────
+
+    def test_no_task_returns_dict(self):
+        """Senza task restituisce un dizionario."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        self.assertIsInstance(result, dict)
+
+    def test_no_task_returns_nonempty(self):
+        """L'F-14A Tomcat ha almeno un loadout."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        self.assertTrue(result)
+
+    def test_no_task_values_are_dicts(self):
+        """Ogni valore nel dizionario è una config (dict)."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        for name, config in result.items():
+            with self.subTest(loadout=name):
+                self.assertIsInstance(config, dict)
+
+    def test_no_task_known_loadout_present(self):
+        """Il loadout recuperato con _first_loadout è presente nel risultato."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        self.assertIn(_FIGHTER_LOADOUT, result)
+
+    # ── Con task ──────────────────────────────────────────────────────────────
+
+    def test_with_task_returns_dict(self):
+        """Con task valido restituisce un dizionario."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL, "CAP")
+        self.assertIsInstance(result, dict)
+
+    def test_with_task_all_loadouts_contain_task(self):
+        """Tutti i loadout nel risultato hanno il task richiesto."""
+        result = self._ac_fighter.get_loadouts(_FIGHTER_MODEL, "CAP")
+        for name, config in result.items():
+            with self.subTest(loadout=name):
+                self.assertIn("CAP", config.get("tasks", []))
+
+    def test_with_task_result_is_subset_of_all_loadouts(self):
+        """Il risultato filtrato per task è un sottoinsieme di tutti i loadout."""
+        all_loadouts  = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        task_loadouts = self._ac_fighter.get_loadouts(_FIGHTER_MODEL, "CAP")
+        for name in task_loadouts:
+            with self.subTest(loadout=name):
+                self.assertIn(name, all_loadouts)
+
+    def test_with_task_unknown_loadout_excluded(self):
+        """Loadout senza task CAP non compare nel risultato filtrato."""
+        all_loadouts  = self._ac_fighter.get_loadouts(_FIGHTER_MODEL)
+        cap_loadouts  = self._ac_fighter.get_loadouts(_FIGHTER_MODEL, "CAP")
+        non_cap = [n for n, cfg in all_loadouts.items() if "CAP" not in cfg.get("tasks", [])]
+        for name in non_cap:
+            with self.subTest(loadout=name):
+                self.assertNotIn(name, cap_loadouts)
+
+    def test_with_task_unmatched_returns_empty_dict(self):
+        """Task valido senza loadout corrispondenti per quel velivolo → dict vuoto."""
+        # Un bombardiere strategico non ha in genere loadout CAP
+        result = self._ac_bomber.get_loadouts(_BOMBER_MODEL, "CAP")
+        self.assertIsInstance(result, dict)
+        # Se davvero vuoto, verifichiamo che non ci siano voci con task CAP
+        for name, config in result.items():
+            self.assertIn("CAP", config.get("tasks", []))
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_invalid_task_not_in_air_task_raises_ValueError(self):
+        """Task non in AIR_TASK → ValueError."""
+        with self.assertRaises(ValueError):
+            self._ac_fighter.get_loadouts(_FIGHTER_MODEL, "INVALID_TASK_XYZ")
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        """Aircraft non nel registry → ValueError."""
+        with self.assertRaises(ValueError):
+            self._ac_fighter.get_loadouts("AIRCRAFT_NOT_EXISTING_XYZ")
+
+    def test_non_string_aircraft_name_raises_TypeError(self):
+        """aircraft_name non-string → TypeError."""
+        with self.assertRaises(TypeError):
+            self._ac_fighter.get_loadouts(42)
+
+    def test_none_aircraft_name_raises_TypeError(self):
+        """aircraft_name None → TypeError."""
+        with self.assertRaises(TypeError):
+            self._ac_fighter.get_loadouts(None)
+
+
+class TestGetListOfAircrafts(unittest.TestCase):
+    """Unit test per Aircraft_Data.get_list_of_aircrafts(side, task, target_distribuition, ...).
+
+    Il metodo valida i parametri opzionali route_length, route_speed e role,
+    poi restituisce una lista di Aircraft_Data ordinata per combat_score_target_effectiveness
+    (quando target_distribuition è fornita) oppure combat_score (quando è None).
+
+    ── Stato attuale dei bug dopo il tentativo di correzione BLA2 ──────────────
+
+    Tutti i bug precedentemente documentati (BLA0, BLA1, BLA2a, BLA2b) sono stati
+    corretti. Rimane un bug residuo nel sorting key della return:
+
+    BUG BLA3 — StopIteration nel sorting key per aircraft senza loadout del task:
+      Il sorting key usa next(iter(self.get_loadouts(x.model, task))).
+      Se un aircraft Blue non ha loadout per il task richiesto,
+      get_loadouts(x.model, task) restituisce {} e next(iter({})) solleva
+      StopIteration. Questo accade quando role=None e la lista include
+      aircraft di ogni categoria (es. trasporti, bombardieri senza loadout CAP).
+      Con role="Fighter" il bug non si manifesta perché tutti i fighter
+      hanno loadout CAP.
+      Correzione: gestire il caso di dict vuoto prima di chiamare next(iter(...)).
+    """
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self._patchers = [
+            patch(_LOGGER_PATH,          MagicMock()),
+            patch(_LOADOUTS_LOGGER_PATH, MagicMock()),
+            patch(_AWD_LOGGER_PATH,      MagicMock()),
+        ]
+        for p in self._patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+
+    # ── Validazione route_length ──────────────────────────────────────────────
+
+    def test_negative_route_length_raises_ValueError(self):
+        """route_length negativo → ValueError."""
+        with self.assertRaises(ValueError):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, route_length=-1.0)
+
+    def test_zero_route_length_is_valid(self):
+        """route_length=0 è accettato (>= 0): il metodo non deve sollevare ValueError.
+        BUG BLA3 atteso: StopIteration nel sorting key per aircraft Blue senza
+        loadout CAP (es. trasporti, bombardieri)."""
+        with self.assertRaises(StopIteration):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, route_length=0.0)
+
+    # ── Validazione route_speed ───────────────────────────────────────────────
+
+    def test_zero_route_speed_raises_ValueError(self):
+        """route_speed=0 → ValueError (deve essere > 0)."""
+        with self.assertRaises(ValueError):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, route_speed=0.0)
+
+    def test_negative_route_speed_raises_ValueError(self):
+        """route_speed negativo → ValueError."""
+        with self.assertRaises(ValueError):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, route_speed=-100.0)
+
+    def test_positive_route_speed_is_valid(self):
+        """route_speed > 0 è accettato: il metodo non deve sollevare ValueError.
+        BUG BLA3 atteso: StopIteration nel sorting key per aircraft Blue senza
+        loadout CAP."""
+        with self.assertRaises(StopIteration):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, route_speed=500.0)
+
+    # ── Validazione role ──────────────────────────────────────────────────────
+
+    def test_invalid_role_raises_ValueError(self):
+        """role non in AIRCRAFT_ROLE → ValueError."""
+        with self.assertRaises(ValueError):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None, role="INVALID_ROLE_XYZ")
+
+    def test_valid_role_is_accepted(self):
+        """role='Fighter' valido: BLA2 corretto → filtra correttamente per categoria.
+        Tutti i Fighter Blue hanno loadout CAP → BLA3 non si manifesta.
+        Il risultato è una lista non vuota di Aircraft_Data con categoria Fighter."""
+        result = self._ac.get_list_of_aircrafts("Blue", "CAP", None, role="Fighter")
+        self.assertIsInstance(result, list)
+        self.assertTrue(result, "Deve esserci almeno un Fighter Blue nel registry")
+        for ac in result:
+            with self.subTest(model=ac.model):
+                self.assertIsInstance(ac, Aircraft_Data)
+                self.assertTrue(
+                    any(c == Air_Asset_Type.FIGHTER for c in ac.category),
+                    f"{ac.model} non ha categoria Fighter"
+                )
+
+    # ── Bug BLA1: return statement ────────────────────────────────────────────
+
+    def test_valid_params_raises_stop_iteration_bug(self):
+        """BUG BLA3 — Parametri validi senza role: StopIteration nel sorting key.
+
+        Con role=None tutti i Blue aircraft sono inclusi nella lista da ordinare.
+        Per aircraft senza loadout CAP (es. trasporti, bombardieri),
+        get_loadouts(x.model, 'CAP') restituisce {} e next(iter({})) solleva
+        StopIteration. Il metodo deve gestire il caso di loadout vuoti,
+        ad es. escludendo tali aircraft dalla lista o usando un valore di default.
+        """
+        with self.assertRaises(StopIteration):
+            self._ac.get_list_of_aircrafts("Blue", "CAP", None)
+
+    # ── Logica combat_score vs combat_score_target_effectiveness ─────────────
+
+    def test_table_rows_use_combat_score_target_effectiveness_with_dist(self):
+        """Quando target_dist è fornita, _build_list_of_aircrafts_rows usa
+        combat_score_target_effectiveness; il valore deve differire da quello
+        prodotto da combat_score (che ignora il target)."""
+        dist = {
+            "Soft":    {"perc_type": 0.5, "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3}},
+            "Armored": {"perc_type": 0.3, "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3}},
+            "Structure": {"perc_type": 0.2, "perc_dimension": {"big": 0.0, "med": 0.2, "small": 0.8}},
+        }
+        t_types, t_dims = _extract_target_types_dims(dist)
+        # Prendi il primo Fighter Red con loadout Strike
+        loadout = _best_loadout_for_task(_FIGHTER_MODEL, "Strike")
+        if loadout is None:
+            self.skipTest(f"{_FIGHTER_MODEL} non ha loadout Strike")
+        score_target = _safe_combat_score_target_raw(self._ac, "Strike", loadout, t_types, t_dims)
+        score_plain  = _safe_combat_score_raw(self._ac, "Strike", loadout)
+        # Entrambi devono essere float non-nan
+        self.assertFalse(_is_nan(score_target), "combat_score_target_effectiveness ha restituito nan")
+        self.assertFalse(_is_nan(score_plain),  "combat_score ha restituito nan")
+        # I due score usano pesi diversi: non devono essere uguali
+        self.assertNotEqual(
+            round(score_target, 6), round(score_plain, 6),
+            "combat_score_target_effectiveness e combat_score non devono coincidere"
+        )
+
+    def test_table_rows_use_combat_score_without_dist(self):
+        """Quando target_dist è None, _build_list_of_aircrafts_rows usa combat_score."""
+        loadout = _best_loadout_for_task(_FIGHTER_MODEL, "Strike")
+        if loadout is None:
+            self.skipTest(f"{_FIGHTER_MODEL} non ha loadout Strike")
+        score_plain = _safe_combat_score_raw(self._ac, "Strike", loadout)
+        self.assertFalse(_is_nan(score_plain), "combat_score ha restituito nan")
+        self.assertGreaterEqual(score_plain, 0.0)
+
+    def test_extract_target_types_dims(self):
+        """_extract_target_types_dims estrae correttamente tipi e dimensioni."""
+        dist = {
+            "Soft":    {"perc_type": 0.5, "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3}},
+            "Armored": {"perc_type": 0.5, "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3}},
+        }
+        t_types, t_dims = _extract_target_types_dims(dist)
+        self.assertEqual(t_types, ["Soft", "Armored"])
+        self.assertEqual(sorted(t_dims), ["big", "med", "small"])
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  UTILITY PER LA GENERAZIONE DELLE TABELLE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1003,6 +1280,78 @@ def _safe_combat_score_target(
 ) -> float:
     """Chiama combat_score_target_effectiveness con logger mockato."""
     return _safe_combat_score_target_raw(ac, task, loadout_name, t_types, t_dims)
+
+
+def _safe_dist_score(ac: Aircraft_Data, task: str, loadout: str, target_dist: dict) -> float:
+    """Chiama loadout_target_effectiveness_by_distribuition con logger mockato.
+
+    Nota: la funzione è importata da Aircraft_Loadouts (livello modulo),
+    non è un metodo di Aircraft_Data. Il parametro loadout è il NOME del
+    loadout (stringa chiave del dict restituito da get_loadouts).
+    route_length=1 e route_speed=1 per non escludere nessun loadout per rotta.
+    """
+    try:
+        with _all_loggers_mocked():
+            return loadout_target_effectiveness_by_distribuition(
+                ac.model, loadout, target_dist, route_length=1, route_speed=1
+            )
+    except Exception:
+        return float("nan")
+
+
+def _extract_target_types_dims(target_dist: dict):
+    """Estrae (target_types, target_dims) dalla distribuzione per combat_score_target_effectiveness."""
+    t_types = list(target_dist.keys())
+    t_dims = sorted({d for v in target_dist.values() for d in v.get("perc_dimension", {}).keys()})
+    return t_types, t_dims
+
+
+def _build_list_of_aircrafts_rows(side: str, task: str, target_dist: dict,
+                                   role: Optional[str] = None) -> list:
+    """Costruisce le righe per la tabella get_list_of_aircrafts().
+
+    Replica la logica di get_list_of_aircrafts() gestendo BLA3:
+    gli aircraft senza loadout per il task vengono esclusi invece di
+    causare StopIteration nel sorting key.
+
+    Calcolo Combat Score:
+    - Se target_dist è fornita: usa combat_score_target_effectiveness(task, loadout,
+      target_types, target_dims) con target_types/dims estratti dalla dist.
+    - Se target_dist è None: usa combat_score(task, loadout).
+
+    Ritorna lista di tuple (rank, model, best_loadout, combat_score_norm,
+    dist_score_raw) ordinata per combat_score decrescente.
+    """
+    t_types, t_dims = _extract_target_types_dims(target_dist) if target_dist else (None, None)
+
+    raw_rows = []
+    for ac in Aircraft_Data._registry.values():
+        if role and not any(c.value == role for c in ac.category):
+            continue
+        if not any(user in COALITIONS[side] for user in ac.users):
+            continue
+        loadout = _best_loadout_for_task(ac.model, task)
+        if loadout is None:
+            continue
+        if target_dist:
+            cs = _safe_combat_score_target_raw(ac, task, loadout, t_types, t_dims)
+        else:
+            cs = _safe_combat_score_raw(ac, task, loadout)
+        ds = _safe_dist_score(ac, task, loadout, target_dist)
+        raw_rows.append((ac.model, loadout, cs, ds))
+
+    if not raw_rows:
+        return []
+
+    # Normalizza combat_score nella lista
+    cs_vals = [r[2] for r in raw_rows]
+    rows = [
+        (m, l, _normalize_scores(cs, cs_vals), ds)
+        for m, l, cs, ds in raw_rows
+    ]
+    rows.sort(key=lambda x: x[2] if not _is_nan(x[2]) else -1, reverse=True)
+
+    return [(rank, m, l, cs_n, ds) for rank, (m, l, cs_n, ds) in enumerate(rows, start=1)]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1151,6 +1500,69 @@ def print_combat_score_target_tables(
                     row_parts.append(f"{s:^{cell_w}}")
                 print("  ".join(row_parts))
         print()
+
+
+def print_get_list_of_aircrafts_table(
+    side: str, task: str, target_dist: dict, role: Optional[str] = None
+) -> None:
+    """Stampa a terminale la classifica get_list_of_aircrafts(side, task, target_dist).
+
+    Colonne: #, Aeromobile, Best Loadout, Combat Score (norm.), Dist. Score (raw)
+    Combat Score: combat_score_target_effectiveness() se target_dist è fornita,
+                  altrimenti combat_score().
+    Ordinamento: combat_score_target_effectiveness decrescente (quando target_dist fornita).
+    Gli aircraft senza loadout per il task sono omessi (BLA3 workaround).
+    """
+    rows = _build_list_of_aircrafts_rows(side, task, target_dist, role)
+
+    dist_label = "  +  ".join(
+        f"{t} {int(v['perc_type'] * 100)}%"
+        f" [{' '.join(f'{d}:{int(p * 100)}%' for d, p in v['perc_dimension'].items())}]"
+        for t, v in target_dist.items()
+    )
+    role_label = f"  role='{role}'" if role else ""
+
+    header = (
+        f"  CLASSIFICA get_list_of_aircrafts()  "
+        f"side='{side}'  task='{task}'{role_label}\n"
+        f"  Target distribution: {dist_label}"
+    )
+    print()
+    if not rows:
+        print(f"[SKIP] Nessun aircraft {side} con loadout '{task}'{role_label}.")
+        return
+
+    col_r = 3
+    col_m = max(len("Aeromobile"), max(len(r[1]) for r in rows))
+    col_l = max(len("Best Loadout"), max(len(r[2]) for r in rows))
+    col_cs = 14
+    col_ds = 14
+    sep = "  "
+    width = col_r + len(sep) + col_m + len(sep) + col_l + len(sep) + col_cs + len(sep) + col_ds + 4
+
+    print("═" * width)
+    for line in header.splitlines():
+        print(line)
+    print("═" * width)
+    print(
+        f"  {'#':<{col_r}}{sep}"
+        f"{'Aeromobile':<{col_m}}{sep}"
+        f"{'Best Loadout':<{col_l}}{sep}"
+        f"{'Combat Score':>{col_cs}}{sep}"
+        f"{'Dist. Score':>{col_ds}}"
+    )
+    print("─" * width)
+    for rank, model, loadout, cs_n, ds in rows:
+        cs_s = f"{cs_n:.6f}" if not _is_nan(cs_n) else "     N/A     "
+        ds_s = f"{ds:.6f}" if not _is_nan(ds) else "     N/A     "
+        print(
+            f"  {rank:<{col_r}}{sep}"
+            f"{model:<{col_m}}{sep}"
+            f"{loadout:<{col_l}}{sep}"
+            f"{cs_s:>{col_cs}}{sep}"
+            f"{ds_s:>{col_ds}}"
+        )
+    print()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1439,6 +1851,89 @@ def save_aircraft_combat_score_target_pdf(
     print(f"[PDF] Aircraft_Combat_Score_Target → {output_path}")
 
 
+def save_get_list_of_aircrafts_pdf(
+    side: str, task: str, target_dist: dict, output_path: str,
+    role: Optional[str] = None,
+) -> None:
+    """Salva in PDF la classifica get_list_of_aircrafts(side, task, target_dist).
+
+    Una singola pagina con:
+      - colonne: #, Aeromobile, Best Loadout, Combat Score (norm.), Dist. Score (raw)
+      - Combat Score calcolato con combat_score_target_effectiveness() se target_dist
+        è fornita, altrimenti combat_score()
+      - heatmap RdYlGn sulla colonna Combat Score
+      - heatmap RdYlGn sulla colonna Dist. Score (scala indipendente)
+    """
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+
+    rows = _build_list_of_aircrafts_rows(side, task, target_dist, role)
+    if not rows:
+        role_label = f"  role='{role}'" if role else ""
+        print(f"[PDF] Nessun aircraft {side} con loadout '{task}'{role_label} — PDF non generato.")
+        return
+
+    dist_label = "  |  ".join(
+        f"{t} {int(v['perc_type'] * 100)}%"
+        f" [{' '.join(f'{d}:{int(p * 100)}%' for d, p in v['perc_dimension'].items())}]"
+        for t, v in target_dist.items()
+    )
+
+    # Scala colori combat score
+    cs_vals  = [r[3] for r in rows if not _is_nan(r[3])]
+    cs_max, cs_min = (max(cs_vals), min(cs_vals)) if cs_vals else (1.0, 0.0)
+    cs_rng = (cs_max - cs_min) if cs_max != cs_min else 1.0
+
+    # Scala colori dist score
+    ds_vals  = [r[4] for r in rows if not _is_nan(r[4])]
+    ds_max, ds_min = (max(ds_vals), min(ds_vals)) if ds_vals else (1.0, 0.0)
+    ds_rng = (ds_max - ds_min) if ds_max != ds_min else 1.0
+
+    cell_text   = []
+    cell_colors = []
+    for rank, model, loadout, cs_n, ds in rows:
+        cs_s = f"{cs_n:.4f}" if not _is_nan(cs_n) else "N/A"
+        ds_s = f"{ds:.4f}"   if not _is_nan(ds)   else "N/A"
+        cell_text.append([str(rank), model, loadout, cs_s, ds_s])
+
+        cs_color = plt.cm.RdYlGn((cs_n - cs_min) / cs_rng) if not _is_nan(cs_n) else (0.87, 0.87, 0.87, 1.0)
+        ds_color = plt.cm.RdYlGn((ds - ds_min) / ds_rng)   if not _is_nan(ds)   else (0.87, 0.87, 0.87, 1.0)
+        cell_colors.append(["#f5f5f5", "#f0f4f8", "#f0f4f8", cs_color, ds_color])
+
+    n_cols  = 5
+    fig_h   = max(4.0, 0.40 * len(cell_text) + 3.0)
+    fig, ax = plt.subplots(figsize=(16, fig_h))
+    ax.axis("off")
+    role_label = f"  role='{role}'" if role else ""
+    ax.set_title(
+        f"Classifica Aeromobili — get_list_of_aircrafts()\n"
+        f"side='{side}'  task='{task}'{role_label}  |  {dist_label}",
+        fontsize=12, fontweight="bold", pad=20,
+    )
+    tbl = ax.table(
+        cellText=cell_text,
+        colLabels=["#", "Aeromobile", "Best Loadout", "Combat Score", "Dist. Score"],
+        cellColours=cell_colors,
+        loc="center",
+        cellLoc="center",
+    )
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(8)
+    tbl.auto_set_column_width(list(range(n_cols)))
+    _header_style(tbl, n_cols)
+    plt.tight_layout()
+
+    with PdfPages(output_path) as pdf:
+        pdf.savefig(fig, bbox_inches="tight")
+    plt.close(fig)
+
+    print(f"[PDF] get_list_of_aircrafts → {output_path}")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1471,6 +1966,8 @@ def _run_tests() -> unittest.TestResult:
         TestGetNormalizedCombatScore,
         TestGetAircraftData,
         TestGetAircraftScores,
+        TestGetLoadouts,
+        TestGetListOfAircrafts,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
@@ -1494,6 +1991,12 @@ def _run_tables_terminal() -> None:
         COMBAT_TASKS, AIRCRAFT_CATEGORIES, target_type_list, target_dimension_list
     )
 
+    print("\n" + "=" * 80)
+    print("  CLASSIFICA AEROMOBILI — get_list_of_aircrafts()")
+    print("=" * 80)
+    print_get_list_of_aircrafts_table(_LIST_SIDE, _LIST_TASK, _LIST_TARGET_DIST)
+    print_get_list_of_aircrafts_table(_LIST_SIDE, _LIST_TASK, _LIST_TARGET_DIST, role="Fighter_Bomber")
+
 
 def _run_tables_pdf() -> None:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -1511,6 +2014,19 @@ def _run_tables_pdf() -> None:
         target_type_list,
         target_dimension_list,
         os.path.join(OUTPUT_DIR, "Aircraft_Combat_Score_Target.pdf"),
+    )
+    save_get_list_of_aircrafts_pdf(
+        _LIST_SIDE,
+        _LIST_TASK,
+        _LIST_TARGET_DIST,
+        os.path.join(OUTPUT_DIR, "Aircraft_List_Strike_Red.pdf"),
+    )
+    save_get_list_of_aircrafts_pdf(
+        _LIST_SIDE,
+        _LIST_TASK,
+        _LIST_TARGET_DIST,
+        os.path.join(OUTPUT_DIR, "Aircraft_List_Strike_Red_FighterBomber.pdf"),
+        role="Fighter_Bomber",
     )
 
 

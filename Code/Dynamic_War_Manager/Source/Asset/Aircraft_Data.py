@@ -17,10 +17,10 @@ NO:
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, Ground_Vehicle_Asset_Type
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, loadout_target_effectiveness_by_distribuition
 from sympy import Point3D
 from dataclasses import dataclass
 
@@ -28,8 +28,9 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
 
-AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
+AIRCRAFT_ROLE = [e.value for e in Air_Asset_Type]
 AIRCRAFT_TASK = AIR_TASK
+
 
 SYSTEM_WEIGHTS = {
 
@@ -763,6 +764,108 @@ class Aircraft_Data:
         aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
         scores = [ac.combat_score_target_effectiveness(task, loadout, target_type, target_dimension) for ac in aircraft_list]
         return self._normalize(self.combat_score_target_effectiveness(task, loadout, target_type, target_dimension), scores)
+
+    def get_loadouts(self, aircraft_name: str, task: Optional[str] = None):
+        """Returns a list of loadouts for a specific aircraft.
+
+        Args:
+            aircraft_name (str): The name of the aircraft.
+        Returns:
+            list: A list of loadouts for the specified aircraft.
+        """
+        if not isinstance(aircraft_name, str):
+            raise TypeError(f"aircraft_name must be a string, got {type(aircraft_name).__name__!r}.")
+        
+        aircraft = Aircraft_Data._registry.get(aircraft_name)
+        if not aircraft:
+            raise ValueError(f"Aircraft with name {aircraft_name!r} not found.")
+        
+        if task and task not in AIR_TASK:
+            raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
+        
+        if task:
+            return get_aircraft_loadouts_by_task(aircraft_name, task)
+        else:
+            return get_aircraft_loadouts(aircraft_name)
+        
+    def get_list_of_aircrafts(self, side: str, task: str, target_distribuition: Optional[Dict[str, float]], role: Optional[str] = None, route_length: Optional[float] = None, route_speed: Optional[float] = None):
+
+        """
+        esempio di distribuzione dei target:
+        target_distribuition = {
+                    'Soft':     {   'perc_type': 0.5,
+                                    'perc_dimension': {
+                                        'big': 0.2,
+                                        'med': 0.5,
+                                        'small': 0.3
+                                    },
+                    'Armored':     {   'perc_type': 0.3,
+                                    'perc_dimension': {
+                                        'big': 0.3,
+                                        'med': 0.4,
+                                        'small': 0.3
+                                    },
+                    'Structure': {'perc_type': 0.2,
+                                    'perc_dimension': {
+                                        'big': 0.0,
+                                        'med': 0.2,
+                                        'small': 0.8
+                                    },
+            }
+        """
+
+        aircraft_list = {   'side': side, 
+                            'task': task,
+                            'target_distribuition': target_distribuition,
+                            'role': role,
+                            'scores':  {
+                                'aircraft': None,                                                            
+                                'score': 0.0
+                            }
+        }
+
+        if route_length is not None and (not isinstance(route_length, (int, float)) or route_length < 0):
+            raise ValueError(f"route_length must be a non-negative number, got {route_length!r}.")
+        if route_speed is not None and (not isinstance(route_speed, (int, float)) or route_speed <= 0):
+            raise ValueError(f"route_speed must be a positive number, got {route_speed!r}.")
+        if role is not None and (not isinstance(role, str) or role not in AIRCRAFT_ROLE):
+            raise ValueError(f"role must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {role!r}.")        
+        if route_length is None:
+            route_length = 1 # per considerare tutti i loadout senza penalizzare quelli con range più limitato, altrimenti si rischia di escludere aerei con loadout efficaci ma con range limitato che potrebbero comunque essere utilizzati se la lunghezza della rotta è breve
+        if route_speed is None:
+            route_speed = 1 # per considerare tutti i loadout senza penalizzare quelli con range più limitato, altrimenti si rischia di escludere aerei con loadout efficaci ma con range limitato che potrebbero comunque essere utilizzati se la lunghezza della rotta è breve
+
+        for ac in Aircraft_Data._registry.values():
+            
+            if role and not any(c.value == role for c in ac.category):
+                continue
+            
+            if not any(user in COALITIONS[side] for user in ac.users):
+                continue
+
+            loadouts = self.get_loadouts(ac.model, task)            
+
+            if not loadouts:
+                logger.warning(f"No loadouts found for aircraft {ac.model!r} and task {task!r}. Skipping combat score evaluation.")
+                continue
+
+            aircraft_list['score'] = 0.0
+
+            for loadout in loadouts:                
+
+                if target_distribuition:
+
+                    sc = ac.loadout_target_effectiveness_by_distribuition(task=task, loadout=loadout, target_distribuition=target_distribuition, route_length=0, route_speed=1)
+                else:
+                    sc = ac.combat_score(task=task, loadout=loadout)
+
+                if sc > aircraft_list['score']:
+                    aircraft_list['score'] = sc
+                    aircraft_list['aircraft'] = ac.model
+
+        #return sorted([ac for ac in Aircraft_Data._registry.values() if any(user in COALITIONS[side] for user in ac.users) and (role is None or role in ac.roles)], key=lambda x: x.combat_score(task, loadout=self.get_loadouts(x.model, task)[0]), reverse=True)           
+        return sorted([ac for ac in Aircraft_Data._registry.values() if any(user in COALITIONS[side] for user in ac.users) and (role is None or any(c.value == role for c in ac.category))], key=lambda x: x.combat_score(task, loadout=next(iter(self.get_loadouts(x.model, task)))), reverse=True)
+
 
 # AIRCRAFT DATA
 

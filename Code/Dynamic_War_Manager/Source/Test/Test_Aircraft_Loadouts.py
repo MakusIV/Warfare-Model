@@ -56,6 +56,62 @@ TASK_TARGET_TYPE_OVERRIDE: dict = {
 ROUTE_SPEED: float = 100.0   # km/h
 ROUTE_LENGTH: float = 100.0  # km
 
+# ─── Distribuzioni target per loadout_target_effectiveness_by_distribuition ──
+# Distribuzione monotipo: solo Soft, tutte le dimensioni, somme = 1.0
+_DIST_SOFT_ONLY: dict = {
+    "Soft": {
+        "perc_type": 1.0,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    }
+}
+
+# Distribuzione mista: Soft 70% + Armored 30%, somme = 1.0
+_DIST_MIXED: dict = {
+    "Soft": {
+        "perc_type": 0.7,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    },
+    "Armored": {
+        "perc_type": 0.3,
+        "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3},
+    },
+}
+
+# Distribuzione non valida: manca la chiave perc_dimension
+_DIST_MISSING_DIM: dict = {
+    "Soft": {
+        "perc_type": 1.0,
+    }
+}
+
+# Distribuzione non valida: perc_type > 1 (fuori range)
+_DIST_PERC_TYPE_INVALID: dict = {
+    "Soft": {
+        "perc_type": 1.5,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    }
+}
+
+# Distribuzione non valida: somma perc_dimension != 1.0
+_DIST_DIM_SUM_INVALID: dict = {
+    "Soft": {
+        "perc_type": 1.0,
+        "perc_dimension": {"big": 0.5, "med": 0.5, "small": 0.5},  # sum = 1.5
+    }
+}
+
+# Distribuzione non valida: somma perc_type != 1.0
+_DIST_TYPE_SUM_INVALID: dict = {
+    "Soft": {
+        "perc_type": 0.5,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    },
+    "Armored": {
+        "perc_type": 0.1,  # somma totale = 0.6, non 1.0
+        "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3},
+    },
+}
+
 # Directory di output per i PDF
 OUTPUT_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "out")
@@ -90,6 +146,8 @@ _LOADOUT_IRON    = "Iron Bomb Strike"
 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
+    get_aircraft_loadouts,
+    get_aircraft_loadouts_by_task,
     get_loadout,
     get_loadout_tasks,
     get_loadout_attributes,
@@ -100,11 +158,108 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     evaluate_loadout_altitude,
     loadout_eval,
     loadout_target_effectiveness,
+    loadout_target_effectiveness_by_distribuition,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  UNIT TESTS
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+class TestGetAircraftLoadouts(unittest.TestCase):
+    """Unit test per get_aircraft_loadouts()."""
+
+    def test_valid_aircraft_returns_dict(self):
+        """Aircraft valido → restituisce un dizionario."""
+        result = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        self.assertIsInstance(result, dict)
+
+    def test_returns_nonempty_dict(self):
+        """L'F-14A Tomcat ha almeno un loadout nel database."""
+        result = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        self.assertTrue(result)
+
+    def test_values_are_dicts(self):
+        """Ogni valore nel dizionario restituito è a sua volta un dizionario (loadout config)."""
+        result = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        for name, config in result.items():
+            with self.subTest(loadout=name):
+                self.assertIsInstance(config, dict)
+
+    def test_each_loadout_has_tasks_key(self):
+        """Ogni loadout config contiene la chiave 'tasks'."""
+        result = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        for name, config in result.items():
+            with self.subTest(loadout=name):
+                self.assertIn("tasks", config)
+
+    def test_known_loadout_present(self):
+        """Il loadout noto 'Phoenix Fleet Defense' è presente per l'F-14A Tomcat."""
+        result = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        self.assertIn(_LOADOUT_CAP, result)
+
+    def test_multiple_aircraft_return_different_dicts(self):
+        """Aeromobili diversi restituiscono loadout diversi."""
+        result_cap    = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        result_strike = get_aircraft_loadouts(_AIRCRAFT_STRIKE)
+        self.assertNotEqual(set(result_cap.keys()), set(result_strike.keys()))
+
+    def test_invalid_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_aircraft_loadouts("INVALID_AIRCRAFT_XYZ")
+
+
+class TestGetAircraftLoadoutsByTask(unittest.TestCase):
+    """Unit test per get_aircraft_loadouts_by_task()."""
+
+    def test_valid_task_returns_dict(self):
+        """Aircraft valido + task valido → restituisce un dizionario."""
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, "CAP")
+        self.assertIsInstance(result, dict)
+
+    def test_known_loadout_present_for_task(self):
+        """'Phoenix Fleet Defense' deve comparire tra i loadout CAP dell'F-14A Tomcat."""
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, "CAP")
+        self.assertIn(_LOADOUT_CAP, result)
+
+    def test_all_returned_loadouts_have_task(self):
+        """Tutti i loadout nel risultato devono contenere il task richiesto."""
+        task = "CAP"
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, task)
+        for name, config in result.items():
+            with self.subTest(loadout=name):
+                self.assertIn(task, config.get("tasks", []))
+
+    def test_result_is_subset_of_all_loadouts(self):
+        """Il risultato per un task è un sottoinsieme di get_aircraft_loadouts()."""
+        all_loadouts  = get_aircraft_loadouts(_AIRCRAFT_CAP)
+        task_loadouts = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, "CAP")
+        for name in task_loadouts:
+            with self.subTest(loadout=name):
+                self.assertIn(name, all_loadouts)
+
+    def test_strike_task_returns_strike_loadout(self):
+        """'Laser Strike' deve comparire tra i loadout Pinpoint_Strike dell'F-15E."""
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_STRIKE, "Pinpoint_Strike")
+        self.assertIn(_LOADOUT_STRIKE, result)
+
+    def test_unknown_task_returns_empty_dict(self):
+        """Task inesistente → dizionario vuoto (non ValueError)."""
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, "TASK_THAT_DOES_NOT_EXIST_XYZ")
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
+
+    def test_loadout_not_in_task_is_excluded(self):
+        """Un loadout che non ha il task richiesto non deve comparire nel risultato."""
+        # "Phoenix Fleet Defense" ha tasks CAP e Intercept, non "CAS"
+        result = get_aircraft_loadouts_by_task(_AIRCRAFT_CAP, "CAS")
+        self.assertNotIn(_LOADOUT_CAP, result)
+
+    def test_invalid_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError (propagato da get_aircraft_loadouts)."""
+        with self.assertRaises(ValueError):
+            get_aircraft_loadouts_by_task("INVALID_AIRCRAFT_XYZ", "CAP")
 
 
 class TestGetLoadout(unittest.TestCase):
@@ -519,6 +674,21 @@ def _safe_loadout_target_eff(
         return float("nan")
 
 
+def _safe_loadout_target_eff_by_dist(
+    aircraft: str,
+    loadout: str,
+    distribution: dict,
+    r_len: float,
+    r_spd: float,
+) -> float:
+    """Chiama loadout_target_effectiveness_by_distribuition con entrambi i logger mockati; ritorna float('nan') su eccezione."""
+    try:
+        with patch(_LOGGER_PATH, MagicMock()), patch(_LOGGER_PATH_WD, MagicMock()):
+            return loadout_target_effectiveness_by_distribuition(aircraft, loadout, distribution, r_len, r_spd)
+    except Exception:
+        return float("nan")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  TABELLE — STAMPA A TERMINALE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -830,6 +1000,155 @@ def save_loadout_target_eff_pdf(
     print(f"[PDF] loadout_target_eff → {output_path}")
 
 
+class TestLoadoutTargetEffectivenessByDistribution(unittest.TestCase):
+    """
+    Unit test per loadout_target_effectiveness_by_distribuition().
+
+    La funzione esegue due fasi distinte prima di calcolare lo score:
+      1. Approvazione rotta (stessa logica di loadout_target_effectiveness):
+         se route_speed > velocità loadout o route_length > gittata effettiva → 0.0
+      2. Validazione della distribuzione target:
+         - perc_dimension deve essere presente e non vuota → altrimenti 0.0
+         - perc_type deve essere in [0, 1] → altrimenti 0.0
+         - somma perc_dimension ≈ 1.0 (±0.01) → altrimenti 0.0
+         - somma perc_type ≈ 1.0 (±0.01) → altrimenti 0.0
+      3. Calcolo score pesato per (target_type × target_dimension × weapon).
+
+    Entrambi i logger sono mockati per isolare dai side-effect di
+    Aircraft_Loadouts e Aircraft_Weapon_Data.
+    """
+
+    def setUp(self):
+        self._logger_patcher    = patch(_LOGGER_PATH,    MagicMock())
+        self._logger_patcher_wd = patch(_LOGGER_PATH_WD, MagicMock())
+        self._logger_patcher.start()
+        self._logger_patcher_wd.start()
+
+    def tearDown(self):
+        self._logger_patcher_wd.stop()
+        self._logger_patcher.stop()
+
+    # ── Comportamento base ────────────────────────────────────────────────────
+
+    def test_returns_float(self):
+        """Distribuzione valida, rotta breve → restituisce un float."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_SOFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertIsInstance(result, float)
+
+    def test_score_non_negative(self):
+        """Distribuzione valida → score >= 0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_SOFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreaterEqual(result, 0.0)
+
+    def test_mixed_distribution_returns_float(self):
+        """Distribuzione mista (Soft 70% + Armored 30%) → float >= 0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_MIXED,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertIsInstance(result, float)
+        self.assertGreaterEqual(result, 0.0)
+
+    # ── Approvazione rotta ────────────────────────────────────────────────────
+
+    def test_excessive_route_speed_returns_zero(self):
+        """Velocità rotta irraggiungibile → loadout non approvato → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_SOFT_ONLY,
+            ROUTE_LENGTH, 99999.0,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_excessive_route_length_returns_zero(self):
+        """Lunghezza rotta irraggiungibile → loadout non approvato → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_SOFT_ONLY,
+            99999.0, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    # ── Validazione distribuzione: perc_dimension ─────────────────────────────
+
+    def test_missing_perc_dimension_returns_zero(self):
+        """Chiave 'perc_dimension' assente nel target type → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_MISSING_DIM,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_perc_dimension_sum_not_one_returns_zero(self):
+        """Somma dei valori di perc_dimension != 1.0 → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_DIM_SUM_INVALID,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    # ── Validazione distribuzione: perc_type ─────────────────────────────────
+
+    def test_perc_type_out_of_range_returns_zero(self):
+        """perc_type > 1 → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_PERC_TYPE_INVALID,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_perc_type_none_returns_zero(self):
+        """Chiave 'perc_type' assente (None) → 0.0."""
+        dist = {
+            "Soft": {
+                "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+            }
+        }
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, dist,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_perc_type_sum_not_one_returns_zero(self):
+        """Somma dei perc_type di tutti i target type != 1.0 → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_TYPE_SUM_INVALID,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_empty_distribution_returns_zero(self):
+        """Distribuzione vuota → somma perc_type = 0.0 ≠ 1.0 → 0.0."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, {},
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertEqual(result, 0.0)
+
+    # ── Errori di input ───────────────────────────────────────────────────────
+
+    def test_invalid_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            loadout_target_effectiveness_by_distribuition(
+                "INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, _DIST_SOFT_ONLY,
+                ROUTE_LENGTH, ROUTE_SPEED,
+            )
+
+    def test_invalid_loadout_raises_ValueError(self):
+        """Loadout sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            loadout_target_effectiveness_by_distribuition(
+                _AIRCRAFT_CAP, "INVALID_LOADOUT_XYZ", _DIST_SOFT_ONLY,
+                ROUTE_LENGTH, ROUTE_SPEED,
+            )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
@@ -838,6 +1157,8 @@ def _run_tests() -> unittest.TestResult:
     loader = unittest.TestLoader()
     suite  = unittest.TestSuite()
     for cls in (
+        TestGetAircraftLoadouts,
+        TestGetAircraftLoadoutsByTask,
         TestGetLoadout,
         TestGetLoadoutTasks,
         TestGetLoadoutAttributes,
@@ -848,6 +1169,7 @@ def _run_tests() -> unittest.TestResult:
         TestEvaluateLoadoutAltitude,
         TestLoadoutEval,
         TestLoadoutTargetEffectiveness,
+        TestLoadoutTargetEffectivenessByDistribution,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)

@@ -27,7 +27,7 @@
 #   stores                : full list of carried stores and internal resources
 # =============================================================================
 
-from typing import List
+from typing import Dict, List, Optional
 from venv import logger
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target
@@ -3502,7 +3502,7 @@ AIRCRAFT_LOADOUTS = {
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {"Escort": True, "SEAD": True, "Escort_Jammer": True,
                                    "Flare_Illumination": False, "Laser_Illumination": False},
-            "stores": {"pylons": {"bay_1": ["Kh-22N", 6]},
+            "stores": {"pylons": {"bay_1": ["Kh-55", 6]},
                        "devices": {}, "pylon_count": 1,
                        "fuel_internal_max": 87000, "flare": 0, "chaff": 0, "gun_rounds": 0},
         },
@@ -3558,7 +3558,7 @@ AIRCRAFT_LOADOUTS = {
             "usability": {"day": True, "night": True, "adverse_weather": True},
             "mandatory_support": {"Escort": True, "SEAD": True, "Escort_Jammer": True,
                                    "Flare_Illumination": False, "Laser_Illumination": False},
-            "stores": {"pylons": {"bay_1": ["Kh-22N", 6], "bay_2": ["Kh-22N", 6]},
+            "stores": {"pylons": {"bay_1": ["Kh-101", 6], "bay_2": ["Kh-101", 6]},
                        "devices": {}, "pylon_count": 2,
                        "fuel_internal_max": 171000, "flare": 0, "chaff": 0, "gun_rounds": 0},
         },
@@ -3687,6 +3687,18 @@ AIRCRAFT_LOADOUTS = {
 # =========================================================================
 # Methods to retrieve loadout information
 # =========================================================================
+def get_aircraft_loadouts(aircraft_name):
+    """Retrieve all loadouts available for a specific aircraft."""
+    try:
+        return AIRCRAFT_LOADOUTS[aircraft_name]
+    except KeyError:
+        raise ValueError(f"Aircraft '{aircraft_name}' not found in loadout database")
+    
+def get_aircraft_loadouts_by_task(aircraft_name, task):
+    """Retrieve loadouts for a specific aircraft that are designed for a given task."""
+    loadouts = get_aircraft_loadouts(aircraft_name)
+    return {name: config for name, config in loadouts.items() if task in config.get("tasks", [])}
+
 
 def get_loadout(aircraft_name, loadout_name):
     """Retrieve the loadout configuration for a specific aircraft and loadout name."""
@@ -3805,3 +3817,98 @@ def loadout_target_effectiveness(aircraft_name: str, loadout_name: str, target_t
 
     return score
 
+def loadout_target_effectiveness_by_distribuition(aircraft_name: str, loadout_name: str, target_distribution: Dict, route_length: float, route_speed: float) -> float: # questo lo usi per valutare l'efficacia del loadout sul target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout)
+      
+    loadout = get_loadout(aircraft_name, loadout_name)
+    loadout_approval = False
+    effective_range = 0.0
+
+    reference = [ [loadout.get("cruise", {}).get("speed", 0), loadout.get("cruise", {}).get("range", {}).get("fuel_100%", 0)], [loadout.get("attack", {}).get("speed", 0), loadout.get("attack", {}).get("range", {}).get("fuel_100%", 0)]]
+
+    pylons = loadout.get("stores", {}).get("pylons", {})
+
+    for i, ref in enumerate(reference): # confronto la velocità di crociera e di attacco del loadout con la velocità della rotta, se la velocità della rotta è inferiore o uguale alla velocità di crociera del loadout, allora il loadout è approvato per la rotta, altrimenti non è approvato
+        speed = ref[0]
+        ref_range = ref[1]
+        if route_speed <= speed:
+            factor_range_increment = min (1.3, 1 + speed * 0.1 / route_speed if route_speed > 0 else 0 ) # fattore di incremento della gittata in base alla velocità di crociera di riferimento rispetto alla velocità effettiva della rotta, con un limite massimo del 30% di incremento
+            effective_range  = ref_range * factor_range_increment # incremento della gittata in base alla velocità di crociera rispetto alla velocità della rotta
+
+            if route_length <= effective_range:
+                loadout_approval = True
+                break # se la velocità della rotta è inferiore o uguale alla velocità di crociera o di attacco del loadout e la gittata effettiva è superiore o uguale alla lunghezza della rotta, allora il loadout è approvato per la rotta e si esce dal ciclo
+
+    if not loadout_approval:
+        logger.info(f"Loadout '{loadout_name}' for aircraft '{aircraft_name}' is not approved for the route due to insufficient range (effective range: {effective_range:.2f} km, route length: {route_length:.2f} km).")
+        return 0.0 # se la gittata effettiva è inferiore alla lunghezza della rotta, il loadout non è approvato e restituisce un punteggio di efficacia pari a 0
+
+    # continuiamo con la valutazione dell'efficacia del loadout contro il target specifico, considerando le caratteristiche del target e confrontandole con quelle del loadout
+    """
+    esempio di distribuzione dei target:
+    target_distribuition = {
+                'Soft':     {   'perc_type': 0.7,
+                                'perc_dimension': {
+                                    'big': 0.2,
+                                    'med': 0.5,
+                                    'small': 0.3
+                                },
+                'Hard':     {   'perc_type': 0.1,
+                                'perc_dimension': {
+                                    'big': 0.3,
+                                    'med': 0.4,
+                                    'small': 0.3
+                                },
+                'Structured': {'perc_type': 0.2,
+                                'perc_dimension': {
+                                    'big': 0.1,
+                                    'med': 0.1,
+                                    'small': 0.8
+                                },
+        }
+    """
+    perc_type_sum = 0.0
+    
+    # Controllo della conformità della distribuzione dei target, verificando che ogni target type abbia una distribuzione delle dimensioni valida e che la somma delle distribuzioni dei tipi e delle dimensioni sia approssimativamente 1
+    for target_type, distribution in target_distribution.items(): # target_type = 'Soft', 'Hard', 'Structured'            
+        dimension_distribution = distribution.get("perc_dimension", {})
+        
+        if not dimension_distribution:
+            logger.warning(f"Target type '{target_type}' does not have a valid dimension distribution, returning 0.0.")
+            return 0.0 # se il target type non ha una distribuzione delle dimensioni valida, restituisce un punteggio di efficacia pari a 0
+        perc_type = distribution.get("perc_type", None)
+
+        if perc_type is None or not (0 <= perc_type <= 1):
+            logger.warning(f"Target type '{target_type}' does not have a valid type distribution, returning 0.0.")
+            return 0.0 # se il target type non ha una distribuzione del tipo valida, restituisce un punteggio di efficacia pari a 0
+        perc_type_sum += perc_type
+        perc_dimension_sum = 0.0        
+
+        for target_dimension, distribution in dimension_distribution.items(): # target_dimension = 'big', 'med', 'small'
+            perc_dimension = dimension_distribution.get(target_dimension, None) 
+
+            if perc_dimension is None:
+                logger.warning(f"Target type '{target_type}' does not have a valid distribution for dimension '{target_dimension}', returning 0.0.")
+                return 0.0 # se il target type non ha una distribuzione per quella dimensione specifica valida, restituisce un punteggio di efficacia pari a 0
+            perc_dimension_sum += perc_dimension
+        if abs(perc_dimension_sum - 1.0) > 0.01: # controllo che la somma delle distribuzioni delle dimensioni sia approssimativamente 1
+            logger.warning(f"Target type '{target_type}' has an invalid dimension distribution (sum: {perc_dimension_sum:.2f}), returning 0.0.")
+            return 0.0 # se la somma delle distribuzioni delle dimensioni non è approssimativamente 1, restituisce un punteggio di efficacia pari a 0
+    if abs(perc_type_sum - 1.0) > 0.01: # controllo che la somma delle distribuzioni dei tipi sia approssimativamente 1
+        logger.warning(f"Target distribution has an invalid type distribution (sum: {perc_type_sum:.2f}), returning 0.0.")
+        return 0.0 # se la somma delle distribuzioni dei tipi non è approssimativamente 1, restituisce un punteggio di efficacia pari a 0
+    
+    # Calcolo score per ogni combinazione di target type e dimensione, moltiplicando il punteggio base dell'arma per la distribuzione del target per quel tipo e dimensione specifici
+    score = 0.0
+    for target_type, distribution in target_distribution.items(): # target_type = 'Soft', 'Hard', 'Structured'
+        dimension_distribution = distribution.get("perc_dimension", {})
+        perc_type = distribution.get("perc_type")
+
+        type_score = 0.0
+        for target_dimension, perc_dimension in dimension_distribution.items(): # target_dimension = 'big', 'med', 'small'
+            dim_score = 0.0
+            for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]
+                dim_score += get_weapon_score_target(weapon[0], [target_type], [target_dimension]) * weapon[1] # punteggio base dell'arma in base al modello
+            type_score += dim_score * perc_dimension # contributo di questa dimensione, pesato per la sua distribuzione
+        score += type_score * perc_type # contributo di questo tipo, pesato per la sua distribuzione
+
+    return score

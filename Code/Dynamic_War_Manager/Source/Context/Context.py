@@ -13,6 +13,14 @@ MAX_WORLD_DISTANCE = float('inf')
 DCS_DATA_DIRECTORY = 'E:\\Sviluppo\Warfare_Model\\Code\\Persistence\\DCS_Data' # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
 DEBUG = False
 
+COALITIONS = {
+    'Blue': ['USA', 'Germany', 'France', 'Britain', 'Italy', 'Turkey', 'Greece', 'Georgia', 'Australia', 'Canada'],
+    'Red': ['Russia', 'China', 'North_Korea', 'Iran', 'Syria'],
+    'Neutral': ['India', 'Japan', 'Vietnam', 'Brazil']
+}
+
+
+
 PATH_TYPE = ['onroad', 'offroad', 'air', 'water']
 ROUTE_TYPE = ['ground', 'air', 'water', 'mixed']
 
