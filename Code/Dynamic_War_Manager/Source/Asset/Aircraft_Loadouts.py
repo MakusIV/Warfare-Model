@@ -3707,6 +3707,22 @@ def get_loadout(aircraft_name, loadout_name):
     except KeyError:
         raise ValueError(f"Loadout '{loadout_name}' not found for aircraft '{aircraft_name}'")
     
+def get_weapons_by_loadout(aircraft_model, loadout_name):
+    """Get the list of weapons associated with a specific loadout."""
+    loadout = get_loadout(aircraft_model, loadout_name)
+
+    stores = loadout.get('stores', None)
+
+    if not stores:
+        raise ValueError(f"No stores found in loadout {loadout!r} for aircraft {aircraft_model!r}.")
+    
+    pylons = stores.get('pylons', None)
+
+    if not pylons:
+        raise ValueError(f"No pylons found in loadout {loadout!r} for aircraft {aircraft_model!r}.")
+    
+    return pylons
+
 def get_loadout_tasks(aircraft_name, loadout_name):
     """Get the list of tasks associated with a specific loadout."""
     loadout = get_loadout(aircraft_name, loadout_name)
@@ -3757,8 +3773,6 @@ def evaluate_loadout_altitude(aircraft_name, loadout_name, phase):
         "altitude_max": phase_data.get("altitude_max", 0),
         "altitude_min": phase_data.get("altitude_min", 0),
     }
-
-
 
 def loadout_eval(aircraft_name: str, loadout_name: str) -> float: # questo lo usi per verificare come l'aereo performa per la missione senza considerare la tipologia del target
     """Evaluate the overall effectiveness of a loadout based on its attributes, range, speed, and weaponry."""

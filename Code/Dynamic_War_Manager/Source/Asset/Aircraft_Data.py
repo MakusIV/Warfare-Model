@@ -20,9 +20,11 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, loadout_target_effectiveness_by_distribuition
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, get_loadout, loadout_target_effectiveness_by_distribuition, get_weapon_efficiency
 from sympy import Point3D
 from dataclasses import dataclass
+
+from Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
 
 # LOGGING --
  
@@ -789,7 +791,7 @@ class Aircraft_Data:
             return get_aircraft_loadouts(aircraft_name)
         
     def get_list_of_aircrafts(self, side: str, task: str, target_distribuition: Optional[Dict[str, float]], role: Optional[str] = None, route_length: Optional[float] = None, route_speed: Optional[float] = None):
-
+        """Returns a list of aircrafts sorted by combat score for a specific task, considering the target distribution and the role."""
         """
         esempio di distribuzione dei target:
         target_distribuition = {
@@ -865,6 +867,44 @@ class Aircraft_Data:
 
         #return sorted([ac for ac in Aircraft_Data._registry.values() if any(user in COALITIONS[side] for user in ac.users) and (role is None or role in ac.roles)], key=lambda x: x.combat_score(task, loadout=self.get_loadouts(x.model, task)[0]), reverse=True)           
         return sorted([ac for ac in Aircraft_Data._registry.values() if any(user in COALITIONS[side] for user in ac.users) and (role is None or any(c.value == role for c in ac.category))], key=lambda x: x.combat_score(task, loadout=next(iter(self.get_loadouts(x.model, task)))), reverse=True)
+
+    def get_aircrafts_quantity(self, model: str, loadout: str, target_data: Dict[str, float]):
+    
+        """
+        esempio di distribuzione dei target:
+        target_data = {
+                    'Soft':     {   
+                                    'big': 3,
+                                    'med': 5,
+                                    'small': 10
+                                },
+                    'Armored':  {
+                                    'big': 2,
+                                    'med': 4,
+                                    'small': 10
+                                },
+                    'Structure':{
+                                    'big': 3,
+                                    'med': 6,
+                                    'small': 12
+                                },
+            }
+        """
+
+        aircraft = Aircraft_Data._registry.get(model)
+        
+        if not aircraft:
+            raise ValueError(f"Aircraft with name {model!r} not found.")    
+        
+        loadout_data = get_loadout(model, loadout)
+
+        if not loadout_data:
+            raise ValueError(f"Loadout with name {loadout!r} for aircraft {model!r} not found.")
+        
+        weapons = get_weapon_efficiency(model, loadout, target_data)
+                        
+        pass    
+        
 
 
 # AIRCRAFT DATA

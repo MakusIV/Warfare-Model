@@ -648,6 +648,87 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
 
     return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
+def get_weapon_efficiency(model: str, target_data: Dict[str, float]) -> Dict[str, float]:
+    """
+    Returns an efficiency score for a weapon against a list of specific target, based on the weapon's parameters and the target's characteristics.
+
+    Restituisce un punteggio di efficienza per una bomba valutando gli effetti in base ad una lista di bersagli con dimensioni specificate in una lista. Il calcolo è basato sui parametri della bomba e sulle caratteristiche del bersaglio.
+    
+    :param model: model of WEAPON / il modello dell'ARMA da valutare
+    :type model: str
+    :param target_type: type of target (e.g., 'Soft', 'Armored', 'Structure') / tipo di bersaglio (es. 'Soft', 'Armored', 'Structure')
+    :type target_type: List
+    :param target_dimension: dimension of target (e.g., 'small', 'medium', 'large') / dimensione del bersaglio (es. 'small', 'medium', 'large')
+    :type target_dimension: List
+    :return: weapon's efficiency against the target / punteggio di efficacia della bomba contro il bersaglio, calcolato come prodotto del punteggio base della bomba e dell'efficacia della testata contro quel tipo e dimensione di bersaglio
+    :rtype: float
+    """
+
+    """ target_data = {
+                    'Soft':     {   
+                                    'big': 3,
+                                    'med': 5,
+                                    'small': 10
+                                },
+                    'Armored':  {
+                                    'big': 2,
+                                    'med': 4,
+                                    'small': 10
+                                },
+                    'Structure':{
+                                    'big': 3,
+                                    'med': 6,
+                                    'small': 12
+                                },
+            }"""
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+    result  = get_weapon(model)
+
+    weapons_category, weapons_type, weapon_data = result.get('weapons_category', None), result.get('weapons_type', None), result.get('weapons_data', None)
+
+    if not isinstance(target_data, dict):
+        raise TypeError(f"target_data is not dict, got {type(target_data).__name__}")
+
+    if not weapons_category or not weapons_type or not weapon_data:
+        logger.warning(f"weapon {model} unknow, return None")
+        return None   
+    
+    if weapons_category == 'MISSILES_AAM':
+        logger.warning(f"weapon {model} is a a2a missile, get_weapon_efficiency is not implemented for missiles, return None")
+        return None    
+    weapon_efficiency = weapon_data.get('efficiency', None)
+
+    if not weapon_efficiency:
+        logger.warning(f"weapon {model} has no efficiency data, return None")
+        return None    
+    efficiency = {}
+
+    for target_type, dimensions in target_data.items():
+
+        if target_type not in TARGET_CLASSIFICATION:
+            logger.warning(f"target_type {target_type} unknow, got {target_data}. Continue with next target type.")
+            continue
+        efficiency[target_type] = {}
+
+        for target_dimension in dimensions.keys():
+
+            if target_dimension not in TARGET_DIMENSION:
+                logger.warning(f"target_dimension {target_dimension} unknow, got {target_data}. Continue with next target dimension.")
+                continue
+            dimension = weapon_efficiency.get(target_type, {}).get(target_dimension, None)
+
+            if not dimension:
+                logger.warning(f"weapon {model} has no efficiency data for target_type {target_type} and target_dimension {target_dimension}, set efficiency to 0.0")
+                efficiency[target_type][target_dimension] = {'accuracy': 0.0, 'destroy_capacity': 0.0}
+            else:
+                efficiency[target_type][target_dimension] = dimension
+
+    return efficiency
+
+
+
 AIR_WEAPONS = {
    
     'MISSILES_AAM': {

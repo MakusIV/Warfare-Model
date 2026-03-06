@@ -30,6 +30,21 @@ Bug nel modulo Aircraft_Weapon_Data (documentati nei test):
   B6. TARGET_DIMENSION = ['small','medium','large'] non corrispondeva alle chiavi
       efficiency 'small'/'med'/'big' → validazione sempre falliva → ritornava 0.
       [CORRETTO: aggiornato a ['small','med','big']]
+  BW1. get_weapon_efficiency(): fa tuple unpacking su get_weapon(model)
+      (`weapons_category, weapons_type, weapon_data = get_weapon(model)`),
+      ma get_weapon restituisce un dict (non una tupla). Fare unpacking di un
+      dict ne estrae le CHIAVI in ordine d'inserzione; quindi le variabili
+      ricevono le stringhe "weapons_category", "weapons_type", "weapons_data"
+      invece dei valori. Conseguenze:
+        • Arma sconosciuta (get_weapon → None): TypeError "cannot unpack
+          non-iterable NoneType object" invece di return None.
+        • Arma valida: weapon_data è la stringa "weapons_data" → la chiamata
+          weapon_data.get('efficiency', None) solleva AttributeError.
+      [DA CORREGGERE: result = get_weapon(model); usare result.get('weapons_category') etc.]
+  BW2. get_weapon_efficiency(): efficiency[target_type] = {} è DENTRO il ciclo
+      interno sul target_dimension → sovrascrive le dimensioni già calcolate per
+      lo stesso target_type ad ogni iterazione, conservando solo l'ultima.
+      [DA CORREGGERE: spostare efficiency[target_type] = {} fuori dal ciclo su target_dimension]
 """
 
 import os
@@ -99,6 +114,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
     get_machine_guns_score,
     get_weapon_score,
     get_weapon_score_target,
+    get_weapon_efficiency,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1109,6 +1125,286 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
     def test_type_error_non_string_model_none(self):
         with self.assertRaises(TypeError):
             get_weapon_score_target(None, ["Soft"], ["small"])
+
+
+class TestGetWeaponEfficiency(unittest.TestCase):
+    """
+    Unit test per get_weapon_efficiency(model, target_data).
+
+    La funzione deve restituire un dict strutturato come:
+        {target_type: {target_dimension: {'accuracy': float, 'destroy_capacity': float}}}
+    con i dati di efficienza dell'arma per ogni combinazione (target_type,
+    target_dimension) richiesta in target_data, oppure None per modelli
+    sconosciuti, MISSILES_AAM, o armi prive di dati efficiency.
+
+    target_data ha la forma:
+        {'Soft': {'big': <n>, 'med': <n>, 'small': <n>}, 'Armored': {...}, ...}
+    I valori numerici nelle dimensioni non vengono usati: la funzione legge
+    solo le CHIAVI per determinare quali dimensioni valutare.
+
+    Bug noti (non ancora corretti):
+      BW1. Il codice fa `weapons_category, weapons_type, weapon_data = get_weapon(model)`,
+           ma get_weapon restituisce un dict a 3 chiavi (non una tupla). L'unpacking
+           di un dict estrae le chiavi in ordine, quindi le variabili ricevono le
+           stringhe "weapons_category", "weapons_type", "weapons_data" invece dei
+           valori. Ne consegue:
+             • Arma sconosciuta → TypeError (unpack su None) invece di return None.
+             • Arma valida → AttributeError su weapon_data.get() (str non ha .get).
+           I test che rivelano questo bug sono annotati con [BW1].
+      BW2. `efficiency[target_type] = {}` è all'interno del ciclo interno
+           per target_dimension → sovrascrive le dimensioni già calcolate per lo
+           stesso target_type, conservando solo l'ultima.
+           I test che rivelano questo bug sono annotati con [BW2].
+    """
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    # ── Validazione tipo parametri ─────────────────────────────────────────
+
+    def test_type_error_on_int_model(self):
+        """Raises TypeError se model non è str (check avviene prima dell'unpacking)."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency(123, {'Soft': {'med': 1}})
+
+    def test_type_error_on_none_model(self):
+        """Raises TypeError se model è None."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency(None, {'Soft': {'med': 1}})
+
+    def test_type_error_on_list_model(self):
+        """Raises TypeError se model è una lista."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency(["Mk-84"], {'Soft': {'med': 1}})
+
+    def test_type_error_on_float_model(self):
+        """Raises TypeError se model è un float."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency(3.14, {'Soft': {'med': 1}})
+
+    def test_type_error_on_str_target_data_known_weapon(self):
+        """Raises TypeError se target_data non è dict, per arma valida.
+        L'unpacking del dict restituito da get_weapon (3 chiavi in ordine)
+        funziona sintatticamente, quindi si arriva al check isinstance."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency("Mk-84", "not-a-dict")
+
+    def test_type_error_on_list_target_data_known_weapon(self):
+        """Raises TypeError se target_data è una lista, per arma valida."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency("Mk-84", ["Soft"])
+
+    def test_type_error_on_none_target_data_known_weapon(self):
+        """Raises TypeError se target_data è None, per arma valida."""
+        with self.assertRaises(TypeError):
+            get_weapon_efficiency("Mk-84", None)
+
+    # ── Arma sconosciuta → None ────────────────────────────────────────────
+
+    def test_unknown_weapon_returns_none(self):
+        """Arma sconosciuta deve restituire None.
+        [BW1] Con il bug attuale get_weapon restituisce None →
+        l'unpacking solleva TypeError invece di procedere al check."""
+        result = get_weapon_efficiency("WEAPON_UNKNOWN_XYZ", {'Soft': {'med': 1}})
+        self.assertIsNone(result)
+
+    # ── MISSILES_AAM → None ────────────────────────────────────────────────
+
+    def test_aam_ir_returns_none(self):
+        """MISSILES_AAM deve restituire None (non implementato per AAM).
+        [BW1] Con il bug attuale il check `weapons_category == 'MISSILES_AAM'`
+        confronta la chiave del dict ('weapons_category') col valore → sempre False
+        → si procede fino ad AttributeError su weapon_data.get()."""
+        result = get_weapon_efficiency("AIM-9L", {'Soft': {'med': 1}})
+        self.assertIsNone(result)
+
+    def test_aam_radar_returns_none(self):
+        """MISSILES_AAM radar (AIM-54A-MK47) deve restituire None. [BW1]"""
+        result = get_weapon_efficiency("AIM-54A-MK47", {'Soft': {'med': 1}})
+        self.assertIsNone(result)
+
+    def test_asm_does_not_return_none(self):
+        """MISSILES_ASM non è un AAM: la funzione non deve restituire None.
+        [BW1] Con il bug attuale solleva AttributeError prima di restituire
+        qualsiasi valore."""
+        result = get_weapon_efficiency("RB-05A", {'Soft': {'med': 1}})
+        self.assertIsNotNone(result)
+
+    # ── Tipo restituito ────────────────────────────────────────────────────
+
+    def test_valid_bomb_returns_dict(self):
+        """Bomba valida (Mk-84) con target_data valido deve restituire un dict.
+        [BW1] Con il bug attuale solleva AttributeError."""
+        result = get_weapon_efficiency("Mk-84", {'Soft': {'med': 1}})
+        self.assertIsInstance(result, dict)
+
+    def test_valid_cannon_returns_dict(self):
+        """Cannone valido (UPK-23) deve restituire un dict. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        self.assertIsInstance(result, dict)
+
+    def test_valid_rocket_returns_dict(self):
+        """Razzo valido (Zuni-Mk71) deve restituire un dict. [BW1]"""
+        result = get_weapon_efficiency("Zuni-Mk71", {'Soft': {'med': 1}})
+        self.assertIsInstance(result, dict)
+
+    def test_valid_machine_gun_returns_dict(self):
+        """Mitragliatrice valida (AN-M2) deve restituire un dict. [BW1]"""
+        result = get_weapon_efficiency("AN-M2", {'Armored': {'small': 1}})
+        self.assertIsInstance(result, dict)
+
+    # ── Struttura del risultato ────────────────────────────────────────────
+
+    def test_result_contains_requested_target_type(self):
+        """Il risultato deve contenere le chiavi dei target_type validi richiesti.
+        [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        self.assertIn('Soft', result)
+
+    def test_result_contains_multiple_target_types(self):
+        """Con più target_type validi, tutti devono essere presenti nel risultato.
+        [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {
+            'Soft':    {'med': 1},
+            'Armored': {'med': 1},
+        })
+        self.assertIn('Soft', result)
+        self.assertIn('Armored', result)
+
+    def test_result_contains_requested_dimension(self):
+        """Ogni entry del risultato deve avere la dimensione richiesta come chiave.
+        [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        self.assertIn('med', result['Soft'])
+
+    def test_result_dim_has_accuracy_key(self):
+        """Ogni cella (target_type, dim) deve contenere la chiave 'accuracy'. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        self.assertIn('accuracy', result['Soft']['med'])
+
+    def test_result_dim_has_destroy_capacity_key(self):
+        """Ogni cella (target_type, dim) deve contenere 'destroy_capacity'. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        self.assertIn('destroy_capacity', result['Soft']['med'])
+
+    def test_result_accuracy_is_float_in_range(self):
+        """accuracy deve essere un float in [0.0, 1.0]. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        acc = result['Soft']['med']['accuracy']
+        self.assertIsInstance(acc, float)
+        self.assertGreaterEqual(acc, 0.0)
+        self.assertLessEqual(acc, 1.0)
+
+    def test_result_destroy_capacity_is_non_negative(self):
+        """destroy_capacity deve essere >= 0.0. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        dc = result['Soft']['med']['destroy_capacity']
+        self.assertGreaterEqual(dc, 0.0)
+
+    def test_cannon_soft_med_efficiency_non_zero(self):
+        """Un cannone deve avere accuracy * destroy_capacity > 0 contro Soft/med. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'med': 1}})
+        cell = result['Soft']['med']
+        self.assertGreater(cell['accuracy'] * cell['destroy_capacity'], 0.0)
+
+    def test_bomb_soft_med_efficiency_non_zero(self):
+        """Mk-84 (bomba HE) deve avere accuracy * destroy_capacity > 0 contro Soft/med.
+        [BW1]"""
+        result = get_weapon_efficiency("Mk-84", {'Soft': {'med': 1}})
+        cell = result['Soft']['med']
+        self.assertGreater(cell['accuracy'] * cell['destroy_capacity'], 0.0)
+
+    # ── Più dimensioni per lo stesso target_type ───────────────────────────
+
+    def test_multiple_dimensions_all_present_in_result(self):
+        """Con più dimensioni per uno stesso target_type (big, med, small),
+        tutte devono essere presenti nel risultato.
+        [BW1] Con il bug attuale solleva AttributeError.
+        [BW2] Anche dopo la correzione di BW1, efficiency[target_type] = {}
+        dentro il ciclo interno sovrascrive le dimensioni precedenti → solo
+        l'ultima (small) sarebbe presente."""
+        result = get_weapon_efficiency("UPK-23", {
+            'Soft': {'big': 3, 'med': 5, 'small': 10}
+        })
+        self.assertIn('big',   result['Soft'])
+        self.assertIn('med',   result['Soft'])
+        self.assertIn('small', result['Soft'])
+
+    def test_multiple_dimensions_values_independent(self):
+        """I valori per dimensioni diverse dello stesso target_type devono essere
+        indipendenti (non sovrascritti). [BW1] [BW2]"""
+        result = get_weapon_efficiency("UPK-23", {
+            'Soft': {'big': 1, 'small': 1}
+        })
+        self.assertIn('big',   result['Soft'])
+        self.assertIn('small', result['Soft'])
+        # I valori big e small possono essere uguali ma non si sovrascrivono
+        self.assertIn('accuracy', result['Soft']['big'])
+        self.assertIn('accuracy', result['Soft']['small'])
+
+    # ── Target type / dimensione non validi ───────────────────────────────
+
+    def test_unknown_target_type_not_in_result(self):
+        """Target type non valido deve essere ignorato (non presente nel risultato).
+        [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {
+            'INVALID_TYPE': {'med': 1},
+            'Soft':         {'med': 1},
+        })
+        self.assertNotIn('INVALID_TYPE', result)
+        self.assertIn('Soft', result)
+
+    def test_unknown_target_dimension_not_in_result(self):
+        """Dimensione non valida deve essere ignorata. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {
+            'Soft': {'invalid_dim': 1, 'med': 1}
+        })
+        self.assertNotIn('invalid_dim', result.get('Soft', {}))
+        self.assertIn('med', result.get('Soft', {}))
+
+    def test_all_invalid_target_types_returns_empty_dict(self):
+        """Se tutti i target_type sono non validi, deve restituire un dict vuoto.
+        [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'INVALID_TYPE': {'med': 1}})
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
+
+    def test_empty_target_data_returns_empty_dict(self):
+        """Con target_data vuoto deve restituire un dict vuoto. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {})
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
+
+    # ── Valori per dimensione 'big' e 'small' ────────────────────────────
+
+    def test_big_dimension_valid(self):
+        """La dimensione 'big' deve essere accettata e produrre un risultato. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Armored': {'big': 1}})
+        self.assertIn('Armored', result)
+        self.assertIn('big', result['Armored'])
+
+    def test_small_dimension_valid(self):
+        """La dimensione 'small' deve essere accettata e produrre un risultato. [BW1]"""
+        result = get_weapon_efficiency("UPK-23", {'Soft': {'small': 1}})
+        self.assertIn('Soft', result)
+        self.assertIn('small', result['Soft'])
+
+    # ── Coerenza con get_weapon_score_target ──────────────────────────────
+
+    def test_efficiency_accuracy_times_destroy_matches_score_target_single_cell(self):
+        """Per una singola (type, dim), accuracy * destroy_capacity deve coincidere
+        con il contributo di get_weapon_score_target (che calcola la media delle celle).
+        [BW1]"""
+        target_data = {'Soft': {'med': 1}}
+        result = get_weapon_efficiency("UPK-23", target_data)
+        cell = result['Soft']['med']
+        eff_product = cell['accuracy'] * cell['destroy_capacity']
+        score = get_weapon_score_target("UPK-23", ["Soft"], ["med"])
+        self.assertAlmostEqual(eff_product, score, places=6)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
