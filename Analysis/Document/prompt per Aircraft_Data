@@ -1,8 +1,34 @@
 
 
 
-
 FATTO
+
+Nel modulo Aircraft_Data.py ho implementato il metodo get_aircrafts_quantity(), implementa nel modulo Test_Aircraft_Data.py i metodi di test per questo metodo includendo anche le configurazioni dei test integrativi di seguito specificate. Inoltre implementa il codice la stampa a terminale ed in pdf delle tabelle con riportati i risultati dei test integrativi richiesti:
+
+Configurazioni dei test integrativi:
+sviluppa i test per ogni target (target A, target B, ..) considerando ogni coppia (aereo, loadout) specificata in aircraft e loadout  
+
+- scenario CAS:
+aircraft e loadout:(MiG-27K, CAS Rocket Attack), (Su-25, CAS Ground Pounding), (A-10C II Thunderbolt II, Maverick/Gun CAS), (Su-17M4, CAS Rocket), (F-4E Phantom II, CAS)
+target A: ( target_data: {'Soft':     {'big': 2, 'med': 3, 'small': 6}, 'Armored': {'big': 1, 'med': 2, 'small': 4}, 'Air_Defense': {'med': 1, 'small': 2}} ),
+target B: ( target_data: {'Soft':     {'big': 2, 'med': 3, 'small': 6}, 'Armored': {'big': 1, 'med': 2, 'small': 4}} ).
+
+- scenario Strike:
+aircraft e loadout: (F-14B Tomcat, Strike/LANTIRN), (F-15E Strike Eagle, Iron Bomb Strike), (MiG-27K, Precision Ground Attack), (Su-25, Strike), (Su-24M, Night Precision Strike), (Su-24M, Heavy Strike)
+target A: ( target_data: {'Structure':     {'big': 2, 'med': 3, 'small': 6}, 'Armored': {'big': 1, 'med': 2, 'small': 4}}), 
+target B: ( {'Structure':     {'big': 2, 'med': 3, 'small': 6}} ).
+target C: ( {'Structure':     {'big': 5, 'med': 8, 'small': 12}} ). 
+
+- scenario antiship:
+aircraft e loadout: (F/A-18C Lot 20, Anti-Ship), (F-15E Strike Eagle, Iron Bomb Strike), (A-4E Skyhawk, Anti-Ship), (S-3B Viking, Anti-Ship Maritime Strike), (AJ/ASJ 37 Viggen, Anti-Ship Strike), (Su-34, Anti-Ship), (Tu-22M, Anti-Ship Strike), (Tu-142, Maritime Strike)
+target A: ( target_data: 'ship': {'big': 3', med': 5, 'small': 7}} ),
+target B: ( target_data: 'ship': {'big': 4', med': 9, 'small': 18}} ),
+ 
+- scenario SEAD:
+aircraft e loadout: (Su-24M, SEAD), (Su-34, SEAD), (Su-30, SEAD), 
+target A: ( target_data: 'Air_Defense': {'big': 3', med': 5, 'small': 7}} ),
+target B: ( target_data: 'Air_Defense': {'med': 3, 'small': 3}} ),
+target C: ( target_data: 'Air_Defense': {'med': 1, 'small': 2}} ),
 
 Realizza il modulo di test Test_Aircraft_Data.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e la verifica delle strutture dati implementate del modulo Aircraft_Data.py. Inoltre, considerando quanto realizzato nel modulo Test_Vehicle_Data.py, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
 
@@ -21,5 +47,9 @@ Considera i punteggi relativi alla tabella Aircraft_Sub_System_Scores.pdf, per u
   dovrebbero avere un punteggio di 0.0 e  1.0          
 
 COnsidera  il modulo Aircraft_Data.py, aggiungi il peso dell'aereo 'weight' nella classe Aircraft_Data implementando anche i due metodi getter & setter. Imposta in ogni dizionario con le caratteristiche dell'aereo (f14a_data, f14b_data, ..) la proprietà weight con il valore specifico per l'aereo in configurazione pulita.
+
+
+
+
 
 

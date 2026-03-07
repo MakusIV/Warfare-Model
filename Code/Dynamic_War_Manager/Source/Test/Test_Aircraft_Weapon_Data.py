@@ -115,6 +115,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
     get_weapon_score,
     get_weapon_score_target,
     get_weapon_efficiency,
+    is_weapon_introduced,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1405,6 +1406,188 @@ class TestGetWeaponEfficiency(unittest.TestCase):
         eff_product = cell['accuracy'] * cell['destroy_capacity']
         score = get_weapon_score_target("UPK-23", ["Soft"], ["med"])
         self.assertAlmostEqual(eff_product, score, places=6)
+
+
+class TestIsWeaponIntroduced(unittest.TestCase):
+    """
+    Unit test per is_weapon_introduced(model, year).
+
+    La funzione restituisce True se l'arma è stata introdotta in servizio entro
+    l'anno dato (start_service <= year), False altrimenti.
+
+    Comportamento atteso:
+      - TypeError se model non è str.
+      - TypeError se year non è int.
+      - False se il modello è sconosciuto (chiama logger.warning).
+      - False se l'arma non ha il campo start_service (chiama logger.warning).
+      - True  se year >= start_service.
+      - False se year <  start_service.
+
+    Dati di riferimento (start_service):
+      AIM-54A-MK47 (MISSILES_AAM)  → 1974
+      AIM-9L       (MISSILES_AAM)  → 1975
+      Mk-84        (BOMBS)         → 1954
+      Zuni-Mk71    (ROCKETS)       → 1956
+      UPK-23       (CANNONS)       → 1972
+      AN-M2        (MACHINE_GUNS)  → 1939
+    """
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    # ── Validazione tipo parametri ─────────────────────────────────────────
+
+    def test_type_error_on_int_model(self):
+        """Raises TypeError se model è int."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced(123, 2000)
+
+    def test_type_error_on_none_model(self):
+        """Raises TypeError se model è None."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced(None, 2000)
+
+    def test_type_error_on_list_model(self):
+        """Raises TypeError se model è una lista."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced(["AIM-9L"], 2000)
+
+    def test_type_error_on_float_model(self):
+        """Raises TypeError se model è un float."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced(3.14, 2000)
+
+    def test_type_error_on_str_year(self):
+        """Raises TypeError se year è str."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced("AIM-9L", "1975")
+
+    def test_type_error_on_float_year(self):
+        """Raises TypeError se year è float (anche se intero come 1975.0)."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced("AIM-9L", 1975.0)
+
+    def test_type_error_on_none_year(self):
+        """Raises TypeError se year è None."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced("AIM-9L", None)
+
+    def test_type_error_on_list_year(self):
+        """Raises TypeError se year è una lista."""
+        with self.assertRaises(TypeError):
+            is_weapon_introduced("AIM-9L", [1975])
+
+    # ── Arma sconosciuta → False ───────────────────────────────────────────
+
+    def test_unknown_weapon_returns_false(self):
+        """is_weapon_introduced restituisce False per un modello sconosciuto."""
+        result = is_weapon_introduced("WEAPON_NOT_EXISTING_XYZ", 2000)
+        self.assertFalse(result)
+
+    def test_unknown_weapon_returns_false_past_year(self):
+        """Arma sconosciuta → False anche con un anno molto passato."""
+        result = is_weapon_introduced("WEAPON_NOT_EXISTING_XYZ", 1900)
+        self.assertFalse(result)
+
+    # ── True: anno >= start_service ────────────────────────────────────────
+
+    def test_aam_radar_introduced_exact_year(self):
+        """AIM-54A-MK47 (start_service=1974): year==1974 → True."""
+        self.assertTrue(is_weapon_introduced("AIM-54A-MK47", 1974))
+
+    def test_aam_radar_introduced_after_start(self):
+        """AIM-54A-MK47 (start_service=1974): year=2000 → True."""
+        self.assertTrue(is_weapon_introduced("AIM-54A-MK47", 2000))
+
+    def test_aam_ir_introduced_exact_year(self):
+        """AIM-9L (start_service=1975): year==1975 → True."""
+        self.assertTrue(is_weapon_introduced("AIM-9L", 1975))
+
+    def test_aam_ir_introduced_after_start(self):
+        """AIM-9L (start_service=1975): year=1990 → True."""
+        self.assertTrue(is_weapon_introduced("AIM-9L", 1990))
+
+    def test_bomb_introduced_exact_year(self):
+        """Mk-84 (start_service=1954): year==1954 → True."""
+        self.assertTrue(is_weapon_introduced("Mk-84", 1954))
+
+    def test_bomb_introduced_after_start(self):
+        """Mk-84 (start_service=1954): year=1980 → True."""
+        self.assertTrue(is_weapon_introduced("Mk-84", 1980))
+
+    def test_rocket_introduced_exact_year(self):
+        """Zuni-Mk71 (start_service=1956): year==1956 → True."""
+        self.assertTrue(is_weapon_introduced("Zuni-Mk71", 1956))
+
+    def test_rocket_introduced_after_start(self):
+        """Zuni-Mk71 (start_service=1956): year=1970 → True."""
+        self.assertTrue(is_weapon_introduced("Zuni-Mk71", 1970))
+
+    def test_cannon_introduced_exact_year(self):
+        """UPK-23 (start_service=1972): year==1972 → True."""
+        self.assertTrue(is_weapon_introduced("UPK-23", 1972))
+
+    def test_cannon_introduced_after_start(self):
+        """UPK-23 (start_service=1972): year=2010 → True."""
+        self.assertTrue(is_weapon_introduced("UPK-23", 2010))
+
+    def test_machine_gun_introduced_exact_year(self):
+        """AN-M2 (start_service=1939): year==1939 → True."""
+        self.assertTrue(is_weapon_introduced("AN-M2", 1939))
+
+    def test_machine_gun_introduced_after_start(self):
+        """AN-M2 (start_service=1939): year=1945 → True."""
+        self.assertTrue(is_weapon_introduced("AN-M2", 1945))
+
+    # ── False: anno < start_service ────────────────────────────────────────
+
+    def test_aam_radar_not_yet_introduced(self):
+        """AIM-54A-MK47 (start_service=1974): year=1973 → False."""
+        self.assertFalse(is_weapon_introduced("AIM-54A-MK47", 1973))
+
+    def test_aam_radar_not_introduced_much_earlier(self):
+        """AIM-54A-MK47 (start_service=1974): year=1960 → False."""
+        self.assertFalse(is_weapon_introduced("AIM-54A-MK47", 1960))
+
+    def test_aam_ir_not_yet_introduced(self):
+        """AIM-9L (start_service=1975): year=1974 → False."""
+        self.assertFalse(is_weapon_introduced("AIM-9L", 1974))
+
+    def test_bomb_not_yet_introduced(self):
+        """Mk-84 (start_service=1954): year=1953 → False."""
+        self.assertFalse(is_weapon_introduced("Mk-84", 1953))
+
+    def test_rocket_not_yet_introduced(self):
+        """Zuni-Mk71 (start_service=1956): year=1955 → False."""
+        self.assertFalse(is_weapon_introduced("Zuni-Mk71", 1955))
+
+    def test_cannon_not_yet_introduced(self):
+        """UPK-23 (start_service=1972): year=1971 → False."""
+        self.assertFalse(is_weapon_introduced("UPK-23", 1971))
+
+    def test_machine_gun_not_yet_introduced(self):
+        """AN-M2 (start_service=1939): year=1938 → False."""
+        self.assertFalse(is_weapon_introduced("AN-M2", 1938))
+
+    def test_year_zero_returns_false_for_modern_weapon(self):
+        """year=0 → False per qualsiasi arma moderna (start_service >> 0)."""
+        self.assertFalse(is_weapon_introduced("AIM-54A-MK47", 0))
+
+    # ── Ritorno è bool ────────────────────────────────────────────────────
+
+    def test_return_type_is_bool_true_case(self):
+        """Il valore restituito deve essere bool (caso True)."""
+        result = is_weapon_introduced("AIM-54A-MK47", 2000)
+        self.assertIsInstance(result, bool)
+
+    def test_return_type_is_bool_false_case(self):
+        """Il valore restituito deve essere bool (caso False, anno precedente)."""
+        result = is_weapon_introduced("AIM-54A-MK47", 1973)
+        self.assertIsInstance(result, bool)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

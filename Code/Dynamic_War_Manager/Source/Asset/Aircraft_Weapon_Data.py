@@ -649,24 +649,11 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
     return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
 def get_weapon_efficiency(model: str, target_data: Dict[str, float]) -> Dict[str, float]:
-    """
-    Returns an efficiency score for a weapon against a list of specific target, based on the weapon's parameters and the target's characteristics.
-
-    Restituisce un punteggio di efficienza per una bomba valutando gli effetti in base ad una lista di bersagli con dimensioni specificate in una lista. Il calcolo è basato sui parametri della bomba e sulle caratteristiche del bersaglio.
-    
-    :param model: model of WEAPON / il modello dell'ARMA da valutare
-    :type model: str
-    :param target_type: type of target (e.g., 'Soft', 'Armored', 'Structure') / tipo di bersaglio (es. 'Soft', 'Armored', 'Structure')
-    :type target_type: List
-    :param target_dimension: dimension of target (e.g., 'small', 'medium', 'large') / dimensione del bersaglio (es. 'small', 'medium', 'large')
-    :type target_dimension: List
-    :return: weapon's efficiency against the target / punteggio di efficacia della bomba contro il bersaglio, calcolato come prodotto del punteggio base della bomba e dell'efficacia della testata contro quel tipo e dimensione di bersaglio
-    :rtype: float
-    """
+    """Returns the efficiency ()'accuracy', 'destroy_capacity') of a weapon against a list of specific target, based on the weapon's parameters and the target's characteristics."""
 
     """ target_data = {
                     'Soft':     {   
-                                    'big': 3,
+                                    'big': 3, # asset number of that type and dimension, used to weight the efficiency of the weapon against that type and dimension of target in the final score calculation
                                     'med': 5,
                                     'small': 10
                                 },
@@ -727,7 +714,39 @@ def get_weapon_efficiency(model: str, target_data: Dict[str, float]) -> Dict[str
 
     return efficiency
 
+def is_weapon_introduced(model: str, year: int) -> bool:
+    """
+    Checks if a weapon model was introduced in service by a given year.
 
+    Controlla se un modello di arma è stato introdotto in servizio entro un dato anno.
+    
+    :param model: model of weapon to check / il modello dell'arma da verificare
+    :type model: str
+    :param year: year to check against / anno di riferimento per il controllo
+    :type year: int
+    :return: True if the weapon was introduced in service by the given year, False otherwise / True se l'arma è stata introdotta in servizio entro l'anno dato, False altrimenti
+    :rtype: bool
+    """
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")    
+    if not isinstance(year, int):
+        raise TypeError(f"year is not int, got {type(year).__name__}")    
+
+    weapon_dict = get_weapon(model)
+
+    if not weapon_dict:
+        logger.warning(f"weapon {model} unknow")
+        return True # Restituisce True per evitare che in un confronto tra dispositivi assegnati a piloni ma non inseriti nel database delle armi  
+
+    weapon_data = weapon_dict.get('weapons_data', {})
+    start_service = weapon_data.get('start_service', None)
+
+    if start_service is None:
+        logger.warning(f"weapon {model} has no start_service data, return False")
+        return False
+
+    return start_service <= year
 
 AIR_WEAPONS = {
    
@@ -7522,6 +7541,7 @@ AIR_WEAPONS = {
             },
         },        
     }
+    # DEVICES : fuel_tank, pods in modo da considerare l'anno di tuilizzo e l'eventuale costo
 }
 
 

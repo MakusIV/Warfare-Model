@@ -1,7 +1,11 @@
 DA FARE
 
+Nel modulo Aircraft_Loadouts.py ho implementato il metodo loadout_year_compatibility(). Implementa nel modulo Test_Aircraft_Loadouts.py i metodi di test per questo metodo.
 
-Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per tutte le armi appartenenti ad una determinata categoria specificata negli argomenti, le caratteristiche specificate nell'argomento. Negli argomenti includi la possibilità di scegliere la categoria dell'arma (MI
+
+
+
+
 
 Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richiesta di aggiornamento di informazioni relative ad un banale dizionario python. Considera che la richiesta di proseguire nel compito è già successiva all'attesa di una  pausa d'interruzione per il raggiungimento dei sopra citati limiti, perchè i limiti sono già stati ulteriormente raggiunti. C'è un problema di sovrapposizione degli impegni degli agenti attivati nella sessione precedente (quella prima della pausa d'interruzione) con gli impegni attivati nella richiesta di prosecuzione dell'attività?      
 
@@ -9,6 +13,8 @@ Non capisco perchè ho raggiunto i limiti del mio piano con una semplice richies
 
 
 ESEGUITI
+
+Realizza una funzione di stampa su video e pdf, basata su tabelle, che consenta di confrontare per tutte le armi appartenenti ad una determinata categoria specificata negli argomenti, le caratteristiche specificate nell'argomento. Negli argomenti includi la possibilità di scegliere la categoria dell'arma (MI
 
 Realizza il modulo di test Test_Aircraft_Loadouts.py basato sulla libreria unittest. Il modulo deve implementare i test di unità per tutte le funzioni presenti. 
 Inoltre, deve essere implementato il codice per la stampa a terminale ed in pdf delle seguenti tabelle:

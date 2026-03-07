@@ -140,6 +140,11 @@ _LOADOUT_CAS     = "CAS"                     # tasks: ["CAS"], day-only
 _AIRCRAFT_IRON   = "F-15E Strike Eagle"
 _LOADOUT_IRON    = "Iron Bomb Strike"
 
+# Loadout con serbatoi carburante nei pylons (267gal_tank non è in AIR_WEAPONS)
+# → loadout_year_compatibility restituisce sempre False indipendentemente dall'anno
+_AIRCRAFT_SPARROW = "F-14A Tomcat"
+_LOADOUT_SPARROW  = "Sparrow CAP/Escort"
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  IMPORT DEL MODULO SOTTO TEST
 # ─────────────────────────────────────────────────────────────────────────────
@@ -159,6 +164,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     loadout_eval,
     loadout_target_effectiveness,
     loadout_target_effectiveness_by_distribuition,
+    loadout_year_compatibility,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1149,6 +1155,149 @@ class TestLoadoutTargetEffectivenessByDistribution(unittest.TestCase):
             )
 
 
+class TestLoadoutYearCompatibility(unittest.TestCase):
+    """
+    Unit test per loadout_year_compatibility(aircraft_name, loadout_name, year).
+
+    La funzione restituisce True se tutte le armi nei pylons del loadout erano
+    in servizio entro l'anno specificato, False se almeno una non lo era.
+
+    Logica interna:
+      1. Chiama get_loadout() → ValueError per aircraft/loadout sconosciuti.
+      2. Itera sui pylons e chiama is_weapon_introduced(weapon_model, year) per
+         ciascun'arma → TypeError se year non è int (propagato da is_weapon_introduced).
+      3. Restituisce False appena trova un'arma non ancora introdotta, True se
+         tutte le armi superano il controllo.
+
+    Store non-arma nei pylons (serbatoi, pod) non sono in AIR_WEAPONS:
+      is_weapon_introduced() → False + logger.warning → loadout incompatibile.
+      Il logger di Aircraft_Weapon_Data viene mockato per isolare questo side-effect.
+
+    Dati di riferimento (start_service delle armi chiave):
+      AIM-54A-MK47 → 1974   AIM-7M  → 1982   GBU-12 → 1970
+      AIM-9L       → 1975   AIM-9M  → 1982   Mk-82  → 1954
+      267gal_tank  → NON in AIR_WEAPONS (sempre False)
+
+    Loadout usati:
+      F-14A "Phoenix Fleet Defense": AIM-54A-MK47, AIM-9L, AIM-7M → compat. da 1982
+      F-14A "Sparrow CAP/Escort":   AIM-7M, AIM-9L, 267gal_tank   → sempre False
+      F-15E "Laser Strike":         GBU-12, AIM-9M, AIM-7M        → compat. da 1982
+      F-15E "Iron Bomb Strike":     Mk-82, AIM-9M                  → compat. da 1982
+    """
+
+    def setUp(self):
+        # Aircraft_Weapon_Data.logger viene chiamato da is_weapon_introduced()
+        # quando trova store non-arma (es. 267gal_tank) non presenti in AIR_WEAPONS.
+        self._logger_patcher_wd = patch(_LOGGER_PATH_WD, MagicMock())
+        self._logger_patcher_wd.start()
+
+    def tearDown(self):
+        self._logger_patcher_wd.stop()
+
+    # ── Propagazione TypeError da year non-int ─────────────────────────────
+
+    def test_type_error_on_str_year(self):
+        """year come str → TypeError propagato da is_weapon_introduced."""
+        with self.assertRaises(TypeError):
+            loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, "1982")
+
+    def test_type_error_on_float_year(self):
+        """year come float (anche intero) → TypeError propagato da is_weapon_introduced."""
+        with self.assertRaises(TypeError):
+            loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1982.0)
+
+    def test_type_error_on_none_year(self):
+        """year None → TypeError propagato da is_weapon_introduced."""
+        with self.assertRaises(TypeError):
+            loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, None)
+
+    def test_type_error_on_list_year(self):
+        """year come lista → TypeError propagato da is_weapon_introduced."""
+        with self.assertRaises(TypeError):
+            loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, [1982])
+
+    # ── Propagazione ValueError da aircraft/loadout sconosciuti ───────────
+
+    def test_invalid_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError da get_loadout."""
+        with self.assertRaises(ValueError):
+            loadout_year_compatibility("INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, 2000)
+
+    def test_invalid_loadout_raises_ValueError(self):
+        """Loadout sconosciuto → ValueError da get_loadout."""
+        with self.assertRaises(ValueError):
+            loadout_year_compatibility(_AIRCRAFT_CAP, "INVALID_LOADOUT_XYZ", 2000)
+
+    # ── True: tutte le armi introdotte entro l'anno ────────────────────────
+
+    def test_cap_loadout_compatible_exact_year(self):
+        """F-14A 'Phoenix Fleet Defense': anno esatto del missile più recente (AIM-7M: 1982) → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1982))
+
+    def test_cap_loadout_compatible_after_all_weapons(self):
+        """F-14A 'Phoenix Fleet Defense': anno 2000, tutte le armi introdotte entro il 1982 → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 2000))
+
+    def test_strike_loadout_compatible_exact_year(self):
+        """F-15E 'Laser Strike': anno esatto del sistema più recente (AIM-9M/AIM-7M: 1982) → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_STRIKE, _LOADOUT_STRIKE, 1982))
+
+    def test_strike_loadout_compatible_after_all_weapons(self):
+        """F-15E 'Laser Strike': anno 1990, tutte le armi introdotte entro il 1982 → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_STRIKE, _LOADOUT_STRIKE, 1990))
+
+    def test_iron_bomb_compatible_exact_year(self):
+        """F-15E 'Iron Bomb Strike': anno 1982 (Mk-82:1954, AIM-9M:1982) → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_IRON, _LOADOUT_IRON, 1982))
+
+    def test_iron_bomb_compatible_after_all_weapons(self):
+        """F-15E 'Iron Bomb Strike': anno 2000 → True."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_IRON, _LOADOUT_IRON, 2000))
+
+    # ── False: almeno un'arma non ancora introdotta ────────────────────────
+
+    def test_cap_loadout_not_compatible_one_year_before(self):
+        """F-14A 'Phoenix Fleet Defense': anno 1981 → AIM-7M (1982) non ancora introdotto → False."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1981))
+
+    def test_cap_loadout_not_compatible_much_earlier(self):
+        """F-14A 'Phoenix Fleet Defense': anno 1970, nessuna arma introdotta → False."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1970))
+
+    def test_strike_loadout_not_compatible_one_year_before(self):
+        """F-15E 'Laser Strike': anno 1981 → AIM-9M/AIM-7M (1982) non ancora introdotti → False."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_STRIKE, _LOADOUT_STRIKE, 1981))
+
+    def test_iron_bomb_not_compatible_one_year_before(self):
+        """F-15E 'Iron Bomb Strike': anno 1981 → AIM-9M (1982) non ancora introdotto → False."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_IRON, _LOADOUT_IRON, 1981))
+
+    # ── False: store non-arma nei pylons (serbatoi carburante) ────────────
+
+    def test_loadout_with_fuel_tank_always_false_recent_year(self):
+        """F-14A 'Sparrow CAP/Escort': contiene 267gal_tank (non in AIR_WEAPONS)
+        → is_weapon_introduced restituisce False → loadout_year_compatibility False,
+        anche con anno recente (2000)."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 2000))
+
+    def test_loadout_with_fuel_tank_always_false_exact_weapon_year(self):
+        """F-14A 'Sparrow CAP/Escort': anno 1982 (AIM-7M introdotto) ma 267gal_tank
+        non è in AIR_WEAPONS → False."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 1982))
+
+    # ── Tipo di ritorno ───────────────────────────────────────────────────
+
+    def test_return_type_is_bool_true_case(self):
+        """Il valore restituito è bool (caso True)."""
+        result = loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 2000)
+        self.assertIsInstance(result, bool)
+
+    def test_return_type_is_bool_false_case(self):
+        """Il valore restituito è bool (caso False — anno precedente)."""
+        result = loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1981)
+        self.assertIsInstance(result, bool)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1170,6 +1319,7 @@ def _run_tests() -> unittest.TestResult:
         TestLoadoutEval,
         TestLoadoutTargetEffectiveness,
         TestLoadoutTargetEffectivenessByDistribution,
+        TestLoadoutYearCompatibility,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)

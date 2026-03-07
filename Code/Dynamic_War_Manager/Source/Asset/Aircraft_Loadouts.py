@@ -30,7 +30,7 @@
 from typing import Dict, List, Optional
 from venv import logger
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target, is_weapon_introduced
 
 # ---------------------------------------------------------------------------
 # Shared helper comment: range values are combat radius in km
@@ -3926,3 +3926,43 @@ def loadout_target_effectiveness_by_distribuition(aircraft_name: str, loadout_na
         score += type_score * perc_type # contributo di questo tipo, pesato per la sua distribuzione
 
     return score
+
+def get_weapon_efficiency(aircraft_name: str, loadout_name: str, target_data: Dict) -> Dict:
+    """Returns the aggregated weapon efficiency of a loadout against specified target types and dimensions.
+
+    For each (target_type, dimension) pair in target_data, sums the weapon score from all
+    weapons in the loadout pylons, weighted by weapon quantity in pylon.
+
+    :param aircraft_name: aircraft model name (e.g. 'A-10C II Thunderbolt II')
+    :param loadout_name:  loadout name (e.g. 'Maverick/Gun CAS')
+    :param target_data:   {target_type: {dimension: count}} — only keys are used for iteration
+    :return: {target_type: {dimension: float}} — summed weapon score per aircraft sortie
+    """
+    loadout = get_loadout(aircraft_name, loadout_name)
+    pylons = loadout.get("stores", {}).get("pylons", {})
+
+    efficiency: Dict = {}
+
+    for target_type, dimensions in target_data.items():
+        efficiency[target_type] = {}
+        for dimension in dimensions.keys():
+            score = 0.0
+            for pylon, weapon in pylons.items():
+                weapon_model = weapon[0]
+                weapon_qty   = weapon[1]
+                score += get_weapon_score_target(weapon_model, [target_type], [dimension]) * weapon_qty
+            efficiency[target_type][dimension] = score
+
+    return efficiency
+
+
+def loadout_year_compatibility(aircraft_name: str, loadout_name: str, year: int) -> bool:
+    """Evaluate if a loadout is compatible with a specific year based on the introduction dates of its weapons."""
+    loadout = get_loadout(aircraft_name, loadout_name)
+    pylons = loadout.get("stores", {}).get("pylons", {})
+    
+    for pylon, weapon in pylons.items():
+        weapon_model = weapon[0]
+        if not is_weapon_introduced(weapon_model, year):
+            return False # se almeno un'arma del loadout non è stata introdotta entro l'anno specificato, il loadout non è compatibile con quell'anno
+    return True # se tutte le armi del loadout sono state introdotte entro l'anno specificato, il loadout è compatibile con quell'anno
