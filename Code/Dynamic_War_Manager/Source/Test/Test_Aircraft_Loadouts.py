@@ -7,6 +7,8 @@ Aircraft_Loadouts.
 Utilizzo:
     python -m pytest Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Loadouts.py -v
     python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Loadouts.py            # menu interattivo
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Loadouts.py --tables-only
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Aircraft_Loadouts.py --tests-only
 
 Bug nel modulo Aircraft_Loadouts (documentati nei test):
   BL1. loadout_eval(): `get_weapon_score(weapon_model=weapon[0])` usava il keyword
@@ -22,6 +24,9 @@ Bug nel modulo Aircraft_Loadouts (documentati nei test):
        chiamano Aircraft_Weapon_Data.logger.warning() → Bug B0 → AttributeError.
        [WORKAROUND nei test: patch di entrambi i logger (Aircraft_Loadouts e
        Aircraft_Weapon_Data). Score corretto = 0 per quelle store, non N/A.]
+  Nota: is_weapon_introduced() restituisce True (non False) per store non in
+       AIR_WEAPONS (by design), quindi serbatoi e pod non bloccano la compatibilità
+       anno di un loadout; la compatibilità dipende solo dalle armi reali.
 """
 
 import os
@@ -165,7 +170,88 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     loadout_target_effectiveness,
     loadout_target_effectiveness_by_distribuition,
     loadout_year_compatibility,
+    get_aircrafts_quantity,
 )
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SCENARI PER I TEST INTEGRATIVI get_aircrafts_quantity
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Aeromobile e loadout usati per i test unitari di get_aircrafts_quantity
+_QTY_AC_MODEL      = "A-10C II Thunderbolt II"
+_QTY_LOADOUT       = "Maverick/Gun CAS"
+_QTY_TARGET_SIMPLE = {"Soft": {"med": 3, "small": 5}}
+
+# Dizionario scenari: ogni scenario ha una lista di coppie (aircraft, loadout)
+# e un dict di target (label → target_data)
+_SCENARIOS: dict = {
+    "CAS": {
+        "aircraft": [
+            ("MiG-27K",                "CAS Rocket Attack"),
+            ("Su-25",                  "CAS Ground Pounding"),
+            ("A-10C II Thunderbolt II","Maverick/Gun CAS"),
+            ("Su-17M4",               "CAS Rocket"),
+            ("F-4E Phantom II",       "CAS"),
+        ],
+        "targets": {
+            "target_A": {
+                "Soft":        {"big": 2, "med": 3, "small": 6},
+                "Armored":     {"big": 1, "med": 2, "small": 4},
+                "Air_Defense": {"med": 1, "small": 2},
+            },
+            "target_B": {
+                "Soft":    {"big": 2, "med": 3, "small": 6},
+                "Armored": {"big": 1, "med": 2, "small": 4},
+            },
+        },
+    },
+    "Strike": {
+        "aircraft": [
+            ("F-14B Tomcat",      "Strike/LANTIRN"),
+            ("F-15E Strike Eagle","Iron Bomb Strike"),
+            ("MiG-27K",          "Precision Ground Attack"),
+            ("Su-25",            "Strike"),
+            ("Su-24M",           "Night Precision Strike"),
+            ("Su-24M",           "Heavy Strike"),
+        ],
+        "targets": {
+            "target_A": {
+                "Structure": {"big": 2, "med": 3, "small": 6},
+                "Armored":   {"big": 1, "med": 2, "small": 4},
+            },
+            "target_B": {"Structure": {"big": 2, "med": 3, "small": 6}},
+            "target_C": {"Structure": {"big": 5, "med": 8, "small": 12}},
+        },
+    },
+    "AntiShip": {
+        "aircraft": [
+            ("F/A-18C Lot 20",    "Anti-Ship"),
+            ("F-15E Strike Eagle","Iron Bomb Strike"),
+            ("A-4E Skyhawk",      "Anti-Ship"),
+            ("S-3B Viking",       "Anti-Ship Maritime Strike"),
+            ("AJ/ASJ 37 Viggen",  "Anti-Ship Strike"),
+            ("Su-34",             "Anti-Ship"),
+            ("Tu-22M",            "Anti-Ship Strike"),
+            ("Tu-142",            "Maritime Strike"),
+        ],
+        "targets": {
+            "target_A": {"ship": {"big": 3, "med": 5, "small": 7}},
+            "target_B": {"ship": {"big": 4, "med": 9, "small": 18}},
+        },
+    },
+    "SEAD": {
+        "aircraft": [
+            ("Su-24M", "SEAD"),
+            ("Su-34",  "SEAD"),
+            ("Su-30",  "SEAD"),
+        ],
+        "targets": {
+            "target_A": {"Air_Defense": {"big": 3, "med": 5, "small": 7}},
+            "target_B": {"Air_Defense": {"med": 3, "small": 3}},
+            "target_C": {"Air_Defense": {"med": 1, "small": 2}},
+        },
+    },
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  UNIT TESTS
@@ -695,6 +781,36 @@ def _safe_loadout_target_eff_by_dist(
         return float("nan")
 
 
+def _all_loggers_mocked():
+    """Context manager che mocka tutti i logger necessari per i test get_aircrafts_quantity."""
+    from contextlib import ExitStack
+    stack = ExitStack()
+    for path in [_LOGGER_PATH, _LOGGER_PATH_WD]:
+        stack.enter_context(patch(path, MagicMock()))
+    return stack
+
+
+def _qty_safe(ac_model: str, loadout: str, target_data: dict):
+    """Chiama get_aircrafts_quantity con tutti i logger mockati; None su eccezione."""
+    try:
+        with _all_loggers_mocked():
+            return get_aircrafts_quantity(ac_model, loadout, target_data)
+    except Exception:
+        return None
+
+
+def _mission_aircraft(result: dict) -> int:
+    """Aerei impiegati nella singola missione: somma dei conteggi per dimensione (già cappati),
+    escludendo missions_needed."""
+    return sum(
+        count
+        for key, val in result.items()
+        if key not in ("total", "message") and isinstance(val, dict)
+        for dim, count in val.items()
+        if dim != "missions_needed"
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  TABELLE — STAMPA A TERMINALE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1006,6 +1122,175 @@ def save_loadout_target_eff_pdf(
     print(f"[PDF] loadout_target_eff → {output_path}")
 
 
+def print_aircrafts_quantity_tables() -> None:
+    """Stampa a terminale le tabelle get_aircrafts_quantity per ogni scenario e target.
+
+    Colonne: Aircraft, Loadout, una per ogni (target_type/dimension), Miss (globale), Total.
+    """
+    for scenario_name, scenario in _SCENARIOS.items():
+        aircraft_list = scenario["aircraft"]
+
+        for target_label, target_data in scenario["targets"].items():
+            # col_specs: una colonna per ogni (target_type, dimension)
+            col_specs: list = []
+            for tt, dims in target_data.items():
+                for dim in dims.keys():
+                    col_specs.append((tt, dim))
+
+            col_headers = [f"{tt}/{dim}" for tt, dim in col_specs]
+            target_desc = "  ".join(
+                f"{tt}:{dict(dims)}" for tt, dims in target_data.items()
+            )
+
+            header = (
+                f"  SCENARIO: {scenario_name}  |  {target_label}  "
+                f"— get_aircrafts_quantity()\n"
+                f"  Target: {target_desc}"
+            )
+            width = max(100, len(target_desc) + 10)
+            print()
+            print("═" * width)
+            for line in header.splitlines():
+                print(line)
+            print("═" * width)
+
+            col_ac = max(20, max(len(ac) for ac, _ in aircraft_list))
+            col_lo = max(24, max(len(lo) for _, lo in aircraft_list))
+            cell_w = 9
+
+            header_row = (
+                f"  {'Aircraft':<{col_ac}}   {'Loadout':<{col_lo}}  "
+                + "  ".join(f"{h:^{cell_w}}" for h in col_headers)
+                + f"  {'Miss':>{cell_w}}  {'Total':>{cell_w}}"
+            )
+            print(header_row)
+            print("─" * len(header_row))
+
+            for ac, lo in aircraft_list:
+                result = _qty_safe(ac, lo, target_data)
+                if result is None:
+                    print(f"  {ac:<{col_ac}}   {lo:<{col_lo}}  ERROR")
+                    continue
+                cells = []
+                for tt, dim in col_specs:
+                    tt_dict = result.get(tt, {}) if isinstance(result.get(tt), dict) else {}
+                    cells.append(f"{tt_dict.get(dim, 0):^{cell_w}}")
+                missions = result.get("missions_needed", 1)
+                total = result.get("total", 0)
+                print(
+                    f"  {ac:<{col_ac}}   {lo:<{col_lo}}  "
+                    + "  ".join(cells)
+                    + f"  {missions:>{cell_w}}  {total:>{cell_w}}"
+                )
+            print()
+
+
+def save_aircrafts_quantity_pdf(output_path: str) -> None:
+    """Salva Aircraft_Quantity.pdf con tabelle get_aircrafts_quantity per ogni scenario/target.
+
+    Una pagina per ogni coppia (scenario × target). Colonne: Aircraft, Loadout,
+    una per ogni (target_type, dimension), Total.
+    Heatmap sulla colonna Total: verde = meno aerei (più efficiente), rosso = più aerei.
+    """
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(
+        os.path.dirname(output_path) if os.path.dirname(output_path) else ".",
+        exist_ok=True,
+    )
+
+    with PdfPages(output_path) as pdf:
+        for scenario_name, scenario in _SCENARIOS.items():
+            aircraft_list = scenario["aircraft"]
+
+            for target_label, target_data in scenario["targets"].items():
+                col_specs: list = []
+                for tt, dims in target_data.items():
+                    for dim in dims.keys():
+                        col_specs.append((tt, dim))
+
+                col_labels = (
+                    ["Aeromobile", "Loadout"]
+                    + [f"{tt}\n{dim}" for tt, dim in col_specs]
+                    + ["Miss", "Total"]
+                )
+                n_data_cols  = len(col_specs)
+                n_cols_total = 2 + n_data_cols + 2  # +2: Miss e Total
+
+                cell_text    = []
+                miss_values  = []
+                total_values = []
+
+                for ac, lo in aircraft_list:
+                    result = _qty_safe(ac, lo, target_data)
+                    if result is None:
+                        vals = ["-"] * n_data_cols
+                        miss_values.append(None)
+                        total_values.append(None)
+                        cell_text.append([ac, lo] + vals + ["-", "-"])
+                    else:
+                        vals = []
+                        for tt, dim in col_specs:
+                            tt_dict = result.get(tt, {}) if isinstance(result.get(tt), dict) else {}
+                            vals.append(str(tt_dict.get(dim, 0)))
+                        missions = result.get("missions_needed", 1)
+                        total = result.get("total", 0)
+                        miss_values.append(missions if isinstance(missions, int) else None)
+                        total_values.append(total if isinstance(total, int) else None)
+                        cell_text.append([ac, lo] + vals + [str(missions), str(total)])
+
+                def _heatmap_color(values, val):
+                    valid = [v for v in values if v is not None]
+                    max_v = max(valid) if valid else 1
+                    min_v = min(valid) if valid else 0
+                    rng_v = float(max_v - min_v) if max_v != min_v else 1.0
+                    if val is not None and rng_v > 0:
+                        return plt.cm.RdYlGn(1.0 - (val - min_v) / rng_v)
+                    return (0.87, 0.87, 0.87, 1.0)
+
+                cell_colors = []
+                for miss_val, total_val in zip(miss_values, total_values):
+                    cell_colors.append(
+                        ["#f0f4f8", "#f0f4f8"]
+                        + ["#f5f5f5"] * n_data_cols
+                        + [_heatmap_color(miss_values, miss_val),
+                           _heatmap_color(total_values, total_val)]
+                    )
+
+                target_desc = "  ".join(
+                    f"{tt}: {dict(dims)}" for tt, dims in target_data.items()
+                )
+                fig_w = max(14.0, 2.0 * n_cols_total)
+                fig_h = max(4.0, 0.42 * len(aircraft_list) + 3.5)
+                fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+                ax.axis("off")
+                ax.set_title(
+                    f"Aircrafts Quantity — Scenario: {scenario_name}  |  {target_label}\n"
+                    f"Target: {target_desc}\n"
+                    f"Funzione: get_aircrafts_quantity()  |  Colore Total: verde=efficiente",
+                    fontsize=10, fontweight="bold", pad=18,
+                )
+                tbl = ax.table(
+                    cellText=cell_text,
+                    colLabels=col_labels,
+                    cellColours=cell_colors,
+                    loc="center",
+                    cellLoc="center",
+                )
+                tbl.auto_set_font_size(False)
+                tbl.set_fontsize(8)
+                tbl.auto_set_column_width(list(range(n_cols_total)))
+                _header_style(tbl, n_cols_total)
+                plt.tight_layout()
+                pdf.savefig(fig, bbox_inches="tight")
+                plt.close(fig)
+
+    print(f"[PDF] Aircraft_Quantity → {output_path}")
+
+
 class TestLoadoutTargetEffectivenessByDistribution(unittest.TestCase):
     """
     Unit test per loadout_target_effectiveness_by_distribuition().
@@ -1170,17 +1455,20 @@ class TestLoadoutYearCompatibility(unittest.TestCase):
          tutte le armi superano il controllo.
 
     Store non-arma nei pylons (serbatoi, pod) non sono in AIR_WEAPONS:
-      is_weapon_introduced() → False + logger.warning → loadout incompatibile.
+      is_weapon_introduced() → True + logger.warning (by design: restituisce True
+      per le store non presenti nel database, per non penalizzare i loadout che
+      portano serbatoi o pod). Quindi la compatibilità dipende solo dalle armi reali.
       Il logger di Aircraft_Weapon_Data viene mockato per isolare questo side-effect.
 
     Dati di riferimento (start_service delle armi chiave):
       AIM-54A-MK47 → 1974   AIM-7M  → 1982   GBU-12 → 1970
       AIM-9L       → 1975   AIM-9M  → 1982   Mk-82  → 1954
-      267gal_tank  → NON in AIR_WEAPONS (sempre False)
+      267gal_tank  → NON in AIR_WEAPONS → is_weapon_introduced restituisce True
 
     Loadout usati:
       F-14A "Phoenix Fleet Defense": AIM-54A-MK47, AIM-9L, AIM-7M → compat. da 1982
-      F-14A "Sparrow CAP/Escort":   AIM-7M, AIM-9L, 267gal_tank   → sempre False
+      F-14A "Sparrow CAP/Escort":   AIM-7M, AIM-9L, 267gal_tank   → compat. da 1982
+                                    (267gal_tank → True by design, non blocca)
       F-15E "Laser Strike":         GBU-12, AIM-9M, AIM-7M        → compat. da 1982
       F-15E "Iron Bomb Strike":     Mk-82, AIM-9M                  → compat. da 1982
     """
@@ -1272,18 +1560,23 @@ class TestLoadoutYearCompatibility(unittest.TestCase):
         """F-15E 'Iron Bomb Strike': anno 1981 → AIM-9M (1982) non ancora introdotto → False."""
         self.assertFalse(loadout_year_compatibility(_AIRCRAFT_IRON, _LOADOUT_IRON, 1981))
 
-    # ── False: store non-arma nei pylons (serbatoi carburante) ────────────
+    # ── Store non-arma nei pylons (serbatoi carburante): non bloccano la compat. ──
 
-    def test_loadout_with_fuel_tank_always_false_recent_year(self):
+    def test_loadout_with_fuel_tank_compatible_recent_year(self):
         """F-14A 'Sparrow CAP/Escort': contiene 267gal_tank (non in AIR_WEAPONS)
-        → is_weapon_introduced restituisce False → loadout_year_compatibility False,
-        anche con anno recente (2000)."""
-        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 2000))
+        → is_weapon_introduced restituisce True by design → loadout compatibile
+        da 1982 (anno di AIM-7M, l'arma più recente del loadout)."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 2000))
 
-    def test_loadout_with_fuel_tank_always_false_exact_weapon_year(self):
-        """F-14A 'Sparrow CAP/Escort': anno 1982 (AIM-7M introdotto) ma 267gal_tank
-        non è in AIR_WEAPONS → False."""
-        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 1982))
+    def test_loadout_with_fuel_tank_compatible_exact_weapon_year(self):
+        """F-14A 'Sparrow CAP/Escort': anno 1982 (AIM-7M introdotto), 267gal_tank
+        → True by design → loadout compatibile."""
+        self.assertTrue(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 1982))
+
+    def test_loadout_with_fuel_tank_not_compatible_before_weapons(self):
+        """F-14A 'Sparrow CAP/Escort': anno 1981 → AIM-7M (1982) non ancora introdotto
+        → False (il serbatoio non influisce, ma AIM-7M blocca)."""
+        self.assertFalse(loadout_year_compatibility(_AIRCRAFT_SPARROW, _LOADOUT_SPARROW, 1981))
 
     # ── Tipo di ritorno ───────────────────────────────────────────────────
 
@@ -1296,6 +1589,301 @@ class TestLoadoutYearCompatibility(unittest.TestCase):
         """Il valore restituito è bool (caso False — anno precedente)."""
         result = loadout_year_compatibility(_AIRCRAFT_CAP, _LOADOUT_CAP, 1981)
         self.assertIsInstance(result, bool)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  get_aircrafts_quantity
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetAircraftsQuantity(unittest.TestCase):
+    """Unit test per get_aircrafts_quantity(model, loadout, target_data, year).
+
+    Aeromobile di test: A-10C II Thunderbolt II / Maverick/Gun CAS.
+    La funzione è standalone (non è un metodo di Aircraft_Data).
+
+    Entrambi i logger sono mockati tramite _all_loggers_mocked() per isolare
+    i side-effect di Aircraft_Weapon_Data.logger (chiamato da get_weapon_score_target
+    e is_weapon_introduced su armi non-AAM o non trovate).
+    """
+
+    def setUp(self):
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        """Aeromobile sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_aircrafts_quantity(
+                "UNKNOWN_AIRCRAFT_XYZ", _QTY_LOADOUT, _QTY_TARGET_SIMPLE
+            )
+
+    def test_unknown_loadout_raises_ValueError(self):
+        """Loadout sconosciuto (aircraft valido) → ValueError."""
+        with self.assertRaises(ValueError):
+            get_aircrafts_quantity(
+                _QTY_AC_MODEL, "UNKNOWN_LOADOUT_XYZ", _QTY_TARGET_SIMPLE
+            )
+
+    # ── Struttura del risultato ───────────────────────────────────────────────
+
+    def test_returns_dict(self):
+        """Input valido → restituisce un dict."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIsInstance(result, dict)
+
+    def test_result_has_total_key(self):
+        """Il risultato contiene la chiave 'total'."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIn("total", result)
+
+    def test_result_has_message_key(self):
+        """Il risultato contiene la chiave 'message'."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIn("message", result)
+
+    def test_total_is_int(self):
+        """'total' è un intero."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIsInstance(result["total"], int)
+
+    def test_total_is_non_negative(self):
+        """'total' >= 0."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertGreaterEqual(result["total"], 0)
+
+    def test_result_contains_target_type_keys(self):
+        """Il risultato contiene le chiavi dei target_type richiesti."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        for target_type in _QTY_TARGET_SIMPLE:
+            with self.subTest(target_type=target_type):
+                self.assertIn(target_type, result)
+
+    def test_result_has_missions_needed_key(self):
+        """Il risultato contiene la chiave globale 'missions_needed'."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIn("missions_needed", result)
+
+    def test_dimension_values_are_non_negative_int(self):
+        """Ogni valore (target_type, dimension) è un intero >= 0.
+        I target_type hanno sub-dict con solo le dimensioni richieste;
+        'missions_needed' è una chiave scalare a livello root, non nei sub-dict."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        _SCALAR_KEYS = {"total", "message", "missions_needed"}
+        for key, val in result.items():
+            if key in _SCALAR_KEYS or not isinstance(val, dict):
+                continue
+            for dim, count in val.items():
+                with self.subTest(target_type=key, dimension=dim):
+                    self.assertIsInstance(count, int)
+                    self.assertGreaterEqual(count, 0)
+
+    def test_total_equals_sum_of_all_dimensions(self):
+        """'total' è uguale alla somma di tutti i conteggi per (target_type, dimension)."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        _SCALAR_KEYS = {"total", "message", "missions_needed"}
+        expected = sum(
+            v
+            for key, dims in result.items()
+            if key not in _SCALAR_KEYS and isinstance(dims, dict)
+            for v in dims.values()
+        )
+        self.assertEqual(result["total"], expected)
+
+    def test_multi_target_type_result_structure(self):
+        """Con più target_type, tutte le chiavi richieste sono nel risultato."""
+        target_data = {
+            "Soft":    {"big": 2, "med": 3, "small": 5},
+            "Armored": {"big": 1, "med": 2, "small": 4},
+        }
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, target_data)
+        for target_type in target_data:
+            with self.subTest(target_type=target_type):
+                self.assertIn(target_type, result)
+        self.assertIn("total", result)
+        self.assertIn("missions_needed", result)
+
+    # ── Compatibilità anno (year parameter) ───────────────────────────────────
+
+    def test_incompatible_year_returns_total_zero(self):
+        """Anno incompatibile (1950, prima di qualsiasi arma moderna) → total=0."""
+        result = get_aircrafts_quantity(
+            _QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE, year=1950
+        )
+        self.assertEqual(result["total"], 0)
+
+    def test_incompatible_year_returns_message(self):
+        """Anno incompatibile → il risultato contiene 'message'."""
+        result = get_aircrafts_quantity(
+            _QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE, year=1950
+        )
+        self.assertIn("message", result)
+
+    def test_incompatible_year_result_is_dict(self):
+        """Anno incompatibile → risultato è un dict (non eccezione)."""
+        result = get_aircrafts_quantity(
+            _QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE, year=1950
+        )
+        self.assertIsInstance(result, dict)
+
+    def test_no_year_skips_compatibility_check(self):
+        """Senza year, il controllo di compatibilità non viene eseguito → risultato valido."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        self.assertIn("total", result)
+        self.assertGreaterEqual(result["total"], 0)
+
+    def test_compatible_year_returns_full_result(self):
+        """Anno compatibile con le armi → restituisce result con tutte le chiavi."""
+        # F-15E Iron Bomb Strike: Mk-82 (1954), AIM-9M (1982) → compatibile da 1982
+        ac_model = "F-15E Strike Eagle"
+        loadout  = "Iron Bomb Strike"
+        target   = {"Soft": {"med": 2}}
+        result = get_aircrafts_quantity(ac_model, loadout, target, year=1982)
+        self.assertIn("total", result)
+        self.assertIn("message", result)
+        # Non deve essere la risposta di incompatibilità (total=0 con aircraft_number={})
+        self.assertIn("Soft", result)
+
+    # ── missions_needed (globale) ─────────────────────────────────────────────
+
+    def test_missions_needed_is_positive_int(self):
+        """'missions_needed' globale è un intero >= 1."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        mn = result["missions_needed"]
+        self.assertIsInstance(mn, int)
+        self.assertGreaterEqual(mn, 1)
+
+    def test_missions_needed_not_in_target_type_dict(self):
+        """'missions_needed' è a livello root, NON dentro i sub-dict dei target_type."""
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        for target_type in _QTY_TARGET_SIMPLE:
+            with self.subTest(target_type=target_type):
+                self.assertNotIn("missions_needed", result[target_type])
+
+    def test_missions_needed_equals_ceil_total_over_max(self):
+        """missions_needed == ceil(total / 8) con minimo 1."""
+        import math
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        total = result["total"]
+        expected = max(1, math.ceil(total / 8))
+        self.assertEqual(result["missions_needed"], expected)
+
+    def test_missions_needed_is_one_when_total_within_max(self):
+        """Con un target piccolo (total <= 8) missions_needed == 1."""
+        target = {"Soft": {"small": 1}}
+        result = get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, target)
+        if result["total"] <= 8:
+            self.assertEqual(result["missions_needed"], 1)
+
+
+class TestGetAircraftsQuantityIntegrative(unittest.TestCase):
+    """Test integrativi per get_aircrafts_quantity su scenari reali di combattimento.
+
+    Per ogni scenario (CAS / Strike / AntiShip / SEAD), ogni target (A/B/C) e ogni
+    coppia (aircraft, loadout) specificata nei _SCENARIOS, verifica che il risultato
+    sia strutturalmente corretto: dict, chiave 'total', valori non-negativi.
+
+    I test non verificano valori assoluti (dipendono dai dati delle armi e dai loadout),
+    ma garantiscono che la funzione non sollevi eccezioni e restituisca una struttura
+    coerente per tutti gli scenari operativi previsti.
+
+    Entrambi i logger sono mockati per isolare i side-effect su armi non in AIR_WEAPONS
+    (serbatoi carburante, pod) o armi che richiamano logger.warning.
+    """
+
+    def setUp(self):
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def _assert_result(self, result: dict, target_data: dict, ac: str, lo: str) -> None:
+        """Asserzioni strutturali comuni per ogni coppia (aircraft, loadout)."""
+        self.assertIsInstance(result, dict, f"{ac}/{lo}: il risultato deve essere dict")
+        self.assertIn("total", result, f"{ac}/{lo}: manca chiave 'total'")
+        self.assertIsInstance(result["total"], int, f"{ac}/{lo}: 'total' deve essere int")
+        self.assertGreaterEqual(result["total"], 0, f"{ac}/{lo}: 'total' deve essere >= 0")
+        # missions_needed è globale (a livello root)
+        with self.subTest(aircraft=ac, loadout=lo, field="missions_needed"):
+            self.assertIn("missions_needed", result, f"{ac}/{lo}: manca chiave globale 'missions_needed'")
+            self.assertIsInstance(result["missions_needed"], int, f"{ac}/{lo}: 'missions_needed' deve essere int")
+            self.assertGreaterEqual(result["missions_needed"], 1, f"{ac}/{lo}: 'missions_needed' deve essere >= 1")
+        for target_type, dims in target_data.items():
+            if target_type not in result:
+                continue  # target_type con efficienza zero può essere presente o assente
+            tt_dict = result[target_type]
+            for dim in dims.keys():
+                if dim in tt_dict:
+                    with self.subTest(aircraft=ac, loadout=lo, target_type=target_type, dim=dim):
+                        self.assertIsInstance(tt_dict[dim], int)
+                        self.assertGreaterEqual(tt_dict[dim], 0)
+
+    def _run_scenario(self, scenario_name: str, target_label: str) -> None:
+        """Esegue il test su tutte le coppie del scenario per il target dato."""
+        aircraft_list = _SCENARIOS[scenario_name]["aircraft"]
+        target_data   = _SCENARIOS[scenario_name]["targets"][target_label]
+        for ac, lo in aircraft_list:
+            with self.subTest(aircraft=ac, loadout=lo):
+                try:
+                    result = get_aircrafts_quantity(ac, lo, target_data)
+                    self._assert_result(result, target_data, ac, lo)
+                except (ValueError, KeyError) as e:
+                    self.fail(
+                        f"get_aircrafts_quantity({ac!r}, {lo!r}) ha sollevato {type(e).__name__}: {e}"
+                    )
+
+    # ── Scenario CAS ──────────────────────────────────────────────────────────
+
+    def test_cas_target_a(self):
+        """CAS — Target A: Soft + Armored + Air_Defense con diverse dimensioni."""
+        self._run_scenario("CAS", "target_A")
+
+    def test_cas_target_b(self):
+        """CAS — Target B: Soft + Armored (senza Air_Defense)."""
+        self._run_scenario("CAS", "target_B")
+
+    # ── Scenario Strike ───────────────────────────────────────────────────────
+
+    def test_strike_target_a(self):
+        """Strike — Target A: Structure + Armored con volume basso."""
+        self._run_scenario("Strike", "target_A")
+
+    def test_strike_target_b(self):
+        """Strike — Target B: solo Structure con volume basso."""
+        self._run_scenario("Strike", "target_B")
+
+    def test_strike_target_c(self):
+        """Strike — Target C: solo Structure con volume alto."""
+        self._run_scenario("Strike", "target_C")
+
+    # ── Scenario Anti-Ship ────────────────────────────────────────────────────
+
+    def test_antiship_target_a(self):
+        """AntiShip — Target A: navi mix big/med/small volume basso."""
+        self._run_scenario("AntiShip", "target_A")
+
+    def test_antiship_target_b(self):
+        """AntiShip — Target B: navi mix big/med/small volume alto."""
+        self._run_scenario("AntiShip", "target_B")
+
+    # ── Scenario SEAD ─────────────────────────────────────────────────────────
+
+    def test_sead_target_a(self):
+        """SEAD — Target A: Air_Defense mix big/med/small volume alto."""
+        self._run_scenario("SEAD", "target_A")
+
+    def test_sead_target_b(self):
+        """SEAD — Target B: Air_Defense solo med/small volume medio."""
+        self._run_scenario("SEAD", "target_B")
+
+    def test_sead_target_c(self):
+        """SEAD — Target C: Air_Defense solo med/small volume basso."""
+        self._run_scenario("SEAD", "target_C")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1320,6 +1908,8 @@ def _run_tests() -> unittest.TestResult:
         TestLoadoutTargetEffectiveness,
         TestLoadoutTargetEffectivenessByDistribution,
         TestLoadoutYearCompatibility,
+        TestGetAircraftsQuantity,
+        TestGetAircraftsQuantityIntegrative,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
@@ -1339,6 +1929,11 @@ def _run_tables_terminal() -> None:
         ROUTE_LENGTH, ROUTE_SPEED,
     )
 
+    print("\n" + "=" * 70)
+    print("  AIRCRAFTS QUANTITY — get_aircrafts_quantity()")
+    print("=" * 70)
+    print_aircrafts_quantity_tables()
+
 
 def _run_tables_pdf() -> None:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -1351,6 +1946,9 @@ def _run_tables_pdf() -> None:
         TARGET_TYPE_LIST, TARGET_DIMENSION_LIST,
         ROUTE_LENGTH, ROUTE_SPEED,
         os.path.join(OUTPUT_DIR, "loadout_target_eff_tables.pdf"),
+    )
+    save_aircrafts_quantity_pdf(
+        os.path.join(OUTPUT_DIR, "Aircraft_Quantity.pdf"),
     )
 
 
@@ -1440,4 +2038,11 @@ def _interactive_menu() -> None:
 
 
 if __name__ == "__main__":
-    _interactive_menu()
+    if "--tests-only" in sys.argv:
+        result = _run_tests()
+        sys.exit(0 if result.wasSuccessful() else 1)
+    elif "--tables-only" in sys.argv:
+        _run_tables_terminal()
+        _run_tables_pdf()
+    else:
+        _interactive_menu()

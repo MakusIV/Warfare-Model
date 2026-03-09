@@ -1339,14 +1339,12 @@ class TestGetAircraftsQuantity(unittest.TestCase):
                 self.assertIn(target_type, result)
 
     def test_dimension_values_are_non_negative_int(self):
-        """Ogni valore (target_type, dimension) è un intero >= 0 (esclude missions_needed)."""
+        """Ogni valore (target_type, dimension) è un intero >= 0."""
         result = self._ac.get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
         for key, val in result.items():
-            if key in ("total", "message", "aircraft_number"):
+            if not isinstance(val, dict):
                 continue
             for dim, count in val.items():
-                if dim == "missions_needed":
-                    continue
                 with self.subTest(target_type=key, dimension=dim):
                     self.assertIsInstance(count, int)
                     self.assertGreaterEqual(count, 0)
@@ -1375,6 +1373,7 @@ class TestGetAircraftsQuantity(unittest.TestCase):
             with self.subTest(target_type=target_type):
                 self.assertIn(target_type, result)
         self.assertIn("total", result)
+        self.assertIn("missions_needed", result)
 
     # ── Compatibilità anno (year parameter) ───────────────────────────────────
 
@@ -1419,21 +1418,33 @@ class TestGetAircraftsQuantity(unittest.TestCase):
 
     # ── missions_needed ───────────────────────────────────────────────────────
 
-    def test_target_type_has_missions_needed(self):
-        """Ogni target_type nel risultato ha la chiave 'missions_needed'."""
+    def test_result_has_missions_needed_key(self):
+        """Il risultato ha 'missions_needed' come chiave radice (non per target_type)."""
         result = self._ac.get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
-        for target_type in _QTY_TARGET_SIMPLE:
-            with self.subTest(target_type=target_type):
-                self.assertIn("missions_needed", result[target_type])
+        self.assertIn("missions_needed", result)
 
     def test_missions_needed_is_positive_int(self):
-        """'missions_needed' per ogni target_type è un intero >= 1."""
+        """'missions_needed' al livello radice è un intero >= 1."""
+        result = self._ac.get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        mn = result["missions_needed"]
+        self.assertIsInstance(mn, int)
+        self.assertGreaterEqual(mn, 1)
+
+    def test_missions_needed_not_in_target_type_dict(self):
+        """'missions_needed' non è presente nei sotto-dict per target_type."""
         result = self._ac.get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
         for target_type in _QTY_TARGET_SIMPLE:
             with self.subTest(target_type=target_type):
-                mn = result[target_type]["missions_needed"]
-                self.assertIsInstance(mn, int)
-                self.assertGreaterEqual(mn, 1)
+                tt_dict = result.get(target_type, {})
+                self.assertNotIn("missions_needed", tt_dict)
+
+    def test_missions_needed_equals_ceil_total_over_max(self):
+        """'missions_needed' == ceil(total / 8), minimo 1."""
+        import math
+        result = self._ac.get_aircrafts_quantity(_QTY_AC_MODEL, _QTY_LOADOUT, _QTY_TARGET_SIMPLE)
+        total = result["total"]
+        expected = max(1, math.ceil(total / 8))
+        self.assertEqual(result["missions_needed"], expected)
 
 
 class TestGetAircraftsQuantityIntegrative(unittest.TestCase):
@@ -1465,15 +1476,15 @@ class TestGetAircraftsQuantityIntegrative(unittest.TestCase):
         self.assertIn("total", result, f"{ac}/{lo}: manca chiave 'total'")
         self.assertIsInstance(result["total"], int, f"{ac}/{lo}: 'total' deve essere int")
         self.assertGreaterEqual(result["total"], 0, f"{ac}/{lo}: 'total' deve essere >= 0")
+        # missions_needed presente al livello radice e >= 1
+        with self.subTest(aircraft=ac, loadout=lo, field="missions_needed"):
+            self.assertIn("missions_needed", result, f"{ac}/{lo}: manca chiave radice 'missions_needed'")
+            self.assertIsInstance(result["missions_needed"], int)
+            self.assertGreaterEqual(result["missions_needed"], 1)
         for target_type, dims in target_data.items():
             if target_type not in result:
                 continue  # target_type con efficienza zero può essere presente o assente
             tt_dict = result[target_type]
-            # missions_needed presente e >= 1
-            with self.subTest(aircraft=ac, loadout=lo, target_type=target_type, field="missions_needed"):
-                self.assertIn("missions_needed", tt_dict)
-                self.assertIsInstance(tt_dict["missions_needed"], int)
-                self.assertGreaterEqual(tt_dict["missions_needed"], 1)
             # valori per dimensione non negativi
             for dim in dims.keys():
                 if dim in tt_dict:
@@ -2335,17 +2346,13 @@ def print_aircrafts_quantity_tables() -> None:
         aircraft_list = scenario["aircraft"]
 
         for target_label, target_data in scenario["targets"].items():
-            # col_specs: ('dim', tt, dim) per ogni dimensione, ('miss', tt, None) per missions_needed
+            # col_specs: (tt, dim) per ogni dimensione
             col_specs: list = []
             for tt, dims in target_data.items():
                 for dim in dims.keys():
-                    col_specs.append(("dim", tt, dim))
-                col_specs.append(("miss", tt, None))
+                    col_specs.append((tt, dim))
 
-            col_headers = [
-                f"{tt}/{dim}" if kind == "dim" else f"{tt}/miss"
-                for kind, tt, dim in col_specs
-            ]
+            col_headers = [f"{tt}/{dim}" for tt, dim in col_specs]
             target_desc = "  ".join(
                 f"{tt}:{dict(dims)}" for tt, dims in target_data.items()
             )
@@ -2380,16 +2387,16 @@ def print_aircrafts_quantity_tables() -> None:
                     print(f"  {ac:<{col_ac}}   {lo:<{col_lo}}  ERROR")
                     continue
                 cells = []
-                for kind, tt, dim in col_specs:
+                for tt, dim in col_specs:
                     tt_dict = result.get(tt, {}) if isinstance(result.get(tt), dict) else {}
-                    val = tt_dict.get(dim, 0) if kind == "dim" else tt_dict.get("missions_needed", 1)
+                    val = tt_dict.get(dim, 0)
                     cells.append(f"{val:^{cell_w}}")
-                mission_ac = _mission_aircraft(result)
+                missions = result.get("missions_needed", 1)
                 total = result.get("total", 0)
                 print(
                     f"  {ac:<{col_ac}}   {lo:<{col_lo}}  "
                     + "  ".join(cells)
-                    + f"  {mission_ac:>{cell_w}}  {total:>{cell_w}}"
+                    + f"  {missions:>{cell_w}}  {total:>{cell_w}}"
                 )
             print()
 
@@ -2417,19 +2424,15 @@ def save_aircrafts_quantity_pdf(output_path: str) -> None:
             aircraft_list = scenario["aircraft"]
 
             for target_label, target_data in scenario["targets"].items():
-                # col_specs: ('dim', tt, dim) per ogni dimensione, ('miss', tt, None) per missions_needed
+                # col_specs: (tt, dim) per ogni dimensione
                 col_specs: list = []
                 for tt, dims in target_data.items():
                     for dim in dims.keys():
-                        col_specs.append(("dim", tt, dim))
-                    col_specs.append(("miss", tt, None))
+                        col_specs.append((tt, dim))
 
                 col_labels = (
                     ["Aeromobile", "Loadout"]
-                    + [
-                        f"{tt}\n{dim}" if kind == "dim" else f"{tt}\nmiss"
-                        for kind, tt, dim in col_specs
-                    ]
+                    + [f"{tt}\n{dim}" for tt, dim in col_specs]
                     + ["Miss", "Total"]
                 )
                 n_data_cols  = len(col_specs)
@@ -2448,15 +2451,15 @@ def save_aircrafts_quantity_pdf(output_path: str) -> None:
                         cell_text.append([ac, lo] + vals + ["-", "-"])
                     else:
                         vals = []
-                        for kind, tt, dim in col_specs:
+                        for tt, dim in col_specs:
                             tt_dict = result.get(tt, {}) if isinstance(result.get(tt), dict) else {}
-                            val = tt_dict.get(dim, 0) if kind == "dim" else tt_dict.get("missions_needed", 1)
+                            val = tt_dict.get(dim, 0)
                             vals.append(str(val))
-                        mission_ac = _mission_aircraft(result)
+                        missions = result.get("missions_needed", 1)
                         total = result.get("total", 0)
-                        miss_values.append(mission_ac if isinstance(mission_ac, int) else None)
+                        miss_values.append(missions if isinstance(missions, int) else None)
                         total_values.append(total if isinstance(total, int) else None)
-                        cell_text.append([ac, lo] + vals + [str(mission_ac), str(total)])
+                        cell_text.append([ac, lo] + vals + [str(missions), str(total)])
 
                 # Heatmap colonne Miss e Total: meno aerei = più verde (inverso)
                 def _heatmap_color(values, val):

@@ -3966,3 +3966,63 @@ def loadout_year_compatibility(aircraft_name: str, loadout_name: str, year: int)
         if not is_weapon_introduced(weapon_model, year):
             return False # se almeno un'arma del loadout non è stata introdotta entro l'anno specificato, il loadout non è compatibile con quell'anno
     return True # se tutte le armi del loadout sono state introdotte entro l'anno specificato, il loadout è compatibile con quell'anno
+
+def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, float], year: Optional[int] = None):
+        """Returns the quantity of aircrafts needed to accomplish a specific task against a specific target, considering the target distribution and the loadout."""
+    
+        """
+        esempio di distribuzione dei target:
+        target_data = {
+                    'Soft':     {   
+                                    'big': 3,
+                                    'med': 5,
+                                    'small': 10
+                                },
+                    'Armored':  {
+                                    'big': 2,
+                                    'med': 4,
+                                    'small': 10
+                                },
+                    'Structure':{
+                                    'big': 3,
+                                    'med': 6,
+                                    'small': 12
+                                },
+            }
+        """
+        MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale
+
+        loadout_data = get_loadout(model, loadout)
+
+        if not loadout_data:
+            raise ValueError(f"Loadout with name {loadout!r} for aircraft {model!r} not found.")
+        aircraft_number = {}
+
+        if year is not None and not loadout_year_compatibility(model, loadout, year):
+            logger.warning(f"Loadout {loadout!r} for aircraft {model!r} is not compatible with the aircraft's service years. Skipping quantity evaluation.")
+            return { 'message': f"Loadout {loadout!r} for aircraft {model!r} is not compatible with the aircraft's service years. Skipping quantity evaluation.",
+                     'total': 0,
+                     'aircraft_number': {}
+                    }            
+        
+        
+        efficiency = get_weapon_efficiency(model, loadout, target_data)
+
+        for target_type, dimensions in target_data.items():
+            aircraft_number[target_type] = {}
+            for dimension, quantity in dimensions.items():
+                if efficiency.get(target_type, {}).get(dimension, 0) > 0:
+                    aircraft_number[target_type][dimension] = round(quantity / efficiency[target_type][dimension])
+                else:
+                    aircraft_number[target_type][dimension] = 0  # Se l'efficienza è zero, significa che il loadout non è efficace contro quel tipo di target.
+
+        total_aircraft = sum(
+            v for dimensions in aircraft_number.values()
+            for k, v in dimensions.items()
+        )
+        aircraft_number['total'] = total_aircraft
+        aircraft_number['missions_needed'] = max(1, (total_aircraft + MAX_AIRCRAFT_TYPE_FOR_MISSION - 1) // MAX_AIRCRAFT_TYPE_FOR_MISSION)
+        aircraft_number['message'] = f"Estimated number of aircraft needed to accomplish the task with loadout {loadout!r} for aircraft {model!r} against the specified target distribution."
+
+        return aircraft_number                        
+   

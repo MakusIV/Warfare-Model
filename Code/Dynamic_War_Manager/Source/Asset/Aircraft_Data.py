@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, get_loadout, loadout_target_effectiveness_by_distribuition, get_weapon_efficiency, loadout_year_compatibility
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, get_loadout, loadout_target_effectiveness_by_distribuition, get_weapon_efficiency, loadout_year_compatibility, get_aircrafts_quantity
 from sympy import Point3D
 from dataclasses import dataclass
 
@@ -896,6 +896,9 @@ class Aircraft_Data:
         
         if not aircraft:
             raise ValueError(f"Aircraft with name {model!r} not found.")    
+        
+
+        return get_aircrafts_quantity(model, loadout, target_data, year)
         
         loadout_data = get_loadout(model, loadout)
 
