@@ -900,46 +900,7 @@ class Aircraft_Data:
 
         return get_aircrafts_quantity(model, loadout, target_data, year)
         
-        loadout_data = get_loadout(model, loadout)
-
-        if not loadout_data:
-            raise ValueError(f"Loadout with name {loadout!r} for aircraft {model!r} not found.")
-        aircraft_number = {}
-
-        if year is not None and not loadout_year_compatibility(model, loadout, year):
-            logger.warning(f"Loadout {loadout!r} for aircraft {model!r} is not compatible with the aircraft's service years. Skipping quantity evaluation.")
-            return { 'message': f"Loadout {loadout!r} for aircraft {model!r} is not compatible with the aircraft's service years. Skipping quantity evaluation.",
-                     'total': 0,
-                     'aircraft_number': {}
-                    }            
-        
-        
-        efficiency = get_weapon_efficiency(model, loadout, target_data)
-
-        for target_type, dimensions in target_data.items():
-            aircraft_number[target_type] = {'missions_needed': 1} # inizializza il numero di missioni necessarie a 1, verrà aggiornato se il numero di aerei per tipo di target supera il massimo definito  
-
-            for dimension, quantity in dimensions.items():
-                # Qui puoi implementare la logica per calcolare il numero di aerei necessari in base all'efficienza e alla quantità di target
-                # Ad esempio, potresti dividere la quantità di target per l'efficienza per ottenere una stima del numero di aerei necessari
-                if efficiency.get(target_type, {}).get(dimension, 0) > 0:                    
-                    aircraft_number[target_type][dimension] = round(quantity / efficiency[target_type][dimension])
-                    if aircraft_number[target_type][dimension] > MAX_AIRCRAFT_TYPE_FOR_MISSION:
-                        aircraft_number[target_type][dimension] = MAX_AIRCRAFT_TYPE_FOR_MISSION  # Limita il numero di aerei per tipo di target a un massimo definito
-                        aircraft_number[target_type]['missions_needed'] = round(quantity / (efficiency[target_type][dimension] * MAX_AIRCRAFT_TYPE_FOR_MISSION))  # Calcola il numero di missioni necessarie se il numero di aerei per tipo di target supera il massimo
-                else:
-                    aircraft_number[target_type][dimension] = 0  # Se l'efficienza è zero, significa che il loadout non è efficace contro quel tipo di target.
-                
-        total_aircraft = sum(
-            v for dimensions in aircraft_number.values()
-            for k, v in dimensions.items()
-            if k != "missions_needed"
-        )
-        aircraft_number['total'] = total_aircraft
-        aircraft_number['message'] = f"Estimated number of aircraft needed to accomplish the task with loadout {loadout!r} for aircraft {model!r} against the specified target distribution."
-
-        return aircraft_number                        
-            
+                               
         
 
 

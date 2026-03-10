@@ -148,6 +148,7 @@ GROUND_COMBAT_EFFICACY = {
 }
 
 
+MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale
 
 STATE = {'Operational': True, 'Not_Operational': True , 'Destroyed': True, 'Critical': True, 'Damaged': True}
 

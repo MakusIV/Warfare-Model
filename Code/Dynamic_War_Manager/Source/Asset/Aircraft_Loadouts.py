@@ -29,7 +29,7 @@
 
 from typing import Dict, List, Optional
 from venv import logger
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, MAX_AIRCRAFT_TYPE_FOR_MISSION
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target, is_weapon_introduced
 
 # ---------------------------------------------------------------------------
@@ -3967,7 +3967,7 @@ def loadout_year_compatibility(aircraft_name: str, loadout_name: str, year: int)
             return False # se almeno un'arma del loadout non è stata introdotta entro l'anno specificato, il loadout non è compatibile con quell'anno
     return True # se tutte le armi del loadout sono state introdotte entro l'anno specificato, il loadout è compatibile con quell'anno
 
-def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, float], year: Optional[int] = None):
+def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, float], year: Optional[int] = None, max_aircraft_for_mission: Optional[int] = None):
         """Returns the quantity of aircrafts needed to accomplish a specific task against a specific target, considering the target distribution and the loadout."""
     
         """
@@ -3990,7 +3990,11 @@ def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, floa
                                 },
             }
         """
-        MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale
+        
+        
+
+        if not (max_aircraft_for_mission and max_aircraft_for_mission > 0):
+            max_aircraft_for_mission = MAX_AIRCRAFT_TYPE_FOR_MISSION
 
         loadout_data = get_loadout(model, loadout)
 
@@ -4020,8 +4024,9 @@ def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, floa
             v for dimensions in aircraft_number.values()
             for k, v in dimensions.items()
         )
-        aircraft_number['total'] = total_aircraft
-        aircraft_number['missions_needed'] = max(1, (total_aircraft + MAX_AIRCRAFT_TYPE_FOR_MISSION - 1) // MAX_AIRCRAFT_TYPE_FOR_MISSION)
+        aircraft_number['total'] = total_aircraft        
+        aircraft_number['missions_needed'] = max(1, (total_aircraft + max_aircraft_for_mission - 1) // max_aircraft_for_mission)
+        aircraft_number['max_aircraft_for_mission'] = (total_aircraft//aircraft_number['missions_needed'])
         aircraft_number['message'] = f"Estimated number of aircraft needed to accomplish the task with loadout {loadout!r} for aircraft {model!r} against the specified target distribution."
 
         return aircraft_number                        
