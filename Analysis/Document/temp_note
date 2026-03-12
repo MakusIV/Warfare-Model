@@ -1,14 +1,80 @@
- implementata get_weapon_cost in Aicraft_Weapon_Data.py
- controlla se tutte le armi hanno il costo e l'unità di misura k$
+
+
+Realizza il modulo di test Test_Military_Resources_Assigner.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e della strutture dati definite. Nei test di unità includi i seguenti test e configurazioni:
+
+test con loadouts compatibili con le seguenti configurazioni:
+
+task: 'Strike',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 4, 8
+max_missions = 2, 4
+directive = balanced, performance_high
+
+aircraft_availability = [
+        {'model': 'F-4E Phantom II', 'loadout': 'Strike', 'quantity': 12}, # USA Fighter_Bomber/Attacker
+        {'model': 'MiG-27K', 'loadout': 'Precision Ground Attack', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+        {'model': 'B-52H Stratofortress', 'loadout': 'Heavy Strike Mk-84', 'quantity': 6}, # USA Bomber
+        {'model': 'Su-24M', 'loadout': 'Heavy Strike', 'quantity': 8}, # USSR Bomber
+    ]
+    
+target_data = {
+        'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                     'med': {'quantity': 5, 'priority': 6},
+                     'small': {'quantity': 10, 'priority': 6}},
+        'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                     'med': {'quantity': 4, 'priority': 3},
+                     'small': {'quantity': 5, 'priority': 5}},
+        'Structure':{'big': {'quantity': 3, 'priority': 10},
+                     'med': {'quantity': 6, 'priority': 7},
+                     'small': {'quantity': 12, 'priority': 7}},
+    },
+    
+
+
+target_data = {
+        'Structure':{'big': {'quantity': 3, 'priority': 10},
+                     'med': {'quantity': 6, 'priority': 7},
+                     'small': {'quantity': 12, 'priority': 7}},
+}
+
+
+
+
+Escort', 'Intercept', 'CAS', 'Anti-Ship' 
+
+
+
+ Inoltre, considerando quanto realizzato nel modulo Test_Aircraft_Data.py, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
+
+
+
+  
+  
  
- implementata loadout_cost in Aicraft_Loadouts.py
- 
- Nel modulo Aircraft_Data.py ho implementato la funzione cost() in Aircraft_Data.py, implementa un test di unità minimale nel modulo Test_Aircraft_Data.py per questa funzione. Inoltre, ho notato che in diversi dizionari relativi agli aerei (a10a_data, f117_data, b52h_data, ...), il valore di cost è 0. Assegna  il valore di cost (credo sia espresso in milioni di dollari/euro) a questi aerei e confronta i costi di tutti gli aerei verificando che siano coerenti tra loro. 
  
  
  
+ FATTO
  
- Nel modulo Military_Resources_Assigner ho implementato la funzione get_aircraft_for_mission(). Questa funzione restituisce un dizionario contenente due liste di dizionari che contengono i nomi degli aerei e dei loadout e dei relativi punteggi.
- La logica implementata nella funzione valuta l'efficacia del loadout dell'aereo nei confronti del target e creare delle liste ordinate di aerei con loadout compatibile. 
- Verifica la funzione  considerando sia la logica e che la sintassi, oltre che le correzioni necessarie, puoi proporre anche delle modifiche migliorative considerando anche altri metodi implementati (o da implementare) nelle funzioni utilizzate anche nei moduli importati
  
+ Nel modulo Aircraft_Data.py ho implementato la funzione cost() in Aircraft_Data.py, implementa un test di unità minimale nel modulo Test_Aircraft_Data.py per questa funzione. Inoltre, ho notato che in diversi dizionari relativi agli aerei (a10a_data, f117_data, b52h_data, ...), il valore di cost è 0. Assegna  il valore di cost (credo sia espresso in milioni di dollari/euro) a questi aerei e confronta i costi di tutti gli aerei verificando che siano coerenti tra loro
+ 
+ 
+ Nel modulo Aicraft_Weapon_Data.py ho implementato la funzione get_weapon_cost(), implementa i test di unità nel modulo Test_Aircraft_Weapon_Data.py per questa funzione. Inoltre assegnato un valore espesso in k$, alla proprietà 'cost' nelle armi specificate nei dizionari CANNONS e MACHINE_GUNS presenti in AIR_WEAPONS
+ 
+ Nel modulo Aicraft_Loadouts.py ho implementato la funzione loadout_cost(), implementa i test di unità nel modulo Test_Aircraft_Loadouts.py per questa funzione.
+ 
+ reduction_ratio_aircraft è calcolato come qyt/max_aircraft_for_mission (riga 285) e non rappresenta, come dovrebbe, il livello di riduzione calcolato in base alla indisponibilità di aerei nel soddisfare pienamente le esigenze del target. Tuttavia, la funzione get_aircraft_quantity() restituisce, nel risultato, il numero di missioni necessario per soddisfare pienamente le esigenze del target in base al numero di aerei per missione passato come argomento il cui valore è effective_max = min(qty, max_aircraft_for_mission). Pertanto, non ha senso utilizzare reduction_ratio_aircraft come condizione e valore in base alla quale applicare la riduzione dello score e classificare il loadout come 'derated'. Valuta l'eliminazione del reduction_ratio_aircraft dalla funzione ed illustra le tue considerazioni
+ 
+ 
+ Nel modulo Military_Resources_Assigner ho implementato la funzione get_aircraft_for_mission(). Questa funzione restituisce un dizionario contenente due liste di dizionari che contengono i nomi degli aerei, dei loadout e dei relativi punteggi scelti in base ad un dizionario di aerei e loadout proposti (aircraft_availability), un dizionario di richieste per la missione (mission_requirements) ed un dizionario con le caratteristiche del target assegnato (target_data).
+ La logica della funzione valuta l'efficacia del loadout dell'aereo nei confronti del target e crea delle liste ordinate di aerei con loadout compatibile. 
+ Verifica la funzione analizzando logica e sintassi, effettua le eventuali correzioni necessarie. Inoltre, puoi proporre anche delle modifiche migliorative implementando anche altre fuznioni ausiliarie nel modulo. Qualora fosse nessario, i miglioramenti possono essere estesi ance ai moduli importati.
+ 
+ Aggiorna la funzione get_aicraft_for_mission() e le funzioni di supporto, considerando che la proprietà 'usability' dell'argomento mission_requirements è un dizionario; 'usability'= {'day': bool, 'night':bool, 'adverse_weather': bool}.
+ 
+ 
+ Nel modulo Aircraft_Weapon_Data.py ho aggiunto i parametri "perc_efficiency_variability" e "efficiency" nel dizionario "AIM-54A-MK47" presente in 'MISSILES_AAM' incluso nel dizionario 'AIR_WEAPONS'. Utilizzando il dizionario "AIM-54A-MK47" come esempio, implementa i due parametri in tutti i missili specificati in MISSILES_AAM
+
+implementa adesso la chiave 'aircraft'con i relativi valori come relaizzato in 'efficiency' di MISSILES_AAM nei dizionari 'efficiency' presenti nei dizionati MACHINE_GUNS e CANNONS inclusi in ?AIR_WEAPONS
+

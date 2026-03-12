@@ -1,202 +1,377 @@
 """
  MODULE Military Resources Assigner
- 
-methods for allocating military resources: aircraft, vehilce, ecc.
+
+methods for allocating military resources: aircraft, vehicle, ecc.
 
 """
 
-#from typing import Literal
-#VARIABLE = Literal["A", "B, "C"]
+from __future__ import annotations  # must be the very first statement
 
-import sys
-import os
-import random
 import copy
-from __future__ import annotations
-from typing import Dict, List, Optional
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
-import numpy as np
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY, AIR_TASK
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS, get_aircrafts_quantity, loadout_eval, loadout_cost
-from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
+
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
+    AIRCRAFT_LOADOUTS,
+    get_aircrafts_quantity,
+    loadout_cost,
+)
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 
-logger = Logger(module_name = __name__, class_name = 'Military_Resources_Assigner').logger
+logger = Logger(module_name=__name__, class_name='Military_Resources_Assigner').logger
 
 
-aircrafts = Aircraft_Data()
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
-def get_aircraft_for_mission(task: str, aircraft_availability: Dict, mission_requirements: Dict, target_data: Dict, max_aircraft_for_mission: int, max_missions: int, directive: str) -> Dict:
+_DIRECTIVE_WEIGHTS: Dict[str, Tuple[float, float]] = {
+    'performance_high': (1.00, 0.00),
+    'performance':      (0.75, 0.25),
+    'balanced':         (0.50, 0.50),
+    'economy':          (0.25, 0.75),
+    'economy_high':     (0.10, 0.90),
+}
 
+# Reference total cost [k$] used to normalise the cost factor (≈ average fighter+loadout)
+_REFERENCE_COST_K: float = 303_000.0
+
+
+
+
+# ---------------------------------------------------------------------------
+# Private helpers
+# ---------------------------------------------------------------------------
+
+def _extract_quantities(target_data: Dict) -> Dict:
+    """Convert ``{type: {dim: {'quantity': int, 'priority': int}}}`` to
+    ``{type: {dim: int}}`` as expected by ``get_aircrafts_quantity``."""
+    result = {}
+    for target_type, dims in target_data.items():
+        result[target_type] = {}
+        for dim, data in dims.items():
+            result[target_type][dim] = data['quantity'] if isinstance(data, dict) else int(data)
+    return result
+
+
+def _extract_target_lists(target_data: Dict) -> Tuple[List[str], List[str]]:
+    """Return ``(target_types, target_dimensions)`` lists from *target_data*."""
+    types: List[str] = []
+    dims: List[str] = []
+    for t_type, t_dims in target_data.items():
+        for dim in t_dims:
+            if t_type not in types:
+                types.append(t_type)
+            if dim not in dims:
+                dims.append(dim)
+    return types, dims
+
+
+def _check_mission_requirements(loadout: Dict, mission_requirements: Dict) -> bool:
+    """Return *True* if *loadout* satisfies cruise and attack *mission_requirements*.
+
+    ``loadout[phase]['range']`` is a dict ``{'fuel_25%': km, …, 'fuel_100%': km}``;
+    the comparison uses ``fuel_100%`` (maximum range).
     """
-        FORMATO PARAMETRI
-    
-        task = 'Strike'
+    for phase in ('cruise', 'attack'):
+        req = mission_requirements.get(phase, {})
+        lo  = loadout.get(phase, {})
+        if not req or not lo:
+            return False
 
-        aircraf_availability = [
-                    {'model': 'F-4E Phantom II', 'loadout': 'Strike', 'quantity': 10},
-                    {'model': 'F-15E Strike Eagle', 'loadout': 'Iron Bomb Strike', 'quantity': 15},
-                    {'model': 'A-10A Thunderbolt II', 'loadout': 'Precision Strike', 'quantity': 5},
-                    {'model': 'B-52H Stratofortress', 'loadout': 'Heavy Strike Mk-84', 'quantity': 3},
-                    {'model': 'F-16C Block 52d', 'loadout': 'Strike', 'quantity': 20},
-                ],
+        lo_range  = lo.get('range', {})
+        lo_range_max = lo_range.get('fuel_100%', 0) if isinstance(lo_range, dict) else lo_range
 
-        mission_requirements = { 
-            "cruise": {
-                        "speed": 850, "reference_altitude": 7000,
-                        "altitude_max": 12000, "altitude_min": 300,
-                        "range": 1000,
-                    },
-            "attack": {
-                        "speed": 950, "reference_altitude": 3000,
-                        "altitude_max": 8000, "altitude_min": 300,
-                        "range": 500,
-                    },
-            "usability": "day",
-        }
+        if not (
+            lo.get('speed', 0)              >= req.get('speed', 0)              and
+            lo.get('reference_altitude', 0) >= req.get('reference_altitude', 0) and
+            lo.get('altitude_max', 0)       >= req.get('altitude_max', 0)       and
+            lo.get('altitude_min', float('inf')) <= req.get('altitude_min', float('inf')) and
+            lo_range_max                    >= req.get('range', 0)
+        ):
+            return False
+    return True
 
-        target_data = {
-                            'Soft':     {   
-                                            'big': {'quantity': 3, 'priority': 5},
-                                            'med': {'quantity': 5, 'priority': 6},
-                                            'small': {'quantity': 10, 'priority': 6}
-                                        },
-                            'Armored':  {
-                                            'big': {'quantity': 2, 'priority': 3},
-                                            'med': {'quantity': 4, 'priority': 3},
-                                            'small': {'quantity': 5, 'priority': 5}
-                                        },
-                            'Structure':{
-                                            'big': {'quantity': 3, 'priority': 10},
-                                            'med': {'quantity': 6, 'priority': 7},
-                                            'small': {'quantity': 12, 'priority': 7}
-                                        },
-                    }
 
-        max_aircraft_for_mission = 9
-        max_missions = 2 # se >1 le mssioni vengono inserite in una coda la quale dovrà tenere conto se gli asset sono ancora disponibili
+def _usability_met(loadout_usability: Dict, required_usability: Dict) -> bool:
+    """Return *True* if *loadout_usability* satisfies every condition required by *required_usability*.
+
+    Both arguments have the form ``{'day': bool, 'night': bool, 'adverse_weather': bool}``.
+    A condition in *required_usability* set to ``True`` means the mission demands that capability;
+    the loadout must also expose it as ``True``.  Conditions set to ``False`` in the requirement
+    are ignored (the mission does not need them).
+
+    Examples::
+
+        _usability_met({'day': True, 'night': True,  'adverse_weather': False},
+                       {'day': True, 'night': False, 'adverse_weather': False})
+        # → True  (mission needs day only; loadout supports day)
+
+        _usability_met({'day': True, 'night': False, 'adverse_weather': False},
+                       {'day': True, 'night': True,  'adverse_weather': False})
+        # → False (mission needs night; loadout does not support it)
     """
-   
+    return all(
+        loadout_usability.get(cond, False)
+        for cond, required in required_usability.items()
+        if required
+    )
 
-    DIRECTIVE = ['performance_high', 'performance', 'balanced', 'economy', 'economy high']
-    REFERENCE_FOR_COST = 500 # riferimento per somma dei costi dell'aereo e del loadout
 
-    if directive not in DIRECTIVE:
-        logger.error(f"directive ({directive}) unknow. Permitted values:{DIRECTIVE}")
-        raise ValueError(f"directive ({directive}) unknow. Permitted values:{DIRECTIVE}")
-    
+def _compute_score(
+    combat_score: float,
+    aircraft_cost_M: float,
+    loadout_cost_k: float,
+    directive: str,
+) -> float:
+    """Return a weighted score combining combat effectiveness and cost.
+
+    Aircraft cost is stored in M$; loadout cost in k$.  Both are converted to
+    k$ before combining so the units are consistent.
+
+    Formula::
+
+        score = combat * ws  +  combat * wc * (_REFERENCE_COST_K / total_cost_k)
+
+    which simplifies to::
+
+        score = combat * (ws  +  wc * _REFERENCE_COST_K / max(1, total_cost_k))
+    """
+    ws, wc = _DIRECTIVE_WEIGHTS[directive]
+    total_cost_k = aircraft_cost_M * 1_000.0 + loadout_cost_k
+    cost_factor = _REFERENCE_COST_K / max(1.0, total_cost_k)
+    return combat_score * (ws + wc * cost_factor)
+
+
+def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
+    """Return a deep copy of *target_data* with quantities scaled by *reduction_ratio*,
+    preserving priority weights (higher-priority targets retain more quantity).
+
+    The weighted reduction ensures that the total quantity is scaled by
+    *reduction_ratio* while redistributing across priorities.
+    """
+    total_priority_weight = sum(
+        dim_data['priority']
+        for _, category_data in target_data.items()
+        for _, dim_data in category_data.items()
+    )
+    updated = copy.deepcopy(target_data)
+    for _, category_data in updated.items():
+        for _, dim_data in category_data.items():
+            weight = dim_data['priority'] / max(1, total_priority_weight)
+            # Scale quantity: higher-priority targets are cut less harshly
+            dim_data['quantity'] = max(
+                0,
+                round(dim_data['quantity'] * reduction_ratio * (1.0 + weight))
+            )
+    return updated
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+def get_aircraft_mission(
+    task: str,
+    aircraft_availability: List[Dict],
+    mission_requirements: Dict,
+    target_data: Dict,
+    max_aircraft_for_mission: int,
+    max_missions: int,
+    directive: str,
+) -> Dict:
+    """Select and rank available aircraft/loadout combinations for a mission.
+
+    Parameters
+    ----------
+    task:
+        Air task string, one of ``AIR_TASK``.
+    aircraft_availability:
+        List of ``{'model': str, 'loadout': str, 'quantity': int}``.
+    mission_requirements:
+        Dict with ``'cruise'``, ``'attack'`` performance sub-dicts and a
+        ``'usability'`` dict ``{'day': bool, 'night': bool, 'adverse_weather': bool}``
+        where ``True`` marks a condition the mission demands.
+    target_data:
+        ``{type: {dim: {'quantity': int, 'priority': int}}}``
+    max_aircraft_for_mission:
+        Maximum number of aircraft per single mission sortie.
+    max_missions:
+        Maximum number of missions (sorties) allowed.
+    directive:
+        Optimisation directive – one of ``_DIRECTIVE_WEIGHTS`` keys.
+
+    Returns
+    -------
+    Dict with keys ``'fully_compliant'`` and ``'derated'``, each a list of
+    ``{'aircraft_model': str, 'loadout': str, 'score': float}`` dicts sorted
+    descending by score.
+
+    Format example
+    --------------
+    task = 'Strike'
+
+    aircraft_availability = [
+        {'model': 'F-4E Phantom II',       'loadout': 'Strike',             'quantity': 10},
+        {'model': 'F-15E Strike Eagle',    'loadout': 'Iron Bomb Strike',   'quantity': 15},
+        {'model': 'A-10A Thunderbolt II',  'loadout': 'Precision Strike',   'quantity': 5},
+        {'model': 'B-52H Stratofortress',  'loadout': 'Heavy Strike Mk-84', 'quantity': 3},
+        {'model': 'F-16C Block 52d',       'loadout': 'Strike',             'quantity': 20},
+    ]
+
+    mission_requirements = {
+        'cruise': {
+            'speed': 850, 'reference_altitude': 7000,
+            'altitude_max': 12000, 'altitude_min': 300,
+            'range': 1000,
+        },
+        'attack': {
+            'speed': 950, 'reference_altitude': 3000,
+            'altitude_max': 8000, 'altitude_min': 300,
+            'range': 500,
+        },
+        'usability': {'day': True, 'night': False, 'adverse_weather': False},
+    }
+
+    target_data = {
+        'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                     'med': {'quantity': 5, 'priority': 6},
+                     'small': {'quantity': 10, 'priority': 6}},
+        'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                     'med': {'quantity': 4, 'priority': 3},
+                     'small': {'quantity': 5, 'priority': 5}},
+        'Structure':{'big': {'quantity': 3, 'priority': 10},
+                     'med': {'quantity': 6, 'priority': 7},
+                     'small': {'quantity': 12, 'priority': 7}},
+    }
+
+    max_aircraft_for_mission = 9
+    max_missions = 2  # if >1 missions are queued; availability must be re-checked
+    directive = 'balanced'
+    """
+
+    # ------------------------------------------------------------------
+    # Input validation
+    # ------------------------------------------------------------------
+    if directive not in _DIRECTIVE_WEIGHTS:
+        logger.error(f"directive ({directive!r}) unknown. Permitted values: {list(_DIRECTIVE_WEIGHTS)}")
+        raise ValueError(f"directive ({directive!r}) unknown. Permitted values: {list(_DIRECTIVE_WEIGHTS)}")
+
     if not task or not isinstance(task, str):
-            raise TypeError ("task must be a string")
-    
+        raise TypeError("task must be a non-empty string")
+
     if task not in AIR_TASK:
-        raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
-    
-    # liste degli aerei con loadout idoneo: 
-    # fully_compliant: i target sono serviti con numero aerei e numero missioni sono conformi alle richieste. 
-    # derated: i target non possono essere serviti con numero aerei e numero missioni richieste: derating del target
-    avalaible_aircraft_list = {'fully_compliant':[], 'derated':[]} 
-    
-    # Loadout check: per ogni aereo disponibile, verificare se il loadout soddisfa i requisiti di missione (velocità, altitudine, range). Se sì, aggiungere alla lista dei candidati.
+        raise ValueError(f"task must be one of {AIR_TASK!r}, got {task!r}")
+
+    # ------------------------------------------------------------------
+    # Pre-compute target info that does not change across aircraft
+    # ------------------------------------------------------------------
+    target_types, target_dims = _extract_target_lists(target_data)
+    base_quantities = _extract_quantities(target_data)          # {type: {dim: int}}
+    required_usability: Dict = mission_requirements.get('usability', {'day': True, 'night': False, 'adverse_weather': False})
+
+    # Result lists
+    available_aircraft_list: Dict[str, List] = {'fully_compliant': [], 'derated': []}
+
+    # ------------------------------------------------------------------
+    # Evaluate each candidate aircraft/loadout
+    # ------------------------------------------------------------------
     for aircraft in aircraft_availability:
-        reduction_ratio_for_aircraft_number = 1
-        reduction_ratio_for_mission_number = 1
-        loadout_idoneity = False
+        model   = aircraft['model']
+        lo_name = aircraft['loadout']
+        qty     = aircraft['quantity']
 
-        if aircraft['quantity'] < max_aircraft_for_mission:
-            logger.warning(f"availability of {aircraft['model']}: {aircraft['quantity']} is lower of requested max_aircraft_for_mission({max_aircraft_for_mission}. assigned to max_aircraft_for_mission: {aircraft['quantity']} )")
-            reduction_ratio_for_aircraft_number = aircraft['quantity'] / max_aircraft_for_mission
-            max_aircraft_for_mission = aircraft['quantity']            
-        
-        loadout = AIRCRAFT_LOADOUTS.get(aircraft['model'], {}).get(aircraft['loadout'], {})
-        
+        # --- Loadout existence check -----------------------------------
+        loadout = AIRCRAFT_LOADOUTS.get(model, {}).get(lo_name, {})
         if not loadout:
-            logger.warning(f"loadout {aircraft['loadout']} for model {aircraft['model']} not found in AIRCRAFT_LOADOUTS.")
-            continue
-        loadout_idoneity = True
-
-        for key in ['cruise', 'attack']:
-            if not (loadout[key]['speed'] >= mission_requirements[key]['speed'] and
-                loadout[key]['reference_altitude'] >= mission_requirements[[key]]['reference_altitude'] and
-                loadout[key]['altitude_max'] >= mission_requirements[[key]]['altitude_max'] and
-                loadout[key]['altitude_min'] <= mission_requirements[[key]]['altitude_min'] and 
-                loadout[key]['range'] >= mission_requirements[[key]]['range'] ):                
-                    loadout_idoneity = False
-                    break
-        
-        if not loadout_idoneity:
-            logger.info(f"Aircraft {aircraft['model']} with loadout {aircraft['loadout']} does not meet mission requirements (cruise or attack params).")
+            logger.warning(f"Loadout {lo_name!r} for model {model!r} not found in AIRCRAFT_LOADOUTS.")
             continue
 
-        if loadout['usability'] != mission_requirements['usability']:
-            logger.info(f"Aircraft {aircraft['model']} with loadout {aircraft['loadout']} does not meet usability requirements.")
+        # --- Performance check -----------------------------------------
+        if not _check_mission_requirements(loadout, mission_requirements):
+            logger.info(f"Aircraft {model!r} / loadout {lo_name!r}: does not meet mission performance requirements.")
             continue
-        aircrafts_quantity = get_aircrafts_quantity(model = aircraft['model'], loadout = aircraft['loadout'], target_data = target_data, year = None, max_aircraft_for_mission = max_aircraft_for_mission)
-        calculated_missions = aircrafts_quantity['missions_needed']
-        calculated_aircraft = aircrafts_quantity['total']
 
-        if max_missions > calculated_missions:
-            # il numero di missioni calcolato è superiore a quello consentito nella richiesta
-            # quindi devi ridefinire target_data, riducendo gli obiettivi in funzione delle loro priorità
-            reduction_ratio_for_mission_number = calculated_missions / max_missions # coefficente di riduzione da applicare al numero di aerei richiesto per singolo target            
-            target_data_priority_weight = sum( # sommatoria delle priorità applicate a tutti i target
-                                        dim_data['priority']
-                                        for _, category_data in target_data.items()
-                                        for _, dim_data in category_data.items()
-                                        )
-            updated_target_data = copy.deepcopy(target_data)
+        # --- Usability check -------------------------------------------
+        if not _usability_met(loadout.get('usability', {}), required_usability):
+            logger.info(f"Aircraft {model!r} / loadout {lo_name!r}: does not meet usability requirements {required_usability!r}.")
+            continue
 
-            for _, category_data in updated_target_data.items():
-                for _, dim_data in category_data.items():
-                    updated_target_data['quantity'] *=  reduction_ratio_for_mission_number * updated_target_data['priority'] / target_data_priority_weight
-        # ricalcola le quantità in base alle nuove richieste sui target
-        aircrafts_quantity = get_aircrafts_quantity(model = aircraft['model'], loadout = aircraft['loadout'], target_data = updated_target_data, year = None, max_aircraft_for_mission = max_aircraft_for_mission)
-        calculated_missions = aircrafts_quantity['missions_needed']
+        # --- Effective max aircraft for this entry (never mutates outer var) ---
+        # Caps formation size to what is actually available; get_aircrafts_quantity
+        # will naturally compute a higher missions_needed if effective_max < max_aircraft_for_mission,
+        # so no separate reduction ratio is needed for aircraft availability.
+        effective_max = min(qty, max_aircraft_for_mission)
 
-        if max_missions > calculated_missions:
-            logger.error(f"Error in function logic{calculated_missions}")
-            raise ValueError(f"Error in function logic{calculated_missions}")
-        
-        else:# inserisce l'aereo, il loadout e lo score di questo in una lista                
+        # --- Quantity needed for the full target set -------------------
+        aq = get_aircrafts_quantity(
+            model=model,
+            loadout=lo_name,
+            target_data=base_quantities,
+            year=None,
+            max_aircraft_for_mission=effective_max,
+        )
+        calculated_missions = aq.get('missions_needed', 0)
+        reduction_ratio_missions = 1.0
+        effective_quantities = base_quantities
 
-            #   criteri di scelta:    
-            #   performance high -> sceglie in base al combat score (tiene conto dell'aereo e del loadout): ws = 1.0, wc: 0
-            #   performance -> sceglie in base al combat score ed al costo dell'aereo e del loadout: ws = 0.75, wc: 0.25
-            #   balanced -> sceglie in base al combat score ed al costo dell'aereo e del loadout: ws = 0.5, wc: 0.5
-            #   economy -> sceglie in base al combat score ed al costo dell'aereo e del loadout: ws = 0.25, wc: 0.75
-            #   economy high -> balanced -> sceglie in base al combat score ed al costo dell'aereo e del loadout: ws = 0.1, wc: 0.9
-            
-            aircraft_data= aircrafts.get_aircraft(aircraft['model'])
-            combat_score_value = aircraft_data.combat_score(task, aircraft['loadout'])# considera anche il punteggio del loadout
-            # loadout_score_value = loadout_eval(aircraft_name=aircraft['model'], loadout_name=aircraft['loadout'])
-            aircraft_cost_value = aircraft_data.cost()
-            loadout_cost_value = loadout_cost(aircraft['model'], aircraft['loadout'])
-            score_value = 0.0
+        if calculated_missions > max_missions:
+            # Target set must be reduced to fit within max_missions
+            reduction_ratio_missions = max_missions / max(1, calculated_missions)
+            reduced_target = _reduce_target_data(target_data, reduction_ratio_missions)
+            effective_quantities = _extract_quantities(reduced_target)
 
-            # valutazione del punteggio in base alla direttiva
-            if directive == 'performance_high':
-                score_value = combat_score_value
-            elif directive == 'performance':
-                score_value = combat_score_value * 0.75 * REFERENCE_FOR_COST/ (0.25 * (aircraft_cost_value + loadout_cost_value) )#
-            elif directive == 'balanced':
-                score_value = combat_score_value * REFERENCE_FOR_COST  / ( (aircraft_cost_value + loadout_cost_value) )#
-            elif directive == 'economy':
-                score_value = combat_score_value * 0.25 * REFERENCE_FOR_COST / (0.75 * (aircraft_cost_value + loadout_cost_value) )#
-            elif directive == 'economy_high':
-                score_value = REFERENCE_FOR_COST / (aircraft_cost_value + loadout_cost_value) #
+            # Recompute with reduced target
+            aq = get_aircrafts_quantity(
+                model=model,
+                loadout=lo_name,
+                target_data=effective_quantities,
+                year=None,
+                max_aircraft_for_mission=effective_max,
+            )
+            calculated_missions = aq.get('missions_needed', 0)
 
-            # selezione della lista di assegnazione
-            if reduction_ratio_for_aircraft_number == 1 and reduction_ratio_for_mission_number == 1:  # non sono stati rilevate le condizioni per il calcolo e l'applicazione dei fattori di riduzione: il loadout soddifa le richieste per la missione (num aerei e num missioni)                                              
-                avalaible_aircraft_list['fully_compliant'].extend({'aircraft_model': aircraft['model'], 'loadout': aircraft['loadout'], 'score': score_value}) # inserisco lo score nella lista fully_compliant
+            if calculated_missions > max_missions:
+                logger.error(
+                    f"Aircraft {model!r} / loadout {lo_name!r}: still exceeds max_missions "
+                    f"({calculated_missions} > {max_missions}) after target reduction."
+                )
+                # Still keep as derated candidate but flag the shortfall
+                reduction_ratio_missions = max_missions / max(1, calculated_missions)
 
-            else:# sono stati rilevate le condizioni per il calcolo e l'applicazione dei fattori di riduzione: il loadout NON soddifa le richieste per la missione (num aerei e num missioni)                                              
-                avalaible_aircraft_list['derated'].extend({'aircraft_model': aircraft['model'], 'loadout': aircraft['loadout'], 'score': score_value * reduction_ratio_for_aircraft_number * reduction_ratio_for_mission_number}) # inserisco lo score nella lista derated
-    
-    avalaible_aircraft_list['fully_compliant'].sort(key = lambda x: x['score'], reverse=True)
-    avalaible_aircraft_list['derated'].sort(key = lambda x: x['score'], reverse=True)
-    return avalaible_aircraft_list
+        # --- Combat score (with target context for better ranking) -----
+        aircraft_data: Optional[Aircraft_Data] = Aircraft_Data._registry.get(model)
+        if aircraft_data is None:
+            logger.warning(f"Aircraft {model!r} not found in Aircraft_Data registry. Skipping.")
+            continue
 
+        combat_score_value = aircraft_data.combat_score_target_effectiveness(
+            task, lo_name, target_types, target_dims
+        )
+        aircraft_cost_M  = aircraft_data.cost               # int, M$
+        lo_cost_k        = loadout_cost(model, lo_name)     # float, k$
 
-   
+        score_value = _compute_score(combat_score_value, aircraft_cost_M, lo_cost_k, directive)
+
+        # --- Assign to correct list ------------------------------------
+        # fully_compliant: target integrally covered within max_missions
+        # derated:         target partially covered (mission count constraint triggered reduction)
+        entry = {'aircraft_model': model, 'loadout': lo_name, 'score': score_value}
+
+        if reduction_ratio_missions == 1.0:
+            available_aircraft_list['fully_compliant'].append(entry)
+        else:
+            derated_entry = dict(entry)
+            derated_entry['score'] = score_value * reduction_ratio_missions
+            available_aircraft_list['derated'].append(derated_entry)
+
+    # ------------------------------------------------------------------
+    # Sort both lists descending by score
+    # ------------------------------------------------------------------
+    available_aircraft_list['fully_compliant'].sort(key=lambda x: x['score'], reverse=True)
+    available_aircraft_list['derated'].sort(key=lambda x: x['score'], reverse=True)
+
+    return available_aircraft_list
+

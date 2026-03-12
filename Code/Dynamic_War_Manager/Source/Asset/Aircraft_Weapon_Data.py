@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 # LOGGING --
  
-logger = Logger(module_name = __name__, class_name = 'Aircraft_Weapon_Data')
+logger = Logger(module_name = __name__, class_name = 'Aircraft_Weapon_Data').logger
 
 AIRCRAFT_ROLE = AIR_MILITARY_CRAFT_ASSET.keys()
 AIRCRAFT_TASK = AIR_TASK
@@ -618,9 +618,9 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
         logger.warning(f"weapon {model} unknow")
         return 0.0
     else:        
-        if weapon_dict.get('weapons_category') == 'MISSILES_AAM':
-            logger.warning(f"weapon {model} is a a2a missile, get_weapon_score_target is not implemented for missiles yet, return 0.0")
-            return 0.0
+    #    if weapon_dict.get('weapons_category') == 'MISSILES_AAM':
+    #        logger.warning(f"weapon {model} is a a2a missile, get_weapon_score_target is not implemented for missiles yet, return 0.0")
+    #        return 0.0
     
         logger.debug(f"weapon {model} found in category {weapon_dict['weapons_category']} with type {weapon_dict['weapons_type']}")
     
@@ -670,21 +670,28 @@ def get_weapon_efficiency(model: str, target_data: Dict[str, float]) -> Dict[str
             }"""
     
     if not isinstance(model, str):
-        raise TypeError(f"model is not str, got {type(model).__name__}")    
-    result  = get_weapon(model)
+        raise TypeError(f"model is not str, got {type(model).__name__}")
 
-    weapons_category, weapons_type, weapon_data = result.get('weapons_category', None), result.get('weapons_type', None), result.get('weapons_data', None)
+    result = get_weapon(model)
+
+    if result is None:
+        logger.warning(f"weapon {model} unknown, return None")
+        return None
+
+    weapons_category = result.get('weapons_category', None)
+    weapons_type     = result.get('weapons_type',     None)
+    weapon_data      = result.get('weapons_data',     None)
 
     if not isinstance(target_data, dict):
         raise TypeError(f"target_data is not dict, got {type(target_data).__name__}")
 
     if not weapons_category or not weapons_type or not weapon_data:
-        logger.warning(f"weapon {model} unknow, return None")
-        return None   
+        logger.warning(f"weapon {model} unknown, return None")
+        return None
     
-    if weapons_category == 'MISSILES_AAM':
-        logger.warning(f"weapon {model} is a a2a missile, get_weapon_efficiency is not implemented for missiles, return None")
-        return None    
+    #if weapons_category == 'MISSILES_AAM':
+    #    logger.warning(f"weapon {model} is a a2a missile, get_weapon_efficiency is not implemented for missiles, return None")
+    #    return None    
     weapon_efficiency = weapon_data.get('efficiency', None)
 
     if not weapon_efficiency:
@@ -790,7 +797,15 @@ AIR_WEAPONS = {
             "max_height": 24.8,
             "max_speed": 3.8,
             "manouvrability": 0.6,
-            "accuracy": 0.75
+            "accuracy": 0.75,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {  
+                "Aircraft": {
+                    "big": {"accuracy": 1, "destroy_capacity": 1},
+                    "med": {"accuracy": 1, "destroy_capacity": 1},
+                    "small": {"accuracy": 0.95, "destroy_capacity": 1},
+                }              
+            },
         },
         "AIM-54A-MK60": {
             "type": "AAM",
@@ -809,7 +824,15 @@ AIR_WEAPONS = {
             "max_height": 24.8,
             "max_speed": 3.8,
             "manouvrability": 0.6,
-            "accuracy": 0.75
+            "accuracy": 0.75,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.95, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-54C-MK47": {
             "type": "AAM",
@@ -828,7 +851,15 @@ AIR_WEAPONS = {
             "max_height": 24.8,
             "max_speed": 4.5,
             "manouvrability": 0.73,
-            "accuracy": 0.8
+            "accuracy": 0.8,
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.97, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-54C-MK60": {
             "type": "AAM",
@@ -847,7 +878,15 @@ AIR_WEAPONS = {
             "max_height": 24.8,
             "max_speed": 4.5,
             "manouvrability": 0.73,
-            "accuracy": 0.8
+            "accuracy": 0.8,
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 1.0, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.97, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-7E": {
             "type": "AAM",
@@ -866,7 +905,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.6,
-            "accuracy": 0.6
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.75, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-7F": {
             "type": "AAM",
@@ -885,7 +932,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.6,
-            "accuracy": 0.65
+            "accuracy": 0.65,
+            "perc_efficiency_variability": 0.13,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.80, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-7M": {
             "type": "AAM",
@@ -904,7 +959,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.65,
-            "accuracy": 0.7
+            "accuracy": 0.7,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-7MH": {
             "type": "AAM",
@@ -923,7 +986,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.66,
-            "accuracy": 0.72
+            "accuracy": 0.72,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.87, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.72, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.57, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-7P": {
             "type": "AAM",
@@ -942,7 +1013,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.7,
-            "accuracy": 0.75
+            "accuracy": 0.75,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.90, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9B": {
             "type": "AAM",
@@ -959,7 +1038,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 1.7,
             "manouvrability": 0.5,
-            "accuracy": 0.45
+            "accuracy": 0.45,
+            "perc_efficiency_variability": 0.20,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.50, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9P": {
             "type": "AAM",
@@ -976,7 +1063,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2,
             "manouvrability": 0.5,
-            "accuracy": 0.55
+            "accuracy": 0.55,
+            "perc_efficiency_variability": 0.18,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.60, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9P5": {
             "type": "AAM",
@@ -993,7 +1088,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2,
             "manouvrability": 0.6,
-            "accuracy": 0.58
+            "accuracy": 0.58,
+            "perc_efficiency_variability": 0.17,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.63, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.58, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.43, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9L": {
             "type": "AAM",
@@ -1010,7 +1113,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2.5,
             "manouvrability": 0.7,
-            "accuracy": 0.7
+            "accuracy": 0.7,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.80, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9M": {
             "type": "AAM",
@@ -1027,7 +1138,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2.5,
             "manouvrability": 0.7,
-            "accuracy": 0.75
+            "accuracy": 0.75,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.85, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1.0},
+                }
+            },
         },
         "AIM-9X": {
             "type": "AAM",
@@ -1044,7 +1163,15 @@ AIR_WEAPONS = {
             "max_height": 25,
             "max_speed": 2.9,
             "manouvrability": 0.9,
-            "accuracy": 0.9
+            "accuracy": 0.9,
+            "perc_efficiency_variability": 0.07,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.95, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.90, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.85, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-550": {
             "type": "AAM",
@@ -1061,7 +1188,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2.8,
             "manouvrability": 0.6,
-            "accuracy": 0.65
+            "accuracy": 0.65,
+            "perc_efficiency_variability": 0.13,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.72, "destroy_capacity": 0.75},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.52, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-530IR": {
             "type": "AAM",
@@ -1078,7 +1213,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 3,
             "manouvrability": 0.6,
-            "accuracy": 0.55
+            "accuracy": 0.55,
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.60, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-530EM": {
             "type": "AAM",
@@ -1096,7 +1239,15 @@ AIR_WEAPONS = {
             "max_height": 20,
             "max_speed": 4,
             "manouvrability": 0.7,
-            "accuracy": 0.6
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.13,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.70, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.0},
+                }
+            },
         },
         "RB-24": {
             "type": "AAM",
@@ -1113,7 +1264,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 1.7,
             "manouvrability": 0.5,
-            "accuracy": 0.45
+            "accuracy": 0.45,
+            "perc_efficiency_variability": 0.20,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.50, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 1.0},
+                }
+            },
         },
         "RB-24J": {
             "type": "AAM",
@@ -1130,7 +1289,15 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2,
             "manouvrability": 0.6,
-            "accuracy": 0.6
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.0},
+                }
+            },
         },
         "RB-74": {
             "type": "AAM",
@@ -1147,8 +1314,16 @@ AIR_WEAPONS = {
             "max_height": 18,
             "max_speed": 2.5,
             "manouvrability": 0.7,
-            "accuracy": 0.7
-        },   
+            "accuracy": 0.7,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.80, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                }
+            },
+        },
         # red
         "R-13M": {
             "type": "AAM",
@@ -1165,8 +1340,16 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.7,  # mach
             "manouvrability": 0.8,
-            "accuracy": 0.55
-        },            
+            "accuracy": 0.55,
+            "perc_efficiency_variability": 0.17,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.60, "destroy_capacity": 0.50},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-13M1": {
             "type": "AAM",
             "model": "R-13M1",
@@ -1182,7 +1365,15 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.4,  # mach
             "manouvrability": 0.8,
-            "accuracy": 0.58
+            "accuracy": 0.58,
+            "perc_efficiency_variability": 0.16,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.63, "destroy_capacity": 0.50},
+                    "med": {"accuracy": 0.58, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.43, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-60": {
             "type": "AAM",
@@ -1199,7 +1390,15 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.7,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.6
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 0.60},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-60M": {
             "type": "AAM",
@@ -1216,7 +1415,15 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.7,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.65
+            "accuracy": 0.65,
+            "perc_efficiency_variability": 0.13,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.70, "destroy_capacity": 0.28},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 0.62},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-73": {
             "type": "AAM",
@@ -1233,7 +1440,15 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.7,  # mach
             "manouvrability": 0.85,
-            "accuracy": 0.85
+            "accuracy": 0.85,
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.90, "destroy_capacity": 0.60},
+                    "med": {"accuracy": 0.85, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.78, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-3S": {  # aka K-13A
             "type": "AAM",
@@ -1250,7 +1465,15 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.85,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.45
+            "accuracy": 0.45,
+            "perc_efficiency_variability": 0.20,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.50, "destroy_capacity": 0.65},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.32, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-3R": {
             "type": "AAM",
@@ -1268,8 +1491,16 @@ AIR_WEAPONS = {
             "max_height": 20,  # km
             "max_speed": 2.85,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.5
-        },            
+            "accuracy": 0.5,
+            "perc_efficiency_variability": 0.20,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.60, "destroy_capacity": 0.65},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.38, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-24R": {
             "type": "AAM",
             "model": "R-24R",
@@ -1286,8 +1517,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 3.42,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.65
-        },            
+            "accuracy": 0.65,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.75, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-24T": {
             "type": "AAM",
             "model": "R-24T",
@@ -1303,8 +1542,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 3.42,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.6
-        },            
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.13,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.68, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.46, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-40R": {
             "type": "AAM",
             "model": "R-40R",
@@ -1321,8 +1568,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.6
-        },            
+            "accuracy": 0.6,
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.72, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-40T": {
             "type": "AAM",
             "model": "R-40T",
@@ -1338,8 +1593,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.55
-        },            
+            "accuracy": 0.55,
+            "perc_efficiency_variability": 0.17,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.65, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-27R": {
             "type": "AAM",
             "model": "R-27R",
@@ -1356,7 +1619,15 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.7
+            "accuracy": 0.7,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.82, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                }
+            },
         },
         "R-27T": {
             "type": "AAM",
@@ -1373,8 +1644,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.65
-        },            
+            "accuracy": 0.65,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.75, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.52, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-27ER": {
             "type": "AAM",
             "model": "R-27ER",
@@ -1391,8 +1670,16 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.72
-        },           
+            "accuracy": 0.72,
+            "perc_efficiency_variability": 0.09,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.83, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.72, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.57, "destroy_capacity": 1.0},
+                }
+            },
+        },
         "R-27ET": {
             "type": "AAM",
             "model": "R-27ET",
@@ -1408,7 +1695,15 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.7,
-            "accuracy": 0.68
+            "accuracy": 0.68,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.78, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.68, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.54, "destroy_capacity": 1.0},
+                }
+            },
         },
 
         "R-33": {
@@ -1428,7 +1723,15 @@ AIR_WEAPONS = {
             "max_height": 25,  # km
             "max_speed": 4.5,  # mach
             "manouvrability": 0.6,
-            "accuracy": 0.7
+            "accuracy": 0.7,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.88, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.52, "destroy_capacity": 1.0},
+                }
+            },
         },
 
         "R-37": {
@@ -1447,7 +1750,15 @@ AIR_WEAPONS = {
             "max_height": 30,  # km
             "max_speed": 6.0,  # mach
             "manouvrability": 0.5,
-            "accuracy": 0.72
+            "accuracy": 0.72,
+            "perc_efficiency_variability": 0.10,
+            "efficiency": {
+                "Aircraft": {
+                    "big": {"accuracy": 0.88, "destroy_capacity": 1.0},
+                    "med": {"accuracy": 0.72, "destroy_capacity": 1.0},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 1.0},
+                }
+            },
         },
 
     },
@@ -6326,7 +6637,7 @@ AIR_WEAPONS = {
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1972,
             "end_service": None,
-            "cost": None,  # k$
+            "cost": 30,  # k$
             "caliber": 23,  # mm
             "warhead": None,  # kg
             "warhead_type": "AP",
@@ -6390,8 +6701,13 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.35, "destroy_capacity": 0.20},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.45},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 0.85},
+                },
             },
-        },    
+        },
         "Gsh-23L": {  # 23 mm twin-barrel autocannon
             "type": "Rockets",
             "model": "Gsh-23L",
@@ -6399,7 +6715,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1972,
             "end_service": None,
-            "cost": None,
+            "cost": 25,  # k$
             "caliber": 23,  # mm
             "warhead": None,
             "warhead_type": "AP",
@@ -6463,6 +6779,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.15},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.40, "destroy_capacity": 0.22},
+                    "med": {"accuracy": 0.30, "destroy_capacity": 0.48},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 0.88},
+                },
             },
         },
         "GAU-8/A": {  # 30mm 7-barrel rotary cannon - A-10A, A-10C, A-10C II
@@ -6472,7 +6793,7 @@ AIR_WEAPONS = {
             "task": ["Strike", "CAS"],
             "start_service": 1977,
             "end_service": None,
-            "cost": None,
+            "cost": 500,  # k$
             "caliber": 30,  # mm
             "warhead": None,  # kg
             "warhead_type": "APFSDS",  # PGU-14/B API with Depleted Uranium core
@@ -6536,6 +6857,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.15},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.25},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.25, "destroy_capacity": 0.45},
+                    "med": {"accuracy": 0.18, "destroy_capacity": 0.75},
+                    "small": {"accuracy": 0.22, "destroy_capacity": 0.95},
+                },
             },
         },
         "M61A1": {  # 20mm 6-barrel rotary Vulcan - F/A-18A/C, F-14A/B, F-15C/E, F-16A/C variants, F-4E
@@ -6545,7 +6871,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1959,
             "end_service": None,
-            "cost": None,
+            "cost": 150,  # k$
             "caliber": 20,  # mm (20x102mm)
             "warhead": None,
             "warhead_type": "HE",  # M56A3 HEI primary round; SAPHEI (PGU-28/B) also available
@@ -6609,6 +6935,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.05},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.12},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": 0.20},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.50},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 0.85},
+                },
             },
         },
         "M39A3": {  # 20mm 5-chamber revolver cannon - F-5E(3), 2 guns
@@ -6618,7 +6949,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1955,
             "end_service": None,
-            "cost": None,
+            "cost": 50,  # k$
             "caliber": 20,  # mm (20x102mm)
             "warhead": None,
             "warhead_type": "HE",
@@ -6682,6 +7013,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.04},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.10},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.18},
+                    "med": {"accuracy": 0.38, "destroy_capacity": 0.44},
+                    "small": {"accuracy": 0.32, "destroy_capacity": 0.82},
+                },
             },
         },
         "Mk-12": {  # 20mm semi-automatic cannon - A-4E Skyhawk (A4E-C), 2 guns
@@ -6691,7 +7027,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1955,
             "end_service": None,
-            "cost": None,
+            "cost": 30,  # k$
             "caliber": 20,  # mm (20x110mm USN)
             "warhead": None,
             "warhead_type": "HE",  # HEI, SAPHEI rounds
@@ -6755,6 +7091,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.03},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.08},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.35, "destroy_capacity": 0.16},
+                    "med": {"accuracy": 0.28, "destroy_capacity": 0.40},
+                    "small": {"accuracy": 0.28, "destroy_capacity": 0.80},
+                },
             },
         },
         "DEFA-554": {  # 30mm revolver cannon - M-2000C Mirage 2000C (2 guns, 125 rds/gun)
@@ -6764,7 +7105,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1984,
             "end_service": None,
-            "cost": None,
+            "cost": 80,  # k$
             "caliber": 30,  # mm (30x113mm B)
             "warhead": None,
             "warhead_type": "HE",  # HEI, APHEI-SD rounds
@@ -6828,6 +7169,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.50, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 0.68},
+                    "small": {"accuracy": 0.38, "destroy_capacity": 0.95},
+                },
             },
         },
         "N-37": {  # 37mm autocannon - MiG-15bis (1 gun, 40 rounds)
@@ -6837,7 +7183,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1946,
             "end_service": None,
-            "cost": None,
+            "cost": 10,  # k$
             "caliber": 37,  # mm (37x155mm OZ)
             "warhead": None,
             "warhead_type": "HE",  # HEI-T, AP-T rounds; ~400 rpm, low fire rate
@@ -6901,6 +7247,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.55},
+                    "med": {"accuracy": 0.28, "destroy_capacity": 0.80},
+                    "small": {"accuracy": 0.22, "destroy_capacity": 1.00},
+                },
             },
         },
         "NR-23": {  # 23mm autocannon - MiG-15bis (2 guns, 80 rds/gun)
@@ -6910,7 +7261,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1949,
             "end_service": None,
-            "cost": None,
+            "cost": 15,  # k$
             "caliber": 23,  # mm (23x115mm)
             "warhead": None,
             "warhead_type": "AP",  # HEI, API, AP-T rounds; lower muzzle vel. than GSh-23L
@@ -6974,6 +7325,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.07},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.14},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.42, "destroy_capacity": 0.22},
+                    "med": {"accuracy": 0.32, "destroy_capacity": 0.48},
+                    "small": {"accuracy": 0.28, "destroy_capacity": 0.88},
+                },
             },
         },
         "NR-30": {  # 30mm autocannon - MiG-19P (3 guns), Su-17 M4 (2 guns)
@@ -6983,7 +7339,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1954,
             "end_service": None,
-            "cost": None,
+            "cost": 20,  # k$
             "caliber": 30,  # mm (30x155mm Soviet)
             "warhead": None,
             "warhead_type": "HE",  # HEI, AP rounds
@@ -7047,6 +7403,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.35},
+                    "med": {"accuracy": 0.35, "destroy_capacity": 0.65},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 0.95},
+                },
             },
         },
         "GSh-30-1": {  # 30mm single-barrel cannon - MiG-29A, MiG-29S, Su-27, Su-30, Su-33, Su-34
@@ -7056,7 +7417,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1983,
             "end_service": None,
-            "cost": None,
+            "cost": 100,  # k$
             "caliber": 30,  # mm (30x165mm)
             "warhead": None,
             "warhead_type": "HE",  # HEI, API rounds; ~1500-1800 rpm
@@ -7120,6 +7481,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.20},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.55, "destroy_capacity": 0.38},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.42, "destroy_capacity": 0.96},
+                },
             },
         },
         "GSh-30-2": {  # 30mm twin-barrel (Gast) cannon - Su-25, Su-25T, Su-25TM (VPU-17A mount, 250 rds)
@@ -7129,7 +7495,7 @@ AIR_WEAPONS = {
             "task": ["Strike", "CAS"],
             "start_service": 1981,
             "end_service": None,
-            "cost": None,
+            "cost": 120,  # k$
             "caliber": 30,  # mm (30x165mm)
             "warhead": None,
             "warhead_type": "HE",  # HEI, API rounds; ~3000 rpm via Gast principle
@@ -7193,6 +7559,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.45, "destroy_capacity": 0.40},
+                    "med": {"accuracy": 0.35, "destroy_capacity": 0.72},
+                    "small": {"accuracy": 0.35, "destroy_capacity": 0.96},
+                },
             },
         },
         "GSh-6-23M": {  # 23mm 6-barrel rotary cannon - MiG-31 (260 rds), Su-24M/Su-24MR (500 rds)
@@ -7202,7 +7573,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1974,
             "end_service": None,
-            "cost": None,
+            "cost": 200,  # k$
             "caliber": 23,  # mm (23x115mm)
             "warhead": None,
             "warhead_type": "AP",  # HEI, API rounds; ~8000-10000 rpm fire rate
@@ -7266,6 +7637,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.08},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.16},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.60, "destroy_capacity": 0.28},
+                    "med": {"accuracy": 0.52, "destroy_capacity": 0.58},
+                    "small": {"accuracy": 0.44, "destroy_capacity": 0.92},
+                },
             },
         },
         "GSh-6-30": {  # 30mm 6-barrel rotary cannon - MiG-27K (260 rds in ventral gondola)
@@ -7275,7 +7651,7 @@ AIR_WEAPONS = {
             "task": ["Strike", "CAS"],
             "start_service": 1975,
             "end_service": None,
-            "cost": None,
+            "cost": 250,  # k$
             "caliber": 30,  # mm (30x165mm)
             "warhead": None,
             "warhead_type": "HE",  # HEI, API, HE-T rounds; ~4000-6000 rpm fire rate
@@ -7339,6 +7715,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.40, "destroy_capacity": 0.45},
+                    "med": {"accuracy": 0.32, "destroy_capacity": 0.75},
+                    "small": {"accuracy": 0.35, "destroy_capacity": 0.96},
+                },
             },
         },
         "Oerlikon-KCA": {  # 30mm cannon in AKAN m/75 gun pod - AJS 37 Viggen (ASJ37, 150 rounds)
@@ -7348,7 +7729,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1979,
             "end_service": None,
-            "cost": None,
+            "cost": 80,  # k$
             "caliber": 30,  # mm (30x173mm - same cartridge as GAU-8/A)
             "warhead": None,
             "warhead_type": "HE",  # HEI, SAPHE rounds; exceptionally high muzzle velocity for 30mm
@@ -7412,6 +7793,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.5, "destroy_capacity": 0.12},
                     "small": {"accuracy": 0.6, "destroy_capacity": 0.22},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.50, "destroy_capacity": 0.38},
+                    "med": {"accuracy": 0.46, "destroy_capacity": 0.68},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 0.95},
+                },
             },
         },
     },
@@ -7423,7 +7809,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1939,
             "end_service": None,
-            "cost": None,
+            "cost": 5,  # k$
             "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm)
             "warhead": None,
             "warhead_type": "AP",  # API, AP, HEI rounds
@@ -7487,6 +7873,11 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.30, "destroy_capacity": 0.08},
+                    "med": {"accuracy": 0.22, "destroy_capacity": 0.20},
+                    "small": {"accuracy": 0.28, "destroy_capacity": 0.55},
+                },
             },
         },
         "M3-Browning": {  # 12.7mm (.50 cal) high-rate aircraft MG - F-86E Sabre (6 guns)
@@ -7496,7 +7887,7 @@ AIR_WEAPONS = {
             "task": ["Strike"],
             "start_service": 1945,
             "end_service": None,
-            "cost": None,
+            "cost": 7,  # k$
             "caliber": 12.7,  # mm (.50 BMG, 12.7x99mm); ~1200-1250 rpm vs 800 rpm of AN/M2
             "warhead": None,
             "warhead_type": "AP",  # API, AP, HEI rounds
@@ -7560,8 +7951,13 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.4, "destroy_capacity": 0.02},
                     "small": {"accuracy": 0.5, "destroy_capacity": 0.05},
                 },
+                "Aircraft": {
+                    "big": {"accuracy": 0.32, "destroy_capacity": 0.10},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.22},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 0.58},
+                },
             },
-        },        
+        },
     }
     # DEVICES : fuel_tank, pods in modo da considerare l'anno di tuilizzo e l'eventuale costo
 }

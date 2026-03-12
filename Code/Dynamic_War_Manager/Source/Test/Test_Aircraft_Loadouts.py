@@ -117,6 +117,27 @@ _DIST_TYPE_SUM_INVALID: dict = {
     },
 }
 
+# Distribuzione Aircraft pura: solo bersagli aerei, tutte le dimensioni, somme = 1.0
+_DIST_AIRCRAFT_ONLY: dict = {
+    "Aircraft": {
+        "perc_type": 1.0,
+        "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3},
+    }
+}
+
+# Distribuzione mista: Aircraft 80% + Soft 20%
+# Per loadout CAP (sole AAM): Soft contribuisce 0 → score = 80% dell'Aircraft puro
+_DIST_AIRCRAFT_SOFT_MIXED: dict = {
+    "Aircraft": {
+        "perc_type": 0.8,
+        "perc_dimension": {"big": 0.3, "med": 0.4, "small": 0.3},
+    },
+    "Soft": {
+        "perc_type": 0.2,
+        "perc_dimension": {"big": 0.2, "med": 0.5, "small": 0.3},
+    },
+}
+
 # Directory di output per i PDF
 OUTPUT_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..", "out")
@@ -170,7 +191,9 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     loadout_target_effectiveness,
     loadout_target_effectiveness_by_distribuition,
     loadout_year_compatibility,
+    loadout_cost,
     get_aircrafts_quantity,
+    get_weapon_efficiency,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -181,6 +204,10 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
 _QTY_AC_MODEL      = "A-10C II Thunderbolt II"
 _QTY_LOADOUT       = "Maverick/Gun CAS"
 _QTY_TARGET_SIMPLE = {"Soft": {"med": 3, "small": 5}}
+
+# Target Aircraft con quantità sufficientemente elevate da garantire round(qty/eff) >= 1
+# anche per CAP loadout ad alta efficienza (eff ≈ 4–6 per Aircraft/big)
+_QTY_TARGET_AIRCRAFT = {"Aircraft": {"big": 20, "med": 30, "small": 40}}
 
 # Dizionario scenari: ogni scenario ha una lista di coppie (aircraft, loadout)
 # e un dict di target (label → target_data)
@@ -1887,6 +1914,531 @@ class TestGetAircraftsQuantityIntegrative(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  TEST loadout_target_effectiveness — TARGET AIRCRAFT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLoadoutTargetEffectivenessAircraft(unittest.TestCase):
+    """Unit test per loadout_target_effectiveness() con target_type='Aircraft'.
+
+    Verifica che le AAM (AIM-54A-MK47, AIM-9L, AIM-7M) del loadout CAP
+    producano punteggi > 0 contro bersagli Aircraft dopo l'aggiunta dei valori
+    efficiency['Aircraft'] in Aircraft_Weapon_Data.
+    CAP loadout: AIM-54A-MK47×4, AIM-9L×2, AIM-7M×2 → tutti hanno Aircraft eff.
+    Strike loadout: GBU-12×4 (nessuna Aircraft eff) + AIM-9M×2 + AIM-7M×2.
+    """
+
+    def setUp(self):
+        self._logger_patcher    = patch(_LOGGER_PATH,    MagicMock())
+        self._logger_patcher_wd = patch(_LOGGER_PATH_WD, MagicMock())
+        self._logger_patcher.start()
+        self._logger_patcher_wd.start()
+
+    def tearDown(self):
+        self._logger_patcher_wd.stop()
+        self._logger_patcher.stop()
+
+    def test_cap_loadout_aircraft_target_returns_float(self):
+        """CAP loadout con target Aircraft → restituisce un float."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertIsInstance(result, float)
+
+    def test_cap_loadout_aircraft_big_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/big → score > 0 (AIM-54A-MK47 ha Aircraft efficiency)."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_loadout_aircraft_med_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/med → score > 0."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["med"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_loadout_aircraft_small_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/small → score > 0 (AIM-9L eccelle vs bersagli piccoli)."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_loadout_aircraft_all_dims_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/[big,med,small] → score > 0."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big", "med", "small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_aircraft_score_greater_than_strike_aircraft_score(self):
+        """CAP (8 AAM) ha Aircraft score > Strike (solo 4 AAM + 4 bombe prive di Aircraft eff)."""
+        cap_score = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big", "med", "small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        strike_score = loadout_target_effectiveness(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE,
+            ["Aircraft"], ["big", "med", "small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(cap_score, strike_score)
+
+    def test_cap_aircraft_score_greater_than_soft_score(self):
+        """CAP loadout: Aircraft score > Soft score (AAM sono inefficaci contro bersagli Soft)."""
+        aircraft_score = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big", "med", "small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        soft_score = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Soft"], ["big", "med", "small"], ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(aircraft_score, soft_score)
+
+    def test_route_blocked_returns_zero_for_aircraft_target(self):
+        """Rotta irraggiungibile → 0.0 anche per target Aircraft."""
+        result = loadout_target_effectiveness(
+            _AIRCRAFT_CAP, _LOADOUT_CAP,
+            ["Aircraft"], ["big"], ROUTE_LENGTH, 99999.0,
+        )
+        self.assertEqual(result, 0.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST loadout_target_effectiveness_by_distribuition — DISTRIBUZIONE AIRCRAFT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLoadoutTargetEffectivenessByDistributionAircraft(unittest.TestCase):
+    """Unit test per loadout_target_effectiveness_by_distribuition() con distribuzione Aircraft.
+
+    Verifica che la distribuzione Aircraft venga elaborata correttamente:
+    - CAP loadout (sole AAM) → score > 0 per distribuzione Aircraft pura
+    - Distribuzione mista Aircraft 80% + Soft 20%: score < Aircraft puro
+      (le AAM hanno score 0 per Soft, quindi il 20% Soft non contribuisce)
+    - CAP > Strike per distribuzione Aircraft (CAP ha più e migliori AAM)
+    """
+
+    def setUp(self):
+        self._logger_patcher    = patch(_LOGGER_PATH,    MagicMock())
+        self._logger_patcher_wd = patch(_LOGGER_PATH_WD, MagicMock())
+        self._logger_patcher.start()
+        self._logger_patcher_wd.start()
+
+    def tearDown(self):
+        self._logger_patcher_wd.stop()
+        self._logger_patcher.stop()
+
+    def test_aircraft_only_distribution_returns_float(self):
+        """Distribuzione Aircraft pura → restituisce un float."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertIsInstance(result, float)
+
+    def test_aircraft_only_distribution_cap_loadout_positive(self):
+        """CAP loadout, distribuzione Aircraft pura → score > 0 (loadout con sole AAM)."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_aircraft_soft_mixed_distribution_positive(self):
+        """CAP loadout, distribuzione Aircraft 80% + Soft 20% → score > 0 (contributo Aircraft)."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_SOFT_MIXED,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_aircraft_distribution_cap_greater_than_strike(self):
+        """CAP (8 AAM) Aircraft distribution score > Strike (4 bombe + 4 AAM)."""
+        cap_score = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        strike_score = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreater(cap_score, strike_score)
+
+    def test_aircraft_soft_mixed_less_than_aircraft_only(self):
+        """Distribuzione mista (Aircraft 80% + Soft 20%) < Aircraft 100%.
+        Le AAM hanno score=0 per Soft → il 20% Soft non contribuisce → score = 80% del puro."""
+        mixed_score = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_SOFT_MIXED,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        aircraft_only_score = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertLess(mixed_score, aircraft_only_score)
+
+    def test_route_blocked_returns_zero_for_aircraft_distribution(self):
+        """Rotta irraggiungibile → 0.0 anche con distribuzione Aircraft."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, 99999.0,
+        )
+        self.assertEqual(result, 0.0)
+
+    def test_aircraft_distribution_non_negative(self):
+        """Score >= 0.0 per distribuzione Aircraft valida."""
+        result = loadout_target_effectiveness_by_distribuition(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, _DIST_AIRCRAFT_ONLY,
+            ROUTE_LENGTH, ROUTE_SPEED,
+        )
+        self.assertGreaterEqual(result, 0.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST get_weapon_efficiency (Aircraft_Loadouts) — TARGET AIRCRAFT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetWeaponEfficiencyLoadouts(unittest.TestCase):
+    """Unit test per get_weapon_efficiency() di Aircraft_Loadouts con target Aircraft.
+
+    Questa funzione (diversa da get_weapon_efficiency in Aircraft_Weapon_Data)
+    aggrega il punteggio armi del loadout per ogni (target_type, dimension) in
+    target_data, restituendo {target_type: {dimension: float}}.
+
+    Scenari chiave:
+      - CAP loadout (sole AAM) → Aircraft eff > 0, Soft eff = 0
+      - CAP eff Aircraft > Strike eff Aircraft (CAP ha più AAM)
+    """
+
+    def setUp(self):
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_aircraft_target_returns_dict(self):
+        """target_data con Aircraft → restituisce un dict."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 2, "med": 4, "small": 6}}
+        )
+        self.assertIsInstance(result, dict)
+
+    def test_aircraft_target_has_aircraft_key(self):
+        """Il risultato contiene la chiave 'Aircraft'."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 2, "med": 4, "small": 6}}
+        )
+        self.assertIn("Aircraft", result)
+
+    def test_aircraft_target_has_all_dimensions(self):
+        """Il sub-dict 'Aircraft' contiene big, med, small."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 2, "med": 4, "small": 6}}
+        )
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                self.assertIn(dim, result["Aircraft"])
+
+    def test_cap_loadout_aircraft_efficiency_all_dims_positive(self):
+        """CAP loadout (sole AAM) → score > 0 per tutte e 3 le dimensioni Aircraft."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 2, "med": 4, "small": 6}}
+        )
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                self.assertGreater(result["Aircraft"][dim], 0.0)
+
+    def test_cap_loadout_soft_efficiency_is_zero(self):
+        """CAP loadout (sole AAM) → score = 0 per target Soft (AAM non hanno eff. terrestre)."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Soft": {"big": 2, "med": 4, "small": 6}}
+        )
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                self.assertAlmostEqual(result["Soft"][dim], 0.0, places=6)
+
+    def test_cap_vs_strike_aircraft_efficiency_all_dims(self):
+        """CAP (8 AAM) ha efficienza Aircraft > Strike (4 bombe + 4 AAM) per tutti i dim."""
+        cap_eff = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 1, "med": 1, "small": 1}}
+        )
+        strike_eff = get_weapon_efficiency(
+            _AIRCRAFT_STRIKE, _LOADOUT_STRIKE, {"Aircraft": {"big": 1, "med": 1, "small": 1}}
+        )
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                self.assertGreater(cap_eff["Aircraft"][dim], strike_eff["Aircraft"][dim])
+
+    def test_multi_target_type_structure(self):
+        """target_data con Aircraft + Soft → risultato contiene entrambe le chiavi."""
+        target = {
+            "Aircraft": {"big": 2, "med": 4, "small": 6},
+            "Soft":     {"big": 1, "med": 2, "small": 3},
+        }
+        result = get_weapon_efficiency(_AIRCRAFT_CAP, _LOADOUT_CAP, target)
+        self.assertIn("Aircraft", result)
+        self.assertIn("Soft", result)
+
+    def test_values_are_float(self):
+        """Ogni valore nel sub-dict è un float."""
+        result = get_weapon_efficiency(
+            _AIRCRAFT_CAP, _LOADOUT_CAP, {"Aircraft": {"big": 2, "med": 4, "small": 6}}
+        )
+        for dim, val in result["Aircraft"].items():
+            with self.subTest(dim=dim):
+                self.assertIsInstance(val, float)
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_efficiency(
+                "INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, {"Aircraft": {"big": 2}}
+            )
+
+    def test_unknown_loadout_raises_ValueError(self):
+        """Loadout sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_efficiency(
+                _AIRCRAFT_CAP, "INVALID_LOADOUT_XYZ", {"Aircraft": {"big": 2}}
+            )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST get_aircrafts_quantity — TARGET AIRCRAFT (aria-aria)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetAircraftsQuantityAircraft(unittest.TestCase):
+    """Unit test per get_aircrafts_quantity() con target Aircraft (scenario aria-aria).
+
+    Aeromobile di test: F-14A Tomcat / Phoenix Fleet Defense (sole AAM).
+    Quantità target elevate (_QTY_TARGET_AIRCRAFT) per garantire round(qty/eff) >= 1
+    anche per loadout ad alta efficienza Aircraft.
+
+    Entrambi i logger sono mockati tramite _all_loggers_mocked().
+    """
+
+    def setUp(self):
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_aircraft_target_returns_dict(self):
+        """Input valido con target Aircraft → restituisce un dict."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertIsInstance(result, dict)
+
+    def test_aircraft_target_has_total_key(self):
+        """Il risultato contiene la chiave 'total'."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertIn("total", result)
+
+    def test_aircraft_target_has_message_key(self):
+        """Il risultato contiene la chiave 'message'."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertIn("message", result)
+
+    def test_aircraft_target_has_missions_needed(self):
+        """Il risultato contiene la chiave 'missions_needed' >= 1."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertIn("missions_needed", result)
+        self.assertGreaterEqual(result["missions_needed"], 1)
+
+    def test_aircraft_target_total_positive(self):
+        """CAP loadout vs target Aircraft (quantità elevate) → total > 0."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertGreater(result["total"], 0)
+
+    def test_aircraft_target_has_aircraft_key_in_result(self):
+        """Il risultato contiene la chiave 'Aircraft' (il target_type richiesto)."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        self.assertIn("Aircraft", result)
+
+    def test_aircraft_target_dimension_values_non_negative_int(self):
+        """Tutti i valori (Aircraft, dimension) sono interi >= 0."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        if "Aircraft" in result and isinstance(result["Aircraft"], dict):
+            for dim, count in result["Aircraft"].items():
+                with self.subTest(dim=dim):
+                    self.assertIsInstance(count, int)
+                    self.assertGreaterEqual(count, 0)
+
+    def test_aircraft_target_total_equals_sum_dimensions(self):
+        """'total' è uguale alla somma di tutti i conteggi (Aircraft, dimension)."""
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT)
+        _SCALAR_KEYS = {"total", "message", "missions_needed", "max_aircraft_for_mission"}
+        expected = sum(
+            v
+            for key, dims in result.items()
+            if key not in _SCALAR_KEYS and isinstance(dims, dict)
+            for v in dims.values()
+        )
+        self.assertEqual(result["total"], expected)
+
+    def test_integrative_cap_large_aerial_target(self):
+        """Test integrativo: F-14A CAP vs formazione aerea numerosa — struttura valida."""
+        target_data = {"Aircraft": {"big": 30, "med": 50, "small": 80}}
+        result = get_aircrafts_quantity(_AIRCRAFT_CAP, _LOADOUT_CAP, target_data)
+        self.assertIsInstance(result, dict)
+        self.assertIn("total", result)
+        self.assertIsInstance(result["total"], int)
+        self.assertGreaterEqual(result["total"], 0)
+        self.assertIn("missions_needed", result)
+        self.assertGreaterEqual(result["missions_needed"], 1)
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        """Aircraft sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_aircrafts_quantity(
+                "INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP, _QTY_TARGET_AIRCRAFT
+            )
+
+    def test_unknown_loadout_raises_ValueError(self):
+        """Loadout sconosciuto → ValueError."""
+        with self.assertRaises(ValueError):
+            get_aircrafts_quantity(
+                _AIRCRAFT_CAP, "INVALID_LOADOUT_XYZ", _QTY_TARGET_AIRCRAFT
+            )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST LOADOUT_COST
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLoadoutCost(unittest.TestCase):
+    """Test unitari per loadout_cost(aircraft_name, loadout_name).
+
+    loadout_cost() somma get_weapon_cost(model) * qty per ogni pylone del
+    loadout. Le armi non presenti in AIR_WEAPONS (es. serbatoi) contribuiscono
+    con 0.0. Propaga il ValueError di get_loadout per aircraft/loadout non validi.
+
+    Costi di riferimento dei weapon usati nei test (k$):
+      AIM-54A-MK47 = 400   AIM-9L = 75    AIM-9M = 80
+      AIM-7M       = 150   GBU-12 = 22    AGM-65K = 160
+      Mk-82AIR     = 4     330gal_tank → 0.0 (non in AIR_WEAPONS)
+    """
+
+    def setUp(self):
+        self._p_lo  = patch(_LOGGER_PATH,    MagicMock())
+        self._p_wd  = patch(_LOGGER_PATH_WD, MagicMock())
+        self._p_lo.start()
+        self._p_wd.start()
+
+    def tearDown(self):
+        self._p_lo.stop()
+        self._p_wd.stop()
+
+    # ── Errori argomenti ────────────────────────────────────────────────────
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        with self.assertRaises(ValueError):
+            loadout_cost("INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP)
+
+    def test_unknown_loadout_raises_ValueError(self):
+        with self.assertRaises(ValueError):
+            loadout_cost(_AIRCRAFT_CAP, "INVALID_LOADOUT_XYZ")
+
+    # ── Tipo di ritorno ─────────────────────────────────────────────────────
+
+    def test_returns_numeric(self):
+        result = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        self.assertIsInstance(result, (int, float))
+
+    def test_returns_non_negative(self):
+        result = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        self.assertGreaterEqual(result, 0.0)
+
+    # ── Valori specifici — F-14A Tomcat "Phoenix Fleet Defense" ─────────────
+    # Pylons: AIM-54A-MK47×4 (400×4=1600) + AIM-9L×2 (75×2=150) + AIM-7M×2 (150×2=300)
+    # Totale atteso: 2050 k$
+
+    def test_cap_loadout_expected_cost(self):
+        result = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        self.assertAlmostEqual(result, 2050.0, places=3)
+
+    # ── Valori specifici — F-15E Strike Eagle "Laser Strike" ────────────────
+    # Pylons: GBU-12×4 (22×4=88) + AIM-9M×2 (80×2=160) + AIM-7M×2 (150×2=300)
+    # Totale atteso: 548 k$
+
+    def test_strike_loadout_expected_cost(self):
+        result = loadout_cost(_AIRCRAFT_STRIKE, _LOADOUT_STRIKE)
+        self.assertAlmostEqual(result, 548.0, places=3)
+
+    # ── Valori specifici — F/A-18A Hornet "CAS" ─────────────────────────────
+    # Pylons: Mk-82AIR×2 (4×2=8) + Mk-82AIR×2 (4×2=8) + AIM-9M×1 (80) + AIM-9M×1 (80) + 330gal_tank×1 (→0)
+    # Totale atteso: 176 k$
+
+    def test_cas_loadout_expected_cost(self):
+        result = loadout_cost(_AIRCRAFT_CAS, _LOADOUT_CAS)
+        self.assertAlmostEqual(result, 176.0, places=3)
+
+    # ── Valori specifici — A-10C II "Maverick/Gun CAS" ──────────────────────
+    # Pylons: AGM-65K×4 (160×4=640) + GBU-12×2 (22×2=44) + AIM-9M×1 (80)
+    # Totale atteso: 764 k$
+
+    def test_a10c2_maverick_cas_expected_cost(self):
+        result = loadout_cost(_QTY_AC_MODEL, _QTY_LOADOUT)
+        self.assertAlmostEqual(result, 764.0, places=3)
+
+    # ── Armi non in AIR_WEAPONS (serbatoi) contribuiscono con 0 ─────────────
+
+    def test_fuel_tank_does_not_raise(self):
+        """Loadout con 330gal_tank non solleva eccezioni (tank → cost 0)."""
+        try:
+            loadout_cost(_AIRCRAFT_CAS, _LOADOUT_CAS)
+        except Exception as exc:
+            self.fail(f"loadout_cost raised unexpectedly: {exc}")
+
+    def test_fuel_tank_pylon_contributes_zero(self):
+        """Il costo con tank è uguale al costo senza il contributo del tank."""
+        # CAS loadout: 176 k$ (con 330gal_tank a 0) = Mk-82AIR*4 + AIM-9M*2
+        result = loadout_cost(_AIRCRAFT_CAS, _LOADOUT_CAS)
+        expected_without_tank = 4 * 4 + 2 * 80  # 16 + 160
+        self.assertAlmostEqual(result, expected_without_tank, places=3)
+
+    # ── Coerenza relativa tra loadout ────────────────────────────────────────
+
+    def test_phoenix_more_expensive_than_laser_strike(self):
+        """Phoenix Fleet Defense (AIM-54 ×4) deve costare più di Laser Strike (GBU-12 ×4)."""
+        cap_cost    = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        strike_cost = loadout_cost(_AIRCRAFT_STRIKE, _LOADOUT_STRIKE)
+        self.assertGreater(cap_cost, strike_cost)
+
+    def test_maverick_cas_more_expensive_than_cas(self):
+        """Maverick/Gun CAS (AGM-65K ×4) deve costare più di CAS (Mk-82AIR ×4)."""
+        mav_cost = loadout_cost(_QTY_AC_MODEL, _QTY_LOADOUT)
+        cas_cost = loadout_cost(_AIRCRAFT_CAS, _LOADOUT_CAS)
+        self.assertGreater(mav_cost, cas_cost)
+
+    def test_cost_is_deterministic(self):
+        """Due chiamate consecutive restituiscono lo stesso valore."""
+        c1 = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        c2 = loadout_cost(_AIRCRAFT_CAP, _LOADOUT_CAP)
+        self.assertEqual(c1, c2)
+
+    def test_all_fixture_loadouts_non_negative(self):
+        """Tutti i loadout usati nelle fixture hanno costo >= 0."""
+        fixtures = [
+            (_AIRCRAFT_CAP,    _LOADOUT_CAP),
+            (_AIRCRAFT_STRIKE, _LOADOUT_STRIKE),
+            (_AIRCRAFT_CAS,    _LOADOUT_CAS),
+            (_AIRCRAFT_IRON,   _LOADOUT_IRON),
+            (_QTY_AC_MODEL,    _QTY_LOADOUT),
+        ]
+        for ac, lo in fixtures:
+            with self.subTest(aircraft=ac, loadout=lo):
+                self.assertGreaterEqual(loadout_cost(ac, lo), 0.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1906,10 +2458,15 @@ def _run_tests() -> unittest.TestResult:
         TestEvaluateLoadoutAltitude,
         TestLoadoutEval,
         TestLoadoutTargetEffectiveness,
+        TestLoadoutTargetEffectivenessAircraft,
         TestLoadoutTargetEffectivenessByDistribution,
+        TestLoadoutTargetEffectivenessByDistributionAircraft,
         TestLoadoutYearCompatibility,
+        TestGetWeaponEfficiencyLoadouts,
         TestGetAircraftsQuantity,
+        TestGetAircraftsQuantityAircraft,
         TestGetAircraftsQuantityIntegrative,
+        TestLoadoutCost,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)

@@ -4039,3 +4039,4 @@ def loadout_cost(aircraft_name: str, loadout_name: str) -> float: # questo lo us
     for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
         cost += get_weapon_cost( weapon[0] ) * weapon[1]            
     return cost
+

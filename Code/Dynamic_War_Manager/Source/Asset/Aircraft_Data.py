@@ -491,7 +491,6 @@ class Aircraft_Data:
 
         return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension, route_length = route_length, route_speed = route_speed)
     
-
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[List] = None, category: Optional[str] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
@@ -1274,7 +1273,7 @@ f5e_data = {
 f86e_data = {
     "constructor": "North American Aviation", "made": "USA", "model": "F-86E Sabre",
     "users": ["USA", "UK", "Canada", "Australia", "Norway"], "start_service": 1950, "end_service": 1975,
-    "category": [Air_Asset_Type.FIGHTER], "cost": 0,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
     "weight": 4967,
     
@@ -1456,7 +1455,7 @@ f16cm_bl50_data = {
 a10a_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10A Thunderbolt II",
     "users": ["USA"], "start_service": 1977, "end_service": None,
-    "category": [Air_Asset_Type.ATTACKER], "cost": 0,
+    "category": [Air_Asset_Type.ATTACKER], "cost": 13,
     "roles": ["CAS"],
     "weight": 11321,
     
@@ -1492,7 +1491,7 @@ a10a_data = {
 a10c_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10C Thunderbolt II",
     "users": ["USA"], "start_service": 2005, "end_service": None,
-    "category": [Air_Asset_Type.ATTACKER], "cost": 0,
+    "category": [Air_Asset_Type.ATTACKER], "cost": 18,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
     "weight": 11321,
     
@@ -1528,7 +1527,7 @@ a10c_data = {
 a10c2_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10C II Thunderbolt II",
     "users": ["USA"], "start_service": 2018, "end_service": None,
-    "category": [Air_Asset_Type.ATTACKER], "cost": 0,
+    "category": [Air_Asset_Type.ATTACKER], "cost": 23,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
     "weight": 11321,
     
@@ -1564,7 +1563,7 @@ a10c2_data = {
 a20g_data = {
     "constructor": "Douglas", "made": "USA", "model": "A-20G Havoc",
     "users": ["USA", "UK", "USSR"], "start_service": 1941, "end_service": 1954,
-    "category": [Air_Asset_Type.ATTACKER], "cost": 0,
+    "category": [Air_Asset_Type.ATTACKER], "cost": 1,
     "roles": ["CAS", "Strike"],
     "weight": 7918,
     
@@ -1600,7 +1599,7 @@ a20g_data = {
 a4ec_data = {
     "constructor": "Douglas", "made": "USA", "model": "A-4E Skyhawk",
     "users": ["USA", "Israel", "Australia", "Singapore"], "start_service": 1956, "end_service": 1998,
-    "category": [Air_Asset_Type.ATTACKER], "cost": 0,
+    "category": [Air_Asset_Type.ATTACKER], "cost": 5,
     "roles": ["CAS", "Strike", "Anti_Ship"],
     "weight": 4469,
     
@@ -1638,7 +1637,7 @@ a4ec_data = {
 f117_data = {
     "constructor": "Lockheed", "made": "USA", "model": "F-117 Nighthawk",
     "users": ["USA"], "start_service": 1983, "end_service": 2008,
-    "category": [Air_Asset_Type.BOMBER], "cost": 0,
+    "category": [Air_Asset_Type.BOMBER], "cost": 122,
     "roles": ["Pinpoint_Strike"],
     "weight": 13381,
     
@@ -1674,7 +1673,7 @@ f117_data = {
 b1b_data = {
     "constructor": "Rockwell", "made": "USA", "model": "B-1B Lancer",
     "users": ["USA"], "start_service": 1986, "end_service": None,
-    "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 0,
+    "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 283,
     "roles": ["Strike", "Pinpoint_Strike"],
     "weight": 87090,
     
@@ -1710,7 +1709,7 @@ b1b_data = {
 b52h_data = {
     "constructor": "Boeing", "made": "USA", "model": "B-52H Stratofortress",
     "users": ["USA"], "start_service": 1961, "end_service": None,
-    "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 0,
+    "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 74,
     "roles": ["Strike"],
     "weight": 83250,
     
@@ -1746,7 +1745,7 @@ b52h_data = {
 s3b_data = {
     "constructor": "Lockheed", "made": "USA", "model": "S-3B Viking",
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
-    "category": [Air_Asset_Type.BOMBER], "cost": 0,
+    "category": [Air_Asset_Type.BOMBER], "cost": 27,
     "roles": ["Anti_Ship", "Recon"],
     "weight": 12088,
     
@@ -1782,7 +1781,7 @@ s3b_data = {
 s3b_tanker_data = {
     "constructor": "Lockheed", "made": "USA", "model": "S-3B Viking Tanker",
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 27,
     "roles": [],
     "weight": 12088,
     
@@ -1820,7 +1819,7 @@ s3b_tanker_data = {
 e2d_data = {
     "constructor": "Northrop Grumman", "made": "USA", "model": "E-2D Advanced Hawkeye",
     "users": ["USA", "Japan", "France"], "start_service": 1964, "end_service": None,
-    "category": [Air_Asset_Type.AWACS], "cost": 0,
+    "category": [Air_Asset_Type.AWACS], "cost": 232,
     "roles": [],
     "weight": 17265,
     
@@ -1856,7 +1855,7 @@ e2d_data = {
 e3a_data = {
     "constructor": "Boeing", "made": "USA", "model": "E-3A Sentry",
     "users": ["USA", "NATO", "UK", "France", "Saudi Arabia"], "start_service": 1977, "end_service": None,
-    "category": [Air_Asset_Type.AWACS], "cost": 0,
+    "category": [Air_Asset_Type.AWACS], "cost": 270,
     "roles": [],
     "weight": 73480,
     
@@ -1892,7 +1891,7 @@ e3a_data = {
 mq1a_data = {
     "constructor": "General Atomics", "made": "USA", "model": "MQ-1 Predator",
     "users": ["USA", "Italy", "Morocco"], "start_service": 1995, "end_service": 2018,
-    "category": [Air_Asset_Type.RECON], "cost": 0,
+    "category": [Air_Asset_Type.RECON], "cost": 4,
     "roles": ["Recon", "CAS"],
     "weight": 512,
     
@@ -1928,7 +1927,7 @@ mq1a_data = {
 mq9_data = {
     "constructor": "General Atomics", "made": "USA", "model": "MQ-9 Reaper",
     "users": ["USA", "UK", "Italy", "France", "Netherlands"], "start_service": 2007, "end_service": None,
-    "category": [Air_Asset_Type.RECON], "cost": 0,
+    "category": [Air_Asset_Type.RECON], "cost": 32,
     "roles": ["Recon", "CAS", "Strike"],
     "weight": 2223,
     
@@ -1966,7 +1965,7 @@ mq9_data = {
 c130_data = {
     "constructor": "Lockheed", "made": "USA", "model": "C-130 Hercules",
     "users": ["USA", "UK", "many"], "start_service": 1956, "end_service": None,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 30,
     "roles": [],
     "weight": 34400,
     
@@ -2002,7 +2001,7 @@ c130_data = {
 c17a_data = {
     "constructor": "Boeing", "made": "USA", "model": "C-17A Globemaster III",
     "users": ["USA", "UK", "Canada", "Australia"], "start_service": 1995, "end_service": None,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 218,
     "roles": [],
     "weight": 128100,
     
@@ -2038,7 +2037,7 @@ c17a_data = {
 kc130_data = {
     "constructor": "Lockheed Martin", "made": "USA", "model": "KC-130",
     "users": ["USA", "many"], "start_service": 1962, "end_service": None,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 35,
     "roles": [],
     "weight": 34686,
     
@@ -2074,7 +2073,7 @@ kc130_data = {
 kc135_data = {
     "constructor": "Boeing", "made": "USA", "model": "KC-135 Stratotanker",
     "users": ["USA", "France", "Turkey", "Singapore"], "start_service": 1957, "end_service": None,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 52,
     "roles": [],
     "weight": 44663,
     
@@ -2110,7 +2109,7 @@ kc135_data = {
 kc135_mprs_data = {
     "constructor": "Boeing", "made": "USA", "model": "KC-135 MPRS",
     "users": ["USA"], "start_service": 1985, "end_service": None,
-    "category": [Air_Asset_Type.TRANSPORT], "cost": 0,
+    "category": [Air_Asset_Type.TRANSPORT], "cost": 55,
     "roles": [],
     "weight": 44663,
     
@@ -2148,7 +2147,7 @@ kc135_mprs_data = {
 asj37_data = {
     "constructor": "Saab", "made": "Sweden", "model": "AJ/ASJ 37 Viggen",
     "users": ["Sweden"], "start_service": 1971, "end_service": 2005,
-    "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 0,
+    "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 10,
     "roles": ["Strike", "CAS", "Fighter_Sweep", "CAP"],
     "weight": 11800,
     
@@ -2184,7 +2183,7 @@ asj37_data = {
 m2000c_data = {
     "constructor": "Dassault", "made": "France", "model": "Mirage 2000C",
     "users": ["France", "India", "Egypt", "UAE", "Greece", "Qatar", "Taiwan", "Peru"], "start_service": 1984, "end_service": None,
-    "category": [Air_Asset_Type.FIGHTER], "cost": 0,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 23,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
     "weight": 7500,
     

@@ -49,6 +49,25 @@ GROUND_WEAPON_TASK = {
     'Infantry_Support': 'Infantry_Support'
 }
 
+AIR_TO_AIR_TASK = {
+    
+    'CAP': 'CAP',  
+    'Fighter_Sweep': 'Fighter_Sweep'  ,
+    'Intercept': 'Intercept',
+    'Escort': 'Escort',
+    'Recon': 'Recon',    
+} 
+AIR_TO_GROUND_TASK = {
+    'CAS': 'CAS',
+    'Strike': 'Strike', # coincidono con Ground Attack
+    'Pinpoint_Strike': 'Pinpoint_Strike',
+    'SEAD': 'SEAD',
+    'Anti_Ship': 'Anti_Ship'
+} 
+
+AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
+
+"""
 AIR_TASK = {
     
     'CAP': 'CAP',  
@@ -62,7 +81,7 @@ AIR_TASK = {
     'SEAD': 'SEAD',
     'Anti_Ship': 'Anti_Ship'
 } 
-
+"""
 SEA_TASK  = {
 
     'Attack':   'Attack', 
@@ -612,6 +631,17 @@ TARGET_CLASSIFICATION = {
                         Ground_Vehicle_Asset_Type.SAM_BIG.value,
                         Ground_Vehicle_Asset_Type.AAA.value,
                         Ground_Vehicle_Asset_Type.EWR.value
+                    ],
+    'Aircraft':     [   Air_Asset_Type.FIGHTER.value, # for air to air targeting
+                        Air_Asset_Type.ATTACKER.value,
+                        Air_Asset_Type.BOMBER.value,
+                        Air_Asset_Type.AWACS.value,
+                        Air_Asset_Type.FIGHTER_BOMBER.value,
+                        Air_Asset_Type.HEAVY_BOMBER.value,
+                        Air_Asset_Type.BOMBER.value,
+                        Air_Asset_Type.HELICOPTER.value,
+                        Air_Asset_Type.RECON.value,
+                        Air_Asset_Type.TRANSPORT.value
                     ]
 }
 

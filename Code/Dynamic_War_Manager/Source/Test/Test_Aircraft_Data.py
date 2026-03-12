@@ -130,6 +130,10 @@ _QTY_AC_MODEL       = "A-10C II Thunderbolt II"
 _QTY_LOADOUT        = "Maverick/Gun CAS"
 _QTY_TARGET_SIMPLE  = {"Soft": {"med": 3, "small": 5}}
 
+# Target Aircraft con quantità elevate per garantire round(qty/eff) >= 1
+# anche per loadout CAP ad alta efficienza Aircraft (eff ≈ 4–6 per 'big')
+_QTY_TARGET_AIRCRAFT = {"Aircraft": {"big": 20, "med": 30, "small": 40}}
+
 # Dizionario scenari: ogni scenario ha una lista di coppie (aircraft, loadout)
 # e un dict di target (label → target_data)
 _SCENARIOS: dict = {
@@ -1556,6 +1560,389 @@ class TestGetAircraftsQuantityIntegrative(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  TEST _loadout_target_effectiveness — TARGET AIRCRAFT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLoadoutTargetEffectivenessAircraft(unittest.TestCase):
+    """Unit test per Aircraft_Data._loadout_target_effectiveness() con target Aircraft.
+
+    _loadout_target_effectiveness(loadout, target_type, target_dimension,
+                                  route_length=0.0, route_speed=1.0)
+    delega a loadout_target_effectiveness() di Aircraft_Loadouts.
+    Con i default (route_length=0, route_speed=1) tutti i loadout superano il
+    controllo rotta → il punteggio è determinato solo dalle armi del loadout.
+
+    Fixture: F-14A Tomcat / Phoenix Fleet Defense (AIM-54A-MK47×4, AIM-9L×2, AIM-7M×2).
+    Tutte le armi sono AAM con efficiency['Aircraft'], nessuna ha efficiency terrestre
+    → Aircraft score > 0, Soft score = 0.
+    """
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._patchers = [
+            patch(_LOGGER_PATH,          MagicMock()),
+            patch(_LOADOUTS_LOGGER_PATH, MagicMock()),
+            patch(_AWD_LOGGER_PATH,      MagicMock()),
+        ]
+        for p in self._patchers:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patchers:
+            p.stop()
+
+    def test_returns_float(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/big → restituisce un float."""
+        result = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertIsInstance(result, float)
+
+    def test_aircraft_big_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/big → score > 0 (AIM-54A-MK47 ha Aircraft eff)."""
+        result = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_aircraft_med_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/med → score > 0."""
+        result = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["med"]
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_aircraft_small_positive(self):
+        """F-14A Phoenix Fleet Defense, Aircraft/small → score > 0 (AIM-9L eccelle vs piccoli)."""
+        result = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["small"]
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_all_dims_positive(self):
+        """Score > 0 per ognuna delle tre dimensioni Aircraft."""
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                result = self._ac._loadout_target_effectiveness(
+                    _FIGHTER_LOADOUT, ["Aircraft"], [dim]
+                )
+                self.assertGreater(result, 0.0)
+
+    def test_aircraft_score_greater_than_soft_score(self):
+        """CAP loadout: Aircraft score > Soft score (AAM non hanno efficienza per Soft)."""
+        aircraft_score = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["big", "med", "small"]
+        )
+        soft_score = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Soft"], ["big", "med", "small"]
+        )
+        self.assertGreater(aircraft_score, soft_score)
+
+    def test_aircraft_target_multi_dim_positive(self):
+        """F-14A, Aircraft/[big,med,small] → score > 0 (media su 3 combinazioni)."""
+        result = self._ac._loadout_target_effectiveness(
+            _FIGHTER_LOADOUT, ["Aircraft"], ["big", "med", "small"]
+        )
+        self.assertGreater(result, 0.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST combat_score_target_effectiveness / combat_score_eval — TARGET AIRCRAFT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestCombatScoreTargetEffectivenessAircraft(unittest.TestCase):
+    """Unit test per combat_score_target_effectiveness() e combat_score_eval() con Aircraft.
+
+    combat_score_target_effectiveness(task, loadout, target_type, target_dimension)
+      → chiama combat_score_eval(task, loadout, True, target_type, target_dimension).
+
+    Con calc_scores_options=True:
+      - loadout score = _loadout_target_effectiveness(...) × w_loadout / sum_weights
+      - Gli altri score (radar, TVD, engine, ...) dipendono dal task, non dal target.
+    Per task='CAP' + target='Aircraft':
+      - Radar usa modes=['air'] → F-14A ha radar AWG-9 molto capace → contributo elevato
+      - Loadout Phoenix Fleet Defense → score Aircraft > 0 → contributo positivo
+    → combat_score_target_effectiveness > 0 per F-14A + CAP + Aircraft.
+
+    Confronto Aircraft > Soft: le AAM (score Aircraft > 0) battono Soft (score = 0)
+    nel componente loadout, mentre gli altri componenti sono identici.
+    """
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_returns_float(self):
+        """CAP + Phoenix Fleet Defense + Aircraft/big → restituisce un float."""
+        result = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertIsInstance(result, float)
+
+    def test_cap_aircraft_big_non_negative(self):
+        """CAP + Aircraft/big → score >= 0."""
+        result = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertGreaterEqual(result, 0.0)
+
+    def test_cap_aircraft_big_positive(self):
+        """F-14A CAP + Aircraft/big → score > 0 (loadout + radar air contribuiscono)."""
+        result = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_aircraft_all_dims_positive(self):
+        """F-14A CAP + Aircraft/[big,med,small] → score > 0."""
+        result = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big", "med", "small"]
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_cap_aircraft_score_greater_than_soft_score(self):
+        """F-14A CAP: Aircraft score > Soft score.
+        Il componente loadout discrimina: Aircraft > 0, Soft = 0 per Phoenix Fleet Defense."""
+        aircraft_score = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big", "med", "small"]
+        )
+        soft_score = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Soft"], ["big", "med", "small"]
+        )
+        self.assertGreater(aircraft_score, soft_score)
+
+    def test_combat_score_eval_true_equals_target_effectiveness(self):
+        """combat_score_eval(..., True, ...) == combat_score_target_effectiveness(...)."""
+        score_eval = self._ac.combat_score_eval(
+            "CAP", _FIGHTER_LOADOUT, True, ["Aircraft"], ["big"]
+        )
+        score_target = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertAlmostEqual(score_eval, score_target, places=9)
+
+    def test_invalid_task_raises(self):
+        """Task non valido → ValueError."""
+        with self.assertRaises((ValueError, TypeError)):
+            self._ac.combat_score_target_effectiveness(
+                "INVALID_TASK_XYZ", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+            )
+
+    def test_none_task_raises_type_error(self):
+        """task=None → TypeError."""
+        with self.assertRaises(TypeError):
+            self._ac.combat_score_target_effectiveness(
+                None, _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+            )
+
+    def test_cap_aircraft_score_deterministic(self):
+        """Due chiamate consecutive con stessi argomenti restituiscono lo stesso valore."""
+        score1 = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        score2 = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertEqual(score1, score2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST Aircraft_Data.get_aircrafts_quantity — TARGET AIRCRAFT (aria-aria)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetAircraftsQuantityAircraft(unittest.TestCase):
+    """Unit test per Aircraft_Data.get_aircrafts_quantity() con target Aircraft.
+
+    Il metodo valida l'aeromobile nel registry, poi delega a
+    get_aircrafts_quantity() di Aircraft_Loadouts.
+
+    Aeromobile chiamante: F-14A Tomcat (_FIGHTER_MODEL).
+    Aeromobile richiesto: F-14A Tomcat / Phoenix Fleet Defense.
+    Quantità target elevate (_QTY_TARGET_AIRCRAFT) per garantire
+    round(qty/eff) >= 1 anche per loadout ad alta efficienza Aircraft (eff ≈ 4–6).
+
+    Tutti e 4 i logger sono mockati tramite _all_loggers_mocked().
+    """
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_aircraft_target_returns_dict(self):
+        """Input valido con target Aircraft → restituisce un dict."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertIsInstance(result, dict)
+
+    def test_aircraft_target_has_total(self):
+        """Il risultato contiene la chiave 'total'."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertIn("total", result)
+
+    def test_aircraft_target_has_message(self):
+        """Il risultato contiene la chiave 'message'."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertIn("message", result)
+
+    def test_aircraft_target_has_missions_needed(self):
+        """'missions_needed' presente e >= 1."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertIn("missions_needed", result)
+        self.assertGreaterEqual(result["missions_needed"], 1)
+
+    def test_aircraft_target_total_positive(self):
+        """F-14A Phoenix Fleet Defense vs target Aircraft (quantità elevate) → total > 0."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertGreater(result["total"], 0)
+
+    def test_aircraft_target_has_aircraft_key(self):
+        """Il risultato contiene la chiave 'Aircraft' (target_type richiesto)."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        self.assertIn("Aircraft", result)
+
+    def test_aircraft_target_dimension_values_non_negative_int(self):
+        """Tutti i valori (Aircraft, dimension) sono interi >= 0."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        if "Aircraft" in result and isinstance(result["Aircraft"], dict):
+            for dim, count in result["Aircraft"].items():
+                with self.subTest(dim=dim):
+                    self.assertIsInstance(count, int)
+                    self.assertGreaterEqual(count, 0)
+
+    def test_aircraft_target_total_equals_sum_dimensions(self):
+        """'total' == somma di tutti i conteggi per (Aircraft, dimension)."""
+        result = self._ac.get_aircrafts_quantity(
+            _FIGHTER_MODEL, _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+        )
+        _SCALAR_KEYS = {"total", "message", "missions_needed", "max_aircraft_for_mission",
+                        "aircraft_number"}
+        expected = sum(
+            v
+            for key, dims in result.items()
+            if key not in _SCALAR_KEYS and isinstance(dims, dict)
+            for v in dims.values()
+        )
+        self.assertEqual(result["total"], expected)
+
+    def test_unknown_aircraft_raises_ValueError(self):
+        """Aeromobile sconosciuto → ValueError (validazione locale del registry)."""
+        with self.assertRaises(ValueError):
+            self._ac.get_aircrafts_quantity(
+                "INVALID_AIRCRAFT_XYZ", _FIGHTER_LOADOUT, _QTY_TARGET_AIRCRAFT
+            )
+
+    def test_integrative_large_aerial_formation(self):
+        """Test integrativo: F-14A CAP vs formazione aerea numerosa — struttura valida."""
+        target_data = {"Aircraft": {"big": 30, "med": 50, "small": 80}}
+        result = self._ac.get_aircrafts_quantity(_FIGHTER_MODEL, _FIGHTER_LOADOUT, target_data)
+        self.assertIsInstance(result, dict)
+        self.assertIn("total", result)
+        self.assertIsInstance(result["total"], int)
+        self.assertGreaterEqual(result["total"], 0)
+        self.assertIn("missions_needed", result)
+        self.assertGreaterEqual(result["missions_needed"], 1)
+
+    def test_integrative_air_superiority_mixed_formation(self):
+        """Scenario aria-aria mix big/med/small — struttura valida."""
+        target_data = {"Aircraft": {"big": 5, "med": 10, "small": 20}}
+        result = self._ac.get_aircrafts_quantity(_FIGHTER_MODEL, _FIGHTER_LOADOUT, target_data)
+        self.assertIsInstance(result, dict)
+        self.assertIn("total", result)
+        self.assertGreaterEqual(result["total"], 0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST COST
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestCost(unittest.TestCase):
+    """Test unitari per Aircraft_Data.cost()."""
+
+    def test_cost_returns_int(self):
+        """cost() restituisce un intero."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertIsInstance(ac.cost, int)
+
+    def test_cost_positive_for_known_aircraft(self):
+        """cost > 0 per tutti gli aeromobili nel registry."""
+        for model, ac in Aircraft_Data._registry.items():
+            self.assertGreater(ac.cost, 0, f"{model}: cost deve essere > 0")
+
+    def test_f14a_cost(self):
+        """F-14A Tomcat: costo storico ~38 M$."""
+        ac = Aircraft_Data._registry["F-14A Tomcat"]
+        self.assertEqual(ac.cost, 38)
+
+    def test_f16a_cost(self):
+        """F-16A Fighting Falcon: costo storico ~6 M$."""
+        ac = Aircraft_Data._registry["F-16A Fighting Falcon"]
+        self.assertIn(ac.cost, (6,))
+
+    def test_b1b_cost_greater_than_f15e(self):
+        """B-1B Lancer (heavy bomber) deve costare più dell'F-15E (fighter-bomber)."""
+        b1b = Aircraft_Data._registry["B-1B Lancer"]
+        f15e = Aircraft_Data._registry["F-15E Strike Eagle"]
+        self.assertGreater(b1b.cost, f15e.cost)
+
+    def test_tu160_cost_greater_than_tu95ms(self):
+        """Tu-160 (supersonico) deve costare più del Tu-95MS."""
+        tu160 = Aircraft_Data._registry["Tu-160"]
+        tu95 = Aircraft_Data._registry["Tu-95MS"]
+        self.assertGreater(tu160.cost, tu95.cost)
+
+    def test_awacs_cost_greater_than_basic_fighter(self):
+        """E-3A Sentry (AWACS) deve costare più di un F-16A (fighter leggero)."""
+        e3a = Aircraft_Data._registry["E-3A Sentry"]
+        f16a = Aircraft_Data._registry["F-16A Fighting Falcon"]
+        self.assertGreater(e3a.cost, f16a.cost)
+
+    def test_a10c_more_expensive_than_a10a(self):
+        """A-10C (upgrade) deve costare più dell'A-10A originale."""
+        a10a = Aircraft_Data._registry["A-10A Thunderbolt II"]
+        a10c = Aircraft_Data._registry["A-10C Thunderbolt II"]
+        self.assertGreater(a10c.cost, a10a.cost)
+
+    def test_f117_cost_greater_than_f16cm(self):
+        """F-117 Nighthawk (stealth) deve costare più dell'F-16CM."""
+        f117 = Aircraft_Data._registry["F-117 Nighthawk"]
+        f16cm = Aircraft_Data._registry["F-16CM Block 50"]
+        self.assertGreater(f117.cost, f16cm.cost)
+
+    def test_mq1_cheaper_than_mq9(self):
+        """MQ-1 Predator deve costare meno dell'MQ-9 Reaper."""
+        mq1 = Aircraft_Data._registry["MQ-1 Predator"]
+        mq9 = Aircraft_Data._registry["MQ-9 Reaper"]
+        self.assertLess(mq1.cost, mq9.cost)
+
+    def test_cost_coherence_su27_vs_mig29(self):
+        """Su-27 (heavy air superiority) deve costare più del MiG-29A."""
+        su27 = Aircraft_Data._registry["Su-27"]
+        mig29 = Aircraft_Data._registry["MiG-29A"]
+        self.assertGreater(su27.cost, mig29.cost)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  UTILITY PER LA GENERAZIONE DELLE TABELLE
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2547,6 +2934,9 @@ def _run_tests() -> unittest.TestResult:
         TestGetListOfAircrafts,
         TestGetAircraftsQuantity,
         TestGetAircraftsQuantityIntegrative,
+        TestLoadoutTargetEffectivenessAircraft,
+        TestCombatScoreTargetEffectivenessAircraft,
+        TestGetAircraftsQuantityAircraft,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)

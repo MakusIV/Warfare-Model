@@ -116,6 +116,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import (
     get_weapon_score_target,
     get_weapon_efficiency,
     is_weapon_introduced,
+    get_weapon_cost,
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -230,16 +231,22 @@ class TestAircraftWeaponsDataStructure(unittest.TestCase):
 
     # ── MISSILES_AAM: struttura specifica ────────────────────────────────────
 
-    def test_aam_weapons_have_no_efficiency_field(self):
-        """Gli AAM non devono avere il campo 'efficiency': il loro punteggio è
-        calcolato esclusivamente dai parametri balistici (warhead, range,
-        max_speed, manouvrability, ...) tramite WEAPON_PARAM['MISSILES_AAM_RAD/INF']."""
+    def test_aam_weapons_have_efficiency_aircraft_field(self):
+        """Tutti gli AAM devono avere il campo 'efficiency' con la chiave 'Aircraft'
+        (big, med, small), aggiunto per modellare l'efficacia nel combattimento aereo."""
         for model, data in AIR_WEAPONS["MISSILES_AAM"].items():
             with self.subTest(model=model):
-                self.assertNotIn(
+                self.assertIn(
                     "efficiency", data,
-                    f"MISSILES_AAM/{model} NON dovrebbe avere 'efficiency'",
+                    f"MISSILES_AAM/{model} dovrebbe avere 'efficiency'",
                 )
+                self.assertIn(
+                    "Aircraft", data["efficiency"],
+                    f"MISSILES_AAM/{model}['efficiency'] dovrebbe avere la chiave 'Aircraft'",
+                )
+                for dim in ("big", "med", "small"):
+                    self.assertIn(dim, data["efficiency"]["Aircraft"],
+                                  f"MISSILES_AAM/{model}['efficiency']['Aircraft'] manca '{dim}'")
 
     def test_aam_weapons_have_seeker_field(self):
         """Tutti gli AAM devono avere il campo 'seeker'."""
@@ -1127,6 +1134,77 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
         with self.assertRaises(TypeError):
             get_weapon_score_target(None, ["Soft"], ["small"])
 
+    # ── Aircraft target (nuova efficiency) ───────────────────────────────────
+
+    def test_aam_with_aircraft_target_returns_positive_score(self):
+        """AAM vs Aircraft: efficiency['Aircraft'] ora presente → score > 0."""
+        score = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["big"])
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_aam_aircraft_big_exact_score(self):
+        """AIM-54A-MK47 vs Aircraft/big: accuracy=1.0 * destroy_capacity=1.0 = 1.0."""
+        score = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["big"])
+        self.assertAlmostEqual(score, 1.0, places=6)
+
+    def test_aam_aircraft_small_lower_than_big(self):
+        """AIM-54A-MK47 vs Aircraft/small (acc=0.95*dc=1.0=0.95) < big (1.0)."""
+        score_big   = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["big"])
+        score_small = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["small"])
+        self.assertGreater(score_big, score_small)
+
+    def test_aam_with_ground_target_returns_zero(self):
+        """AAM non ha efficiency per target terrestri → score = 0.0."""
+        self.assertEqual(get_weapon_score_target("AIM-9L", ["Soft"], ["med"]), 0.0)
+
+    def test_cannon_with_aircraft_target_returns_positive_score(self):
+        """Cannone (M61A1) vs Aircraft/med: efficiency presente → score > 0."""
+        score = get_weapon_score_target("M61A1", ["Aircraft"], ["med"])
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_cannon_aircraft_med_exact_score(self):
+        """M61A1 vs Aircraft/med: accuracy=0.50 * destroy_capacity=0.50 = 0.25."""
+        score = get_weapon_score_target("M61A1", ["Aircraft"], ["med"])
+        self.assertAlmostEqual(score, 0.25, places=6)
+
+    def test_cannon_aircraft_big_lower_dc_than_small(self):
+        """M61A1: destroy_capacity big (0.20) < small (0.85) — bombardiere più resistente."""
+        eff_big   = get_weapon_score_target("M61A1", ["Aircraft"], ["big"])
+        eff_small = get_weapon_score_target("M61A1", ["Aircraft"], ["small"])
+        self.assertLess(eff_big, eff_small)
+
+    def test_machine_gun_with_aircraft_target_returns_positive_score(self):
+        """Mitragliatrice (AN-M2) vs Aircraft/small: efficiency presente → score > 0."""
+        score = get_weapon_score_target("AN-M2", ["Aircraft"], ["small"])
+        self.assertIsInstance(score, float)
+        self.assertGreater(score, 0.0)
+
+    def test_cannon_aircraft_score_higher_than_machine_gun(self):
+        """30mm cannon (GAU-8/A) vs Aircraft/med ha score > 12.7mm (AN-M2): calibro maggiore."""
+        score_cannon = get_weapon_score_target("GAU-8/A",  ["Aircraft"], ["med"])
+        score_mg     = get_weapon_score_target("AN-M2",    ["Aircraft"], ["med"])
+        self.assertGreater(score_cannon, score_mg)
+
+    def test_a2a_cannon_score_higher_than_cas_cannon_vs_aircraft(self):
+        """M61A1 (cannone A2A primario) > GAU-8/A (CAS) vs Aircraft/med per accuracy."""
+        score_m61  = get_weapon_score_target("M61A1",   ["Aircraft"], ["med"])
+        score_gau  = get_weapon_score_target("GAU-8/A", ["Aircraft"], ["med"])
+        self.assertGreater(score_m61, score_gau)
+
+    def test_large_warhead_aam_aircraft_score_higher_than_small(self):
+        """R-40R (warhead 70 kg, dc big=1.0) > AIM-9B (warhead 4.5 kg, dc big=0.35) vs Aircraft/big."""
+        score_r40  = get_weapon_score_target("R-40R",  ["Aircraft"], ["big"])
+        score_9b   = get_weapon_score_target("AIM-9B", ["Aircraft"], ["big"])
+        self.assertGreater(score_r40, score_9b)
+
+    def test_aam_aircraft_multi_dim_score_is_average(self):
+        """Score su [big, med] è la media dei prodotti (accuracy*dc) delle due celle."""
+        score_multi = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["big", "med"])
+        s_big = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["big"])
+        s_med = get_weapon_score_target("AIM-54A-MK47", ["Aircraft"], ["med"])
+        self.assertAlmostEqual(score_multi, (s_big + s_med) / 2, places=6)
+
 
 class TestGetWeaponEfficiency(unittest.TestCase):
     """
@@ -1215,18 +1293,23 @@ class TestGetWeaponEfficiency(unittest.TestCase):
 
     # ── MISSILES_AAM → None ────────────────────────────────────────────────
 
-    def test_aam_ir_returns_none(self):
-        """MISSILES_AAM deve restituire None (non implementato per AAM).
-        [BW1] Con il bug attuale il check `weapons_category == 'MISSILES_AAM'`
-        confronta la chiave del dict ('weapons_category') col valore → sempre False
-        → si procede fino ad AttributeError su weapon_data.get()."""
+    def test_aam_with_ground_target_returns_zero_efficiency(self):
+        """AAM non ha efficiency per target terrestri (Soft) → dict con valori 0.0.
+        In precedenza annotato [BW1]: con BW1 corretto la funzione non restituisce
+        più None ma un dict con accuracy=0.0 e destroy_capacity=0.0."""
         result = get_weapon_efficiency("AIM-9L", {'Soft': {'med': 1}})
-        self.assertIsNone(result)
+        self.assertIsInstance(result, dict)
+        self.assertIn('Soft', result)
+        self.assertAlmostEqual(result['Soft']['med']['accuracy'],        0.0)
+        self.assertAlmostEqual(result['Soft']['med']['destroy_capacity'], 0.0)
 
-    def test_aam_radar_returns_none(self):
-        """MISSILES_AAM radar (AIM-54A-MK47) deve restituire None. [BW1]"""
+    def test_aam_radar_with_ground_target_returns_zero_efficiency(self):
+        """AIM-54A-MK47 + target Soft → dict con valori 0.0 (nessuna entry Soft
+        in efficiency). In precedenza annotato [BW1]."""
         result = get_weapon_efficiency("AIM-54A-MK47", {'Soft': {'med': 1}})
-        self.assertIsNone(result)
+        self.assertIsInstance(result, dict)
+        self.assertAlmostEqual(result['Soft']['med']['accuracy'],        0.0)
+        self.assertAlmostEqual(result['Soft']['med']['destroy_capacity'], 0.0)
 
     def test_asm_does_not_return_none(self):
         """MISSILES_ASM non è un AAM: la funzione non deve restituire None.
@@ -1398,14 +1481,113 @@ class TestGetWeaponEfficiency(unittest.TestCase):
 
     def test_efficiency_accuracy_times_destroy_matches_score_target_single_cell(self):
         """Per una singola (type, dim), accuracy * destroy_capacity deve coincidere
-        con il contributo di get_weapon_score_target (che calcola la media delle celle).
-        [BW1]"""
+        con il contributo di get_weapon_score_target (che calcola la media delle celle)."""
         target_data = {'Soft': {'med': 1}}
         result = get_weapon_efficiency("UPK-23", target_data)
         cell = result['Soft']['med']
         eff_product = cell['accuracy'] * cell['destroy_capacity']
         score = get_weapon_score_target("UPK-23", ["Soft"], ["med"])
         self.assertAlmostEqual(eff_product, score, places=6)
+
+    # ── Aircraft target (nuova efficiency) ───────────────────────────────────
+
+    def test_aam_with_aircraft_target_returns_dict(self):
+        """AAM vs Aircraft: efficiency['Aircraft'] presente → dict non None."""
+        result = get_weapon_efficiency("AIM-54A-MK47", {'Aircraft': {'big': 1}})
+        self.assertIsInstance(result, dict)
+        self.assertIn('Aircraft', result)
+
+    def test_aam_aircraft_efficiency_non_zero(self):
+        """AIM-54A-MK47 vs Aircraft/big: accuracy=1.0, destroy_capacity=1.0."""
+        result = get_weapon_efficiency("AIM-54A-MK47", {'Aircraft': {'big': 1}})
+        cell = result['Aircraft']['big']
+        self.assertAlmostEqual(cell['accuracy'],        1.0)
+        self.assertAlmostEqual(cell['destroy_capacity'], 1.0)
+
+    def test_aam_aircraft_small_accuracy_lower_than_big(self):
+        """AIM-54A-MK47: accuracy small (0.95) < accuracy big (1.0)."""
+        result = get_weapon_efficiency("AIM-54A-MK47", {'Aircraft': {'big': 1, 'small': 1}})
+        acc_big   = result['Aircraft']['big']['accuracy']
+        acc_small = result['Aircraft']['small']['accuracy']
+        self.assertGreater(acc_big, acc_small)
+
+    def test_aam_aircraft_all_dimensions_present(self):
+        """get_weapon_efficiency AAM + Aircraft restituisce big, med, small."""
+        result = get_weapon_efficiency("AIM-54A-MK47", {'Aircraft': {'big': 1, 'med': 1, 'small': 1}})
+        for dim in ('big', 'med', 'small'):
+            self.assertIn(dim, result['Aircraft'])
+
+    def test_cannon_with_aircraft_target_returns_dict(self):
+        """Cannone (M61A1) vs Aircraft: efficiency['Aircraft'] presente."""
+        result = get_weapon_efficiency("M61A1", {'Aircraft': {'med': 1}})
+        self.assertIsInstance(result, dict)
+        self.assertIn('Aircraft', result)
+        self.assertIn('med', result['Aircraft'])
+
+    def test_cannon_aircraft_big_lower_dc_than_small(self):
+        """M61A1: destroy_capacity Aircraft/big (0.20) < Aircraft/small (0.85)."""
+        result = get_weapon_efficiency("M61A1", {'Aircraft': {'big': 1, 'small': 1}})
+        dc_big   = result['Aircraft']['big']['destroy_capacity']
+        dc_small = result['Aircraft']['small']['destroy_capacity']
+        self.assertLess(dc_big, dc_small)
+
+    def test_cannon_aircraft_consistency_with_score_target(self):
+        """accuracy * destroy_capacity (efficiency) == score (get_weapon_score_target)
+        per singola cella Aircraft/med."""
+        result = get_weapon_efficiency("M61A1", {'Aircraft': {'med': 1}})
+        cell = result['Aircraft']['med']
+        expected = cell['accuracy'] * cell['destroy_capacity']
+        score = get_weapon_score_target("M61A1", ["Aircraft"], ["med"])
+        self.assertAlmostEqual(expected, score, places=6)
+
+    def test_machine_gun_with_aircraft_target_returns_dict(self):
+        """Mitragliatrice (AN-M2) vs Aircraft."""
+        result = get_weapon_efficiency("AN-M2", {'Aircraft': {'small': 1}})
+        self.assertIsInstance(result, dict)
+        self.assertIn('Aircraft', result)
+        self.assertIn('small', result['Aircraft'])
+
+    def test_machine_gun_aircraft_big_lower_dc_than_small(self):
+        """AN-M2: destroy_capacity Aircraft/big (0.08) < Aircraft/small (0.55)."""
+        result = get_weapon_efficiency("AN-M2", {'Aircraft': {'big': 1, 'small': 1}})
+        dc_big   = result['Aircraft']['big']['destroy_capacity']
+        dc_small = result['Aircraft']['small']['destroy_capacity']
+        self.assertLess(dc_big, dc_small)
+
+    def test_aam_mixed_targets_aircraft_and_ground(self):
+        """AAM con target misti: Aircraft ha valori reali, Soft ha valori 0.0."""
+        result = get_weapon_efficiency("AIM-54A-MK47", {
+            'Aircraft': {'med': 1},
+            'Soft':     {'med': 1},
+        })
+        self.assertGreater(result['Aircraft']['med']['accuracy'], 0.0)
+        self.assertAlmostEqual(result['Soft']['med']['accuracy'], 0.0)
+
+    def test_all_aam_have_aircraft_efficiency(self):
+        """Tutti i missili AAM devono avere efficiency['Aircraft'] con big/med/small."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
+        for name in AIR_WEAPONS['MISSILES_AAM']:
+            result = get_weapon_efficiency(name, {'Aircraft': {'big': 1, 'med': 1, 'small': 1}})
+            self.assertIsNotNone(result, msg=f"{name} returned None")
+            self.assertIn('Aircraft', result, msg=f"{name} missing 'Aircraft' key")
+            for dim in ('big', 'med', 'small'):
+                self.assertIn(dim, result['Aircraft'], msg=f"{name} missing dim '{dim}'")
+
+    def test_all_cannons_have_aircraft_efficiency(self):
+        """Tutti i cannoni devono avere efficiency['Aircraft'] con big/med/small."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
+        for name in AIR_WEAPONS['CANNONS']:
+            result = get_weapon_efficiency(name, {'Aircraft': {'big': 1, 'med': 1, 'small': 1}})
+            self.assertIsNotNone(result, msg=f"{name} returned None")
+            self.assertIn('Aircraft', result, msg=f"{name} missing 'Aircraft' key")
+
+    def test_all_machine_guns_have_aircraft_efficiency(self):
+        """Tutte le mitragliatrici devono avere efficiency['Aircraft'] con big/med/small."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
+        for name in AIR_WEAPONS['MACHINE_GUNS']:
+            result = get_weapon_efficiency(name, {'Aircraft': {'big': 1, 'med': 1, 'small': 1}})
+            self.assertIsNotNone(result, msg=f"{name} returned None")
+            self.assertIn('Aircraft', result, msg=f"{name} missing 'Aircraft' key")
 
 
 class TestIsWeaponIntroduced(unittest.TestCase):
@@ -1588,6 +1770,174 @@ class TestIsWeaponIntroduced(unittest.TestCase):
         """Il valore restituito deve essere bool (caso False, anno precedente)."""
         result = is_weapon_introduced("AIM-54A-MK47", 1973)
         self.assertIsInstance(result, bool)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST GET_WEAPON_COST
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetWeaponCost(unittest.TestCase):
+    """Test unitari per get_weapon_cost(model).
+
+    get_weapon_cost() restituisce il valore 'cost' (in k$) dal dizionario del
+    weapon_data. Solleva TypeError per model non-stringa; restituisce 0.0 (con
+    logger.warning) per armi sconosciute o prive del campo 'cost'.
+    """
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    # ── Type errors ─────────────────────────────────────────────────────────
+
+    def test_type_error_on_int(self):
+        with self.assertRaises(TypeError):
+            get_weapon_cost(42)
+
+    def test_type_error_on_none(self):
+        with self.assertRaises(TypeError):
+            get_weapon_cost(None)
+
+    def test_type_error_on_list(self):
+        with self.assertRaises(TypeError):
+            get_weapon_cost(["GAU-8/A"])
+
+    # ── Unknown weapon ───────────────────────────────────────────────────────
+
+    def test_unknown_weapon_returns_zero(self):
+        result = get_weapon_cost("UNKNOWN_WEAPON_XYZ")
+        self.assertEqual(result, 0.0)
+
+    def test_unknown_weapon_returns_float(self):
+        result = get_weapon_cost("UNKNOWN_WEAPON_XYZ")
+        self.assertIsInstance(result, float)
+
+    def test_unknown_weapon_logs_warning(self):
+        mock_logger = MagicMock()
+        with patch(_LOGGER_PATH, mock_logger):
+            get_weapon_cost("UNKNOWN_WEAPON_XYZ")
+        mock_logger.warning.assert_called_once()
+
+    # ── Return type ──────────────────────────────────────────────────────────
+
+    def test_returns_numeric_for_missile(self):
+        result = get_weapon_cost("AIM-54A-MK47")
+        self.assertIsInstance(result, (int, float))
+
+    def test_returns_numeric_for_cannon(self):
+        result = get_weapon_cost("GAU-8/A")
+        self.assertIsInstance(result, (int, float))
+
+    def test_returns_numeric_for_machine_gun(self):
+        result = get_weapon_cost("AN-M2")
+        self.assertIsInstance(result, (int, float))
+
+    # ── Correct values — missiles (pre-existing costs) ───────────────────────
+
+    def test_aim54a_cost(self):
+        """AIM-54A-MK47: cost = 400 k$."""
+        self.assertEqual(get_weapon_cost("AIM-54A-MK47"), 400.0)
+
+    # ── Correct values — CANNONS ─────────────────────────────────────────────
+
+    def test_gau8a_cost(self):
+        """GAU-8/A (A-10 cannon): 500 k$."""
+        self.assertEqual(get_weapon_cost("GAU-8/A"), 500.0)
+
+    def test_m61a1_cost(self):
+        """M61A1 Vulcan: 150 k$."""
+        self.assertEqual(get_weapon_cost("M61A1"), 150.0)
+
+    def test_m39a3_cost(self):
+        """M39A3: 50 k$."""
+        self.assertEqual(get_weapon_cost("M39A3"), 50.0)
+
+    def test_mk12_cost(self):
+        """Mk-12: 30 k$."""
+        self.assertEqual(get_weapon_cost("Mk-12"), 30.0)
+
+    def test_defa554_cost(self):
+        """DEFA-554: 80 k$."""
+        self.assertEqual(get_weapon_cost("DEFA-554"), 80.0)
+
+    def test_n37_cost(self):
+        """N-37 (Soviet WWII-era): 10 k$."""
+        self.assertEqual(get_weapon_cost("N-37"), 10.0)
+
+    def test_nr23_cost(self):
+        """NR-23: 15 k$."""
+        self.assertEqual(get_weapon_cost("NR-23"), 15.0)
+
+    def test_nr30_cost(self):
+        """NR-30: 20 k$."""
+        self.assertEqual(get_weapon_cost("NR-30"), 20.0)
+
+    def test_gsh30_1_cost(self):
+        """GSh-30-1: 100 k$."""
+        self.assertEqual(get_weapon_cost("GSh-30-1"), 100.0)
+
+    def test_gsh30_2_cost(self):
+        """GSh-30-2: 120 k$."""
+        self.assertEqual(get_weapon_cost("GSh-30-2"), 120.0)
+
+    def test_gsh6_23m_cost(self):
+        """GSh-6-23M (rotary): 200 k$."""
+        self.assertEqual(get_weapon_cost("GSh-6-23M"), 200.0)
+
+    def test_gsh6_30_cost(self):
+        """GSh-6-30 (rotary): 250 k$."""
+        self.assertEqual(get_weapon_cost("GSh-6-30"), 250.0)
+
+    def test_oerlikon_kca_cost(self):
+        """Oerlikon-KCA: 80 k$."""
+        self.assertEqual(get_weapon_cost("Oerlikon-KCA"), 80.0)
+
+    def test_upk23_cost(self):
+        """UPK-23 gun pod: 30 k$."""
+        self.assertEqual(get_weapon_cost("UPK-23"), 30.0)
+
+    def test_gsh23l_cost(self):
+        """Gsh-23L: 25 k$."""
+        self.assertEqual(get_weapon_cost("Gsh-23L"), 25.0)
+
+    # ── Correct values — MACHINE_GUNS ────────────────────────────────────────
+
+    def test_anm2_cost(self):
+        """AN-M2 (WWII .50 cal): 5 k$."""
+        self.assertEqual(get_weapon_cost("AN-M2"), 5.0)
+
+    def test_m3_browning_cost(self):
+        """M3-Browning (F-86 .50 cal): 7 k$."""
+        self.assertEqual(get_weapon_cost("M3-Browning"), 7.0)
+
+    # ── Coherence checks ─────────────────────────────────────────────────────
+
+    def test_gau8a_more_expensive_than_m61a1(self):
+        """GAU-8/A (specialised CAS cannon) deve costare più del M61A1 Vulcan."""
+        self.assertGreater(get_weapon_cost("GAU-8/A"), get_weapon_cost("M61A1"))
+
+    def test_gsh6_30_more_expensive_than_gsh30_1(self):
+        """GSh-6-30 (rotary) deve costare più del GSh-30-1 (single barrel)."""
+        self.assertGreater(get_weapon_cost("GSh-6-30"), get_weapon_cost("GSh-30-1"))
+
+    def test_cannon_more_expensive_than_machine_gun(self):
+        """Qualsiasi cannone moderno deve costare più di una mitragliatrice WWII."""
+        self.assertGreater(get_weapon_cost("M61A1"), get_weapon_cost("AN-M2"))
+
+    def test_all_cannons_have_positive_cost(self):
+        """Tutti i CANNONS in AIR_WEAPONS devono avere cost > 0."""
+        for model in AIR_WEAPONS.get("CANNONS", {}):
+            cost = get_weapon_cost(model)
+            self.assertGreater(cost, 0.0, f"CANNONS/{model}: cost deve essere > 0")
+
+    def test_all_machine_guns_have_positive_cost(self):
+        """Tutte le MACHINE_GUNS in AIR_WEAPONS devono avere cost > 0."""
+        for model in AIR_WEAPONS.get("MACHINE_GUNS", {}):
+            cost = get_weapon_cost(model)
+            self.assertGreater(cost, 0.0, f"MACHINE_GUNS/{model}: cost deve essere > 0")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1889,6 +2239,8 @@ def _run_tests() -> unittest.TestResult:
         TestGetWeaponTypeScores,
         TestGetWeaponScore,
         TestGetWeaponScoreTarget,
+        TestGetWeaponEfficiency,
+        TestGetWeaponCost,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
