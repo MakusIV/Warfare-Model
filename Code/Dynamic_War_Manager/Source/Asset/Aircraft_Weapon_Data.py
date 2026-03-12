@@ -748,6 +748,28 @@ def is_weapon_introduced(model: str, year: int) -> bool:
 
     return start_service <= year
 
+def get_weapon_cost(model: str) -> float:
+    
+    if not isinstance(model, str):
+        raise TypeError(f"model is not str, got {type(model).__name__}")  
+    
+    weapon_dict = get_weapon(model)
+
+    if not weapon_dict:
+        logger.warning(f"weapon {model} unknow, return 0")
+        return 0.0
+    
+    weapon_data = weapon_dict.get('weapons_data', {})
+    cost = weapon_data.get('cost', None)
+
+    if cost is None:
+        logger.warning(f"weapon {model} has no cost data, return 0")
+        return 0.0
+    
+    return cost
+
+
+
 AIR_WEAPONS = {
    
     'MISSILES_AAM': {

@@ -30,7 +30,7 @@
 from typing import Dict, List, Optional
 from venv import logger
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, MAX_AIRCRAFT_TYPE_FOR_MISSION
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target, is_weapon_introduced
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS, get_weapon_score, get_weapon_score_target, is_weapon_introduced, get_weapon_cost
 
 # ---------------------------------------------------------------------------
 # Shared helper comment: range values are combat radius in km
@@ -3699,7 +3699,6 @@ def get_aircraft_loadouts_by_task(aircraft_name, task):
     loadouts = get_aircraft_loadouts(aircraft_name)
     return {name: config for name, config in loadouts.items() if task in config.get("tasks", [])}
 
-
 def get_loadout(aircraft_name, loadout_name):
     """Retrieve the loadout configuration for a specific aircraft and loadout name."""
     try:
@@ -3955,7 +3954,6 @@ def get_weapon_efficiency(aircraft_name: str, loadout_name: str, target_data: Di
 
     return efficiency
 
-
 def loadout_year_compatibility(aircraft_name: str, loadout_name: str, year: int) -> bool:
     """Evaluate if a loadout is compatible with a specific year based on the introduction dates of its weapons."""
     loadout = get_loadout(aircraft_name, loadout_name)
@@ -4031,3 +4029,13 @@ def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, floa
 
         return aircraft_number                        
    
+def loadout_cost(aircraft_name: str, loadout_name: str) -> float: # questo lo usi per verificare come l'aereo performa per la missione senza considerare la tipologia del target
+    """Evaluate the overall effectiveness of a loadout based on its attributes, range, speed, and weaponry."""
+    
+    cost = 0.0    
+    loadout = get_loadout(aircraft_name, loadout_name)    
+    pylons = loadout.get("stores", {}).get("pylons", {})
+    
+    for pylon, weapon in pylons.items(): #  weapon_model = weapon[0], weapon_qty = weapon[1]        
+        cost += get_weapon_cost( weapon[0] ) * weapon[1]            
+    return cost

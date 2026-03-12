@@ -1,0 +1,14 @@
+ implementata get_weapon_cost in Aicraft_Weapon_Data.py
+ controlla se tutte le armi hanno il costo e l'unità di misura k$
+ 
+ implementata loadout_cost in Aicraft_Loadouts.py
+ 
+ Nel modulo Aircraft_Data.py ho implementato la funzione cost() in Aircraft_Data.py, implementa un test di unità minimale nel modulo Test_Aircraft_Data.py per questa funzione. Inoltre, ho notato che in diversi dizionari relativi agli aerei (a10a_data, f117_data, b52h_data, ...), il valore di cost è 0. Assegna  il valore di cost (credo sia espresso in milioni di dollari/euro) a questi aerei e confronta i costi di tutti gli aerei verificando che siano coerenti tra loro. 
+ 
+ 
+ 
+ 
+ Nel modulo Military_Resources_Assigner ho implementato la funzione get_aircraft_for_mission(). Questa funzione restituisce un dizionario contenente due liste di dizionari che contengono i nomi degli aerei e dei loadout e dei relativi punteggi.
+ La logica implementata nella funzione valuta l'efficacia del loadout dell'aereo nei confronti del target e creare delle liste ordinate di aerei con loadout compatibile. 
+ Verifica la funzione  considerando sia la logica e che la sintassi, oltre che le correzioni necessarie, puoi proporre anche delle modifiche migliorative considerando anche altri metodi implementati (o da implementare) nelle funzioni utilizzate anche nei moduli importati
+ 

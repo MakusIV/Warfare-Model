@@ -90,6 +90,8 @@ class Aircraft_Data:
     def roles(self):
         return self.roles
 
+    def cost(self):
+        return self.cost
 
     def model(self):
         return self.model
@@ -2220,7 +2222,7 @@ m2000c_data = {
 mig15_data = {
     "constructor": "Mikoyan-Gurevich", "made": "USSR", "model": "MiG-15bis",
     "users": ["USSR", "China", "North Korea"], "start_service": 1949, "end_service": 1980,
-    "category": [Air_Asset_Type.FIGHTER], "cost": 0,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
     "weight": 3635,
     
@@ -2256,7 +2258,7 @@ mig15_data = {
 mig19p_data = {
     "constructor": "Mikoyan-Gurevich", "made": "USSR", "model": "MiG-19P",
     "users": ["USSR", "China"], "start_service": 1955, "end_service": 1980,
-    "category": [Air_Asset_Type.FIGHTER], "cost": 0,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
     "weight": 5447,
     
@@ -2292,7 +2294,7 @@ mig19p_data = {
 mig21bis_data = {
     "constructor": "Mikoyan-Gurevich", "made": "USSR", "model": "MiG-21bis",
     "users": ["USSR", "Russia", "India", "Finland", "Algeria", "Vietnam"], "start_service": 1959, "end_service": None,
-    "category": [Air_Asset_Type.FIGHTER], "cost": 1,
+    "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept", "Strike"],
     "weight": 5843,
     
