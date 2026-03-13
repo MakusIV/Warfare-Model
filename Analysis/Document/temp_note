@@ -1,55 +1,4 @@
-
-
-Realizza il modulo di test Test_Military_Resources_Assigner.py basato sulla libreria unittest, nel quale sono implementati i test di unità per tutte le funzioni e della strutture dati definite. Nei test di unità includi i seguenti test e configurazioni:
-
-test con loadouts compatibili con le seguenti configurazioni:
-
-task: 'Strike',
-loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
-max_aircraft_for_mission = 4, 8
-max_missions = 2, 4
-directive = balanced, performance_high
-
-aircraft_availability = [
-        {'model': 'F-4E Phantom II', 'loadout': 'Strike', 'quantity': 12}, # USA Fighter_Bomber/Attacker
-        {'model': 'MiG-27K', 'loadout': 'Precision Ground Attack', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
-        {'model': 'B-52H Stratofortress', 'loadout': 'Heavy Strike Mk-84', 'quantity': 6}, # USA Bomber
-        {'model': 'Su-24M', 'loadout': 'Heavy Strike', 'quantity': 8}, # USSR Bomber
-    ]
-    
-target_data = {
-        'Soft':     {'big': {'quantity': 3, 'priority': 5},
-                     'med': {'quantity': 5, 'priority': 6},
-                     'small': {'quantity': 10, 'priority': 6}},
-        'Armored':  {'big': {'quantity': 2, 'priority': 3},
-                     'med': {'quantity': 4, 'priority': 3},
-                     'small': {'quantity': 5, 'priority': 5}},
-        'Structure':{'big': {'quantity': 3, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
-    },
-    
-
-
-target_data = {
-        'Structure':{'big': {'quantity': 3, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
-}
-
-
-
-
-Escort', 'Intercept', 'CAS', 'Anti-Ship' 
-
-
-
- Inoltre, considerando quanto realizzato nel modulo Test_Aircraft_Data.py, implementa il codice per la stampa a terminale ed in pdf delle seguenti tabelle:
-
-
-
-  
-  
+Nelle tabelle create, dovresti aggiungere il numero di aerei e di missioni effettivamente richiesti per lo specifico aereo/loadout
  
  
  
@@ -77,4 +26,141 @@ Escort', 'Intercept', 'CAS', 'Anti-Ship'
  Nel modulo Aircraft_Weapon_Data.py ho aggiunto i parametri "perc_efficiency_variability" e "efficiency" nel dizionario "AIM-54A-MK47" presente in 'MISSILES_AAM' incluso nel dizionario 'AIR_WEAPONS'. Utilizzando il dizionario "AIM-54A-MK47" come esempio, implementa i due parametri in tutti i missili specificati in MISSILES_AAM
 
 implementa adesso la chiave 'aircraft'con i relativi valori come relaizzato in 'efficiency' di MISSILES_AAM nei dizionari 'efficiency' presenti nei dizionati MACHINE_GUNS e CANNONS inclusi in ?AIR_WEAPONS
+
+Nel modulo di test Test_Military_Resources_Assigner.py  includi i test da effettuare con le configurazioni sotto specificate.
+I test devono essere sviluppati considerando le diverse combinazioni dei parametri specificati nelle configurazioni richieste.
+Inoltre, considerando quanto realizzato per la stampa a terminale ed in pdf nel modulo Test_Aircraft_Data.py, implementa il codice per la stampa a terminale ed in pdf delle tabelle relative ai diversi gruppi di test (una tabella per gruppo). Le tabella devono riportare nel titolo: il gruppo di test, il task, max_aircraft_for_mission, max_mission, directive e il target_data. 
+Le tabelle devono essere realizzate in base alle informazioni contenute nel dizionario degli aerei/loadout prodotta dalla funzione: aereo(modello), loadout, score, 'fully_compliant' o 'derated'.
+
+
+Configurazione di test "Strike"
+task: 'Strike',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 4, 8
+max_missions = 2, 4
+directive = balanced, performance_high, economy_high
+
+aircraft_availability = [
+        {'model': 'F-4E Phantom II', 'loadout': 'Strike', 'quantity': 12}, # USA Fighter_Bomber/Attacker
+        {'model': 'MiG-27K', 'loadout': 'Precision Ground Attack', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+        {'model': 'B-52H Stratofortress', 'loadout': 'Heavy Strike Mk-84', 'quantity': 6}, # USA Bomber
+        {'model': 'Su-24M', 'loadout': 'Heavy Strike', 'quantity': 8}, # USSR Bomber
+    ]
+    
+
+target_data = {
+        'Structure':{'big': {'quantity': 3, 'priority': 10},
+                     'med': {'quantity': 6, 'priority': 7},
+                     'small': {'quantity': 12, 'priority': 7}},
+}
+
+Configurazione di test "CAS"
+task: 'CAS',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 3, 6
+max_missions = 2, 4
+directive = balanced, performance_high, , economy_high
+
+aircraft_availability = [
+        {'model': 'F-4E Phantom II', 'loadout': 'CAS', 'quantity': 12}, # USA Fighter_Bomber/Attacker
+        {'model': 'MiG-27K', 'loadout': 'CAS Rocket Attack', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+        {'model': 'A-10C II Thunderbolt II', 'loadout': 'Maverick/Gun CAS', 'quantity': 12}, # USA Bomber
+        {'model': 'Su-25T', 'loadout': 'Anti-Tank Precision', 'quantity': 8}, # USSR Bomber
+    ]
+    
+target_data = {
+        'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                     'med': {'quantity': 5, 'priority': 6},
+                     'small': {'quantity': 10, 'priority': 6}},
+        'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                     'med': {'quantity': 4, 'priority': 3},
+                     'small': {'quantity': 5, 'priority': 5}},
+        },
+        
+        
+Configurazione di test "SEAD"
+task: 'SEAD',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 3, 6
+max_missions = 2, 4
+directive = balanced, performance_high, economy_high
+
+aircraft_availability = [
+        {'model': 'F-4E Phantom II', 'loadout': 'CAS', 'quantity': 12}, # USA Fighter_Bomber/Attacker
+        {'model': 'MiG-27K', 'loadout': 'CAS Rocket Attack', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+        {'model': 'A-10C II Thunderbolt II', 'loadout': 'Maverick/Gun CAS', 'quantity': 12}, # USA Bomber
+        {'model': 'Su-25T', 'loadout': 'Anti-Tank Precision', 'quantity': 8}, # USSR Bomber
+    ]
+    
+target_data = {
+        'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                     'med': {'quantity': 5, 'priority': 6},
+                     'small': {'quantity': 10, 'priority': 6}},
+        'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                     'med': {'quantity': 4, 'priority': 3},
+                     'small': {'quantity': 5, 'priority': 5}},
+        },
+    
+
+
+Configurazione di test "Anti-Ship"
+task: 'Anti-Ship',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 6, 10
+max_missions = 2, 4, 8
+directive = balanced, performance_high
+
+aircraft_availability = [
+        {'model': 'F/A-18C Hornet', 'loadout': 'Anti-Ship', 'quantity': 12}, # USA Fighter_Bomber/Attacker
+        {'model': 'Su-30', 'loadout': 'Anti-Ship', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+        {'model': 'S-3B Viking', 'loadout': 'Anti-Ship Maritime Strike', 'quantity': 8}, # USA Bomber
+        {'model': 'Tu-142', 'loadout': 'Maritime Strike', 'quantity': 7}, # USSR Bomber
+    ]
+    
+target_data = {
+        'ship':	{'big': {'quantity': 4, 'priority': 10},
+                'med': {'quantity': 4, 'priority': 6},
+               	'small': {'quantity': 6, 'priority': 3}},
+}
+
+
+Configurazione di test "Fighter_Sweep"
+task: 'Anti-Ship',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 6, 10
+max_missions = 3, 6
+directive = balanced, performance_high
+
+aircraft_availability = [
+        {'model': 'F-15C Eagle', 'loadout': 'Eagle Sweep', 'quantity': 12}, # USA Fighter
+        {'model': 'Su-27', 'loadout': 'Flanker CAP', 'quantity': 12}, # USSR Fighter_Bomber/Attacker
+	{'model': 'AJ/ASJ 37 Viggen', 'loadout': 'Air-to-Air', 'quantity': 12}, #         
+	{'model': 'MiG-29S', 'loadout': 'CAP', 'quantity': 12}, # USSR Fighter        
+    ]
+    
+target_data = {
+        'Aircraft':	{'big': {'quantity': 4, 'priority': 10},
+                	'med': {'quantity': 4, 'priority': 2},
+               		'small': {'quantity': 6, 'priority': 1}},
+}
+
+
+Configurazione di test "Intercept"
+task: 'Anti-Ship',
+loadout usability: 'usability': {'day': True, 'night': False, 'adverse_weather': False},
+max_aircraft_for_mission = 6, 10
+max_missions = 3, 6
+directive = balanced, performance_high
+
+aircraft_availability = [
+        {'model': 'F-15C Eagle', 'loadout': 'Eagle Sweep', 'quantity': 12}, # USA Fighter
+        {'model': 'Su-27', 'loadout': 'Flanker CAP', 'quantity': 12}, # USSR Fighter_Bomber
+        {'model': 'MiG-21bis', 'loadout': 'Fishbed CAP', 'quantity': 12}, # USSR Fighter
+	{'model': 'MiG-31', 'loadout': 'Foxhound Intercept', 'quantity': 12}, # USSR Fighter
+    ]
+    
+target_data = {
+        'Aircraft':	{'small': {'quantity': 10, 'priority': 10}},
+}
+
 

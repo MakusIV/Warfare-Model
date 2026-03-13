@@ -189,6 +189,174 @@ _MAX_AIRCRAFT:  int = 8
 _MAX_MISSIONS:  int = 5
 _DIRECTIVE:     str = 'balanced'
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  SCENARIO FIXTURES — configurazioni per test di scenario e tabelle
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Directory di output PDF (quattro livelli su dalla cartella Test → radice progetto / out)
+_OUTPUT_DIR = os.path.normpath(
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        *(['..'] * 4), 'out',
+    )
+)
+
+# ── Strike ────────────────────────────────────────────────────────────────────
+_AVAIL_STRIKE_SCENARIO: List[Dict] = [
+    {'model': 'F-4E Phantom II',        'loadout': 'Strike',                  'quantity': 12},
+    {'model': 'MiG-27K',                'loadout': 'Precision Ground Attack',  'quantity': 12},
+    {'model': 'B-52H Stratofortress',   'loadout': 'Heavy Strike Mk-84',       'quantity': 6},
+    {'model': 'Su-24M',                 'loadout': 'Heavy Strike',             'quantity': 8},
+]
+_TARGET_STRIKE_SCENARIO: Dict = {
+    'Structure': {
+        'big':   {'quantity': 3,  'priority': 10},
+        'med':   {'quantity': 6,  'priority': 7},
+        'small': {'quantity': 12, 'priority': 7},
+    },
+}
+
+# ── CAS ───────────────────────────────────────────────────────────────────────
+_AVAIL_CAS_SCENARIO: List[Dict] = [
+    {'model': 'F-4E Phantom II',          'loadout': 'CAS',                  'quantity': 12},
+    {'model': 'MiG-27K',                  'loadout': 'CAS Rocket Attack',    'quantity': 12},
+    {'model': 'A-10C II Thunderbolt II',  'loadout': 'Maverick/Gun CAS',     'quantity': 12},
+    {'model': 'Su-25T',                   'loadout': 'Anti-Tank Precision',   'quantity': 8},
+]
+_TARGET_CAS_SCENARIO: Dict = {
+    'Soft': {
+        'big':   {'quantity': 3,  'priority': 5},
+        'med':   {'quantity': 5,  'priority': 6},
+        'small': {'quantity': 10, 'priority': 6},
+    },
+    'Armored': {
+        'big':   {'quantity': 2, 'priority': 3},
+        'med':   {'quantity': 4, 'priority': 3},
+        'small': {'quantity': 5, 'priority': 5},
+    },
+}
+
+# ── SEAD ──────────────────────────────────────────────────────────────────────
+_AVAIL_SEAD_SCENARIO: List[Dict] = [
+    {'model': 'F-4E Phantom II',          'loadout': 'CAS',                  'quantity': 12},
+    {'model': 'MiG-27K',                  'loadout': 'CAS Rocket Attack',    'quantity': 12},
+    {'model': 'A-10C II Thunderbolt II',  'loadout': 'Maverick/Gun CAS',     'quantity': 12},
+    {'model': 'Su-25T',                   'loadout': 'Anti-Tank Precision',   'quantity': 8},
+]
+_TARGET_SEAD_SCENARIO: Dict = {
+    'Soft': {
+        'big':   {'quantity': 3,  'priority': 5},
+        'med':   {'quantity': 5,  'priority': 6},
+        'small': {'quantity': 10, 'priority': 6},
+    },
+    'Armored': {
+        'big':   {'quantity': 2, 'priority': 3},
+        'med':   {'quantity': 4, 'priority': 3},
+        'small': {'quantity': 5, 'priority': 5},
+    },
+}
+
+# ── Anti_Ship ─────────────────────────────────────────────────────────────────
+_AVAIL_ANTISHIP_SCENARIO: List[Dict] = [
+    {'model': 'F/A-18C Hornet',  'loadout': 'Anti-Ship',                 'quantity': 12},
+    {'model': 'Su-30',           'loadout': 'Anti-Ship',                 'quantity': 12},
+    {'model': 'S-3B Viking',     'loadout': 'Anti-Ship Maritime Strike', 'quantity': 8},
+    {'model': 'Tu-142',          'loadout': 'Maritime Strike',           'quantity': 7},
+]
+_TARGET_ANTISHIP_SCENARIO: Dict = {
+    'ship': {
+        'big':   {'quantity': 4, 'priority': 10},
+        'med':   {'quantity': 4, 'priority': 6},
+        'small': {'quantity': 6, 'priority': 3},
+    },
+}
+
+# ── Fighter_Sweep ─────────────────────────────────────────────────────────────
+_AVAIL_FIGHTER_SWEEP_SCENARIO: List[Dict] = [
+    {'model': 'F-15C Eagle',       'loadout': 'Eagle Sweep',  'quantity': 12},
+    {'model': 'Su-27',             'loadout': 'Flanker CAP',  'quantity': 12},
+    {'model': 'AJ/ASJ 37 Viggen',  'loadout': 'Air-to-Air',   'quantity': 12},
+    {'model': 'MiG-29S',           'loadout': 'CAP',          'quantity': 12},
+]
+_TARGET_FIGHTER_SWEEP_SCENARIO: Dict = {
+    'Aircraft': {
+        'big':   {'quantity': 4, 'priority': 10},
+        'med':   {'quantity': 4, 'priority': 2},
+        'small': {'quantity': 6, 'priority': 1},
+    },
+}
+
+# ── Intercept ─────────────────────────────────────────────────────────────────
+_AVAIL_INTERCEPT_SCENARIO: List[Dict] = [
+    {'model': 'F-15C Eagle',  'loadout': 'Eagle Sweep',        'quantity': 12},
+    {'model': 'Su-27',        'loadout': 'Flanker CAP',        'quantity': 12},
+    {'model': 'MiG-21bis',    'loadout': 'Fishbed CAP',        'quantity': 12},
+    {'model': 'MiG-31',       'loadout': 'Foxhound Intercept', 'quantity': 12},
+]
+_TARGET_INTERCEPT_SCENARIO: Dict = {
+    'Aircraft': {
+        'small': {'quantity': 10, 'priority': 10},
+    },
+}
+
+# ── Lista globale degli scenari (usata anche per le tabelle) ──────────────────
+_SCENARIO_CONFIGS: List[Dict] = [
+    {
+        'group':               'Strike',
+        'task':                'Strike',
+        'availability':        _AVAIL_STRIKE_SCENARIO,
+        'target_data':         _TARGET_STRIKE_SCENARIO,
+        'max_aircraft_values': [4, 8],
+        'max_missions_values': [2, 4],
+        'directives':          ['balanced', 'performance_high', 'economy_high'],
+    },
+    {
+        'group':               'CAS',
+        'task':                'CAS',
+        'availability':        _AVAIL_CAS_SCENARIO,
+        'target_data':         _TARGET_CAS_SCENARIO,
+        'max_aircraft_values': [3, 6],
+        'max_missions_values': [2, 4],
+        'directives':          ['balanced', 'performance_high', 'economy_high'],
+    },
+    {
+        'group':               'SEAD',
+        'task':                'SEAD',
+        'availability':        _AVAIL_SEAD_SCENARIO,
+        'target_data':         _TARGET_SEAD_SCENARIO,
+        'max_aircraft_values': [3, 6],
+        'max_missions_values': [2, 4],
+        'directives':          ['balanced', 'performance_high', 'economy_high'],
+    },
+    {
+        'group':               'Anti_Ship',
+        'task':                'Anti_Ship',
+        'availability':        _AVAIL_ANTISHIP_SCENARIO,
+        'target_data':         _TARGET_ANTISHIP_SCENARIO,
+        'max_aircraft_values': [6, 10],
+        'max_missions_values': [2, 4, 8],
+        'directives':          ['balanced', 'performance_high'],
+    },
+    {
+        'group':               'Fighter_Sweep',
+        'task':                'Fighter_Sweep',
+        'availability':        _AVAIL_FIGHTER_SWEEP_SCENARIO,
+        'target_data':         _TARGET_FIGHTER_SWEEP_SCENARIO,
+        'max_aircraft_values': [6, 10],
+        'max_missions_values': [3, 6],
+        'directives':          ['balanced', 'performance_high'],
+    },
+    {
+        'group':               'Intercept',
+        'task':                'Intercept',
+        'availability':        _AVAIL_INTERCEPT_SCENARIO,
+        'target_data':         _TARGET_INTERCEPT_SCENARIO,
+        'max_aircraft_values': [6, 10],
+        'max_missions_values': [3, 6],
+        'directives':          ['balanced', 'performance_high'],
+    },
+]
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  UTILITY
@@ -918,6 +1086,324 @@ class TestGetAircraftMissionAircraft(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  9. Scenario base class + 6 scenari parametrici
+# ─────────────────────────────────────────────────────────────────────────────
+
+class _ScenarioTestBase(unittest.TestCase):
+    """Base class per i test di scenario parametrici.
+
+    Le sottoclassi devono definire `_CFG` come uno degli elementi di
+    `_SCENARIO_CONFIGS`.  I metodi di test iterano tutte le combinazioni
+    (max_aircraft × max_missions × directive) tramite subTest.
+    """
+
+    _CFG: Dict = {}   # sovrascritta da ogni sottoclasse
+
+    def setUp(self) -> None:
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self) -> None:
+        self._mock_ctx.__exit__(None, None, None)
+
+    def _run_for_params(self, max_aircraft: int, max_missions: int, directive: str) -> Dict:
+        return get_aircraft_mission(
+            self._CFG['task'],
+            self._CFG['availability'],
+            _REQ_LENIENT,
+            self._CFG['target_data'],
+            max_aircraft,
+            max_missions,
+            directive,
+        )
+
+    def _combinations(self):
+        cfg = self._CFG
+        for ma in cfg['max_aircraft_values']:
+            for mm in cfg['max_missions_values']:
+                for directive in cfg['directives']:
+                    yield ma, mm, directive
+
+    # ── test comuni ────────────────────────────────────────────────────────
+
+    def test_result_structure_all_combinations(self):
+        """Tutte le combinazioni restituiscono un dict con le chiavi attese."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                self.assertIsInstance(result, dict)
+                self.assertIn('fully_compliant', result)
+                self.assertIn('derated', result)
+                self.assertIsInstance(result['fully_compliant'], list)
+                self.assertIsInstance(result['derated'], list)
+
+    def test_entries_have_required_fields(self):
+        """Ogni entry ha 'aircraft_model', 'loadout', 'score' per tutte le combinazioni."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for entry in result['fully_compliant'] + result['derated']:
+                    self.assertIn('aircraft_model', entry)
+                    self.assertIn('loadout',        entry)
+                    self.assertIn('score',          entry)
+
+    def test_scores_non_negative(self):
+        """Tutti gli score >= 0 per tutte le combinazioni."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for entry in result['fully_compliant'] + result['derated']:
+                    self.assertGreaterEqual(entry['score'], 0.0)
+
+    def test_lists_sorted_descending(self):
+        """'fully_compliant' e 'derated' sono ordinate per score decrescente."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for list_name in ('fully_compliant', 'derated'):
+                    scores = [e['score'] for e in result[list_name]]
+                    self.assertEqual(scores, sorted(scores, reverse=True))
+
+    def test_performance_high_vs_economy_high_differ(self):
+        """'performance_high' e 'economy_high' producono score diversi (se entrambi nel CFG)."""
+        directives = self._CFG['directives']
+        if 'performance_high' not in directives or 'economy_high' not in directives:
+            self.skipTest("Lo scenario non include entrambe le directive.")
+        ma = self._CFG['max_aircraft_values'][0]
+        mm = self._CFG['max_missions_values'][0]
+        res_perf = self._run_for_params(ma, mm, 'performance_high')
+        res_econ = self._run_for_params(ma, mm, 'economy_high')
+        scores_p = {e['aircraft_model']: e['score']
+                    for e in res_perf['fully_compliant'] + res_perf['derated']}
+        scores_e = {e['aircraft_model']: e['score']
+                    for e in res_econ['fully_compliant'] + res_econ['derated']}
+        common = set(scores_p) & set(scores_e)
+        if not common:
+            return   # nessun modello comune, test non applicabile
+        different = any(abs(scores_p[m] - scores_e[m]) > 1e-9 for m in common)
+        self.assertTrue(different,
+            "performance_high ed economy_high producono score identici su tutti i modelli.")
+
+
+class TestStrikeScenario(_ScenarioTestBase):
+    """Scenario Strike: F-4E, MiG-27K, B-52H, Su-24M — target Structure."""
+    _CFG = _SCENARIO_CONFIGS[0]
+
+
+class TestCASScenario(_ScenarioTestBase):
+    """Scenario CAS: F-4E, MiG-27K, A-10C II, Su-25T — target Soft+Armored."""
+    _CFG = _SCENARIO_CONFIGS[1]
+
+
+class TestSEADScenario(_ScenarioTestBase):
+    """Scenario SEAD: stessi loadout CAS — verifica ranking con task SEAD."""
+    _CFG = _SCENARIO_CONFIGS[2]
+
+
+class TestAntiShipScenario(_ScenarioTestBase):
+    """Scenario Anti_Ship: F/A-18C, Su-30, S-3B Viking, Tu-142 — target ship."""
+    _CFG = _SCENARIO_CONFIGS[3]
+
+
+class TestFighterSweepScenario(_ScenarioTestBase):
+    """Scenario Fighter_Sweep: F-15C, Su-27, Viggen, MiG-29S — target Aircraft."""
+    _CFG = _SCENARIO_CONFIGS[4]
+
+
+class TestInterceptScenario(_ScenarioTestBase):
+    """Scenario Intercept: F-15C, Su-27, MiG-21bis, MiG-31 — target Aircraft small."""
+    _CFG = _SCENARIO_CONFIGS[5]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TABELLE — utilità condivise
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _format_target_str(target_data: Dict) -> str:
+    """Ritorna una rappresentazione compatta di target_data."""
+    parts = []
+    for t_type, dims in target_data.items():
+        dim_parts = [
+            f"{dim}:{info['quantity']}(p{info['priority']})"
+            for dim, info in dims.items()
+        ]
+        parts.append(f"{t_type}[{', '.join(dim_parts)}]")
+    return '  '.join(parts)
+
+
+def _build_mission_rows(cfg: Dict, max_aircraft: int, max_missions: int, directive: str) -> List[Dict]:
+    """Chiama get_aircraft_mission e ritorna righe flat per la tabella."""
+    with _all_loggers_mocked():
+        result = get_aircraft_mission(
+            cfg['task'],
+            cfg['availability'],
+            _REQ_LENIENT,
+            cfg['target_data'],
+            max_aircraft,
+            max_missions,
+            directive,
+        )
+    rows = []
+    for entry in result['fully_compliant']:
+        rows.append({
+            'model':   entry['aircraft_model'],
+            'loadout': entry['loadout'],
+            'score':   entry['score'],
+            'status':  'fully_compliant',
+        })
+    for entry in result['derated']:
+        rows.append({
+            'model':   entry['aircraft_model'],
+            'loadout': entry['loadout'],
+            'score':   entry['score'],
+            'status':  'derated',
+        })
+    return rows
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TABELLE — stampa a terminale
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _print_scenario_table_terminal(
+    cfg: Dict, max_aircraft: int, max_missions: int, directive: str
+) -> None:
+    """Stampa a terminale la tabella risultato per una combinazione di parametri."""
+    rows = _build_mission_rows(cfg, max_aircraft, max_missions, directive)
+    W = 96
+    print(f"\n{'═' * W}")
+    print(
+        f"  Gruppo: {cfg['group']}  |  Task: {cfg['task']}"
+        f"  |  max_aircraft: {max_aircraft}"
+        f"  |  max_missions: {max_missions}"
+        f"  |  directive: {directive}"
+    )
+    print(f"  Target: {_format_target_str(cfg['target_data'])}")
+    print(f"{'─' * W}")
+    if not rows:
+        print("  (nessun risultato)")
+        return
+    hdr = f"  {'#':>3}  {'Aeromobile':<32}  {'Loadout':<28}  {'Score':>8}  {'Status':<16}"
+    print(hdr)
+    print(f"  {'─'*3}  {'─'*32}  {'─'*28}  {'─'*8}  {'─'*16}")
+    for i, row in enumerate(rows, start=1):
+        print(
+            f"  {i:>3}  {row['model']:<32}  {row['loadout']:<28}"
+            f"  {row['score']:>8.4f}  {row['status']:<16}"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TABELLE — salvataggio PDF
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _setup_matplotlib():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.backends.backend_pdf import PdfPages
+        return plt, PdfPages
+    except ImportError:
+        return None, None
+
+
+def _header_style(tbl, n_cols: int) -> None:
+    """Intestazione tabella: sfondo scuro, testo bianco in grassetto."""
+    for col in range(n_cols):
+        tbl[0, col].set_facecolor("#2c3e50")
+        tbl[0, col].set_text_props(color="white", fontweight="bold")
+
+
+def save_mission_scenario_tables_pdf(output_path: str) -> None:
+    """Salva MRA_Scenario_Tables.pdf — una pagina per ogni combinazione di parametri.
+
+    Ogni pagina riporta nel titolo: gruppo, task, max_aircraft, max_missions,
+    directive e target_data.  Le colonne della tabella sono:
+      #  |  Aeromobile  |  Loadout  |  Score  |  Status
+    con heatmap RdYlGn sulla colonna Score (verde=alto, rosso=basso).
+    """
+    plt, PdfPages = _setup_matplotlib()
+    if plt is None:
+        print("[PDF] matplotlib non disponibile — generazione PDF saltata.")
+        return
+
+    os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
+
+    col_labels = ["#", "Aeromobile", "Loadout", "Score", "Status"]
+    n_cols = len(col_labels)
+
+    with PdfPages(output_path) as pdf:
+        for cfg in _SCENARIO_CONFIGS:
+            for ma in cfg['max_aircraft_values']:
+                for mm in cfg['max_missions_values']:
+                    for directive in cfg['directives']:
+                        rows = _build_mission_rows(cfg, ma, mm, directive)
+
+                        cell_text   = []
+                        cell_colors = []
+
+                        scores = [r['score'] for r in rows] if rows else []
+                        max_s  = max(scores) if scores else 1.0
+                        min_s  = min(scores) if scores else 0.0
+                        rng    = (max_s - min_s) if max_s != min_s else 1.0
+
+                        if not rows:
+                            cell_text.append(["—", "(nessun risultato)", "", "", ""])
+                            cell_colors.append(["#f5f5f5"] * n_cols)
+                        else:
+                            for i, row in enumerate(rows, start=1):
+                                score_str = f"{row['score']:.4f}"
+                                cell_text.append([
+                                    str(i),
+                                    row['model'],
+                                    row['loadout'],
+                                    score_str,
+                                    row['status'],
+                                ])
+                                norm = (row['score'] - min_s) / rng
+                                score_color = plt.cm.RdYlGn(norm)
+                                status_bg   = "#d4edda" if row['status'] == 'fully_compliant' else "#fff3cd"
+                                cell_colors.append([
+                                    "#f5f5f5", "#f0f4f8", "#f0f4f8",
+                                    score_color, status_bg,
+                                ])
+
+                        n_rows = len(cell_text)
+                        fig_w  = max(16.0, 2.2 * n_cols)
+                        fig_h  = max(4.0, 0.40 * n_rows + 3.5)
+
+                        fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+                        ax.axis("off")
+                        target_str = _format_target_str(cfg['target_data'])
+                        ax.set_title(
+                            f"Gruppo: {cfg['group']}  |  Task: {cfg['task']}"
+                            f"  |  max_aircraft: {ma}"
+                            f"  |  max_missions: {mm}"
+                            f"  |  directive: {directive}\n"
+                            f"Target: {target_str}",
+                            fontsize=9, fontweight="bold", pad=14,
+                        )
+
+                        tbl = ax.table(
+                            cellText=cell_text,
+                            colLabels=col_labels,
+                            cellColours=cell_colors,
+                            loc="center",
+                            cellLoc="center",
+                        )
+                        tbl.auto_set_font_size(False)
+                        tbl.set_fontsize(8)
+                        tbl.auto_set_column_width(list(range(n_cols)))
+                        _header_style(tbl, n_cols)
+                        plt.tight_layout()
+                        pdf.savefig(fig, bbox_inches="tight")
+                        plt.close(fig)
+
+    print(f"[PDF] MRA_Scenario_Tables → {output_path}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -933,50 +1419,120 @@ def _run_tests() -> unittest.TestResult:
         TestReduceTargetData,
         TestGetAircraftMission,
         TestGetAircraftMissionAircraft,
+        # Scenari parametrici
+        TestStrikeScenario,
+        TestCASScenario,
+        TestSEADScenario,
+        TestAntiShipScenario,
+        TestFighterSweepScenario,
+        TestInterceptScenario,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
 
 
 def _run_tables_terminal() -> None:
-    """Placeholder: nessuna tabella prevista per questo modulo."""
-    print("\nNessuna tabella disponibile per Military_Resources_Assigner.")
+    """Stampa a terminale le tabelle di risultato per tutti gli scenari."""
+    for cfg in _SCENARIO_CONFIGS:
+        print(f"\n{'#' * 96}")
+        print(f"  SCENARIO: {cfg['group']}  (task={cfg['task']})")
+        print(f"{'#' * 96}")
+        for ma in cfg['max_aircraft_values']:
+            for mm in cfg['max_missions_values']:
+                for directive in cfg['directives']:
+                    _print_scenario_table_terminal(cfg, ma, mm, directive)
+    print()
+
+
+def _run_tables_pdf() -> None:
+    """Salva le tabelle di scenario in PDF."""
+    os.makedirs(_OUTPUT_DIR, exist_ok=True)
+    out_path = os.path.join(_OUTPUT_DIR, "MRA_Scenario_Tables.pdf")
+    save_mission_scenario_tables_pdf(out_path)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  MENU INTERATTIVO / FLAG --tests-only
+#  MENU INTERATTIVO
 # ─────────────────────────────────────────────────────────────────────────────
 
-if __name__ == '__main__':
-    args = sys.argv[1:]
+_MENU_ITEMS = [
+    ("Esegui i test unitari",            _run_tests),
+    ("Stampa le tabelle a terminale",    _run_tables_terminal),
+    ("Salva le tabelle in PDF",          _run_tables_pdf),
+    ("Esegui test + stampa a terminale", None),
+    ("Esegui test + salva PDF",          None),
+    ("Stampa a terminale + salva PDF",   None),
+    ("Tutto (test + terminale + PDF)",   None),
+    ("Esci",                             None),
+]
 
-    if '--tests-only' in args:
-        result = _run_tests()
-        sys.exit(0 if result.wasSuccessful() else 1)
 
-    if '--tables-only' in args:
-        _run_tables_terminal()
-        sys.exit(0)
-
-    # Menu interattivo
+def _print_menu() -> None:
     print()
     print("╔══════════════════════════════════════════════════════════════╗")
     print("║   Test_Military_Resources_Assigner  —  Menu principale      ║")
     print("╠══════════════════════════════════════════════════════════════╣")
-    print("║  1.  Esegui i test unitari                                   ║")
-    print("║  2.  Esci                                                    ║")
+    for idx, (label, _) in enumerate(_MENU_ITEMS, start=1):
+        print(f"║  {idx}.  {label:<55}║")
     print("╚══════════════════════════════════════════════════════════════╝")
 
+
+def _ask_choice() -> int:
+    n = len(_MENU_ITEMS)
     while True:
         try:
-            raw = input("\nScelta [1-2]: ").strip()
+            raw = input(f"\nScelta [1-{n}]: ").strip()
             choice = int(raw)
-            if choice == 1:
-                _run_tests()
-                break
-            elif choice == 2:
-                break
-            else:
-                print("  Inserire 1 o 2.")
-        except (ValueError, EOFError, KeyboardInterrupt):
+            if 1 <= choice <= n:
+                return choice
+            print(f"  Inserire un numero tra 1 e {n}.")
+        except (ValueError, EOFError):
+            print("  Input non valido. Riprovare.")
+
+
+def _interactive_menu() -> None:
+    test_result = None
+    while True:
+        _print_menu()
+        choice = _ask_choice()
+        label = _MENU_ITEMS[choice - 1][0]
+        print(f"\n▶  {label}\n")
+
+        if choice == 1:
+            test_result = _run_tests()
+        elif choice == 2:
+            _run_tables_terminal()
+        elif choice == 3:
+            _run_tables_pdf()
+        elif choice == 4:
+            test_result = _run_tests()
+            _run_tables_terminal()
+        elif choice == 5:
+            test_result = _run_tests()
+            _run_tables_pdf()
+        elif choice == 6:
+            _run_tables_terminal()
+            _run_tables_pdf()
+        elif choice == 7:
+            test_result = _run_tests()
+            _run_tables_terminal()
+            _run_tables_pdf()
+        elif choice == 8:
+            print("Uscita.")
             break
+
+        input("\nPremi INVIO per tornare al menu...")
+
+    if test_result is not None:
+        sys.exit(0 if test_result.wasSuccessful() else 1)
+
+
+if __name__ == '__main__':
+    if '--tests-only' in sys.argv:
+        result = _run_tests()
+        sys.exit(0 if result.wasSuccessful() else 1)
+    elif '--tables-only' in sys.argv:
+        _run_tables_terminal()
+        _run_tables_pdf()
+    else:
+        _interactive_menu()
