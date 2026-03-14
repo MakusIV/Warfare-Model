@@ -1,10 +1,32 @@
-Nelle tabelle create, dovresti aggiungere il numero di aerei e di missioni effettivamente richiesti per lo specifico aereo/loadout
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  
  
  
  FATTO
  
+ 
+
+ aumenta la valutazione per task "Intercept" della combat speed, speed e radar. Nelle liste di scelta il MiG-31 nella direttiva Performance_high dovrebbe essere il rpimo (controlla se nel payload i missili usati sono performanti quanto quelli del "u-27, MiG-29S)
+
+Nel modulo Aircraft_Data.py ho implementato le funzioni _intercept_speed_eval e get_normalized_intercept_speed_score e modificato combat_score_eval. L'esecuzione di  Test_Aircraft_Data.py mi restituisce degli errori. Implementa i test di unita per le due nuove funzioni nel modulo Test_Aircraft_Data.py e correggi gli errori riscontrati
+ 
+ Nelle tabelle create, specificatamente per le configurazioni con task SEAD, la colonna AC/miss riporta sempre 0. Analizza quali sono i motivi che generano tabelle vuote.
+ 
+ Nelle tabelle ci sono alcuni test  in cui il numero di missioni calcolate (Missioni) è superiore a quello massimo consentito (max_missions) mentre il numero di aerei per missione (Ac/Miss) è inferiore al valore massimo consentito. Analizza i motivi e valuta le soluzioni.
+ 
+ Nelle tabelle create, specificatamente per le configurazioni con task: CAS, Anti_Ship non è presente alcun aereo, mentre in quelle con task SEAD, per le quali ho corretto in _AVAIL_SEAD_SCENARIO gli aerei ed i loadout di riferimento, la colonna AC/miss riporta sempre 0. Analizza quali sono i motivi che generano tabelle vuote.
  
  Nel modulo Aircraft_Data.py ho implementato la funzione cost() in Aircraft_Data.py, implementa un test di unità minimale nel modulo Test_Aircraft_Data.py per questa funzione. Inoltre, ho notato che in diversi dizionari relativi agli aerei (a10a_data, f117_data, b52h_data, ...), il valore di cost è 0. Assegna  il valore di cost (credo sia espresso in milioni di dollari/euro) a questi aerei e confronta i costi di tutti gli aerei verificando che siano coerenti tra loro
  
@@ -163,4 +185,6 @@ target_data = {
         'Aircraft':	{'small': {'quantity': 10, 'priority': 10}},
 }
 
-
+Considera il modulo Test_Aircrafts_Military_Resources_Assigner.py, nelle tabelle previste per la stampa a terminale ed in pdf dovresti aggiungere il numero di aerei e di missioni effettivamente richiesti per lo specifico aereo/loadout
+ 
+ 

@@ -84,3 +84,399 @@
 2026-03-12 10:05:42,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon AIM-9M is a a2a missile, get_weapon_score_target is not implemented for missiles yet, return 0.0
 2026-03-12 10:05:42,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
 2026-03-12 10:05:42,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_cost - weapon 370gal_tank unknow, return 0
+2026-03-14 12:28:02,053 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,054 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,055 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,056 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,057 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,058 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,059 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,060 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,061 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,062 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,063 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,064 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,065 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,066 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,067 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,068 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 12:28:02,069 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 12:28:02,069 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,861 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,865 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,870 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,871 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,872 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,873 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,879 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,880 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,880 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,880 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,882 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,882 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,882 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,882 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,882 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,883 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,885 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,886 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,887 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,891 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,892 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 370gal_tank unknow
+2026-03-14 15:36:55,903 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,903 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,903 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,903 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,904 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,905 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,908 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,909 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,910 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,917 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,917 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,917 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,917 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,918 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,919 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,928 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,929 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,930 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,930 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,935 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,936 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,943 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,943 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,946 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MPU found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,949 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,951 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,952 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,952 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,952 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,952 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,952 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,953 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,953 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,954 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,961 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,962 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,963 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,974 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,975 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,976 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,976 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,976 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,976 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,976 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,988 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,989 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,990 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,991 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,991 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,991 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,998 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,998 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,998 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,998 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AGM-88 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:55,999 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-9X found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon AIM-7MH found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - WARNING - get_weapon_score_target - weapon 330gal_tank unknow
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,000 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,008 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,009 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,010 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,017 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,018 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,018 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,020 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,022 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,022 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,023 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,024 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,029 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,030 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,032 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,033 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,036 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,036 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,036 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,037 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,037 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,037 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,037 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,037 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,038 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,038 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,038 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-25MP found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon Kh-58 found in category MISSILES_ASM with type ASM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM
+2026-03-14 15:36:56,039 - Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data - DEBUG - get_weapon_score_target - weapon R-60M found in category MISSILES_AAM with type AAM

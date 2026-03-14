@@ -1,7 +1,7 @@
 from functools import lru_cache
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK, TARGET_CLASSIFICATION
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK, TARGET_CLASSIFICATION, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -28,13 +28,13 @@ WEAPON_PARAM = {
                         'range':            5 / ( 3000 * 27 ), # 3000                        
                         },
 
-    'MISSILES_AAM_RAD': {'warhead':         3 / ( 250 * 43 ), # in kg, ref ~250 kg (AIM-54C)
-                        'range':            5 / ( 100 * 43 ), # in km, ref ~50000 m (AIM-54C)
-                        'semiactive_range': 7 / ( 15 * 43 ), # in km, ref ~15000 m (AIM-54C)
-                        'active_range':     9 / ( 8 * 43 ),  # in km, ref ~8000 m (AIM-54C)                      
-                        'max_speed':        9 / ( 3 * 43 ), # in mach 
-                        'max_height':       3 / ( 30 * 43 ), # max ~30 km
-                        'manouvrability':   7 / ( 10 * 43 ), # coeff, ref 10
+    'MISSILES_AAM_RAD': {'warhead':         5 / ( 250 * 45 ), # in kg, ref ~250 kg (AIM-54C)
+                        'range':            5 / ( 100 * 45 ), # in km, ref ~50000 m (AIM-54C)
+                        'semiactive_range': 7 / ( 15 * 45 ), # in km, ref ~15000 m (AIM-54C)
+                        'active_range':     9 / ( 8 * 45 ),  # in km, ref ~8000 m (AIM-54C)                      
+                        'max_speed':        9 / ( 3 * 45 ), # in mach 
+                        'max_height':       3 / ( 30 * 45 ), # max ~30 km
+                        'manouvrability':   7 / ( 10 * 45 ), # coeff, ref 10
                         },
     'MISSILES_AAM_INF': {'warhead':         5 / ( 250 * 28 ), # in kg, ref ~250 kg (AIM-54C)
                         'range':            5 / ( 30 * 28 ), # in km, ref ~30 km (typical modern IR missile, e.g. AIM-9L/R-73)
@@ -303,6 +303,13 @@ def get_missiles_score(model: str) -> float:
                 reference_efficiency_param.extend([weapon.get('efficiency').get('Air_Defense').get('big'),
                                                    weapon.get('efficiency').get('Air_Defense').get('med'),
                                                    weapon.get('efficiency').get('Air_Defense').get('small')])
+                
+            if any(t in task for t in AIR_TO_AIR_TASK):
+                count_task += 3
+                reference_efficiency_param.extend([weapon.get('efficiency').get('Aircraft').get('big'),
+                                                   weapon.get('efficiency').get('Aircraft').get('med'),
+                                                   weapon.get('efficiency').get('Aircraft').get('small')])
+
 
             for i in range(count_task):
                 if reference_efficiency_param[i]:

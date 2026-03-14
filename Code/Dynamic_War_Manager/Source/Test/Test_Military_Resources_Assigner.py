@@ -86,14 +86,14 @@ _REQ_LENIENT: Dict = {
     'cruise': {
         'speed':               400,
         'reference_altitude':  3000,
-        'altitude_max':        5000,
+        'altitude_max':        0,       # 0 → req.altitude_max ≤ lo.altitude_min sempre vero
         'altitude_min':        20000,   # loadout alt_min ≤ 20000 → supera il check
         'range':               100,
     },
     'attack': {
         'speed':               400,
         'reference_altitude':  3000,
-        'altitude_max':        5000,
+        'altitude_max':        0,       # 0 → req.altitude_max ≤ lo.altitude_min sempre vero
         'altitude_min':        20000,
         'range':               100,
     },
@@ -130,11 +130,11 @@ _REQ_STRICT_RANGE: Dict = {
 _REQ_NIGHT: Dict = {
     'cruise': {
         'speed': 400, 'reference_altitude': 3000,
-        'altitude_max': 5000, 'altitude_min': 20000, 'range': 100,
+        'altitude_max': 0, 'altitude_min': 20000, 'range': 100,
     },
     'attack': {
         'speed': 400, 'reference_altitude': 3000,
-        'altitude_max': 5000, 'altitude_min': 20000, 'range': 100,
+        'altitude_max': 0, 'altitude_min': 20000, 'range': 100,
     },
     'usability': {'day': True, 'night': True, 'adverse_weather': False},
 }
@@ -238,22 +238,17 @@ _TARGET_CAS_SCENARIO: Dict = {
 
 # ── SEAD ──────────────────────────────────────────────────────────────────────
 _AVAIL_SEAD_SCENARIO: List[Dict] = [
-    {'model': 'F-4E Phantom II',          'loadout': 'CAS',                  'quantity': 12},
-    {'model': 'MiG-27K',                  'loadout': 'CAS Rocket Attack',    'quantity': 12},
-    {'model': 'A-10C II Thunderbolt II',  'loadout': 'Maverick/Gun CAS',     'quantity': 12},
-    {'model': 'Su-25T',                   'loadout': 'Anti-Tank Precision',   'quantity': 8},
+    {'model': 'F-16CM Block 50',          'loadout': 'SEAD/DEAD',                  'quantity': 12},
+    {'model': 'Su-24M',                   'loadout': 'SEAD',                       'quantity': 12},
+    {'model': 'F/A-18C Lot 20',           'loadout': 'SEAD',                       'quantity': 12},
+    {'model': 'Su-25TM',                  'loadout': 'SEAD/Anti-Radar',            'quantity': 8},
 ]
 _TARGET_SEAD_SCENARIO: Dict = {
-    'Soft': {
+    'Air_Defense': {
         'big':   {'quantity': 3,  'priority': 5},
         'med':   {'quantity': 5,  'priority': 6},
         'small': {'quantity': 10, 'priority': 6},
-    },
-    'Armored': {
-        'big':   {'quantity': 2, 'priority': 3},
-        'med':   {'quantity': 4, 'priority': 3},
-        'small': {'quantity': 5, 'priority': 5},
-    },
+    }   
 }
 
 # ── Anti_Ship ─────────────────────────────────────────────────────────────────
@@ -677,12 +672,18 @@ class TestReduceTargetData(unittest.TestCase):
     La riduzione è proporzionale alla priorità: target ad alta priorità
     perdono meno quantità rispetto ai target a bassa priorità.
 
-    Formula per singolo dim: quantity = max(0, round(qty * ratio * (1 + weight)))
-      con weight = priority / total_priority.
+    Formula (interpolazione lineare):
+      multiplier = ratio + weight * (1 - ratio)   ∈ [ratio, 1.0]
+      weight = priority / total_priority_weight
+      quantity = max(0, round(qty * multiplier))
 
     Con due target di priorità diverse (2 e 8, totale=10):
-      low  (prio=2): weight=0.2, qty = round(qty * ratio * 1.2)
-      high (prio=8): weight=0.8, qty = round(qty * ratio * 1.8)
+      low  (prio=2): weight=0.2, multiplier = ratio + 0.2*(1-ratio)
+      high (prio=8): weight=0.8, multiplier = ratio + 0.8*(1-ratio)
+
+    Casi limite:
+      ratio ≤ 0 → tutte le quantità diventano 0
+      ratio ≥ 1 → nessuna riduzione (deep copy invariata)
     """
 
     def test_returns_dict(self):
@@ -739,8 +740,8 @@ class TestReduceTargetData(unittest.TestCase):
         """Verifica i valori esatti per reduction_ratio=0.5 con due priorità (2 e 8).
 
         total_priority_weight = 10
-        Soft/big    (prio=2): weight=0.2, qty = round(10 * 0.5 * 1.2) = round(6.0) = 6
-        Armored/big (prio=8): weight=0.8, qty = round(10 * 0.5 * 1.8) = round(9.0) = 9
+        Soft/big    (prio=2): weight=0.2, multiplier = 0.5 + 0.2*0.5 = 0.6, qty = round(10 * 0.6) = 6
+        Armored/big (prio=8): weight=0.8, multiplier = 0.5 + 0.8*0.5 = 0.9, qty = round(10 * 0.9) = 9
         """
         result = _reduce_target_data(_TARGET_TWO_PRIO, 0.5)
         self.assertEqual(result['Soft']['big']['quantity'],    6)
@@ -1089,12 +1090,17 @@ class TestGetAircraftMissionAircraft(unittest.TestCase):
 #  9. Scenario base class + 6 scenari parametrici
 # ─────────────────────────────────────────────────────────────────────────────
 
-class _ScenarioTestBase(unittest.TestCase):
+class _ScenarioTestBase:
     """Base class per i test di scenario parametrici.
 
     Le sottoclassi devono definire `_CFG` come uno degli elementi di
     `_SCENARIO_CONFIGS`.  I metodi di test iterano tutte le combinazioni
     (max_aircraft × max_missions × directive) tramite subTest.
+
+    Non eredita direttamente da unittest.TestCase per evitare che i runner
+    (pytest, -m unittest) la scoprano e la eseguano con _CFG = {} vuoto.
+    Le sottoclassi concrete usano ereditarietà multipla:
+        class TestFoo(_ScenarioTestBase, unittest.TestCase): ...
     """
 
     _CFG: Dict = {}   # sovrascritta da ogni sottoclasse
@@ -1138,14 +1144,17 @@ class _ScenarioTestBase(unittest.TestCase):
                 self.assertIsInstance(result['derated'], list)
 
     def test_entries_have_required_fields(self):
-        """Ogni entry ha 'aircraft_model', 'loadout', 'score' per tutte le combinazioni."""
+        """Ogni entry ha i campi obbligatori per tutte le combinazioni."""
         for ma, mm, directive in self._combinations():
             with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
                 result = self._run_for_params(ma, mm, directive)
                 for entry in result['fully_compliant'] + result['derated']:
-                    self.assertIn('aircraft_model', entry)
-                    self.assertIn('loadout',        entry)
-                    self.assertIn('score',          entry)
+                    self.assertIn('aircraft_model',      entry)
+                    self.assertIn('loadout',             entry)
+                    self.assertIn('score',               entry)
+                    self.assertIn('aircraft_per_mission',entry)
+                    self.assertIn('missions_needed',     entry)
+                    self.assertIn('derating_factor',     entry)
 
     def test_scores_non_negative(self):
         """Tutti gli score >= 0 per tutte le combinazioni."""
@@ -1163,6 +1172,32 @@ class _ScenarioTestBase(unittest.TestCase):
                 for list_name in ('fully_compliant', 'derated'):
                     scores = [e['score'] for e in result[list_name]]
                     self.assertEqual(scores, sorted(scores, reverse=True))
+
+    def test_derating_factor_in_range(self):
+        """derating_factor ∈ [0, 1) per tutte le combinazioni."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for entry in result['fully_compliant'] + result['derated']:
+                    df = entry['derating_factor']
+                    self.assertGreaterEqual(df, 0.0)
+                    self.assertLess(df, 1.0)
+
+    def test_fully_compliant_derating_is_zero(self):
+        """Tutte le entry fully_compliant hanno derating_factor == 0.0."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for entry in result['fully_compliant']:
+                    self.assertEqual(entry['derating_factor'], 0.0)
+
+    def test_derated_derating_is_positive(self):
+        """Tutte le entry derated hanno derating_factor > 0.0."""
+        for ma, mm, directive in self._combinations():
+            with self.subTest(max_aircraft=ma, max_missions=mm, directive=directive):
+                result = self._run_for_params(ma, mm, directive)
+                for entry in result['derated']:
+                    self.assertGreater(entry['derating_factor'], 0.0)
 
     def test_performance_high_vs_economy_high_differ(self):
         """'performance_high' e 'economy_high' producono score diversi (se entrambi nel CFG)."""
@@ -1185,32 +1220,32 @@ class _ScenarioTestBase(unittest.TestCase):
             "performance_high ed economy_high producono score identici su tutti i modelli.")
 
 
-class TestStrikeScenario(_ScenarioTestBase):
+class TestStrikeScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario Strike: F-4E, MiG-27K, B-52H, Su-24M — target Structure."""
     _CFG = _SCENARIO_CONFIGS[0]
 
 
-class TestCASScenario(_ScenarioTestBase):
+class TestCASScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario CAS: F-4E, MiG-27K, A-10C II, Su-25T — target Soft+Armored."""
     _CFG = _SCENARIO_CONFIGS[1]
 
 
-class TestSEADScenario(_ScenarioTestBase):
+class TestSEADScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario SEAD: stessi loadout CAS — verifica ranking con task SEAD."""
     _CFG = _SCENARIO_CONFIGS[2]
 
 
-class TestAntiShipScenario(_ScenarioTestBase):
+class TestAntiShipScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario Anti_Ship: F/A-18C, Su-30, S-3B Viking, Tu-142 — target ship."""
     _CFG = _SCENARIO_CONFIGS[3]
 
 
-class TestFighterSweepScenario(_ScenarioTestBase):
+class TestFighterSweepScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario Fighter_Sweep: F-15C, Su-27, Viggen, MiG-29S — target Aircraft."""
     _CFG = _SCENARIO_CONFIGS[4]
 
 
-class TestInterceptScenario(_ScenarioTestBase):
+class TestInterceptScenario(_ScenarioTestBase, unittest.TestCase):
     """Scenario Intercept: F-15C, Su-27, MiG-21bis, MiG-31 — target Aircraft small."""
     _CFG = _SCENARIO_CONFIGS[5]
 
@@ -1231,6 +1266,11 @@ def _format_target_str(target_data: Dict) -> str:
     return '  '.join(parts)
 
 
+def _format_availability_str(availability: List[Dict]) -> str:
+    """Ritorna una rappresentazione compatta della disponibilità aerei: 'Modello(qty)', ..."""
+    return ',  '.join(f"{e['model']}({e['quantity']})" for e in availability)
+
+
 def _build_mission_rows(cfg: Dict, max_aircraft: int, max_missions: int, directive: str) -> List[Dict]:
     """Chiama get_aircraft_mission e ritorna righe flat per la tabella."""
     with _all_loggers_mocked():
@@ -1246,17 +1286,23 @@ def _build_mission_rows(cfg: Dict, max_aircraft: int, max_missions: int, directi
     rows = []
     for entry in result['fully_compliant']:
         rows.append({
-            'model':   entry['aircraft_model'],
-            'loadout': entry['loadout'],
-            'score':   entry['score'],
-            'status':  'fully_compliant',
+            'model':               entry['aircraft_model'],
+            'loadout':             entry['loadout'],
+            'score':               entry['score'],
+            'aircraft_per_mission': entry.get('aircraft_per_mission', 0),
+            'missions_needed':     entry.get('missions_needed', 0),
+            'derating_factor':     entry.get('derating_factor', 0.0),
+            'status':              'fully_compliant',
         })
     for entry in result['derated']:
         rows.append({
-            'model':   entry['aircraft_model'],
-            'loadout': entry['loadout'],
-            'score':   entry['score'],
-            'status':  'derated',
+            'model':               entry['aircraft_model'],
+            'loadout':             entry['loadout'],
+            'score':               entry['score'],
+            'aircraft_per_mission': entry.get('aircraft_per_mission', 0),
+            'missions_needed':     entry.get('missions_needed', 0),
+            'derating_factor':     entry.get('derating_factor', 0.0),
+            'status':              'derated',
         })
     return rows
 
@@ -1270,7 +1316,7 @@ def _print_scenario_table_terminal(
 ) -> None:
     """Stampa a terminale la tabella risultato per una combinazione di parametri."""
     rows = _build_mission_rows(cfg, max_aircraft, max_missions, directive)
-    W = 96
+    W = 130
     print(f"\n{'═' * W}")
     print(
         f"  Gruppo: {cfg['group']}  |  Task: {cfg['task']}"
@@ -1278,18 +1324,23 @@ def _print_scenario_table_terminal(
         f"  |  max_missions: {max_missions}"
         f"  |  directive: {directive}"
     )
+    print(f"  Disponibili: {_format_availability_str(cfg['availability'])}")
     print(f"  Target: {_format_target_str(cfg['target_data'])}")
     print(f"{'─' * W}")
     if not rows:
         print("  (nessun risultato)")
         return
-    hdr = f"  {'#':>3}  {'Aeromobile':<32}  {'Loadout':<28}  {'Score':>8}  {'Status':<16}"
+    hdr = (
+        f"  {'#':>3}  {'Aeromobile':<32}  {'Loadout':<28}"
+        f"  {'Score':>8}  {'Ac/Miss':>7}  {'Missioni':>8}  {'Derating':>8}  {'Status':<16}"
+    )
     print(hdr)
-    print(f"  {'─'*3}  {'─'*32}  {'─'*28}  {'─'*8}  {'─'*16}")
+    print(f"  {'─'*3}  {'─'*32}  {'─'*28}  {'─'*8}  {'─'*7}  {'─'*8}  {'─'*8}  {'─'*16}")
     for i, row in enumerate(rows, start=1):
         print(
             f"  {i:>3}  {row['model']:<32}  {row['loadout']:<28}"
-            f"  {row['score']:>8.4f}  {row['status']:<16}"
+            f"  {row['score']:>8.4f}  {row['aircraft_per_mission']:>7}  {row['missions_needed']:>8}"
+            f"  {row['derating_factor']:>7.1%}  {row['status']:<16}"
         )
 
 
@@ -1330,7 +1381,7 @@ def save_mission_scenario_tables_pdf(output_path: str) -> None:
 
     os.makedirs(os.path.dirname(output_path) if os.path.dirname(output_path) else ".", exist_ok=True)
 
-    col_labels = ["#", "Aeromobile", "Loadout", "Score", "Status"]
+    col_labels = ["#", "Aeromobile", "Loadout", "Score", "Ac/Miss", "Missioni", "Derating", "Status"]
     n_cols = len(col_labels)
 
     with PdfPages(output_path) as pdf:
@@ -1349,38 +1400,46 @@ def save_mission_scenario_tables_pdf(output_path: str) -> None:
                         rng    = (max_s - min_s) if max_s != min_s else 1.0
 
                         if not rows:
-                            cell_text.append(["—", "(nessun risultato)", "", "", ""])
+                            cell_text.append(["—", "(nessun risultato)", "", "", "", "", "", ""])
                             cell_colors.append(["#f5f5f5"] * n_cols)
                         else:
                             for i, row in enumerate(rows, start=1):
-                                score_str = f"{row['score']:.4f}"
+                                score_str    = f"{row['score']:.4f}"
+                                derating_str = f"{row['derating_factor']:.1%}"
                                 cell_text.append([
                                     str(i),
                                     row['model'],
                                     row['loadout'],
                                     score_str,
+                                    str(row['aircraft_per_mission']),
+                                    str(row['missions_needed']),
+                                    derating_str,
                                     row['status'],
                                 ])
                                 norm = (row['score'] - min_s) / rng
-                                score_color = plt.cm.RdYlGn(norm)
-                                status_bg   = "#d4edda" if row['status'] == 'fully_compliant' else "#fff3cd"
+                                score_color   = plt.cm.RdYlGn(norm)
+                                # Derating: verde=0% (nessun taglio), rosso=100% (taglio totale)
+                                derating_color = plt.cm.RdYlGn(1.0 - row['derating_factor'])
+                                status_bg      = "#d4edda" if row['status'] == 'fully_compliant' else "#fff3cd"
                                 cell_colors.append([
                                     "#f5f5f5", "#f0f4f8", "#f0f4f8",
-                                    score_color, status_bg,
+                                    score_color, "#f0f4f8", "#f0f4f8", derating_color, status_bg,
                                 ])
 
                         n_rows = len(cell_text)
-                        fig_w  = max(16.0, 2.2 * n_cols)
+                        fig_w  = max(20.0, 2.2 * n_cols)
                         fig_h  = max(4.0, 0.40 * n_rows + 3.5)
 
                         fig, ax = plt.subplots(figsize=(fig_w, fig_h))
                         ax.axis("off")
                         target_str = _format_target_str(cfg['target_data'])
+                        avail_str  = _format_availability_str(cfg['availability'])
                         ax.set_title(
                             f"Gruppo: {cfg['group']}  |  Task: {cfg['task']}"
                             f"  |  max_aircraft: {ma}"
                             f"  |  max_missions: {mm}"
                             f"  |  directive: {directive}\n"
+                            f"Disponibili: {avail_str}\n"
                             f"Target: {target_str}",
                             fontsize=9, fontweight="bold", pad=14,
                         )

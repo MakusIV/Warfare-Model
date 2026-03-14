@@ -808,6 +808,106 @@ class TestGetNormalizedSpeedScore(unittest.TestCase):
         self.assertGreater(f_score, a_score)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+#  _intercept_speed_eval  e  get_normalized_intercept_speed_score
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestInterceptSpeedEval(unittest.TestCase):
+    """Unit test per Aircraft_Data._intercept_speed_eval().
+
+    Il metodo calcola la velocità di intercettazione (true airspeed convertita
+    all'altitudine di riferimento di 20 000 m) ponderata da un fattore temporale:
+
+        fact_time = time / INTERCEPT_TIME   se time <= INTERCEPT_TIME
+        fact_time = 1.0                     altrimenti
+        score     = speed_at_20000m * fact_time
+
+    Tutti gli aeromobili nel registry devono avere speed_data['combat'] valorizzato;
+    il risultato deve essere sempre > 0 e deterministico.
+    F-14A Tomcat (speed_combat=2485 km/h) deve superare A-10C Thunderbolt II
+    (speed_combat=680 km/h) sia in valore assoluto che normalizzato.
+    """
+
+    def test_all_aircraft_positive(self):
+        """_intercept_speed_eval() > 0 per tutti gli aeromobili del registry."""
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertGreater(ac._intercept_speed_eval(), 0.0)
+
+    def test_returns_float(self):
+        """Restituisce un float."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertIsInstance(ac._intercept_speed_eval(), float)
+
+    def test_fighter_higher_than_attacker(self):
+        """F-14A (vmax ~2485 km/h) > A-10C Thunderbolt II (vmax ~680 km/h)."""
+        fighter_score  = Aircraft_Data._registry[_FIGHTER_MODEL]._intercept_speed_eval()
+        attacker_score = Aircraft_Data._registry[_ATTACKER_MODEL]._intercept_speed_eval()
+        self.assertGreater(fighter_score, attacker_score)
+
+    def test_deterministic(self):
+        """Due chiamate consecutive restituiscono lo stesso valore."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        self.assertAlmostEqual(ac._intercept_speed_eval(), ac._intercept_speed_eval(), places=9)
+
+
+class TestGetNormalizedInterceptSpeedScore(unittest.TestCase):
+    """Unit test per Aircraft_Data.get_normalized_intercept_speed_score().
+
+    Normalizza _intercept_speed_eval() dell'aeromobile corrente rispetto a tutti
+    gli aeromobili della categoria (default: tutti i ruoli).
+    Il risultato deve essere compreso in [0, 1].
+    La chiamata con category non valida deve sollevare ValueError.
+    """
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_aircraft_in_range(self):
+        """Score normalizzato ∈ [0, 1] per tutti gli aeromobili del registry."""
+        for model, ac in Aircraft_Data._registry.items():
+            with self.subTest(model=model):
+                score = ac.get_normalized_intercept_speed_score()
+                self.assertGreaterEqual(score, 0.0)
+                self.assertLessEqual(score, 1.0)
+
+    def test_returns_float(self):
+        """Restituisce un float."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        result = ac.get_normalized_intercept_speed_score()
+        self.assertIsInstance(result, float)
+
+    def test_fighter_higher_than_attacker(self):
+        """F-14A deve avere score intercept più alto di A-10C Thunderbolt II."""
+        f_score = Aircraft_Data._registry[_FIGHTER_MODEL].get_normalized_intercept_speed_score()
+        a_score = Aircraft_Data._registry[_ATTACKER_MODEL].get_normalized_intercept_speed_score()
+        self.assertGreater(f_score, a_score)
+
+    def test_invalid_category_raises_value_error(self):
+        """category non valida → ValueError."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        with self.assertRaises(ValueError):
+            ac.get_normalized_intercept_speed_score(category="INVALID_CAT_XYZ")
+
+    def test_valid_category_in_range(self):
+        """category='Fighter' valida → score ∈ [0, 1]."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        score = ac.get_normalized_intercept_speed_score(category="Fighter")
+        self.assertGreaterEqual(score, 0.0)
+        self.assertLessEqual(score, 1.0)
+
+    def test_deterministic(self):
+        """Due chiamate consecutive restituiscono lo stesso valore."""
+        ac = Aircraft_Data._registry[_FIGHTER_MODEL]
+        s1 = ac.get_normalized_intercept_speed_score()
+        s2 = ac.get_normalized_intercept_speed_score()
+        self.assertAlmostEqual(s1, s2, places=9)
+
+
 class TestGetNormalizedReliabilityAndAvailability(unittest.TestCase):
     """Unit test per get_normalized_reliability_score(), avalaiability_score(), maintenance_score()."""
 

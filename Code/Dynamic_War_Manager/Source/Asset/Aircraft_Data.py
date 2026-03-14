@@ -30,6 +30,8 @@ from dataclasses import dataclass
  
 logger = Logger(module_name = __name__, class_name = 'Aircraft_Data').logger
 
+
+INTERCEPT_TIME = 30  # minuti: soglia sotto cui applicare penalità al tempo di intercettazione
 AIRCRAFT_ROLE = [e.value for e in Air_Asset_Type]
 AIRCRAFT_TASK = AIR_TASK
 MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale
@@ -421,6 +423,36 @@ class Aircraft_Data:
         eval_20000 = self._speed_at_altitude_eval('metric', 20000)  # Default to metric and altitude 1000        
         return eval_20000
 
+    def _intercept_speed_eval(self) -> float:
+        """evaluate intercept speed score at fixed altitude for comparations
+
+        Returns:
+            float: speed calculates at 20000 meter
+        """    
+        speed_type = 'combat'
+        ref_altitude = 20000        
+
+        data = self.speed_data.get(speed_type, {})
+        speed = data.get('airspeed', 0)                                  
+
+        if data.get('type_speed') == "indicated_airspeed":
+            # converte l'airspeed indicato in velocità vera
+            speed = true_air_speed( data.get('airspeed', 0), data.get('altitude'), data.get('metric') )
+
+        elif data.get('type_speed') == "true_airspeed":
+            speed = data['airspeed']            
+        else:
+            raise ValueError(f"Invalid type_speed: {data.get('type_speed', 'unknown')}. Expected 'indicated_airspeed' or 'true_airspeed'.")        
+        speed = true_air_speed_at_new_altitude(speed, data.get('altitude'), ref_altitude, metric = data.get('metric'))                        
+        time = data.get('time')
+
+        fact_time = 1.0
+        if time is not None and time <= INTERCEPT_TIME:
+            fact_time = time / INTERCEPT_TIME
+
+        score = speed * fact_time # - data.get('consume', 0) * 0.001
+        return score
+
     def _reliability_eval(self):
         """evaluate reliability (mtbf) of aircraft subsystem
 
@@ -582,6 +614,21 @@ class Aircraft_Data:
         scores = [ac.get_engine_eval() for ac in aircraft_list]
         return self._normalize(self.get_engine_eval(), scores)
 
+    def get_normalized_intercept_speed_score(self, category: Optional[str] = None):
+            """returns speed score normalized from 0 (min score) 1 (max score)
+
+            Returns:
+                float: normalized speed score
+            """
+            if not category:
+                category = AIRCRAFT_ROLE
+            elif not isinstance(category, str) or category not in AIRCRAFT_ROLE:
+                raise ValueError(f"category must be a string with value: {list(AIRCRAFT_ROLE)!r}, got {category!r}.")
+
+            aircraft_list = [ac for ac in Aircraft_Data._registry.values() if any(c.value in category for c in ac.category)]
+            scores = [ac._intercept_speed_eval() for ac in aircraft_list]
+            return self._normalize(self._intercept_speed_eval(), scores)
+
     def get_normalized_speed_score(self, category: Optional[str] = None):
         """returns speed score normalized from 0 (min score) 1 (max score)
 
@@ -706,12 +753,12 @@ class Aircraft_Data:
             }
             
             if task in ['Fighter_Sweep']:                
-                scores_weights['radar'] += 2
+                scores_weights['radar'] += 5
                 scores_weights['TVD'] += 2
             
             elif task in ['Intercept']:
                 scores_weights['speed'] += 5
-                scores_weights['radar'] += 2
+                scores_weights['radar'] += 5
 
             sum_weights = sum(scores_weights.values())
             scores["loadout"] = self._loadout_eval(loadout) * scores_weights['loadout'] / sum_weights
@@ -723,7 +770,7 @@ class Aircraft_Data:
 
         if task in ['CAP', 'Intercept', 'Fighter_Sweep', 'Escort', 'Recon']:
             scores["radar"] = self.get_normalized_radar_score(modes=['air']) * scores_weights['radar'] / sum_weights
-            scores["TVD"] = self.get_normalized_TVD_score(modes=['air']) * scores_weights['TVD'] / sum_weights
+            scores["TVD"] = self.get_normalized_TVD_score(modes=['air']) * scores_weights['TVD'] / sum_weights            
 
         elif task in ['Strike', 'CAS', 'Pinpoint_Strike', 'SEAD']:
             scores["radar"] = self.get_normalized_radar_score(modes=['ground']) * scores_weights['radar'] / sum_weights
@@ -735,8 +782,13 @@ class Aircraft_Data:
         else:
             logger.warning(f"Task {task!r} not recognized for specific score evaluation, returning 0")
             return 0.0
-        # lo score è già normalizzato in quanto considera score normalizzati e pesati, quindi è sufficiente sommare i valori per ottenere un punteggio finale rappresentativo dell'efficacia complessiva dell'aereo per il compito specifico
-        return sum(scores.values())
+        
+        total_scores = sum(scores.values())
+
+        if task == 'Intercept':
+            total_scores += self.get_normalized_intercept_speed_score()
+
+        return total_scores
 
     def combat_score_target_effectiveness(self, task: str, loadout: Dict[str, any], target_type: List = None, target_dimension: List = None):
         """Returns a score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""

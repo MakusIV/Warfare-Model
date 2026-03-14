@@ -86,10 +86,10 @@ def _check_mission_requirements(loadout: Dict, mission_requirements: Dict) -> bo
 
         if not (
             lo.get('speed', 0)              >= req.get('speed', 0)              and
-            lo.get('reference_altitude', 0) >= req.get('reference_altitude', 0) and
-            lo.get('altitude_max', 0)       >= req.get('altitude_max', 0)       and
+            lo.get('altitude_max', 0)>= req.get('reference_altitude', 0) and
+            lo.get('altitude_max', 0) >= req.get('altitude_max', 0) <= lo.get('altitude_min', float('inf')) and
             lo.get('altitude_min', float('inf')) <= req.get('altitude_min', float('inf')) and
-            lo_range_max                    >= req.get('range', 0)
+            lo_range_max >= req.get('range', 0)
         ):
             return False
     return True
@@ -149,23 +149,37 @@ def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
     """Return a deep copy of *target_data* with quantities scaled by *reduction_ratio*,
     preserving priority weights (higher-priority targets retain more quantity).
 
-    The weighted reduction ensures that the total quantity is scaled by
-    *reduction_ratio* while redistributing across priorities.
+    Uses linear interpolation between *reduction_ratio* (low-priority targets,
+    maximum cut) and 1.0 (high-priority targets, no cut):
+
+        multiplier = reduction_ratio + weight * (1.0 - reduction_ratio)
+        weight     = priority / total_priority_weight  ∈ [0, 1]
+
+    Edge cases:
+      - reduction_ratio ≤ 0  → all quantities zeroed (no missions possible).
+      - reduction_ratio ≥ 1  → deep copy returned unchanged.
     """
+    updated = copy.deepcopy(target_data)
+
+    if reduction_ratio <= 0.0:
+        for _, category_data in updated.items():
+            for _, dim_data in category_data.items():
+                dim_data['quantity'] = 0
+        return updated
+
+    if reduction_ratio >= 1.0:
+        return updated
+
     total_priority_weight = sum(
         dim_data['priority']
-        for _, category_data in target_data.items()
+        for _, category_data in updated.items()
         for _, dim_data in category_data.items()
     )
-    updated = copy.deepcopy(target_data)
     for _, category_data in updated.items():
         for _, dim_data in category_data.items():
             weight = dim_data['priority'] / max(1, total_priority_weight)
-            # Scale quantity: higher-priority targets are cut less harshly
-            dim_data['quantity'] = max(
-                0,
-                round(dim_data['quantity'] * reduction_ratio * (1.0 + weight))
-            )
+            multiplier = reduction_ratio + weight * (1.0 - reduction_ratio)
+            dim_data['quantity'] = max(0, round(dim_data['quantity'] * multiplier))
     return updated
 
 
@@ -358,7 +372,14 @@ def get_aircraft_mission(
         # --- Assign to correct list ------------------------------------
         # fully_compliant: target integrally covered within max_missions
         # derated:         target partially covered (mission count constraint triggered reduction)
-        entry = {'aircraft_model': model, 'loadout': lo_name, 'score': score_value}
+        entry = {
+            'aircraft_model':      model,
+            'loadout':             lo_name,
+            'score':               score_value,
+            'aircraft_per_mission': aq.get('max_aircraft_for_mission', 0),
+            'missions_needed':     calculated_missions,
+            'derating_factor':     1.0 - reduction_ratio_missions
+        }
 
         if reduction_ratio_missions == 1.0:
             available_aircraft_list['fully_compliant'].append(entry)

@@ -4024,7 +4024,7 @@ def get_aircrafts_quantity(model: str, loadout: str, target_data: Dict[str, floa
         )
         aircraft_number['total'] = total_aircraft        
         aircraft_number['missions_needed'] = max(1, (total_aircraft + max_aircraft_for_mission - 1) // max_aircraft_for_mission)
-        aircraft_number['max_aircraft_for_mission'] = (total_aircraft//aircraft_number['missions_needed'])
+        aircraft_number['max_aircraft_for_mission'] = (total_aircraft + aircraft_number['missions_needed'] - 1) // aircraft_number['missions_needed']
         aircraft_number['message'] = f"Estimated number of aircraft needed to accomplish the task with loadout {loadout!r} for aircraft {model!r} against the specified target distribution."
 
         return aircraft_number                        
