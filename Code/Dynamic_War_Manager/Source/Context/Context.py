@@ -139,16 +139,17 @@ class Ground_Vehicle_Asset_Type(Enum):
     SAM_SMALL = 'SAM_Small'
     EWR = 'EWR'
     AAA = 'AAA'
-   
+
+ag = Ground_Vehicle_Asset_Type
 
 # Peso per il calcolo della combat power  in Tactical_Evaluation Module
 WEIGHT_FORCE_GROUND_ASSET = {
 
-    Ground_Vehicle_Asset_Type.TANK: 7,
-    Ground_Vehicle_Asset_Type.ARMORED: 5,   
-    Ground_Vehicle_Asset_Type.MOTORIZED: 3,
-    Ground_Vehicle_Asset_Type.ARTILLERY_FIXED: 4,
-    Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT: 7,
+    ag.TANK: 7,
+    ag.ARMORED: 5,   
+    ag.MOTORIZED: 3,
+    ag.ARTILLERY_FIXED: 4,
+    ag.ARTILLERY_SEMOVENT: 7,
 }
 
 # Parametri per il calcolo della combat power degli asset da combattimento. 
@@ -357,14 +358,14 @@ AIR_DEFENSE_ASSET = {
 # key1: asset category, key2: asset type
 GROUND_MILITARY_VEHICLE_ASSET = {
     # Corazzata 
-    'Tank':     {   'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    ag.TANK.value:     {   'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
                     'Tank':                             {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Main_Battle_Tank':                 {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
                     'Infantry_Fighting_Vehicle':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Scout_&_Recon':                    {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Truck_Supply':                     {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}},
     # Meccanizzata
-    'Armored':    { 'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    ag.ARMORED.value:    { 'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
                     'Armored_Personal_Carrier':         {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Infantry_Fighting_Vehicle':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Scout_&_Recon':                    {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -372,7 +373,7 @@ GROUND_MILITARY_VEHICLE_ASSET = {
                     'Self_Propelled_ATGM':              {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Self_Propelled_Gun':               {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}    },
     # Motorizzata
-    'Motorized': {  'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    ag.MOTORIZED.value: {  'Command_&_Control':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
                     'Armored_Personal_Carrier':         {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Infantry_Fighting_Vehicle':        {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Truck_Supply':                     {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                        
@@ -380,7 +381,7 @@ GROUND_MILITARY_VEHICLE_ASSET = {
                     'Self_Propelled_ATGM':              {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Self_Propelled_Gun':               {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33} },
     # Artiglieria fissa
-    'Artillery_Fixed': {  'Command_&_Control':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+    ag.ARTILLERY_FIXED.value: {  'Command_&_Control':          {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Howitzer_Big':                     {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Howitzer_Medium':                  {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Howitzer_Small':                   {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -388,7 +389,7 @@ GROUND_MILITARY_VEHICLE_ASSET = {
                     'Truck_Supply':                     {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Scout_&_Recon':                    {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33} },
     # Artiglieria semovent
-    'Artillery_Semovent': {  'Command_&_Control':       {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                    
+    ag.ARTILLERY_SEMOVENT.value: {  'Command_&_Control':       {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                    
                     'Mortar':                           {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Multiple_Rocket_Launcher':         {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                     'Self_Propelled_Artillery_Big':     {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -398,18 +399,32 @@ GROUND_MILITARY_VEHICLE_ASSET = {
                     'Scout_&_Recon':                    {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33} }
 }
 
+class Sea_Asset_Type(Enum):
+    CARRIER = 'Carrier'
+    DESTROYER = 'Destroyer'
+    CRUISER = 'Cruiser'
+    FRIGATE = 'Frigate'
+    FAST_ATTACK = 'Fast_Attack'
+    SUBMARINE = 'Submarine'
+    AMPHIBIOUS_ASSAULT_SHIP = 'Amphibious_Assault_Ship'
+    TRANSPORT = 'Transport'
+    CIVILIAN = 'Civilian'
+
+asea = Sea_Asset_Type
+
+
 # key: asset type
 SEA_MILITARY_CRAFT_ASSET = {
      
-    'Carrier':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
-    'Destroyer':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Cruiser':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Frigate':                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Fast_Attack':              {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},    
-    'Submarine':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Amphibious_Assault_Ship':  {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Transport':                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
-    'Civilian':                 {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.CARRIER.value:                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},      
+    asea.DESTROYER.value:                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.CRUISER.value:                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.FRIGATE.value:                  {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.FAST_ATTACK.value:              {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},    
+    asea.SUBMARINE.value:                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.AMPHIBIOUS_ASSAULT_SHIP.value:  {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.TRANSPORT.value:                {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
+    asea.CIVILIAN.value:                 {'cost': None, 'value': VALUE.CRITICAL, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},     
 
 }
 

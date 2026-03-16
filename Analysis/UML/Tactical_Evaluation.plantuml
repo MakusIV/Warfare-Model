@@ -1,0 +1,481 @@
+@startuml Tactical_Evaluation.Component.Diagram
+title Tactical_Evaluation — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Tactical_Evaluation" {
+    [evaluateGroundTacticalAction\n(gs, flr, dyn_inc, cls)] as EGTA
+    [calcRecoAccuracy\n(parameter, rmsr, rae)] as CRA
+    [calcFightResult\n(n_fr, n_en, eff_fr, eff_en)] as CFR
+    [evaluateCombatSuperiority\n(action, asset_fr, asset_en)] as ECS
+    [evaluateCriticalityGroundEnemy\n(report_base, report_enemy)] as ECGE
+    [evaluateGroundRouteDangerLevel\n(enemy_bases, route, gs, ttr)] as EGRDL
+}
+
+package "Context" {
+    [BLOCK_ASSET_CATEGORY] as BAC
+    [GROUND_ACTION] as GA
+    [GROUND_COMBAT_EFFICACY] as GCE
+}
+
+package "Utility" {
+    [get_membership_label] as GML
+}
+
+package "DataType" {
+    [Route] as R
+    [Edge] as E
+    [Waypoint] as W
+}
+
+package "External Libraries" {
+    [skfuzzy / ctrl] as FUZZ
+    [numpy] as NP
+    [random] as RND
+}
+
+EGTA --> FUZZ : uses fuzzy logic
+EGTA --> NP   : np.arange
+EGTA --> GML  : get label
+CRA  --> FUZZ : uses fuzzy logic
+CRA  --> NP   : np.arange
+CRA  --> GML  : get label
+CFR  --> RND  : random.uniform
+
+ECS  --> BAC  : BLOCK_ASSET_CATEGORY
+ECS  --> GA   : GROUND_ACTION
+ECGE --> ECS  : calls x3
+ECGE --> GA   : GROUND_ACTION
+
+EGRDL --> R   : route.edges / travelTime
+EGRDL --> E   : calcTravelTime
+EGRDL --> NP  : np.mean / max
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml evaluateGroundTacticalAction
+title Activity Diagram — evaluateGroundTacticalAction()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Receive inputs:\nground_superiority (gs)\nfight_load_ratio (flr)\ndynamic_increment (dyn_inc)\ncombat_load_sustainability (cls);
+
+partition "Define Fuzzy Antecedents" {
+    :Create ctrl.Antecedent universes\n[0, 10.1] step 0.1\nfor gs, flr, dyn_inc, cls;
+}
+
+partition "Define Fuzzy Consequent" {
+    :Create ctrl.Consequent universe\n[0, 1.01] step 0.01\nfor action;
+}
+
+partition "Membership Functions" {
+    :Assign trapezoidal MFs to gs:\n HI, MI, EQ, MS, HS;
+    :Assign trapezoidal MFs to flr:\n HS, MS, EQ, MI, HI;
+    :Assign trapezoidal MFs to dyn_inc:\n HS, MS, EQ, MI, HI;
+    :Assign trapezoidal MFs to cls:\n HI, MI, EQ, MS, HS;
+    :action.automf(names=\n['RETRAIT','DEFENSE','MAINTAIN','ATTACK']);
+}
+
+partition "Define Fuzzy Rules" {
+    :RETRAIT rules (4 rules);
+    :DEFENSE rules (4 rules);
+    :MAINTAIN rules (7 rules);
+    :ATTACK rules (6 rules);
+}
+
+partition "Fuzzy Inference" {
+    :Build ControlSystem(rules);
+    :Create ControlSystemSimulation;
+    :Set inputs:\n gs, flr, dyn_inc, cls;
+    :Compute output;
+    :Read output_numeric = action;
+}
+
+:output_string = get_membership_label\n(output_numeric, action);
+
+:Return (output_string, output_numeric);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml calcRecoAccuracy
+title Activity Diagram — calcRecoAccuracy()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Receive inputs:\nparameter (\"Number\" | \"Efficiency\")\nrecon_mission_success_ratio (rmsr)\nrecon_asset_efficiency (rae);
+
+if (rmsr < 0 or rae < 0?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+if (parameter not in\n["Number","Efficiency"]?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+:Clamp rmsr and rae to [0, 1];
+
+if (parameter == "Number"?) then (yes)
+    :min = 0.7\n(max 30% error);
+else (no)
+    :min = 0.5\n(max 50% error);
+endif
+
+partition "Fuzzy System Setup" {
+    :Antecedents: rmsr [0,1], rae [0,1];
+    :Consequent: accuracy [min, 1];
+    :MFs for rmsr: L, M, H (trapezoidal);
+    :MFs for rae: L, M, H (trapezoidal);
+    :accuracy.automf(names=['L','M','H','MAX']);
+}
+
+partition "Fuzzy Rules (3x3 matrix)" {
+    :rmsr.H & rae.H → MAX;
+    :rmsr.M & rae.H → H;
+    :rmsr.L & rae.H → M;
+    :rmsr.H & rae.M → H;
+    :rmsr.M & rae.M → M;
+    :rmsr.L & rae.M → L;
+    :rmsr.H & rae.L → M;
+    :rmsr.M & rae.L → L;
+    :rmsr.L & rae.L → L;
+}
+
+:Compute fuzzy output;
+:accuracy_string = get_membership_label\n(accuracy_value, accuracy);
+
+:Return (accuracy_string, accuracy_value);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml calcFightResult
+title Activity Diagram — calcFightResult()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Receive inputs:\nn_fr (int), n_en (int)\neff_fr (float), eff_en (float);
+
+if (n_fr not int or n_fr <= 0?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+if (n_en not int or n_en <= 0?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+if (eff_fr or eff_en not float\nor negative?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+:num_ratio = n_fr / n_en;
+:eff_ratio = (eff_fr + ε) / (eff_en + ε);
+
+if (|num_ratio − 1| < 2% AND\n|eff_ratio − 1| < 2%?) then (yes)
+    :return 1.0 (parity);
+    stop
+endif
+
+partition "Determine k_fr / k_en Coefficients" {
+    if (num_ratio > 4?) then (yes)
+        :k_fr=10, k_en=0.2;
+    elseif (num_ratio < 0.25?) then (yes)
+        :k_fr=0.2, k_en=10;
+    else (no)
+        :Interpolate in k_ratio table\n[(4,10,0.2),(3,1.9,0.5),\n(2,1.5,0.66),(1,1,1)];
+    endif
+}
+
+partition "Calculate Damage Estimates" {
+    :min_perc_fr = (1 − eff_fr·k_fr) × rand[0.95,1.05];
+    :max_perc_fr = (eff_en·k_en) × rand[0.95,1.05];
+    :Clamp min/max_perc_fr to [0,1];
+    :min_perc_en = (1 − eff_en·k_en) × rand;
+    :max_perc_en = (eff_fr·k_fr) × rand;
+    :Clamp min/max_perc_en to [0,1];
+}
+
+:damage_fr = random.uniform(min_perc_fr, max_perc_fr);
+:damage_en = random.uniform(min_perc_en, max_perc_en);
+
+if (damage_fr < LOW_LIMIT(0.35) AND\ndamage_en < LOW_LIMIT(0.35)?) then (yes)
+    :result = 1.0 (parity);
+else (no)
+    :result = damage_fr / damage_en;
+    note right
+        result < 1  → friendly advantage
+        result = 1  → parity
+        result > 1  → enemy advantage
+    end note
+endif
+
+:Return result (float [0, ∞));
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml evaluateCombatSuperiority
+title Activity Diagram — evaluateCombatSuperiority()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Receive inputs:\naction (str)\nasset_fr (dict)\nasset_en (dict);
+
+partition "Input Validation" {
+    if (asset_fr not dict?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+    if (asset_fr keys not in\nGROUND_ASSET_CATEGORY?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+    if (asset_en not dict?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+    if (action not in GROUND_ACTION?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+}
+
+:combat_pow_fr = 0\ncombat_pow_en = 0\ncombat_pow_en_alt = 0;
+
+partition "Loop over asset categories" {
+    while (for each cat in\nGROUND_ASSET_CATEGORY?) is (yes)
+        if (action == "Attack"?) then (yes)
+            :combat_pow_en += num_en × cp_en["Defense"];
+            :combat_pow_en_alt += num_en × cp_en["Maintain"];
+        elseif (action == "Defense"\nor "Maintain"?) then (yes)
+            :combat_pow_en += num_en × cp_en["Attack"];
+        endif
+        :combat_pow_fr += num_fr × cp_fr[action];
+    endwhile (no)
+}
+
+if (combat_pow_en < combat_pow_en_alt?) then (yes)
+    :combat_pow_en = combat_pow_en_alt;
+endif
+
+:combat_superiority =\ncombat_pow_fr / (combat_pow_en + combat_pow_fr);
+
+note right
+    Result ∈ [0, 1]
+    > 0.55 → friendly advantage
+    0.45–0.55 → parity
+    < 0.45 → enemy advantage
+end note
+
+:Return combat_superiority;
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml evaluateCriticalityGroundEnemy
+title Sequence Diagram — evaluateCriticalityGroundEnemy()
+
+skinparam SequenceArrowColor #336699
+skinparam SequenceLifeLineBorderColor #336699
+skinparam SequenceParticipantBackgroundColor #D9E8FF
+skinparam backgroundColor #FEFEFE
+autonumber
+
+actor Caller
+participant ":Tactical_Evaluation" as TE
+participant "evaluateCombatSuperiority\n(Attack)" as ECS_A
+participant "evaluateCombatSuperiority\n(Defense)" as ECS_D
+participant "evaluateCombatSuperiority\n(Maintain)" as ECS_M
+
+Caller -> TE: evaluateCriticalityGroundEnemy\n(report_base, report_enemy)
+activate TE
+
+TE -> ECS_A: evaluateCombatSuperiority\n(GROUND_ACTION["Attack"],\nreport_base, report_enemy)
+activate ECS_A
+ECS_A --> TE: attack_superiority (float)
+deactivate ECS_A
+
+TE -> ECS_D: evaluateCombatSuperiority\n(GROUND_ACTION["Defense"],\nreport_base, report_enemy)
+activate ECS_D
+ECS_D --> TE: defense_superiority (float)
+deactivate ECS_D
+
+TE -> ECS_M: evaluateCombatSuperiority\n(GROUND_ACTION["Maintain"],\nreport_base, report_enemy)
+activate ECS_M
+ECS_M --> TE: maintain_superiority (float)
+deactivate ECS_M
+
+TE -> TE: Evaluate criticality action & value
+
+note over TE
+    if attack_superiority > 0.55  → action = "attack"
+    elif maintain > 0.45 and maintain > defense → action = "maintain"
+    elif defense_superiority > 0.40 → action = "Defense"
+    else → action = "retrait"
+    value = int(best_superiority × 100)
+end note
+
+Caller <-- TE: criticality = {"action": str, "value": int}
+deactivate TE
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml evaluateGroundRouteDangerLevel
+title Activity Diagram — evaluateGroundRouteDangerLevel()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Receive inputs:\nenemy_bases (list)\nroute (Route)\nground_speed (float)\ntot_time_route (float);
+
+:Initialize:\nair_danger = 0\nground_intercept_danger = 0\nartillery_danger = 0\ndanger = {air_attack:[], ground_attack:[], artillery_range:[]};
+
+:route_travel_time = route.travelTime;
+
+partition "Loop over route edges" {
+    while (for each (k, v_edge)\nin Route.edges?) is (yes)
+        :travel_time = v_edge.calcTravelTime();
+
+        partition "Loop over enemy bases" {
+            while (for each (k_base, v_base)\nin enemy_bases?) is (yes)
+                :attack_time = v_base.time2attack(v_edge);
+                :danger_level =\ntravel_time × v_base.efficiency\n/ attack_time;
+
+                if (v_base.is_airbase AND\nattack_time < 0.5 × route_travel_time?) then (yes)
+                    :danger["air_attack"].append(danger_level);
+                endif
+
+                if (v_base.is_groundbase AND\nattack_time < 0.7 × route_travel_time?) then (yes)
+                    :danger["ground_attack"].append(danger_level);
+                    if (v_base.artilleryInRange(v_edge) == True?) then (yes)
+                        :danger["artillery_range"].append(in_range_level);
+                    endif
+                endif
+            endwhile (no)
+        }
+    endwhile (no)
+}
+
+:danger_level_air_attack =\nnp.mean(air_attack) × max(air_attack);
+:danger_level_ground_attack =\nnp.mean(ground_attack) × max(ground_attack);
+:danger_level_artillery_range =\nnp.mean(artillery_range) × max(artillery_range);
+
+:Return (danger_level_air_attack,\ndanger_level_ground_attack,\ndanger_level_artillery_range);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Tactical_Evaluation.FuzzyLogic.Concept
+title Fuzzy Logic Architecture — evaluateGroundTacticalAction & calcRecoAccuracy
+
+skinparam backgroundColor #FEFEFE
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+
+class FuzzyVariable {
+    +universe: np.array
+    +terms: dict
+    +automf(names)
+}
+
+class Antecedent {
+    +name: str
+    --
+    Inherits FuzzyVariable
+}
+
+class Consequent {
+    +name: str
+    --
+    Inherits FuzzyVariable
+}
+
+class Rule {
+    +antecedent_terms: list
+    +consequent_term: str
+}
+
+class ControlSystem {
+    +rules: list
+}
+
+class ControlSystemSimulation {
+    +input: dict
+    +output: dict
+    +compute()
+}
+
+FuzzyVariable <|-- Antecedent
+FuzzyVariable <|-- Consequent
+Rule "1..*" --> Antecedent : references
+Rule "1..*" --> Consequent : references
+ControlSystem "1" o-- "1..*" Rule
+ControlSystemSimulation --> ControlSystem : uses
+
+note top of Antecedent
+  evaluateGroundTacticalAction:
+  gs, flr, dyn_inc, cls
+  Labels: HI, MI, EQ, MS, HS
+  --
+  calcRecoAccuracy:
+  rmsr, rae
+  Labels: L, M, H
+end note
+
+note top of Consequent
+  evaluateGroundTacticalAction:
+  action [0,1]
+  Labels: RETRAIT, DEFENSE, MAINTAIN, ATTACK
+  --
+  calcRecoAccuracy:
+  accuracy [min,1]
+  Labels: L, M, H, MAX
+end note
+
+@enduml

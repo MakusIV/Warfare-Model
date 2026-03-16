@@ -11,6 +11,7 @@ import copy
 from typing import Dict, List, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK
+from Code.Dynamic_War_Manager.Source.Context.Campaign_State import Campaign_State
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
     get_aircrafts_quantity,
