@@ -21,6 +21,46 @@ from Code.Dynamic_War_Manager.Source.Context.Initial_Context import _ASSET_AVAIL
  
 logger = Logger(module_name = __name__, class_name = 'Campaign_State')
 
+
+"""
+DATA STRUCTURE
+
+_ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {   
+
+        'air': {at.FIGHTER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14B Tomcat': 100,        
+                },
+                at.FIGHTER_BOMBER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                                
+        }, 
+
+        'ground': {
+                ag.TANK.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14B Tomcat': 100,
+                    },
+                ag.ARMORED.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,
+                },
+                
+        },
+
+        'sea': {asea.CARRIER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                    
+                },
+                asea.DESTROYER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                    
+                },                           
+            },
+}"""
+
+
+
 class Campaign_State:
 
     def __init__(self): 

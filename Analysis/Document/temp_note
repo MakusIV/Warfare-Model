@@ -1,12 +1,8 @@
 
 
  
- 
- 
- 
- 
- 
- 
+Analizza le funzioni:  Verifica le funzioni analizzandone logica e sintassi, effettua le eventuali correzioni necessarie. Inoltre, puoi proporre anche delle modifiche migliorative implementando anche altre fuznioni ausiliarie nel modulo. Qualora fosse nessario, i miglioramenti possono essere estesi ance ai moduli importati. Implementa i necessari controlli sulla conformità degli argomenti.
+
  
  
  
@@ -16,8 +12,14 @@
  
  FATTO
  
+  Completa i dati presenti nel dizionario air_weapons incluso nel dizionario _WEAPONS_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando tutte le chiavi definte nel dizionari MISSILES_AAM, MISSILES_ASM, ... inclusi in AIR_WEAPONS definito nel modulo Aircraft_Weapon_Data.py 
  
-
+Completa i dati presenti nel dizionario 'air' incluso nel dizionario _ASSET_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando il valore di 'model' presente nei diversi dizionari relativi agli aerei: f14a_data, f14b_data, ... definiti nel modulo Aircraft_Data.py 
+ 
+ Completa i dati presenti nel dizionario 'ground' incluso nel dizionario _ASSET_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando il valore di 'model' presente nei diversi dizionari relativi agli aerei: T90M_data, T72_data, ... definiti nel modulo Vehicle_Data.py 
+ 
+ Completa i dati presenti nel dizionario ground_weapons incluso nel dizionario _WEAPONS_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando tutte le chiavi definte nel dizionari AUTO_CANNONS, CANNONS, ... inclusi in GROUND_WEAPONS definito nel modulo Ground_Weapon_Data.py 
+ 
  aumenta la valutazione per task "Intercept" della combat speed, speed e radar. Nelle liste di scelta il MiG-31 nella direttiva Performance_high dovrebbe essere il rpimo (controlla se nel payload i missili usati sono performanti quanto quelli del "u-27, MiG-29S)
 
 Nel modulo Aircraft_Data.py ho implementato le funzioni _intercept_speed_eval e get_normalized_intercept_speed_score e modificato combat_score_eval. L'esecuzione di  Test_Aircraft_Data.py mi restituisce degli errori. Implementa i test di unita per le due nuove funzioni nel modulo Test_Aircraft_Data.py e correggi gli errori riscontrati

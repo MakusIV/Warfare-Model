@@ -1,7 +1,7 @@
 """
-Test_Military_Resources_Assigner.py
+Test_Air_Resources_Assigner.py
 =====================================
-Unit tests per il modulo Military_Resources_Assigner.py.
+Unit tests per il modulo Air_Resources_Assigner.py.
 
 Funzioni testate
 ----------------
@@ -18,9 +18,9 @@ Funzioni testate
                                  (include test con target terrestre e target Aircraft)
 
 Utilizzo:
-    python -m pytest Code/Dynamic_War_Manager/Source/Test/Test_Military_Resources_Assigner.py -v
-    python  Code/Dynamic_War_Manager/Source/Test/Test_Military_Resources_Assigner.py
-    python  Code/Dynamic_War_Manager/Source/Test/Test_Military_Resources_Assigner.py --tests-only
+    python -m pytest Code/Dynamic_War_Manager/Source/Test/Test_Air_Resources_Assigner.py -v
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Air_Resources_Assigner.py
+    python  Code/Dynamic_War_Manager/Source/Test/Test_Air_Resources_Assigner.py --tests-only
 """
 
 import os
@@ -43,7 +43,7 @@ sys.path.insert(
 #  LOGGER PATHS DA MOCKARE
 # ─────────────────────────────────────────────────────────────────────────────
 
-_LOGGER_MRA   = "Code.Dynamic_War_Manager.Source.Logic.Military_Resources_Assigner.logger"
+_LOGGER_MRA   = "Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.logger"
 _LOGGER_LO    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts.logger"
 _LOGGER_AWD   = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data.logger"
 _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
@@ -52,7 +52,7 @@ _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
 #  IMPORT DEL MODULO SOTTO TEST
 # ─────────────────────────────────────────────────────────────────────────────
 
-from Code.Dynamic_War_Manager.Source.Logic.Military_Resources_Assigner import (
+from Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     get_aircraft_mission,
     _extract_quantities,
     _extract_target_lists,
@@ -1529,7 +1529,7 @@ _MENU_ITEMS = [
 def _print_menu() -> None:
     print()
     print("╔══════════════════════════════════════════════════════════════╗")
-    print("║   Test_Military_Resources_Assigner  —  Menu principale      ║")
+    print("║   Test_Air_Resources_Assigner  —  Menu principale      ║")
     print("╠══════════════════════════════════════════════════════════════╣")
     for idx, (label, _) in enumerate(_MENU_ITEMS, start=1):
         print(f"║  {idx}.  {label:<55}║")

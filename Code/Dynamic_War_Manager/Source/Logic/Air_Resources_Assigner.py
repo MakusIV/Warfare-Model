@@ -16,12 +16,53 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
     get_aircrafts_quantity,
     loadout_cost,
+    get_loadout,
+    get_aircraft_loadouts_by_task,
+    get_weapons_by_loadout
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 
 logger = Logger(module_name=__name__, class_name='Military_Resources_Assigner').logger
+
+
+"""
+DATA STRUCTURE
+
+_ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {   
+
+        'air': {at.FIGHTER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14B Tomcat': 100,        
+                },
+                at.FIGHTER_BOMBER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                                
+        }, 
+
+        'ground': {
+                ag.TANK.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14B Tomcat': 100,
+                    },
+                ag.ARMORED.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,
+                },
+                
+        },
+
+        'sea': {asea.CARRIER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                    
+                },
+                asea.DESTROYER.value: {
+                    'F-14A Tomcat': 100,
+                    'F-14A Tomcat': 100,                    
+                },                           
+            },
+}"""
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +97,6 @@ def _extract_quantities(target_data: Dict) -> Dict:
             result[target_type][dim] = data['quantity'] if isinstance(data, dict) else int(data)
     return result
 
-
 def _extract_target_lists(target_data: Dict) -> Tuple[List[str], List[str]]:
     """Return ``(target_types, target_dimensions)`` lists from *target_data*."""
     types: List[str] = []
@@ -68,7 +108,6 @@ def _extract_target_lists(target_data: Dict) -> Tuple[List[str], List[str]]:
             if dim not in dims:
                 dims.append(dim)
     return types, dims
-
 
 def _check_mission_requirements(loadout: Dict, mission_requirements: Dict) -> bool:
     """Return *True* if *loadout* satisfies cruise and attack *mission_requirements*.
@@ -95,7 +134,6 @@ def _check_mission_requirements(loadout: Dict, mission_requirements: Dict) -> bo
             return False
     return True
 
-
 def _usability_met(loadout_usability: Dict, required_usability: Dict) -> bool:
     """Return *True* if *loadout_usability* satisfies every condition required by *required_usability*.
 
@@ -120,7 +158,6 @@ def _usability_met(loadout_usability: Dict, required_usability: Dict) -> bool:
         if required
     )
 
-
 def _compute_score(
     combat_score: float,
     aircraft_cost_M: float,
@@ -144,7 +181,6 @@ def _compute_score(
     total_cost_k = aircraft_cost_M * 1_000.0 + loadout_cost_k
     cost_factor = _REFERENCE_COST_K / max(1.0, total_cost_k)
     return combat_score * (ws + wc * cost_factor)
-
 
 def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
     """Return a deep copy of *target_data* with quantities scaled by *reduction_ratio*,
@@ -183,10 +219,135 @@ def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
             dim_data['quantity'] = max(0, round(dim_data['quantity'] * multiplier))
     return updated
 
+def _loadout_availability(weapons_availability: Dict, aircraft_model: str, loadout_name: str):
+    """"""
+    pylons = get_weapons_by_loadout(aircraft_model, loadout_name)
+    loadout_quantity = 0
+    weapons_quantity_loadout = {}
+
+    # conta il numero di armi di una stessa tipologia montate sui piloni dell'aereo
+    for pylon, weapon in pylons:
+        weapon_name_load = weapon[0]
+        weapons_quantity_loadout[weapon_name_load] += weapon[1]
+
+    # verifica se la quantità di armi disponibili per uno specifica tipo è superiore alla quantità prevista nel loadout
+    for wl_name, wl_qty in weapons_quantity_loadout:
+        w_qty_available = weapons_availability.get(wl_name, None) 
+
+        if not w_qty_available:
+            logger.warning(f"weapon: {wl_name} is not present in the available quantity dictionary. Continute with the next weapon")
+            continue
+
+        if w_qty_available < wl_qty:
+            logger.warning(f"The required amount of {wl_name} is not avalaible ({wl_qty}: requested, {w_qty_available}: available). The loadout: {loadout_name} is not available")
+            return loadout_quantity
+        
+        else:
+            loadout_quantity = min(loadout_quantity, w_qty_available // wl_qty)
+                
+    return loadout_quantity
+
+
+def _reduction_weapons_availability(weapons_availability: Dict, weapons_list: Dict):
+        """
+        weapon_list = { <weapon_name>: quantity }
+        """
+
+        for weapon_name, quantity in weapons_list:
+
+            if weapons_availability.get(weapon_name, None):
+
+                if weapons_availability[weapon_name] >= quantity:
+                    weapons_availability[weapon_name] -= quantity
+
+                else:
+                    logger.warning(f"The weapon: {weapon_name} quantity in weapons_availabilitY dictionary is less than the requested reduction. The requested update is not performed. Returns None")    
+                    return False
+            
+            else:
+                logger.warning(f"The weapon: {weapon_name} is not present in weapons_availabilitY dictionary. Continue with the next weapon")
+        return True
+
+def _increase_weapons_availability(weapons_availability: Dict, weapons_list: Dict):
+        """
+        weapon_list = { <weapon_name>: quantity }
+        """
+
+        for weapon_name, quantity in weapons_list:
+
+            if weapons_availability.get(weapon_name, None):                
+                weapons_availability[weapon_name] += quantity
+            
+            else:
+                logger.warning(f"The weapon: {weapon_name} is not present in weapons_availabilitY dictionary. Continue with the next weapon")
+        return True
+
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
+def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict):
+    """
+
+    weapons_availability = {
+
+        <weapon_type>: {<weapon_name>:  quantity}
+
+    }    
+    <weapon_type> : MISSILES_AAM, MISSILES_ASM, ....
+
+    
+    loadout_list = {
+        
+        <aircraft_model>: {<loadout_name>: quantity(float)}
+    
+    }
+    
+    Aggiorna i due dizionari passati come argomenti (riferimenti) aggiornando le quantità richieste in loadout_list con quelle effettivamente disponibili e aggiornando weapons_availability riducendo le wapons delle quantità richieste nei loadouts
+    """
+    
+    for aircraft_model, loadout in loadouts_list:
+        
+        for loadout_name, loadout_quantity in loadout:            
+            quantity = _loadout_availability(weapons_availability, aircraft_model, loadout_name)
+
+            if quantity >= loadout_quantity:                    
+                weapons_list = get_weapons_by_loadout(aircraft_model, loadout_name)
+                
+                for i in range(0, loadout_quantity):
+                    reduction_results = _reduction_weapons_availability(weapons_availability, weapons_list)
+            
+                    if not reduction_results:
+                        logger.error(f"loadout_availability was verified but not update weapons_availability was performed!! Raise Exception")
+                        raise Exception(f"loadout_availability was verified but not update weapons_availability was performed!!")
+                logger.info(f"The loadout: {loadout_name} quantity requested {loadout_quantity} has been assigned. weapons_list was udated")
+
+            else:
+                logger.warning(f"The loadout: {loadout_name} quantity requested is lesser of loadout available {quantity}")
+                loadout_quantity_reduction = False
+
+                for i in range(loadout_quantity-1, 0, -1):
+                    
+                    if quantity >= i:
+                        loadout_quantity_reduction = True
+                        logger.warning(f"The loadout: {loadout_name} quantity assigned has been reduced (requested: {loadout_quantity}, assigned: {i}")
+                        loadout[loadout_name] = i
+
+                        for i in range(0, i):
+                            reduction_results = _reduction_weapons_availability(weapons_availability, weapons_list)
+                    
+                            if not reduction_results:
+                                logger.error(f"loadout_availability was verified but not update weapons_availability was performed!! Raise Exception")
+                                raise Exception(f"loadout_availability was verified but not update weapons_availability was performed!!")
+                        break
+                    
+                if not loadout_quantity_reduction:
+                    loadout[loadout_name] = 0
+                    logger.warning(f"The loadout: {loadout_name} quantity assigned is 0") 
+
+                                   
+
 
 def get_aircraft_mission(
     task: str,
@@ -397,3 +558,6 @@ def get_aircraft_mission(
 
     return available_aircraft_list
 
+
+
+    
