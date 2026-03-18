@@ -1,0 +1,220 @@
+@startuml Aircraft_Data.Component.Diagram
+title Aircraft_Data — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Aircraft_Data" {
+    [Aircraft_Data\n(dataclass / Singleton)] as AD
+    [AIRCRAFT\n(registry Dict)] as ARG
+}
+
+package "Aircraft_Loadouts" {
+    [loadout_eval\nloadout_target_effectiveness\nget_aircraft_loadouts\nget_aircraft_loadouts_by_task\nget_loadout\nloadout_target_effectiveness_by_distribuition\nget_weapon_efficiency\nloadout_year_compatibility\nget_aircrafts_quantity] as AL
+}
+
+package "Context" {
+    [AIR_MILITARY_CRAFT_ASSET\nAIR_TASK\nAir_Asset_Type\nCOALITIONS] as CTX
+}
+
+package "Utility" {
+    [true_air_speed\nindicated_air_speed\ntrue_air_speed_at_new_altitude] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [dataclasses] as DC
+    [sympy.Point3D] as PT
+    [typing] as TYP
+}
+
+AD --> AL  : loadout evaluation
+AD --> CTX : AIR_TASK / Air_Asset_Type
+AD --> UTL : air speed conversions
+AD --> LOG : logger
+ARG --> AD : populated by Aircraft_Data instances
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Aircraft_Data.Class.Diagram
+title Aircraft_Data — Class Diagram (Singleton Registry)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Aircraft_Data <<dataclass>> {
+    ' Singleton registry
+    +{static} _registry: Dict[str, Aircraft_Data]
+
+    ' Construction fields
+    +constructor: str
+    +users: List
+    +made: str
+    +model: str
+    +start_service / end_service: str
+    +category: str
+    +cost: int
+    +roles: str
+    +weight: float
+
+    ' Subsystems
+    +engine: Dict
+    +radar: Dict
+    +TVD: Dict
+    +radio_nav: Dict
+    +avionics: Dict
+    +hydraulic: Dict
+    +speed_data: Dict
+
+    ' Subsystem score evaluation
+    -_radar_eval(modes, category): float
+    -_TVD_eval(modes): float
+    -_radio_nav_eval(): float
+    -_hydraulic_eval(): float
+    -_avionics_eval(): float
+    +get_engine_eval(): float
+    -_speed_at_altitude_eval(metric, altitude): float
+    -_speed_eval(): float
+    -_intercept_speed_eval(): float
+    -_reliability_eval(): float
+    -_maintenance_eval(): float
+    -_avalaiability_eval(): float
+
+    ' Loadout-based evaluation
+    -_loadout_eval(loadout): float
+    -_loadout_target_effectiveness(loadout, types, dims, ...): float
+
+    ' Normalized score API
+    +get_normalized_radar_score(modes, category): float
+    +get_normalized_TVD_score(modes, category): float
+    +get_normalized_radio_nav_score(category): float
+    +get_normalized_hydraulic_score(category): float
+    +get_normalized_avionics_score(category): float
+    +get_normalized_engine_score(category): float
+    +get_normalized_speed_score(category): float
+    +get_normalized_intercept_speed_score(category): float
+    +get_normalized_reliability_score(category): float
+    +get_normalized_avalaiability_score(category): float
+    +get_normalized_maintenance_score(category): float
+
+    ' Combat scoring
+    +combat_score(task, loadout): float
+    +combat_score_target_effectiveness(task, loadout, types, dims): float
+    +combat_score_eval(task, loadout, calc_scores_options, ...): float
+    +get_normalized_combat_score(task, loadout, category): float
+    +get_normalized_combat_score_target_effectiveness(...): float
+
+    ' Registry
+    +get_aircraft(model): Aircraft_Data
+    +get_weight(): float
+    +set_weight(weight): void
+
+    ' Private
+    -_normalize(value, scores): float
+}
+
+note top of Aircraft_Data
+  Singleton registry pattern:
+  Aircraft_Data._registry[model] = self
+  populated at module load time.
+  Accessed via Aircraft_Data._registry.
+
+  SYSTEM_WEIGHTS:
+  radar_weights, tvd_weights, speed_weights
+  (normalized scoring coefficients per sensor)
+end note
+
+note right of Aircraft_Data
+  AIRCRAFT_ROLE = [e.value for e in Air_Asset_Type]
+  Used to filter _registry for category-level
+  normalization in all get_normalized_*() methods.
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml combat_score_eval
+title Activity Diagram — combat_score_eval(task, loadout, calc_scores_options)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:combat_score_eval(task, loadout,\n  calc_scores_options, target_type, target_dimension);
+
+partition "Input Validation" {
+    if (task not str?) then (yes)
+        :raise TypeError;
+        stop
+    endif
+    if (task not in AIR_TASK?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+}
+
+if (calc_scores_options == True?) then (yes)
+    partition "Target-specific weights" {
+        :scores_weights: engine=2, radar=4, TVD=4,\n  radio_nav=3, hydraulic=1, avionics=4,\n  loadout=10, speed=1;
+        :loadout score = _loadout_target_effectiveness\n  (loadout, target_type, target_dimension);
+    }
+else (no)
+    partition "Generic weights" {
+        :scores_weights: engine=2, radar=5, TVD=5,\n  radio_nav=3, hydraulic=1, avionics=4,\n  loadout=7, speed=5;
+        if (task == 'Fighter_Sweep'?) then (yes)
+            :radar += 5, TVD += 2;
+        elseif (task == 'Intercept'?) then (yes)
+            :speed += 5, radar += 5;
+        endif
+        :loadout score = _loadout_eval(loadout);
+    }
+endif
+
+:sum_weights = sum(scores_weights.values());
+
+partition "System Scores" {
+    :scores["engine"] = get_normalized_engine_score() × w / sum_w;
+    :scores["radio_nav"] = get_normalized_radio_nav_score() × w / sum_w;
+    :scores["hydraulic"] = get_normalized_hydraulic_score() × w / sum_w;
+    :scores["avionics"] = get_normalized_avionics_score() × w / sum_w;
+}
+
+partition "Sensor Scores (by task)" {
+    if (task in CAP/Intercept/Fighter_Sweep/Escort/Recon?) then (yes)
+        :radar & TVD → mode='air';
+    elseif (task in Strike/CAS/Pinpoint/SEAD?) then (yes)
+        :radar & TVD → mode='ground';
+    elseif (task == Anti_Ship?) then (yes)
+        :radar & TVD → mode='sea';
+    else (unknown)
+        :log warning\nreturn 0.0;
+        stop
+    endif
+}
+
+:total = sum(scores.values());
+
+if (task == 'Intercept'?) then (yes)
+    :total += get_normalized_intercept_speed_score();
+endif
+
+:Return total_score (float);
+
+stop
+@enduml

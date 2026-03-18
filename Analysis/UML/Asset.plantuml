@@ -1,0 +1,262 @@
+@startuml Asset.Component.Diagram
+title Asset — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Asset" {
+    [Asset] as AST
+    [AssetParams\n(dataclass)] as AP
+}
+
+package "Block" {
+    [Block] as BLK
+}
+
+package "DataType" {
+    [Event] as EVT
+    [State] as STA
+    [Payload\n(PAYLOAD_ATTRIBUTES)] as PL
+    [Volume] as VOL
+    [Threat] as THR
+}
+
+package "Utility" {
+    [validate_class\nsetName / setId\nmean_point] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [sympy.Point3D] as PT
+    [dataclasses] as DC
+    [enum.Enum] as EN
+    [typing] as TYP
+}
+
+AST --> BLK  : belongs to (_block)
+AST --> EVT  : events list
+AST --> STA  : _state (health proxy)
+AST --> PL   : resources_assigned\nresources_to_self_consume\npayload / production
+AST --> VOL  : _volume
+AST --> THR  : _threat
+AST --> UTL  : setName / setId
+AST --> LOG  : logger
+AST --> PT   : _position (Point3D)
+AST --> EN   : category enum handling
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Asset.Class.Diagram
+title Asset — Class Diagram
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class AssetParams <<dataclass>> {
+    +name: Optional[str]
+    +description: Optional[str]
+    +category: Optional[str]
+    +asset_type: Optional[str]
+    +functionality: Optional[str]
+    +cost: Optional[int]
+    +value: Optional[int]
+    +resources_assigned: Optional[Payload]
+    +resources_to_self_consume: Optional[Payload]
+    +payload: Optional[Payload]
+    +production: Optional[Payload]
+    +position: Optional[Point3D]
+    +crytical: Optional[bool]
+    +repair_time: Optional[int]
+    +role: Optional[str]
+    +health: Optional[int]
+}
+
+class Asset {
+    ' Private attributes
+    -_id: str
+    -_name: str
+    -_description: str
+    -_category: str
+    -_asset_type: str
+    -_functionality: str
+    -_position: Point3D
+    -_cost: int
+    -_value: int
+    -_crytical: bool
+    -_repair_time: int
+    -_role: str
+    -_dcs_unit_data: Dict
+    -_events: List[Event]
+    -_state: State
+    -_volume: Volume
+    -_block: Block
+    -_threat: Threat
+    -_resources_assigned: Payload
+    -_resources_to_self_consume: Payload
+    -_payload: Payload
+    -_production: Payload
+
+    ' Computed properties
+    +efficiency: float
+    +balance_trade: float
+    +health: int
+
+    ' Standard properties
+    +name / id / description
+    +category / asset_type / functionality
+    +cost / value / crytical / repair_time / role
+    +position / state / volume / threat / block
+    +resources_assigned / resources_to_self_consume
+    +payload / production
+    +events
+
+    ' Resource operations
+    +consume(): Dict[str, Optional[bool]]
+    +get_production(): Payload
+    +produce(): Dict[str, Optional[bool]]
+
+    ' Event management
+    +add_event(event): void
+    +get_last_event(): Event
+    +get_event(index): Event
+    +remove_event(event): void
+
+    ' Type checks
+    +is_military(): bool
+    +is_logistic(): bool
+    +is_civilian(): bool
+    +threat_volume(): None
+
+    ' Validation
+    -_validate_all_params(**kwargs): void
+    -_validate_param(name, value, type): void
+    -_validate_dcs_data(data): Tuple[bool, str]
+    -_consume(cons): Dict
+}
+
+class Block {
+    +id: str
+}
+
+class State {
+    +health: int
+}
+
+class Payload {
+    +goods / energy / hr / hc / hs / hb: float
+}
+
+Asset --> Block : "_block"
+Asset --> State : "_state"
+Asset "1" --> "4" Payload : resources_assigned\nresources_to_self_consume\npayload\nproduction
+
+note top of Asset
+  efficiency = balance_trade × health/100
+  balance_trade = mean(resources_assigned[i] / resources_to_self_consume[i])
+  health is proxied through _state.health
+end note
+
+note right of Asset
+  DCS unit data setter:
+  auto-populates _name, _id, _position
+  and _state.health from dcs_unit_data dict
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_production
+title Activity Diagram — get_production() / produce()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+fork
+
+    partition "get_production()" {
+        :Initialize delivery = Payload();
+        while (for each item in PAYLOAD_ATTRIBUTES?) is (yes)
+            :request = production[item];
+            if (request > 0?) then (yes)
+                :maximum = payload[item];
+                if (maximum > request?) then (yes)
+                    :delivery[item] = request;
+                    :payload[item] -= request;
+                else (no)
+                    :delivery[item] = maximum;
+                    :payload[item] = 0;
+                endif
+            endif
+        endwhile (no)
+        :Return delivery Payload;
+    }
+
+fork again
+
+    partition "produce()" {
+        while (for each item in PAYLOAD_ATTRIBUTES?) is (yes)
+            :request = production[item];
+            if (request > 0?) then (yes)
+                :item_produced = request × efficiency;
+                :payload[item] += item_produced;
+                :results[item] = True;
+            else (no)
+                :results[item] = False;
+            endif
+        endwhile (no)
+        :Return results dict;
+    }
+
+end fork
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml consume_asset
+title Activity Diagram — consume()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:consume() → _consume(resources_to_self_consume);
+
+while (for each item in PAYLOAD_ATTRIBUTES?) is (yes)
+    :cons_val = cons[item];
+    if (cons_val > 0?) then (yes)
+        :acp_val = resources_assigned[item];
+        if (acp_val >= cons_val?) then (yes)
+            :resources_assigned[item] -= cons_val;
+            :results[item] = True;
+        else (no)
+            :results[item] = False;
+        endif
+    else (no)
+        :results[item] = None (no consumption);
+    endif
+endwhile (no)
+
+:Return results dict;
+
+stop
+@enduml

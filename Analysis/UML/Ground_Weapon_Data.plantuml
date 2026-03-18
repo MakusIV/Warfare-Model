@@ -1,0 +1,173 @@
+@startuml Ground_Weapon_Data.Component.Diagram
+title Ground_Weapon_Data — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Ground_Weapon_Data" {
+    [Weapon scoring\nfunctions] as GWD
+    [WEAPON_PARAM\n(score coefficients)] as WP
+    [AMMO_PARAM\n(ammo type weights)] as AP
+    [AMMO_TARGET_EFFECTIVENESS\n(ammo vs target)] as ATE
+    [Efficiency templates\n(_EFF_* dicts)] as EFF
+    [GROUND_WEAPONS\n(weapon registry)] as GWR
+}
+
+package "Context" {
+    [TARGET_CLASSIFICATION\nGROUND_WEAPON_TASK] as CTX
+}
+
+package "Asset" {
+    [Aircraft] as AIR
+}
+
+package "Utility" {
+    [true_air_speed\nindicated_air_speed\ntrue_air_speed_at_new_altitude] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [random] as RND
+    [sys] as SYS
+    [dataclasses] as DC
+    [typing] as TYP
+}
+
+GWD --> WP  : WEAPON_PARAM coefficients
+GWD --> AP  : AMMO_PARAM weights
+GWD --> ATE : ammo type vs target
+GWD --> EFF : per-weapon efficiency templates
+GWD --> GWR : weapon registry lookup
+GWD --> CTX : TARGET_CLASSIFICATION
+GWD --> UTL : air speed utils
+GWD --> LOG : logger
+GWD --> LRU : @lru_cache on scoring funcs
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Ground_Weapon_Data.Class.Diagram
+title Ground_Weapon_Data — Module Structure (Data + Functions)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class "WEAPON_PARAM (constants)" as WP {
+    CANNONS: {caliber, muzzle_speed, fire_rate, range, ammo_type}
+    MISSILES: {caliber, warhead, range, ammo_type, speed}
+    ROCKETS: {caliber, range, fire_rate, ammo_type}
+    MORTARS: {caliber, fire_rate, range, ammo_type}
+    ARTILLERY: {caliber, muzzle_speed, fire_rate, range, ammo_type}
+    AA_CANNONS: {caliber, muzzle_speed, fire_rate, range, ammo_type}
+    AUTO_CANNONS: {caliber, muzzle_speed, fire_rate, range, ammo_type}
+    MACHINE_GUNS: {caliber, fire_rate, range}
+    BOMBS: {tnt, accuracy}
+}
+
+class "AMMO_TARGET_EFFECTIVENESS (constants)" as ATE {
+    HE:     {Soft:1.0, Armored:0.15, Hard:0.5, ...}
+    HEAT:   {Soft:0.6, Armored:0.85, ...}
+    2HEAT:  {Soft:0.6, Armored:1.0, ...}
+    AP:     {Soft:0.35, Armored:0.7, ...}
+    APFSDS: {Soft:0.4, Armored:1.0, ...}
+    FRAG:   {Soft:0.9, Armored:0.05, ...}
+}
+
+class "AMMO_LOAD_REFERENCE (constants)" as ALR {
+    CANNONS: 30
+    ARTILLERY: 50
+    AA_CANNONS: 600
+    AUTO_CANNONS: 500
+    MISSILES_SAM: 4
+    MISSILES_TANK: 2
+    ROCKETS: 4
+    MORTARS: 10
+}
+
+class "Scoring Functions (module-level)" as SF {
+    +get_weapon(model): Optional[Dict]
+    +get_cannon_score(model): float
+    +get_aa_cannon_score(model): float
+    +get_auto_cannon_score(model): float
+    +get_missiles_score(model): float
+    +get_machine_gun_score(model): float
+    +get_rockets_score(model): float
+    +get_mortars_score(model): float
+    +get_artillery_score(model): float
+    +get_weapon_score(weapon_type, weapon_model): float
+    +get_weapon_score_single_target(type, model, ...): float
+    +get_weapon_score_target(model, types, dims): float
+    +get_weapon_score_target_distribuition(model, types, dims): float
+    --
+    ' Private
+    -_get_ref_caliber(efficiency_data): float
+}
+
+WP ..> SF : provides coefficients
+ATE ..> SF : provides ammo effectiveness
+ALR ..> SF : provides ammo references
+
+note top of SF
+  get_weapon_score():
+  Dispatches to specific scorer by weapon_type.
+  Each scorer computes weighted sum of WEAPON_PARAM
+  fields against weapon data from GROUND_WEAPONS dict.
+
+  get_weapon_score_target():
+  Calls get_weapon_score_single_target() for each
+  (target_type, target_dimension) combination,
+  averaging results.
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_weapon_score_target
+title Activity Diagram — get_weapon_score_target(model, target_type, target_dimension)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:get_weapon_score_target(model, target_type, target_dimension);
+
+:weapon = get_weapon(model)
+ → finds weapon in GROUND_WEAPONS registry;
+
+if (weapon not found?) then (yes)
+    :log warning\nreturn 0.0;
+    stop
+endif
+
+:score = 0.0\ncount = 0;
+
+while (for each t_type in target_type?) is (yes)
+    while (for each t_dim in target_dimension?) is (yes)
+        :score += get_weapon_score_single_target\n         (weapon_type, model, t_type, t_dim);
+        :count += 1;
+    endwhile (no)
+endwhile (no)
+
+if (count > 0?) then (yes)
+    :return score / count;
+else (no)
+    :return 0.0;
+endif
+
+stop
+@enduml

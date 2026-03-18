@@ -1,0 +1,330 @@
+@startuml Region.Component.Diagram
+title Region — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Region" {
+    [Region] as RGN
+    [BlockItem\n(dataclass)] as BI
+    [RegionParams\n(dataclass)] as RP
+    [BlockCategory\n(Enum)] as BCAT
+}
+
+package "Block" {
+    [Block] as BLK
+    [Military] as MIL
+    [Production] as PRD
+    [Storage] as STR
+    [Transport] as TRN
+    [Urban] as URB
+}
+
+package "DataType" {
+    [Limes] as LIM
+    [Route] as RTE
+    [Payload] as PL
+}
+
+package "Context" {
+    [Context\n(MILITARY_FORCES\nACTION_TASKS)] as CTX
+}
+
+package "Utility" {
+    [Utility\n(check_side, enemySide)] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [sympy.Point2D] as PT
+    [numpy.clip] as NP
+    [dataclasses / enum] as DC
+    [collections.defaultdict] as DEF
+}
+
+RGN --> BLK  : manages blocks (BlockItem)
+RGN --> MIL  : get_blocks_by_criteria filter
+RGN --> PRD  : production values
+RGN --> STR  : storage values
+RGN --> TRN  : transport values
+RGN --> URB  : urban values
+RGN --> RTE  : routes dict
+RGN --> LIM  : boundary limes
+RGN --> PL   : calc_total_warehouse
+RGN --> CTX  : MILITARY_FORCES / ACTION_TASKS
+RGN --> UTL  : check_side / enemySide
+RGN --> LOG  : logger
+RGN --> LRU  : @lru_cache on query methods
+RGN --> PT   : calc_strategic_logistic_center
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Region.Class.Diagram
+title Region — Class Diagram
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class BlockCategory <<Enum>> {
+    MILITARY = "Military"
+    LOGISTIC = "Logistic"
+    CIVILIAN = "Civilian"
+}
+
+class BlockItem <<dataclass>> {
+    +priority: float
+    +block: Block
+    --
+    +__post_init__(): void
+}
+
+class RegionParams <<dataclass>> {
+    +name: str
+    +description: str
+    +blocks: Optional[List[BlockItem]]
+    +routes: Optional[Dict[str, Route]]
+    +limes: Optional[List[Limes]]
+}
+
+class Region {
+    ' Constants
+    +DEFAULT_ATTACK_WEIGHT: float = 0.5
+
+    ' Private attributes
+    -_name: str
+    -_description: str
+    -_limes: List[Limes]
+    -_attack_weight: float
+    -_weight_priority_target: Dict
+    -_blocks: Dict[str, BlockItem]
+    -_routes: Dict[str, Route]
+
+    ' Properties
+    +name: str
+    +description: str
+    +attack_weight: float
+    +weight_priority_target: Dict
+    +blocks: List[BlockItem]
+    +routes: Dict[str, Route]
+
+    ' Block management
+    +add_block(block, priority): void
+    +remove_block(block_id): bool
+    +get_block_by_id(block_id): BlockItem
+    -_add_block_item(block_item): void
+
+    ' Block queries (cached)
+    +get_blocks_by_criteria(side, category, block_class): List[BlockItem] <<lru_cache>>
+    +get_sorted_priority_blocks(count, side, sort_by, category): List[BlockItem]
+    +get_normalized_priority_blocks(count, side, sort_by, category): List[BlockItem]
+
+    ' Route management
+    +add_route(key, route): void
+    +get_route(block_id, target_block_id): Route <<lru_cache>>
+
+    ' Strategic calculations (cached)
+    +calc_strategic_logistic_center(side): Point2D <<lru_cache>>
+    +calc_combat_power_center(side): Dict <<lru_cache>>
+    +calc_total_warehouse(side): Payload <<lru_cache>>
+    +calc_total_production(side): Payload <<lru_cache>>
+    +calc_production_values(side): Dict <<lru_cache>>
+
+    ' Priority updates
+    +update_logistic_priorities(side): bool
+    +update_military_priorities(side): void
+
+    ' Private helpers
+    -_get_tuple_hashable_block_item(items): tuple
+    -_is_logistic_block(block): bool
+    -_invalidate_caches(cache_type): void
+    -_validate_init_params(...): void
+    -_validate_weight_priority_target(value): void
+}
+
+Region "1" o-- "*" BlockItem : _blocks
+Region "1" o-- "*" Route : _routes
+Region "1" o-- "*" Limes : _limes
+BlockItem "1" --> "1" Block : block
+
+note top of Region
+  All query methods use @lru_cache.
+  Cache is invalidated on any structural change:
+  add_block / remove_block / add_route /
+  update priorities / name change.
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_blocks_by_criteria
+title Activity Diagram — get_blocks_by_criteria() [lru_cache]
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:get_blocks_by_criteria(side, category, block_class);
+
+note right
+  @lru_cache(maxsize=128)
+  Returns cached result if called
+  with same arguments before.
+end note
+
+:result = [];
+
+while (for each block_item in _blocks.values()?) is (yes)
+    :block = block_item.block;
+
+    if (side is set AND block.side != side?) then (yes)
+        :continue (skip);
+    endif
+
+    if (category is set?) then (yes)
+        if (category == "Military" AND not Military?) then (yes)
+            :continue;
+        elseif (category == "Logistic" AND\nnot Production/Storage/Transport?) then (yes)
+            :continue;
+        elseif (category == "Civilian" AND not Urban?) then (yes)
+            :continue;
+        elseif (block.category != category?) then (yes)
+            :continue;
+        endif
+    endif
+
+    if (block_class is set AND\nnot isinstance(block, block_class)?) then (yes)
+        :continue;
+    endif
+
+    :result.append(block_item);
+endwhile (no)
+
+:Return result (List[BlockItem]);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml calc_strategic_logistic_center
+title Activity Diagram — calc_strategic_logistic_center(side)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:calc_strategic_logistic_center(side);
+
+note right
+  @lru_cache(maxsize=128)
+end note
+
+if (not check_side(side)?) then (yes)
+    :raise ValueError;
+    stop
+endif
+
+:logistic_blocks =\nget_blocks_by_criteria(side, "Logistic");
+
+if (logistic_blocks is empty?) then (yes)
+    :return None;
+    stop
+endif
+
+:total_priority = 0.0\nweighted_x = 0.0\nweighted_y = 0.0;
+
+while (for each block_item in logistic_blocks?) is (yes)
+    :priority = block_item.priority;
+    if (block.position is not None AND priority > 0?) then (yes)
+        :weighted_x += position.x × priority;
+        :weighted_y += position.y × priority;
+        :total_priority += priority;
+    endif
+endwhile (no)
+
+if (total_priority == 0?) then (yes)
+    :return None;
+    stop
+endif
+
+:Return Point2D(weighted_x / total_priority,\n               weighted_y / total_priority);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml add_block_sequence
+title Sequence Diagram — add_block() with cache invalidation
+
+skinparam SequenceArrowColor #336699
+skinparam SequenceLifeLineBorderColor #336699
+skinparam SequenceParticipantBackgroundColor #D9E8FF
+skinparam backgroundColor #FEFEFE
+autonumber
+
+actor Caller
+participant ":Region" as RGN
+participant "_add_block_item()" as ABI
+participant "block.region" as BR
+
+Caller -> RGN: add_block(block, priority=0.0)
+activate RGN
+
+RGN -> RGN: validate block isinstance(Block)
+
+alt block.region is not None and != self
+    RGN --> Caller: raise ValueError
+end
+
+RGN -> RGN: block_item = BlockItem(priority, block)
+
+RGN -> ABI: _add_block_item(block_item)
+activate ABI
+
+ABI -> ABI: validate isinstance(BlockItem)
+
+alt block.id already in _blocks
+    ABI --> Caller: raise ValueError
+end
+
+ABI -> BR: block.region = self
+activate BR
+BR --> ABI: (back-reference set)
+deactivate BR
+
+ABI -> ABI: _blocks[block.id] = block_item
+
+ABI -> RGN: _invalidate_caches()
+note over RGN
+  Clears all lru_cache results:
+  get_blocks_by_criteria
+  get_route
+  calc_strategic_logistic_center
+  calc_combat_power_center
+  calc_total_warehouse, etc.
+end note
+
+deactivate ABI
+
+Caller <-- RGN: (block added successfully)
+deactivate RGN
+
+@enduml

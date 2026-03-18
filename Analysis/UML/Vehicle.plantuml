@@ -1,0 +1,229 @@
+@startuml Vehicle.Component.Diagram
+title Vehicle — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Vehicle" {
+    [Vehicle] as VEH
+}
+
+package "Mobile" {
+    [Mobile] as MOB
+}
+
+package "Asset / Data" {
+    [Vehicle_Data\nget_vehicle_scores()] as VD
+}
+
+package "Block" {
+    [Block] as BLK
+}
+
+package "DataType" {
+    [Event] as EVT
+    [Payload] as PL
+    [Volume] as VOL
+}
+
+package "Context" {
+    [GROUND_COMBAT_EFFICACY] as GCE
+    [GROUND_ACTION] as GA
+    [AIR_DEFENSE_ASSET] as ADA
+    [BLOCK_ASSET_CATEGORY\nBLOCK_INFRASTRUCTURE_ASSET\nGROUND_MILITARY_VEHICLE_ASSET] as BAC
+    [ACTION_TASKS] as ACT
+    [Ground_Vehicle_Asset_Type\n(Enum)] as GVAT
+}
+
+package "Utility" {
+    [Utility] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [sympy.Point3D] as PT
+    [typing] as TYP
+}
+
+VEH --|> MOB : inherits
+VEH --> VD   : get_vehicle_scores(model)
+VEH --> BLK  : block (via Asset)
+VEH --> PL   : acp / rcp / payload
+VEH --> GCE  : GROUND_COMBAT_EFFICACY
+VEH --> GA   : GROUND_ACTION
+VEH --> BAC  : BLOCK_ASSET_CATEGORY validation
+VEH --> ACT  : ACTION_TASKS["ground"]
+VEH --> GVAT : category type checks
+VEH --> LOG  : logger
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Vehicle.Class.Diagram
+title Vehicle — Class Diagram (Inheritance)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Mobile {
+    -_speed: Dict
+    -_fire_range: float
+    -_combat_power: Dict
+    +combat_power(force, action): Dict|float
+    +set_combat_power_value(cp): void
+}
+
+class Vehicle {
+    -_model: str
+    -_speed_off_road: Dict
+    -_vehicle_scores: Dict
+    --
+    ' Asset type boolean properties
+    +isTank: bool
+    +isArmor: bool
+    +isMotorized: bool
+    +isArtillery_Semovent: bool
+    +isArtillery_Fixed: bool
+    +isArtillery: bool
+    +isAntiAircraft: bool
+    +isSAM: bool
+    +isSAM_Big / isSAM_Medium / isSAM_Small: bool
+    +isAAA: bool
+    +isEWR: bool
+    +isCommandControl: bool
+
+    ' Combat
+    +set_combat_power(actions): void
+
+    ' Data loading
+    +loadAssetDataFromContext(): bool
+
+    ' Validation
+    +checkParam(category, asset_type): Tuple[bool, str]
+}
+
+Mobile <|-- Vehicle : extends
+
+note right of Vehicle
+  set_combat_power() formula:
+  relative_weight = 1 + GROUND_COMBAT_EFFICACY
+                        [act][category] * 0.3/5
+  score_modifier = 1 + vehicle_scores['combat score']
+                                      ['global score']
+  cp[act] = relative_weight * score_modifier * efficiency
+  → calls set_combat_power_value({"ground": cp})
+end note
+
+note bottom of Vehicle
+  _vehicle_scores loaded via
+  get_vehicle_scores(model)
+  from Vehicle_Data._registry.
+  Used in set_combat_power().
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml set_combat_power
+title Activity Diagram — set_combat_power(actions)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:set_combat_power(actions = ACTION_TASKS["ground"]);
+
+if (actions has task not in ACTION_TASKS["ground"]?) then (yes)
+    :raise TypeError;
+    stop
+endif
+
+if (self.category is None?) then (yes)
+    :log warning\n"Unable to set combat_power";
+    stop
+endif
+
+:combat_power = {};
+
+while (for each act in actions?) is (yes)
+    :categories_in_action = GROUND_COMBAT_EFFICACY[act].keys();
+    if (self.category in categories_in_action?) then (yes)
+        :relative_weight = 1 + GCEFF[act][category] × 0.3/5;
+        :score_modifier = 1 + vehicle_scores['combat score']['global score'];
+        :combat_power[act] = relative_weight × score_modifier × efficiency;
+    else (no)
+        :log debug\n"Category not in GCEFF, cp = 0";
+        :combat_power[act] = 0;
+    endif
+endwhile (no)
+
+:set_combat_power_value({"ground": combat_power});
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml loadAssetDataFromContext
+title Activity Diagram — loadAssetDataFromContext()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+if (block.is_military()?) then (yes)
+
+    partition "Military block" {
+        :asset_data = GROUND_MILITARY_VEHICLE_ASSET;
+        :Search in asset_data[category] for asset_type;
+        if (found?) then (yes)
+            :set cost, value, rcp, repair_time, payload%;
+            :return True;
+            stop
+        endif
+        :asset_data_aa = AIR_DEFENSE_ASSET;
+        :Search in asset_data_aa[category] for asset_type;
+        if (found?) then (yes)
+            :set cost, value, rcp, repair_time, payload%;
+            :return True;
+            stop
+        endif
+    }
+
+elseif (block.is_logistic()?) then (yes)
+
+    partition "Logistic block" {
+        :asset_data = BLOCK_INFRASTRUCTURE_ASSET;
+        :Search in asset_data[block_class][category]\nfor asset_type;
+        if (found?) then (yes)
+            :set cost, value, rcp, repair_time, payload%;
+            :return True;
+            stop
+        endif
+    }
+
+else (no)
+    :raise Exception\n"Asset not consistent with block";
+    stop
+endif
+
+:return False\n(asset_type not found);
+
+stop
+@enduml

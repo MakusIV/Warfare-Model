@@ -1,0 +1,188 @@
+@startuml Aircraft_Weapon_Data.Component.Diagram
+title Aircraft_Weapon_Data — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Aircraft_Weapon_Data" {
+    [Weapon lookup\n& scoring functions] as AWD
+    [WEAPON_PARAM\n(score coefficients)] as WP
+    [WARHEAD_TYPE_PARAM\n(warhead type weights)] as WTP
+    [WARHEAD_TYPE_TARGET_EFFECTIVENESS\n(warhead vs target)] as WTE
+    [AIR_WEAPONS\n(weapon registry)] as AWR
+}
+
+package "Context" {
+    [AIR_MILITARY_CRAFT_ASSET\nAIR_TASK\nTARGET_CLASSIFICATION\nAIR_TO_AIR_TASK\nAIR_TO_GROUND_TASK] as CTX
+}
+
+package "Asset" {
+    [Aircraft] as AIR
+}
+
+package "Utility" {
+    [true_air_speed\nindicated_air_speed\ntrue_air_speed_at_new_altitude] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [sys] as SYS
+    [dataclasses] as DC
+    [typing] as TYP
+}
+
+AWD --> WP  : WEAPON_PARAM coefficients
+AWD --> WTP : warhead type weights
+AWD --> WTE : warhead type vs target
+AWD --> AWR : weapon registry lookup
+AWD --> CTX : TARGET_CLASSIFICATION / AIR_TASK
+AWD --> UTL : air speed utils
+AWD --> LOG : logger
+AWD --> LRU : @lru_cache
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Aircraft_Weapon_Data.Class.Diagram
+title Aircraft_Weapon_Data — Module Structure (Data + Functions)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class "WEAPON_PARAM (constants)" as WP {
+    CANNONS:       {caliber, speed, fire_rate, range}
+    MISSILES_AAM_RAD: {warhead, range, semiactive_range,\n  active_range, max_speed, max_height, manouvrability}
+    MISSILES_AAM_INF: {warhead, range, max_speed,\n  max_height, manouvrability}
+    MISSILES_ASM:  {warhead, range, max_speed}
+    ROCKETS:       {caliber, warhead, range, warhead_type, speed}
+    MACHINE_GUNS:  {caliber, fire_rate, range}
+    BOMBS:         {warhead, weight}
+}
+
+class "WARHEAD_TYPE_TARGET_EFFECTIVENESS (constants)" as WTE {
+    HE:     {Soft:1.0, Armored:0.15, ...}
+    HEAT:   {Soft:0.6, Armored:0.85, ...}
+    2HEAT:  {Soft:0.6, Armored:1.0, ...}
+    AP:     {Soft:0.35, Armored:0.7, ...}
+    APFSDS: {Soft:0.4, Armored:1.0, ...}
+    FRAG:   {Soft:0.9, Armored:0.05, ...}
+}
+
+class "AIR_WEAPONS (data registry)" as AWR {
+    MISSILES_AAM:  {model: {...params...}}
+    MISSILES_ASM:  {model: {...params...}}
+    BOMBS:         {model: {...params...}}
+    ROCKETS:       {model: {...params...}}
+    CANNONS:       {model: {...params...}}
+    MACHINE_GUNS:  {model: {...params...}}
+}
+
+class "Lookup & Type Functions" as LF {
+    +get_weapon(model): Optional[Dict]
+    +is_missile(model): bool
+    +is_bomb(model): bool
+    +is_rocket(model): bool
+    +is_cannon(model): bool
+    +is_machine_gun(model): bool
+}
+
+class "Scoring Functions" as SCF {
+    +get_missiles_score(model): float
+    +get_cannon_score(model): float
+    +get_machine_gun_score(model): float
+    +get_rockets_score(model): float
+    +get_bomb_score(model): float
+    +get_weapon_score(model): float
+    +get_weapon_score_target(model, types, dims): float
+    +get_weapon_score_target_distribuition(model, types, dims): float
+    +get_weapon_cost(model): float
+    +is_weapon_introduced(model, year): bool
+}
+
+AWR ..> LF  : weapon data source
+AWR ..> SCF : weapon data source
+WP  ..> SCF : scoring coefficients
+WTE ..> SCF : target effectiveness weights
+
+note top of AWR
+  AIR_WEAPONS categories:
+  MISSILES_AAM (radar + IR subtypes)
+  MISSILES_ASM (air-to-surface)
+  BOMBS (unguided / guided)
+  ROCKETS
+  CANNONS (aircraft guns)
+  MACHINE_GUNS
+end note
+
+note right of SCF
+  MISSILES_AAM_RAD = radar-guided (semi-active / active)
+  MISSILES_AAM_INF = IR-guided (infrared seeker)
+  Score formula:
+  score = sum(param_value × WEAPON_PARAM[type][param])
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_missiles_score
+title Activity Diagram — get_missiles_score(model)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:get_missiles_score(model);
+
+if (not isinstance(model, str)?) then (yes)
+    :raise TypeError;
+    stop
+endif
+
+:weapon = AIR_WEAPONS["MISSILES_AAM"].get(model);
+
+if (weapon not found?) then (yes)
+    :weapon = AIR_WEAPONS["MISSILES_ASM"].get(model);
+    if (found as ASM?) then (yes)
+        :task = weapon.get("task");
+        :score = sum over task params\n× WEAPON_PARAM["MISSILES_ASM"] coefficients;
+        :return score;
+        stop
+    endif
+    :return 0.0 (not found);
+    stop
+endif
+
+partition "AAM: radar-guided vs IR-guided" {
+    if (weapon has semiactive_range or active_range?) then (yes)
+        :wp_key = "MISSILES_AAM_RAD";
+    else (no)
+        :wp_key = "MISSILES_AAM_INF";
+    endif
+}
+
+:score = 0.0;
+
+while (for each param, coeff in WEAPON_PARAM[wp_key]?) is (yes)
+    :value = weapon.get(param, 0);
+    :score += value × coeff;
+endwhile (no)
+
+:return score (float);
+
+stop
+@enduml

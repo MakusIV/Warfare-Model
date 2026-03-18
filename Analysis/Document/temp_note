@@ -1,18 +1,17 @@
 
-
- 
-Analizza le funzioni:  Verifica le funzioni analizzandone logica e sintassi, effettua le eventuali correzioni necessarie. Inoltre, puoi proporre anche delle modifiche migliorative implementando anche altre fuznioni ausiliarie nel modulo. Qualora fosse nessario, i miglioramenti possono essere estesi ance ai moduli importati. Implementa i necessari controlli sulla conformità degli argomenti.
-
- 
- 
- 
  
  
  
  
  FATTO
+
+Crea i diagrammi UML per i moduli; Resource_Manager.py, Block.py, Military.py, Asset.py, Region.py, Logistic_Lines.py inserendo i diagrammi in cartelle dedicate al modulo in oggetto. Per la realizzazione dei diagrammi fai riferimento a quelli che hai in precedenza realizzato per il modulo Tactical_Evaluation.py le cui procedure adottate dovresti aver memorizzato 
+
+ Implementa i test di unità relativi alle funzioni: _find_weapon_in_availability, _pylons_to_weapons_dict,  _loadout_availability, _reduction_weapons_availability, _increase_weapons_availability, get_loadouts_availability, nel modulo di test Test_Air_Resources_Assigner.py. Per la creazione dei test,  utilizza come riferimento per la definizione della weapons_list il dizionario 'air_weapons' incluso nel dizionario _WEAPON_AVAILABILITY presente nel modulo Initial_Context.py e come riferimento per la loadouts_list il dizionario AIRCRAFT_LOADOUTS presente nel modulo Aircraft_Loadouts.py.
+
+Analizza le funzioni: _loadout_availability,  _reduction_weapons_availability, increase_weapons_availability, get_loadouts_availability implementate nel modulo Air_Resources_Assigner.py e verificandone logica e sintassi. Effettua le eventuali correzioni. Inoltre, puoi proporre anche delle modifiche migliorative implementando, eventualmente, altre funzioni. Qualora fosse necessario, i miglioramenti possono essere estesi ai moduli importati. Implementa i necessari controlli sulla conformità degli argomenti e i commenti nel codice.
  
-  Completa i dati presenti nel dizionario air_weapons incluso nel dizionario _WEAPONS_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando tutte le chiavi definte nel dizionari MISSILES_AAM, MISSILES_ASM, ... inclusi in AIR_WEAPONS definito nel modulo Aircraft_Weapon_Data.py 
+Completa i dati presenti nel dizionario air_weapons incluso nel dizionario _WEAPONS_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando tutte le chiavi definte nel dizionari MISSILES_AAM, MISSILES_ASM, ... inclusi in AIR_WEAPONS definito nel modulo Aircraft_Weapon_Data.py 
  
 Completa i dati presenti nel dizionario 'air' incluso nel dizionario _ASSET_AVAILABILITY implementato nel modulo Initial_Context.py utilizzando il valore di 'model' presente nei diversi dizionari relativi agli aerei: f14a_data, f14b_data, ... definiti nel modulo Aircraft_Data.py 
  

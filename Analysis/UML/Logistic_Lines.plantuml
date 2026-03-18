@@ -1,0 +1,247 @@
+@startuml Logistic_Lines.Component.Diagram
+title Logistic_Lines — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Logistic_Lines" {
+    [Logistic_Lines] as LL
+    [Logistic_Line\n(dataclass)] as LLD
+}
+
+package "Block" {
+    [Block] as BLK
+    [Transport] as TRN
+}
+
+package "DataType" {
+    [State] as STA
+    [Payload] as PL
+}
+
+package "Context" {
+    [Context] as CTX
+}
+
+package "Utility" {
+    [Utility\n(check_side)] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [dataclasses] as DC
+    [typing] as TYP
+}
+
+LL --> LLD  : manages collection
+LL --> TRN  : transport_line (Block subtype)
+LL --> BLK  : server / client blocks
+LL --> STA  : Logistic_Line.state
+LL --> CTX  : Context (check_side)
+LL --> UTL  : check_side validation
+LL --> LOG  : logger
+LL --> LRU  : @lru_cache on get_logistic_line_by_criteria
+LLD --> TRN : transport_line
+LLD --> BLK : server / client
+LLD --> STA : state
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Logistic_Lines.Class.Diagram
+title Logistic_Lines — Class Diagram
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Logistic_Line <<dataclass>> {
+    +id: str
+    +side: str
+    +name: str
+    +transport_line: Transport
+    +server: Block
+    +client: Block
+    +bidirectional: bool
+    +state: State
+    --
+    ' id format:
+    ' "side:{side}.transport_line_id:{tid}
+    '  .server_id:{sid}.client_id:{cid}.name:{name}"
+}
+
+class Logistic_Lines {
+    ' Private attributes
+    -_logistic_lines: Dict[str, Logistic_Line]
+
+    ' Line management
+    +set_line(side, name, transport_line,\n          server, client): void
+    +remove_logistic_line(lgs_line_id): bool
+
+    ' Queries
+    +get_line(**args): void
+    +get_logistic_line_by_id(lgs_line_id): Logistic_Line
+    +get_logistic_line_by_criteria(side, transport_line_id,\n    server_id, client_id, name): List[Logistic_Line] <<lru_cache>>
+
+    ' Resource manager setup
+    +setup_blocks_resource_manager(): void
+
+    ' Private helpers
+    -_add_logistic_line(lgs_line): void
+    -_invalidate_caches(cache_type): void
+}
+
+class Block {
+    +id: str
+    +resource_manager: Resource_Manager
+    +set_server(id, server): void
+}
+
+class Transport {
+    +id: str
+}
+
+class State {
+    +health: int
+}
+
+Logistic_Lines "1" o-- "*" Logistic_Line : _logistic_lines
+Logistic_Line --> Transport : transport_line
+Logistic_Line --> Block : server
+Logistic_Line --> Block : client
+Logistic_Line --> State : state
+
+note top of Logistic_Line
+  id is a composite string key:
+  "side:{side}.transport_line_id:{tid}
+   .server_id:{sid}.client_id:{cid}.name:{name}"
+end note
+
+note right of Logistic_Lines
+  get_logistic_line_by_criteria uses @lru_cache.
+  Cache is cleared in _invalidate_caches()
+  after any set_line / remove_logistic_line call.
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml set_line
+title Activity Diagram — set_line()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:set_line(side, name, transport_line, server, client);
+
+partition "Input Validation" {
+    if (not check_side(side)?) then (yes)
+        :raise ValueError;
+        stop
+    endif
+    if (not isinstance(transport_line, Transport)?) then (yes)
+        :raise TypeError;
+        stop
+    endif
+    if (not isinstance(server, Block)?) then (yes)
+        :raise TypeError;
+        stop
+    endif
+    if (not isinstance(client, Block)?) then (yes)
+        :raise TypeError;
+        stop
+    endif
+}
+
+:id = "side:{side}.transport_line_id:{tid}\n       .server_id:{sid}.client_id:{cid}.name:{name}";
+
+:lgs_line = Logistic_Line(id, transport_line,\n                         server, client);
+
+:_add_logistic_line(lgs_line);
+
+partition "_add_logistic_line" {
+    if (lgs_line.id already in _logistic_lines?) then (yes)
+        :raise ValueError\n(duplicate line);
+        stop
+    endif
+    :_logistic_lines[lgs_line.id] = lgs_line;
+    :_invalidate_caches();
+}
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml setup_blocks_resource_manager
+title Sequence Diagram — setup_blocks_resource_manager()
+
+skinparam SequenceArrowColor #336699
+skinparam SequenceLifeLineBorderColor #336699
+skinparam SequenceParticipantBackgroundColor #D9E8FF
+skinparam backgroundColor #FEFEFE
+autonumber
+
+actor Caller
+participant ":Logistic_Lines" as LL
+participant "client\n:Block" as CLI
+participant "transport\n:Block" as TRN
+participant "server\n:Block" as SRV
+
+Caller -> LL: setup_blocks_resource_manager()
+activate LL
+
+loop for each line in _lines
+    LL -> LL: server = line.server\nclient = line.client\ntransport = line.transport
+
+    note over LL
+      Logistic chain:
+      server → transport → client
+      (resource flows left to right)
+    end note
+
+    LL -> CLI: client.set_server(transport.id, transport)
+    activate CLI
+    note over CLI
+      set_server() also creates
+      back-reference via transport.set_client()
+    end note
+    CLI --> LL: ok
+    deactivate CLI
+
+    LL -> TRN: transport.set_server(server.id, server)
+    activate TRN
+    TRN --> LL: ok
+    deactivate TRN
+
+    alt line.bidirectional == True
+        LL -> SRV: server.set_server(transport.id, transport)
+        activate SRV
+        SRV --> LL: ok
+        deactivate SRV
+
+        LL -> TRN: transport.set_server(client.id, client)
+        activate TRN
+        TRN --> LL: ok
+        deactivate TRN
+    end
+end
+
+Caller <-- LL: (all resource managers linked)
+deactivate LL
+
+@enduml

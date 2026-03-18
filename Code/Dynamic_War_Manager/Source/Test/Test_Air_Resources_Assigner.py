@@ -6,16 +6,29 @@ Unit tests per il modulo Air_Resources_Assigner.py.
 Funzioni testate
 ----------------
   Helpers privati (unit test puri, nessun mock):
-    _extract_quantities        – conversione target_data → {type: {dim: int}}
-    _extract_target_lists      – estrazione liste type/dim da target_data
-    _check_mission_requirements– verifica requisiti di performance (cruise/attack)
-    _usability_met             – verifica condizioni di usabilità (day/night/aw)
-    _compute_score             – calcolo score ponderato combat × costo
-    _reduce_target_data        – riduzione proporzionale target per priorità
+    _extract_quantities           – conversione target_data → {type: {dim: int}}
+    _extract_target_lists         – estrazione liste type/dim da target_data
+    _check_mission_requirements   – verifica requisiti di performance (cruise/attack)
+    _usability_met                – verifica condizioni di usabilità (day/night/aw)
+    _compute_score                – calcolo score ponderato combat × costo
+    _reduce_target_data           – riduzione proporzionale target per priorità
+    _find_weapon_in_availability  – ricerca weapon in struttura {type:{name:qty}}
+    _pylons_to_weapons_dict       – converti pylons {id:[name,qty]} → {name:total_qty}
+    _loadout_availability         – n° di loadout allestibili con armi disponibili
+    _reduction_weapons_availability – sottrai armi dalla disponibilità (atomico)
+    _increase_weapons_availability  – aggiungi armi alla disponibilità
 
-  Funzione pubblica (test con mock dei logger):
-    get_aircraft_mission       – selezione e ranking aircraft/loadout per missione
-                                 (include test con target terrestre e target Aircraft)
+  Funzioni pubbliche (test con mock del logger):
+    get_aircraft_mission          – selezione e ranking aircraft/loadout per missione
+                                    (include test con target terrestre e target Aircraft)
+    get_loadouts_availability     – verifica e assegna loadout in base alle armi
+
+Dati di riferimento
+-------------------
+  weapons_availability: basata su _WEAPONS_AVAILABILITY['air_weapons'] (Initial_Context.py)
+  loadouts: AIRCRAFT_LOADOUTS (Aircraft_Loadouts.py)
+  Aereo di riferimento: F-14A Tomcat / "Phoenix Fleet Defense"
+    pyloni: 4x AIM-54A-MK47, 2x AIM-9L, 2x AIM-7M
 
 Utilizzo:
     python -m pytest Code/Dynamic_War_Manager/Source/Test/Test_Air_Resources_Assigner.py -v
@@ -23,6 +36,7 @@ Utilizzo:
     python  Code/Dynamic_War_Manager/Source/Test/Test_Air_Resources_Assigner.py --tests-only
 """
 
+import copy
 import os
 import sys
 import unittest
@@ -54,16 +68,23 @@ _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
 
 from Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     get_aircraft_mission,
+    get_loadouts_availability,
     _extract_quantities,
     _extract_target_lists,
     _check_mission_requirements,
     _usability_met,
     _compute_score,
     _reduce_target_data,
+    _find_weapon_in_availability,
+    _pylons_to_weapons_dict,
+    _loadout_availability,
+    _reduction_weapons_availability,
+    _increase_weapons_availability,
     _DIRECTIVE_WEIGHTS,
     _REFERENCE_COST_K,
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+from Code.Dynamic_War_Manager.Source.Context.Initial_Context import _WEAPONS_AVAILABILITY
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  FIXTURE GLOBALI
@@ -188,6 +209,87 @@ _TARGET_TWO_PRIO: Dict = {
 _MAX_AIRCRAFT:  int = 8
 _MAX_MISSIONS:  int = 5
 _DIRECTIVE:     str = 'balanced'
+
+# ── Weapons availability — basata su _WEAPONS_AVAILABILITY['air_weapons'] ─────
+#
+# Aereo di riferimento: F-14A Tomcat / "Phoenix Fleet Defense"
+#   pyloni: 4x AIM-54A-MK47, 2x AIM-9L, 2x AIM-7M
+#
+# Struttura: {weapon_type: {weapon_name: quantity}}
+# La struttura specchia _WEAPONS_AVAILABILITY['air_weapons'] da Initial_Context.py.
+
+# Tutti i tipi di arma con quantità zero, usato come base per costruire i fixture.
+_WEAPONS_AVAIL_EMPTY_TYPES: Dict = {
+    'MISSILES_AAM': {},
+    'MISSILES_ASM': {},
+    'BOMBS':        {},
+    'ROCKETS':      {},
+    'CANNONS':      {},
+    'MACHINE_GUNS': {},
+}
+
+# Sufficiente per esattamente 2 loadout "Phoenix Fleet Defense":
+#   AIM-54A-MK47: 8 // 4 = 2,  AIM-9L: 4 // 2 = 2,  AIM-7M: 4 // 2 = 2
+_WEAPONS_AVAIL_NOMINAL: Dict = {
+    'MISSILES_AAM': {
+        'AIM-54A-MK47': 8,   # 8 // 4 = 2 loadout
+        'AIM-9L':        4,   # 4 // 2 = 2 loadout
+        'AIM-7M':        4,   # 4 // 2 = 2 loadout
+    },
+    'MISSILES_ASM': {},
+    'BOMBS':        {},
+    'ROCKETS':      {},
+    'CANNONS':      {},
+    'MACHINE_GUNS': {},
+}
+
+# AIM-7M è il fattore limitante (1 loadout):
+#   AIM-54A-MK47: 12 // 4 = 3,  AIM-9L: 8 // 2 = 4,  AIM-7M: 2 // 2 = 1
+_WEAPONS_AVAIL_AIM7_LIMITED: Dict = {
+    'MISSILES_AAM': {
+        'AIM-54A-MK47': 12,
+        'AIM-9L':        8,
+        'AIM-7M':        2,  # ← fattore limitante
+    },
+    'MISSILES_ASM': {},
+    'BOMBS':        {},
+    'ROCKETS':      {},
+    'CANNONS':      {},
+    'MACHINE_GUNS': {},
+}
+
+# AIM-54A-MK47 insufficiente (3 < 4 necessari) → 0 loadout
+_WEAPONS_AVAIL_INSUFFICIENT: Dict = {
+    'MISSILES_AAM': {
+        'AIM-54A-MK47': 3,   # 3 < 4 necessari → 0 loadout
+        'AIM-9L':        10,
+        'AIM-7M':        10,
+    },
+    'MISSILES_ASM': {},
+    'BOMBS':        {},
+    'ROCKETS':      {},
+    'CANNONS':      {},
+    'MACHINE_GUNS': {},
+}
+
+# Abbondante: 10 loadout disponibili per ogni arma
+_WEAPONS_AVAIL_ABUNDANT: Dict = {
+    'MISSILES_AAM': {
+        'AIM-54A-MK47': 40,  # 40 // 4 = 10
+        'AIM-9L':        20,  # 20 // 2 = 10
+        'AIM-7M':        20,  # 20 // 2 = 10
+    },
+    'MISSILES_ASM': {},
+    'BOMBS':        {},
+    'ROCKETS':      {},
+    'CANNONS':      {},
+    'MACHINE_GUNS': {},
+}
+
+# Pyloni reali F-14A Tomcat "Phoenix Fleet Defense" (estratti da AIRCRAFT_LOADOUTS)
+_F14A_PHOENIX_PYLONS: Dict = (
+    AIRCRAFT_LOADOUTS["F-14A Tomcat"]["Phoenix Fleet Defense"]["stores"]["pylons"]
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  SCENARIO FIXTURES — configurazioni per test di scenario e tabelle
@@ -365,8 +467,735 @@ def _all_loggers_mocked() -> ExitStack:
     return stack
 
 
+def _mra_logger_mocked() -> ExitStack:
+    """Context manager: mocka solo il logger di Air_Resources_Assigner."""
+    stack = ExitStack()
+    stack.enter_context(patch(_LOGGER_MRA, MagicMock()))
+    return stack
+
+
 # ─────────────────────────────────────────────────────────────────────────────
-#  1. _extract_quantities
+#  1. _find_weapon_in_availability
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestFindWeaponInAvailability(unittest.TestCase):
+    """Unit test per _find_weapon_in_availability(weapons_availability, weapon_name).
+
+    Ricerca un'arma nella struttura annidata::
+
+        {weapon_type: {weapon_name: quantity}, ...}
+
+    Restituisce ``(type_key, quantity)`` se trovata, ``(None, 0)`` altrimenti.
+
+    Fixture: basata su _WEAPONS_AVAILABILITY['air_weapons'] (Initial_Context.py)
+    con overrides locali per garantire valori deterministi nei test.
+    """
+
+    def setUp(self):
+        # Costruisce una weapons_availability realistica a partire dai dati reali,
+        # sovrascrivendo le quantità per renderle deterministiche nei test.
+        base = copy.deepcopy(_WEAPONS_AVAILABILITY['air_weapons'])
+        base['MISSILES_AAM']['AIM-54A-MK47'] = 50
+        base['BOMBS']['Mk-84'] = 30
+        self._wa = base
+
+    # ── Weapon trovata ────────────────────────────────────────────────────────
+
+    def test_aim54_found_in_missiles_aam(self):
+        """AIM-54A-MK47 → trovato nel bucket MISSILES_AAM."""
+        wtype, qty = _find_weapon_in_availability(self._wa, 'AIM-54A-MK47')
+        self.assertEqual(wtype, 'MISSILES_AAM')
+
+    def test_mk84_found_in_bombs(self):
+        """Mk-84 → trovato nel bucket BOMBS."""
+        wtype, _ = _find_weapon_in_availability(self._wa, 'Mk-84')
+        self.assertEqual(wtype, 'BOMBS')
+
+    def test_returns_correct_quantity(self):
+        """La quantità restituita corrisponde al valore presente nel dizionario."""
+        _, qty = _find_weapon_in_availability(self._wa, 'AIM-54A-MK47')
+        self.assertEqual(qty, 50)
+
+    def test_mk84_correct_quantity(self):
+        """La quantità per Mk-84 corrisponde al valore impostato."""
+        _, qty = _find_weapon_in_availability(self._wa, 'Mk-84')
+        self.assertEqual(qty, 30)
+
+    def test_returns_tuple(self):
+        """Il risultato è sempre una tupla di due elementi."""
+        result = _find_weapon_in_availability(self._wa, 'AIM-54A-MK47')
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(len(result), 2)
+
+    # ── Weapon non trovata ────────────────────────────────────────────────────
+
+    def test_unknown_weapon_returns_none_zero(self):
+        """Weapon inesistente → (None, 0)."""
+        wtype, qty = _find_weapon_in_availability(self._wa, 'UNKNOWN_WEAPON_XYZ')
+        self.assertIsNone(wtype)
+        self.assertEqual(qty, 0)
+
+    def test_empty_availability_returns_none_zero(self):
+        """Dizionario vuoto → (None, 0)."""
+        wtype, qty = _find_weapon_in_availability({}, 'AIM-54A-MK47')
+        self.assertIsNone(wtype)
+        self.assertEqual(qty, 0)
+
+    def test_weapon_in_last_bucket_found(self):
+        """Weapon in un bucket successivo al primo → trovata correttamente."""
+        # AIM-7M è in MISSILES_AAM; verifichiamo che non importi la posizione
+        wtype, _ = _find_weapon_in_availability(self._wa, 'AIM-7M')
+        self.assertEqual(wtype, 'MISSILES_AAM')
+
+    def test_rockets_bucket(self):
+        """Weapon nel bucket ROCKETS → trovata con il tipo corretto."""
+        base = copy.deepcopy(_WEAPONS_AVAILABILITY['air_weapons'])
+        base['ROCKETS']['Zuni-Mk71'] = 15
+        wtype, qty = _find_weapon_in_availability(base, 'Zuni-Mk71')
+        self.assertEqual(wtype, 'ROCKETS')
+        self.assertEqual(qty, 15)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  2. _pylons_to_weapons_dict
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestPylonsToWeaponsDict(unittest.TestCase):
+    """Unit test per _pylons_to_weapons_dict(pylons).
+
+    Converte::
+
+        {pylon_id: [weapon_name, quantity, ...], ...}
+
+    in::
+
+        {weapon_name: total_quantity}
+
+    somma le quantità per armi sullo stesso tipo montate su più piloni.
+
+    Fixture: pyloni reali di F-14A Tomcat "Phoenix Fleet Defense"
+    (4x AIM-54A-MK47, 2x AIM-9L, 2x AIM-7M).
+    """
+
+    # ── Casi nominali ────────────────────────────────────────────────────────
+
+    def test_f14a_phoenix_aggregates_correctly(self):
+        """Pyloni F-14A Phoenix Fleet Defense → 4 AIM-54A-MK47, 2 AIM-9L, 2 AIM-7M."""
+        result = _pylons_to_weapons_dict(_F14A_PHOENIX_PYLONS)
+        self.assertEqual(result.get('AIM-54A-MK47'), 4)
+        self.assertEqual(result.get('AIM-9L'),        2)
+        self.assertEqual(result.get('AIM-7M'),         2)
+
+    def test_same_weapon_multiple_pylons_summed(self):
+        """Stessa arma su più piloni → quantità sommate."""
+        pylons = {
+            1: ['AIM-9L', 1],
+            2: ['AIM-9L', 1],
+            3: ['AIM-9L', 1],
+        }
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertEqual(result['AIM-9L'], 3)
+
+    def test_single_pylon(self):
+        """Un solo pilone → un'arma con la quantità corretta."""
+        pylons = {1: ['AIM-54A-MK47', 2]}
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertEqual(result.get('AIM-54A-MK47'), 2)
+
+    def test_empty_pylons_returns_empty_dict(self):
+        """Pyloni vuoti → dizionario vuoto."""
+        self.assertEqual(_pylons_to_weapons_dict({}), {})
+
+    def test_returns_dict(self):
+        """Il risultato è sempre un dict."""
+        self.assertIsInstance(_pylons_to_weapons_dict(_F14A_PHOENIX_PYLONS), dict)
+
+    def test_different_weapons_no_cross_contamination(self):
+        """Armi diverse su piloni distinti → non si sommano tra loro."""
+        pylons = {1: ['AIM-9L', 1], 2: ['AIM-7M', 1]}
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertEqual(result['AIM-9L'], 1)
+        self.assertEqual(result['AIM-7M'], 1)
+
+    def test_pylon_with_extra_fields_accepted(self):
+        """Pilone con campo extra (es. peso) → accettato senza errore."""
+        pylons = {1: ['AIM-54A-MK47', 4, 450]}  # terzo campo = peso
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertEqual(result.get('AIM-54A-MK47'), 4)
+
+    # ── Dati non validi ───────────────────────────────────────────────────────
+
+    def test_invalid_pylon_entry_skipped(self):
+        """Voce di pilone malformata (non lista/tupla) → saltata, nessuna eccezione."""
+        pylons = {1: ['AIM-9L', 1], 2: 'invalid_entry'}
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertIn('AIM-9L', result)
+        self.assertNotIn('invalid_entry', result)
+
+    def test_pylon_too_short_skipped(self):
+        """Lista pilone con meno di 2 elementi → saltata."""
+        pylons = {1: ['AIM-9L'], 2: ['AIM-7M', 1]}
+        result = _pylons_to_weapons_dict(pylons)
+        self.assertNotIn('AIM-9L', result)
+        self.assertEqual(result.get('AIM-7M'), 1)
+
+    def test_non_dict_input_raises_type_error(self):
+        """Input non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            _pylons_to_weapons_dict([['AIM-9L', 1]])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  3. _loadout_availability
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestLoadoutAvailability(unittest.TestCase):
+    """Unit test per _loadout_availability(weapons_availability, aircraft_model, loadout_name).
+
+    Calcola quanti loadout completi si possono allestire con le armi disponibili.
+    Il fattore limitante è l'arma con il rapporto ``disponibile // richiesta`` minore.
+
+    Aereo di riferimento: F-14A Tomcat / "Phoenix Fleet Defense"
+      (4x AIM-54A-MK47, 2x AIM-9L, 2x AIM-7M per loadout)
+
+    Tabella attesa con _WEAPONS_AVAIL_NOMINAL (8/4/4):
+      AIM-54A-MK47: 8 // 4 = 2
+      AIM-9L:        4 // 2 = 2
+      AIM-7M:        4 // 2 = 2
+      → loadout disponibili = 2
+    """
+
+    _AIRCRAFT = 'F-14A Tomcat'
+    _LOADOUT  = 'Phoenix Fleet Defense'
+
+    def setUp(self):
+        self._mock_ctx = _mra_logger_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    # ── Casi nominali ────────────────────────────────────────────────────────
+
+    def test_nominal_returns_two_loadouts(self):
+        """_WEAPONS_AVAIL_NOMINAL (8/4/4) → 2 loadout disponibili."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 2)
+
+    def test_aim7_is_limiting_factor(self):
+        """Con AIM-7M=2 (fattore limitante) → 1 loadout disponibile."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_AIM7_LIMITED)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 1)
+
+    def test_abundant_returns_ten_loadouts(self):
+        """_WEAPONS_AVAIL_ABUNDANT (40/20/20) → 10 loadout disponibili."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_ABUNDANT)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 10)
+
+    def test_returns_int(self):
+        """Il risultato è sempre un intero."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertIsInstance(result, int)
+
+    def test_returns_non_negative(self):
+        """Il risultato è sempre >= 0."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertGreaterEqual(result, 0)
+
+    def test_does_not_mutate_availability(self):
+        """La funzione non modifica weapons_availability (sola lettura)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        before = copy.deepcopy(wa)
+        _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(wa, before)
+
+    # ── Insufficienza / assenza ───────────────────────────────────────────────
+
+    def test_insufficient_aim54_returns_zero(self):
+        """AIM-54A-MK47=3 (< 4 necessari) → 0 loadout."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_INSUFFICIENT)
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 0)
+
+    def test_weapon_missing_from_availability_returns_zero(self):
+        """Arma non presente nel dizionario → 0 loadout."""
+        wa = {'MISSILES_AAM': {'AIM-9L': 10, 'AIM-7M': 10}}  # AIM-54A-MK47 assente
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 0)
+
+    def test_zero_quantity_weapon_returns_zero(self):
+        """Arma con quantità 0 → 0 loadout."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wa['MISSILES_AAM']['AIM-54A-MK47'] = 0
+        result = _loadout_availability(wa, self._AIRCRAFT, self._LOADOUT)
+        self.assertEqual(result, 0)
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_invalid_weapons_availability_raises_type_error(self):
+        """weapons_availability non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            _loadout_availability("not_a_dict", self._AIRCRAFT, self._LOADOUT)
+
+    def test_empty_aircraft_model_raises_type_error(self):
+        """aircraft_model stringa vuota → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            _loadout_availability(wa, '', self._LOADOUT)
+
+    def test_empty_loadout_name_raises_type_error(self):
+        """loadout_name stringa vuota → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            _loadout_availability(wa, self._AIRCRAFT, '')
+
+    def test_non_string_aircraft_model_raises_type_error(self):
+        """aircraft_model non stringa → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            _loadout_availability(wa, 42, self._LOADOUT)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  4. _reduction_weapons_availability
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestReductionWeaponsAvailability(unittest.TestCase):
+    """Unit test per _reduction_weapons_availability(weapons_availability, weapons_list).
+
+    Sottrae le quantità in *weapons_list* da *weapons_availability* in-place.
+
+    Comportamento chiave:
+      - Validazione atomica: verifica PRIMA tutte le armi, poi applica le riduzioni.
+        Se anche solo un'arma è insufficiente, nessuna modifica viene applicata.
+      - Arma non trovata: warning + skip (non blocca l'operazione).
+      - Ritorna True se tutte le operazioni sono riuscite, False se una quantità
+        è insufficiente.
+
+    Struttura weapons_availability: {weapon_type: {weapon_name: quantity}}
+    Struttura weapons_list:         {weapon_name: quantity}
+    """
+
+    def setUp(self):
+        self._mock_ctx = _mra_logger_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    # ── Casi nominali ────────────────────────────────────────────────────────
+
+    def test_normal_reduction_returns_true(self):
+        """Riduzione normale con scorte sufficienti → True."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 2, 'AIM-7M': 2}
+        result = _reduction_weapons_availability(wa, wl)
+        self.assertTrue(result)
+
+    def test_quantities_correctly_reduced(self):
+        """Le quantità vengono ridotte dei valori corretti."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        # Iniziale: AIM-54A-MK47=8, AIM-9L=4, AIM-7M=4
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 2, 'AIM-7M': 2}
+        _reduction_weapons_availability(wa, wl)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 4)  # 8 - 4
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'],        2)  # 4 - 2
+        self.assertEqual(wa['MISSILES_AAM']['AIM-7M'],         2)  # 4 - 2
+
+    def test_full_depletion_to_zero(self):
+        """Riduzione dell'intera scorta → quantità = 0."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'AIM-54A-MK47': 8, 'AIM-9L': 4, 'AIM-7M': 4}
+        result = _reduction_weapons_availability(wa, wl)
+        self.assertTrue(result)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 0)
+
+    def test_empty_weapons_list_returns_true(self):
+        """Lista armi vuota → True (niente da ridurre)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        before = copy.deepcopy(wa)
+        result = _reduction_weapons_availability(wa, {})
+        self.assertTrue(result)
+        self.assertEqual(wa, before)
+
+    # ── Insufficienza scorte ──────────────────────────────────────────────────
+
+    def test_insufficient_quantity_returns_false(self):
+        """Richiesta superiore alla scorta → False."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'AIM-54A-MK47': 100}  # 100 > 8 disponibili
+        result = _reduction_weapons_availability(wa, wl)
+        self.assertFalse(result)
+
+    def test_atomicity_no_partial_update_on_failure(self):
+        """Atomicità: se una riduzione fallisce, NESSUNA modifica viene applicata.
+
+        Scenario: riduco AIM-54A-MK47=4 (ok) e AIM-9L=100 (fail).
+        Il AIM-54A-MK47 NON deve essere diminuito.
+        """
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        # AIM-9L=4 disponibili, richiediamo 100 → fallisce
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 100}
+        result = _reduction_weapons_availability(wa, wl)
+        self.assertFalse(result)
+        # Verifica: AIM-54A-MK47 NON è stato toccato
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 8)
+        # Verifica: AIM-9L NON è stato toccato
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'], 4)
+
+    # ── Weapon non trovata ────────────────────────────────────────────────────
+
+    def test_unknown_weapon_skipped_others_reduced(self):
+        """Weapon sconosciuta → saltata con warning; le altre vengono ridotte."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'UNKNOWN_WEAPON_XYZ': 5, 'AIM-9L': 2}
+        result = _reduction_weapons_availability(wa, wl)
+        self.assertTrue(result)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'], 2)  # 4 - 2
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_weapons_availability_not_dict_raises_type_error(self):
+        """weapons_availability non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            _reduction_weapons_availability("not_a_dict", {'AIM-9L': 1})
+
+    def test_weapons_list_not_dict_raises_type_error(self):
+        """weapons_list non dict → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            _reduction_weapons_availability(wa, [('AIM-9L', 1)])
+
+    def test_negative_quantity_raises_value_error(self):
+        """Quantità negativa in weapons_list → ValueError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(ValueError):
+            _reduction_weapons_availability(wa, {'AIM-9L': -1})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  5. _increase_weapons_availability
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestIncreaseWeaponsAvailability(unittest.TestCase):
+    """Unit test per _increase_weapons_availability(weapons_availability, weapons_list).
+
+    Aggiunge le quantità in *weapons_list* a *weapons_availability* in-place.
+
+    Comportamento:
+      - Sempre True (l'incremento non può fallire per carenza di scorte).
+      - Arma non trovata: warning + skip.
+      - Quantità negative → ValueError.
+
+    Struttura weapons_availability: {weapon_type: {weapon_name: quantity}}
+    Struttura weapons_list:         {weapon_name: quantity}
+    """
+
+    def setUp(self):
+        self._mock_ctx = _mra_logger_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    # ── Casi nominali ────────────────────────────────────────────────────────
+
+    def test_normal_increase_returns_true(self):
+        """Incremento normale → True."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 2}
+        result = _increase_weapons_availability(wa, wl)
+        self.assertTrue(result)
+
+    def test_quantities_correctly_increased(self):
+        """Le quantità vengono incrementate dei valori corretti."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        # Iniziale: AIM-54A-MK47=8, AIM-9L=4
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 2}
+        _increase_weapons_availability(wa, wl)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 12)  # 8 + 4
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'],         6)  # 4 + 2
+
+    def test_zero_increase_no_change(self):
+        """Incremento di 0 → quantità invariata."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        before_aim54 = wa['MISSILES_AAM']['AIM-54A-MK47']
+        _increase_weapons_availability(wa, {'AIM-54A-MK47': 0})
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], before_aim54)
+
+    def test_empty_weapons_list_returns_true(self):
+        """Lista armi vuota → True (niente da aggiungere)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        before = copy.deepcopy(wa)
+        result = _increase_weapons_availability(wa, {})
+        self.assertTrue(result)
+        self.assertEqual(wa, before)
+
+    def test_reduction_then_increase_roundtrip(self):
+        """Riduzione + incremento identico → disponibilità invariata (roundtrip)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        before = copy.deepcopy(wa)
+        wl = {'AIM-54A-MK47': 4, 'AIM-9L': 2, 'AIM-7M': 2}
+        _reduction_weapons_availability(wa, wl)
+        _increase_weapons_availability(wa, wl)
+        self.assertEqual(wa, before)
+
+    # ── Weapon non trovata ────────────────────────────────────────────────────
+
+    def test_unknown_weapon_returns_true(self):
+        """Weapon sconosciuta → True (skip con warning)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        result = _increase_weapons_availability(wa, {'UNKNOWN_WEAPON_XYZ': 5})
+        self.assertTrue(result)
+
+    def test_unknown_weapon_does_not_alter_others(self):
+        """Weapon sconosciuta saltata → le altre armi vengono comunque incrementate."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        wl = {'UNKNOWN_WEAPON_XYZ': 5, 'AIM-9L': 3}
+        _increase_weapons_availability(wa, wl)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'], 7)  # 4 + 3
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_weapons_availability_not_dict_raises_type_error(self):
+        """weapons_availability non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            _increase_weapons_availability(None, {'AIM-9L': 1})
+
+    def test_weapons_list_not_dict_raises_type_error(self):
+        """weapons_list non dict → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            _increase_weapons_availability(wa, [('AIM-9L', 1)])
+
+    def test_negative_quantity_raises_value_error(self):
+        """Quantità negativa → ValueError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(ValueError):
+            _increase_weapons_availability(wa, {'AIM-9L': -1})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  6. get_loadouts_availability
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetLoadoutsAvailability(unittest.TestCase):
+    """Unit test per get_loadouts_availability(weapons_availability, loadouts_list).
+
+    Verifica e assegna i loadout in base alla disponibilità corrente delle armi.
+    Deduce atomicamente le armi consumate da *weapons_availability*.
+
+    Formato input::
+
+        loadouts_list = {aircraft_model: {loadout_name: requested_quantity}}
+
+    Formato output::
+
+        {aircraft_model: {loadout_name: {'quantity': int, 'reduction_percentage': int}}}
+
+    Aereo di riferimento: F-14A Tomcat / "Phoenix Fleet Defense"
+      (4x AIM-54A-MK47, 2x AIM-9L, 2x AIM-7M per loadout)
+
+    Tabella di riferimento con _WEAPONS_AVAIL_NOMINAL (8/4/4):
+      max 2 loadout disponibili.
+      - richiesta 2 → assegnati 2, reduction_percentage=100
+      - richiesta 3 → assegnati 2, reduction_percentage=66
+      - richiesta 1 con _INSUFFICIENT → assegnati 0, reduction_percentage=0
+    """
+
+    _AIRCRAFT = 'F-14A Tomcat'
+    _LOADOUT  = 'Phoenix Fleet Defense'
+
+    def setUp(self):
+        self._mock_ctx = _mra_logger_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    # ── Struttura del risultato ───────────────────────────────────────────────
+
+    def test_returns_dict(self):
+        """Input valido → restituisce un dict."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        self.assertIsInstance(result, dict)
+
+    def test_result_contains_aircraft_model_key(self):
+        """Il risultato contiene la chiave del modello aereo."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        self.assertIn(self._AIRCRAFT, result)
+
+    def test_result_contains_loadout_name_key(self):
+        """Il risultato contiene la chiave del nome loadout."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        self.assertIn(self._LOADOUT, result[self._AIRCRAFT])
+
+    def test_entry_has_quantity_and_reduction_percentage(self):
+        """Ogni entry ha 'quantity' e 'reduction_percentage'."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertIn('quantity', entry)
+        self.assertIn('reduction_percentage', entry)
+
+    # ── Assegnazione piena ────────────────────────────────────────────────────
+
+    def test_full_assignment_quantity_and_percentage(self):
+        """Richiesta soddisfatta per intero → quantity=richiesta, reduction_percentage=100."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}  # max disponibile = 2
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['quantity'], 2)
+        self.assertEqual(entry['reduction_percentage'], 100)
+
+    def test_single_loadout_assigned(self):
+        """Richiesta di 1 loadout con scorte nominali → assegnato 1 (100%)."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 1}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['quantity'], 1)
+        self.assertEqual(entry['reduction_percentage'], 100)
+
+    # ── Assegnazione parziale ─────────────────────────────────────────────────
+
+    def test_partial_assignment_quantity_reduced(self):
+        """Richiesta 3, disponibili 2 → quantity=2."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 3}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['quantity'], 2)
+
+    def test_partial_assignment_correct_percentage(self):
+        """Richiesta 3, assegnati 2 → reduction_percentage = int(2/3*100) = 66."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 3}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['reduction_percentage'], 66)  # int(2*100/3)
+
+    # ── Nessuna disponibilità ─────────────────────────────────────────────────
+
+    def test_no_availability_quantity_zero(self):
+        """Armi insufficienti → quantity=0."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_INSUFFICIENT)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['quantity'], 0)
+
+    def test_no_availability_percentage_zero(self):
+        """Armi insufficienti → reduction_percentage=0."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_INSUFFICIENT)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        result = get_loadouts_availability(wa, loadouts)
+        entry = result[self._AIRCRAFT][self._LOADOUT]
+        self.assertEqual(entry['reduction_percentage'], 0)
+
+    # ── Deduzione armi ────────────────────────────────────────────────────────
+
+    def test_weapons_deducted_from_availability(self):
+        """Dopo l'assegnazione, weapons_availability è ridotta delle armi usate.
+
+        2 loadout "Phoenix Fleet Defense" consumano: 8 AIM-54A-MK47, 4 AIM-9L, 4 AIM-7M.
+        Partendo da NOMINAL (8/4/4) → tutti a 0.
+        """
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        get_loadouts_availability(wa, loadouts)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 0)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-9L'],        0)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-7M'],         0)
+
+    def test_no_deduction_when_zero_assigned(self):
+        """Se quantity=0 (armi insufficienti), la disponibilità non cambia."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_INSUFFICIENT)
+        before = copy.deepcopy(wa)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        get_loadouts_availability(wa, loadouts)
+        self.assertEqual(wa, before)
+
+    def test_sequential_loadouts_reduce_stock_progressively(self):
+        """Più loadout per lo stesso aereo scalano le scorte progressivamente.
+
+        2 loadout "Phoenix Fleet Defense" consumano 8 AIM-54A-MK47 totali.
+        Partendo da ABUNDANT (40 AIM-54A-MK47) → rimangono 40 - 2*4 = 32.
+        """
+        wa = copy.deepcopy(_WEAPONS_AVAIL_ABUNDANT)
+        loadouts = {self._AIRCRAFT: {self._LOADOUT: 2}}
+        get_loadouts_availability(wa, loadouts)
+        self.assertEqual(wa['MISSILES_AAM']['AIM-54A-MK47'], 32)  # 40 - 2*4
+
+    # ── Più modelli e loadout ─────────────────────────────────────────────────
+
+    def test_multiple_aircraft_models_in_result(self):
+        """Più modelli di aereo nella richiesta → tutti presenti nel risultato."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_ABUNDANT)
+        loadouts = {
+            'F-14A Tomcat': {'Phoenix Fleet Defense': 1},
+            'F-14B Tomcat': {'Phoenix Fleet Defense': 1},
+        }
+        result = get_loadouts_availability(wa, loadouts)
+        self.assertIn('F-14A Tomcat', result)
+        self.assertIn('F-14B Tomcat', result)
+
+    def test_multiple_loadouts_same_aircraft_in_result(self):
+        """Più loadout dello stesso aereo → tutti presenti nel risultato."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_ABUNDANT)
+        loadouts = {
+            'F-14A Tomcat': {
+                'Phoenix Fleet Defense': 1,
+                'Sparrow CAP/Escort':    1,
+            }
+        }
+        result = get_loadouts_availability(wa, loadouts)
+        self.assertIn('Phoenix Fleet Defense', result['F-14A Tomcat'])
+        self.assertIn('Sparrow CAP/Escort',    result['F-14A Tomcat'])
+
+    # ── Validazione input ─────────────────────────────────────────────────────
+
+    def test_weapons_availability_not_dict_raises_type_error(self):
+        """weapons_availability non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            get_loadouts_availability("not_a_dict", {self._AIRCRAFT: {self._LOADOUT: 1}})
+
+    def test_loadouts_list_not_dict_raises_type_error(self):
+        """loadouts_list non dict → TypeError."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        with self.assertRaises(TypeError):
+            get_loadouts_availability(wa, [(self._AIRCRAFT, {self._LOADOUT: 1})])
+
+    def test_invalid_loadout_format_skipped(self):
+        """loadouts per un aereo con formato non dict → saltato, result non contiene l'aereo."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        loadouts = {'F-14A Tomcat': 'invalid_format'}
+        result = get_loadouts_availability(wa, loadouts)
+        # L'aereo viene saltato, non deve comparire nel risultato
+        self.assertNotIn('F-14A Tomcat', result)
+
+    def test_empty_loadouts_list_returns_empty_dict(self):
+        """loadouts_list vuota → dict vuoto."""
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        result = get_loadouts_availability(wa, {})
+        self.assertEqual(result, {})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  7. _extract_quantities
 # ─────────────────────────────────────────────────────────────────────────────
 
 class TestExtractQuantities(unittest.TestCase):
@@ -1470,6 +2299,14 @@ def _run_tests() -> unittest.TestResult:
     loader = unittest.TestLoader()
     suite  = unittest.TestSuite()
     for cls in (
+        # ── Helpers weapons/loadout (nuovi) ───────────────────────────────
+        TestFindWeaponInAvailability,
+        TestPylonsToWeaponsDict,
+        TestLoadoutAvailability,
+        TestReductionWeaponsAvailability,
+        TestIncreaseWeaponsAvailability,
+        TestGetLoadoutsAvailability,
+        # ── Helpers target/mission (esistenti) ───────────────────────────
         TestExtractQuantities,
         TestExtractTargetLists,
         TestCheckMissionRequirements,
@@ -1478,7 +2315,7 @@ def _run_tests() -> unittest.TestResult:
         TestReduceTargetData,
         TestGetAircraftMission,
         TestGetAircraftMissionAircraft,
-        # Scenari parametrici
+        # ── Scenari parametrici (esistenti) ──────────────────────────────
         TestStrikeScenario,
         TestCASScenario,
         TestSEADScenario,

@@ -1,0 +1,273 @@
+@startuml Resource_Manager.Component.Diagram
+title Resource_Manager — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Resource_Manager" {
+    [Resource_Manager] as RM
+    [Resource_Manager_Params\n(dataclass)] as RMP
+}
+
+package "Block" {
+    [Block] as B
+}
+
+package "DataType" {
+    [Payload] as PL
+    [PAYLOAD_ATTRIBUTES] as PA
+}
+
+package "Context" {
+    [Context\n(PRODUCTION_WEIGHT)] as CTX
+}
+
+package "Utility" {
+    [validate_class\nsetName / setId\nmean_point] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [dataclasses] as DC
+    [collections.defaultdict] as DEF
+    [typing] as TYP
+    [inspect] as INS
+}
+
+RM --> B   : manages resources for
+RM --> PL  : warehouse / payload ops
+RM --> PA  : iterates PAYLOAD_ATTRIBUTES
+RM --> CTX : PRODUCTION_WEIGHT
+RM --> UTL : validate_class / setName
+RM --> LOG : logger
+RM --> INS : getmro (block class check)
+RMP --> B  : references Block
+RMP --> PL : references Payload
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Resource_Manager.Class.Diagram
+title Resource_Manager — Class Diagram
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Resource_Manager_Params <<dataclass>> {
+    +clients: Optional[Dict[str, Block]]
+    +server: Optional[Dict[str, Block]]
+    +warehouse: Optional[Payload]
+}
+
+class Resource_Manager {
+    ' Constants
+    +RESOURCE_PARAMS: Tuple
+    +AUTONOMY_THRESHOLDS: Dict
+
+    ' Private attributes
+    -_block: Block
+    -_clients: Dict[str, Block]
+    -_server: Dict[str, Block]
+    -_warehouse: Payload
+    -_resources_to_self_consume: Optional[Payload]
+    -_resources_needed: Optional[Payload]
+    -_actual_production: Payload
+
+    ' Properties (lazy-loaded)
+    +block: Block
+    +warehouse: Payload
+    +resources_needed: Payload <<lazy>>
+    +resources_to_self_consume: Payload <<lazy>>
+    +actual_production: Payload
+    +production_value: float
+
+    ' Server/Client CRUD
+    +list_server_keys(): List[str]
+    +get_server(key): Block
+    +set_server(key, server): void
+    +remove_server(key): void
+    +list_client_keys(): List[str]
+    +get_client(key): Block
+    +set_client(key, client): void
+    +remove_client(key): void
+
+    ' Resource operations
+    +consume(): bool
+    +receive(payload): bool
+    +delivery(): Dict[str, bool]
+    +produce(): Dict[str, Optional[bool]]
+    +run_management_cycle(): Dict
+
+    ' Private methods
+    -_evaluate_resources_to_self_consume(): Payload
+    -_evaluate_effective_resources_needed(): Payload
+    -_get_autonomy_multiplier(autonomy_value): float
+    -_evaluate_clients_priority(): Dict[str, float]
+    -_invalidate_resource_cache(): void
+    -_is_valid_block(block): bool
+    -_validate_block_param(value): void
+    -_validate_all_params(**kwargs): void
+    -_validate_dict_param(name, value): void
+    -_validate_param(name, value, type): bool
+}
+
+class Block {
+    +id: str
+    +name: str
+    +region: Region
+    +assets: Dict
+    +resource_manager: Resource_Manager
+}
+
+class Payload {
+    +goods: float
+    +energy: float
+    +hr: float
+    +hc: float
+    +hs: float
+    +hb: float
+}
+
+Resource_Manager --> Block : "_block (1)"
+Resource_Manager "1" --> "*" Block : "_clients / _server"
+Resource_Manager --> Payload : "_warehouse\n_actual_production"
+Resource_Manager_Params ..> Resource_Manager : validates params for
+
+note top of Resource_Manager
+  Lazy-loading pattern:
+  resources_needed and resources_to_self_consume
+  are computed on first access, then cached.
+  Cache is invalidated on warehouse/block changes.
+end note
+
+note right of Resource_Manager
+  Bidirectional reference:
+  set_server() → server.set_client()
+  remove_server() → server.remove_client()
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml run_management_cycle
+title Activity Diagram — run_management_cycle()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Call run_management_cycle();
+
+partition "Consume" {
+    :consume() — subtract\nresources_to_self_consume\nfrom warehouse;
+    if (warehouse >= request?) then (yes)
+        :warehouse -= resources_to_self_consume;
+        :invalidate resource cache;
+        :results['consume'] = True;
+    else (no)
+        :log warning;
+        :results['consume'] = False;
+    endif
+}
+
+partition "Produce" {
+    :reset _actual_production;
+    while (for each asset in block.assets?) is (yes)
+        :asset_production = asset.get_production();
+        while (for each item in PAYLOAD_ATTRIBUTES?) is (yes)
+            if (production_item > 0?) then (yes)
+                :warehouse[item] += production_item;
+                :actual_production[item] += production_item;
+                :results[item] = True;
+            else (no)
+                :results[item] = False;
+            endif
+        endwhile (no)
+    endwhile (no)
+    :results['produce'] = item results;
+}
+
+partition "Delivery" {
+    :_evaluate_clients_priority()\nfrom region.blocks_priority;
+    :total_priority = sum(priorities);
+    while (for each client?) is (yes)
+        :priority_ratio = client_priority / total_priority;
+        :max_delivery = available_resources × ratio;
+        :actual_delivery = min(request, max_delivery) per item;
+        :client.resource_manager.receive(actual_delivery);
+        :warehouse -= actual_delivery;
+    endwhile (no)
+    :results['delivery'] = delivery_results;
+}
+
+:Return results dict\n{'consume': bool, 'produce': dict, 'delivery': dict};
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml delivery_sequence
+title Sequence Diagram — delivery()
+
+skinparam SequenceArrowColor #336699
+skinparam SequenceLifeLineBorderColor #336699
+skinparam SequenceParticipantBackgroundColor #D9E8FF
+skinparam backgroundColor #FEFEFE
+autonumber
+
+actor Caller
+participant ":Resource_Manager" as RM
+participant "_evaluate_clients_priority()" as ECP
+participant "client.resource_manager" as CRM
+
+Caller -> RM: delivery()
+activate RM
+
+RM -> ECP: _evaluate_clients_priority()
+activate ECP
+note over ECP
+  Reads block.region.blocks_priority
+  Returns {client_id: priority}
+end note
+ECP --> RM: clients_priority: Dict[str, float]
+deactivate ECP
+
+RM -> RM: total_priority = sum(clients_priority.values())
+RM -> RM: available_resources = warehouse.copy()
+
+loop for each client_id, client in _clients
+    RM -> RM: priority_ratio = client_priority / total_priority
+    RM -> RM: max_delivery = available_resources × priority_ratio
+    RM -> CRM: resources_needed (property)
+    activate CRM
+    CRM --> RM: client_request: Payload
+    deactivate CRM
+    RM -> RM: actual_delivery = min(request, max_delivery) per item
+    RM -> CRM: receive(actual_delivery)
+    activate CRM
+    CRM --> RM: success: bool
+    deactivate CRM
+    alt delivery_success
+        RM -> RM: warehouse -= actual_delivery
+        RM -> RM: available_resources -= actual_delivery
+    end
+end
+
+Caller <-- RM: delivery_results: Dict[str, bool]
+deactivate RM
+
+@enduml

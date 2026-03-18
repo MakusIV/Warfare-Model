@@ -1,0 +1,188 @@
+@startuml Vehicle_Data.Component.Diagram
+title Vehicle_Data — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Vehicle_Data" {
+    [Vehicle_Data\n(dataclass / Singleton)] as VD
+    [get_vehicle_data(model)] as GVD
+    [get_vehicle_scores(model, scores)] as GVS
+    [VEHICLE\n(registry Dict)] as VRG
+}
+
+package "Ground_Weapon_Data" {
+    [get_weapon_score\nget_weapon_score_target\nget_weapon_score_target_distribuition] as GWD
+}
+
+package "Context" {
+    [GROUND_ACTION\nACTION_TASKS\nBLOCK_ASSET_CATEGORY\nGround_Vehicle_Asset_Type] as CTX
+}
+
+package "Utility" {
+    [convert_mph_to_kmh] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [functools.lru_cache] as LRU
+    [tabulate / pandas] as TAB
+    [dataclasses] as DC
+    [sympy.Point3D] as PT
+    [typing] as TYP
+}
+
+VD --> GWD  : weapon scoring
+VD --> CTX  : category / task constants
+VD --> UTL  : convert_mph_to_kmh
+VD --> LOG  : logger
+VRG --> VD  : populated by Vehicle_Data instances
+GVD --> VRG : reads from registry
+GVS --> VRG : reads from registry
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Vehicle_Data.Class.Diagram
+title Vehicle_Data — Class Diagram (Singleton Registry)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Vehicle_Data <<dataclass>> {
+    ' Singleton registry
+    +{static} _registry: Dict[str, Vehicle_Data]
+
+    ' Construction fields
+    +constructor: str
+    +made: str
+    +model: str
+    +category: str
+    +start_service / end_service: str
+    +cost: int
+    +range: int
+    +roles: str
+
+    ' Subsystems
+    +engine: Dict
+    +weapons: Dict
+    +radar: Dict
+    +TVD: Dict
+    +communication: Dict
+    +hydraulic: Dict
+    +protections: Dict
+    +speed_data: Dict
+
+    ' Subsystem score evaluation
+    -_radar_eval(modes): float
+    -_TVD_eval(modes): float
+    -_reliability_eval(): float
+    -_maintenance_eval(): float
+    -_avalaiability_eval(): float
+    -_speed_eval(): float
+    -_weapon_eval(): float
+    -_protection_eval(): float
+    -_communication_eval(): float
+    -_hydraulic_eval(): float
+    -_range_eval(): float
+    -_combat_eval(): float
+
+    ' Weapon target effectiveness
+    -_weapon_target_effectiveness(types, dims): float
+    -_weapon_target_effectiveness_distribuition(types, dims): float
+
+    ' Normalized score API
+    +get_normalized_combat_score(category): float
+    +get_normalized_weapon_score(category): float
+    +get_normalized_radar_score(modes, category): float
+    +get_normalized_TVD_score(modes, category): float
+    +get_normalized_speed_score(category): float
+    +get_normalized_communication_score(category): float
+    +get_normalized_hydraulic_score(category): float
+    +get_normalized_range_score(category): float
+    +get_normalized_avalaiability_score(category): float
+    +get_normalized_maintenance_score(category): float
+    +get_normalized_reliability_score(category): float
+    +get_normalized_weapon_target_effectiveness(types, dims, category): float
+    +get_normalized_weapon_target_effectiveness_distribuition(...): float
+
+    ' Registry
+    +get_vehicle(model): Vehicle_Data
+
+    ' Private helper
+    -_normalize(value, scores): float
+}
+
+note top of Vehicle_Data
+  Singleton registry pattern:
+  Vehicle_Data._registry[model] = self
+  populated at module load time by
+  individual vehicle definitions.
+  Accessed via get_vehicle_data(model)
+  and get_vehicle_scores(model, scores).
+end note
+
+note right of Vehicle_Data
+  AMMO_LOAD_REFERENCE:
+  CANNONS:30, ARTILLERY:50,
+  AA_CANNONS:600, AUTO_CANNONS:500,
+  MISSILES_SAM:4, MISSILES_TANK:2,
+  ROCKETS:4, MORTARS:10
+  Used in _weapon_eval() to normalize
+  ammunition quantity factor (±20%).
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml combat_eval_vehicle
+title Activity Diagram — _combat_eval() in Vehicle_Data
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Compute individual subsystem scores:;
+
+partition "Subsystem Scores" {
+    :weapon = _weapon_eval();
+    :radar   = _radar_eval();
+    :TVD     = _TVD_eval();
+    :protection = _protection_eval();
+    :communication = _communication_eval();
+    :speed = _speed_eval();
+    :hydraulic = _hydraulic_eval();
+    :range = _range_eval();
+}
+
+:For each subsystem, read weight[self.category]\n(different weights per Ground_Vehicle_Asset_Type);
+
+note right
+  Example weights for TANK:
+  weapon:10, radar:1, TVD:3,
+  protection:10, communication:1,
+  speed:5, hydraulic:1, range:5
+end note
+
+:tot_weights = sum of weight[category] for all subsystems;
+
+:combat_score = sum(score × weight[category])\n                / tot_weights;
+
+:Return combat_score (float);
+
+stop
+@enduml

@@ -1,0 +1,234 @@
+@startuml Military.Component.Diagram
+title Military — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Military" {
+    [Military] as MIL
+}
+
+package "Block" {
+    [Block] as BLK
+}
+
+package "DataType" {
+    [Event] as EVT
+    [Route] as RTE
+}
+
+package "Context" {
+    [GROUND_ACTION] as GA
+    [AIR_TASK] as AT
+    [SEA_TASK] as ST
+    [MILITARY_CATEGORY] as MC
+    [MILITARY_FORCES] as MF
+    [ACTION_TASKS] as ACT
+}
+
+package "Utility" {
+    [validate_class\nsetName / setId\nmean_point] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [numpy.median] as NP
+    [sympy.Point2D / Point3D] as PT
+    [heapq] as HP
+}
+
+package "TYPE_CHECKING only" {
+    [Vehicle] as VEH
+    [Aircraft] as AIR
+    [Ship] as SHP
+    [Asset] as AST
+    [Region] as RGN
+}
+
+MIL --|> BLK  : inherits
+MIL --> RTE   : time_to_ground_intercept
+MIL --> MC    : _validate_mil_category
+MIL --> MF    : combat_power / _is_attack_asset
+MIL --> ACT   : combat_power tasks
+MIL --> UTL   : validate_class
+MIL --> LOG   : logger
+MIL --> NP    : median (recon / artillery)
+MIL --> PT    : position / distance
+MIL ..> VEH   : TYPE_CHECKING
+MIL ..> AIR   : TYPE_CHECKING
+MIL ..> SHP   : TYPE_CHECKING
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Military.Class.Diagram
+title Military — Class Diagram (Inheritance)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class Block {
+    -_name: str
+    -_id: str
+    -_side: str
+    -_category: str
+    -_assets: Dict
+    -_region: Region
+    +position: Point
+    +efficiency: float
+    +morale: float
+    +is_military(): bool
+    +set_asset() / remove_asset()
+}
+
+class Military {
+    -_mil_category: str
+    --
+    +mil_category: str
+
+    ' Base type checks
+    +is_Air_Base(): bool
+    +is_Ground_Base(): bool
+    +is_Naval_Base(): bool
+    +get_military_category(): str
+
+    ' Combat
+    +combat_power(force, action): float
+
+    ' Range calculations
+    +artillery_in_range(target_point): Tuple[bool, dict]
+    -_get_artillery_stats(): Tuple
+
+    ' Time calculations
+    +time_to_direct_line_attack(target): Dict
+    +time_to_ground_intercept(route, speed): Dict
+    +time2attack(target, route, speed): Dict
+    -_get_target_distance(target): float
+    -_get_attack_speeds(): Tuple
+    -_is_attack_asset(asset): bool
+    -_get_nominal_speed(asset): float
+    -_get_max_speed(asset): float
+
+    ' Recon
+    +get_recon_efficiency(): float
+
+    ' Stubs (to be implemented)
+    +air_defense(): None
+    +combat_range(): None
+    +defense_aa_range(): None
+    +combat_volume(): None
+    +intelligence(): None
+    +combat_state(): None
+
+    ' Validation
+    -_validate_mil_category(category): void
+}
+
+Block <|-- Military : extends
+
+note right of Military
+  mil_category values:
+  Air_Base: ["Fighter", "Bomber", "Helibase", ...]
+  Ground_Base: ["Tank", "Armor", "Artillery", ...]
+  Naval_Base: ["Carrier", "Destroyer", ...]
+end note
+
+note bottom of Military
+  time2attack() dispatch:
+  - is_Air_Base → time_to_direct_line_attack(target)
+  - is_Ground_Base → time_to_ground_intercept(route, speed)
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml time2attack
+title Activity Diagram — time2attack() / artillery_in_range()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+fork
+
+    partition "time2attack(target, route, speed)" {
+        :Receive target, route (optional), speed (optional);
+        if (target is None AND route is None?) then (yes)
+            :raise ValueError;
+            stop
+        endif
+        if (is_Air_Base AND target?) then (yes)
+            :time_to_direct_line_attack(target)\ndistance / med_speed;
+        elseif (is_Ground_Base AND route?) then (yes)
+            :time_to_ground_intercept(route, speed)\nroute.travelTime();
+        endif
+        :Return {'time': float, 'min_time': float};
+    }
+
+fork again
+
+    partition "artillery_in_range(target_point)" {
+        :Receive target_point (Point2D/Point3D);
+        if (not isinstance(Point2D/Point3D)?) then (yes)
+            :raise TypeError;
+            stop
+        endif
+        if (self.position is None?) then (yes)
+            :return False, None;
+            stop
+        endif
+        :target_distance = target_point.distance(position);
+        :_get_artillery_stats()\n→ max_range, med_range, ratio, quantity;
+        if (no artillery?) then (yes)
+            :return False, None;
+            stop
+        endif
+        :Build result dict:\n- target_within_max_range\n- target_within_med_range\n- max_range_ratio\n- med_range_ratio\n- artillery_quantity;
+        :Return (True, result);
+    }
+
+end fork
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_recon_efficiency
+title Activity Diagram — get_recon_efficiency()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:Iterate over self.assets.values();
+
+:recognitors = [asset for asset\n  if asset.role == "Recon"];
+
+if (recognitors is empty?) then (yes)
+    :return 0.0;
+    stop
+endif
+
+:efficiencies = [asset.efficiency() for asset in recognitors];
+
+:return numpy.median(efficiencies);
+
+stop
+@enduml

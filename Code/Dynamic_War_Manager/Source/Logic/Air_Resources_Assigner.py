@@ -1,7 +1,7 @@
 """
- MODULE Military Resources Assigner
+ MODULE Air Resources Assigner
 
-methods for allocating military resources: aircraft, vehicle, ecc.
+methods for allocating air military resources: aircraft and loadouts.
 
 """
 
@@ -219,135 +219,349 @@ def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
             dim_data['quantity'] = max(0, round(dim_data['quantity'] * multiplier))
     return updated
 
-def _loadout_availability(weapons_availability: Dict, aircraft_model: str, loadout_name: str):
-    """"""
+def _find_weapon_in_availability(weapons_availability: Dict, weapon_name: str) -> Tuple[Optional[str], int]:
+    """Cerca *weapon_name* nella struttura annidata *weapons_availability*.
+
+    La struttura attesa è::
+
+        weapons_availability = {
+            <weapon_type>: {<weapon_name>: <quantity (int)>},
+            ...
+        }
+
+    Returns
+    -------
+    (type_key, quantity)
+        *type_key* è la chiave del tipo in cui è stata trovata l'arma;
+        *quantity* è la disponibilità corrente.
+        Se l'arma non è trovata restituisce ``(None, 0)``.
+    """
+    for wtype, weapons_dict in weapons_availability.items():
+        if weapon_name in weapons_dict:
+            return wtype, weapons_dict[weapon_name]
+    return None, 0
+
+def _pylons_to_weapons_dict(pylons: Dict) -> Dict[str, int]:
+    """Converte la struttura pylons in un dizionario piatto armi→quantità totale.
+
+    Formato pylons::
+
+        {<pylon_id>: [<weapon_name>, <quantity>, ...], ...}
+
+    Returns
+    -------
+    Dict[str, int]
+        ``{weapon_name: total_quantity}`` — somma delle quantità per ogni arma
+        presente su più piloni dello stesso tipo.
+
+    Raises
+    ------
+    TypeError
+        Se *pylons* non è un dict.
+    """
+    if not isinstance(pylons, dict):
+        raise TypeError(f"pylons deve essere un dict, ricevuto {type(pylons).__name__!r}")
+
+    weapons: Dict[str, int] = {}
+    for pylon_id, weapon_data in pylons.items():
+        if not isinstance(weapon_data, (list, tuple)) or len(weapon_data) < 2:
+            logger.warning(f"Pylon {pylon_id!r}: formato non valido ({weapon_data!r}), ignorato.")
+            continue
+        name = weapon_data[0]
+        qty  = weapon_data[1]
+        if not isinstance(name, str) or not isinstance(qty, (int, float)):
+            logger.warning(f"Pylon {pylon_id!r}: nome o quantità non validi ({name!r}, {qty!r}), ignorato.")
+            continue
+        weapons[name] = weapons.get(name, 0) + int(qty)
+    return weapons
+
+def _loadout_availability(weapons_availability: Dict, aircraft_model: str, loadout_name: str) -> int:
+    """Restituisce quanti loadout completi possono essere allestiti con le armi disponibili.
+
+    Per ogni arma richiesta dal loadout (sommando le quantità tra i piloni dello
+    stesso tipo), calcola quante unità di loadout completo è possibile formare
+    con la scorta attuale.  Restituisce il minimo tra tutte le armi (fattore
+    limitante).
+
+    Parameters
+    ----------
+    weapons_availability:
+        ``{weapon_type: {weapon_name: quantity}}``
+        (``weapon_type``: MISSILES_AAM, MISSILES_ASM, ecc.)
+    aircraft_model:
+        Nome del modello aereo (deve esistere in ``AIRCRAFT_LOADOUTS``).
+    loadout_name:
+        Nome del loadout (deve esistere per l'aereo indicato).
+
+    Returns
+    -------
+    int
+        Numero di loadout completi allestibili (≥ 0).
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    """
+    if not isinstance(weapons_availability, dict):
+        raise TypeError(f"weapons_availability deve essere un dict, ricevuto {type(weapons_availability).__name__!r}")
+    if not isinstance(aircraft_model, str) or not aircraft_model:
+        raise TypeError("aircraft_model deve essere una stringa non vuota")
+    if not isinstance(loadout_name, str) or not loadout_name:
+        raise TypeError("loadout_name deve essere una stringa non vuota")
+
     pylons = get_weapons_by_loadout(aircraft_model, loadout_name)
-    loadout_quantity = 0
-    weapons_quantity_loadout = {}
 
-    # conta il numero di armi di una stessa tipologia montate sui piloni dell'aereo
-    for pylon, weapon in pylons:
-        weapon_name_load = weapon[0]
-        weapons_quantity_loadout[weapon_name_load] += weapon[1]
+    # Aggrega armi per nome: {weapon_name: qty_per_loadout}
+    weapons_per_loadout = _pylons_to_weapons_dict(pylons)
 
-    # verifica se la quantità di armi disponibili per uno specifica tipo è superiore alla quantità prevista nel loadout
-    for wl_name, wl_qty in weapons_quantity_loadout:
-        w_qty_available = weapons_availability.get(wl_name, None) 
+    if not weapons_per_loadout:
+        logger.warning(f"Nessuna arma trovata per il loadout {loadout_name!r} / {aircraft_model!r}.")
+        return 0
 
-        if not w_qty_available:
-            logger.warning(f"weapon: {wl_name} is not present in the available quantity dictionary. Continute with the next weapon")
+    # Calcola il numero di loadout possibile per ciascuna arma (fattore limitante)
+    loadout_quantity: Optional[int] = None
+
+    for weapon_name, qty_needed in weapons_per_loadout.items():
+        wtype, w_qty_available = _find_weapon_in_availability(weapons_availability, weapon_name)
+
+        if wtype is None:
+            logger.warning(
+                f"Arma {weapon_name!r} non trovata in weapons_availability. "
+                f"Il loadout {loadout_name!r} non è disponibile."
+            )
+            return 0
+
+        if w_qty_available < qty_needed:
+            logger.warning(
+                f"Arma {weapon_name!r}: richieste {qty_needed}, disponibili {w_qty_available}. "
+                f"Il loadout {loadout_name!r} non è disponibile."
+            )
+            return 0
+
+        possible = w_qty_available // qty_needed
+        loadout_quantity = possible if loadout_quantity is None else min(loadout_quantity, possible)
+
+    return loadout_quantity if loadout_quantity is not None else 0
+
+def _reduction_weapons_availability(weapons_availability: Dict, weapons_list: Dict) -> bool:
+    """Riduce la disponibilità delle armi scalando le quantità indicate in *weapons_list*.
+
+    Modifica *weapons_availability* in-place.
+
+    Parameters
+    ----------
+    weapons_availability:
+        ``{weapon_type: {weapon_name: quantity}}``
+    weapons_list:
+        ``{weapon_name: quantity}`` — quantità da sottrarre per ogni arma.
+
+    Returns
+    -------
+    bool
+        ``True`` se l'aggiornamento è avvenuto correttamente per tutte le armi,
+        ``False`` se una o più armi non hanno scorte sufficienti
+        (in tal caso nessuna modifica viene applicata).
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    ValueError
+        Se una quantità richiesta è negativa.
+    """
+    if not isinstance(weapons_availability, dict):
+        raise TypeError(f"weapons_availability deve essere un dict, ricevuto {type(weapons_availability).__name__!r}")
+    if not isinstance(weapons_list, dict):
+        raise TypeError(f"weapons_list deve essere un dict {{weapon_name: quantity}}, ricevuto {type(weapons_list).__name__!r}")
+
+    # Validazione preventiva: verifica disponibilità prima di applicare riduzioni
+    for weapon_name, quantity in weapons_list.items():
+        if not isinstance(quantity, (int, float)) or quantity < 0:
+            raise ValueError(f"Quantità non valida per {weapon_name!r}: {quantity!r} (deve essere ≥ 0)")
+
+        wtype, available = _find_weapon_in_availability(weapons_availability, weapon_name)
+
+        if wtype is None:
+            logger.warning(f"Arma {weapon_name!r} non trovata in weapons_availability. Riduzione ignorata.")
             continue
 
-        if w_qty_available < wl_qty:
-            logger.warning(f"The required amount of {wl_name} is not avalaible ({wl_qty}: requested, {w_qty_available}: available). The loadout: {loadout_name} is not available")
-            return loadout_quantity
-        
-        else:
-            loadout_quantity = min(loadout_quantity, w_qty_available // wl_qty)
-                
-    return loadout_quantity
+        if available < quantity:
+            logger.warning(
+                f"Arma {weapon_name!r}: riduzione richiesta {quantity} > disponibile {available}. "
+                f"Operazione annullata."
+            )
+            return False
+
+    # Applicazione delle riduzioni (solo se la validazione è passata)
+    for weapon_name, quantity in weapons_list.items():
+        wtype, _ = _find_weapon_in_availability(weapons_availability, weapon_name)
+        if wtype is not None:
+            weapons_availability[wtype][weapon_name] -= int(quantity)
+
+    return True
+
+def _increase_weapons_availability(weapons_availability: Dict, weapons_list: Dict) -> bool:
+    """Incrementa la disponibilità delle armi aggiungendo le quantità indicate in *weapons_list*.
+
+    Modifica *weapons_availability* in-place.
+
+    Parameters
+    ----------
+    weapons_availability:
+        ``{weapon_type: {weapon_name: quantity}}``
+    weapons_list:
+        ``{weapon_name: quantity}`` — quantità da aggiungere per ogni arma.
+
+    Returns
+    -------
+    bool
+        ``True`` sempre (l'aggiunta non può fallire per carenza di scorte);
+        le armi non presenti nel dizionario vengono saltate con un warning.
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    ValueError
+        Se una quantità è negativa.
+    """
+    if not isinstance(weapons_availability, dict):
+        raise TypeError(f"weapons_availability deve essere un dict, ricevuto {type(weapons_availability).__name__!r}")
+    if not isinstance(weapons_list, dict):
+        raise TypeError(f"weapons_list deve essere un dict {{weapon_name: quantity}}, ricevuto {type(weapons_list).__name__!r}")
+
+    for weapon_name, quantity in weapons_list.items():
+        if not isinstance(quantity, (int, float)) or quantity < 0:
+            raise ValueError(f"Quantità non valida per {weapon_name!r}: {quantity!r} (deve essere ≥ 0)")
+
+        wtype, _ = _find_weapon_in_availability(weapons_availability, weapon_name)
+
+        if wtype is None:
+            logger.warning(f"Arma {weapon_name!r} non trovata in weapons_availability. Incremento ignorato.")
+            continue
+
+        weapons_availability[wtype][weapon_name] += int(quantity)
+
+    return True
 
 
-def _reduction_weapons_availability(weapons_availability: Dict, weapons_list: Dict):
-        """
-        weapon_list = { <weapon_name>: quantity }
-        """
-
-        for weapon_name, quantity in weapons_list:
-
-            if weapons_availability.get(weapon_name, None):
-
-                if weapons_availability[weapon_name] >= quantity:
-                    weapons_availability[weapon_name] -= quantity
-
-                else:
-                    logger.warning(f"The weapon: {weapon_name} quantity in weapons_availabilitY dictionary is less than the requested reduction. The requested update is not performed. Returns None")    
-                    return False
-            
-            else:
-                logger.warning(f"The weapon: {weapon_name} is not present in weapons_availabilitY dictionary. Continue with the next weapon")
-        return True
-
-def _increase_weapons_availability(weapons_availability: Dict, weapons_list: Dict):
-        """
-        weapon_list = { <weapon_name>: quantity }
-        """
-
-        for weapon_name, quantity in weapons_list:
-
-            if weapons_availability.get(weapon_name, None):                
-                weapons_availability[weapon_name] += quantity
-            
-            else:
-                logger.warning(f"The weapon: {weapon_name} is not present in weapons_availabilitY dictionary. Continue with the next weapon")
-        return True
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict):
+def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict) -> Dict:
+    """Verifica e assegna i loadout in base alla disponibilità corrente delle armi.
+
+    Per ogni loadout richiesto calcola quante unità possono essere effettivamente
+    allestite con la scorta disponibile, deduce le armi consumate da
+    *weapons_availability* e restituisce la lista assegnata con le eventuali
+    riduzioni percentuali rispetto alla richiesta.
+
+    Parameters
+    ----------
+    weapons_availability:
+        ``{weapon_type: {weapon_name: quantity}}``
+        Struttura mutata in-place: le armi assegnate vengono scalate.
+    loadouts_list:
+        ``{aircraft_model: {loadout_name: requested_quantity}}``
+
+    Returns
+    -------
+    Dict
+        ``{aircraft_model: {loadout_name: {'quantity': int, 'reduction_percentage': int}}}``
+
+        *reduction_percentage* = 100 se la richiesta è stata soddisfatta per
+        intero, un valore minore altrimenti (0 se nessuna unità è disponibile).
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    Exception
+        Se si verifica un'inconsistenza tra la disponibilità calcolata da
+        ``_loadout_availability`` e la successiva deduzione.
     """
+    if not isinstance(weapons_availability, dict):
+        raise TypeError(f"weapons_availability deve essere un dict, ricevuto {type(weapons_availability).__name__!r}")
+    if not isinstance(loadouts_list, dict):
+        raise TypeError(f"loadouts_list deve essere un dict {{aircraft_model: {{loadout_name: qty}}}}, ricevuto {type(loadouts_list).__name__!r}")
 
-    weapons_availability = {
+    loadout_list_assigned: Dict = {}
 
-        <weapon_type>: {<weapon_name>:  quantity}
+    for aircraft_model, loadouts in loadouts_list.items():
 
-    }    
-    <weapon_type> : MISSILES_AAM, MISSILES_ASM, ....
+        if not isinstance(loadouts, dict):
+            logger.warning(f"Formato non valido per i loadout di {aircraft_model!r} (atteso dict). Ignorato.")
+            continue
 
-    
-    loadout_list = {
-        
-        <aircraft_model>: {<loadout_name>: quantity(float)}
-    
-    }
-    
-    Aggiorna i due dizionari passati come argomenti (riferimenti) aggiornando le quantità richieste in loadout_list con quelle effettivamente disponibili e aggiornando weapons_availability riducendo le wapons delle quantità richieste nei loadouts
-    """
-    
-    for aircraft_model, loadout in loadouts_list:
-        
-        for loadout_name, loadout_quantity in loadout:            
-            quantity = _loadout_availability(weapons_availability, aircraft_model, loadout_name)
+        # Inizializza la voce per questo modello una sola volta, fuori dal loop interno
+        loadout_list_assigned[aircraft_model] = {}
 
-            if quantity >= loadout_quantity:                    
-                weapons_list = get_weapons_by_loadout(aircraft_model, loadout_name)
-                
-                for i in range(0, loadout_quantity):
-                    reduction_results = _reduction_weapons_availability(weapons_availability, weapons_list)
-            
-                    if not reduction_results:
-                        logger.error(f"loadout_availability was verified but not update weapons_availability was performed!! Raise Exception")
-                        raise Exception(f"loadout_availability was verified but not update weapons_availability was performed!!")
-                logger.info(f"The loadout: {loadout_name} quantity requested {loadout_quantity} has been assigned. weapons_list was udated")
+        for loadout_name, requested_qty in loadouts.items():
 
+            if not isinstance(requested_qty, int) or requested_qty < 0:
+                logger.warning(
+                    f"Quantità non valida per {loadout_name!r} / {aircraft_model!r} "
+                    f"({requested_qty!r}). Skipping."
+                )
+                continue
+
+            # ---- Calcola il massimo numero di loadout allestibili --------
+            available_qty = _loadout_availability(weapons_availability, aircraft_model, loadout_name)
+            assigned_qty  = min(requested_qty, available_qty)
+
+            if assigned_qty <= 0:
+                loadout_list_assigned[aircraft_model][loadout_name] = {
+                    'quantity': 0,
+                    'reduction_percentage': 0,
+                }
+                logger.warning(
+                    f"Loadout {loadout_name!r} ({aircraft_model!r}): "
+                    f"0 unità assegnabili su {requested_qty} richieste."
+                )
+                continue
+
+            # ---- Costruisce il dizionario armi totali da detrarre --------
+            # (quantità per singolo loadout × unità assegnate)
+            pylons = get_weapons_by_loadout(aircraft_model, loadout_name)
+            per_loadout_weapons = _pylons_to_weapons_dict(pylons)
+            total_weapons_needed = {
+                wname: wqty * assigned_qty
+                for wname, wqty in per_loadout_weapons.items()
+            }
+
+            # ---- Deduce le armi dalla disponibilità ---------------------
+            result = _reduction_weapons_availability(weapons_availability, total_weapons_needed)
+            if not result:
+                logger.error(
+                    f"Inconsistenza: la disponibilità di {loadout_name!r} ({aircraft_model!r}) "
+                    f"era verificata ma la deduzione ha fallito. Eccezione sollevata."
+                )
+                raise Exception(
+                    f"Inconsistency: weapons deduction failed for {loadout_name!r} / {aircraft_model!r}"
+                )
+
+            percentage = int(assigned_qty * 100 / requested_qty) if requested_qty > 0 else 100
+            loadout_list_assigned[aircraft_model][loadout_name] = {
+                'quantity': assigned_qty,
+                'reduction_percentage': percentage,
+            }
+
+            if assigned_qty == requested_qty:
+                logger.info(
+                    f"Loadout {loadout_name!r} ({aircraft_model!r}): "
+                    f"{assigned_qty}/{requested_qty} unità assegnate (100%)."
+                )
             else:
-                logger.warning(f"The loadout: {loadout_name} quantity requested is lesser of loadout available {quantity}")
-                loadout_quantity_reduction = False
+                logger.warning(
+                    f"Loadout {loadout_name!r} ({aircraft_model!r}): "
+                    f"{assigned_qty}/{requested_qty} unità assegnate ({percentage}%)."
+                )
 
-                for i in range(loadout_quantity-1, 0, -1):
-                    
-                    if quantity >= i:
-                        loadout_quantity_reduction = True
-                        logger.warning(f"The loadout: {loadout_name} quantity assigned has been reduced (requested: {loadout_quantity}, assigned: {i}")
-                        loadout[loadout_name] = i
-
-                        for i in range(0, i):
-                            reduction_results = _reduction_weapons_availability(weapons_availability, weapons_list)
-                    
-                            if not reduction_results:
-                                logger.error(f"loadout_availability was verified but not update weapons_availability was performed!! Raise Exception")
-                                raise Exception(f"loadout_availability was verified but not update weapons_availability was performed!!")
-                        break
-                    
-                if not loadout_quantity_reduction:
-                    loadout[loadout_name] = 0
-                    logger.warning(f"The loadout: {loadout_name} quantity assigned is 0") 
-
-                                   
-
+    return loadout_list_assigned
 
 def get_aircraft_mission(
     task: str,

@@ -1,0 +1,215 @@
+@startuml Aircraft_Loadouts.Component.Diagram
+title Aircraft_Loadouts — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Aircraft_Loadouts" {
+    [AIRCRAFT_LOADOUTS\\n(loadout registry)] as ALR
+    [Loadout evaluation\\nfunctions] as LEF
+}
+
+package "Aircraft_Weapon_Data" {
+    [AIR_WEAPONS\\nget_weapon_score\\nget_weapon_score_target\\nis_weapon_introduced\\nget_weapon_cost] as AWD
+}
+
+package "Context" {
+    [AIR_TASK\\nMAX_AIRCRAFT_TYPE_FOR_MISSION] as CTX
+}
+
+package "External Libraries" {
+    [typing] as TYP
+}
+
+LEF --> ALR : reads loadout data
+LEF --> AWD : weapon scoring & lookup
+LEF --> CTX : AIR_TASK / mission limits
+LEF --> TYP : Dict, List, Optional
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Aircraft_Loadouts.Class.Diagram
+title Aircraft_Loadouts — Module Structure (Data + Functions)
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class "AIRCRAFT_LOADOUTS (data registry)" as ALR {
+    ' aircraft_model → loadout_name → loadout_config
+    loadout_code: str
+    tasks: List[str]
+    attributes: List[str]
+    Lock_Down_Shoot_Down: bool
+    self_escort_capability: bool
+    cruise.speed / attack.speed: float (km/h)
+    cruise.reference_altitude / attack.reference_altitude: float (m)
+    cruise.altitude_max / attack.altitude_max: float (m)
+    cruise.altitude_min / attack.altitude_min: float (m)
+    cruise.range / attack.range: Dict[fuel_%: km]
+    usability.day / night / adverse_weather: bool
+    mandatory_support.Escort / SEAD / Escort_Jammer: bool
+    mandatory_support.Flare_Illumination / Laser_Illumination: bool
+    stores.pylons: Dict[pylon_id → [weapon_name, qty]]
+    stores.devices: Dict[device_name → data]
+    stores.pylon_count: int
+    stores.fuel_internal_max: float
+    stores.flare / chaff / gun_rounds: int
+}
+
+class "Loadout Query Functions" as LQF {
+    +get_aircraft_loadouts(aircraft_name): Dict
+    +get_aircraft_loadouts_by_task(aircraft_name, task): Dict
+    +get_loadout(aircraft_name, loadout_name): Dict
+    +get_weapons_by_loadout(aircraft_model, loadout_name): Dict
+    +get_loadout_tasks(aircraft_name, loadout_name): List
+    +get_loadout_attributes(aircraft_name, loadout_name): List
+    +evaluate_loadout_usability(aircraft_name, loadout_name, conditions): bool
+    +evaluate_loadout_support_requirements(aircraft_name, loadout_name, support_available): bool
+    +evaluate_loadout_range(aircraft_name, loadout_name, fuel_percentage, phase): float
+    +evaluate_loadout_speed(aircraft_name, loadout_name, phase): float
+    +evaluate_loadout_altitude(aircraft_name, loadout_name, phase): Dict
+}
+
+class "Loadout Scoring Functions" as LSF {
+    +loadout_eval(aircraft_name, loadout_name): float
+    +loadout_target_effectiveness(aircraft_name, loadout_name,\\n  target_type, target_dimension,\\n  route_length, route_speed): float
+    +loadout_target_effectiveness_by_distribuition(aircraft_name,\\n  loadout_name, target_distribution,\\n  route_length, route_speed): float
+    +get_weapon_efficiency(aircraft_name, loadout_name, target_data): Dict
+    +loadout_year_compatibility(aircraft_name, loadout_name, year): bool
+    +get_aircrafts_quantity(model, loadout, target_data,\\n  year, max_aircraft_for_mission): Dict
+    +loadout_cost(aircraft_name, loadout_name): float
+}
+
+ALR ..> LQF : data source
+ALR ..> LSF : data source
+
+note top of ALR
+  66 aircraft models:
+  US: F-14/15/16/18, A-10, B-1B, B-52H,
+      F-117, MQ-1/9, C-130/C-17, KC-135...
+  Russia: MiG-21/23/29/31, Su-25/27/30/34,
+          Tu-22M/95MS/160...
+  NATO: Mirage 2000C, AJ 37 Viggen
+end note
+
+note right of LSF
+  loadout_eval() weights:
+    weapons: 50% (sum weapon_score × qty)
+    speed:   30% (normalized to 1000 km/h)
+    range:   20% (avg cruise+attack at 100% fuel,\\n             normalized to 2000 km)
+
+  get_aircrafts_quantity() returns:
+    {aircraft_number, total,
+     missions_needed, max_aircraft_for_mission,
+     message}
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml loadout_target_effectiveness
+title Activity Diagram — loadout_target_effectiveness(aircraft_name, loadout_name, target_type, target_dimension, route_length, route_speed)
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+:loadout_target_effectiveness(\n  aircraft_name, loadout_name,\n  target_type, target_dimension,\n  route_length, route_speed);
+
+:loadout = get_loadout(aircraft_name, loadout_name);
+
+if (loadout not found?) then (yes)
+    :return 0.0;
+    stop
+endif
+
+partition "Range Check" {
+    :cruise_speed = loadout["cruise"]["speed"]\nattack_speed = loadout["attack"]["speed"];
+
+    if (route_speed <= cruise_speed?) then (yes)
+        :phase = "cruise"\nphase_speed = cruise_speed;
+    else (no)
+        :phase = "attack"\nphase_speed = attack_speed;
+    endif
+
+    :range_increment = max(0, (phase_speed - route_speed) / phase_speed) × 0.3\n(max +30% if route speed < loadout speed);
+
+    :effective_range = loadout[phase]["range"]["fuel_100%"] × (1 + range_increment);
+
+    if (route_length > effective_range?) then (yes)
+        :return 0.0 (out of range);
+        stop
+    endif
+}
+
+partition "Weapon Effectiveness Scoring" {
+    :pylons = loadout["stores"]["pylons"];
+    :score = 0.0;
+
+    while (for each pylon_id, [weapon_name, qty] in pylons?) is (yes)
+        :w_score = get_weapon_score_target(\n  weapon_name, target_type, target_dimension);
+        :score += w_score × qty;
+    endwhile (no)
+}
+
+:return score (float);
+
+stop
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml get_aircrafts_quantity
+title Sequence Diagram — get_aircrafts_quantity(model, loadout, target_data, year, max_aircraft_for_mission)
+
+skinparam sequenceArrowColor #336699
+skinparam sequenceLifeLineBorderColor #336699
+skinparam sequenceParticipantBackgroundColor #D9E8FF
+skinparam sequenceParticipantBorderColor #336699
+skinparam backgroundColor #FEFEFE
+autonumber
+
+participant "Caller" as C
+participant "get_aircrafts_quantity" as GAQ
+participant "loadout_year_compatibility" as LYC
+participant "get_weapon_efficiency" as GWE
+participant "Aircraft_Weapon_Data" as AWD
+
+C -> GAQ: get_aircrafts_quantity(model, loadout, target_data, year, max_aircraft_for_mission)
+
+opt year is not None
+    GAQ -> LYC: loadout_year_compatibility(model, loadout, year)
+    LYC -> AWD: is_weapon_introduced(weapon, year) for each pylon weapon
+    AWD --> LYC: bool
+    LYC --> GAQ: compatible: bool
+    alt not compatible
+        GAQ --> C: {total: 0, message: "loadout not year-compatible"}
+    end
+end
+
+GAQ -> GWE: get_weapon_efficiency(model, loadout, target_data)
+GWE -> AWD: get_weapon_score_target(weapon, t_type, t_dim) for each weapon × target
+AWD --> GWE: float
+GWE --> GAQ: efficiency = {target_type: {dimension: float}}
+
+GAQ -> GAQ: For each (t_type, t_dim, count) in target_data:\n  needed = count / efficiency[t_type][t_dim]\n  aircraft_number[t_type][t_dim] = needed
+
+GAQ -> GAQ: total = sum(aircraft_number values)\nmissions_needed = ceil(total / max_aircraft_for_mission)
+
+GAQ --> C: {aircraft_number, total, missions_needed,\n  max_aircraft_for_mission, message}
+
+@enduml

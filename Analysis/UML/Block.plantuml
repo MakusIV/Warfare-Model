@@ -1,0 +1,225 @@
+@startuml Block.Component.Diagram
+title Block — Component / Dependency Diagram
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FEFEFE
+skinparam component {
+    BackgroundColor #D9E8FF
+    BorderColor #336699
+    FontSize 12
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #888888
+}
+
+package "Block" {
+    [Block] as BLK
+    [BlockParams\n(dataclass)] as BP
+}
+
+package "Component" {
+    [Resource_Manager] as RM
+}
+
+package "DataType" {
+    [Event] as EVT
+    [State] as STA
+    [Payload] as PL
+}
+
+package "Context" {
+    [BLOCK_CATEGORY] as BC
+    [SIDE] as SD
+}
+
+package "Utility" {
+    [validate_class\nsetName / setId\nmean_point\nevaluateMorale\nenemySide] as UTL
+    [Logger] as LOG
+}
+
+package "External Libraries" {
+    [numpy.mean] as NP
+    [sympy.Point] as PT
+    [dataclasses] as DC
+}
+
+package "TYPE_CHECKING only" {
+    [Asset] as AST
+    [Region] as RGN
+}
+
+BLK --> RM   : has one resource_manager
+BLK --> EVT  : events list
+BLK --> STA  : state
+BLK --> PL   : cost / balance_trade (via Asset)
+BLK --> BC   : BLOCK_CATEGORY validation
+BLK --> SD   : SIDE validation
+BLK --> UTL  : setName / setId / mean_point
+BLK --> LOG  : logger
+BLK --> NP   : mean(efficiencies)
+BLK --> PT   : position (centroid)
+BLK ..> AST  : TYPE_CHECKING (back-ref)
+BLK ..> RGN  : TYPE_CHECKING (region)
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml Block.Class.Diagram
+title Block — Class Diagram
+
+skinparam classBackgroundColor #D9E8FF
+skinparam classBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+class BlockParams <<dataclass>> {
+    +name: Optional[str]
+    +description: Optional[str]
+    +side: Optional[str]
+    +category: Optional[str]
+    +sub_category: Optional[str]
+    +functionality: Optional[str]
+    +value: Optional[int]
+    +region: Optional[Region]
+}
+
+class Block {
+    ' Constants
+    +MAX_VALUE: int = 10
+    +MIN_VALUE: int = 1
+
+    ' Private attributes
+    -_name: str
+    -_id: str
+    -_description: str
+    -_side: str
+    -_category: str
+    -_sub_category: str
+    -_functionality: str
+    -_value: int
+    -_events: List[Event]
+    -_assets: Dict[str, Asset]
+    -_region: Optional[Region]
+    -_state: State
+    -_resource_manager: Resource_Manager
+
+    ' Properties
+    +name: str
+    +id: str
+    +description: str
+    +side: str
+    +category: str
+    +sub_category: str
+    +functionality: str
+    +value: int
+    +events: List[Event]
+    +assets: Dict[str, Asset]
+    +region: Optional[Region]
+    +state: State
+    +resource_manager: Resource_Manager
+    +position: Optional[Point]
+    +efficiency: float
+    +morale: float
+    +balance_trade: float
+    +cost: int
+    +block_class: str
+
+    ' Asset CRUD
+    +list_asset_keys(): List[str]
+    +get_asset(key): Asset
+    +set_asset(key, asset): void
+    +remove_asset(key): void
+
+    ' Event CRUD
+    +add_event(event): void
+    +get_last_event(): Event
+    +get_event(index): Event
+    +remove_event(event): void
+
+    ' Type checks
+    +is_military(): bool
+    +is_logistic(): bool
+    +is_civilian(): bool
+    +has_resource_manager(): bool
+    +is_instance(obj): bool
+    +check_instance_list(objs): bool
+    +is_enemy(side): bool
+
+    ' Private
+    -_validate_params(**kwargs): void
+}
+
+class Resource_Manager {
+    +block: Block
+    +warehouse: Payload
+    +consume(): bool
+    +produce(): dict
+    +delivery(): dict
+}
+
+class State {
+    +health: int
+    +success_ratio: dict
+}
+
+class Event {
+    +id: str
+    +type: str
+}
+
+Block "1" *-- "1" Resource_Manager : has
+Block "1" o-- "*" Event : events
+Block "1" *-- "1" State : state
+Block "1" o-- "*" Asset : assets
+
+note top of Block
+  position = centroid of asset positions
+  efficiency = mean of asset efficiencies
+  morale = evaluateMorale(success_ratio, efficiency)
+end note
+
+@enduml
+
+' ─────────────────────────────────────────────────────────────
+@startuml set_asset
+title Activity Diagram — set_asset() / remove_asset()
+
+skinparam ActivityBackgroundColor #D9E8FF
+skinparam ActivityBorderColor #336699
+skinparam ArrowColor #336699
+skinparam backgroundColor #FEFEFE
+
+start
+
+fork
+    partition "set_asset(key, asset)" {
+        :Receive key (str) and asset (Asset);
+        if (key not str?) then (yes)
+            :raise TypeError;
+            stop
+        endif
+        if (asset not Asset?) then (yes)
+            :raise TypeError;
+            stop
+        endif
+        :_assets[key] = asset;
+        :asset.block = self\n(back-reference);
+    }
+fork again
+    partition "remove_asset(key)" {
+        :Receive key (str);
+        if (key not str?) then (yes)
+            :raise TypeError;
+            stop
+        endif
+        if (key not in _assets?) then (yes)
+            :raise KeyError;
+            stop
+        endif
+        :del _assets[key];
+    }
+end fork
+
+stop
+@enduml
