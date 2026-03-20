@@ -10,7 +10,20 @@ from __future__ import annotations  # must be the very first statement
 import copy
 from typing import Dict, List, Optional, Tuple
 
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK
+import random
+import skfuzzy as fuzz
+from skfuzzy import control as ctrl
+import numpy as np
+
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK,
+    TARGET_CLASSIFICATION,
+    Target_Class_Name,
+    Weapon_Power_Effect,
+    Weapon_Area_Effect,
+    get_block_infrastructure_components,
+    get_weapons_param_for_asset_type
+)
 from Code.Dynamic_War_Manager.Source.Context.Campaign_State import Campaign_State
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
@@ -521,14 +534,73 @@ def _evaluate_task_and_weapon(target_data: Dict)-> Dict:
     """
     MAX_TARGET_FOR_PINPOINT_STRIKE = 6
     MIN_TARGET_FOR_CLUSTER_BOMBS = 15
+    target_types = [item.value for item in Target_Class_Name]
 
     ground_target_data = {}
+    target_data_classification = {}
     sea_target_data ={}
     air_target_data = {}
     sead_target_data ={}
     evaluated_task = None
 
-    for k,i in target_data.items():
+
+    # if weapon.get()'weapon_param_type',None)
+
+
+    count_effect = {'power': {effect.value: 0 for effect in Weapon_Power_Effect}, 'precision': {effect.value: 0 for effect in Weapon_Area_Effect}}
+
+    for k,i in target_data.items():        
+
+        if k not in target_types:
+            logger.warning(f"unknow target type. {k}. This target will be considered like 'unknow' in the evaluation")
+            target_type = Target_Class_Name.GENERIC.value
+        
+        else:
+            target_type = k
+        targets_components = TARGET_CLASSIFICATION[target_type]
+
+        for component in targets_components:
+            wp = get_weapons_param_for_asset_type(component)
+
+            for item in wp['power']:
+                count_effect['power'][item]+=1
+
+            for item in wp['precision']:
+                count_effect['power'][item]+=1
+
+
+        # usa i valori di count_effect['power'][item] come parametri per fuzzy
+
+
+        """class Weapon_Power_Effect(Enum):
+    PENETRATION = 'Penetration'
+    FRAGMENTATION = 'Fragmentation'
+    HIGH_EXPLOSIVE = 'High_Explosive'
+    CLUSTER = 'Cluster'
+    THERMOBARIC = 'Thermobaric'
+    THERMAL = 'Thermal'
+    BLAST = 'Blast'
+    KINETIC = 'Kinetic'
+
+class Weapon_Area_Effect(Enum):
+    PRECISION = 'Precision'
+    WIDE = 'Wide'
+    LOCALIZED = 'Localized'
+    INTERNAL = 'Internal'"""
+        
+
+
+        # valutazione delle categorie deel target in base alla dimensione ed al numero
+        get_block_infrastructure_components()
+
+        
+
+        
+
+
+
+    for k,i in target_data.items():        
+
 
         if k not in ['ship', 'Aircraft', 'Air_Defense']:
             ground_target_data[k] = i                

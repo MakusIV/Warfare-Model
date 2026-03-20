@@ -1,7 +1,7 @@
 from functools import lru_cache
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK, TARGET_CLASSIFICATION, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK, TARGET_CLASSIFICATION, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK, Weapon_Area_Effect, Weapon_Power_Effect
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -104,6 +104,171 @@ WARHEAD_TYPE_TARGET_EFFECTIVENESS = {
 GUIDE_PARAM = {
 
 }
+
+
+"""
+  ┌──────────────────────────┬─────────────────────┬────────────────────────────┬──────────────────────┐    
+  │        Categoria         │      precision      │           power            │       Esempio        │  
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Missili strike/anti-nave │ PRECISION           │ BLAST, HIGH_EXPLOSIVE      │ Kh-101, AGM-84A,     │  
+  │  HE                      │                     │                            │ GBU-10               │  
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Missili anti-radar       │ PRECISION           │ FRAGMENTATION, BLAST       │ AGM-88, Kh-58        │    
+  │ (SEAD)                   │                     │                            │                      │    
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Missili HEAT/anticarro   │ PRECISION           │ PENETRATION (+HE)          │ AGM-65D, Hellfire,   │  
+  │                          │                     │                            │ HOT-3                │    
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤  
+  │ Bombe libere GP          │ WIDE                │ BLAST, FRAGMENTATION       │ Mk-82, Mk-83,        │    
+  │                          │                     │                            │ FAB-250              │  
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Bombe guidate laser/TV   │ PRECISION           │ BLAST, HIGH_EXPLOSIVE      │ GBU-16, KAB-500L     │
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Bunker buster            │ PRECISION/LOCALIZED │ PENETRATION                │ GBU-27, BetAB-500    │
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Cluster anti-personale   │ WIDE                │ CLUSTER, FRAGMENTATION     │ CBU-52B, BLG66       │
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤
+  │ Cluster anti-carro       │ WIDE                │ CLUSTER, PENETRATION       │ Mk-20, RBK-500PTAB   │    
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤
+  │ Razzi HE/FRAG            │ LOCALIZED           │ BLAST/FRAGMENTATION        │ Zuni, Hydra-70MK1    │    
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤
+  │ Razzi HEAT               │ LOCALIZED           │ PENETRATION,               │ S-8 KOM, Hydra-70MK5 │    
+  │                          │                     │ HIGH_EXPLOSIVE             │                      │
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Cannoni HE               │ LOCALIZED           │ HIGH_EXPLOSIVE,            │ M61A1, GSh-30        │    
+  │                          │                     │ FRAGMENTATION              │                      │
+  ├──────────────────────────┼─────────────────────┼────────────────────────────┼──────────────────────┤    
+  │ Cannoni AP/APFSDS        │ LOCALIZED           │ KINETIC, PENETRATION/FRAG  │ GAU-8/A, NR-23       │
+  └──────────────────────────┴─────────────────────┴────────────────────────────┴──────────────────────┘    
+   
+"""
+
+_wae = Weapon_Area_Effect
+_wpe = Weapon_Power_Effect
+
+# weapon_param_type: classifica ogni arma A/G secondo precisione (Weapon_Area_Effect) e effetto (Weapon_Power_Effect).
+# Assegnato a ogni weapon entry in AIR_WEAPONS dal loop in fondo al file.
+_WEAPON_PARAM_TYPE = {
+
+    # --- MISSILES_ASM ---
+    # Missili da crociera / strike con testata HE
+    'Kh-55':     {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-101':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-22N':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    # Missili anti-nave / multi-ruolo con testata HE
+    'RB-05A':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'RB-05E':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'RB-04E':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'RB-15':     {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'RB-15F':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'AGM-84A':   {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kormoran':  {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Sea Eagle': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-66':     {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-59':     {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-25ML':   {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-25MR':   {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-29L':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-29T':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    # Missili anti-radar (SEAD): testata blast-frammentazione
+    'AGM-45':    {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'AGM-88':    {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'Kh-58':     {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'Kh-25MPU':  {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'Kh-25MP':   {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    # Missili anticarro HEAT / shaped charge
+    'RB-75T':    {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    'AGM-65D':   {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    'AGM-114':   {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    '9M120':     {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    '9M120-F':   {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.HIGH_EXPLOSIVE]},
+    '9M114':     {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION]},
+    'Hot-3':     {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION]},
+    'BGM-71D':   {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION]},
+    # Maverick con testata penetrante blast-frag
+    'AGM-65K':   {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.BLAST, _wpe.FRAGMENTATION]},
+    # Missile leggero (testata piccola frammentante)
+    'Mistral':   {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION]},
+
+    # --- BOMBS ---
+    # Bombe libere (non guidate) - area effect
+    'Mk-84':       {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'Mk-83':       {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'Mk-82':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'Mk-82AIR':    {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'M/71':        {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'SAMP-400LD':  {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'FAB-1500M54': {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'FAB-500M62':  {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'FAB-250M54':  {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'FAB-100':     {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'FAB-50':      {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    # Bombe guidate (laser/TV) - precisione con alta potenza
+    'GBU-10':      {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'GBU-16':      {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'GBU-12':      {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'GBU-24':      {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-500L':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-500Kr':   {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KGBU-96r':    {'precision': [_wae.PRECISION], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    # Bombe bunker-buster / penetranti
+    'GBU-27':      {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION]},
+    'SAMP-250HD':  {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION]},
+    'BetAB-500':   {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION]},
+    # Bombe a grappolo (cluster) anti-personale/soft
+    'Mk-20':       {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'BLG66':       {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'CBU-52B':     {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'BK-90MJ1':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'BK-90MJ1-2':  {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'BK-90MJ2':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-250AO':   {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-500AO':   {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-500PTAB': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'KGBU-2AO':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'KGBU-2PTAB':  {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+
+    # --- ROCKETS ---
+    # Razzi non guidati HE / FRAG
+    'Zuni-Mk71':   {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'Hydra-70MK1': {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'SNEB-253':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'SNEB-256':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.FRAGMENTATION]},
+    'S-5 M':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.FRAGMENTATION]},
+    'S-8 OFP2':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.FRAGMENTATION]},
+    'S-24':        {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    # Razzi non guidati HEAT / anticarro
+    'Hydra-70MK5': {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    'S-5 KO':      {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    'S-8 KOM':     {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    'S-13':        {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION, _wpe.HIGH_EXPLOSIVE]},
+    # Razzo guidato laser (alta precisione)
+    'S-25L':       {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+
+    # --- CANNONS ---
+    # Cannoni HE (frammentazione + esplosione)
+    'M61A1':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'M39A3':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'Mk-12':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'DEFA-554':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'N-37':        {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'NR-30':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'GSh-30-1':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'GSh-30-2':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'GSh-6-30':    {'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'Oerlikon-KCA':{'precision': [_wae.LOCALIZED], 'power': [_wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    # Cannoni AP / APFSDS (cinetico + frammentazione)
+    'UPK-23':      {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+    'Gsh-23L':     {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+    'NR-23':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+    'GSh-6-23M':   {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+    'GAU-8/A':     {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.PENETRATION]},
+
+    # --- MACHINE_GUNS ---
+    'AN-M2':       {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+    'M3-Browning': {'precision': [_wae.LOCALIZED], 'power': [_wpe.KINETIC, _wpe.FRAGMENTATION]},
+}
+
 '''
 RELOAD_PARAM = {
 
@@ -7970,6 +8135,11 @@ AIR_WEAPONS = {
 }
 
 
+# Assegna weapon_param_type a ogni weapon entry in AIR_WEAPONS che ha una voce in _WEAPON_PARAM_TYPE
+for _cat, _weapons in AIR_WEAPONS.items():
+    for _model, _data in _weapons.items():
+        if _model in _WEAPON_PARAM_TYPE:
+            _data['weapon_param_type'] = _WEAPON_PARAM_TYPE[_model]
 
 
 
