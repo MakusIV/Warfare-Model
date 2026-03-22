@@ -495,6 +495,24 @@ class Logistic_Asset_Type(Enum):
     BUNKER = 'Bunker'
 
 
+class Target_Class_Name(Enum):
+    SOFT = 'Soft'
+    ARMORED = 'Armored'
+    HARD = 'Hard'
+    STRUCTURE = 'Structure'
+    AIR_DEFENSE = 'Air_Defense'
+    AIRBASE = 'Airbase'
+    HELIBASE = 'Helibase'   
+    PORT = 'Port'
+    SHIPYARD = 'Shipyard'
+    FARP = 'Farp'
+    STRONGHOLD = 'Stronghold'
+    SHIP = 'ship'
+    AIRCRAFT = 'Aircraft'
+    GENERIC = 'Generic'
+
+
+tc = Target_Class_Name
 
 """                                                                                                         
 
@@ -517,12 +535,61 @@ class Logistic_Asset_Type(Enum):
   │ Infiammabili            │ LOCALIZED │ BLAST, THERMAL          │ Gas_Infrastructure,                 │   
   │                         │           │                         │ Petrol_Infrastructure, Oil_Tank     │   
   └─────────────────────────┴───────────┴─────────────────────────┴─────────────────────────────────────┘   
-                                                                                                        """
-
+                                                                                                        
+"""
 lat = Logistic_Asset_Type
 wpe = Weapon_Power_Effect
 wae = Weapon_Area_Effect
 
+
+
+WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
+
+
+    tc.SOFT.value+tc.ARMORED.value:{ 
+        'Big': {
+            {'qty_range': [1,2], 'Precision': wae.PRECISION},
+            {'qty_range': [3,6], 'Precision': wae.LOCALIZED},
+            {'qty_range': [7,None], 'Precision': wae.WIDE}
+        },
+        'Med': {
+            {'qty_range': [1,4], 'Precision': wae.PRECISION}, # i med normalmente sono raggrupapti in aree più piccole, quindi minore è il numero maggiore è la precisione richiesta
+            {'qty_range': [5,8], 'Precision': wae.LOCALIZED},
+            {'qty_range': [9,None], 'Precision': wae.WIDE}
+        },
+        'Small': {
+            {'qty_range': [1,1], 'Precision': wae.PRECISION},
+            {'qty_range': [2,7],'Precision': wae.LOCALIZED},
+            {'qty_range': [8,None], 'Precision': wae.WIDE}
+        },
+        
+    },          
+    tc.HARD.value:{},          
+    tc.STRUCTURE.value+tc.AIRBASE.value+tc.HELIBASE.value+tc.PORT.value+tc.SHIPYARD.value+tc.STRONGHOLD.value: {
+        'Big': {
+            {'qty_range': [1,2], 'Precision': wae.PRECISION},
+            {'qty_range': [3,4], 'Precision': wae.LOCALIZED},
+            {'qty_range': [5,None], 'Precision': wae.WIDE}
+        },
+        'Med': {
+            {'qty_range': [1,1], 'Precision': wae.PRECISION},
+            {'qty_range': [2,5], 'Precision': wae.LOCALIZED},
+            {'qty_range': [6,None], 'Precision': wae.WIDE}
+        },
+        'Small': {
+            {'qty_range': [1,1], 'Precision': wae.PRECISION},
+            {'qty_range': [2,7], 'Precision': wae.LOCALIZED},
+            {'qty_range': [8,None], 'Precision': wae.WIDE}
+        },     
+    tc.AIR_DEFENSE.value:{},   
+    tc.FARP.value:{},         
+    tc.SHIP.value:{},         
+    tc.AIRCRAFT.value:{},     
+    tc.GENERIC.value:{},   
+    }
+}
+
+"""
 WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
 
     # --- PRECISION + KINETIC/HIGH_EXPLOSIVE: obiettivi strutturali duri ---
@@ -558,12 +625,15 @@ WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
 
 }
 
+
+
 def get_weapons_param_for_asset_type(asset_type: str) -> Dict:
 
     if asset_type not in WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE.keys():
         return None
     return WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE[asset_type]
 
+"""
 
 # key1:   Block Class, key2: Asset Category, key 3: Asset type
 # INFRASTRUCTURE BLOCK ASSET
@@ -576,30 +646,51 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                 },
                                 'Railway': {
                                     lat.STATION.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.RAILWAY_INTERCHANGE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Train.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Port': {
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DOCK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Large.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Medium.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Small.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Airport': {
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.RUNWAY.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Aircraft_Fighter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Aircraft_Fighter_Bomber.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Aircraft_Bomber.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
-                                'Helibase': {
+                                'Helibase': {                                    
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.HELI_PLATFORM.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Helicopter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Helicopter_Big.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Electric': {
+                                    lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Fuel_Line': {
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.GAS_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.PETROL_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
@@ -608,18 +699,21 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 
     'Production':           {   'Power_Plant': {
                                     lat.POWER_PLANT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Factory': {
                                     lat.FACTORY.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
                                 'Farm': {
                                     lat.FARM.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
@@ -628,7 +722,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
 
     'Urban':               {   'Administrative': {
                                     lat.ADMINISTRATIVE_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
-                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
+                                    lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}                                    
                                 },
                                 'Civilian': {
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
@@ -664,6 +758,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.HANGAR.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ENERGY_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Tank.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -690,6 +785,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ENERGY_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Aircraft.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Aircraft_Big.value: {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Aircraft_Fighter.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -710,6 +806,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
+                                    lat.ENERGY_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Helicopter.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Helicopter_Big.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},                                    
@@ -725,6 +822,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ENERGY_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Large.value: {'cost': None, 'value': VALUE.HIGH, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Medium.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Transport_Ship_Small.value: {'cost': None, 'value': VALUE.LOW, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -739,6 +837,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.ENERGY_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Generic_Vehicle.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     Parked_Asset_Type.Truck.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r':7, 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                 },
@@ -755,24 +854,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                     
 }
 
-class Target_Class_Name(Enum):
-    SOFT = 'Soft'
-    ARMORED = 'Armored'
-    HARD = 'Hard'
-    STRUCTURE = 'Structure'
-    AIR_DEFENSE = 'Air_Defense'
-    AIRBASE = 'Airbase'
-    HELIBASE = 'Helibase'   
-    PORT = 'Port'
-    SHIPYARD = 'Shipyard'
-    FARP = 'Farp'
-    STRONGHOLD = 'Stronghold'
-    SHIP = 'ship'
-    AIRCRAFT = 'Aircraft'
-    GENERIC = 'Generic'
 
-
-tc = Target_Class_Name
 
 TARGET_CLASSIFICATION = {
     tc.SOFT.value:          [   Parked_Asset_Type.Transport_Aircraft.value, 
@@ -798,7 +880,16 @@ TARGET_CLASSIFICATION = {
                                 Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value,                    
                             ], # Tank, Armored Vehicle
     tc.HARD.value:          [   lat.BRIDGE.value, lat.BUNKER.value, lat.HANGAR.value, lat.DEPOT.value ],
-    tc.STRUCTURE.value:     [   lat.BUILDING.value, lat.OIL_TANK.value, lat.RAILWAY_INTERCHANGE.value, lat.POWER_PLANT.value, lat.FACTORY.value, lat.GAS_INFRASTRUCTURE.value, lat.PETROL_INFRASTRUCTURE.value, lat.ADMINISTRATIVE_INFRASTRUCTURE.value, lat.ENERGY_INFRASTRUCTURE.value, lat.SERVICE_INFRASTRUCTURE.value], # Building, Factory, Depot, ...
+    tc.STRUCTURE.value:     [   lat.BUILDING.value, lat.OIL_TANK.value, 
+                                lat.RAILWAY_INTERCHANGE.value, 
+                                lat.POWER_PLANT.value, 
+                                lat.FACTORY.value, 
+                                lat.GAS_INFRASTRUCTURE.value, 
+                                lat.PETROL_INFRASTRUCTURE.value, 
+                                lat.ADMINISTRATIVE_INFRASTRUCTURE.value, 
+                                lat.ENERGY_INFRASTRUCTURE.value, 
+                                lat.SERVICE_INFRASTRUCTURE.value
+                            ], # Building, Factory, Depot, ...
     tc.AIR_DEFENSE.value:   [   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
                                 Ground_Vehicle_Asset_Type.SAM_SMALL.value,
                                 Ground_Vehicle_Asset_Type.SAM_BIG.value,
@@ -811,17 +902,17 @@ TARGET_CLASSIFICATION = {
     tc.FARP.value:         [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp'].keys()],
     tc.STRONGHOLD.value:   [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()],
     tc.SHIP.value:         [   Parked_Asset_Type.Transport_Ship_Large.value,
-                            Parked_Asset_Type.Transport_Ship_Medium.value,
-                            Parked_Asset_Type.Transport_Ship_Small.value,
-                            SEA_MILITARY_CRAFT_ASSET.keys()                        
-                        ],
+                                Parked_Asset_Type.Transport_Ship_Medium.value,
+                                Parked_Asset_Type.Transport_Ship_Small.value,
+                                SEA_MILITARY_CRAFT_ASSET.keys()                        
+                            ],
     #'SAM':                 [   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
     #                           Ground_Vehicle_Asset_Type.SAM_SMALL.value,
     #                           Ground_Vehicle_Asset_Type.SAM_BIG.value,
     #                           Ground_Vehicle_Asset_Type.AAA.value,
     #                           Ground_Vehicle_Asset_Type.EWR.value
     #                       ],
-    tc.AIRCRAFT.value:     [   Air_Asset_Type.FIGHTER.value, # for air to air targeting
+    tc.AIRCRAFT.value:     [    Air_Asset_Type.FIGHTER.value, # for air to air targeting
                                 Air_Asset_Type.ATTACKER.value,
                                 Air_Asset_Type.BOMBER.value,
                                 Air_Asset_Type.AWACS.value,
