@@ -50,21 +50,44 @@ GROUND_WEAPON_TASK = {
     'Infantry_Support': 'Infantry_Support'
 }
 
+
+class Air_To_Air_Task(Enum):
+    CAP = 'CAP'
+    FIGHTER_SWEEP = 'Fighter_Sweep'
+    INTERCEPT = 'Intercept'
+    ESCORT = 'Escort'
+    RECON = 'Recon'
+    
+class Air_To_Ground_Task(Enum):    
+    CAS = 'CAS'
+    STRIKE = 'Strike'
+    PINPOINT_STRIKE = 'Pinpoint_Strike'
+    SEAD = 'SEAD'
+    ANTI_SHIP = 'Anti_Ship'
+
+
+
+AIR_TO_AIR_TASK = {task.value: task.value for task in Air_To_Air_Task}
+
+AIR_TO_GROUND_TASK = {task.value: task.value for task in Air_To_Ground_Task}
+
+"""
 AIR_TO_AIR_TASK = {
     
-    'CAP': 'CAP',  
-    'Fighter_Sweep': 'Fighter_Sweep'  ,
-    'Intercept': 'Intercept',
-    'Escort': 'Escort',
-    'Recon': 'Recon',    
+    Air_Task.CAP.value: 'CAP',  
+    Air_Task.FIGHTER_SWEEP.value: 'Fighter_Sweep',
+    Air_Task.INTERCEPT.value: 'Intercept',
+    Air_Task.ESCORT.value: 'Escort',
+    Air_Task.RECON.value: 'Recon',    
 } 
 AIR_TO_GROUND_TASK = {
-    'CAS': 'CAS',
-    'Strike': 'Strike', # coincidono con Ground Attack
-    'Pinpoint_Strike': 'Pinpoint_Strike',
-    'SEAD': 'SEAD',
-    'Anti_Ship': 'Anti_Ship'
+    Air_Task.CAS.value: 'CAS',
+    Air_Task.STRIKE.value: 'Strike', # coincidono con Ground Attack
+    Air_Task.PINPOINT_STRIKE.value: 'Pinpoint_Strike',
+    Air_Task.SEAD.value: 'SEAD',
+    Air_Task.ANTI_SHIP.value: 'Anti_Ship'
 } 
+"""
 
 AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
 
@@ -464,7 +487,6 @@ class Weapon_Area_Effect(Enum):
     PRECISION = 'Precision'
     WIDE = 'Wide'
     LOCALIZED = 'Localized'
-    INTERNAL = 'Internal'
 
 class Logistic_Asset_Type(Enum):
     BRIDGE = 'Bridge'
@@ -545,50 +567,224 @@ wae = Weapon_Area_Effect
 
 WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
 
+    'area_effect': {
 
-    tc.SOFT.value+tc.ARMORED.value:{ 
-        'Big': {
-            {'qty_range': [1,2], 'Precision': wae.PRECISION},
-            {'qty_range': [3,6], 'Precision': wae.LOCALIZED},
-            {'qty_range': [7,None], 'Precision': wae.WIDE}
+        (tc.SOFT.value, tc.ARMORED.value, tc.AIR_DEFENSE.value): {
+            'Big': {
+                (1,2):    wae.PRECISION.value,
+                (3,6):    wae.LOCALIZED.value,
+                (7,None): wae.WIDE.value,
+            },
+            'Med': {
+                (1,4):    wae.PRECISION.value,  # i med normalmente sono raggruppati in aree più piccole, quindi minore è il numero maggiore è la precisione richiesta
+                (5,8):    wae.LOCALIZED.value,
+                (9,None): wae.WIDE.value,
+            },
+            'Small': {
+                (1,1):    wae.PRECISION.value,
+                (2,7):    wae.LOCALIZED.value,
+                (8,None): wae.WIDE.value,
+            },
         },
-        'Med': {
-            {'qty_range': [1,4], 'Precision': wae.PRECISION}, # i med normalmente sono raggrupapti in aree più piccole, quindi minore è il numero maggiore è la precisione richiesta
-            {'qty_range': [5,8], 'Precision': wae.LOCALIZED},
-            {'qty_range': [9,None], 'Precision': wae.WIDE}
+        (tc.HARD.value,): {
+            'Big': {
+                (1,4):     wae.PRECISION.value,
+                (5,9):     wae.LOCALIZED.value,
+                (10,None): wae.WIDE.value,
+            },
+            'Med': {
+                (1,3):    wae.PRECISION.value,
+                (4,7):    wae.LOCALIZED.value,
+                (8,None): wae.WIDE.value,
+            },
+            'Small': {
+                (1,2):    wae.PRECISION.value,
+                (3,6):    wae.LOCALIZED.value,
+                (7,None): wae.WIDE.value,
+            },
         },
-        'Small': {
-            {'qty_range': [1,1], 'Precision': wae.PRECISION},
-            {'qty_range': [2,7],'Precision': wae.LOCALIZED},
-            {'qty_range': [8,None], 'Precision': wae.WIDE}
+        (tc.STRUCTURE.value, tc.AIRBASE.value, tc.HELIBASE.value, tc.PORT.value, tc.SHIPYARD.value, tc.STRONGHOLD.value, tc.FARP.value, tc.GENERIC.value): {
+            'Big': {
+                (1,2):    wae.PRECISION.value,
+                (3,4):    wae.LOCALIZED.value,
+                (5,None): wae.WIDE.value,
+            },
+            'Med': {
+                (1,1):    wae.PRECISION.value,
+                (2,5):    wae.LOCALIZED.value,
+                (6,None): wae.WIDE.value,
+            },
+            'Small': {
+                (1,1):    wae.PRECISION.value,
+                (2,7):    wae.LOCALIZED.value,
+                (8,None): wae.WIDE.value,
+            },
         },
-        
-    },          
-    tc.HARD.value:{},          
-    tc.STRUCTURE.value+tc.AIRBASE.value+tc.HELIBASE.value+tc.PORT.value+tc.SHIPYARD.value+tc.STRONGHOLD.value: {
-        'Big': {
-            {'qty_range': [1,2], 'Precision': wae.PRECISION},
-            {'qty_range': [3,4], 'Precision': wae.LOCALIZED},
-            {'qty_range': [5,None], 'Precision': wae.WIDE}
+        (tc.SHIP.value,): {
+            'Big':   {(1,None): wae.PRECISION.value},
+            'Med':   {(1,None): wae.PRECISION.value},
+            'Small': {(1,None): wae.PRECISION.value},
         },
-        'Med': {
-            {'qty_range': [1,1], 'Precision': wae.PRECISION},
-            {'qty_range': [2,5], 'Precision': wae.LOCALIZED},
-            {'qty_range': [6,None], 'Precision': wae.WIDE}
+
+    },
+
+    'power_effect': {
+
+        (tc.SOFT.value, tc.ARMORED.value, tc.AIR_DEFENSE.value): {
+            'Big':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
+            'Med':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
+            'Small': [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
         },
-        'Small': {
-            {'qty_range': [1,1], 'Precision': wae.PRECISION},
-            {'qty_range': [2,7], 'Precision': wae.LOCALIZED},
-            {'qty_range': [8,None], 'Precision': wae.WIDE}
-        },     
-    tc.AIR_DEFENSE.value:{},   
-    tc.FARP.value:{},         
-    tc.SHIP.value:{},         
-    tc.AIRCRAFT.value:{},     
-    tc.GENERIC.value:{},   
-    }
+        (tc.HARD.value, tc.STRONGHOLD.value): {
+            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
+            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
+            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+        },
+        (tc.STRUCTURE.value, tc.GENERIC.value): {
+            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value],
+            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
+        },
+        (tc.AIRBASE.value, tc.HELIBASE.value, tc.PORT.value, tc.SHIPYARD.value, tc.FARP.value): {
+            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
+            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
+            'Small': [wpe.BLAST.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value],
+        },
+        (tc.SHIP.value,): {
+            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.KINETIC.value],
+            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
+        },
+
+    },
+
 }
 
+"""
+|   TASK            |    AREA EFFECT     |    POWER EFFECT                                                                  |
+| Pinpoint_Strike   |     Precision      |  High Explosive + Penetration                                                    |
+|                   |     Precision      |  High Explosive, Penetration, Kinetic                                            |
+|                   |     Localized      |  High Explosive + Penetration                                                    |
+|                   |                    |                                                                                  |
+|    Strike         |     Precision      |  Blast, Fragmentation, Termal, Thermobaric                                       |
+|                   |     Localized      |  High Explosive, Penetration, Blast, Kinetic, Termal, Thermobaric                |
+|                   |     Wide           |  High Explosive + Penetration                                                    |
+|                   |     Wide           |  High Explosive, Penetration, Blast, Fragmentation, Kinetic, Termal, Thermobaric |                                    
+
+CAS o Strike viene determinato dal punteggio
+
+"""
+
+TASK_FOR_WEAPON_PARAM = {
+    Air_To_Ground_Task.PINPOINT_STRIKE.value: [
+        {'area_effect': [wae.PRECISION.value], 'power_effect': [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value]},
+        {'area_effect': [wae.PRECISION.value, wae.LOCALIZED.value], 'power_effect': [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value]},
+    ],
+    Air_To_Ground_Task.STRIKE.value: [
+        {'area_effect': [wae.PRECISION.value], 'power_effect': [wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.THERMAL.value, wpe.THERMOBARIC.value]},
+        {'area_effect': [wae.LOCALIZED.value, wae.WIDE.value], 'power_effect': [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.THERMAL.value, wpe.THERMOBARIC.value, wpe.KINETIC.value]},        
+    ],
+    
+}
+
+
+def _get_task_from_weapon_param(area_effect: List, power_effect: List) -> str:
+
+    """ Seleziona e restituisce uno dei task previsti nella enumerazione Air_To_Ground in relazione agli argomenti:
+        area_effect  : lista di valori dell'enumerazione Weapon_Area_Effect (stringhe .value)
+        power_effect : lista di valori dell'enumerazione Weapon_Power_Effect (stringhe .value)
+
+    Returns:
+        str: task dell'enumerazione Air_To_Ground_Task, o None se nessuna corrispondenza
+    """
+    if not isinstance(area_effect, list) or not area_effect:
+        raise ValueError(f"get_task_from_weapon_param: area_effect deve essere una lista non vuota, ricevuto: {area_effect}")
+    if not isinstance(power_effect, list) or not power_effect:
+        raise ValueError(f"get_task_from_weapon_param: power_effect deve essere una lista non vuota, ricevuto: {power_effect}")
+
+    valid_ae = {e.value for e in Weapon_Area_Effect}
+    valid_pe = {e.value for e in Weapon_Power_Effect}
+    for a_e in area_effect:
+        if a_e not in valid_ae:
+            raise ValueError(f"get_task_from_weapon_param: valore area_effect non valido: '{a_e}'. Valori consentiti: {valid_ae}")
+    for p_e in power_effect:
+        if p_e not in valid_pe:
+            raise ValueError(f"get_task_from_weapon_param: valore power_effect non valido: '{p_e}'. Valori consentiti: {valid_pe}")
+
+    for task, conditions in TASK_FOR_WEAPON_PARAM.items():
+
+        for condition in conditions:
+
+            for a_e in area_effect:
+
+                if a_e in condition['area_effect']:
+
+                    for p_e in power_effect:
+
+                        if p_e in condition['power_effect']:
+                            return task
+
+    return None
+
+
+def _get_weapon_param_from_target(target_type: str, target_dim: str, target_count: int) -> Dict:
+
+    """ Seleziona e restituisce i weapon params da WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE in relazione agli argomenti:
+        target_type  : valore dell'enumerazione Target_Class_Name (stringa .value)
+        target_dim   : categoria dimensionale del target ('Big', 'Med', 'Small')
+        target_count : numero di unità del target, usato per determinare l'area_effect
+
+    Returns:
+        Dict: {'area_effect': str|None, 'power_effect': List[str]|None}
+    """
+    valid_types = {e.value for e in Target_Class_Name}
+    if target_type not in valid_types:
+        raise ValueError(f"get_weapon_param_from_target: target_type non valido: '{target_type}'. Valori consentiti: {valid_types}")
+    valid_dims = {'Big', 'Med', 'Small'}
+    if target_dim not in valid_dims:
+        raise ValueError(f"get_weapon_param_from_target: target_dim non valido: '{target_dim}'. Valori consentiti: {valid_dims}")
+    if not isinstance(target_count, int) or target_count < 1:
+        raise ValueError(f"get_weapon_param_from_target: target_count deve essere un intero >= 1, ricevuto: {target_count}")
+
+    weapon_param = {'area_effect': None, 'power_effect': None}
+
+    for tg_type_group, item in WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE['area_effect'].items():
+
+        if target_type in tg_type_group:
+
+            for range_key, wae_param in item[target_dim].items():
+                lo, hi = range_key
+                if lo <= target_count and (hi is None or target_count <= hi):
+                    weapon_param['area_effect'] = wae_param
+                    break
+            break
+
+    for tg_type_group, item in WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE['power_effect'].items():
+
+        if target_type in tg_type_group:
+            weapon_param['power_effect'] = item[target_dim]
+            break
+
+    return weapon_param
+
+
+# API            
+def get_task_from_target(target_type: str, target_dim: str, target_count: int) -> str:
+     
+    """ Seleziona e restituisce uno dei task previsti nella enumerazione Air_To_Ground in relazione agli argomenti:
+        target_type  : valore dell'enumerazione Target_Class_Name (stringa .value)
+        target_dim   : categoria dimensionale del target ('Big', 'Med', 'Small')
+        target_count : numero di unità del target, usato per determinare l'area_effect
+
+    Returns:
+        str: task dell'enumerazione Air_To_Ground_Task, o None se nessuna corrispondenza
+
+    """
+     
+    weapon_param = _get_weapon_param_from_target(target_type, target_dim, target_count) 
+    return _get_task_from_weapon_param(weapon_param['area_effect'], weapon_param['power_effect'])
+
+                
 """
 WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
 
@@ -938,53 +1134,6 @@ BLOCK_ASSET_CATEGORY = {
 
 
 ################################## Methods ######################################################
-
-# SBAGLIATA ******************
-def get_target_classification(asset_type: str) -> str:
-    """ Returns target_class of asset_type ( from TARGET_CLASSIFICATION )
-
-    Args:
-        asset_type (str): asset type ( Parked_Asset_Type.Truck.value, 'Tank')
-
-    Returns:
-        str: target classification (Aircraft, Airbase, ...)
-
-
-        NON VA BENE IN QUANTO PER TARGET COMPLESSI (AIRBASE, PORT) I SINGOLI COMPONENTI NON HANNO NOME UNIVOCO_ Hangar è presente sia in Farp, Airbase Helibase ecc.
-
-    """
-
-    for target_classification, target_list in TARGET_CLASSIFICATION:
-
-        for target_type in target_list:
-
-            if asset_type == target_type:
-                return target_classification
-            
-    return None
-
-# SBAGLIATA ******************
-def get_block_class_and_asset_category(asset_type: str) -> str:
-
-    """_summary_
-
-    Returns:
-        _type_: _description_
-
-
-    NON VA BENE IN QUANTO PER BLOCCHI COMPLESSI (AIRBASE, PORT) I SINGOLI COMPONENTI NON HANNO NOME UNIVOCO_ Hangar è presente sia in Farp, Airbase Helibase ecc.
-
-    """
-
-    for block_class, block_componets in BLOCK_INFRASTRUCTURE_ASSET:
-
-        for asset_category, asset_items in block_componets:
-
-            if asset_category == asset_type:
-                return block_class, asset_category
-            
-    return None
-
 
 def get_block_infrastructure_components(block_class: str, asset_category: str) -> List:
     """Returns name list of blocks components ( from BLOCK_INFRASTRUCTURE_ASSET )

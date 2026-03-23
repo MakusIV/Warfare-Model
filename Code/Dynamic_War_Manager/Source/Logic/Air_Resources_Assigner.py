@@ -22,7 +22,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     Weapon_Power_Effect,
     Weapon_Area_Effect,
     get_block_infrastructure_components,
-    get_weapons_param_for_asset_type
+    get_task_from_target
 )
 from Code.Dynamic_War_Manager.Source.Context.Campaign_State import Campaign_State
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
@@ -462,9 +462,9 @@ def _increase_weapons_availability(weapons_availability: Dict, weapons_list: Dic
 def _count_target_dimension(target_dimension_list: Dict) -> Dict:    
     return  sum(dim_values["quantity"] for dim_name, dim_values in target_dimension_list.items())
 
-def _evaluate_task_and_weapon(target_data: Dict)-> Dict:
+def _create_task_table(target_data: Dict)-> Dict:
     
-    """Select and rank available aircraft/loadout combinations for a mission.
+    """Create a task table from target_data
 
     Parameters
     ----------    
@@ -495,46 +495,108 @@ def _evaluate_task_and_weapon(target_data: Dict)-> Dict:
     }
 
 
-    "Soft":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.5},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.65},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.8}},
-    "Armored":        {"big": {"accuracy": 0.4,  "destroy_capacity": 0.15},
-                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.22},
-                       "small": {"accuracy": 0.55, "destroy_capacity": 0.3}},
-    "Hard":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.2},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.3},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.45}},
-    "Structure":      {"big": {"accuracy": 0.5,  "destroy_capacity": 0.1},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.2},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.35}},
-    "Air_Defense":    {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
-                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
-                       "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
-    "Airbase":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Port":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Shipyard":       {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Farp":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Stronghold":     {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "ship":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.15},
-                       "med": {"accuracy": 0.15, "destroy_capacity": 0.2},
-                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.3}},
-}
+    
 
+    """
+    
+    admitted_target_types = [item.value for item in Target_Class_Name]
+    _task_table = {}
+
+    for tg_type, tg_dims in target_data.items(): # scorre tutti i tipo di target presenti nella lista               
+
+        if  tg_type not in admitted_target_types:
+            logger.warning(f"unknow target type. {k}. This target will be considered like 'unknow' in the evaluation")
+            target_type = Target_Class_Name.GENERIC.value
+        
+        else:
+            target_type = tg_type
+        _task_table[target_type] = {}
+        _task = None
+        _max_priority = 0
+
+        for target_dim, dim_item in tg_dims: # scorre le diverse dimensioni definite per ogni tipo di target
+
+            if dim_item['priority'] > _max_priority: # seleziona il task in funzione del target on priorità più alta
+                _task = get_task_from_target(target_type, target_dim, dim_item['quantity'])
+                _max_priority = dim_item['priority']
+        _task_table[target_type]['task'] = _task
+        _task_table[target_type]['priority'] = _max_priority
+
+    return _task_table
+
+
+def get_task_list():
+    """
+        Select and rank available aircraft/loadout combinations for a mission.
+
+        Parameters
+        ----------    
+
+        target_data:
+            ``{type: {dim: {'quantity': int, 'priority': int}}}``
+        
+        Returns
+        -------
+        List  `[<task>: str (Strike, Pinpoint_Strike, Anti_Ship, SEAD, ....), <weapons_param>: List (Penetration, Fragmentation, Cluster)}
+
+        Format example
+        --------------
+
+        target_data = {
+            'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                        'med': {'quantity': 5, 'priority': 6},
+                        'small': {'quantity': 10, 'priority': 6}},
+            'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                        'med': {'quantity': 4, 'priority': 3},
+                        'small': {'quantity': 5, 'priority': 5}},
+            'Structure':{'big': {'quantity': 3, 'priority': 10},
+                        'med': {'quantity': 6, 'priority': 7},
+                        'small': {'quantity': 12, 'priority': 7}},
+            'Aircraft' :{'big': {'quantity': 0, 'priority': 10},
+                        'med': {'quantity': 6, 'priority': 7},
+                        'small': {'quantity': 12, 'priority': 7}},
+        }
+
+
+        "Soft":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.5},
+                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.65},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 0.8}},
+        "Armored":        {"big": {"accuracy": 0.4,  "destroy_capacity": 0.15},
+                        "med": {"accuracy": 0.5,  "destroy_capacity": 0.22},
+                        "small": {"accuracy": 0.55, "destroy_capacity": 0.3}},
+        "Hard":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.2},
+                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.3},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 0.45}},
+        "Structure":      {"big": {"accuracy": 0.5,  "destroy_capacity": 0.1},
+                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.2},
+                        "small": {"accuracy": 0.65, "destroy_capacity": 0.35}},
+        "Air_Defense":    {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
+                        "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
+                        "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
+        "Airbase":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+        "Port":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+        "Shipyard":       {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+        "Farp":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+        "Stronghold":     {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
+                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
+                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
+        "ship":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.15},
+                        "med": {"accuracy": 0.15, "destroy_capacity": 0.2},
+                        "small": {"accuracy": 0.2,  "destroy_capacity": 0.3}},
+        }
 
     """
     MAX_TARGET_FOR_PINPOINT_STRIKE = 6
     MIN_TARGET_FOR_CLUSTER_BOMBS = 15
-    target_types = [item.value for item in Target_Class_Name]
+    admitted_target_types = [item.value for item in Target_Class_Name]
 
     ground_target_data = {}
     target_data_classification = {}
@@ -542,114 +604,6 @@ def _evaluate_task_and_weapon(target_data: Dict)-> Dict:
     air_target_data = {}
     sead_target_data ={}
     evaluated_task = None
-
-
-    # if weapon.get()'weapon_param_type',None)
-
-
-    count_effect = {'power': {effect.value: 0 for effect in Weapon_Power_Effect}, 'precision': {effect.value: 0 for effect in Weapon_Area_Effect}}
-
-    for k,i in target_data.items():        
-
-        if k not in target_types:
-            logger.warning(f"unknow target type. {k}. This target will be considered like 'unknow' in the evaluation")
-            target_type = Target_Class_Name.GENERIC.value
-        
-        else:
-            target_type = k
-        targets_components = TARGET_CLASSIFICATION[target_type]
-
-        for component in targets_components:
-            wp = get_weapons_param_for_asset_type(component)
-
-            for item in wp['power']:
-                count_effect['power'][item]+=1
-
-            for item in wp['precision']:
-                count_effect['power'][item]+=1
-
-
-        # usa i valori di count_effect['power'][item] come parametri per fuzzy
-
-
-        """class Weapon_Power_Effect(Enum):
-    PENETRATION = 'Penetration'
-    FRAGMENTATION = 'Fragmentation'
-    HIGH_EXPLOSIVE = 'High_Explosive'
-    CLUSTER = 'Cluster'
-    THERMOBARIC = 'Thermobaric'
-    THERMAL = 'Thermal'
-    BLAST = 'Blast'
-    KINETIC = 'Kinetic'
-
-class Weapon_Area_Effect(Enum):
-    PRECISION = 'Precision'
-    WIDE = 'Wide'
-    LOCALIZED = 'Localized'
-    INTERNAL = 'Internal'"""
-        
-
-
-        # valutazione delle categorie deel target in base alla dimensione ed al numero
-        get_block_infrastructure_components()
-
-        
-
-        
-
-
-
-    for k,i in target_data.items():        
-
-
-        if k not in ['ship', 'Aircraft', 'Air_Defense']:
-            ground_target_data[k] = i                
-            
-        elif k == 'ship':
-            sea_target_data = i
-
-        elif k == 'Aircraft':
-            air_target_data = i
-        
-        elif k == 'Air_Defense':
-            air_defense_target_data = i
-        
-        else:
-            logger.error(f"Unknow target type: {k}")
-            raise ValueError(f"Unknow target type: {k}")
-
-    for ground_type, ground_item in ground_target_data:
-        count_target_item = _count_target_dimension(ground_item)        
-
-        if ground_type in ['Airbase', 'Port', 'Shipyard', 'Farp', 'Stronghold']: # Big complex
-
-            # Usa Fuzzy Logic
-            #
-            pass
-
-
-
-    if len(ground_target_data) == 1:
-        target_types = ground_target_data.keys()                        
-        weapons_type = []
-
-        if  target_types in ['Tank', 'Armored', 'Motorized', 'Soft']:
-            evaluated_task = 'CAS'
-        
-        else:
-            if target_types in ['Hard', 'Structure', 'Airbase']:
-                
-                if target_types == ['Hard'] or count_target_item <= MAX_TARGET_FOR_PINPOINT_STRIKE:
-                    evaluated_task = 'Pinpoint_Strike'
-
-                    if target_types == ['Hard']:
-                        weapons_type.append('Penetration')
-
-                else: # targets are Structure and Airbases with many items
-                    evaluated_task = 'Strike'
-            
-            if target_types in ['Hard', 'Structure', 'Airbase']:
-                pass
     pass
 
 
