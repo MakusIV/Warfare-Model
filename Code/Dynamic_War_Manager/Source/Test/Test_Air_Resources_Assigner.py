@@ -22,6 +22,10 @@ Funzioni testate
     get_aircraft_mission          – selezione e ranking aircraft/loadout per missione
                                     (include test con target terrestre e target Aircraft)
     get_loadouts_availability     – verifica e assegna loadout in base alle armi
+    get_ground_mission_task_list  – genera lista missioni per tipo target da target_data
+
+  Helpers privati (ground mission):
+    _create_ground_mission_task_table – mappa ogni tipo target al task corretto
 
 Dati di riferimento
 -------------------
@@ -62,6 +66,10 @@ _LOGGER_LO    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts.logger"
 _LOGGER_AWD   = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data.logger"
 _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
 
+_PATCH_GET_TASK_FROM_TARGET = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_task_from_target"
+_PATCH_GET_AIRCRAFT_MISSION = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_aircraft_mission"
+_PATCH_CREATE_TASK_TABLE    = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner._create_ground_mission_task_table"
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  IMPORT DEL MODULO SOTTO TEST
 # ─────────────────────────────────────────────────────────────────────────────
@@ -69,6 +77,7 @@ _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
 from Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     get_aircraft_mission,
     get_loadouts_availability,
+    get_ground_mission_task_list,
     _extract_quantities,
     _extract_target_lists,
     _check_mission_requirements,
@@ -80,6 +89,7 @@ from Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     _loadout_availability,
     _reduction_weapons_availability,
     _increase_weapons_availability,
+    _create_ground_mission_task_table,
     _DIRECTIVE_WEIGHTS,
     _REFERENCE_COST_K,
 )
@@ -2292,6 +2302,421 @@ def save_mission_scenario_tables_pdf(output_path: str) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  10. _create_ground_mission_task_table
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestCreateGroundMissionTaskTable(unittest.TestCase):
+    """Unit test per _create_ground_mission_task_table(target_data).
+
+    La funzione scorre target_data e, per ogni tipo di target, seleziona il
+    task corrispondente alla dimensione con la priorità più alta.
+
+    Regole per tipo di target:
+      - 'Aircraft'    → Air_To_Air_Task.ESCORT.value   = 'Escort'
+      - 'ship'        → Air_To_Ground_Task.ANTI_SHIP.value = 'Anti_Ship'
+      - 'Air_Defense' → Air_To_Ground_Task.SEAD.value  = 'SEAD'
+      - tutti gli altri → delegato a get_task_from_target()
+
+    get_task_from_target è mocked in setUp per isolare la funzione dalle
+    dipendenze di Context.py.
+    """
+
+    def setUp(self):
+        self._mock_logger_ctx = _mra_logger_mocked()
+        self._mock_logger_ctx.__enter__()
+        self._patcher_gtt = patch(_PATCH_GET_TASK_FROM_TARGET, return_value='Strike')
+        self._mock_gtt = self._patcher_gtt.start()
+
+    def tearDown(self):
+        self._patcher_gtt.stop()
+        self._mock_logger_ctx.__exit__(None, None, None)
+
+    # ── Validazione argomenti ─────────────────────────────────────────────────
+
+    def test_non_dict_input_raises_type_error(self):
+        """Input non dict (stringa) → TypeError."""
+        with self.assertRaises(TypeError):
+            _create_ground_mission_task_table("not_a_dict")
+
+    def test_list_input_raises_type_error(self):
+        """Lista in input → TypeError."""
+        with self.assertRaises(TypeError):
+            _create_ground_mission_task_table([('Soft', {})])
+
+    def test_none_input_raises_type_error(self):
+        """None in input → TypeError."""
+        with self.assertRaises(TypeError):
+            _create_ground_mission_task_table(None)
+
+    # ── Casi limite ───────────────────────────────────────────────────────────
+
+    def test_empty_target_data_returns_empty_dict(self):
+        """target_data vuoto → dizionario vuoto."""
+        self.assertEqual(_create_ground_mission_task_table({}), {})
+
+    def test_returns_dict(self):
+        """Il risultato è sempre un dict."""
+        td = {'Aircraft': {'big': {'quantity': 3, 'priority': 7}}}
+        self.assertIsInstance(_create_ground_mission_task_table(td), dict)
+
+    def test_result_entry_has_task_and_priority_keys(self):
+        """Ogni entry del risultato contiene le chiavi 'task' e 'priority'."""
+        td = {'Aircraft': {'big': {'quantity': 3, 'priority': 7}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertIn('task', result['Aircraft'])
+        self.assertIn('priority', result['Aircraft'])
+
+    def test_invalid_tg_dims_not_dict_skipped(self):
+        """tg_dims non dict → entry saltata, non appare nel risultato."""
+        result = _create_ground_mission_task_table({'Soft': 'invalid'})
+        self.assertNotIn('Soft', result)
+
+    def test_invalid_dim_item_not_dict_skipped(self):
+        """dim_item non dict → dimensione saltata; entry presente con task=None e priority=0."""
+        result = _create_ground_mission_task_table({'Soft': {'big': 'bad_value'}})
+        self.assertIn('Soft', result)
+        self.assertIsNone(result['Soft']['task'])
+        self.assertEqual(result['Soft']['priority'], 0)
+
+    def test_all_priority_zero_task_is_none(self):
+        """Tutte le dimensioni con priority=0 → _task rimane None (0 non è > 0)."""
+        td = {'Soft': {'big': {'quantity': 3, 'priority': 0}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertIsNone(result['Soft']['task'])
+        self.assertEqual(result['Soft']['priority'], 0)
+
+    # ── Tipo 'Aircraft' ───────────────────────────────────────────────────────
+
+    def test_aircraft_type_returns_escort(self):
+        """Tipo 'Aircraft' → task = 'Escort'."""
+        td = {'Aircraft': {'big': {'quantity': 5, 'priority': 7}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['Aircraft']['task'], 'Escort')
+
+    def test_aircraft_does_not_call_get_task_from_target(self):
+        """Tipo 'Aircraft' → get_task_from_target NON viene chiamato."""
+        td = {'Aircraft': {'big': {'quantity': 5, 'priority': 7}}}
+        _create_ground_mission_task_table(td)
+        self._mock_gtt.assert_not_called()
+
+    def test_aircraft_priority_highest_dim_selected(self):
+        """Tipo 'Aircraft': la dimensione con priorità più alta determina _max_priority."""
+        td = {'Aircraft': {
+            'big':   {'quantity': 2, 'priority': 3},
+            'med':   {'quantity': 4, 'priority': 9},
+            'small': {'quantity': 6, 'priority': 5},
+        }}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['Aircraft']['task'],     'Escort')
+        self.assertEqual(result['Aircraft']['priority'], 9)
+
+    # ── Tipo 'ship' ───────────────────────────────────────────────────────────
+
+    def test_ship_type_returns_anti_ship(self):
+        """Tipo 'ship' → task = 'Anti_Ship'."""
+        td = {'ship': {'big': {'quantity': 3, 'priority': 8}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['ship']['task'], 'Anti_Ship')
+
+    def test_ship_does_not_call_get_task_from_target(self):
+        """Tipo 'ship' → get_task_from_target NON viene chiamato."""
+        td = {'ship': {'big': {'quantity': 3, 'priority': 8}}}
+        _create_ground_mission_task_table(td)
+        self._mock_gtt.assert_not_called()
+
+    def test_ship_priority_stored_correctly(self):
+        """Tipo 'ship': la priorità massima viene salvata correttamente."""
+        td = {'ship': {
+            'big':   {'quantity': 3, 'priority': 4},
+            'small': {'quantity': 6, 'priority': 10},
+        }}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['ship']['priority'], 10)
+
+    # ── Tipo 'Air_Defense' ───────────────────────────────────────────────────
+
+    def test_air_defense_type_returns_sead(self):
+        """Tipo 'Air_Defense' → task = 'SEAD'."""
+        td = {'Air_Defense': {'big': {'quantity': 2, 'priority': 6}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['Air_Defense']['task'], 'SEAD')
+
+    def test_air_defense_does_not_call_get_task_from_target(self):
+        """Tipo 'Air_Defense' → get_task_from_target NON viene chiamato."""
+        td = {'Air_Defense': {'big': {'quantity': 2, 'priority': 6}}}
+        _create_ground_mission_task_table(td)
+        self._mock_gtt.assert_not_called()
+
+    # ── Tipi ground (Soft, Armored, Structure, …) ─────────────────────────────
+
+    def test_soft_delegates_to_get_task_from_target(self):
+        """Tipo 'Soft' → get_task_from_target chiamato; valore restituito usato come task."""
+        self._mock_gtt.return_value = 'CAS'
+        td = {'Soft': {'big': {'quantity': 3, 'priority': 5}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['Soft']['task'], 'CAS')
+        self._mock_gtt.assert_called_once()
+
+    def test_highest_priority_dim_wins(self):
+        """La dimensione con priorità più alta determina il task finale."""
+        self._mock_gtt.side_effect = ['Strike', 'CAS']
+        td = {'Soft': {
+            'big':   {'quantity': 3,  'priority': 5},   # 1° call → 'Strike'
+            'small': {'quantity': 10, 'priority': 9},   # 2° call → 'CAS' (priorità > 5)
+        }}
+        result = _create_ground_mission_task_table(td)
+        self.assertEqual(result['Soft']['task'],     'CAS')
+        self.assertEqual(result['Soft']['priority'], 9)
+
+    def test_equal_priority_first_dim_wins(self):
+        """Due dimensioni con la stessa priorità: la seconda NON sovrascrive (> non >=)."""
+        td = {'Soft': {
+            'big':   {'quantity': 3,  'priority': 5},
+            'small': {'quantity': 10, 'priority': 5},
+        }}
+        result = _create_ground_mission_task_table(td)
+        # get_task_from_target chiamato una sola volta (per 'big'; 'small' non supera >)
+        self._mock_gtt.assert_called_once()
+        self.assertEqual(result['Soft']['task'],     'Strike')
+        self.assertEqual(result['Soft']['priority'], 5)
+
+    def test_get_task_from_target_called_with_correct_args(self):
+        """get_task_from_target riceve target_type, target_dim e quantity corretti."""
+        td = {'Soft': {'big': {'quantity': 7, 'priority': 5}}}
+        _create_ground_mission_task_table(td)
+        self._mock_gtt.assert_called_once_with('Soft', 'big', 7)
+
+    # ── Tipo sconosciuto ──────────────────────────────────────────────────────
+
+    def test_unknown_type_mapped_to_generic(self):
+        """Tipo target non riconosciuto → chiave 'Generic' usata nel risultato."""
+        td = {'UnknownTargetXYZ': {'big': {'quantity': 1, 'priority': 5}}}
+        result = _create_ground_mission_task_table(td)
+        self.assertIn('Generic', result)
+        self.assertNotIn('UnknownTargetXYZ', result)
+
+    # ── Più tipi target ───────────────────────────────────────────────────────
+
+    def test_multiple_target_types_all_present(self):
+        """Più tipi target → tutti presenti nel risultato con le chiavi corrette."""
+        td = {
+            'Aircraft':    {'big': {'quantity': 3, 'priority': 8}},
+            'ship':        {'big': {'quantity': 2, 'priority': 6}},
+            'Air_Defense': {'med': {'quantity': 5, 'priority': 5}},
+        }
+        result = _create_ground_mission_task_table(td)
+        self.assertIn('Aircraft',    result)
+        self.assertIn('ship',        result)
+        self.assertIn('Air_Defense', result)
+        self.assertEqual(result['Aircraft']['task'],    'Escort')
+        self.assertEqual(result['ship']['task'],        'Anti_Ship')
+        self.assertEqual(result['Air_Defense']['task'], 'SEAD')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  11. get_ground_mission_task_list
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestGetGroundMissionTaskList(unittest.TestCase):
+    """Unit test per get_ground_mission_task_list(...).
+
+    _create_ground_mission_task_table e get_aircraft_mission sono mocked in
+    setUp per isolare la logica della funzione dalle sue dipendenze.
+
+    Struttura del risultato atteso:
+        {target_type: {'task': str, 'priority': int,
+                       'fully_compliant': [...], 'derated': [...]}}
+    """
+
+    _MOCK_TASK_TABLE = {
+        'Soft':      {'task': 'Strike',          'priority': 6},
+        'Structure': {'task': 'Pinpoint_Strike', 'priority': 10},
+    }
+    _MOCK_MISSION_BASE = {'fully_compliant': [], 'derated': []}
+
+    def setUp(self):
+        self._mock_logger_ctx = _mra_logger_mocked()
+        self._mock_logger_ctx.__enter__()
+        self._patcher_gam = patch(
+            _PATCH_GET_AIRCRAFT_MISSION,
+            side_effect=lambda *a, **kw: copy.deepcopy(self._MOCK_MISSION_BASE),
+        )
+        self._mock_gam = self._patcher_gam.start()
+        self._patcher_ctt = patch(
+            _PATCH_CREATE_TASK_TABLE,
+            return_value=copy.deepcopy(self._MOCK_TASK_TABLE),
+        )
+        self._mock_ctt = self._patcher_ctt.start()
+
+    def tearDown(self):
+        self._patcher_gam.stop()
+        self._patcher_ctt.stop()
+        self._mock_logger_ctx.__exit__(None, None, None)
+
+    def _call(self, **overrides):
+        """Helper: chiama get_ground_mission_task_list con parametri di default."""
+        kwargs = dict(
+            aircraft_availability=_AVAIL_STRIKE,
+            mission_requirements=_REQ_LENIENT,
+            target_data=_TARGET_GROUND,
+            max_aircraft_for_mission=_MAX_AIRCRAFT,
+            max_missions=_MAX_MISSIONS,
+            directive=_DIRECTIVE,
+        )
+        kwargs.update(overrides)
+        return get_ground_mission_task_list(**kwargs)
+
+    # ── Validazione argomenti ─────────────────────────────────────────────────
+
+    def test_aircraft_availability_not_list_raises_type_error(self):
+        """aircraft_availability non lista → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(aircraft_availability={'F-15E': 10})
+
+    def test_mission_requirements_not_dict_raises_type_error(self):
+        """mission_requirements non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(mission_requirements=[])
+
+    def test_target_data_not_dict_raises_type_error(self):
+        """target_data non dict → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(target_data="invalid")
+
+    def test_max_aircraft_not_int_raises_type_error(self):
+        """max_aircraft_for_mission non intero → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(max_aircraft_for_mission=3.5)
+
+    def test_max_aircraft_zero_raises_type_error(self):
+        """max_aircraft_for_mission = 0 → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(max_aircraft_for_mission=0)
+
+    def test_max_aircraft_negative_raises_type_error(self):
+        """max_aircraft_for_mission negativo → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(max_aircraft_for_mission=-1)
+
+    def test_max_missions_not_int_raises_type_error(self):
+        """max_missions non intero → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(max_missions=2.0)
+
+    def test_max_missions_zero_raises_type_error(self):
+        """max_missions = 0 → TypeError."""
+        with self.assertRaises(TypeError):
+            self._call(max_missions=0)
+
+    def test_invalid_directive_raises_value_error(self):
+        """directive sconosciuta → ValueError."""
+        with self.assertRaises(ValueError):
+            self._call(directive='super_performance')
+
+    # ── Struttura del risultato ───────────────────────────────────────────────
+
+    def test_returns_dict(self):
+        """Il risultato è sempre un dict."""
+        self.assertIsInstance(self._call(), dict)
+
+    def test_empty_task_table_returns_empty_dict(self):
+        """task_table vuota → risultato vuoto."""
+        self._mock_ctt.return_value = {}
+        self.assertEqual(self._call(), {})
+
+    def test_result_contains_task_key(self):
+        """Ogni entry del risultato contiene la chiave 'task'."""
+        result = self._call()
+        for entry in result.values():
+            self.assertIn('task', entry)
+
+    def test_result_contains_priority_key(self):
+        """Ogni entry del risultato contiene la chiave 'priority'."""
+        result = self._call()
+        for entry in result.values():
+            self.assertIn('priority', entry)
+
+    def test_result_contains_fully_compliant_key(self):
+        """Ogni entry del risultato contiene la chiave 'fully_compliant'."""
+        result = self._call()
+        for entry in result.values():
+            self.assertIn('fully_compliant', entry)
+
+    def test_result_contains_derated_key(self):
+        """Ogni entry del risultato contiene la chiave 'derated'."""
+        result = self._call()
+        for entry in result.values():
+            self.assertIn('derated', entry)
+
+    def test_task_correctly_propagated(self):
+        """Il valore di 'task' corrisponde al task del task_table."""
+        result = self._call()
+        self.assertEqual(result['Soft']['task'],      'Strike')
+        self.assertEqual(result['Structure']['task'], 'Pinpoint_Strike')
+
+    def test_priority_correctly_propagated(self):
+        """Il valore di 'priority' corrisponde alla priorità del task_table."""
+        result = self._call()
+        self.assertEqual(result['Soft']['priority'],      6)
+        self.assertEqual(result['Structure']['priority'], 10)
+
+    def test_number_of_entries_matches_valid_tasks(self):
+        """Il numero di entry corrisponde al numero di tipi con task non-None."""
+        result = self._call()
+        self.assertEqual(len(result), 2)   # 'Soft' e 'Structure'
+
+    def test_get_aircraft_mission_called_once_per_valid_entry(self):
+        """get_aircraft_mission chiamato una volta per ogni entry con task valido."""
+        self._call()
+        self.assertEqual(self._mock_gam.call_count, 2)
+
+    def test_get_aircraft_mission_called_with_correct_task(self):
+        """get_aircraft_mission riceve il task corretto per ogni tipo target."""
+        self._call()
+        tasks_passed = [c[0][0] for c in self._mock_gam.call_args_list]
+        self.assertIn('Strike',          tasks_passed)
+        self.assertIn('Pinpoint_Strike', tasks_passed)
+
+    # ── Gestione task=None ────────────────────────────────────────────────────
+
+    def test_none_task_entry_skipped(self):
+        """Entry con task=None → saltata, non appare nel risultato."""
+        self._mock_ctt.return_value = {
+            'Soft':    {'task': 'Strike', 'priority': 6},
+            'Armored': {'task': None,     'priority': 5},
+        }
+        result = self._call()
+        self.assertIn('Soft',    result)
+        self.assertNotIn('Armored', result)
+
+    def test_get_aircraft_mission_not_called_for_none_task(self):
+        """get_aircraft_mission NON viene chiamato per entry con task=None."""
+        self._mock_ctt.return_value = {
+            'Armored': {'task': None, 'priority': 5},
+        }
+        self._call()
+        self._mock_gam.assert_not_called()
+
+    def test_all_none_tasks_returns_empty_dict(self):
+        """task_table in cui tutti i task sono None → risultato vuoto."""
+        self._mock_ctt.return_value = {
+            'Soft':      {'task': None, 'priority': 5},
+            'Armored':   {'task': None, 'priority': 3},
+            'Structure': {'task': None, 'priority': 8},
+        }
+        self.assertEqual(self._call(), {})
+
+    # ── Tutte le direttive ────────────────────────────────────────────────────
+
+    def test_all_valid_directives_accepted(self):
+        """Tutte le direttive valide sono accettate senza eccezione."""
+        for directive in _DIRECTIVE_WEIGHTS:
+            with self.subTest(directive=directive):
+                result = self._call(directive=directive)
+                self.assertIsInstance(result, dict)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -2299,14 +2724,14 @@ def _run_tests() -> unittest.TestResult:
     loader = unittest.TestLoader()
     suite  = unittest.TestSuite()
     for cls in (
-        # ── Helpers weapons/loadout (nuovi) ───────────────────────────────
+        # ── Helpers weapons/loadout ───────────────────────────────────────
         TestFindWeaponInAvailability,
         TestPylonsToWeaponsDict,
         TestLoadoutAvailability,
         TestReductionWeaponsAvailability,
         TestIncreaseWeaponsAvailability,
         TestGetLoadoutsAvailability,
-        # ── Helpers target/mission (esistenti) ───────────────────────────
+        # ── Helpers target/mission ────────────────────────────────────────
         TestExtractQuantities,
         TestExtractTargetLists,
         TestCheckMissionRequirements,
@@ -2315,7 +2740,10 @@ def _run_tests() -> unittest.TestResult:
         TestReduceTargetData,
         TestGetAircraftMission,
         TestGetAircraftMissionAircraft,
-        # ── Scenari parametrici (esistenti) ──────────────────────────────
+        # ── Ground mission task (nuovi) ───────────────────────────────────
+        TestCreateGroundMissionTaskTable,
+        TestGetGroundMissionTaskList,
+        # ── Scenari parametrici ───────────────────────────────────────────
         TestStrikeScenario,
         TestCASScenario,
         TestSEADScenario,

@@ -1,5 +1,3 @@
- 
-
 
 
 
@@ -7,12 +5,13 @@
 
  FATTO
  
+ Implementa i test di unità per le funzioni: _create_ground_mission_task_table, get_ground_mission_task_list nel modulo Test_Air_Resources_Assigner.py.
+ 
+Nel modulo Air_Resources_Assigner.py ho implementato le due funzioni: _create_ground_mission_task_table, get_ground_mission_task_list. Analizza queste funzioni e le strutture dati che utilizzano verificando la correttezza logica e sintattica. Implementa nelle funzioni il codice di controllo degli argomenti, applica eventuali ottimizzazioni e proponi, eventualmente, dei miglioramenti.
+ 
  Nel modulo Context.py, ho implementato le funzioni: get_task_from_weapon_param e get_weapon_param_from_target. Analizza queste funzioni e le strutture dati che utilizzano (TASK_FOR_WEAPON_PARAM, WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE)  verificando la correttezza logica e sintattica. Implementa nelle funzioni il codice di controllo degli argomenti, applica eventuali ottimizzazioni e proponi, eventualmente, dei miglioramenti sia sulle strutture dati che sulle funzioni stesse. Per queste valutazioni considera che queste funzioni dovranno essere utilizzate nel modulo Air_Resources_Assigner per determinare il task per la selezione degli aerei e dei loadaouts  
- 
- 
+  
  Nel modulo Aircraft_Weapon_Data.py analizza tutte le armi che possono essere utilizzate contro obiettivi terrestri (MISSILES_ASM, ROCKETS, ....) presenti nel dizionario WEAPON_PARAM e implementa per ciascuna arma il dizionario:  weapon_param_type = {'precision': [], 'power': []}. Considerando la tipologia dell'arma assegna a 'precision' ed 'power' gli opportuni valori rispettivamente definiti nelle classi enum:  Weapon_Area_Effect e Weapon_Power_Effect  	
-
-
  
  Nel modulo Context.py completa il dizionario WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE inserendo tutte le enumerazioni presenti nella classe Logistic_Asset_Type ed assegnando adeguati valori alle chiavi 'precision' e 'power' utilizzando le enumerazioni delle classi Weapon_Area_Effect e Weapon_Power_Effect per i valori da assegnare, rispettivamente alle due chiavi. Per la determinazione dei valori da assegnare devi considerare la seguente logica:
 - alle enumerazioni di Logistic_Asset_Type che rappresentano asset (es: ponti) la cui distruzione richiede armi di precisione e di alta potenza, è possibile assegnare 'precision = [wae.PRECISION]   e 'power': [wpe.KINETIC, wpe.HIGH_EXPLOSIVE] 
@@ -20,8 +19,6 @@
 - alle enumerazioni di Logistic_Asset_Type che rappresentano asset non rinforzati la cui distruzione richiede armi di precisione e di alta potenza, è possibile assegnare 'precision = [wae.LOCALIZED]   e 'power': [wpe.BLAST, wpe.FRAGMENTATION] 
 
 Nel modulo Context.py completa la classe enum Logistic_Asset_Type inserendo nelle enumerazioni tutti gli asset ('Bridge', 'Check_Point', 'Port', 'Gas_Infrastructure', ...) che compongono i diversi complessi definiti nel dizionario  BLOCK_INFRASTRUCTURE_ASSET. Successivamente sostituisci le stringhe degli asset utilizzando le specifiche enumerazioni della classe come già effettuato con alcune, diverse, tipologie di asset (es: Parked_Asset_Type.Truck.value)
-
- 
 
 Crea i diagrammi UML per i moduli; Resource_Manager.py, Block.py, Military.py, Asset.py, Region.py, Logistic_Lines.py inserendo i diagrammi in cartelle dedicate al modulo in oggetto. Per la realizzazione dei diagrammi fai riferimento a quelli che hai in precedenza realizzato per il modulo Tactical_Evaluation.py le cui procedure adottate dovresti aver memorizzato 
 
@@ -48,8 +45,7 @@ Nel modulo Aircraft_Data.py ho implementato le funzioni _intercept_speed_eval e 
  Nelle tabelle create, specificatamente per le configurazioni con task: CAS, Anti_Ship non è presente alcun aereo, mentre in quelle con task SEAD, per le quali ho corretto in _AVAIL_SEAD_SCENARIO gli aerei ed i loadout di riferimento, la colonna AC/miss riporta sempre 0. Analizza quali sono i motivi che generano tabelle vuote.
  
  Nel modulo Aircraft_Data.py ho implementato la funzione cost() in Aircraft_Data.py, implementa un test di unità minimale nel modulo Test_Aircraft_Data.py per questa funzione. Inoltre, ho notato che in diversi dizionari relativi agli aerei (a10a_data, f117_data, b52h_data, ...), il valore di cost è 0. Assegna  il valore di cost (credo sia espresso in milioni di dollari/euro) a questi aerei e confronta i costi di tutti gli aerei verificando che siano coerenti tra loro
- 
- 
+  
  Nel modulo Aicraft_Weapon_Data.py ho implementato la funzione get_weapon_cost(), implementa i test di unità nel modulo Test_Aircraft_Weapon_Data.py per questa funzione. Inoltre assegnato un valore espesso in k$, alla proprietà 'cost' nelle armi specificate nei dizionari CANNONS e MACHINE_GUNS presenti in AIR_WEAPONS
  
  Nel modulo Aicraft_Loadouts.py ho implementato la funzione loadout_cost(), implementa i test di unità nel modulo Test_Aircraft_Loadouts.py per questa funzione.

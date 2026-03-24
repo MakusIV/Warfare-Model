@@ -17,6 +17,7 @@ import numpy as np
 
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK,
+    Air_To_Air_Task, Air_To_Ground_Task,
     TARGET_CLASSIFICATION,
     Target_Class_Name,
     Weapon_Power_Effect,
@@ -462,375 +463,215 @@ def _increase_weapons_availability(weapons_availability: Dict, weapons_list: Dic
 def _count_target_dimension(target_dimension_list: Dict) -> Dict:    
     return  sum(dim_values["quantity"] for dim_name, dim_values in target_dimension_list.items())
 
-def _create_task_table(target_data: Dict)-> Dict:
-    
-    """Create a task table from target_data
+def _create_ground_mission_task_table(target_data: Dict) -> Dict:
+    """Create a ground mission task table from target_data.
 
     Parameters
-    ----------    
-
+    ----------
     target_data:
         ``{type: {dim: {'quantity': int, 'priority': int}}}``
-    
+
     Returns
     -------
-    List  `[<task>: str (Strike, Pinpoint_Strike, Anti_Ship, SEAD, ....), <weapons_param>: List (Penetration, Fragmentation, Cluster)}
+    Dict
+        ``{target_type: {'task': str, 'priority': int}}``
+
+        *task* è il valore stringa di ``Air_To_Ground_Task`` o ``Air_To_Air_Task``
+        corrispondente alla dimensione con priorità più alta per quel tipo di target.
 
     Format example
     --------------
 
     target_data = {
         'Soft':     {'big': {'quantity': 3, 'priority': 5},
-                     'med': {'quantity': 5, 'priority': 6},
-                     'small': {'quantity': 10, 'priority': 6}},
+                    'med': {'quantity': 5, 'priority': 6},
+                    'small': {'quantity': 10, 'priority': 6}},
         'Armored':  {'big': {'quantity': 2, 'priority': 3},
-                     'med': {'quantity': 4, 'priority': 3},
-                     'small': {'quantity': 5, 'priority': 5}},
+                    'med': {'quantity': 4, 'priority': 3},
+                    'small': {'quantity': 5, 'priority': 5}},
         'Structure':{'big': {'quantity': 3, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
+                    'med': {'quantity': 6, 'priority': 7},
+                    'small': {'quantity': 12, 'priority': 7}},
         'Aircraft' :{'big': {'quantity': 0, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
+                    'med': {'quantity': 6, 'priority': 7},
+                    'small': {'quantity': 12, 'priority': 7}},
     }
 
+    task_table = {
+        'Soft':      {'task': 'Strike',          'priority': 6},
+        'Armored':   {'task': 'Strike',          'priority': 5},
+        'Structure': {'task': 'Strike',          'priority': 10},
+        'Aircraft':  {'task': 'Escort',          'priority': 10},
+    }
 
-    
-
+    Raises
+    ------
+    TypeError
+        Se *target_data* non è un dict.
     """
-    
-    admitted_target_types = [item.value for item in Target_Class_Name]
+    if not isinstance(target_data, dict):
+        raise TypeError(f"target_data deve essere un dict, ricevuto {type(target_data).__name__!r}")
+
+    admitted_target_types = {item.value for item in Target_Class_Name}
     _task_table = {}
 
-    for tg_type, tg_dims in target_data.items(): # scorre tutti i tipo di target presenti nella lista               
+    for tg_type, tg_dims in target_data.items():
 
-        if  tg_type not in admitted_target_types:
-            logger.warning(f"unknow target type. {k}. This target will be considered like 'unknow' in the evaluation")
+        if not isinstance(tg_dims, dict):
+            logger.warning(f"Dimensioni non valide per il tipo target {tg_type!r} (atteso dict). Ignorato.")
+            continue
+
+        if tg_type not in admitted_target_types:
+            logger.warning(
+                f"Tipo target sconosciuto: {tg_type!r}. "
+                f"Verrà trattato come {Target_Class_Name.GENERIC.value!r}."
+            )
             target_type = Target_Class_Name.GENERIC.value
-        
         else:
             target_type = tg_type
+
         _task_table[target_type] = {}
         _task = None
         _max_priority = 0
 
-        for target_dim, dim_item in tg_dims: # scorre le diverse dimensioni definite per ogni tipo di target
+        for target_dim, dim_item in tg_dims.items():
 
-            if dim_item['priority'] > _max_priority: # seleziona il task in funzione del target on priorità più alta
-                _task = get_task_from_target(target_type, target_dim, dim_item['quantity'])
+            if not isinstance(dim_item, dict):
+                logger.warning(f"Dati dimensione {target_dim!r} non validi per {target_type!r}. Ignorato.")
+                continue
+
+            if dim_item.get('priority', 0) > _max_priority:
+
+                if target_type == Target_Class_Name.AIRCRAFT.value:
+                    # Escort: la valutazione di una Fighter_Sweep richiede anche la stima dei nemici
+                    _task = Air_To_Air_Task.ESCORT.value
+
+                elif target_type == Target_Class_Name.SHIP.value:
+                    _task = Air_To_Ground_Task.ANTI_SHIP.value
+
+                elif target_type == Target_Class_Name.AIR_DEFENSE.value:
+                    _task = Air_To_Ground_Task.SEAD.value
+
+                else:
+                    _task = get_task_from_target(target_type, target_dim, dim_item.get('quantity', 0))
+
                 _max_priority = dim_item['priority']
+
         _task_table[target_type]['task'] = _task
         _task_table[target_type]['priority'] = _max_priority
 
     return _task_table
 
 
-def get_task_list():
-    """
-        Select and rank available aircraft/loadout combinations for a mission.
-
-        Parameters
-        ----------    
-
-        target_data:
-            ``{type: {dim: {'quantity': int, 'priority': int}}}``
-        
-        Returns
-        -------
-        List  `[<task>: str (Strike, Pinpoint_Strike, Anti_Ship, SEAD, ....), <weapons_param>: List (Penetration, Fragmentation, Cluster)}
-
-        Format example
-        --------------
-
-        target_data = {
-            'Soft':     {'big': {'quantity': 3, 'priority': 5},
-                        'med': {'quantity': 5, 'priority': 6},
-                        'small': {'quantity': 10, 'priority': 6}},
-            'Armored':  {'big': {'quantity': 2, 'priority': 3},
-                        'med': {'quantity': 4, 'priority': 3},
-                        'small': {'quantity': 5, 'priority': 5}},
-            'Structure':{'big': {'quantity': 3, 'priority': 10},
-                        'med': {'quantity': 6, 'priority': 7},
-                        'small': {'quantity': 12, 'priority': 7}},
-            'Aircraft' :{'big': {'quantity': 0, 'priority': 10},
-                        'med': {'quantity': 6, 'priority': 7},
-                        'small': {'quantity': 12, 'priority': 7}},
-        }
-
-
-        "Soft":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.5},
-                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.65},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 0.8}},
-        "Armored":        {"big": {"accuracy": 0.4,  "destroy_capacity": 0.15},
-                        "med": {"accuracy": 0.5,  "destroy_capacity": 0.22},
-                        "small": {"accuracy": 0.55, "destroy_capacity": 0.3}},
-        "Hard":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.2},
-                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.3},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 0.45}},
-        "Structure":      {"big": {"accuracy": 0.5,  "destroy_capacity": 0.1},
-                        "med": {"accuracy": 0.6,  "destroy_capacity": 0.2},
-                        "small": {"accuracy": 0.65, "destroy_capacity": 0.35}},
-        "Air_Defense":    {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
-                        "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
-                        "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
-        "Airbase":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-        "Port":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-        "Shipyard":       {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-        "Farp":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-        "Stronghold":     {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                        "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-        "ship":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.15},
-                        "med": {"accuracy": 0.15, "destroy_capacity": 0.2},
-                        "small": {"accuracy": 0.2,  "destroy_capacity": 0.3}},
-        }
-
-    """
-    MAX_TARGET_FOR_PINPOINT_STRIKE = 6
-    MIN_TARGET_FOR_CLUSTER_BOMBS = 15
-    admitted_target_types = [item.value for item in Target_Class_Name]
-
-    ground_target_data = {}
-    target_data_classification = {}
-    sea_target_data ={}
-    air_target_data = {}
-    sead_target_data ={}
-    evaluated_task = None
-    pass
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def get_aircraft_task(
-    aircraft_availability: List[Dict],
-    target_data: Dict,
-    max_destruction_requested_percentage: Dict,
-    max_missions: int,
-    
 
-) -> Dict:
-    """Select and rank available aircraft/loadout combinations for a mission.
+def get_ground_mission_task_list(aircraft_availability: List[Dict],
+                                    mission_requirements: Dict,
+                                    target_data: Dict,
+                                    max_aircraft_for_mission: int,
+                                    max_missions: int,
+                                    directive: str
+                                ) -> Dict:
+    """Create and return a task list of available aircraft/loadout combinations from target_data.
 
     Parameters
-    ----------    
+    ----------
     aircraft_availability:
-        List of ``{'model': str, 'loadout': str, 'quantity': int}``.    
+        Lista di disponibilità degli aeromobili.
+    mission_requirements:
+        Requisiti della missione (velocità, quota, raggio d'azione, usabilità).
     target_data:
         ``{type: {dim: {'quantity': int, 'priority': int}}}``
-    requested_destruction_percentage:
-        ``{'max': int, 'min': int}``
+    max_aircraft_for_mission:
+        Numero massimo di aeromobili per singola missione.
     max_missions:
-        (int) Maximum number of missions (sorties) allowed.
-    
+        Numero massimo di missioni pianificabili.
+    directive:
+        Direttiva di bilanciamento prestazioni/costo
+        (``'performance_high'``, ``'performance'``, ``'balanced'``, ``'economy'``, ``'economy_high'``).
+
     Returns
     -------
-    Dict with keys `{'aircraft_model': str, 'task', 'quantity', 'loadout': str, 'destroy_percentage', 'score': float, 'cost'}`` dicts sorted
-    descending by loadout, destroy_percentage, score, cost.
+    Dict
+        ``{target_type: {'task': str, 'priority': int, 'fully_compliant': [...], 'derated': [...]}}``
 
     Format example
     --------------
 
-    aircraft_availability = [
-        {'model': 'F-4E Phantom II',       'quantity': 10},
-        {'model': 'F-15E Strike Eagle',    'quantity': 15},
-        {'model': 'A-10A Thunderbolt II',  'quantity': 5},
-        {'model': 'B-52H Stratofortress',  'quantity': 3},
-        {'model': 'F-16C Block 52d',       'quantity': 20},
-    ]
-
-
     target_data = {
         'Soft':     {'big': {'quantity': 3, 'priority': 5},
-                     'med': {'quantity': 5, 'priority': 6},
-                     'small': {'quantity': 10, 'priority': 6}},
+                    'med': {'quantity': 5, 'priority': 6},
+                    'small': {'quantity': 10, 'priority': 6}},
         'Armored':  {'big': {'quantity': 2, 'priority': 3},
-                     'med': {'quantity': 4, 'priority': 3},
-                     'small': {'quantity': 5, 'priority': 5}},
+                    'med': {'quantity': 4, 'priority': 3},
+                    'small': {'quantity': 5, 'priority': 5}},
         'Structure':{'big': {'quantity': 3, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
-        'Aircraft' :{'big': {'quantity': 0, 'priority': 10},
-                     'med': {'quantity': 6, 'priority': 7},
-                     'small': {'quantity': 12, 'priority': 7}},
+                    'med': {'quantity': 6, 'priority': 7},
+                    'small': {'quantity': 12, 'priority': 7}},
     }
 
-    requested_destruction_percentage = {'max': 100, 'min': 30}
-    max_missions = 2  # if >1 missions are queued; availability must be re-checked
+    aircraft_mission_task_list = {
+        'Soft': {
+            'task': 'Strike',
+            'priority': 6,
+            'fully_compliant': [
+                {'aircraft_model': 'B-52H', 'loadout': 'Bomber Strike', 'score': 12.4,
+                 'aircraft_per_mission': 2, 'missions_needed': 1, 'derating_factor': 0.0},
+            ],
+            'derated': [
+                {'aircraft_model': 'F-16A', 'loadout': 'Viper Strike', 'score': 4.2,
+                 'aircraft_per_mission': 4, 'missions_needed': 3, 'derating_factor': 18.0},
+            ]
+        },
+        'Structure': {
+            'task': 'Pinpoint_Strike',
+            'priority': 10,
+            'fully_compliant': [...],
+            'derated': [...]
+        }
+    }
 
-    "Soft":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.5},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.65},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.8}},
-    "Armored":        {"big": {"accuracy": 0.4,  "destroy_capacity": 0.15},
-                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.22},
-                       "small": {"accuracy": 0.55, "destroy_capacity": 0.3}},
-    "Hard":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.2},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.3},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.45}},
-    "Structure":      {"big": {"accuracy": 0.5,  "destroy_capacity": 0.1},
-                       "med": {"accuracy": 0.6,  "destroy_capacity": 0.2},
-                       "small": {"accuracy": 0.65, "destroy_capacity": 0.35}},
-    "Air_Defense":    {"big": {"accuracy": 0.4,  "destroy_capacity": 0.3},
-                       "med": {"accuracy": 0.5,  "destroy_capacity": 0.4},
-                       "small": {"accuracy": 0.55, "destroy_capacity": 0.5}},
-    "Airbase":        {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Port":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Shipyard":       {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Farp":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "Stronghold":     {"big": {"accuracy": 0.3,  "destroy_capacity": 0.01},
-                       "med": {"accuracy": 0.4,  "destroy_capacity": 0.03},
-                       "small": {"accuracy": 0.5,  "destroy_capacity": 0.08}},
-    "ship":           {"big": {"accuracy": 0.1,  "destroy_capacity": 0.15},
-                       "med": {"accuracy": 0.15, "destroy_capacity": 0.2},
-                       "small": {"accuracy": 0.2,  "destroy_capacity": 0.3}},
-}
-
-
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    ValueError
+        Se *directive* non è un valore valido.
     """
-    # Determina in base ai target per  tutte le tipologie di aereo presenti in aircraft_availability i task da assegnare
-    # considerando i diversi ruoli definiti nei loadaout assegnati a ciascuna tipologia di aereo
-    # restituisce una lis
+    if not isinstance(aircraft_availability, list):
+        raise TypeError(f"aircraft_availability deve essere una list, ricevuto {type(aircraft_availability).__name__!r}")
+    if not isinstance(mission_requirements, dict):
+        raise TypeError(f"mission_requirements deve essere un dict, ricevuto {type(mission_requirements).__name__!r}")
+    if not isinstance(target_data, dict):
+        raise TypeError(f"target_data deve essere un dict, ricevuto {type(target_data).__name__!r}")
+    if not isinstance(max_aircraft_for_mission, int) or max_aircraft_for_mission < 1:
+        raise TypeError("max_aircraft_for_mission deve essere un intero >= 1")
+    if not isinstance(max_missions, int) or max_missions < 1:
+        raise TypeError("max_missions deve essere un intero >= 1")
+    if directive not in _DIRECTIVE_WEIGHTS:
+        raise ValueError(f"directive non valida: {directive!r}. Valori ammessi: {list(_DIRECTIVE_WEIGHTS)}")
 
-# ------------------------------------------------------------------
-    # Pre-compute target info that does not change across aircraft
-    # ------------------------------------------------------------------
-    target_types, target_dims = _extract_target_lists(target_data)
-    base_quantities = _extract_quantities(target_data)          # {type: {dim: int}}
+    task_table = _create_ground_mission_task_table(target_data)
+    aircraft_mission_task_list = {}
 
-    # Result lists
-    available_aircraft_list: Dict[str, List] = {}
+    for target_type, task_item in task_table.items():
+        task = task_item['task']
+        if task is None:
+            logger.warning(f"Nessun task determinato per il tipo target {target_type!r}. Ignorato.")
+            continue
+        aircraft_mission_task_list[target_type] = get_aircraft_mission(
+            task, aircraft_availability, mission_requirements, target_data,
+            max_aircraft_for_mission, max_missions, directive
+        )
+        aircraft_mission_task_list[target_type]['task'] = task
+        aircraft_mission_task_list[target_type]['priority'] = task_item['priority']
 
-    # ------------------------------------------------------------------
-    # Evaluate each candidate aircraft/loadout
-    # ------------------------------------------------------------------
-    for aircraft in aircraft_availability:
-        model   = aircraft['model']
-        qty     = aircraft['quantity']
-
-      
-        # --- Effective max aircraft for this entry (never mutates outer var) ---
-        # Caps formation size to what is actually available; get_aircrafts_quantity
-        # will naturally compute a higher missions_needed if effective_max < max_aircraft_for_mission,
-        # so no separate reduction ratio is needed for aircraft availability.
-        effective_max = qty
-
-        # analizza le tipologie di target e determina il task
-        # la presenza di 'Aircraft' nel target determina l'eventuale scorta e/o la sweep:
-        # enemy_aircraft_quantity > 0.5 * (fighter + fighter_bomber with autodefense capacity) - > escort
-        # enemy_aircraft_quantity > (fighter + fighter_bomber with autodefense capacity) - > escort + sweep
-        # 
-        # per distinguere Anti_Ship, Strike, Pinpoint_Strike e CAS (SEAD è sempre considerata se presenti Air_Defense nel target):
-        # target solo ship -> Anti_Ship
-        # target singola tipologia: Bridge o Hard o Structure, (ammesse con diverse dimensioni) - > Pinpoint_Strike
-        # target eterogenei -> Strike 
-        # targets esclusuvamente: Tank, Armored o Motorized + Air_Defense (med e small) -> CAS
-        # 
-        #            
-        task_and_weapon = _evaluate_task_and_weapon(target_data)
-
-        for task, weapon_params in task_and_weapon:
-
-            loadouts = get_aircraft_loadouts_by_task(model, task)
-            loadouts = select_loadouts_by_weapon_param(loadouts, weapon_params)
-
-            for loadout_name, loadout_name in loadouts:
-
-                # --- Quantity needed for the full target set -------------------
-                aq = get_aircrafts_quantity(
-                    model = model,
-                    loadout = loadout_name,
-                    target_data = base_quantities,
-                    year = None,
-                    max_aircraft_for_mission = effective_max,
-                )
-                calculated_missions = aq.get('missions_needed', 0)
-                reduction_ratio_missions = 1.0
-                effective_quantities = base_quantities
-
-                if calculated_missions > max_missions:
-                    # Target set must be reduced to fit within max_missions
-                    reduction_ratio_missions = max_missions / max(1, calculated_missions)
-                    reduced_target = _reduce_target_data(target_data, reduction_ratio_missions)
-                    effective_quantities = _extract_quantities(reduced_target)
-
-                    # Recompute with reduced target
-                    aq = get_aircrafts_quantity(
-                        model=model,
-                        loadout=loadout_name,
-                        target_data=effective_quantities,
-                        year=None,
-                        max_aircraft_for_mission=effective_max,
-                    )
-                    calculated_missions = aq.get('missions_needed', 0)
-
-                    if calculated_missions > max_missions:
-                        logger.error(
-                            f"Aircraft {model!r} / loadout {loadout_name!r}: still exceeds max_missions "
-                            f"({calculated_missions} > {max_missions}) after target reduction."
-                        )
-                        # Still keep as derated candidate but flag the shortfall
-                        reduction_ratio_missions = max_missions / max(1, calculated_missions)
-
-                # --- Combat score (with target context for better ranking) -----
-                aircraft_data: Optional[Aircraft_Data] = Aircraft_Data._registry.get(model)
-                if aircraft_data is None:
-                    logger.warning(f"Aircraft {model!r} not found in Aircraft_Data registry. Skipping.")
-                    continue
-
-                combat_score_value = aircraft_data.combat_score_target_effectiveness(
-                    task, loadout_name, target_types, target_dims
-                )
-                aircraft_cost_M  = aircraft_data.cost                    # int, M$
-                lo_cost_k        = loadout_cost(model, loadout_name)     # float, k$
-                directive = 'balanced'                                   
-                score_value = _compute_score(combat_score_value, aircraft_cost_M, lo_cost_k, directive)
-
-                # --- Assign to correct list ------------------------------------
-                # fully_compliant: target integrally covered within max_missions
-                # derated:         target partially covered (mission count constraint triggered reduction)
-                entry = {
-                    'aircraft_model':      model,
-                    'loadout':             loadout_name,
-                    'score':               score_value,
-                    'aircraft_per_mission': aq.get('max_aircraft_for_mission', 0),
-                    'missions_needed':     calculated_missions,
-                    'derating_factor':     1.0 - reduction_ratio_missions
-                }
-
-                if reduction_ratio_missions == 1.0:
-                    available_aircraft_list['fully_compliant'].append(entry)
-                else:
-                    derated_entry = dict(entry)
-                    derated_entry['score'] = score_value * reduction_ratio_missions
-                    available_aircraft_list['derated'].append(derated_entry)
-
-            # ------------------------------------------------------------------
-            # Sort both lists descending by score
-            # ------------------------------------------------------------------
-            available_aircraft_list['fully_compliant'].sort(key=lambda x: x['score'], reverse=True)
-            available_aircraft_list['derated'].sort(key=lambda x: x['score'], reverse=True)
-
-            return available_aircraft_list
-
-
-
+    return aircraft_mission_task_list
 
 def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict) -> Dict:
     """Verifica e assegna i loadout in base alla disponibilità corrente delle armi.
