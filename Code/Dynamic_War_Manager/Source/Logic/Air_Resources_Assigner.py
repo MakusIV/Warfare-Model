@@ -571,111 +571,13 @@ def _create_ground_mission_task_table(target_data: Dict) -> Dict:
 # Public API
 # ---------------------------------------------------------------------------
 
+# NOTE
+# get_ground_mission_task_list() determina i task in funzione del target. La task_list include anche l'eventuale scorta se nel target_type sono incluse le info relative al target_type = 'Aircraft'
+# Non ho implementato la funzione corrispondente per target aerei in quanto non è possibile determinare un air_task (Intercept, Fighter:Sweep, ..) in funzione del target_type = 'Aircraft'-
+# Per le task_list relative a missioni air_to_air è utilizzabile direttamente la funzione get_aircraft_mission() specificando il task: Intercept, Fighter_Sweep, ecc
 
-def get_ground_mission_task_list(aircraft_availability: List[Dict],
-                                    mission_requirements: Dict,
-                                    target_data: Dict,
-                                    max_aircraft_for_mission: int,
-                                    max_missions: int,
-                                    directive: str
-                                ) -> Dict:
-    """Create and return a task list of available aircraft/loadout combinations from target_data.
 
-    Parameters
-    ----------
-    aircraft_availability:
-        Lista di disponibilità degli aeromobili.
-    mission_requirements:
-        Requisiti della missione (velocità, quota, raggio d'azione, usabilità).
-    target_data:
-        ``{type: {dim: {'quantity': int, 'priority': int}}}``
-    max_aircraft_for_mission:
-        Numero massimo di aeromobili per singola missione.
-    max_missions:
-        Numero massimo di missioni pianificabili.
-    directive:
-        Direttiva di bilanciamento prestazioni/costo
-        (``'performance_high'``, ``'performance'``, ``'balanced'``, ``'economy'``, ``'economy_high'``).
-
-    Returns
-    -------
-    Dict
-        ``{target_type: {'task': str, 'priority': int, 'fully_compliant': [...], 'derated': [...]}}``
-
-    Format example
-    --------------
-
-    target_data = {
-        'Soft':     {'big': {'quantity': 3, 'priority': 5},
-                    'med': {'quantity': 5, 'priority': 6},
-                    'small': {'quantity': 10, 'priority': 6}},
-        'Armored':  {'big': {'quantity': 2, 'priority': 3},
-                    'med': {'quantity': 4, 'priority': 3},
-                    'small': {'quantity': 5, 'priority': 5}},
-        'Structure':{'big': {'quantity': 3, 'priority': 10},
-                    'med': {'quantity': 6, 'priority': 7},
-                    'small': {'quantity': 12, 'priority': 7}},
-    }
-
-    aircraft_mission_task_list = {
-        'Soft': {
-            'task': 'Strike',
-            'priority': 6,
-            'fully_compliant': [
-                {'aircraft_model': 'B-52H', 'loadout': 'Bomber Strike', 'score': 12.4,
-                 'aircraft_per_mission': 2, 'missions_needed': 1, 'derating_factor': 0.0},
-            ],
-            'derated': [
-                {'aircraft_model': 'F-16A', 'loadout': 'Viper Strike', 'score': 4.2,
-                 'aircraft_per_mission': 4, 'missions_needed': 3, 'derating_factor': 18.0},
-            ]
-        },
-        'Structure': {
-            'task': 'Pinpoint_Strike',
-            'priority': 10,
-            'fully_compliant': [...],
-            'derated': [...]
-        }
-    }
-
-    Raises
-    ------
-    TypeError
-        Se i parametri non rispettano il tipo atteso.
-    ValueError
-        Se *directive* non è un valore valido.
-    """
-    if not isinstance(aircraft_availability, list):
-        raise TypeError(f"aircraft_availability deve essere una list, ricevuto {type(aircraft_availability).__name__!r}")
-    if not isinstance(mission_requirements, dict):
-        raise TypeError(f"mission_requirements deve essere un dict, ricevuto {type(mission_requirements).__name__!r}")
-    if not isinstance(target_data, dict):
-        raise TypeError(f"target_data deve essere un dict, ricevuto {type(target_data).__name__!r}")
-    if not isinstance(max_aircraft_for_mission, int) or max_aircraft_for_mission < 1:
-        raise TypeError("max_aircraft_for_mission deve essere un intero >= 1")
-    if not isinstance(max_missions, int) or max_missions < 1:
-        raise TypeError("max_missions deve essere un intero >= 1")
-    if directive not in _DIRECTIVE_WEIGHTS:
-        raise ValueError(f"directive non valida: {directive!r}. Valori ammessi: {list(_DIRECTIVE_WEIGHTS)}")
-
-    task_table = _create_ground_mission_task_table(target_data)
-    aircraft_mission_task_list = {}
-
-    for target_type, task_item in task_table.items():
-        task = task_item['task']
-
-        if task is None:
-            logger.warning(f"Nessun task determinato per il tipo target {target_type!r}. Ignorato.")
-            continue
-        aircraft_mission_task_list[target_type] = get_aircraft_mission( # aircraft mission list for specific target_type
-            task, aircraft_availability, mission_requirements, {target_type: target_data[target_type]},
-            max_aircraft_for_mission, max_missions, directive
-        )
-        aircraft_mission_task_list[target_type]['task'] = task
-        aircraft_mission_task_list[target_type]['priority'] = task_item['priority']
-
-    return aircraft_mission_task_list
-
+# utilizzabile avendo già definito la lista delle armi disponibili, degli aerei e dei loadout da considerare
 def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict) -> Dict:
     """Verifica e assegna i loadout in base alla disponibilità corrente delle armi.
 
@@ -787,6 +689,7 @@ def get_loadouts_availability(weapons_availability: Dict, loadouts_list: Dict) -
 
     return loadout_list_assigned
 
+# utilizzabile avendo già definito la lista degli aerei e dei loadout da utilizzare
 def get_aircraft_mission(
     task: str,
     aircraft_availability: List[Dict],
@@ -997,6 +900,7 @@ def get_aircraft_mission(
         total_aircraft_needed = max(1, aq.get('total', 1))
         aircraft_cost_M  = aircraft_data.cost * total_aircraft_needed        # int, M$
         lo_cost_k        = loadout_cost(model, lo_name) * total_aircraft_needed  # float, k$
+        total_cost       = aircraft_cost_M + lo_cost_k
 
         score_value = _compute_score(combat_score_value, aircraft_cost_M, lo_cost_k, directive)
 
@@ -1009,7 +913,8 @@ def get_aircraft_mission(
             'score':               score_value,
             'aircraft_per_mission': aq.get('max_aircraft_for_mission', 0),
             'missions_needed':     calculated_missions,
-            'derating_factor':     1.0 - reduction_ratio_missions
+            'derating_factor':     1.0 - reduction_ratio_missions,
+            'total_cost'     :     total_cost 
         }
 
         if reduction_ratio_missions == 1.0:
@@ -1027,6 +932,247 @@ def get_aircraft_mission(
 
     return available_aircraft_list
 
+# utilizzabile avendo già definito la lista degli aerei e dei loadout da utilizzare
+def get_ground_mission_task_list(aircraft_availability: List[Dict],
+                                    mission_requirements: Dict,
+                                    target_data: Dict,
+                                    max_aircraft_for_mission: int,
+                                    max_missions: int,
+                                    directive: str
+                                ) -> Dict:
+    """Create and return a task list of available aircraft/loadout combinations from target_data.
 
+    Parameters
+    ----------
+    aircraft_availability:
+        Lista di disponibilità degli aeromobili.
+    mission_requirements:
+        Requisiti della missione (velocità, quota, raggio d'azione, usabilità).
+    target_data:
+        ``{type: {dim: {'quantity': int, 'priority': int}}}``
+    max_aircraft_for_mission:
+        Numero massimo di aeromobili per singola missione.
+    max_missions:
+        Numero massimo di missioni pianificabili.
+    directive:
+        Direttiva di bilanciamento prestazioni/costo
+        (``'performance_high'``, ``'performance'``, ``'balanced'``, ``'economy'``, ``'economy_high'``).
 
+    Returns
+    -------
+    Dict
+        ``{target_type: {'task': str, 'priority': int, 'fully_compliant': [...], 'derated': [...]}}``
+
+    Format example
+    --------------
+
+    target_data = {
+        'Soft':     {'big': {'quantity': 3, 'priority': 5},
+                    'med': {'quantity': 5, 'priority': 6},
+                    'small': {'quantity': 10, 'priority': 6}},
+        'Armored':  {'big': {'quantity': 2, 'priority': 3},
+                    'med': {'quantity': 4, 'priority': 3},
+                    'small': {'quantity': 5, 'priority': 5}},
+        'Structure':{'big': {'quantity': 3, 'priority': 10},
+                    'med': {'quantity': 6, 'priority': 7},
+                    'small': {'quantity': 12, 'priority': 7}},
+    }
+
+    aircraft_mission_task_list = {
+        'Soft': {
+            'task': 'Strike',
+            'priority': 6,
+            'fully_compliant': [
+                {'aircraft_model': 'B-52H', 'loadout': 'Bomber Strike', 'score': 12.4,
+                 'aircraft_per_mission': 2, 'missions_needed': 1, 'derating_factor': 0.0},
+            ],
+            'derated': [
+                {'aircraft_model': 'F-16A', 'loadout': 'Viper Strike', 'score': 4.2,
+                 'aircraft_per_mission': 4, 'missions_needed': 3, 'derating_factor': 18.0},
+            ]
+        },
+        'Structure': {
+            'task': 'Pinpoint_Strike',
+            'priority': 10,
+            'fully_compliant': [...],
+            'derated': [...]
+        }
+    }
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    ValueError
+        Se *directive* non è un valore valido.
+    """
+    if not isinstance(aircraft_availability, list):
+        raise TypeError(f"aircraft_availability deve essere una list, ricevuto {type(aircraft_availability).__name__!r}")
+    if not isinstance(mission_requirements, dict):
+        raise TypeError(f"mission_requirements deve essere un dict, ricevuto {type(mission_requirements).__name__!r}")
+    if not isinstance(target_data, dict):
+        raise TypeError(f"target_data deve essere un dict, ricevuto {type(target_data).__name__!r}")
+    if not isinstance(max_aircraft_for_mission, int) or max_aircraft_for_mission < 1:
+        raise TypeError("max_aircraft_for_mission deve essere un intero >= 1")
+    if not isinstance(max_missions, int) or max_missions < 1:
+        raise TypeError("max_missions deve essere un intero >= 1")
+    if directive not in _DIRECTIVE_WEIGHTS:
+        raise ValueError(f"directive non valida: {directive!r}. Valori ammessi: {list(_DIRECTIVE_WEIGHTS)}")
+
+    task_table = _create_ground_mission_task_table(target_data)
+    aircraft_mission_task_list = {}
+
+    for target_type, task_item in task_table.items():
+        task = task_item['task']
+
+        if task is None:
+            logger.warning(f"Nessun task determinato per il tipo target {target_type!r}. Ignorato.")
+            continue
+        aircraft_mission_task_list[target_type] = get_aircraft_mission( # aircraft mission list for specific target_type
+            task, aircraft_availability, mission_requirements, {target_type: target_data[target_type]},
+            max_aircraft_for_mission, max_missions, directive
+        )
+        aircraft_mission_task_list[target_type]['task'] = task
+        aircraft_mission_task_list[target_type]['priority'] = task_item['priority']
+
+    return aircraft_mission_task_list
+
+# utilizzabile avendo già definito la lista degli aerei e dei loadout da utilizzare
+def get_air_mission_task_list(aircraft_availability: List[Dict],
+                                    task: str,
+                                    mission_requirements: Dict,                                    
+                                    target_data: Dict,
+                                    max_aircraft_for_mission: int,
+                                    max_missions: int,
+                                    directive: str
+                                ) -> Dict:
+    """Create and return a task list of available aircraft/loadout combinations from target_data.
+
+    Parameters
+    ----------
+    aircraft_availability:
+        Lista di disponibilità degli aeromobili.
+    task:
+        air task: Intercept, Fighter_Sweep, ...
+    mission_requirements:
+        Requisiti della missione (velocità, quota, raggio d'azione, usabilità).
+    target_data:
+        ``{'Aircraft': {dim: {'quantity': int, 'priority': int}}}``
+        Big -> Bomber, Transport, AWACS, Tanker
+        Med -> Attacker, Fighter_Bomber
+        small -> Fighter, Recon, Helicopter
+        
+    max_aircraft_for_mission:
+        Numero massimo di aeromobili per singola missione.
+    max_missions:
+        Numero massimo di missioni pianificabili.
+    directive:
+        Direttiva di bilanciamento prestazioni/costo
+        (``'performance_high'``, ``'performance'``, ``'balanced'``, ``'economy'``, ``'economy_high'``).
+
+    Returns
+    -------
+    Dict
+        ``{target_type: {'task': str, 'priority': int, 'fully_compliant': [...], 'derated': [...]}}``
+
+    Format example
+    --------------
+
+    target_data = {
+        'Aircraft':     {'big': {'quantity': 3, 'priority': 5},
+                        'med': {'quantity': 5, 'priority': 6},
+                        'small': {'quantity': 10, 'priority': 6}},        
+    }
+
+    aircraft_mission_task_list = {
+        'Intercept'
+            'task': 'Strike',
+            'priority': 6,
+            'fully_compliant': [
+                {'aircraft_model': 'B-52H', 'loadout': 'Bomber Strike', 'score': 12.4,
+                 'aircraft_per_mission': 2, 'missions_needed': 1, 'derating_factor': 0.0},
+            ],
+            'derated': [
+                {'aircraft_model': 'F-16A', 'loadout': 'Viper Strike', 'score': 4.2,
+                 'aircraft_per_mission': 4, 'missions_needed': 3, 'derating_factor': 18.0},
+            ]
+        },
+    }
+
+    Raises
+    ------
+    TypeError
+        Se i parametri non rispettano il tipo atteso.
+    ValueError
+        Se *directive* non è un valore valido.
+    """
+    if not isinstance(aircraft_availability, list):
+        raise TypeError(f"aircraft_availability deve essere una list, ricevuto {type(aircraft_availability).__name__!r}")
+    if not isinstance(task, str) or task not in AIR_TO_AIR_TASK:
+        raise TypeError(f"task deve essere una stringa appartenente a AIR_TO_AIR_TASK, ricevuto {type(task).__name__!r}")
+    if not isinstance(mission_requirements, dict):
+        raise TypeError(f"mission_requirements deve essere un dict, ricevuto {type(mission_requirements).__name__!r}")
+    if not isinstance(target_data, dict) or target_data.get('Aircraft', None) == None or len(target_data) > 1:
+        raise TypeError(f"target_data deve essere un dict contenente l'unica chiave 'Aircraft', ricevuto {type(target_data).__name__!r}")
+    if not isinstance(max_aircraft_for_mission, int) or max_aircraft_for_mission < 1:
+        raise TypeError("max_aircraft_for_mission deve essere un intero >= 1")
+    if not isinstance(max_missions, int) or max_missions < 1:
+        raise TypeError("max_missions deve essere un intero >= 1")
+    if directive not in _DIRECTIVE_WEIGHTS:
+        raise ValueError(f"directive non valida: {directive!r}. Valori ammessi: {list(_DIRECTIVE_WEIGHTS)}")
+
+    aircraft_mission_task_list = {}
+
+    if task in [Air_To_Air_Task.FIGHTER_SWEEP.value, Air_To_Air_Task.INTERCEPT.value, Air_To_Air_Task.CAP, Air_To_Air_Task.ESCORT]:
+        aircraft_mission_task_list['Aircraft'] = get_aircraft_mission( # aircraft mission list for specific target_type
+            task, aircraft_availability, mission_requirements, target_data,
+            max_aircraft_for_mission, max_missions, directive
+        )
+    elif task in [Air_To_Air_Task.RECON]:
+        get_aircraft_mission( # aircraft mission list for specific target_type
+            task, aircraft_availability, mission_requirements, {'Aircraft': {'small': 1}},
+            max_aircraft_for_mission, max_missions, directive
+        )
+    aircraft_mission_task_list['Aircraft']['task'] = task
+    aircraft_mission_task_list['Aircraft']['priority'] = target_data['priority']
+
+    return aircraft_mission_task_list
+
+def get_asset_availability_list(airbase_name: str, asset_type: str, asset_category: str):
+
+    """ 
+    asset_type: Aircraft
+    asset_category: Fighter
+
+    asset_type: Weapon
+    asset_category: Bombs
     
+
+    asset_type: Aircraft
+    asset_category: Fighter
+    task: 'Strike'
+
+
+
+    asset_list = [ {'asset_type': str, 'asset_category': str, 'asset_name': str, asset_quantity: int} ]
+
+    asset_list = [  {'asset_type': 'Aircraft, 'asset_category': 'Fighter_Bomber' ,'asset_name': 'F-4E': asset_quantity: 23}, 
+                    {'asset_type': 'Aircraft, 'asset_category': 'Fighter_Bomber' ,'asset_name': 'F-16A': asset_quantity: 18} ]
+
+    asset_list = [ {'asset_type': 'AIR_WEAPON', 'asset_category': 'MISSILES_ASM' ,'asset_name': 'AGM_64D Maverick': asset_quantity: 230} ]
+
+
+    """
+    pass
+    
+    # airbase = get_airbase(airbase_name) # funzione implementata in Campaign_Stae dovesono definite le Region con le rispettive Military Base assegnate.
+
+    # asset_list = airbase.get_asset_type_list(asset_type, asset_category, status = 'operative')# 'operative', 'repair', 'destroyed'
+    # asset_quantity = len(asset_list)
+
+
+
+
+
+
+

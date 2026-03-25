@@ -361,6 +361,9 @@ class Block:
             raise KeyError(f"Asset with key '{key}' not found")
         del self._assets[key]
 
+    def get_asset_list(asset_type: str, asset_category: str) -> List:
+        pass
+
     # Region property
     @property
     def region(self) -> Optional["Region"]:
