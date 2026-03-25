@@ -227,10 +227,12 @@ def _reduce_target_data(target_data: Dict, reduction_ratio: float) -> Dict:
         for _, category_data in updated.items()
         for _, dim_data in category_data.items()
     )
+        
     for _, category_data in updated.items():
         for _, dim_data in category_data.items():
             weight = dim_data['priority'] / max(1, total_priority_weight)
             multiplier = reduction_ratio + weight * (1.0 - reduction_ratio)
+            # multiplier = reduction_ratio * weight
             dim_data['quantity'] = max(0, round(dim_data['quantity'] * multiplier))
     return updated
 
@@ -514,7 +516,7 @@ def _create_ground_mission_task_table(target_data: Dict) -> Dict:
 
     admitted_target_types = {item.value for item in Target_Class_Name}
     _task_table = {}
-
+    
     for tg_type, tg_dims in target_data.items():
 
         if not isinstance(tg_dims, dict):
@@ -661,11 +663,12 @@ def get_ground_mission_task_list(aircraft_availability: List[Dict],
 
     for target_type, task_item in task_table.items():
         task = task_item['task']
+
         if task is None:
             logger.warning(f"Nessun task determinato per il tipo target {target_type!r}. Ignorato.")
             continue
-        aircraft_mission_task_list[target_type] = get_aircraft_mission(
-            task, aircraft_availability, mission_requirements, target_data,
+        aircraft_mission_task_list[target_type] = get_aircraft_mission( # aircraft mission list for specific target_type
+            task, aircraft_availability, mission_requirements, {target_type: target_data[target_type]},
             max_aircraft_for_mission, max_missions, directive
         )
         aircraft_mission_task_list[target_type]['task'] = task
@@ -927,10 +930,31 @@ def get_aircraft_mission(
         calculated_missions = aq.get('missions_needed', 0)
         reduction_ratio_missions = 1.0
         effective_quantities = base_quantities
-
+        
         if calculated_missions > max_missions:
-            # Target set must be reduced to fit within max_missions
-            reduction_ratio_missions = max_missions / max(1, calculated_missions)
+            # Target set must be reduced to fit within max_missions.
+            # A plain ratio T = max_missions/calculated_missions is insufficient because
+            # _reduce_target_data applies a priority-weighted multiplier that preserves
+            # high-priority targets, making the effective total reduction < T.
+            # We pre-compensate analytically: given the normalised priority-quantity
+            # correlation C = Σ(q_i*p_i)/(Q_tot*P_tot), the effective fraction after
+            # reduction is r*(1-C)+C, so we solve for r such that r*(1-C)+C = T:
+            #   r_corrected = (T - C) / (1 - C)
+            T = max_missions / max(1, calculated_missions)
+            flat = [
+                (d['quantity'], d['priority'])
+                for cat in target_data.values()
+                for d in cat.values()
+            ]
+            Q_tot = sum(q for q, _ in flat)
+            P_tot = sum(p for _, p in flat)
+            if Q_tot > 0 and P_tot > 0:
+                C = sum(q * p for q, p in flat) / (Q_tot * P_tot)
+            else:
+                C = 0.0
+            reduction_ratio_missions = (T - C) / (1.0 - C) if C < 1.0 else 0.0
+            reduction_ratio_missions = max(0.0, min(1.0, reduction_ratio_missions))
+
             reduced_target = _reduce_target_data(target_data, reduction_ratio_missions)
             effective_quantities = _extract_quantities(reduced_target)
 
@@ -945,13 +969,22 @@ def get_aircraft_mission(
             calculated_missions = aq.get('missions_needed', 0)
 
             if calculated_missions > max_missions:
-                logger.error(
-                    f"Aircraft {model!r} / loadout {lo_name!r}: still exceeds max_missions "
-                    f"({calculated_missions} > {max_missions}) after target reduction."
+                # Residual excess from integer rounding or efficiency heterogeneity:
+                # apply one additional proportional correction step on the already-
+                # reduced target (r2 ≈ 1, so priority distribution is barely altered).
+                r2 = max_missions / max(1, calculated_missions)
+                reduced_target = _reduce_target_data(reduced_target, r2)
+                effective_quantities = _extract_quantities(reduced_target)
+                aq = get_aircrafts_quantity(
+                    model=model,
+                    loadout=lo_name,
+                    target_data=effective_quantities,
+                    year=None,
+                    max_aircraft_for_mission=effective_max,
                 )
-                # Still keep as derated candidate but flag the shortfall
-                reduction_ratio_missions = max_missions / max(1, calculated_missions)
-
+                calculated_missions = aq.get('missions_needed', 0)
+                reduction_ratio_missions *= r2
+        
         # --- Combat score (with target context for better ranking) -----
         aircraft_data: Optional[Aircraft_Data] = Aircraft_Data._registry.get(model)
         if aircraft_data is None:
@@ -961,8 +994,9 @@ def get_aircraft_mission(
         combat_score_value = aircraft_data.combat_score_target_effectiveness(
             task, lo_name, target_types, target_dims
         )
-        aircraft_cost_M  = aircraft_data.cost               # int, M$
-        lo_cost_k        = loadout_cost(model, lo_name)     # float, k$
+        total_aircraft_needed = max(1, aq.get('total', 1))
+        aircraft_cost_M  = aircraft_data.cost * total_aircraft_needed        # int, M$
+        lo_cost_k        = loadout_cost(model, lo_name) * total_aircraft_needed  # float, k$
 
         score_value = _compute_score(combat_score_value, aircraft_cost_M, lo_cost_k, directive)
 

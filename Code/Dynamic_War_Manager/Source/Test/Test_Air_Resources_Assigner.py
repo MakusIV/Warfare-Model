@@ -2529,8 +2529,8 @@ class TestGetGroundMissionTaskList(unittest.TestCase):
     """
 
     _MOCK_TASK_TABLE = {
-        'Soft':      {'task': 'Strike',          'priority': 6},
-        'Structure': {'task': 'Pinpoint_Strike', 'priority': 10},
+        'Soft':    {'task': 'Strike', 'priority': 6},
+        'Armored': {'task': 'CAS',    'priority': 5},
     }
     _MOCK_MISSION_BASE = {'fully_compliant': [], 'derated': []}
 
@@ -2651,14 +2651,14 @@ class TestGetGroundMissionTaskList(unittest.TestCase):
     def test_task_correctly_propagated(self):
         """Il valore di 'task' corrisponde al task del task_table."""
         result = self._call()
-        self.assertEqual(result['Soft']['task'],      'Strike')
-        self.assertEqual(result['Structure']['task'], 'Pinpoint_Strike')
+        self.assertEqual(result['Soft']['task'],    'Strike')
+        self.assertEqual(result['Armored']['task'], 'CAS')
 
     def test_priority_correctly_propagated(self):
         """Il valore di 'priority' corrisponde alla priorità del task_table."""
         result = self._call()
-        self.assertEqual(result['Soft']['priority'],      6)
-        self.assertEqual(result['Structure']['priority'], 10)
+        self.assertEqual(result['Soft']['priority'],    6)
+        self.assertEqual(result['Armored']['priority'], 5)
 
     def test_number_of_entries_matches_valid_tasks(self):
         """Il numero di entry corrisponde al numero di tipi con task non-None."""
@@ -2674,8 +2674,8 @@ class TestGetGroundMissionTaskList(unittest.TestCase):
         """get_aircraft_mission riceve il task corretto per ogni tipo target."""
         self._call()
         tasks_passed = [c[0][0] for c in self._mock_gam.call_args_list]
-        self.assertIn('Strike',          tasks_passed)
-        self.assertIn('Pinpoint_Strike', tasks_passed)
+        self.assertIn('Strike', tasks_passed)
+        self.assertIn('CAS',    tasks_passed)
 
     # ── Gestione task=None ────────────────────────────────────────────────────
 

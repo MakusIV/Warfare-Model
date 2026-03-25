@@ -1,10 +1,14 @@
 
 
-
-
-
  FATTO
  
+ Ho modificato un argomento nella chiamata alla funzione get_aircraft_mission nella riga 668 del modulo Air_Resources_Assigner.py. In precedenza l'argomento passato era target_data cioè l'intera struttura degli obiettivi da me cambiato in {target_type: target_data[target_type]} cioè solo una delle diverse tipologie di obiettivo. Eseguendo Test_Air_Resources_Assigner.py vengono restituiti diversi errori. Verifica la correttezza semantica e sintattica della modifica effettuata e aggiorna i test. 
+
+Analizza il motivo per cui eseguendo est_Air_Resources_Assigner.py, viene restituito il seguente errore e similari :
+"Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - ERROR - get_aircraft_mission - Aircraft 'Tu-142' / loadout 'Maritime Strike': still exceeds max_missions (3 > 2) after target reduction.
+ERROR:Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner:Aircraft 'Tu-142' / loadout 'Maritime Strike': still exceeds max_missions (3 > 2) after target reduction."
+Nella tua analisi, considera che la riduzione  viene calcolata in modo da ridimensionare i target affinchè la quantità disponibile di aerei e missioni soddisfi il target ridimensionato e quindi l'errore non dovrebbe manifestarsi
+
  Implementa i test di unità per le funzioni: _create_ground_mission_task_table, get_ground_mission_task_list nel modulo Test_Air_Resources_Assigner.py.
  
 Nel modulo Air_Resources_Assigner.py ho implementato le due funzioni: _create_ground_mission_task_table, get_ground_mission_task_list. Analizza queste funzioni e le strutture dati che utilizzano verificando la correttezza logica e sintattica. Implementa nelle funzioni il codice di controllo degli argomenti, applica eventuali ottimizzazioni e proponi, eventualmente, dei miglioramenti.
