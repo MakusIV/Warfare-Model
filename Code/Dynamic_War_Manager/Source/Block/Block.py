@@ -9,7 +9,13 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.State import State
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_CATEGORY, SIDE
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    BLOCK_CATEGORY, 
+    SIDE,
+    Ground_Vehicle_Asset_Type as gat,
+    Sea_Asset_Type as sat,
+    Air_Asset_Type as aat
+    )
 
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
@@ -23,9 +29,14 @@ if TYPE_CHECKING:
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, class_name='Block')
+logger = Logger(module_name=__name__, class_name='Block').logger
 
 # Constants
+GROUND_ASSET_TYPE = [ v.value for v in gat ]
+AIR_ASSET_TYPE = [ v.value for v in aat ]
+SEA_ASSET_TYPE = [ v.value for v in sat ]
+ASSET_TYPE = GROUND_ASSET_TYPE + AIR_ASSET_TYPE + SEA_ASSET_TYPE
+
 MAX_VALUE = 10  # Maximum value for block's strategic weight parameter
 MIN_VALUE = 1   # Minimum value for block's strategic weight parameter  
 
@@ -361,8 +372,6 @@ class Block:
             raise KeyError(f"Asset with key '{key}' not found")
         del self._assets[key]
 
-    def get_asset_list(asset_type: str, asset_category: str) -> List:
-        pass
 
     # Region property
     @property

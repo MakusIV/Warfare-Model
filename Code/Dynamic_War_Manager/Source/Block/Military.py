@@ -5,6 +5,7 @@ from numpy import median
 from sympy import Point3D, Point2D
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.DataType.State import StateCategory
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -14,7 +15,10 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     SEA_TASK,
     MILITARY_CATEGORY,    
     MILITARY_FORCES,
-    ACTION_TASKS
+    ACTION_TASKS,
+    Ground_Vehicle_Asset_Type as gat,
+    Sea_Asset_Type as sat,
+    Air_Asset_Type as aat
 )
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Context.Region import Region
@@ -30,7 +34,16 @@ if TYPE_CHECKING:
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, class_name='Military')
+logger = Logger(module_name=__name__, class_name='Military').logger
+
+
+#constant:
+GROUND_ASSET_TYPE = [ v.value for v in gat ]
+AIR_ASSET_TYPE = [ v.value for v in aat ]
+SEA_ASSET_TYPE = [ v.value for v in sat ]
+STATE_CATEGORY = [ v.value for v in StateCategory ]
+ASSET_TYPE = GROUND_ASSET_TYPE + AIR_ASSET_TYPE + SEA_ASSET_TYPE
+
 
 class Military(Block):
     """Military class representing specialized combat Block with combat capabilities."""
@@ -75,7 +88,7 @@ class Military(Block):
         self._mil_category = mil_category
         self._validate_mil_category(mil_category)
 
-    #region Properties
+    #military Properties
     @property
     def mil_category(self) -> str:
         """Get military category."""
@@ -86,9 +99,9 @@ class Military(Block):
         """Set military category after validation."""
         self._validate_mil_category(value)
         self._mil_category = value
-    #endregion
+    #endmilitary
 
-    #region Validation Methods
+    #military Validation Methods
     def _validate_mil_category(self, category: str) -> None:
         """Validate military category against allowed values."""
         cat = []                    
@@ -101,7 +114,68 @@ class Military(Block):
             raise ValueError(
                 f"Invalid mil_category: {category}. Must be one of: {valid_categories}"
             )
-    #endregion
+    #endmilitary
+
+    def get_asset_list(self,
+                       asset_class: Optional[str] = None, # Aircraft, Vehicle, Ship, Structure
+                       asset_type: Optional[str] = None, # Tank, Fighter, Armored, ...
+                       asset_state: Optional[str] = None) -> Optional[Dict]:
+
+        """
+        Restituisce un dizionario contenente liste di assets appartenenti al Military Block,
+        filtrati per classe, tipo e stato. I parametri None non applicano filtro.
+
+        Args:
+            asset_class: Optional[str]: 'Aircraft', 'Vehicle', 'Ship', 'Structure'. None = nessun filtro.
+            asset_type: Optional[str]: tipo asset (es. 'Tank', 'Fighter', ...). None = nessun filtro.
+            asset_state: Optional[str]: stato (es. 'Healtful', 'Damaged', 'Critical', 'Destroyed', 'Unknow'). None = nessun filtro.
+
+        Returns:
+            Dict organizzato come {asset_class: {asset_type: [asset, ...]}} o None se i parametri non sono validi.
+        """
+
+        if asset_class is not None and (not isinstance(asset_class, str) or asset_class not in ['Aircraft', 'Vehicle', 'Ship', 'Structure']):
+            logger.warning(f"asset_class:{asset_class} is not valid. Must be one of: 'Aircraft', 'Vehicle', 'Ship', 'Structure'. Returns None")
+            return None
+
+        if asset_type is not None and (not isinstance(asset_type, str) or asset_type not in ASSET_TYPE):
+            logger.warning(f"asset_type:{asset_type} is not valid. Must be one of: {ASSET_TYPE!r}. Returns None")
+            return None
+
+        if asset_state is not None and (not isinstance(asset_state, str) or asset_state not in STATE_CATEGORY):
+            logger.warning(f"asset_state:{asset_state} is not valid. Must be one of: {STATE_CATEGORY!r}. Returns None")
+            return None
+
+        asset_list = {}
+
+        for asset in self.assets.values():
+
+            if asset_class is not None and asset.__class__.__name__ != asset_class:
+                continue
+
+            if asset_type is not None and asset.asset_type != asset_type:
+                continue
+
+            if asset_state is not None and asset.state.state_value != asset_state:
+                continue
+
+            current_class = asset.__class__.__name__
+            current_type = asset.asset_type if asset.asset_type else 'Unknown_asset_type'
+
+            if current_class not in asset_list:
+                asset_list[current_class] = {}
+
+            if current_type not in asset_list[current_class]:
+                asset_list[current_class][current_type] = []
+
+            asset_list[current_class][current_type].append(asset)
+
+        return asset_list
+                    
+
+
+
+
 
     
     def combat_power(self, force: str, action: str) -> float:
@@ -157,7 +231,7 @@ class Military(Block):
 
         return military_category
 
-    #region Base Type Checks
+    #military Base Type Checks
     def is_Air_Base(self) -> bool:
         """Check if base is an Air_Base."""
         return self._mil_category in MILITARY_CATEGORY["Air_Base"]
@@ -169,9 +243,9 @@ class Military(Block):
     def is_Naval_Base(self) -> bool:
         """Check if base is a sea group."""
         return self._mil_category in MILITARY_CATEGORY["Naval_Base"]
-    #endregion
+    #endmilitary
 
-    #region Range Calculations
+    #military Range Calculations
     def artillery_in_range(
         self, 
         target_point: Union[Point2D, Point3D]
@@ -238,9 +312,9 @@ class Military(Block):
         quantity = len(range_values)
         
         return True, max_range, med_range, ratio, quantity
-    #endregion
+    #endmilitary
 
-    #region Time Calculations
+    #military Time Calculations
     def time_to_direct_line_attack(
         self, 
         target: Union[Point2D, Point3D, Asset, Block]
@@ -348,7 +422,7 @@ class Military(Block):
         if validate_class(asset, "Vehicle"):
             return asset.speed.get("off_road", {}).get("max", 0)
         return asset.speed.get("max", 0)
-    #endregion
+    #endmilitary
 
     #Reconnaissance Methods
     def get_recon_efficiency(self) -> float:
@@ -366,7 +440,7 @@ class Military(Block):
         return median(
             [asset.efficiency() for asset in recognitors]
         ) if recognitors else 0.0
-    #endregion
+    #endmilitary
 
     #Placeholder Methods for Future Implementation
     def air_defense(self) -> None:
@@ -396,4 +470,4 @@ class Military(Block):
     def combat_state(self) -> None:
         """Calculate combat state (to be implemented)."""
         pass
-    #endregion
+    #endmilitary

@@ -47,6 +47,16 @@ AMMO_LOAD_REFERENCE = {
 
 CATEGORY = set( item.value for item in Ground_Vehicle_Asset_Type )
 
+# Categorie che possono legittimamente montare AA_CANNONS:
+# oltre alla categoria pura AAA, i sistemi combinati SAM+cannone (SPAAGM, es. 2K22 Tunguska)
+# appartengono a categorie SAM ma montano cannoni AA come armamento secondario o principale.
+AA_CANNONS_ALLOWED_CATEGORIES = {
+    Ground_Vehicle_Asset_Type.AAA.value,
+    Ground_Vehicle_Asset_Type.SAM_SMALL.value,
+    Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
+    Ground_Vehicle_Asset_Type.SAM_BIG.value,
+}
+
 @dataclass
 class Vehicle_Data:
 
@@ -303,8 +313,8 @@ class Vehicle_Data:
                         factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['ARTILLERY'] # 50 reference for cannons (100 cannons ammo -> factor_ammo_quantity = 2)
 
                 elif weapon_type == 'AA_CANNONS':
-                    if not self.category == Ground_Vehicle_Asset_Type.AAA.value:
-                        logger.warning(f"vehicle: {self.model} weapon_type 'AA_CANNONS' installed on non AAA vehicle category:{self.category}")
+                    if self.category not in AA_CANNONS_ALLOWED_CATEGORIES:
+                        logger.warning(f"vehicle: {self.model} weapon_type 'AA_CANNONS' installed on unexpected vehicle category:{self.category}")
                     factor_ammo_quantity = weapon_item[1] / AMMO_LOAD_REFERENCE['AA_CANNONS'] # 600 reference for AAA cannons
 
                 elif weapon_type == 'AUTO_CANNONS':                    

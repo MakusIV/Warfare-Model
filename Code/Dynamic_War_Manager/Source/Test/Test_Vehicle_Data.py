@@ -89,6 +89,7 @@ _LOGGER_PATH = "Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data.logger"
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import (
     Vehicle_Data,
     AMMO_LOAD_REFERENCE,
+    AA_CANNONS_ALLOWED_CATEGORIES,
     CATEGORY,
     VEHICLE,
     SCORES,
@@ -104,7 +105,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import (
 _TANK_MODEL       = "T-90M"
 _ARMORED_MODEL    = "BMP-1"
 _ARTILLERY_MODEL  = "2S3 Akatsiya"
-_AAA_MODEL        = "ZSU-23-4"
+_AAA_MODEL        = "ZSU-23-4-Shilka"
 _SAM_MODEL        = "S-300PS"
 
 
@@ -354,6 +355,54 @@ class TestWeaponEval(unittest.TestCase):
     def test_deterministic(self):
         tank = Vehicle_Data._registry[_TANK_MODEL]
         self.assertAlmostEqual(tank._weapon_eval(), tank._weapon_eval(), places=9)
+
+    def test_aa_cannons_on_sam_small_no_warning(self):
+        """2K22 Tunguska (SAM_Small + AA_CANNONS) non deve emettere warning dopo il fix.
+
+        Il 2K22 Tunguska è un sistema SPAAGM (combined SAM + cannon): la categoria
+        SAM_Small è corretta e AA_CANNONS è un armamento legittimo per questa piattaforma.
+        """
+        tunguska = Vehicle_Data._registry["2K22-Tunguska"]
+        self.assertIn("AA_CANNONS", tunguska.weapons)
+        self.assertEqual(tunguska.category, "SAM_Small")
+        fresh_mock = MagicMock()
+        with patch(_LOGGER_PATH, fresh_mock):
+            tunguska._weapon_eval()
+        fresh_mock.warning.assert_not_called()
+
+    def test_aa_cannons_on_aaa_no_warning(self):
+        """Veicolo di categoria AAA con AA_CANNONS non deve emettere warning."""
+        aaa = Vehicle_Data._registry[_AAA_MODEL]
+        self.assertIn("AA_CANNONS", aaa.weapons)
+        fresh_mock = MagicMock()
+        with patch(_LOGGER_PATH, fresh_mock):
+            aaa._weapon_eval()
+        fresh_mock.warning.assert_not_called()
+
+    def test_aa_cannons_on_unexpected_category_emits_warning(self):
+        """AA_CANNONS su una categoria non prevista (es. Tank) deve emettere warning."""
+        from unittest.mock import patch as _patch
+        import Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data as vd_module
+
+        # Crea un oggetto minimale con AA_CANNONS su categoria Tank, bypassing __init__
+        obj = object.__new__(Vehicle_Data)
+        obj.category = "Tank"
+        obj.model = "_test_tank_with_aa_cannons"
+        obj.weapons = {"AA_CANNONS": [("2A38M-30mm", 100)]}
+
+        fresh_mock = MagicMock()
+        with _patch(_LOGGER_PATH, fresh_mock):
+            with _patch.object(vd_module, "get_weapon_score", return_value=1.0):
+                obj._weapon_eval()
+        fresh_mock.warning.assert_called_once()
+        warning_msg = fresh_mock.warning.call_args[0][0]
+        self.assertIn("unexpected vehicle category", warning_msg)
+        self.assertIn("Tank", warning_msg)
+
+    def test_aa_cannons_allowed_categories_constant(self):
+        """AA_CANNONS_ALLOWED_CATEGORIES deve contenere AAA e tutte le categorie SAM."""
+        expected = {"AAA", "SAM_Small", "SAM_Medium", "SAM_Big"}
+        self.assertEqual(AA_CANNONS_ALLOWED_CATEGORIES, expected)
 
 
 class TestRadarEval(unittest.TestCase):

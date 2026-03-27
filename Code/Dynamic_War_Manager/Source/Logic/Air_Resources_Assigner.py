@@ -14,6 +14,8 @@ import random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
+from Code.Dynamic_War_Manager.Source.Asset import Aircraft
+from Code.Dynamic_War_Manager.Source.Block import Military
 
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_TASK, AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK,
@@ -1138,7 +1140,7 @@ def get_air_mission_task_list(aircraft_availability: List[Dict],
 
     return aircraft_mission_task_list
 
-def get_asset_availability_list(airbase_name: str, asset_type: str, asset_category: str):
+def get_aircraft_availability_list(airbase_name: str, aircraft_category: Optional[str] = None, ):
 
     """ 
     asset_type: Aircraft
@@ -1161,8 +1163,11 @@ def get_asset_availability_list(airbase_name: str, asset_type: str, asset_catego
 
     asset_list = [ {'asset_type': 'AIR_WEAPON', 'asset_category': 'MISSILES_ASM' ,'asset_name': 'AGM_64D Maverick': asset_quantity: 230} ]
 
+    
 
     """
+
+
     pass
     
     # airbase = get_airbase(airbase_name) # funzione implementata in Campaign_Stae dovesono definite le Region con le rispettive Military Base assegnate.
