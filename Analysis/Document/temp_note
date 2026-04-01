@@ -1,6 +1,21 @@
 
+Utilizzando come riferimento Test_Vehicle_Weapon_Data.py, implementa il nuovo modulo Test_Ship_Weapon_Data.py, completo di tutte i dati, metodi e tabelle, analoghi a quelli presenti in Vehicle_Weapon_Data.py.
 
- FATTO
+Utilizzando come riferimento Vehicle_Weapon_Data.py, implementa il nuovo modulo Ship_Weapon_Data.py, completo di tutte i dati e metodi, analoghi a quelli presenti in Vehicle_Weapon_Data.py, utilizzando le informazioni presenti nel dizionario Weapon presente nei dizionari implementati in Ship_Data.py.
+
+commit: "Implemented: _ASSET_AVAILABILITY with quantity, production and repai information in Initial_Context.py, Ship_Data.py, Test_Ship_Data.py, Ship_Weapon_Data.py, Test_Ship_Weapon_Data.py
+
+
+
+
+FATTO
+
+Utilizzando come riferimento Test_Vehicle_Data.py, implementa il nuovo modulo Test_Ship_Data.py, completo di tutte i dati, metodi e tabelle, analoghi a quelli presenti in Vehicle_Data.py.
+
+Utilizzando come riferimento Vehicle_Data.py, implementa il nuovo modulo Ship_Data.py, completo di tutte i dati e metodi, analoghi a quelli presenti in Vehicle_Data.py, utilizzando le informazioni presenti nel dizionario navi presente nel modulo Initial_Context.py escludendo le chiavi: 'communication', 'protection', 'hydraulic' e 'TVD' e aggiungendo la chiave 'class' in cui riportare il valore 'class' specificato in navi e assegnando a 'category' le chiavi di categorizzazione presenti in navi. Per le chiavi utilizza i valori della classe enum Sea_Asset_Type presenti in Context.py.
+
+ 
+ Considera il dizionario _ASSET_AVALAIBILITY implementato nel modulo Initial_Context.py. In questo dizionario sono riportate alcune informazioni iniziali degli asset utilizzate da due coalizioni di nazioni in conflitto militare tra loro in una specifica zona di combattimento. Per ogni asset presente nelle chiavi 'air', 'ground', 'sea' ('F-14B', 'Su-33', 'T-55', 'CVN-70 Carl Vinson', ...) associa il dizionario: {'quantity': int, 'production': float, 'repair': {'heavy_damage': float, 'medium_damage': float, 'light_damage': float}, 'local_industrial_capacity': 0.3} dove a quantity rappresenta la quantità iniziale disponibile, production la capacità produttiva espressa in unità/mese, repair la capacità di riparazione espressa in unità/mese e specificata in funzione del livello di danno ('high_damage', 'medium_damage', 'low_damage'), infine 'local_industrial_capacity' rappresenta il valore percentuale (0.0-1.0) dei valori di 'production' e 'repair' che dipendono dalle infrastrutture industriali (farm, power line, ecc.) presenti nella zona dove si svolge il conflitto militare tra le due coalizioni. Queste due coalizioni sono composte ciascuna da un gruppo di nazioni che producono e/o gestiscono gli asset presenti in _ASSET_AVALAIBILITY. Completa il dizionario utilizzando come esempio quanto realizzato per l'asset 'F-14A Tomcat', determinando e riportando i valori indicativi da associare a quantity, production e repair per tutti gli asset specificati nel dizionario (verifica e, eventualmente, aggiorna i valori per 'F-14A Tomcat'). Assegna 0.75 a 'local_industrial_capacity': anche nel caso in cui la produzione di un asset dipende solo da infrastrutture esterni alla zona di combattimento, quindi teoricamente immune alle distruzioni che avvengono in essa, l'attivazione e l'utilizzo di un asset dipende comunque dalla efficienza delle infrastrutture presenti nella zona di assegnazione che coincide con la zona di combattimento. Pertanto, il danneggiamento delle infrastrutture nella zona di combattimento influirà anche sul valore della 'production'.
  
  Ho modificato un argomento nella chiamata alla funzione get_aircraft_mission nella riga 668 del modulo Air_Resources_Assigner.py. In precedenza l'argomento passato era target_data cioè l'intera struttura degli obiettivi da me cambiato in {target_type: target_data[target_type]} cioè solo una delle diverse tipologie di obiettivo. Eseguendo Test_Air_Resources_Assigner.py vengono restituiti diversi errori. Verifica la correttezza semantica e sintattica della modifica effettuata e aggiorna i test. 
 
