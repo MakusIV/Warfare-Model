@@ -1,12 +1,11 @@
+1 -Utilizzando come riferimento Vehicle_Weapon_Data.py, implementa il nuovo modulo Ship_Weapon_Data.py, completo di tutte i dati e metodi, analoghi a quelli presenti in Vehicle_Weapon_Data.py, utilizzando le informazioni presenti nel dizionario Weapon presente nei dizionari implementati in Ship_Data.py.
 
-Utilizzando come riferimento Test_Vehicle_Weapon_Data.py, implementa il nuovo modulo Test_Ship_Weapon_Data.py, completo di tutte i dati, metodi e tabelle, analoghi a quelli presenti in Vehicle_Weapon_Data.py.
+2 - Utilizzando come riferimento Test_Vehicle_Weapon_Data.py, implementa il nuovo modulo Test_Ship_Weapon_Data.py, completo di tutte i dati, metodi e tabelle, analoghi a quelli presenti in Vehicle_Weapon_Data.py.
 
-Utilizzando come riferimento Vehicle_Weapon_Data.py, implementa il nuovo modulo Ship_Weapon_Data.py, completo di tutte i dati e metodi, analoghi a quelli presenti in Vehicle_Weapon_Data.py, utilizzando le informazioni presenti nel dizionario Weapon presente nei dizionari implementati in Ship_Data.py.
-
-commit: "Implemented: _ASSET_AVAILABILITY with quantity, production and repai information in Initial_Context.py, Ship_Data.py, Test_Ship_Data.py, Ship_Weapon_Data.py, Test_Ship_Weapon_Data.py
-
+3 -commit: "Implemented: Ship_Weapon_Data.py, Test_Ship_Weapon_Data.py
 
 
+commit: "Implemented: _ASSET_AVAILABILITY with quantity, production and repai information in Initial_Context.py, Ship_Data.py, Test_Ship_Data.py
 
 FATTO
 
