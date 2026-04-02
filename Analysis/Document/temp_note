@@ -1,10 +1,20 @@
 
 
-3 -commit: "Implemented: Ship_Weapon_Data.py, Test_Ship_Weapon_Data.py
+
+
 
 
 
 FATTO
+
+
+Ripeti l'analisi e la valutazione considerando che GUNS e CIWS presentano le precedenti incongruenze sul calcolo del punteggio auspicato (Soft>Armored>ship). 
+
+
+
+
+Nella tabella ship_weapon_score_target_tables.pdf prodotta dal modulo Test_Weapon_Ship.py, i punteggi assegnati alle ship sono superiori a quelli assegnati a Armor, Structure. I punteggi relativi al missile RGM-84-Harpoon assegnati alle ship sono superiori rispetto quelli assegnati a Soft e questo è incongruente considerando che le ship dovrebbero essere obiettivi molto più resistenti dei soft.
+Analizza parametri e logica di calcolo dei punteggi e individua i motivi di ciò verificando anche eventuali ulteriori incongruenze.
 
 Utilizzando come riferimento Vehicle_Weapon_Data.py, implementa il nuovo modulo Ship_Weapon_Data.py, completo di tutte i dati e metodi, analoghi a quelli presenti in Vehicle_Weapon_Data.py, utilizzando le informazioni presenti nel dizionario Weapon presente nei dizionari implementati in Ship_Data.py.
 

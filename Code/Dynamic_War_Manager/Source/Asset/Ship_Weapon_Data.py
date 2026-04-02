@@ -197,19 +197,25 @@ _EFF_SAM_LORAD = {
 }
 
 # ── ASM anti-nave subsonico (RGM-84-Harpoon, YJ-83) ──────────────────────────
+# accuracy = alta vs ship (guidance radar marino), bassa vs terra (seeker non ottimizzato)
+# destroy_capacity = fragilità del bersaglio una volta colpito:
+#   Soft: bersagli non protetti → quasi certamente distrutti da 220 kg HE
+#   Armored: un carro colpito da 220 kg è certamente distrutto (testata sproporzionata)
+#   ship: compartimentazione + damage control → il singolo colpo spesso non affonda la nave
+# Ordine atteso: Soft > Armored > ship > Structure > Hard
 _EFF_ASM_ANTISHIP_SUBSONIC = {
-    "Soft":        {"big": {"accuracy": 0.72, "destroy_capacity": 0.48},
-                    "med": {"accuracy": 0.68, "destroy_capacity": 0.55},
-                    "small": {"accuracy": 0.62, "destroy_capacity": 0.62}},
-    "Armored":     {"big": {"accuracy": 0.52, "destroy_capacity": 0.12},
-                    "med": {"accuracy": 0.48, "destroy_capacity": 0.15},
-                    "small": {"accuracy": 0.42, "destroy_capacity": 0.18}},
+    "Soft":        {"big": {"accuracy": 0.72, "destroy_capacity": 0.78},
+                    "med": {"accuracy": 0.68, "destroy_capacity": 0.82},
+                    "small": {"accuracy": 0.62, "destroy_capacity": 0.88}},
+    "Armored":     {"big": {"accuracy": 0.52, "destroy_capacity": 0.72},
+                    "med": {"accuracy": 0.48, "destroy_capacity": 0.78},
+                    "small": {"accuracy": 0.42, "destroy_capacity": 0.84}},
     "Hard":        {"big": {"accuracy": 0.58, "destroy_capacity": 0.14},
                     "med": {"accuracy": 0.52, "destroy_capacity": 0.18},
                     "small": {"accuracy": 0.45, "destroy_capacity": 0.22}},
-    "Structure":   {"big": {"accuracy": 0.65, "destroy_capacity": 0.22},
-                    "med": {"accuracy": 0.60, "destroy_capacity": 0.28},
-                    "small": {"accuracy": 0.55, "destroy_capacity": 0.35}},
+    "Structure":   {"big": {"accuracy": 0.65, "destroy_capacity": 0.40},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 0.46},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 0.54}},
     "Air_Defense": {"big": {"accuracy": 0.55, "destroy_capacity": 0.16},
                     "med": {"accuracy": 0.50, "destroy_capacity": 0.20},
                     "small": {"accuracy": 0.45, "destroy_capacity": 0.24}},
@@ -228,9 +234,9 @@ _EFF_ASM_ANTISHIP_SUBSONIC = {
     "Stronghold":  {"big": {"accuracy": 0.62, "destroy_capacity": 0.20},
                     "med": {"accuracy": 0.57, "destroy_capacity": 0.24},
                     "small": {"accuracy": 0.52, "destroy_capacity": 0.28}},
-    "ship":        {"big": {"accuracy": 0.80, "destroy_capacity": 0.65},
-                    "med": {"accuracy": 0.85, "destroy_capacity": 0.70},
-                    "small": {"accuracy": 0.75, "destroy_capacity": 0.75}},
+    "ship":        {"big": {"accuracy": 0.80, "destroy_capacity": 0.30},
+                    "med": {"accuracy": 0.85, "destroy_capacity": 0.40},
+                    "small": {"accuracy": 0.75, "destroy_capacity": 0.52}},
 }
 
 # ── ASM crociera (BGM-109-Tomahawk) — attacco a terra prevalente ──────────────
@@ -271,19 +277,23 @@ _EFF_ASM_CRUISE_LANDATTACK = {
 }
 
 # ── ASM supersonico (P-270-Moskit, YJ-12, YJ-18) ─────────────────────────────
+# Testata ~300-320 kg, Mach 2-3: la massa cinetica aggiuntiva aumenta dc vs tutti i target.
+# Un veicolo corazzato colpito da 320 kg a Mach 2 è completamente distrutto.
+# Le navi rimangono bersagli duri (compartimentazione, damage control).
+# Ordine atteso: Soft > Armored > ship > Structure > Hard
 _EFF_ASM_SUPERSONIC = {
-    "Soft":        {"big": {"accuracy": 0.72, "destroy_capacity": 0.55},
-                    "med": {"accuracy": 0.68, "destroy_capacity": 0.62},
-                    "small": {"accuracy": 0.62, "destroy_capacity": 0.68}},
-    "Armored":     {"big": {"accuracy": 0.55, "destroy_capacity": 0.20},
-                    "med": {"accuracy": 0.50, "destroy_capacity": 0.25},
-                    "small": {"accuracy": 0.44, "destroy_capacity": 0.30}},
+    "Soft":        {"big": {"accuracy": 0.72, "destroy_capacity": 0.82},
+                    "med": {"accuracy": 0.68, "destroy_capacity": 0.86},
+                    "small": {"accuracy": 0.62, "destroy_capacity": 0.90}},
+    "Armored":     {"big": {"accuracy": 0.55, "destroy_capacity": 0.78},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.84},
+                    "small": {"accuracy": 0.44, "destroy_capacity": 0.90}},
     "Hard":        {"big": {"accuracy": 0.60, "destroy_capacity": 0.22},
                     "med": {"accuracy": 0.55, "destroy_capacity": 0.28},
                     "small": {"accuracy": 0.48, "destroy_capacity": 0.34}},
-    "Structure":   {"big": {"accuracy": 0.68, "destroy_capacity": 0.28},
-                    "med": {"accuracy": 0.62, "destroy_capacity": 0.34},
-                    "small": {"accuracy": 0.55, "destroy_capacity": 0.40}},
+    "Structure":   {"big": {"accuracy": 0.68, "destroy_capacity": 0.46},
+                    "med": {"accuracy": 0.62, "destroy_capacity": 0.54},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 0.62}},
     "Air_Defense": {"big": {"accuracy": 0.58, "destroy_capacity": 0.22},
                     "med": {"accuracy": 0.52, "destroy_capacity": 0.28},
                     "small": {"accuracy": 0.46, "destroy_capacity": 0.33}},
@@ -302,25 +312,30 @@ _EFF_ASM_SUPERSONIC = {
     "Stronghold":  {"big": {"accuracy": 0.64, "destroy_capacity": 0.22},
                     "med": {"accuracy": 0.58, "destroy_capacity": 0.28},
                     "small": {"accuracy": 0.52, "destroy_capacity": 0.33}},
-    "ship":        {"big": {"accuracy": 0.82, "destroy_capacity": 0.80},
-                    "med": {"accuracy": 0.85, "destroy_capacity": 0.85},
-                    "small": {"accuracy": 0.78, "destroy_capacity": 0.90}},
+    "ship":        {"big": {"accuracy": 0.82, "destroy_capacity": 0.32},
+                    "med": {"accuracy": 0.85, "destroy_capacity": 0.42},
+                    "small": {"accuracy": 0.78, "destroy_capacity": 0.55}},
 }
 
 # ── ASM supersonico pesante (P-700-Granit, P-1000-Vulkan) ────────────────────
+# Testata 750 kg (P-700) / 1000 kg (P-1000): distruzione totale per veicoli corazzati
+# se colpiti (dc quasi 1.0). Le navi grandi resistono meglio: la loro massa, la
+# compartimentazione e il damage control limitano l'effetto del singolo colpo.
+# L'alta accuracy vs ship è bilanciata da dc moderata (le navi sono progettate per survivere).
+# Ordine atteso: Soft > Armored > ship > Structure > Hard
 _EFF_ASM_SUPERSONIC_HEAVY = {
-    "Soft":        {"big": {"accuracy": 0.75, "destroy_capacity": 0.65},
-                    "med": {"accuracy": 0.70, "destroy_capacity": 0.72},
-                    "small": {"accuracy": 0.65, "destroy_capacity": 0.78}},
-    "Armored":     {"big": {"accuracy": 0.58, "destroy_capacity": 0.30},
-                    "med": {"accuracy": 0.52, "destroy_capacity": 0.36},
-                    "small": {"accuracy": 0.46, "destroy_capacity": 0.42}},
+    "Soft":        {"big": {"accuracy": 0.75, "destroy_capacity": 0.88},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 0.92}},
+    "Armored":     {"big": {"accuracy": 0.58, "destroy_capacity": 0.90},
+                    "med": {"accuracy": 0.52, "destroy_capacity": 0.94},
+                    "small": {"accuracy": 0.46, "destroy_capacity": 0.98}},
     "Hard":        {"big": {"accuracy": 0.65, "destroy_capacity": 0.35},
                     "med": {"accuracy": 0.58, "destroy_capacity": 0.42},
                     "small": {"accuracy": 0.52, "destroy_capacity": 0.48}},
-    "Structure":   {"big": {"accuracy": 0.72, "destroy_capacity": 0.42},
-                    "med": {"accuracy": 0.66, "destroy_capacity": 0.50},
-                    "small": {"accuracy": 0.60, "destroy_capacity": 0.58}},
+    "Structure":   {"big": {"accuracy": 0.72, "destroy_capacity": 0.58},
+                    "med": {"accuracy": 0.66, "destroy_capacity": 0.68},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 0.78}},
     "Air_Defense": {"big": {"accuracy": 0.62, "destroy_capacity": 0.30},
                     "med": {"accuracy": 0.56, "destroy_capacity": 0.36},
                     "small": {"accuracy": 0.50, "destroy_capacity": 0.42}},
@@ -339,9 +354,9 @@ _EFF_ASM_SUPERSONIC_HEAVY = {
     "Stronghold":  {"big": {"accuracy": 0.68, "destroy_capacity": 0.32},
                     "med": {"accuracy": 0.62, "destroy_capacity": 0.38},
                     "small": {"accuracy": 0.56, "destroy_capacity": 0.44}},
-    "ship":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.95},
-                    "med": {"accuracy": 0.82, "destroy_capacity": 1.00},
-                    "small": {"accuracy": 0.75, "destroy_capacity": 1.00}},
+    "ship":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.42},
+                    "med": {"accuracy": 0.82, "destroy_capacity": 0.57},
+                    "small": {"accuracy": 0.75, "destroy_capacity": 0.72}},
 }
 
 # ── Siluro leggero anti-sommergibile (Mk-46) ──────────────────────────────────
@@ -421,13 +436,17 @@ _EFF_TORPEDO_HEAVY = {
 }
 
 # ── Cannone navale 76 mm (OTO-Melara 76/62, AK-176) ──────────────────────────
+# Un proiettile HE/SAPOM da 76 mm colpisce bersagli a terra con buona precisione
+# (fire support navale). Veicoli corazzati colpiti sono quasi certamente distrutti
+# (destroy_capacity alta), le navi assorbono più colpi (dc moderata per il tipo di
+# target). Ordine atteso: Soft > Armored > ship > Hard > Structure
 _EFF_NAVAL_GUN_76MM = {
     "Soft":        {"big": {"accuracy": 0.85, "destroy_capacity": 0.40},
                     "med": {"accuracy": 0.82, "destroy_capacity": 0.50},
                     "small": {"accuracy": 0.80, "destroy_capacity": 0.60}},
-    "Armored":     {"big": {"accuracy": 0.55, "destroy_capacity": 0.06},
-                    "med": {"accuracy": 0.50, "destroy_capacity": 0.08},
-                    "small": {"accuracy": 0.45, "destroy_capacity": 0.10}},
+    "Armored":     {"big": {"accuracy": 0.55, "destroy_capacity": 0.40},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.52},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.65}},
     "Hard":        {"big": {"accuracy": 0.60, "destroy_capacity": 0.03},
                     "med": {"accuracy": 0.55, "destroy_capacity": 0.05},
                     "small": {"accuracy": 0.50, "destroy_capacity": 0.07}},
@@ -458,13 +477,14 @@ _EFF_NAVAL_GUN_76MM = {
 }
 
 # ── Cannone navale 100 mm (AK-100, Type-79A) ──────────────────────────────────
+# Ordine atteso: Soft > Armored > ship > Hard > Structure
 _EFF_NAVAL_GUN_100MM = {
     "Soft":        {"big": {"accuracy": 0.88, "destroy_capacity": 0.50},
                     "med": {"accuracy": 0.85, "destroy_capacity": 0.58},
                     "small": {"accuracy": 0.82, "destroy_capacity": 0.66}},
-    "Armored":     {"big": {"accuracy": 0.60, "destroy_capacity": 0.08},
-                    "med": {"accuracy": 0.55, "destroy_capacity": 0.10},
-                    "small": {"accuracy": 0.50, "destroy_capacity": 0.13}},
+    "Armored":     {"big": {"accuracy": 0.60, "destroy_capacity": 0.45},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.58},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 0.72}},
     "Hard":        {"big": {"accuracy": 0.65, "destroy_capacity": 0.04},
                     "med": {"accuracy": 0.60, "destroy_capacity": 0.07},
                     "small": {"accuracy": 0.55, "destroy_capacity": 0.10}},
@@ -495,13 +515,14 @@ _EFF_NAVAL_GUN_100MM = {
 }
 
 # ── Cannone navale 127 mm / 5-in (Mk-45) ──────────────────────────────────────
+# Ordine atteso: Soft > Armored > ship > Hard > Structure
 _EFF_NAVAL_GUN_127MM = {
     "Soft":        {"big": {"accuracy": 0.90, "destroy_capacity": 0.55},
                     "med": {"accuracy": 0.87, "destroy_capacity": 0.63},
                     "small": {"accuracy": 0.84, "destroy_capacity": 0.71}},
-    "Armored":     {"big": {"accuracy": 0.65, "destroy_capacity": 0.10},
-                    "med": {"accuracy": 0.60, "destroy_capacity": 0.13},
-                    "small": {"accuracy": 0.55, "destroy_capacity": 0.16}},
+    "Armored":     {"big": {"accuracy": 0.65, "destroy_capacity": 0.50},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 0.62},
+                    "small": {"accuracy": 0.55, "destroy_capacity": 0.75}},
     "Hard":        {"big": {"accuracy": 0.70, "destroy_capacity": 0.06},
                     "med": {"accuracy": 0.65, "destroy_capacity": 0.09},
                     "small": {"accuracy": 0.60, "destroy_capacity": 0.13}},
@@ -532,13 +553,14 @@ _EFF_NAVAL_GUN_127MM = {
 }
 
 # ── Cannone navale 130 mm (AK-130) ────────────────────────────────────────────
+# Ordine atteso: Soft > Armored > ship > Hard > Structure
 _EFF_NAVAL_GUN_130MM = {
     "Soft":        {"big": {"accuracy": 0.90, "destroy_capacity": 0.60},
                     "med": {"accuracy": 0.87, "destroy_capacity": 0.68},
                     "small": {"accuracy": 0.84, "destroy_capacity": 0.76}},
-    "Armored":     {"big": {"accuracy": 0.68, "destroy_capacity": 0.12},
-                    "med": {"accuracy": 0.62, "destroy_capacity": 0.15},
-                    "small": {"accuracy": 0.56, "destroy_capacity": 0.18}},
+    "Armored":     {"big": {"accuracy": 0.68, "destroy_capacity": 0.52},
+                    "med": {"accuracy": 0.62, "destroy_capacity": 0.65},
+                    "small": {"accuracy": 0.56, "destroy_capacity": 0.78}},
     "Hard":        {"big": {"accuracy": 0.72, "destroy_capacity": 0.07},
                     "med": {"accuracy": 0.67, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.62, "destroy_capacity": 0.14}},
@@ -570,14 +592,17 @@ _EFF_NAVAL_GUN_130MM = {
 
 # ── CIWS (Mk-15-Phalanx, AK-630, Type-730) ───────────────────────────────────
 # Sistema di difesa ravvicinata anti-missile / anti-aereo.
-# Efficacia irrilevante contro tutti i bersagli superficiali.
+# Efficacia molto ridotta vs bersagli superficiali; i proiettili 20-30 mm non
+# penetrano la corazza dei carri ma possono danneggiare APCs, ottiche e sistemi
+# esterni (dc > ship). Le navi assorbono 20-30 mm senza effetti significativi.
+# Ordine atteso: Soft > Armored > ship (tutti i valori sono molto bassi)
 _EFF_CIWS = {
     "Soft":        {"big": {"accuracy": 0.30, "destroy_capacity": 0.04},
                     "med": {"accuracy": 0.25, "destroy_capacity": 0.05},
                     "small": {"accuracy": 0.20, "destroy_capacity": 0.07}},
-    "Armored":     {"big": {"accuracy": 0.10, "destroy_capacity": 0.01},
-                    "med": {"accuracy": 0.08, "destroy_capacity": 0.01},
-                    "small": {"accuracy": 0.06, "destroy_capacity": 0.01}},
+    "Armored":     {"big": {"accuracy": 0.10, "destroy_capacity": 0.04},
+                    "med": {"accuracy": 0.08, "destroy_capacity": 0.06},
+                    "small": {"accuracy": 0.06, "destroy_capacity": 0.08}},
     "Hard":        {"big": {"accuracy": 0.08, "destroy_capacity": 0.005},
                     "med": {"accuracy": 0.06, "destroy_capacity": 0.005},
                     "small": {"accuracy": 0.05, "destroy_capacity": 0.005}},

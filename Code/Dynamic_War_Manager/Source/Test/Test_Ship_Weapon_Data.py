@@ -1016,12 +1016,14 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
         score_sub   = get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["big"])
         self.assertGreater(score_super, score_sub)
 
-    def test_asm_vs_ship_higher_than_vs_armored(self):
-        """Un missile anti-nave deve avere efficacia vs ship > vs Armored
-        (il target primario è navale, non blindato terrestre)."""
+    def test_asm_vs_armored_higher_than_vs_ship(self):
+        """Un missile anti-nave ha accuracy alta vs ship ma destroy_capacity bassa
+        (le navi resistono a colpi singoli). Contro Armored l'accuracy è minore ma
+        la dc è quasi 1.0 (un carro colpito da 220 kg è certamente distrutto).
+        Il prodotto acc×dc risulta: Armored > ship."""
         score_ship    = get_weapon_score_target("RGM-84-Harpoon", ["ship"],    ["big"])
         score_armored = get_weapon_score_target("RGM-84-Harpoon", ["Armored"], ["big"])
-        self.assertGreater(score_ship, score_armored)
+        self.assertGreater(score_armored, score_ship)
 
     def test_return_is_non_negative_for_all_sample_models(self):
         """Il punteggio deve essere non negativo per un campione di modelli."""
@@ -1329,26 +1331,28 @@ class TestGetWeaponScoreTargetDistribuition(unittest.TestCase):
 
     # ── confronti ordinativi ──────────────────────────────────────────────────
 
-    def test_asm_ship_score_higher_than_armored(self):
-        """Harpoon: score vs ship > score vs Armored (missile anti-nave, non anti-carro)."""
+    def test_asm_armored_score_higher_than_ship(self):
+        """Harpoon: score vs Armored > score vs ship.
+        La dc vs Armored è quasi 1.0 (carro distrutto da 220 kg con certezza),
+        mentre vs ship la dc è moderata (compartimentazione e damage control)."""
         score_ship    = get_weapon_score_target_distribuition(
             "RGM-84-Harpoon", {"ship": 1.0}, {"big": 1.0}
         )
         score_armored = get_weapon_score_target_distribuition(
             "RGM-84-Harpoon", {"Armored": 1.0}, {"big": 1.0}
         )
-        self.assertGreater(score_ship, score_armored)
+        self.assertGreater(score_armored, score_ship)
 
-    def test_higher_ship_weight_gives_higher_score_for_asm(self):
-        """Peso maggiore su ship produce score più alto di peso maggiore su Soft,
-        poiché score(ship) > score(Soft) per Harpoon."""
+    def test_higher_soft_weight_gives_higher_score_for_asm(self):
+        """Peso maggiore su Soft produce score più alto di peso maggiore su ship,
+        poiché score(Soft) > score(ship) per Harpoon (Soft è il bersaglio più fragile)."""
         score_ship_heavy = get_weapon_score_target_distribuition(
             "RGM-84-Harpoon", {"ship": 0.8, "Soft": 0.2}, {"big": 1.0}
         )
         score_soft_heavy = get_weapon_score_target_distribuition(
             "RGM-84-Harpoon", {"ship": 0.2, "Soft": 0.8}, {"big": 1.0}
         )
-        self.assertGreater(score_ship_heavy, score_soft_heavy)
+        self.assertGreater(score_soft_heavy, score_ship_heavy)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
