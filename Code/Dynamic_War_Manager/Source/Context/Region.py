@@ -324,6 +324,8 @@ class Region:
 
         return normalized_blocks[:count]    
     
+    
+    # ************************************  API *************************************
     # ROUTE MANAGEMENT
 
     def add_route(self, key: str, route: Route) -> None:
@@ -558,15 +560,6 @@ class Region:
         
         return values
     
-    def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
-        # crea una tupla di coppie (priority, block) evitando di utilizzare la classe BlockItem non hashable in quanto dataclass
-        tuple_priority_and_block = ()
-        for block_item in block_items:
-            item = (block_item.priority, block_item.block)
-            tuple_priority_and_block += (item,)
-
-        return tuple_priority_and_block
-
     # PRIORITY UPDATES
     def update_logistic_priorities(self, side: str) -> bool:
         """Update priorities for logistic blocks based on production values."""
@@ -683,12 +676,22 @@ class Region:
                 logger.debug(f"Resource management cycle run for {block.name} in region {self.name}. Result cyce: {result!r}")    
 
         
+    # ************************************  END API *************************************
+
+
     # HELPER METHODS
-    
+    def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
+        # crea una tupla di coppie (priority, block) evitando di utilizzare la classe BlockItem non hashable in quanto dataclass
+        tuple_priority_and_block = ()
+        for block_item in block_items:
+            item = (block_item.priority, block_item.block)
+            tuple_priority_and_block += (item,)
+
+        return tuple_priority_and_block
+
     def _is_logistic_block(self, block: Block) -> bool:
         """Check if a block is a logistic block."""
         return isinstance(block, (Production, Storage, Transport))
-
     
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[(float, Block), ...]) -> float:
@@ -717,7 +720,6 @@ class Region:
         
         return priority
     
-
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[(float, Block), ...]) -> float:
         """Calculate defense priority for a military block."""
@@ -747,7 +749,6 @@ class Region:
         
         return priority
 
-    
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _select_weight(self, target_block: Block, task: str, block_category: str) -> float:
         """        Select the weight for a block based on its category."""
@@ -770,8 +771,6 @@ class Region:
         # weight selection
         return self._weight_priority_target[block_category][task].get(target_category, 0.0) # Uso .get per default 0.0
         
-
-
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _calculate_priority(
     self,
@@ -808,8 +807,6 @@ class Region:
             return (target_value * range_ratio * weight) / time_to_intercept
         
         return 0.0
-
-
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _calc_surface_priority(self, block: Military, target_item: Tuple[float, Block],
@@ -858,7 +855,6 @@ class Region:
             range_ratio=range_ratio,
             target_priority=target_item[0]
         )
-
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> float:
