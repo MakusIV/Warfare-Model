@@ -17,8 +17,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     Air_Asset_Type as at, 
     Ground_Vehicle_Asset_Type as ag,
     Sea_Asset_Type as asea,
-    Target_Class_Name as tc,
-    Logistic_Asset_Type as lat,
+    Target_Class_Name as tcn,
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
@@ -36,44 +35,9 @@ logger = Logger(module_name=__name__, class_name='Initial_Context').logger
 # Constants
 # ---------------------------------------------------------------------------
 
-"""
-DATA STRUCTURE
-
-_ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {   
-
-        'air': {at.FIGHTER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14B Tomcat': 100,        
-                },
-                at.FIGHTER_BOMBER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                                
-        }, 
-
-        'ground': {
-                ag.TANK.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14B Tomcat': 100,
-                    },
-                ag.ARMORED.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,
-                },
-                
-        },
-
-        'sea': {asea.CARRIER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                    
-                },
-                asea.DESTROYER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                    
-                },                           
-            },
-}"""
 
 
+# non serve più
 PRODUCTION_ASSET:Dict[str, Tuple[float, float]] = {   
         'air':      {at.FIGHTER.value: 1,
                     at.FIGHTER_BOMBER.value: 1,
@@ -121,53 +85,6 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
     {'quantity': int, 'production': X/30, 'repair': {'heavy_damage': A/30,
     'medium_damage': B/30, 'light_damage': C/30}, 'context_industrial_capacity':
     0.75}
-
-    Logica dei valori:
-
-    ┌───────────────────────────┬─────────┬─────────────┬────────────────────┐
-    │                           │ quantit │ production  │                    │
-    │         Categoria         │    y    │ (unità/mese │ repair heavy→light │
-    │                           │         │      )      │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Caccia moderni (F-15,     │ 20–48   │ 2–4/30      │ 4→8→15/30          │
-    │ MiG-29, Su-27)            │         │             │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Caccia legacy (F-86,      │ 8–15    │ 0 (cessata) │ 6→12→22/30         │
-    │ MiG-15)                   │         │             │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Cacciabombardieri (F-16,  │ 20–48   │ 2–4/30      │ 5→10→20/30         │
-    │ Su-30, Su-34)             │         │             │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Attaccanti (A-10, Su-25)  │ 16–36   │ 1–4/30      │ 7→14→24/30         │
-    │                           │         │             │ (robusti)          │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Bombardieri strategici    │ 4–10    │ 0–1/30      │ 0–1→2→3/30         │
-    │ (B-52, Tu-160)            │         │             │ (lentissima)       │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ UAV (MQ-1, MQ-9)          │ 15–20   │ 4–6/30      │ 6→12→22/30         │
-    │                           │         │             │ (semplici)         │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Carri armati moderni      │ 60–100  │ 8–12/30     │ 4–6→10–14→22–28/30 │
-    │ (T-90M, M1A2)             │         │             │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ MBT legacy (T-55,         │ 120–150 │ 10–12/30    │ 12→22→40/30        │
-    │ Type-59)                  │         │             │ (semplici)         │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ IFV/APC (BMP, BTR, M2     │ 80–150  │ 15–22/30    │ 9–16→20–28→38–50/3 │
-    │ Bradley)                  │         │             │ 0                  │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Artiglieria (M109, 2S19,  │ 20–60   │ 3–10/30     │ 6–12→14–22→28–42/3 │
-    │ BM-21)                    │         │             │ 0                  │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ SAM grande/medio          │ 8–20    │ 1–3/30      │ 1–3→2–7→4–14/30    │
-    │ (S-300PS, Buk)            │         │             │                    │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Portaerei                 │ 1       │ 0           │ 0→1→2/30 (arsenale │
-    │                           │         │             │  remoto)           │
-    ├───────────────────────────┼─────────┼─────────────┼────────────────────┤
-    │ Cacciatorpediniere/Fregat │ 2–4     │ 0–1/30      │ 0→1→3–4/30         │
-    │ e                         │         │             │                    │
-    └───────────────────────────┴─────────┴─────────────┴────────────────────┘
 
     """
 
@@ -529,150 +446,6 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
 }
 
 
-
-# con queste info inizializzi le Regioni
-# poi lo implementi anche in Actual_Context.py, dove Region.py lo utilizza per determinare il rateo di successi per RECON mission in base al numero di missioni recon effettuate con sucesso
-
- 
-REGIONS_ASSET = {
-    'red': {
-        'Region_North': {
-            'Military_Bases': {
-                'airbases': {
-                    'Airbase Alpha': {
-                        
-                        at.FIGHTER.value: {                            
-                            'F-14A Tomcat':      {'operative': 60,  'repair': 30, 'destroyed': 60},                                                        
-                         },
-                        at.FIGHTER_BOMBER.value: {                            
-                            'F-15E Strike Eagle': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.ATTACKER.value: {                            
-                            'A-10A Thunderbolt II': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.BOMBER.value: {                            
-                            'F-117 Nighthawk': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.HEAVY_BOMBER.value: {                            
-                            'B-1B Lancer':          {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.RECON.value: {                            
-                            'MQ-1 Predator': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                             },
-                        at.AWACS.value: {                            
-                            'E-2D Advanced Hawkeye': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.TRANSPORT.value: {                            
-                            'C-130 Hercules':        {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        },
-                        at.HELICOPTER.value: {                            
-                            'AH-64 Apache': {'operative': 60,  'repair': 30, 'destroyed': 60}
-                        },
-                     },
-                    'Airbase Beta': {},
-                },
-                'naval_bases': {
-                    'Naval Base Alpha': {
-                        asea.CARRIER.value: {
-                            'CVN-70 Carl Vinson': {'operative': 0,  'repair': 1,    'destroyed': 0},
-                            'Arleigh Burke IIa':    {'operative': 0,  'repair': 1,    'destroyed': 0},
-                        },
-                    },
-                    'Naval Base Beta': {},
-                },
-                'ground_bases': {
-                    'Ground Base Alpha': {
-                        ag.ARMORED.value: {
-                            'BMP-1':           {'operative': 60,  'repair': 30, 'destroyed': 60},
-                            'BMP-2':           {'operative': 60,  'repair': 30, 'destroyed': 60},
-                        }
-                    },
-                    'Ground Base Beta': {},
-                },
-            },
-            'Production': {
-                'Instrustrial site Alpha': {
-                    lat.POWER_PLANT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.FACTORY.value:     {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.DEPOT.value:       {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'Instrustrial site Beta': {},
-            },
-            'Transport': {
-                'Transport Hub Alpha': {
-                    lat.BRIDGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.CHECK_POINT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'Transport Hub Beta': {},
-                'Transport Line Alpha': {},
-            },
-            'Storage': {
-                'Storage Facility Alpha': {
-                    lat.FUEL_STORAGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    },
-                'Storage Facility Beta': {},
-            },
-            'Urban Centers': {
-                'City Alpha': {
-                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'City Beta': {},  
-            },
-        },
-        'Region_South': {},
-        'Region_center': {},
-    },
-    'blue': {},
-    'neutral': {}
-}
-
-
-
-
-_MILITARY_BASE_ASSETS: Dict[str, Dict[str, Dict[str, Dict[str, float]]]] = {
-
-
-}
-
-navi = {
-    'Carrier': {
-        'CVN-70 Carl Vinson': {'class': 'Nimitz-class', 'Nationality': 'USA'},
-        'CVN-71 Theodore Roosevelt': {'class': 'Supercarrier', 'Nationality': 'USA'},
-        'CVN-72 Abraham Lincoln': {'class': 'Supercarrier', 'Nationality': 'USA'},
-        'CVN-73 George Washington': {'class': 'Supercarrier', 'Nationality': 'USA'},
-        'CVN-74 John C. Stennis': {'class': 'Nimitz-class', 'Nationality': 'USA'},
-        'CVN-75 Harry S. Truman': {'class': 'Supercarrier', 'Nationality': 'USA'},
-        'CV-59 USS Forrestal': {'class': 'Forrestal-class', 'Nationality': 'USA'},
-        'CV 1143.5 Admiral Kuznetsov': {'class': 'Admiral Kuznetsov', 'Nationality': 'Russia'}
-    },
-    'Destroyer': {
-        'USS Arleigh Burke IIa': {'class': 'Arleigh Burke-class', 'Nationality': 'USA'},
-        'Type 052B Guangzhou-class': {'class': 'Luyang I-class', 'Nationality': 'China'},
-        'Type 052C': {'class': 'Luyang II-class', 'Nationality': 'China'}
-    },
-    'Cruiser': {
-        'CG-65': {'class': 'Ticonderoga-class', 'Nationality': 'USA'},
-        'CGN 1144.2 Piotr Velikiy': {'class': 'Kirov-class Battlecruiser', 'Nationality': 'Russia'},
-        'CG 1164 Moskva': {'class': 'Slava-class', 'Nationality': 'Russia'}
-    },
-    'Frigate': {
-        'FFG-46': {'class': 'Oliver Hazard Perry-class', 'Nationality': 'USA'},
-        'FF 1135M Rezky': {'class': 'Krivak II-class', 'Nationality': 'Russia'},
-        'FFG 11540 Neustrashimy': {'class': 'Neustrashimy-class', 'Nationality': 'Russia'},
-        'Type 054A': {'class': 'Jiangkai II-class', 'Nationality': 'China'}
-    },
-    'Fast Attack': {
-        'FFL 1124.4 Grisha': {'class': 'Grisha V-class Corvette', 'Nationality': 'Russia'},
-        'FSG 1241.1MP Molniya': {'class': 'Tarantul III-class', 'Nationality': 'Russia'}
-    },
-    'Submarine': {
-        'Type 093': {'class': 'Shang-class Attack Submarine', 'Nationality': 'China'}
-    },
-    'Amphibious': {
-        'LHA-1 Tarawa': {'class': 'Tarawa-class', 'Nationality': 'USA'},
-        'Type 071': {'class': 'Yuzhao-class Amphibious Transport Dock', 'Nationality': 'China'}
-    }
-}
 
 
 
