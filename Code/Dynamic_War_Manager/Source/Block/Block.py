@@ -456,3 +456,10 @@ class Block:
     
     def is_enemy(self, side: str):            
             return self._side == self.enemy_side(side)
+    
+    def get_recongition_report(self):
+        """Generate reconnaissance report for block
+        This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
+        The actual implementation will depend on the specific requirements of the reconnaissance-
+        The implementation of this method is currently a placeholder and will be developed on derivated class."""
+        return

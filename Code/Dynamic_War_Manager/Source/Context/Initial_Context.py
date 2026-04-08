@@ -531,19 +531,25 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
 
 
 # con queste info inizializzi le Regioni
-# poi lo implementi anche in Actual_Context.py, dove Region.py lo utilizza per determinare il rateo di successi per RECON mission in base al numero di missioni recon effettuate con sucesso
-
+# poi lo implementi anche in Actual_Context.py, dove Region.py lo utilizza per determinare il rateo di successi per RECON mission in base al numero di missioni recon effettuate con successo
+# con queste informazioni crei le regioni e le basi, e assegni le unità alle basi
  
 REGIONS_ASSET = {
-    'red': {
-        'Region_North': {
-            'Military_Bases': {
-                'airbases': {
-                    'Airbase Alpha': {
-                        
+    
+    'Region_North': {
+        'Military_Bases': {
+            'airbases': {
+                'Airbase Alpha': {
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {                        
                         at.FIGHTER.value: {                            
                             'F-14A Tomcat':      {'operative': 60,  'repair': 30, 'destroyed': 60},                                                        
-                         },
+                        },
                         at.FIGHTER_BOMBER.value: {                            
                             'F-15E Strike Eagle': {'operative': 60,  'repair': 30, 'destroyed': 60},
                         },
@@ -558,7 +564,7 @@ REGIONS_ASSET = {
                         },
                         at.RECON.value: {                            
                             'MQ-1 Predator': {'operative': 60,  'repair': 30, 'destroyed': 60},
-                             },
+                            },
                         at.AWACS.value: {                            
                             'E-2D Advanced Hawkeye': {'operative': 60,  'repair': 30, 'destroyed': 60},
                         },
@@ -568,62 +574,86 @@ REGIONS_ASSET = {
                         at.HELICOPTER.value: {                            
                             'AH-64 Apache': {'operative': 60,  'repair': 30, 'destroyed': 60}
                         },
-                     },
-                    'Airbase Beta': {},
+                    },
                 },
-                'naval_bases': {
-                    'Naval Base Alpha': {
+                'Airbase Beta': {},
+            },
+            'naval_bases': {
+                'Naval Base Alpha': {
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {    
                         asea.CARRIER.value: {
                             'CVN-70 Carl Vinson': {'operative': 0,  'repair': 1,    'destroyed': 0},
                             'Arleigh Burke IIa':    {'operative': 0,  'repair': 1,    'destroyed': 0},
                         },
                     },
-                    'Naval Base Beta': {},
                 },
-                'ground_bases': {
-                    'Ground Base Alpha': {
+                'Naval Base Beta': {},
+            },
+            'ground_bases': {
+                'Ground Base Alpha': {
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {
                         ag.ARMORED.value: {
                             'BMP-1':           {'operative': 60,  'repair': 30, 'destroyed': 60},
                             'BMP-2':           {'operative': 60,  'repair': 30, 'destroyed': 60},
                         }
                     },
-                    'Ground Base Beta': {},
                 },
-            },
-            'Production': {
-                'Instrustrial site Alpha': {
-                    lat.POWER_PLANT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.FACTORY.value:     {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.DEPOT.value:       {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'Instrustrial site Beta': {},
-            },
-            'Transport': {
-                'Transport Hub Alpha': {
-                    lat.BRIDGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    lat.CHECK_POINT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'Transport Hub Beta': {},
-                'Transport Line Alpha': {},
-            },
-            'Storage': {
-                'Storage Facility Alpha': {
-                    lat.FUEL_STORAGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                    },
-                'Storage Facility Beta': {},
-            },
-            'Urban Centers': {
-                'City Alpha': {
-                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
-                },
-                'City Beta': {},  
+                'Ground Base Beta': {},
             },
         },
-        'Region_South': {},
-        'Region_center': {},
+        'Production': {
+            'Power Plant Alpha': {                    
+                    lat.POWER_PLANT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                    lat.ELECTRIC_INFRASTRUCTURE.value:     {'operative': 60,  'repair': 30, 'destroyed': 60},
+                    lat.DEPOT.value:       {'operative': 60,  'repair': 30, 'destroyed': 60},  
+            },                                          
+            'Farm Beta': {},
+        },
+        'Transport': {
+            'Road Alpha': {
+                lat.BRIDGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                lat.CHECK_POINT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+            },
+            'Railway Beta': {},
+            'Port Alpha': {},
+        },
+        'Storage': {
+            'Oil Storage Alpha': {
+                tc.SERVICE.value: { # verificare se serve distinguere SERVICE e ADMINISTRATIVE per i depositi
+                    lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+                tc.ADMINISTRATIVE.value: {
+                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+            },                    
+            'Good Storage Beta': {},
+        },
+        'Urban Centers': {
+            'City Alpha': {
+                tc.CIVILIAN.value: { # verificare se serve distinguere SERVICE e ADMINISTRATIVE per le città
+                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+                tc.SERVICE.value: {
+                    lat.SERVICE_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+            },
+            'City Beta': {},  
+        },
     },
-    'blue': {},
-    'neutral': {}
+    'Region_South': {},
+    'Region_center': {},
 }
 
 

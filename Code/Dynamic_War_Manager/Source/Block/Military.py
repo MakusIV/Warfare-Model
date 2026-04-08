@@ -172,12 +172,6 @@ class Military(Block):
 
         return asset_list
                     
-
-
-
-
-
-    
     def combat_power(self, force: str, action: str) -> float:
         #action=task, military_force=force
         """
@@ -471,3 +465,77 @@ class Military(Block):
         """Calculate combat state (to be implemented)."""
         pass
     #endmilitary
+
+    def get_recongition_report(self):
+        """Generate reconnaissance report for block
+        This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
+        The actual implementation will depend on the specific requirements of the reconnaissance-
+        The implementation of this method is currently a placeholder and will be developed on derivated class."""
+
+
+        # cilcando tutti gli asset devi creare un report che sintetizza le informazioni più rilevanti per la valutazione strategica, come:
+        # - Numero e tipo di asset presenti (es. 5 carri armati, 3 aerei da combattimento, 2 navi da guerra)
+        # - Stato degli asset (es. 3 carri armati in condizioni critiche, 2 aerei da combattimento operativi)
+        # - Eventi recenti che hanno coinvolto il blocco (es. attacchi subiti, missioni completate, movimenti di truppe)
+        # - Informazioni sulla posizione e la capacità di difesa del blocco (es. presenza di sistemi di difesa aerea, distanza da obiettivi strategici)
+        
+        self.state.update() if self.state else None,
+
+        target_report = {
+            "position": self.position,
+            "events": [event.description for event in self.events],            
+            "state": self.state.state_value if self.state else None,
+            "asset_summary": {
+                "total_assets": len(self.assets),
+                "operative": {
+                    "Soft": {
+                        "Big": 0,
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Hard": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Structure": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                },
+                "damaged": { # SERVE!? 
+                    "Soft": {
+                        "Big": 0,
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Hard": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Structure": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                },
+            },
+        }
+
+        # Necessarip categorizzare le dimensioni degli asset in base alla loro classe e tipo, ad esempio:
+        # - Per i veicoli: Big (es. carri armati pesanti), Medium (es. carri armati medi), Small (es. veicoli leggeri)
+        # - Per gli aerei: Big (es. bombardieri), Medium (es. aerei da combattimento), Small (es. droni)
+
+
+        for asset in self.assets.values():
+            logger.debug(f"Asset: {asset.name}, Type: {asset.__class__.__name__}, State: {asset.state.state_value}")   
+
+            if asset.state.state_value == "Healtful":
+                if asset.__class__.__name__ in ["Vehicle", "Aircraft", "Ship"]:
+                    size_category = self._categorize_asset_size(asset)
+                    target_report["asset_summary"]["operative"][asset.__class__.__name__][size_category] += 1
+                elif asset.__class__.__name__ == "Structure":
+                    size_category = self._categorize_asset_size(asset)
+                    target_report["asset_summary"]["operative"]["Structure"][size_category] += 1 

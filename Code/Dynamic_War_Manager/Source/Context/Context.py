@@ -35,13 +35,16 @@ PRODUCTION_WEIGHT = {
     'hb': 3,
 }
 
+class Ground_Action(Enum):
+    ATTACK = 'Attack'
+    DEFENSE = 'Defense'
+    MAINTAIN = 'Maintain'
+    RETRAIT = 'Retrait'
 
-GROUND_ACTION  = {
-    'Attack':   'Attack',
-    'Defense':  'Defense',
-    'Maintain': 'Maintain',
-    'Retrait':  'Retrait' 
-}
+
+GROUND_ACTION = {task.value: task.value for task in Ground_Action}
+
+
 
 GROUND_WEAPON_TASK = {
     'Anti_Tank': 'Anti_Tank',
@@ -91,27 +94,12 @@ AIR_TO_GROUND_TASK = {
 
 AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
 
-"""
-AIR_TASK = {
-    
-    'CAP': 'CAP',  
-    'Fighter_Sweep': 'Fighter_Sweep'  ,
-    'Intercept': 'Intercept',
-    'Escort': 'Escort',
-    'Recon': 'Recon',
-    'CAS': 'CAS',
-    'Strike': 'Strike', # coincidono con Ground Attack
-    'Pinpoint_Strike': 'Pinpoint_Strike',
-    'SEAD': 'SEAD',
-    'Anti_Ship': 'Anti_Ship'
-} 
-"""
-SEA_TASK  = {
+class Sea_Task(Enum):
+    ATTACK = 'Attack'
+    DEFENSE = 'Defense'
+    RETRAIT = 'Retrait'
 
-    'Attack':   'Attack', 
-    'Defense':  'Defense',   
-    'Retrait':  'Retrait' 
-}
+SEA_TASK = {task.value: task.value for task in Sea_Task}
 
 MILITARY_FORCES = ['ground', 'air', 'sea']
 
@@ -878,6 +866,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                 },
                                 tc.RAILWAY.value: {
                                     lat.STATION.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
+                                    lat.BRIDGE.value: {'cost': None, 'value': VALUE.CRITICAL, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BARRACK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 1, 'hs': 4, 'hb': 3, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
@@ -943,7 +932,7 @@ BLOCK_INFRASTRUCTURE_ASSET = {
                                     lat.DEPOT.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.BUILDING.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33}
                                 },
-                                tc.FACTORY.value: {
+                                tc.FARM.value: {
                                     lat.FARM.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.ELECTRIC_INFRASTRUCTURE.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},
                                     lat.OIL_TANK.value: {'cost': None, 'value': VALUE.MEDIUM, 't2r': ( 1, 7 ), 'rcp': {'hc': 0, 'hs': 0, 'hb': 6, 'hr': None, 'goods': 1, 'energy': None}, 'payload%': 33},

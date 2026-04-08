@@ -19,6 +19,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 print("\nPYTHONPATH during execution:")
 print("\n".join(sys.path))
@@ -29,6 +30,16 @@ print("\n".join(sys.path))
 #from typing import TYPE_CHECKING
 #if TYPE_CHECKING:
     #from Dynamic_War_Manager.Source.Military import Military
+
+
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name=__name__, class_name='').logger
 
 
 LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFihtResult() restituiscono 1 (parity)ù
@@ -170,9 +181,11 @@ def calcRecoAccuracy(parameter: str, recon_mission_success_ratio: float, recon_a
         raise ValueError("Parameter must be 'Number' or 'Efficiency'")
 
     if recon_mission_success_ratio > 1:
+        logger.warning("Recon mission success ratio cannot be greater than 1. Setting it to 1.")
         recon_mission_success_ratio = 1
 
     if recon_asset_efficiency > 1:
+        logger.warning("Recon asset efficiency cannot be greater than 1. Setting it to 1.")
         recon_asset_efficiency = 1
 
     min = 0.5 # max error for asset efficiency calculation is 50%

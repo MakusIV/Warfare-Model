@@ -14,10 +14,15 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_TASK, 
     AIR_TO_AIR_TASK, 
     AIR_TO_GROUND_TASK, 
+    Ground_Action as tskg,
+    Sea_Task as tsksea,
+    Air_To_Air_Task as tska2a,
+    Air_To_Ground_Task as tska2g,
     Air_Asset_Type as at, 
     Ground_Vehicle_Asset_Type as ag,
     Sea_Asset_Type as asea,
-    Target_Class_Name as tcn,
+    Target_Class_Name as tc,
+    Logistic_Asset_Type as lat,
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
@@ -447,6 +452,1165 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
 
 
 
+# con queste info inizializzi le Regioni
+# poi lo implementi anche in Actual_Context.py, dove Region.py lo utilizza per determinare il rateo di successi per RECON mission in base al numero di missioni recon effettuate con successo
+# con queste informazioni crei le regioni e le basi, e assegni le unità alle basi
+ 
+REGION_ASSETS_STATUS = {
+    'Region_North': {
+        'Military_Bases': {
+            'airbases': {
+                'Airbase Alpha': {
+                    'mission': {
+                            tska2a.RECON.value: {                                    
+                                'success_count': 0,   # Contatore di missioni RECON riuscite
+                                'total_count': 0      # Contatore totale di missioni RECON
+                            },
+                            tska2a.CAP.value: {
+                                'success_count': 0,   # Contatore di missioni STRIKE riuscite
+                                'total_count': 0      # Contatore totale di missioni STRIKE
+                            },
+                            tska2a.ESCORT.value: {
+                                'success_count': 0,   # Contatore di missioni SUPPLY riuscite
+                                'total_count': 0      # Contatore totale di missioni SUPPLY     
+                            },
+                            tska2a.FIGHTER_SWEEP.value: {
+                                'success_count': 0,   # Contatore di missioni FIGHTER_SWEEP riuscite
+                                'total_count': 0      # Contatore totale di missioni FIGHTER_SWEEP     
+                            },
+                            tska2a.INTERCEPT.value: {
+                                'success_count': 0,   # Contatore di missioni INTERCEPT riuscite
+                                'total_count': 0      # Contatore totale di missioni INTERCEPT  
+                            },
+                            tska2g.STRIKE.value: {
+                                'success_count': 0,   # Contatore di missioni STRIKE riuscite
+                                'total_count': 0      # Contatore totale di missioni STRIKE
+                            },
+                            tska2g.ANTI_SHIP.value: {
+                                'success_count': 0,   # Contatore di missioni ANTI_SHIP riuscite
+                                'total_count': 0      # Contatore totale di missioni ANTI_SHIP
+                            },
+                            tska2g.CAS.value: {
+                                'success_count': 0,   # Contatore di missioni CAS riuscite
+                                'total_count': 0      # Contatore totale di missioni CAS
+                            },
+                            tska2g.PINPOINT_STRIKE.value: {
+                                'success_count': 0,   # Contatore di missioni PINPOINT_STRIKE riuscite
+                                'total_count': 0      # Contatore totale di missioni PINPOINT_STRIKE
+                            },
+                            tska2g.SEAD.value: {
+                                'success_count': 0,   # Contatore di missioni SEAD riuscite     
+                                'total_count': 0      # Contatore totale di missioni SEAD   
+                            },
+                    },
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {      
+                        'aicrafts': {                 
+                            at.FIGHTER.value: {                            
+                                'F-14A Tomcat':      {'operative': 60,  'repair': 30, 'destroyed': 60},                                                        
+                            },
+                            at.FIGHTER_BOMBER.value: {                            
+                                'F-15E Strike Eagle': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.ATTACKER.value: {                            
+                                'A-10A Thunderbolt II': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.BOMBER.value: {                            
+                                'F-117 Nighthawk': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.HEAVY_BOMBER.value: {                            
+                                'B-1B Lancer':          {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.RECON.value: {                            
+                                'MQ-1 Predator': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                },
+                            at.AWACS.value: {                            
+                                'E-2D Advanced Hawkeye': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.TRANSPORT.value: {                            
+                                'C-130 Hercules':        {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            at.HELICOPTER.value: {                            
+                                'AH-64 Apache': {'operative': 60,  'repair': 30, 'destroyed': 60}
+                            },
+                        },
+                        'vehicles': {
+                            ag.ARMORED.value: {
+                                'BMP-1':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                'BMP-2':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                },                                                    
+                            ag.SAM_BIG.value: {
+                                'S-300PS': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            ag.SAM_MEDIUM.value: {
+                                '2K12-Kub':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                '9K37-Buk':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                        },                            
+                        'weapons': {
+                            'air_weapons': {
+
+                                'MISSILES_AAM': {
+                                        'AIM-54A-MK47': 100,
+                                        'AIM-54A-MK60': 100,
+                                        'AIM-54C-MK47': 100,
+                                        'AIM-54C-MK60': 100,
+                                        'AIM-7E': 100,
+                                        'AIM-7F': 100,
+                                        'AIM-7M': 100,
+                                        'AIM-7MH': 100,
+                                        'AIM-7P': 100,
+                                        'AIM-9B': 100,
+                                        'AIM-9P': 100,
+                                        'AIM-9P5': 100,
+                                        'AIM-9L': 100,
+                                        'AIM-9M': 100,
+                                        'AIM-9X': 100,
+                                        'R-550': 100,
+                                        'R-530IR': 100,
+                                        'R-530EM': 100,
+                                        'RB-24': 100,
+                                        'RB-24J': 100,
+                                        'RB-74': 100,
+                                        'R-13M': 100,
+                                        'R-13M1': 100,
+                                        'R-60': 100,
+                                        'R-60M': 100,
+                                        'R-73': 100,
+                                        'R-3S': 100,
+                                        'R-3R': 100,
+                                        'R-24R': 100,
+                                        'R-24T': 100,
+                                        'R-40R': 100,
+                                        'R-40T': 100,
+                                        'R-27R': 100,
+                                        'R-27T': 100,
+                                        'R-27ER': 100,
+                                        'R-27ET': 100,
+                                        'R-33': 100,
+                                        'R-37': 100,
+                                },
+                                'MISSILES_ASM': {
+                                        'RB-05A': 100,
+                                        'RB-15F': 100,
+                                        'AGM-45': 100,
+                                        'AGM-84A': 100,
+                                        'AGM-88': 100,
+                                        'Kormoran': 100,
+                                        'RB-05E': 100,
+                                        'RB-04E': 100,
+                                        'Sea Eagle': 100,
+                                        'RB-75T': 100,
+                                        'RB-15': 100,
+                                        'AGM-65D': 100,
+                                        'AGM-65K': 100,
+                                        'AGM-114': 100,
+                                        'BGM-71D': 100,
+                                        '9M120-F': 100,
+                                        '9M120': 100,
+                                        '9M114': 100,
+                                        'Hot-3': 100,
+                                        'Mistral': 100,
+                                        'Kh-55': 100,
+                                        'Kh-101': 100,
+                                        'Kh-22N': 100,
+                                        'Kh-58': 100,
+                                        'Kh-66': 100,
+                                        'Kh-59': 100,
+                                        'Kh-25ML': 100,
+                                        'Kh-25MR': 100,
+                                        'Kh-25MPU': 100,
+                                        'Kh-25MP': 100,
+                                        'Kh-29L': 100,
+                                        'Kh-29T': 100,
+                                },
+                                'BOMBS': {
+                                        'Mk-84': 100,
+                                        'Mk-83': 100,
+                                        'Mk-82': 100,
+                                        'Mk-82AIR': 100,
+                                        'GBU-10': 100,
+                                        'GBU-16': 100,
+                                        'GBU-12': 100,
+                                        'GBU-24': 100,
+                                        'GBU-27': 100,
+                                        'Mk-20': 100,
+                                        'BLG66': 100,
+                                        'CBU-52B': 100,
+                                        'BK-90MJ1': 100,
+                                        'BK-90MJ1-2': 100,
+                                        'BK-90MJ2': 100,
+                                        'M/71': 100,
+                                        'SAMP-400LD': 100,
+                                        'SAMP-250HD': 100,
+                                        'FAB-1500M54': 100,
+                                        'FAB-500M62': 100,
+                                        'FAB-250M54': 100,
+                                        'FAB-100': 100,
+                                        'FAB-50': 100,
+                                        'RBK-250AO': 100,
+                                        'RBK-500AO': 100,
+                                        'RBK-500PTAB': 100,
+                                        'BetAB-500': 100,
+                                },
+                                'ROCKETS': {
+                                        'Zuni-Mk71': 100,
+                                        'Hydra-70MK5': 100,
+                                        'Hydra-70MK1': 100,
+                                        'SNEB-256': 100,
+                                        'SNEB-253': 100,
+                                        'S-5 M': 100,
+                                        'S-5 KO': 100,
+                                        'S-8 OFP2': 100,
+                                        'S-8 KOM': 100,
+                                        'S-13': 100,
+                                        'S-25L': 100,
+                                        'S-24': 100,
+                                },
+                                'CANNONS': {
+                                        'UPK-23': 100,
+                                        'Gsh-23L': 100,
+                                        'GAU-8/A': 100,
+                                        'M61A1': 100,
+                                        'M39A3': 100,
+                                        'Mk-12': 100,
+                                        'DEFA-554': 100,
+                                        'N-37': 100,
+                                        'NR-23': 100,
+                                        'NR-30': 100,
+                                        'GSh-30-1': 100,
+                                        'GSh-30-2': 100,
+                                        'GSh-6-23M': 100,
+                                        'GSh-6-30': 100,
+                                        'Oerlikon-KCA': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'AN-M2': 100,
+                                        'M3-Browning': 100,
+                                },
+                            },
+                            'ground_weapons': {
+
+                                'AUTO_CANNONS': {
+                                        '2A42': 100,
+                                        'APV-23': 100,
+                                        'M242 Bushmaster': 100,
+                                        'M230 Chain Gun': 100,
+                                        '2A42-30mm': 100,
+                                        'M242-Bushmaster-25mm': 100,
+                                        '2A72-30mm': 100,
+                                        'ZPT-99-30mm': 100,
+                                        'L21A1-RARDEN-30mm': 100,
+                                        'M242-25mm': 100,
+                                        'MK-20-Rh-202-20mm': 100,
+                                },
+                                'CANNONS': {
+                                        '2A28-Grom-73mm': 100,
+                                        '2A46M': 100,
+                                        '2A20': 100,
+                                        'U-5TS "Molot"': 100,
+                                        '2A46M-5': 100,
+                                        '2A46': 100,
+                                        '2A61': 100,
+                                        '2A64': 100,
+                                        '2A70': 100,
+                                        'M68A1': 100,
+                                        'M256': 100,
+                                        'M255': 100,
+                                        'D30': 100,
+                                        'D-10T': 100,
+                                        '2A28 Grom': 100,
+                                        'D-10T2S-100mm': 100,
+                                        'L11A5-120mm': 100,
+                                        'L7A3-105mm': 100,
+                                        'M68-105mm': 100,
+                                        'Rheinmetall-120mm-L44': 100,
+                                        'Rheinmetall-120mm-L55': 100,
+                                        'M256-120mm': 100,
+                                        'CN120-26-120mm': 100,
+                                        'L30A1-120mm': 100,
+                                        'MG251-120mm': 100,
+                                        'Type-59-100mm': 100,
+                                        '2A46M-125mm': 100,
+                                        '2A46M5-125mm': 100,
+                                        'ZPT-98-125mm': 100,
+                                        '2A70-100mm': 100,
+                                },
+                                'AA_CANNONS': {
+                                        'S-68-57mm': 100,
+                                        'AZP-23-23mm': 100,
+                                        'M61-Vulcan-20mm': 100,
+                                        'Oerlikon-KDA-35mm': 100,
+                                        '2A38M-30mm': 100,
+                                },
+                                'MISSILES': {
+                                        '9K119M': 100,
+                                        '99K120': 100,
+                                        '9M14 Malyutka': 100,
+                                        '9M113 Konkurs': 100,
+                                        '9M35 Kornet': 100,
+                                        '9M37M': 100,
+                                        '9M331': 100,
+                                        'TOW-2': 100,
+                                        '9M119-Refleks': 100,
+                                        '9M119M-Refleks-M': 100,
+                                        '9M113-Konkurs': 100,
+                                        '9M14-Malyutka': 100,
+                                        'BGM-71-TOW': 100,
+                                        'MILAN': 100,
+                                        'HJ-73C': 100,
+                                        '9M311-SAM': 100,
+                                        '9M31-SAM': 100,
+                                        'MIM-72-SAM': 100,
+                                        '9M33-SAM': 100,
+                                        '9M37-SAM': 100,
+                                        'Roland-SAM': 100,
+                                        '9M331-SAM': 100,
+                                        'FIM-92-Stinger': 100,
+                                        '3M9-SAM': 100,
+                                        '9M38-SAM': 100,
+                                        '5V55R-SAM': 100,
+                                },
+                                'ROCKETS': {
+                                        '122mm-Grad-Rocket': 100,
+                                        '220mm-Uragan-Rocket': 100,
+                                        '300mm-Smerch-Rocket': 100,
+                                        '227mm-MLRS-Rocket': 100,
+                                },
+                                'MORTARS': {
+                                        'M933-60mm': 100,
+                                },
+                                'ARTILLERY': {
+                                        '2A33-152mm': 100,
+                                        '2A31-122mm': 100,
+                                        '2A51-120mm': 100,
+                                        '2A64-152mm': 100,
+                                        'Dana-152mm': 100,
+                                        'M284-155mm': 100,
+                                        'PL-45-155mm': 100,
+                                        'Firtina-155mm': 100,
+                                },
+                                'FLAME_TRHOWERS': {
+                                },
+                                'GRENADE_LAUNCHERS': {
+                                        'AGS-17': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'PKT-7.62': 100,
+                                        'Kord-12.7': 100,
+                                        'NSVT-12.7': 100,
+                                        'M2HB-12.7': 100,
+                                        'M240-7.62': 100,
+                                        'KPVT-14.5': 100,
+                                        'DShK-12.7': 100,
+                                        'L8A1-7.62': 100,
+                                        'L37A1-7.62': 100,
+                                        'L37A2-7.62': 100,
+                                        'L94A1-7.62': 100,
+                                        'MG3-7.62': 100,
+                                        'MG34-7.92': 100,
+                                        'M240C-7.62': 100,
+                                        'M1919-7.62': 100,
+                                        'FN MAG-7.62': 100,
+                                        'ANF1-7.62': 100,
+                                        'M693-12.7': 100,
+                                        'PKM-7.62': 100,
+                                        'PKTM-7.62': 100,
+                                        'Type-59T-7.62': 100,
+                                        'Type-86-7.62': 100,
+                                        'QJC88-12.7': 100,
+                                        'K6-12.7': 100,
+                                },
+                            },
+                        },
+                    },
+                },
+                'Airbase Beta': {},
+            },
+            'naval_bases': {
+                'Naval Base Alpha': {
+                    'mission': {
+                        tsksea.ATTACK.value: {
+                            'success_count': 0,   # Contatore di missioni ATTACK riuscite
+                            'total_count': 0      # Contatore totale di missioni ATTACK
+                        },
+                        tsksea.DEFENSE.value: {
+                            'success_count': 0,   # Contatore di missioni ANTI_SHIP riuscite
+                            'total_count': 0      # Contatore totale di missioni ANTI_SHIP
+                        },
+                        tsksea.RETRAIT.value: {
+                            'success_count': 0,   # Contatore di missioni ANTI_SUB riuscite
+                            'total_count': 0      # Contatore totale di missioni ANTI_SUB
+                        },                            
+                    },
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {  
+                        'ships': { 
+                            asea.CARRIER.value: {
+                                'CVN-70 Carl Vinson': {'operative': 0,  'repair': 1,    'destroyed': 0},
+                                'Arleigh Burke IIa':    {'operative': 0,  'repair': 1,    'destroyed': 0},
+                            },
+                        },
+                        'vehicles': {
+                            ag.ARMORED.value: {
+                                'BMP-1':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                'BMP-2':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                },                                                    
+                            ag.SAM_BIG.value: {
+                                'S-300PS': {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            ag.SAM_MEDIUM.value: {
+                                '2K12-Kub':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                '9K37-Buk':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                        },                            
+                        'helicopters': {
+                            at.HELICOPTER.value: {
+                                'Mi-24P':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                'AH-64D':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },                               
+                        },
+                        'weapons': {
+                            'air_weapons': {
+
+                                'MISSILES_AAM': {
+                                        'AIM-54A-MK47': 100,
+                                        'AIM-54A-MK60': 100,
+                                        'AIM-54C-MK47': 100,
+                                        'AIM-54C-MK60': 100,
+                                        'AIM-7E': 100,
+                                        'AIM-7F': 100,
+                                        'AIM-7M': 100,
+                                        'AIM-7MH': 100,
+                                        'AIM-7P': 100,
+                                        'AIM-9B': 100,
+                                        'AIM-9P': 100,
+                                        'AIM-9P5': 100,
+                                        'AIM-9L': 100,
+                                        'AIM-9M': 100,
+                                        'AIM-9X': 100,
+                                        'R-550': 100,
+                                        'R-530IR': 100,
+                                        'R-530EM': 100,
+                                        'RB-24': 100,
+                                        'RB-24J': 100,
+                                        'RB-74': 100,
+                                        'R-13M': 100,
+                                        'R-13M1': 100,
+                                        'R-60': 100,
+                                        'R-60M': 100,
+                                        'R-73': 100,
+                                        'R-3S': 100,
+                                        'R-3R': 100,
+                                        'R-24R': 100,
+                                        'R-24T': 100,
+                                        'R-40R': 100,
+                                        'R-40T': 100,
+                                        'R-27R': 100,
+                                        'R-27T': 100,
+                                        'R-27ER': 100,
+                                        'R-27ET': 100,
+                                        'R-33': 100,
+                                        'R-37': 100,
+                                },
+                                'MISSILES_ASM': {
+                                        'RB-05A': 100,
+                                        'RB-15F': 100,
+                                        'AGM-45': 100,
+                                        'AGM-84A': 100,
+                                        'AGM-88': 100,
+                                        'Kormoran': 100,
+                                        'RB-05E': 100,
+                                        'RB-04E': 100,
+                                        'Sea Eagle': 100,
+                                        'RB-75T': 100,
+                                        'RB-15': 100,
+                                        'AGM-65D': 100,
+                                        'AGM-65K': 100,
+                                        'AGM-114': 100,
+                                        'BGM-71D': 100,
+                                        '9M120-F': 100,
+                                        '9M120': 100,
+                                        '9M114': 100,
+                                        'Hot-3': 100,
+                                        'Mistral': 100,
+                                        'Kh-55': 100,
+                                        'Kh-101': 100,
+                                        'Kh-22N': 100,
+                                        'Kh-58': 100,
+                                        'Kh-66': 100,
+                                        'Kh-59': 100,
+                                        'Kh-25ML': 100,
+                                        'Kh-25MR': 100,
+                                        'Kh-25MPU': 100,
+                                        'Kh-25MP': 100,
+                                        'Kh-29L': 100,
+                                        'Kh-29T': 100,
+                                },
+                                'BOMBS': {
+                                        'Mk-84': 100,
+                                        'Mk-83': 100,
+                                        'Mk-82': 100,
+                                        'Mk-82AIR': 100,
+                                        'GBU-10': 100,
+                                        'GBU-16': 100,
+                                        'GBU-12': 100,
+                                        'GBU-24': 100,
+                                        'GBU-27': 100,
+                                        'Mk-20': 100,
+                                        'BLG66': 100,
+                                        'CBU-52B': 100,
+                                        'BK-90MJ1': 100,
+                                        'BK-90MJ1-2': 100,
+                                        'BK-90MJ2': 100,
+                                        'M/71': 100,
+                                        'SAMP-400LD': 100,
+                                        'SAMP-250HD': 100,
+                                        'FAB-1500M54': 100,
+                                        'FAB-500M62': 100,
+                                        'FAB-250M54': 100,
+                                        'FAB-100': 100,
+                                        'FAB-50': 100,
+                                        'RBK-250AO': 100,
+                                        'RBK-500AO': 100,
+                                        'RBK-500PTAB': 100,
+                                        'BetAB-500': 100,
+                                },
+                                'ROCKETS': {
+                                        'Zuni-Mk71': 100,
+                                        'Hydra-70MK5': 100,
+                                        'Hydra-70MK1': 100,
+                                        'SNEB-256': 100,
+                                        'SNEB-253': 100,
+                                        'S-5 M': 100,
+                                        'S-5 KO': 100,
+                                        'S-8 OFP2': 100,
+                                        'S-8 KOM': 100,
+                                        'S-13': 100,
+                                        'S-25L': 100,
+                                        'S-24': 100,
+                                },
+                                'CANNONS': {
+                                        'UPK-23': 100,
+                                        'Gsh-23L': 100,
+                                        'GAU-8/A': 100,
+                                        'M61A1': 100,
+                                        'M39A3': 100,
+                                        'Mk-12': 100,
+                                        'DEFA-554': 100,
+                                        'N-37': 100,
+                                        'NR-23': 100,
+                                        'NR-30': 100,
+                                        'GSh-30-1': 100,
+                                        'GSh-30-2': 100,
+                                        'GSh-6-23M': 100,
+                                        'GSh-6-30': 100,
+                                        'Oerlikon-KCA': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'AN-M2': 100,
+                                        'M3-Browning': 100,
+                                },
+                            },
+                            'ground_weapons': {
+
+                                'AUTO_CANNONS': {
+                                        '2A42': 100,
+                                        'APV-23': 100,
+                                        'M242 Bushmaster': 100,
+                                        'M230 Chain Gun': 100,
+                                        '2A42-30mm': 100,
+                                        'M242-Bushmaster-25mm': 100,
+                                        '2A72-30mm': 100,
+                                        'ZPT-99-30mm': 100,
+                                        'L21A1-RARDEN-30mm': 100,
+                                        'M242-25mm': 100,
+                                        'MK-20-Rh-202-20mm': 100,
+                                },
+                                'CANNONS': {
+                                        '2A28-Grom-73mm': 100,
+                                        '2A46M': 100,
+                                        '2A20': 100,
+                                        'U-5TS "Molot"': 100,
+                                        '2A46M-5': 100,
+                                        '2A46': 100,
+                                        '2A61': 100,
+                                        '2A64': 100,
+                                        '2A70': 100,
+                                        'M68A1': 100,
+                                        'M256': 100,
+                                        'M255': 100,
+                                        'D30': 100,
+                                        'D-10T': 100,
+                                        '2A28 Grom': 100,
+                                        'D-10T2S-100mm': 100,
+                                        'L11A5-120mm': 100,
+                                        'L7A3-105mm': 100,
+                                        'M68-105mm': 100,
+                                        'Rheinmetall-120mm-L44': 100,
+                                        'Rheinmetall-120mm-L55': 100,
+                                        'M256-120mm': 100,
+                                        'CN120-26-120mm': 100,
+                                        'L30A1-120mm': 100,
+                                        'MG251-120mm': 100,
+                                        'Type-59-100mm': 100,
+                                        '2A46M-125mm': 100,
+                                        '2A46M5-125mm': 100,
+                                        'ZPT-98-125mm': 100,
+                                        '2A70-100mm': 100,
+                                },
+                                'AA_CANNONS': {
+                                        'S-68-57mm': 100,
+                                        'AZP-23-23mm': 100,
+                                        'M61-Vulcan-20mm': 100,
+                                        'Oerlikon-KDA-35mm': 100,
+                                        '2A38M-30mm': 100,
+                                },
+                                'MISSILES': {
+                                        '9K119M': 100,
+                                        '99K120': 100,
+                                        '9M14 Malyutka': 100,
+                                        '9M113 Konkurs': 100,
+                                        '9M35 Kornet': 100,
+                                        '9M37M': 100,
+                                        '9M331': 100,
+                                        'TOW-2': 100,
+                                        '9M119-Refleks': 100,
+                                        '9M119M-Refleks-M': 100,
+                                        '9M113-Konkurs': 100,
+                                        '9M14-Malyutka': 100,
+                                        'BGM-71-TOW': 100,
+                                        'MILAN': 100,
+                                        'HJ-73C': 100,
+                                        '9M311-SAM': 100,
+                                        '9M31-SAM': 100,
+                                        'MIM-72-SAM': 100,
+                                        '9M33-SAM': 100,
+                                        '9M37-SAM': 100,
+                                        'Roland-SAM': 100,
+                                        '9M331-SAM': 100,
+                                        'FIM-92-Stinger': 100,
+                                        '3M9-SAM': 100,
+                                        '9M38-SAM': 100,
+                                        '5V55R-SAM': 100,
+                                },
+                                'ROCKETS': {
+                                        '122mm-Grad-Rocket': 100,
+                                        '220mm-Uragan-Rocket': 100,
+                                        '300mm-Smerch-Rocket': 100,
+                                        '227mm-MLRS-Rocket': 100,
+                                },
+                                'MORTARS': {
+                                        'M933-60mm': 100,
+                                },
+                                'ARTILLERY': {
+                                        '2A33-152mm': 100,
+                                        '2A31-122mm': 100,
+                                        '2A51-120mm': 100,
+                                        '2A64-152mm': 100,
+                                        'Dana-152mm': 100,
+                                        'M284-155mm': 100,
+                                        'PL-45-155mm': 100,
+                                        'Firtina-155mm': 100,
+                                },
+                                'FLAME_TRHOWERS': {
+                                },
+                                'GRENADE_LAUNCHERS': {
+                                        'AGS-17': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'PKT-7.62': 100,
+                                        'Kord-12.7': 100,
+                                        'NSVT-12.7': 100,
+                                        'M2HB-12.7': 100,
+                                        'M240-7.62': 100,
+                                        'KPVT-14.5': 100,
+                                        'DShK-12.7': 100,
+                                        'L8A1-7.62': 100,
+                                        'L37A1-7.62': 100,
+                                        'L37A2-7.62': 100,
+                                        'L94A1-7.62': 100,
+                                        'MG3-7.62': 100,
+                                        'MG34-7.92': 100,
+                                        'M240C-7.62': 100,
+                                        'M1919-7.62': 100,
+                                        'FN MAG-7.62': 100,
+                                        'ANF1-7.62': 100,
+                                        'M693-12.7': 100,
+                                        'PKM-7.62': 100,
+                                        'PKTM-7.62': 100,
+                                        'Type-59T-7.62': 100,
+                                        'Type-86-7.62': 100,
+                                        'QJC88-12.7': 100,
+                                        'K6-12.7': 100,
+                                },
+                            },
+                        },                        
+                    },
+                },
+                'Naval Base Beta': {},
+            },
+            'ground_bases': {
+                'Ground Base Alpha': {
+                    'mission': {
+                        tskg.ATTACK.value: {
+                            'success_count': 0,   # Contatore di missioni ATTACK riuscite       
+                            'total_count': 0      # Contatore totale di missioni ATTACK
+                        },
+                        tskg.MAINTAIN.value: {
+                            'success_count': 0,   # Contatore di missioni SUPPORT riuscite
+                            'total_count': 0      # Contatore totale di missioni SUPPORT
+                        },
+                        tskg.DEFENSE.value: {
+                            'success_count': 0,   # Contatore di missioni DEFENSE riuscite
+                            'total_count': 0      # Contatore totale di missioni DEFENSE
+                        },                            
+                        tskg.RETRAIT.value: {
+                            'success_count': 0,   # Contatore di missioni SUPPORT riuscite
+                            'total_count': 0      # Contatore totale di missioni SUPPORT
+                        },                            
+                    },
+                    'infrastructure': {
+                        lat.RUNWAY.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.HANGAR.value:  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.ELECTRIC_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                        lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60}
+                    },                            
+                    'operative asset': {
+                        'vehicles': {
+                            ag.ARMORED.value: {
+                                'BMP-1':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                'BMP-2':           {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                            ag.SAM_MEDIUM.value: {
+                                '2K12-Kub':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                '9K37-Buk':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },
+                        },
+                        'helicopters': {
+                            at.HELICOPTER.value: {
+                                'Mi-24P':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                                'AH-64D':  {'operative': 60,  'repair': 30, 'destroyed': 60},
+                            },                               
+                        },
+                        'weapons': {
+                            'air_weapons': {
+
+                                'MISSILES_AAM': {
+                                        'AIM-54A-MK47': 100,
+                                        'AIM-54A-MK60': 100,
+                                        'AIM-54C-MK47': 100,
+                                        'AIM-54C-MK60': 100,
+                                        'AIM-7E': 100,
+                                        'AIM-7F': 100,
+                                        'AIM-7M': 100,
+                                        'AIM-7MH': 100,
+                                        'AIM-7P': 100,
+                                        'AIM-9B': 100,
+                                        'AIM-9P': 100,
+                                        'AIM-9P5': 100,
+                                        'AIM-9L': 100,
+                                        'AIM-9M': 100,
+                                        'AIM-9X': 100,
+                                        'R-550': 100,
+                                        'R-530IR': 100,
+                                        'R-530EM': 100,
+                                        'RB-24': 100,
+                                        'RB-24J': 100,
+                                        'RB-74': 100,
+                                        'R-13M': 100,
+                                        'R-13M1': 100,
+                                        'R-60': 100,
+                                        'R-60M': 100,
+                                        'R-73': 100,
+                                        'R-3S': 100,
+                                        'R-3R': 100,
+                                        'R-24R': 100,
+                                        'R-24T': 100,
+                                        'R-40R': 100,
+                                        'R-40T': 100,
+                                        'R-27R': 100,
+                                        'R-27T': 100,
+                                        'R-27ER': 100,
+                                        'R-27ET': 100,
+                                        'R-33': 100,
+                                        'R-37': 100,
+                                },
+                                'MISSILES_ASM': {
+                                        'RB-05A': 100,
+                                        'RB-15F': 100,
+                                        'AGM-45': 100,
+                                        'AGM-84A': 100,
+                                        'AGM-88': 100,
+                                        'Kormoran': 100,
+                                        'RB-05E': 100,
+                                        'RB-04E': 100,
+                                        'Sea Eagle': 100,
+                                        'RB-75T': 100,
+                                        'RB-15': 100,
+                                        'AGM-65D': 100,
+                                        'AGM-65K': 100,
+                                        'AGM-114': 100,
+                                        'BGM-71D': 100,
+                                        '9M120-F': 100,
+                                        '9M120': 100,
+                                        '9M114': 100,
+                                        'Hot-3': 100,
+                                        'Mistral': 100,
+                                        'Kh-55': 100,
+                                        'Kh-101': 100,
+                                        'Kh-22N': 100,
+                                        'Kh-58': 100,
+                                        'Kh-66': 100,
+                                        'Kh-59': 100,
+                                        'Kh-25ML': 100,
+                                        'Kh-25MR': 100,
+                                        'Kh-25MPU': 100,
+                                        'Kh-25MP': 100,
+                                        'Kh-29L': 100,
+                                        'Kh-29T': 100,
+                                },
+                                'BOMBS': {
+                                        'Mk-84': 100,
+                                        'Mk-83': 100,
+                                        'Mk-82': 100,
+                                        'Mk-82AIR': 100,
+                                        'GBU-10': 100,
+                                        'GBU-16': 100,
+                                        'GBU-12': 100,
+                                        'GBU-24': 100,
+                                        'GBU-27': 100,
+                                        'Mk-20': 100,
+                                        'BLG66': 100,
+                                        'CBU-52B': 100,
+                                        'BK-90MJ1': 100,
+                                        'BK-90MJ1-2': 100,
+                                        'BK-90MJ2': 100,
+                                        'M/71': 100,
+                                        'SAMP-400LD': 100,
+                                        'SAMP-250HD': 100,
+                                        'FAB-1500M54': 100,
+                                        'FAB-500M62': 100,
+                                        'FAB-250M54': 100,
+                                        'FAB-100': 100,
+                                        'FAB-50': 100,
+                                        'RBK-250AO': 100,
+                                        'RBK-500AO': 100,
+                                        'RBK-500PTAB': 100,
+                                        'BetAB-500': 100,
+                                },
+                                'ROCKETS': {
+                                        'Zuni-Mk71': 100,
+                                        'Hydra-70MK5': 100,
+                                        'Hydra-70MK1': 100,
+                                        'SNEB-256': 100,
+                                        'SNEB-253': 100,
+                                        'S-5 M': 100,
+                                        'S-5 KO': 100,
+                                        'S-8 OFP2': 100,
+                                        'S-8 KOM': 100,
+                                        'S-13': 100,
+                                        'S-25L': 100,
+                                        'S-24': 100,
+                                },
+                                'CANNONS': {
+                                        'UPK-23': 100,
+                                        'Gsh-23L': 100,
+                                        'GAU-8/A': 100,
+                                        'M61A1': 100,
+                                        'M39A3': 100,
+                                        'Mk-12': 100,
+                                        'DEFA-554': 100,
+                                        'N-37': 100,
+                                        'NR-23': 100,
+                                        'NR-30': 100,
+                                        'GSh-30-1': 100,
+                                        'GSh-30-2': 100,
+                                        'GSh-6-23M': 100,
+                                        'GSh-6-30': 100,
+                                        'Oerlikon-KCA': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'AN-M2': 100,
+                                        'M3-Browning': 100,
+                                },
+                            },
+                            'ground_weapons': {
+
+                                'AUTO_CANNONS': {
+                                        '2A42': 100,
+                                        'APV-23': 100,
+                                        'M242 Bushmaster': 100,
+                                        'M230 Chain Gun': 100,
+                                        '2A42-30mm': 100,
+                                        'M242-Bushmaster-25mm': 100,
+                                        '2A72-30mm': 100,
+                                        'ZPT-99-30mm': 100,
+                                        'L21A1-RARDEN-30mm': 100,
+                                        'M242-25mm': 100,
+                                        'MK-20-Rh-202-20mm': 100,
+                                },
+                                'CANNONS': {
+                                        '2A28-Grom-73mm': 100,
+                                        '2A46M': 100,
+                                        '2A20': 100,
+                                        'U-5TS "Molot"': 100,
+                                        '2A46M-5': 100,
+                                        '2A46': 100,
+                                        '2A61': 100,
+                                        '2A64': 100,
+                                        '2A70': 100,
+                                        'M68A1': 100,
+                                        'M256': 100,
+                                        'M255': 100,
+                                        'D30': 100,
+                                        'D-10T': 100,
+                                        '2A28 Grom': 100,
+                                        'D-10T2S-100mm': 100,
+                                        'L11A5-120mm': 100,
+                                        'L7A3-105mm': 100,
+                                        'M68-105mm': 100,
+                                        'Rheinmetall-120mm-L44': 100,
+                                        'Rheinmetall-120mm-L55': 100,
+                                        'M256-120mm': 100,
+                                        'CN120-26-120mm': 100,
+                                        'L30A1-120mm': 100,
+                                        'MG251-120mm': 100,
+                                        'Type-59-100mm': 100,
+                                        '2A46M-125mm': 100,
+                                        '2A46M5-125mm': 100,
+                                        'ZPT-98-125mm': 100,
+                                        '2A70-100mm': 100,
+                                },
+                                'AA_CANNONS': {
+                                        'S-68-57mm': 100,
+                                        'AZP-23-23mm': 100,
+                                        'M61-Vulcan-20mm': 100,
+                                        'Oerlikon-KDA-35mm': 100,
+                                        '2A38M-30mm': 100,
+                                },
+                                'MISSILES': {
+                                        '9K119M': 100,
+                                        '99K120': 100,
+                                        '9M14 Malyutka': 100,
+                                        '9M113 Konkurs': 100,
+                                        '9M35 Kornet': 100,
+                                        '9M37M': 100,
+                                        '9M331': 100,
+                                        'TOW-2': 100,
+                                        '9M119-Refleks': 100,
+                                        '9M119M-Refleks-M': 100,
+                                        '9M113-Konkurs': 100,
+                                        '9M14-Malyutka': 100,
+                                        'BGM-71-TOW': 100,
+                                        'MILAN': 100,
+                                        'HJ-73C': 100,
+                                        '9M311-SAM': 100,
+                                        '9M31-SAM': 100,
+                                        'MIM-72-SAM': 100,
+                                        '9M33-SAM': 100,
+                                        '9M37-SAM': 100,
+                                        'Roland-SAM': 100,
+                                        '9M331-SAM': 100,
+                                        'FIM-92-Stinger': 100,
+                                        '3M9-SAM': 100,
+                                        '9M38-SAM': 100,
+                                        '5V55R-SAM': 100,
+                                },
+                                'ROCKETS': {
+                                        '122mm-Grad-Rocket': 100,
+                                        '220mm-Uragan-Rocket': 100,
+                                        '300mm-Smerch-Rocket': 100,
+                                        '227mm-MLRS-Rocket': 100,
+                                },
+                                'MORTARS': {
+                                        'M933-60mm': 100,
+                                },
+                                'ARTILLERY': {
+                                        '2A33-152mm': 100,
+                                        '2A31-122mm': 100,
+                                        '2A51-120mm': 100,
+                                        '2A64-152mm': 100,
+                                        'Dana-152mm': 100,
+                                        'M284-155mm': 100,
+                                        'PL-45-155mm': 100,
+                                        'Firtina-155mm': 100,
+                                },
+                                'FLAME_TRHOWERS': {
+                                },
+                                'GRENADE_LAUNCHERS': {
+                                        'AGS-17': 100,
+                                },
+                                'MACHINE_GUNS': {
+                                        'PKT-7.62': 100,
+                                        'Kord-12.7': 100,
+                                        'NSVT-12.7': 100,
+                                        'M2HB-12.7': 100,
+                                        'M240-7.62': 100,
+                                        'KPVT-14.5': 100,
+                                        'DShK-12.7': 100,
+                                        'L8A1-7.62': 100,
+                                        'L37A1-7.62': 100,
+                                        'L37A2-7.62': 100,
+                                        'L94A1-7.62': 100,
+                                        'MG3-7.62': 100,
+                                        'MG34-7.92': 100,
+                                        'M240C-7.62': 100,
+                                        'M1919-7.62': 100,
+                                        'FN MAG-7.62': 100,
+                                        'ANF1-7.62': 100,
+                                        'M693-12.7': 100,
+                                        'PKM-7.62': 100,
+                                        'PKTM-7.62': 100,
+                                        'Type-59T-7.62': 100,
+                                        'Type-86-7.62': 100,
+                                        'QJC88-12.7': 100,
+                                        'K6-12.7': 100,
+                                },
+                            },
+                        },
+                    },
+                },
+                'Ground Base Beta': {},                    
+            },
+        },
+        'Production': {
+            'Power Plant Alpha': {                    
+                    lat.POWER_PLANT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                    lat.ELECTRIC_INFRASTRUCTURE.value:     {'operative': 60,  'repair': 30, 'destroyed': 60},
+                    lat.DEPOT.value:       {'operative': 60,  'repair': 30, 'destroyed': 60},  
+            },                                          
+            'Farm Beta': {},
+        },
+        'Transport': {
+            'Road Alpha': {
+                lat.BRIDGE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                lat.CHECK_POINT.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+            },
+            'Railway Beta': {},
+            'Port Alpha': {},
+        },
+        'Storage': {
+            'Oil Storage Alpha': {
+                tc.SERVICE.value: { # verificare se serve distinguere SERVICE e ADMINISTRATIVE per i depositi
+                    lat.OIL_TANK.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+                tc.ADMINISTRATIVE.value: {
+                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+            },                    
+            'Good Storage Beta': {},
+        },
+        'Urban': {
+            'City Alpha': {
+                tc.CIVILIAN.value: { # verificare se serve distinguere SERVICE e ADMINISTRATIVE per le città
+                    lat.BUILDING.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+                tc.SERVICE.value: {
+                    lat.SERVICE_INFRASTRUCTURE.value: {'operative': 60,  'repair': 30, 'destroyed': 60},
+                },
+            },
+            'City Beta': {},  
+        },
+    },
+    'Region_South': {},
+    'Region_center': {},
+}
+
+def update_mission_count(region_name: str, base_name: str, mission_type: str, success: bool):
+    """Update the mission counts for a specific base and mission type.
+
+    Args:
+        region_name (str): name of the Region
+        base_name (str): name of the base (airbase, ground base or naval base)
+        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETRAIT)
+        success (bool): True if the mission was successful, False otherwise
+    """
+    update = False
+
+    if region_name in REGION_ASSETS_STATUS:
+        region = REGION_ASSETS_STATUS[region_name]
+        if 'Military_Bases' in region and set(['airbases', 'ground_bases', 'naval_bases']) & set(region['Military_Bases']):    # Almeno una delle basi è presente# usa l'intersezione tra insiemi # Anche questo è corretto -> any(bases in region['Military_Bases'] for bases in ['airbases', 'ground_bases', 'naval_bases'])   # 'airbases' in region['Military_Bases']:
+            
+            for base_type in ['airbases', 'ground_bases', 'naval_bases']:                
+                bases = region['Military_Bases'].get(base_type, None)
+
+                if bases is None:
+                    continue
+
+                if base_name in bases:
+                    base = bases[base_name]
+
+                    if 'mission' in base and mission_type in base['mission']:
+                        mission_data = base['mission'][mission_type]
+                        mission_data['total_count'] += 1
+
+                        if success:
+                            mission_data['success_count'] += 1
+                        logger.info(f"Mission '{mission_type}' for base '{base_name}' in region '{region_name}' updated: {mission_data['success_count']}/{mission_data['total_count']} successful.")
+                        return True
+                    else:
+                        logger.info(f"Mission type '{mission_type}' not found for base '{base_name}' in region '{region_name}'.")
+                        return False
+                
+        logger.info(f"Military_Bases not found in Region {region_name}")
+        return False
+    
+    logger.info(f"Region '{region_name}' not found.")
+    return False
+
+
+def get_mission_success_rate(region_name: str, base_name: str, mission_type: str) -> float:
+    """Calculate the success rate for a specific mission type at a given base.
+
+    Args:
+        region_name (str): name of the Region
+        base_name (str): name of the base (airbase, ground base or naval base)
+        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETRAIT)
+    Returns:
+        float: success rate as a percentage (0.0 to 1.0), or -1.0 if the mission type is not found or if there are no missions recorded.
+    """
+    if region_name in REGION_ASSETS_STATUS:
+        region = REGION_ASSETS_STATUS[region_name]
+        if 'Military_Bases' in region and set(['airbases', 'ground_bases', 'naval_bases']) & set(region['Military_Bases']):    # Almeno una delle basi è presente# usa l'intersezione tra insiemi # Anche questo è corretto -> any(bases in region['Military_Bases'] for bases in ['airbases', 'ground_bases', 'naval_bases'])   # 'airbases' in region['Military_Bases']:
+            
+            for base_type in ['airbases', 'ground_bases', 'naval_bases']:                
+                bases = region['Military_Bases'].get(base_type, None)
+
+                if bases is None:
+                    continue
+
+                if base_name in bases:
+                    base = bases[base_name]
+
+                    if 'mission' in base and mission_type in base['mission']:
+                        mission_data = base['mission'][mission_type]
+                        total_count = mission_data['total_count']
+                        success_count = mission_data['success_count']
+                        
+                        if total_count > 0:
+                            success_rate = success_count / total_count
+                            logger.info(f"Mission '{mission_type}' for base '{base_name}' in region '{region_name}' has a success rate of {success_rate:.2f}% ({success_count}/{total_count} successful).")
+                            return success_rate
+                        else:
+                            logger.info(f"No missions recorded for mission type '{mission_type}' at base '{base_name}' in region '{region_name}'.")
+                            return -1.0
+                    else:
+                        logger.info(f"Mission type '{mission_type}' not found for base '{base_name}' in region '{region_name}'.")
+                        return -1.0
+
+    logger.info(f"Region '{region_name}' or base '{base_name}' not found.")
+    return -1.0
 
 
 _WEAPONS_AVAILABILITY: Dict[str, Tuple[float, float]] = {   

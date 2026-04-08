@@ -8,8 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-from Utility import get_membership_label
-
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 
 #import skfuzzy as fuzz
@@ -18,6 +17,15 @@ from Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_Military_VEHICLE_ASSET, GROUND_ACTION
 
 
+
+# Logger setup
+    # CRITICAL 	50
+    # ERROR 	40
+    # WARNING 	30
+    # INFO 	20
+    # DEBUG 	10
+    # NOTSET 	0
+logger = Logger(module_name=__name__, class_name='').logger
 
 """ 
 NO, DEVE VALUTARE LE AZIONI CONSIDERANDO TRE GRAFI: QUELLO DEL CONFLITTO COSTITUITO DA BASI_MIL AMICHE E NEMICHE, QUELLO LOGISTICO
