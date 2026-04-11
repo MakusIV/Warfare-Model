@@ -9,10 +9,14 @@
 #VARIABLE = Literal['A', 'B, 'C']
 from enum import Enum
 from typing import Dict, List, Tuple
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 MAX_WORLD_DISTANCE = float('inf')
 DCS_DATA_DIRECTORY = 'E:\\Sviluppo\Warfare_Model\\Code\\Persistence\\DCS_Data' # Directory for DCS table: Lua and Python.  att dcs funziona solo in windows quindi path solo per formato windows
 DEBUG = False
+
+
+logger = Logger(module_name=__name__, class_name='Context').logger
 
 COALITIONS = {
     'Blue': ['USA', 'Germany', 'France', 'Britain', 'Italy', 'Turkey', 'Greece', 'Georgia', 'Australia', 'Canada'],
@@ -24,6 +28,126 @@ COALITIONS = {
 
 PATH_TYPE = ['onroad', 'offroad', 'air', 'water']
 ROUTE_TYPE = ['ground', 'air', 'water', 'mixed']
+
+
+
+
+"""
+veicoli
+
+big (2 veicoli) — sistemi su truck di grandi dimensioni, ≥12m/≥40t:
+- S300PS_data (riferimento), A9A52_Smerch_data (MAZ-79111, 12m/43t)
+
+med (33 veicoli) — piattaforme medio-pesanti tracked/wheeled,
+~7.5–12m/~25–65t:
+- Tutti gli MBT (T90M, T72, T55, Leopard 1/2, M1A2, Challenger II, Merkava IV,
+ecc.)
+- SPH pesanti: S2S3 Akatsia, BM27 Uragan, Dana vz77, S2S19 Msta, M109, PLZ05,
+T155 Firtina
+- SPAAG pesanti: ZSU-57-2, Flakpanzer Gepard, K2K22 Tunguska
+- SAM medi: K9K37 Buk (riferimento), K2K12 Kub, K9K331 Tor
+
+small (29 veicoli) — veicoli leggeri/compatti, ≤8m/≤25t:
+  - Tutti gli IFV (BMP1, BMP2, BMP3, Bradley, Marder, Warrior, ecc.)
+  - Tutti gli APC (M113, BTR80, AAV7, ecc.)
+
+  
+navi
+
+Logica adottata (dimensioni fisiche reali):
+  - big: portaerei (306–333m / 58–104kt), Kirov PiotrVelikiy (252m/24kt), LHA
+  Tarawa (250m/39kt)
+  - med: incrociatori, cacciatorpediniere, fregate, sottomarini nucleari,
+  Type071 (107–186m / 3–11kt)
+  - small: corvette e fast-attack (56–71m / 385–950t)
+
+  
+"""
+
+
+VEHICLE_SIZE_CATEGORY = {
+    # Veicoli terrestri: lunghezza e peso sono i criteri primari.
+    # Nessun veicolo militare standard supera 4m di larghezza/altezza, quindi
+    # le soglie width/height sono tarate sui valori reali del dataset.
+    # Controllo in ordine big → medium → small (primo match vince).
+    #
+    # big:    peso ≥ 40t  → MBT moderni (T-90M 48t, Abrams 62t, ...),
+    #                        SAM pesanti (S-300PS 48t), artiglieria pesante (Smerch 44t)
+    # medium: peso 20–39t → SAM medi (Buk 32t, Tunguska 34t), MBT leggeri (T-55 36t),
+    #                        IFV pesanti (Bradley 28t), artiglieria media (2S3 28t)
+    # small:  peso  < 20t → APC leggeri (BMP-1 13t, BTR-80 14t),
+    #                        SAM piccoli (Osa 18t, Strela 7t)
+    'big':    {'length': 8,  'height': 2, 'width': 3, 'weight': 40},
+    'medium': {'length': 6,  'height': 2, 'width': 2, 'weight': 20},
+    'small':  {'length': 2,  'height': 1, 'width': 1, 'weight': 1},
+}
+
+
+SHIP_SIZE_CATEGORY = {
+    # Navi: lunghezza e peso sono i criteri primari.
+    # Le soglie width/height riflettono i valori reali del dataset
+    # (carrier W=75m H=76m; corvetta W=10m H=12m).
+    # Controllo in ordine big → medium → small (primo match vince).
+    #
+    # big:    peso ≥ 24000t  → portaerei (Nimitz 104000t, Kuznetsov 59000t),
+    #                           incrociatori nucleari (Piotr Velikiy 24000t),
+    #                           portaelicotteri (LHA-1 Tarawa 39000t)
+    # medium: peso ≥  3000t  → cacciatorpediniere (Arleigh Burke 9100t),
+    #                           incrociatori (CG-65 9800t), fregate (FFG-46 4100t),
+    #                           sottomarini (Type-093 6000t), anfibio (Type-071 20000t)
+    # small:  peso ≥   100t  → corvette (Grisha 950t, Tarantul 455t)
+    'big':    {'length': 200, 'height': 40, 'width': 28, 'weight': 24000},
+    'medium': {'length': 90,  'height': 10, 'width': 10, 'weight': 3000},
+    'small':  {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
+}
+
+
+def get_dimension(asset_type: str, length: float, width: float, height: float, weight: float) -> str:
+    """
+    Categorizza un asset in base alle sue dimensioni fisiche in una delle classi
+    definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (big, medium, small).
+
+    La funzione scorre le categorie nell'ordine big → medium → small e restituisce
+    la prima categoria per cui sia la condizione dimensionale sia quella di peso
+    risultano soddisfatte:
+        (length >= min_length  OR  (width >= min_width AND height >= min_height))  AND  weight >= min_weight
+
+    Args:
+        asset_type: 'Vehicle' o 'Ship'
+        length:     lunghezza massima in metri
+        width:      larghezza massima in metri
+        height:     altezza massima in metri
+        weight:     peso in tonnellate
+
+    Returns:
+        str: 'big', 'medium', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
+    """
+    if asset_type not in ['Vehicle', 'Ship']:
+        raise ValueError(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship'.")
+
+    SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY if asset_type == 'Vehicle' else SHIP_SIZE_CATEGORY
+
+    for dimension, thresholds in SIZE_CATEGORY.items():
+        min_length = thresholds['length']
+        min_width  = thresholds['width']
+        min_height = thresholds['height']
+        min_weight = thresholds['weight']
+
+        size_match   = (length >= min_length) or (width >= min_width and height >= min_height)
+        weight_match = weight >= min_weight
+
+        if size_match and weight_match:
+            return dimension
+
+    logger.warning(
+        f"Asset dimensions do not fit any category: "
+        f"length={length}, width={width}, height={height}, weight={weight}. Returning 'Unknown'."
+    )
+    return "Unknown"
+    
+
+
+
 
 # Peso per il calcolo del valore complessivo di una produzione (Resource_Manager.production value)
 PRODUCTION_WEIGHT = {

@@ -318,6 +318,211 @@ class TestVehicleDataAttributes(unittest.TestCase):
             with self.subTest(model=model):
                 self.assertIsInstance(obj.start_service, int)
 
+    def test_physical_characteristics_attribute_is_dict(self):
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIsInstance(obj.physical_characteristics, dict)
+
+    def test_physical_characteristics_has_correct_keys(self):
+        expected_keys = {'length', 'width', 'height', 'weight'}
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(expected_keys.issubset(obj.physical_characteristics))
+
+    def test_physical_characteristics_values_are_positive_ints(self):
+        for model, obj in Vehicle_Data._registry.items():
+            for key in ('length', 'width', 'height', 'weight'):
+                with self.subTest(model=model, key=key):
+                    val = obj.physical_characteristics[key]
+                    self.assertIsInstance(val, int)
+                    self.assertGreater(val, 0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  2b. PHYSICAL_CHARACTERISTICS — VALIDAZIONE STRUTTURA E VALORI
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestVehicleDataPhysicalCharacteristics(unittest.TestCase):
+    """Verifica la struttura e i valori di physical_characteristics per tutti i veicoli."""
+
+    _PC_KEYS = {'length', 'width', 'height', 'weight'}
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+        self.s300  = Vehicle_Data._registry["S-300PS"]
+        self.buk   = Vehicle_Data._registry["9K37-Buk"]
+        self.osa   = Vehicle_Data._registry["9A33-Osa"]
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_vehicles_have_physical_characteristics(self):
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(hasattr(obj, 'physical_characteristics'))
+
+    def test_all_vehicles_physical_characteristics_is_dict(self):
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIsInstance(obj.physical_characteristics, dict)
+
+    def test_all_vehicles_physical_characteristics_has_required_keys(self):
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(self._PC_KEYS.issubset(obj.physical_characteristics))
+
+    def test_all_vehicles_physical_characteristics_values_are_positive_ints(self):
+        for model, obj in Vehicle_Data._registry.items():
+            for key in self._PC_KEYS:
+                with self.subTest(model=model, key=key):
+                    val = obj.physical_characteristics[key]
+                    self.assertIsInstance(val, int)
+                    self.assertGreater(val, 0)
+
+    def test_length_ge_width_for_all_vehicles(self):
+        """La lunghezza deve essere >= larghezza per ogni veicolo."""
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                pc = obj.physical_characteristics
+                self.assertGreaterEqual(pc['length'], pc['width'])
+
+    def test_length_ge_height_for_all_vehicles(self):
+        """La lunghezza deve essere >= altezza per ogni veicolo."""
+        for model, obj in Vehicle_Data._registry.items():
+            with self.subTest(model=model):
+                pc = obj.physical_characteristics
+                self.assertGreaterEqual(pc['length'], pc['height'])
+
+    def test_s300_larger_than_buk(self):
+        """S-300PS (SAM_Big) deve essere più pesante e lungo del BUK (SAM_Medium)."""
+        self.assertGreater(
+            self.s300.physical_characteristics['weight'],
+            self.buk.physical_characteristics['weight'],
+        )
+        self.assertGreater(
+            self.s300.physical_characteristics['length'],
+            self.buk.physical_characteristics['length'],
+        )
+
+    def test_buk_larger_than_osa(self):
+        """9K37-Buk (SAM_Medium) deve essere più pesante e lungo di 9A33-Osa (SAM_Small)."""
+        self.assertGreater(
+            self.buk.physical_characteristics['weight'],
+            self.osa.physical_characteristics['weight'],
+        )
+        self.assertGreater(
+            self.buk.physical_characteristics['length'],
+            self.osa.physical_characteristics['length'],
+        )
+
+    def test_constructor_raises_for_missing_key(self):
+        """Il costruttore deve sollevare ValueError se manca una chiave in physical_characteristics."""
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VD
+        registry_model = Vehicle_Data._registry[_TANK_MODEL]
+        bad_pc = {'length': 10, 'width': 4, 'height': 2}  # manca 'weight'
+        with self.assertRaises(ValueError):
+            _VD(
+                constructor=registry_model.constructor,
+                made=registry_model.made,
+                model="_test_missing_key",
+                category=registry_model.category,
+                physical_characteristics=bad_pc,
+                start_service=registry_model.start_service,
+                end_service=registry_model.end_service,
+                cost=registry_model.cost,
+                range=registry_model.range,
+                roles=registry_model.roles,
+                engine=registry_model.engine,
+                weapons=registry_model.weapons,
+                radar=registry_model.radar,
+                TVD=registry_model.TVD,
+                communication=registry_model.communication,
+                hydraulic=registry_model.hydraulic,
+                protections=registry_model.protections,
+                speed_data=registry_model.speed_data,
+            )
+
+    def test_constructor_raises_for_wrong_type(self):
+        """Il costruttore deve sollevare ValueError se physical_characteristics non è un dict."""
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VD
+        registry_model = Vehicle_Data._registry[_TANK_MODEL]
+        with self.assertRaises(ValueError):
+            _VD(
+                constructor=registry_model.constructor,
+                made=registry_model.made,
+                model="_test_wrong_type",
+                category=registry_model.category,
+                physical_characteristics="not_a_dict",
+                start_service=registry_model.start_service,
+                end_service=registry_model.end_service,
+                cost=registry_model.cost,
+                range=registry_model.range,
+                roles=registry_model.roles,
+                engine=registry_model.engine,
+                weapons=registry_model.weapons,
+                radar=registry_model.radar,
+                TVD=registry_model.TVD,
+                communication=registry_model.communication,
+                hydraulic=registry_model.hydraulic,
+                protections=registry_model.protections,
+                speed_data=registry_model.speed_data,
+            )
+
+    def test_constructor_raises_for_non_positive_value(self):
+        """Il costruttore deve sollevare ValueError se un valore di physical_characteristics è <= 0."""
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VD
+        registry_model = Vehicle_Data._registry[_TANK_MODEL]
+        bad_pc = {'length': 10, 'width': 4, 'height': 0, 'weight': 48}  # height=0
+        with self.assertRaises(ValueError):
+            _VD(
+                constructor=registry_model.constructor,
+                made=registry_model.made,
+                model="_test_zero_value",
+                category=registry_model.category,
+                physical_characteristics=bad_pc,
+                start_service=registry_model.start_service,
+                end_service=registry_model.end_service,
+                cost=registry_model.cost,
+                range=registry_model.range,
+                roles=registry_model.roles,
+                engine=registry_model.engine,
+                weapons=registry_model.weapons,
+                radar=registry_model.radar,
+                TVD=registry_model.TVD,
+                communication=registry_model.communication,
+                hydraulic=registry_model.hydraulic,
+                protections=registry_model.protections,
+                speed_data=registry_model.speed_data,
+            )
+
+    def test_constructor_raises_for_float_value(self):
+        """Il costruttore deve sollevare ValueError se un valore non è int (es. float)."""
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VD
+        registry_model = Vehicle_Data._registry[_TANK_MODEL]
+        bad_pc = {'length': 10.5, 'width': 4, 'height': 2, 'weight': 48}
+        with self.assertRaises(ValueError):
+            _VD(
+                constructor=registry_model.constructor,
+                made=registry_model.made,
+                model="_test_float_value",
+                category=registry_model.category,
+                physical_characteristics=bad_pc,
+                start_service=registry_model.start_service,
+                end_service=registry_model.end_service,
+                cost=registry_model.cost,
+                range=registry_model.range,
+                roles=registry_model.roles,
+                engine=registry_model.engine,
+                weapons=registry_model.weapons,
+                radar=registry_model.radar,
+                TVD=registry_model.TVD,
+                communication=registry_model.communication,
+                hydraulic=registry_model.hydraulic,
+                protections=registry_model.protections,
+                speed_data=registry_model.speed_data,
+            )
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  3. METODI DI VALUTAZIONE ASSOLUTI (_eval)

@@ -62,11 +62,25 @@ class Vehicle_Data:
 
     _registry = {}
     
-    def __init__(self, constructor: str, made: str, model: str, category: str, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict):
+    def __init__(self, constructor: str, made: str, model: str, category: str, physical_characteristics: Dict, start_service: str, end_service: str, cost: int, range: int, roles: str, engine: Dict, weapons: Dict, radar: Dict, TVD: Dict, communication: Dict, hydraulic: Dict, protections: Dict, speed_data: Dict):
+        _PC_KEYS = {'length', 'width', 'height', 'weight'}
+        if not isinstance(physical_characteristics, dict) or not _PC_KEYS.issubset(physical_characteristics):
+            raise ValueError(
+                f"physical_characteristics must be a dict with keys {_PC_KEYS}, "
+                f"got: {physical_characteristics!r}"
+            )
+        for _k in _PC_KEYS:
+            if not isinstance(physical_characteristics[_k], int) or physical_characteristics[_k] <= 0:
+                raise ValueError(
+                    f"physical_characteristics['{_k}'] must be a positive int, "
+                    f"got: {physical_characteristics[_k]!r}"
+                )
+
         self.constructor = constructor
         self.made = made
         self.model = model # registry keys
         self.category = category #Tank, Armored, Motorized from Context BLOCK_ASSET_CATEGORY["Ground_Military_Vehicle_Asset"], BLOCK_ASSET_CATEGORY["Air_Defense_Asset"].
+        self.physical_characteristics = physical_characteristics
         self.start_service = start_service
         self.end_service = end_service
         self.cost = cost
@@ -1024,6 +1038,37 @@ class Vehicle_Data:
 
 # VEHICLE DATA
 
+"""
+Struttura inserita (posizione invariata, subito dopo 'category'):
+  'physical_characteristics': {'length': X, 'width': X, 'height': X, 'weight':
+  X},
+  Le dimensioni rappresentano il parallelepipedo minimo in configurazione di
+  marcia (canna/lanciatori in posizione di stivaggio). Il peso è in tonnellate
+  metriche.
+
+  Note sui valori più caratteristici:
+
+  ┌─────────────────┬──────────────┬──────────────┬────────────────────────┐
+  │    Categoria    │ Range length │ Range weight │        Esempio         │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ MBT             │ 9–12 m       │ 36–65 t      │ Challenger II: 12m/63t │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ IFV/APC         │ 5–8 m        │ 7–28 t       │ BMD-1: 6m/8t           │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ SPH pesante     │ 7–12 m       │ 9–46 t       │ 2S19 Msta: 12m/42t     │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ MLRS camion     │ 8–13 m       │ 14–44 t      │ Smerch: 13m/44t        │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ SAM SHORAD      │ 6–8 m        │ 7–33 t       │ OSA: 8m/18t            │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ SAM medio/lungo │ 9–14 m       │ 20–48 t      │ S-300: 14m/48t         │
+  ├─────────────────┼──────────────┼──────────────┼────────────────────────┤
+  │ SPAAG pesante   │ 8–10 m       │ 21–48 t      │ Gepard: 8m/48t         │
+  └─────────────────┴──────────────┴──────────────┴────────────────────────┘
+
+
+"""
+
 # metric = metric - > speed: km/h, altitude: m, radar/TVD/radioNav range: km 
 # metric = imperial - > speed: mph, altitude: feet, radar/TVD/radioNav range: nm
 
@@ -1034,6 +1079,7 @@ T90M_data = {
     'start_service': 2020,
     'end_service': None,
     'category': 'Tank', # Main Battle Tank
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 2, 'weight': 48},
     'cost': 4, # M$
     'range': 550, # km
     'roles': ['Tank'],
@@ -1096,6 +1142,7 @@ T72_data = {
     'start_service': 2020,
     'end_service': None,
     'category': 'Tank', # Main Battle Tank
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 2, 'weight': 42},
     'cost': 2.5, # M$
     'range': 400, # km
     'roles': ['Tank'],
@@ -1158,6 +1205,7 @@ BMP1_data = {
     'start_service': 1966,
     'end_service': None,
     'category': 'Armored', # 
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 2, 'weight': 13},
     'cost': 0.06, # M$
     'range': 500, # km
     'roles': ['APC', 'IFV'], # APC: Armored Personnel Carrier, IFV: Infantry Fighting Vehicle
@@ -1214,6 +1262,7 @@ T55_data = {
     'start_service': 1958,
     'end_service': 1990,
     'category': 'Tank',
+    'physical_characteristics': {'length': 9, 'width': 3, 'height': 2, 'weight': 36},
     'cost': 1.5,  # M$
     'range': 500,  # km
     'roles': ['Tank'],
@@ -1263,6 +1312,7 @@ Chieftain_MK3_data = {
     'start_service': 1969,
     'end_service': 1995,
     'category': 'Tank',
+    'physical_characteristics': {'length': 11, 'width': 4, 'height': 3, 'weight': 55},
     'cost': 2.5,  # M$
     'range': 450,  # km
     'roles': ['Tank'],
@@ -1312,6 +1362,7 @@ Leopard_1A3_data = {
     'start_service': 1973,
     'end_service': 2000,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 42},
     'cost': 1.8,  # M$
     'range': 600,  # km
     'roles': ['Tank'],
@@ -1361,6 +1412,7 @@ M60A3_data = {
     'start_service': 1978,
     'end_service': 1997,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 53},
     'cost': 2.5,  # M$
     'range': 480,  # km
     'roles': ['Tank'],
@@ -1410,6 +1462,7 @@ Leopard_2A4_data = {
     'start_service': 1985,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 55},
     'cost': 5.5,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1459,6 +1512,7 @@ Leopard_2A5_data = {
     'start_service': 1995,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 60},
     'cost': 6.5,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1508,6 +1562,7 @@ Leopard_2A6M_data = {
     'start_service': 2007,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 11, 'width': 4, 'height': 3, 'weight': 63},
     'cost': 9.0,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1557,6 +1612,7 @@ M1A2_Abrams_data = {
     'start_service': 1992,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 62},
     'cost': 8.5,  # M$
     'range': 426,  # km
     'roles': ['Tank'],
@@ -1606,6 +1662,7 @@ Leclerc_data = {
     'start_service': 1992,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 57},
     'cost': 9.0,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1658,6 +1715,7 @@ Challenger_II_data = {
     'start_service': 1998,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 12, 'width': 4, 'height': 3, 'weight': 63},
     'cost': 6.0,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1707,6 +1765,7 @@ Merkava_IV_data = {
     'start_service': 2004,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 9, 'width': 4, 'height': 3, 'weight': 65},
     'cost': 6.5,  # M$
     'range': 500,  # km
     'roles': ['Tank'],
@@ -1768,6 +1827,7 @@ Type_59_data = {
     'start_service': 1958,
     'end_service': 1985,
     'category': 'Tank',
+    'physical_characteristics': {'length': 9, 'width': 3, 'height': 3, 'weight': 36},
     'cost': 0.8,  # M$
     'range': 500,  # km
     'roles': ['Tank'],
@@ -1817,6 +1877,7 @@ T80U_data = {
     'start_service': 1985,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 2, 'weight': 46},
     'cost': 4.0,  # M$
     'range': 335,  # km (500 with external tanks)
     'roles': ['Tank'],
@@ -1875,6 +1936,7 @@ T90_base_data = {
     'start_service': 1992,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 2, 'weight': 47},
     'cost': 4.5,  # M$
     'range': 550,  # km
     'roles': ['Tank'],
@@ -1936,6 +1998,7 @@ T72B3_data = {
     'start_service': 2013,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 2, 'weight': 45},
     'cost': 1.8,  # M$ (modernization cost)
     'range': 500,  # km
     'roles': ['Tank'],
@@ -1997,6 +2060,7 @@ ZTZ_96B_data = {
     'start_service': 2017,
     'end_service': None,
     'category': 'Tank',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 3, 'weight': 57},
     'cost': 2.8,  # M$
     'range': 400,  # km
     'roles': ['Tank'],
@@ -2067,6 +2131,7 @@ Marder_data = {
     'start_service': 1971,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 28},
     'cost': 3.5,  # M$
     'range': 520,  # km
     'roles': ['IFV'],
@@ -2117,6 +2182,7 @@ BMP2_data = {
     'start_service': 1980,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 2, 'weight': 14},
     'cost': 1.8,  # M$
     'range': 600,  # km
     'roles': ['IFV'],
@@ -2167,6 +2233,7 @@ BMD1_data = {
     'start_service': 1969,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 6, 'width': 3, 'height': 2, 'weight': 8},
     'cost': 1.2,  # M$
     'range': 600,  # km
     'roles': ['IFV', 'Airborne'],
@@ -2217,6 +2284,7 @@ M2_Bradley_data = {
     'start_service': 1981,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 28},
     'cost': 3.8,  # M$
     'range': 400,  # km
     'roles': ['IFV'],
@@ -2267,6 +2335,7 @@ BMP3_data = {
     'start_service': 1987,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 19},
     'cost': 2.5,  # M$
     'range': 600,  # km
     'roles': ['IFV'],
@@ -2317,6 +2386,7 @@ Warrior_data = {
     'start_service': 1987,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 25},
     'cost': 3.7,  # M$
     'range': 660,  # km
     'roles': ['IFV'],
@@ -2366,6 +2436,7 @@ LAV25_data = {
     'start_service': 1983,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 13},
     'cost': 1.8,  # M$
     'range': 660,  # km
     'roles': ['IFV'],
@@ -2415,6 +2486,7 @@ M1126_Stryker_data = {
     'start_service': 2002,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 17},
     'cost': 5.0,  # M$
     'range': 500,  # km
     'roles': ['IFV', 'APC'],
@@ -2463,6 +2535,7 @@ BTR82A_data = {
     'start_service': 2012,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 3, 'weight': 15},
     'cost': 1.7,  # M$
     'range': 600,  # km
     'roles': ['IFV', 'APC'],
@@ -2512,6 +2585,7 @@ ZBD04A_data = {
     'start_service': 2004,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 21},
     'cost': 3.2,  # M$
     'range': 500,  # km
     'roles': ['IFV'],
@@ -2564,6 +2638,7 @@ SdKfz_251_data = {
     'start_service': 1939,
     'end_service': 1945,
     'category': 'Armored',
+    'physical_characteristics': {'length': 6, 'width': 2, 'height': 2, 'weight': 9},
     'cost': 0.8,  # M$
     'range': 300,  # km
     'roles': ['APC'],
@@ -2612,6 +2687,7 @@ MTLB_data = {
     'start_service': 1966,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 2, 'weight': 10},
     'cost': 0.6,  # M$
     'range': 500,  # km
     'roles': ['APC', 'Transport'],
@@ -2660,6 +2736,7 @@ M2A1_Halftrack_data = {
     'start_service': 1940,
     'end_service': 1960,
     'category': 'Armored',
+    'physical_characteristics': {'length': 6, 'width': 2, 'height': 3, 'weight': 9},
     'cost': 0.7,  # M$
     'range': 280,  # km
     'roles': ['APC'],
@@ -2708,6 +2785,7 @@ M113_data = {
     'start_service': 1960,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 5, 'width': 3, 'height': 3, 'weight': 11},
     'cost': 1.2,  # M$
     'range': 480,  # km
     'roles': ['APC'],
@@ -2756,6 +2834,7 @@ AAV7_data = {
     'start_service': 1972,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 4, 'weight': 23},
     'cost': 2.0,  # M$
     'range': 480,  # km
     'roles': ['APC', 'Amphibious'],
@@ -2804,6 +2883,7 @@ TPz_Fuchs_data = {
     'start_service': 1979,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 18},
     'cost': 1.5,  # M$
     'range': 800,  # km
     'roles': ['APC', 'NBC'],
@@ -2852,6 +2932,7 @@ BTR80_data = {
     'start_service': 1986,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 3, 'weight': 14},
     'cost': 1.0,  # M$
     'range': 600,  # km
     'roles': ['APC'],
@@ -2900,6 +2981,7 @@ BTR_RD_data = {
     'start_service': 1984,
     'end_service': None,
     'category': 'Armored',
+    'physical_characteristics': {'length': 6, 'width': 3, 'height': 2, 'weight': 8},
     'cost': 0.9,  # M$
     'range': 580,  # km
     'roles': ['APC', 'Airborne'],
@@ -2950,6 +3032,7 @@ BM21_Grad_data = {
     'start_service': 1963,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 3, 'weight': 14},
     'cost': 1.5,  # M$
     'range': 450,  # km
     'roles': ['MLRS'],
@@ -2999,6 +3082,7 @@ S2S3_Akatsia_data = {
     'start_service': 1971,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 3, 'weight': 28},
     'cost': 2.5,  # M$
     'range': 500,  # km
     'roles': ['SPH'],
@@ -3048,6 +3132,7 @@ S2S1_Gvozdika_data = {
     'start_service': 1972,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 16},
     'cost': 1.8,  # M$
     'range': 500,  # km
     'roles': ['SPH'],
@@ -3097,6 +3182,7 @@ BM27_Uragan_data = {
     'start_service': 1975,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 10, 'width': 3, 'height': 4, 'weight': 20},
     'cost': 3.5,  # M$
     'range': 500,  # km
     'roles': ['MLRS'],
@@ -3145,6 +3231,7 @@ Dana_vz77_data = {
     'start_service': 1980,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 12, 'width': 3, 'height': 3, 'weight': 29},
     'cost': 4.5,  # M$
     'range': 600,  # km
     'roles': ['SPH'],
@@ -3194,6 +3281,7 @@ S2S9_Nona_data = {
     'start_service': 1981,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 6, 'width': 3, 'height': 3, 'weight': 9},
     'cost': 1.2,  # M$
     'range': 500,  # km
     'roles': ['SPM', 'Airborne'],
@@ -3243,6 +3331,7 @@ M270_MLRS_data = {
     'start_service': 1983,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 25},
     'cost': 2.8,  # M$
     'range': 640,  # km
     'roles': ['MLRS'],
@@ -3291,6 +3380,7 @@ A9A52_Smerch_data = {
     'start_service': 1989,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 13, 'width': 4, 'height': 4, 'weight': 44},
     'cost': 6.0,  # M$
     'range': 850,  # km
     'roles': ['MLRS'],
@@ -3339,6 +3429,7 @@ S2S19_Msta_data = {
     'start_service': 1989,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 12, 'width': 4, 'height': 3, 'weight': 42},
     'cost': 3.0,  # M$
     'range': 500,  # km
     'roles': ['SPH'],
@@ -3388,6 +3479,7 @@ M109_Paladin_data = {
     'start_service': 1992,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 9, 'width': 3, 'height': 4, 'weight': 28},
     'cost': 5.5,  # M$
     'range': 350,  # km
     'roles': ['SPH'],
@@ -3437,6 +3529,7 @@ PLZ05_data = {
     'start_service': 2008,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 11, 'width': 3, 'height': 3, 'weight': 35},
     'cost': 3.5,  # M$
     'range': 450,  # km
     'roles': ['SPH'],
@@ -3486,6 +3579,7 @@ T155_Firtina_data = {
     'start_service': 2004,
     'end_service': None,
     'category': 'Artillery_Semovent',
+    'physical_characteristics': {'length': 11, 'width': 4, 'height': 3, 'weight': 46},
     'cost': 4.0,  # M$
     'range': 480,  # km
     'roles': ['SPH'],
@@ -3537,6 +3631,7 @@ ZSU_57_2_data = {
     'start_service': 1957,
     'end_service': 1990,
     'category': 'AAA',
+    'physical_characteristics': {'length': 9, 'width': 3, 'height': 3, 'weight': 28},
     'cost': 1.5,  # M$
     'range': 420,  # km
     'roles': ['AAA'],
@@ -3585,6 +3680,7 @@ ZSU_23_4_data = {
     'start_service': 1965,
     'end_service': None,
     'category': 'AAA',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 21},
     'cost': 1.8,  # M$
     'range': 450,  # km
     'roles': ['AAA'],
@@ -3641,6 +3737,7 @@ M163_VADS_data = {
     'start_service': 1969,
     'end_service': 1998,
     'category': 'AAA',
+    'physical_characteristics': {'length': 5, 'width': 3, 'height': 3, 'weight': 12},
     'cost': 1.0,  # M$
     'range': 480,  # km
     'roles': ['AAA'],
@@ -3689,6 +3786,7 @@ Flakpanzer_Gepard_data = {
     'start_service': 1976,
     'end_service': None,
     'category': 'AAA',
+    'physical_characteristics': {'length': 8, 'width': 4, 'height': 4, 'weight': 48},
     'cost': 5.5,  # M$
     'range': 550,  # km
     'roles': ['AAA'],
@@ -3745,6 +3843,7 @@ K2K22_Tunguska_data = {
     'start_service': 1982,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 4, 'weight': 34},
     'cost': 16.0,  # M$
     'range': 500,  # km
     'roles': ['AAA', 'SHORAD'],
@@ -3804,6 +3903,7 @@ Strela1_9P31_data = {
     'start_service': 1968,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 6, 'width': 3, 'height': 3, 'weight': 7},
     'cost': 1.2,  # M$
     'range': 500,  # km
     'roles': ['SHORAD'],
@@ -3860,6 +3960,7 @@ MIM72G_Chaparral_data = {
     'start_service': 1969,
     'end_service': 1998,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 6, 'width': 3, 'height': 3, 'weight': 13},
     'cost': 1.5,  # M$
     'range': 480,  # km
     'roles': ['SHORAD'],
@@ -3916,6 +4017,7 @@ A9A33_Osa_data = {
     'start_service': 1971,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 8, 'width': 3, 'height': 3, 'weight': 18},
     'cost': 5.0,  # M$
     'range': 500,  # km
     'roles': ['SHORAD'],
@@ -3972,6 +4074,7 @@ K9K35_Strela10_data = {
     'start_service': 1976,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 12},
     'cost': 2.5,  # M$
     'range': 500,  # km
     'roles': ['SHORAD'],
@@ -4028,6 +4131,7 @@ MIM115_Roland_data = {
     'start_service': 1977,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 33},
     'cost': 3.5,  # M$
     'range': 450,  # km
     'roles': ['SHORAD'],
@@ -4084,6 +4188,7 @@ K9K331_Tor_data = {
     'start_service': 1986,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 8, 'width': 4, 'height': 4, 'weight': 34},
     'cost': 25.0,  # M$
     'range': 500,  # km
     'roles': ['SHORAD'],
@@ -4140,6 +4245,7 @@ M6_Linebacker_data = {
     'start_service': 1997,
     'end_service': None,
     'category': 'SAM_Small',
+    'physical_characteristics': {'length': 7, 'width': 3, 'height': 3, 'weight': 29},
     'cost': 3.0,  # M$
     'range': 480,  # km
     'roles': ['SHORAD'],
@@ -4197,6 +4303,7 @@ K2K12_Kub_data = {
     'start_service': 1967,
     'end_service': None,
     'category': 'SAM_Medium',
+    'physical_characteristics': {'length': 9, 'width': 4, 'height': 4, 'weight': 20},
     'cost': 8.0,  # M$
     'range': 450,  # km
     'roles': ['MERAD'],
@@ -4253,6 +4360,7 @@ K9K37_Buk_data = {
     'start_service': 1979,
     'end_service': None,
     'category': 'SAM_Medium',
+    'physical_characteristics': {'length': 10, 'width': 4, 'height': 4, 'weight': 32},
     'cost': 12.0,  # M$
     'range': 500,  # km
     'roles': ['MERAD'],
@@ -4309,6 +4417,7 @@ S300PS_data = {
     'start_service': 1982,
     'end_service': None,
     'category': 'SAM_Big',
+    'physical_characteristics': {'length': 14, 'width': 4, 'height': 4, 'weight': 48},
     'cost': 20.0,  # M$
     'range': 600,  # km
     'roles': ['LORAD'],

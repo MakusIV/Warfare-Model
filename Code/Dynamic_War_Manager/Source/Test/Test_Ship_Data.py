@@ -365,6 +365,208 @@ class TestShipDataAttributes(unittest.TestCase):
         """I portaerei Nimitz devono avere ship_class='Nimitz-class'."""
         self.assertEqual(self.carrier.ship_class, "Nimitz-class")
 
+    def test_physical_characteristics_attribute_is_dict(self):
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIsInstance(obj.physical_characteristics, dict)
+
+    def test_physical_characteristics_has_correct_keys(self):
+        expected_keys = {'length', 'width', 'height', 'weight'}
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(expected_keys.issubset(obj.physical_characteristics))
+
+    def test_physical_characteristics_values_are_positive_ints(self):
+        for model, obj in Ship_Data._registry.items():
+            for key in ('length', 'width', 'height', 'weight'):
+                with self.subTest(model=model, key=key):
+                    val = obj.physical_characteristics[key]
+                    self.assertIsInstance(val, int)
+                    self.assertGreater(val, 0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  2b. PHYSICAL_CHARACTERISTICS — VALIDAZIONE STRUTTURA E VALORI
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestShipDataPhysicalCharacteristics(unittest.TestCase):
+    """Verifica la struttura e i valori di physical_characteristics per tutte le navi."""
+
+    _PC_KEYS = {'length', 'width', 'height', 'weight'}
+
+    def setUp(self):
+        self._patcher = patch(_LOGGER_PATH, MagicMock())
+        self._patcher.start()
+        self.carrier   = Ship_Data._registry[_CARRIER_MODEL]
+        self.cruiser   = Ship_Data._registry[_CRUISER_MODEL]
+        self.destroyer = Ship_Data._registry[_DESTROYER_MODEL]
+        self.frigate   = Ship_Data._registry[_FRIGATE_MODEL]
+        self.corvette  = Ship_Data._registry[_CORVETTE_MODEL]
+
+    def tearDown(self):
+        self._patcher.stop()
+
+    def test_all_ships_have_physical_characteristics(self):
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(hasattr(obj, 'physical_characteristics'))
+
+    def test_all_ships_physical_characteristics_is_dict(self):
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertIsInstance(obj.physical_characteristics, dict)
+
+    def test_all_ships_physical_characteristics_has_required_keys(self):
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                self.assertTrue(self._PC_KEYS.issubset(obj.physical_characteristics))
+
+    def test_all_ships_physical_characteristics_values_are_positive_ints(self):
+        for model, obj in Ship_Data._registry.items():
+            for key in self._PC_KEYS:
+                with self.subTest(model=model, key=key):
+                    val = obj.physical_characteristics[key]
+                    self.assertIsInstance(val, int)
+                    self.assertGreater(val, 0)
+
+    def test_length_ge_width_for_all_ships(self):
+        """La lunghezza deve essere >= larghezza per ogni nave."""
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                pc = obj.physical_characteristics
+                self.assertGreaterEqual(pc['length'], pc['width'])
+
+    def test_length_ge_height_for_all_ships(self):
+        """La lunghezza deve essere >= altezza per ogni nave."""
+        for model, obj in Ship_Data._registry.items():
+            with self.subTest(model=model):
+                pc = obj.physical_characteristics
+                self.assertGreaterEqual(pc['length'], pc['height'])
+
+    def test_carrier_larger_than_destroyer(self):
+        """Il portaerei deve essere più pesante e lungo del cacciatorpediniere."""
+        self.assertGreater(
+            self.carrier.physical_characteristics['weight'],
+            self.destroyer.physical_characteristics['weight'],
+        )
+        self.assertGreater(
+            self.carrier.physical_characteristics['length'],
+            self.destroyer.physical_characteristics['length'],
+        )
+
+    def test_cruiser_larger_than_frigate(self):
+        """L'incrociatore deve essere più pesante e lungo della fregata."""
+        self.assertGreater(
+            self.cruiser.physical_characteristics['weight'],
+            self.frigate.physical_characteristics['weight'],
+        )
+        self.assertGreater(
+            self.cruiser.physical_characteristics['length'],
+            self.frigate.physical_characteristics['length'],
+        )
+
+    def test_frigate_larger_than_corvette(self):
+        """La fregata deve essere più pesante e lunga della corvetta."""
+        self.assertGreater(
+            self.frigate.physical_characteristics['weight'],
+            self.corvette.physical_characteristics['weight'],
+        )
+        self.assertGreater(
+            self.frigate.physical_characteristics['length'],
+            self.corvette.physical_characteristics['length'],
+        )
+
+    def test_constructor_raises_for_missing_key(self):
+        """Il costruttore deve sollevare ValueError se manca una chiave in physical_characteristics."""
+        ref = Ship_Data._registry[_CARRIER_MODEL]
+        bad_pc = {'length': 333, 'width': 77, 'height': 76}  # manca 'weight'
+        with self.assertRaises(ValueError):
+            Ship_Data(
+                constructor=ref.constructor,
+                made=ref.made,
+                model="_test_missing_key",
+                category=ref.category,
+                ship_class=ref.ship_class,
+                physical_characteristics=bad_pc,
+                start_service=ref.start_service,
+                end_service=ref.end_service,
+                cost=ref.cost,
+                range=ref.range,
+                roles=ref.roles,
+                engine=ref.engine,
+                weapons=ref.weapons,
+                radar=ref.radar,
+                speed_data=ref.speed_data,
+            )
+
+    def test_constructor_raises_for_wrong_type(self):
+        """Il costruttore deve sollevare ValueError se physical_characteristics non è un dict."""
+        ref = Ship_Data._registry[_CARRIER_MODEL]
+        with self.assertRaises(ValueError):
+            Ship_Data(
+                constructor=ref.constructor,
+                made=ref.made,
+                model="_test_wrong_type",
+                category=ref.category,
+                ship_class=ref.ship_class,
+                physical_characteristics="not_a_dict",
+                start_service=ref.start_service,
+                end_service=ref.end_service,
+                cost=ref.cost,
+                range=ref.range,
+                roles=ref.roles,
+                engine=ref.engine,
+                weapons=ref.weapons,
+                radar=ref.radar,
+                speed_data=ref.speed_data,
+            )
+
+    def test_constructor_raises_for_non_positive_value(self):
+        """Il costruttore deve sollevare ValueError se un valore di physical_characteristics è <= 0."""
+        ref = Ship_Data._registry[_CARRIER_MODEL]
+        bad_pc = {'length': 333, 'width': 77, 'height': 0, 'weight': 104000}
+        with self.assertRaises(ValueError):
+            Ship_Data(
+                constructor=ref.constructor,
+                made=ref.made,
+                model="_test_zero_value",
+                category=ref.category,
+                ship_class=ref.ship_class,
+                physical_characteristics=bad_pc,
+                start_service=ref.start_service,
+                end_service=ref.end_service,
+                cost=ref.cost,
+                range=ref.range,
+                roles=ref.roles,
+                engine=ref.engine,
+                weapons=ref.weapons,
+                radar=ref.radar,
+                speed_data=ref.speed_data,
+            )
+
+    def test_constructor_raises_for_float_value(self):
+        """Il costruttore deve sollevare ValueError se un valore non è int (es. float)."""
+        ref = Ship_Data._registry[_CARRIER_MODEL]
+        bad_pc = {'length': 333.5, 'width': 77, 'height': 76, 'weight': 104000}
+        with self.assertRaises(ValueError):
+            Ship_Data(
+                constructor=ref.constructor,
+                made=ref.made,
+                model="_test_float_value",
+                category=ref.category,
+                ship_class=ref.ship_class,
+                physical_characteristics=bad_pc,
+                start_service=ref.start_service,
+                end_service=ref.end_service,
+                cost=ref.cost,
+                range=ref.range,
+                roles=ref.roles,
+                engine=ref.engine,
+                weapons=ref.weapons,
+                radar=ref.radar,
+                speed_data=ref.speed_data,
+            )
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  3. METODI DI VALUTAZIONE ASSOLUTI (_eval)

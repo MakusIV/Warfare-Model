@@ -109,6 +109,7 @@ class Ship_Data:
         model: str,
         category: str,
         ship_class: str,
+        physical_characteristics: Dict,
         start_service: int,
         end_service,
         cost: float,
@@ -119,11 +120,24 @@ class Ship_Data:
         radar,
         speed_data: Dict,
     ):
+        _PC_KEYS = {'length', 'width', 'height', 'weight'}
+        if not isinstance(physical_characteristics, dict) or not _PC_KEYS.issubset(physical_characteristics):
+            raise ValueError(
+                f"physical_characteristics must be a dict with keys {_PC_KEYS}, "
+                f"got: {physical_characteristics!r}"
+            )
+        for _k in _PC_KEYS:
+            if not isinstance(physical_characteristics[_k], int) or physical_characteristics[_k] <= 0:
+                raise ValueError(
+                    f"physical_characteristics['{_k}'] must be a positive int, "
+                    f"got: {physical_characteristics[_k]!r}"
+                )
         self.constructor = constructor
         self.made = made
         self.model = model          # chiave nel registro
         self.category = category    # valore Sea_Asset_Type (es. 'Carrier')
         self.ship_class = ship_class  # classe della nave (es. 'Nimitz-class')
+        self.physical_characteristics = physical_characteristics
         self.start_service = start_service
         self.end_service = end_service
         self.cost = cost            # miliardi di $
@@ -460,6 +474,7 @@ CVN70_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1982,
     'end_service':   None,
     'cost':          4.5,    # B$ (approx costruzione)
@@ -497,6 +512,7 @@ CVN71_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1986,
     'end_service':   None,
     'cost':          4.5,
@@ -534,6 +550,7 @@ CVN72_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1989,
     'end_service':   None,
     'cost':          4.7,
@@ -571,6 +588,7 @@ CVN73_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1992,
     'end_service':   None,
     'cost':          4.7,
@@ -608,6 +626,7 @@ CVN74_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1995,
     'end_service':   None,
     'cost':          4.5,
@@ -645,6 +664,7 @@ CVN75_data = {
     'made':          'USA',
     'ship_class':    'Nimitz-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
     'start_service': 1998,
     'end_service':   None,
     'cost':          4.5,
@@ -682,6 +702,7 @@ CV59_data = {
     'made':          'USA',
     'ship_class':    'Forrestal-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 331, 'width': 76, 'height': 57, 'weight': 79000},
     'start_service': 1955,
     'end_service':   1993,
     'cost':          0.22,   # B$ costo storico
@@ -719,6 +740,7 @@ KuznetsovAdmiral_data = {
     'made':          'Russia',
     'ship_class':    'Admiral Kuznetsov-class',
     'category':      Sea_Asset_Type.CARRIER.value,
+    'physical_characteristics': {'length': 305, 'width': 75, 'height': 64, 'weight': 59000},
     'start_service': 1990,
     'end_service':   None,
     'cost':          1.2,
@@ -763,6 +785,7 @@ ArleighBurke_data = {
     'made':          'USA',
     'ship_class':    'Arleigh Burke-class',
     'category':      Sea_Asset_Type.DESTROYER.value,
+    'physical_characteristics': {'length': 155, 'width': 20, 'height': 28, 'weight': 9100},
     'start_service': 1991,
     'end_service':   None,
     'cost':          1.8,
@@ -803,6 +826,7 @@ Type052B_data = {
     'made':          'China',
     'ship_class':    'Luyang I-class',
     'category':      Sea_Asset_Type.DESTROYER.value,
+    'physical_characteristics': {'length': 154, 'width': 17, 'height': 30, 'weight': 6500},
     'start_service': 2004,
     'end_service':   None,
     'cost':          0.6,
@@ -843,6 +867,7 @@ Type052C_data = {
     'made':          'China',
     'ship_class':    'Luyang II-class',
     'category':      Sea_Asset_Type.DESTROYER.value,
+    'physical_characteristics': {'length': 157, 'width': 17, 'height': 32, 'weight': 7000},
     'start_service': 2004,
     'end_service':   None,
     'cost':          0.9,
@@ -888,6 +913,7 @@ CG65_data = {
     'made':          'USA',
     'ship_class':    'Ticonderoga-class',
     'category':      Sea_Asset_Type.CRUISER.value,
+    'physical_characteristics': {'length': 173, 'width': 17, 'height': 28, 'weight': 9800},
     'start_service': 1992,
     'end_service':   None,
     'cost':          1.1,
@@ -928,6 +954,7 @@ PiotrVelikiy_data = {
     'made':          'Russia',
     'ship_class':    'Kirov-class',
     'category':      Sea_Asset_Type.CRUISER.value,
+    'physical_characteristics': {'length': 252, 'width': 29, 'height': 59, 'weight': 24000},
     'start_service': 1998,
     'end_service':   None,
     'cost':          2.0,
@@ -968,6 +995,7 @@ Moskva_data = {
     'made':          'Russia',
     'ship_class':    'Slava-class',
     'category':      Sea_Asset_Type.CRUISER.value,
+    'physical_characteristics': {'length': 186, 'width': 21, 'height': 34, 'weight': 11500},
     'start_service': 1983,
     'end_service':   None,
     'cost':          0.75,
@@ -1013,6 +1041,7 @@ FFG46_data = {
     'made':          'USA',
     'ship_class':    'Oliver Hazard Perry-class',
     'category':      Sea_Asset_Type.FRIGATE.value,
+    'physical_characteristics': {'length': 135, 'width': 14, 'height': 18, 'weight': 4100},
     'start_service': 1984,
     'end_service':   2010,
     'cost':          0.35,
@@ -1053,6 +1082,7 @@ FF1135M_data = {
     'made':          'Russia',
     'ship_class':    'Krivak II-class',
     'category':      Sea_Asset_Type.FRIGATE.value,
+    'physical_characteristics': {'length': 123, 'width': 14, 'height': 20, 'weight': 3600},
     'start_service': 1974,
     'end_service':   None,
     'cost':          0.15,
@@ -1093,6 +1123,7 @@ FFG11540_data = {
     'made':          'Russia',
     'ship_class':    'Neustrashimy-class',
     'category':      Sea_Asset_Type.FRIGATE.value,
+    'physical_characteristics': {'length': 131, 'width': 15, 'height': 22, 'weight': 4400},
     'start_service': 1993,
     'end_service':   None,
     'cost':          0.30,
@@ -1133,6 +1164,7 @@ Type054A_data = {
     'made':          'China',
     'ship_class':    'Jiangkai II-class',
     'category':      Sea_Asset_Type.FRIGATE.value,
+    'physical_characteristics': {'length': 134, 'width': 16, 'height': 20, 'weight': 4000},
     'start_service': 2008,
     'end_service':   None,
     'cost':          0.35,
@@ -1179,6 +1211,7 @@ FFL1124_data = {
     'made':          'Russia',
     'ship_class':    'Grisha V-class',
     'category':      Sea_Asset_Type.CORVETTE.value,
+    'physical_characteristics': {'length': 71, 'width': 10, 'height': 15, 'weight': 950},
     'start_service': 1975,
     'end_service':   None,
     'cost':          0.08,
@@ -1218,6 +1251,7 @@ FSG1241_data = {
     'made':          'Russia',
     'ship_class':    'Tarantul III-class',
     'category':      Sea_Asset_Type.CORVETTE.value,
+    'physical_characteristics': {'length': 56, 'width': 11, 'height': 12, 'weight': 455},
     'start_service': 1981,
     'end_service':   None,
     'cost':          0.05,
@@ -1262,6 +1296,7 @@ Type093_data = {
     'made':          'China',
     'ship_class':    'Shang-class',
     'category':      Sea_Asset_Type.SUBMARINE.value,
+    'physical_characteristics': {'length': 107, 'width': 11, 'height': 10, 'weight': 6000},
     'start_service': 2006,
     'end_service':   None,
     'cost':          1.5,
@@ -1304,6 +1339,7 @@ LHA1_data = {
     'made':          'USA',
     'ship_class':    'Tarawa-class',
     'category':      Sea_Asset_Type.AMPHIBIOUS_ASSAULT_SHIP.value,
+    'physical_characteristics': {'length': 250, 'width': 32, 'height': 50, 'weight': 39000},
     'start_service': 1976,
     'end_service':   2011,
     'cost':          0.25,
@@ -1342,6 +1378,7 @@ Type071_data = {
     'made':          'China',
     'ship_class':    'Yuzhao-class',
     'category':      Sea_Asset_Type.AMPHIBIOUS_ASSAULT_SHIP.value,
+    'physical_characteristics': {'length': 210, 'width': 28, 'height': 35, 'weight': 20000},
     'start_service': 2007,
     'end_service':   None,
     'cost':          0.30,

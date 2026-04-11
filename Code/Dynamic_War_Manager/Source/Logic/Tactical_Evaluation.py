@@ -580,7 +580,9 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
     return danger_level_air_attack, danger_level_ground_attack, danger_level_artillery_range
                     
 
-
+def get_recongition_report(block: Block):
+    
+    pass
 
     
 
