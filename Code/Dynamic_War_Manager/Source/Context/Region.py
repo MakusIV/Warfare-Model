@@ -112,7 +112,7 @@ class Region:
         self._validate_init_params(name, limes, description, blocks, routes)
         
         self._name = name
-        self._description = description or ""
+        self._description = description or ""        
         self._limes = limes or []
         self._attack_weight = DEFAULT_ATTACK_WEIGHT  # Copia per evitare modifiche involontarie        
         self._weight_priority_target = DEFAULT_WEIGHT_PRIORITY_TARGET.copy()   # Copia per evitare modifiche involontarie
@@ -675,7 +675,91 @@ class Region:
                 self._invalidate_caches()
                 logger.debug(f"Resource management cycle run for {block.name} in region {self.name}. Result cyce: {result!r}")    
 
+
+
+    # DEVI IMPLEMENTARE IN ACTUAL_CONTEXT LA REGISTRAZIONE DELLE MISSIONI DI SUCCESSO PER OGNI BLOCCO, IN MODO DA POTER CALCOLARE LA MORALE IN BASE AL NUMERO DI MISSIONI DI SUCCESSO E MISSIONI TOTALI.
+    
+
+    def get_block_morale(self, block_id: str) -> Optional[float]:
+        """Calculate the morale of a specific block."""
+        block_item = self.get_block_by_id(block_id)
         
+        if not block_item:
+            logger.warning(f"Block with ID {block_id} not found in region {self.name}")
+            return None
+        
+        block = block_item.block
+        if hasattr(block, 'morale'):
+            morale = block.morale()
+            if isinstance(morale, (int, float)):
+                return morale
+            else:
+                logger.warning(f"Invalid morale value for block {block.name}: {morale!r}")
+                return None
+        else:
+            logger.warning(f"Block {block.name} does not have a morale method")
+            return None
+
+    def get_region_morale(self, side: str) -> float:
+        """Calculate the region's morale for a side."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        
+        military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
+        
+        if not military_blocks:
+            return 0.0
+        
+        total_morale = 0.0
+        count = 0
+        
+        # Nota che il numero di missioni di successo, cioè lo stato della campagna è memorizzato in Actual_Context.
+
+        for block_item in military_blocks:
+            block = block_item.block
+            if hasattr(block, 'morale'):
+                morale = block.morale()
+                if isinstance(morale, (int, float)):
+                    total_morale += morale
+                    count += 1
+        
+        return total_morale / count if count > 0 else 0.0
+
+    def get_region_recon_efficiency(self, side: str) -> float:
+        """Calculate the region's reconnaissance efficiency for a side.
+            morale, resource and ammo
+        """
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+        
+        military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
+        
+        if not military_blocks:
+            return 0.0
+        
+        total_efficiency = 0.0
+        count = 0
+        
+        """
+        Deve calcoare per ogni blocco il rapporto tra missioni recon di successo e missioni recon totali, poi fare la media di questi rapporti per tutti i blocchi militari della regione.
+
+        block.recon_efficiency() = ( recon_asset_operative /recon_asset_total ) * (numero di missioni recon di successo / numero totale di missioni recon )
+
+        Nota che il numero di missioni di successo, cioè lo stato della campagna è memorizzato in Actual_Context.
+        
+        non utilizzo morale in quanto se questo viene calcolatto con missioni_complessive_di_successo / missioni_complessive_totali, allora è già parzialmente incluso nel calcolo dell'efficienza di ricognizione, altrimenti si rischia di sovrastimare l'efficienza di ricognizione.
+
+        """
+
+        for block_item in military_blocks:
+            block = block_item.block
+            if hasattr(block, 'recon_efficiency'):
+                efficiency = block.recon_efficiency()
+                if isinstance(efficiency, (int, float)):
+                    total_efficiency += efficiency
+                    count += 1
+        
+        return total_efficiency / count if count > 0 else 0.0 
     # ************************************  END API *************************************
 
 
