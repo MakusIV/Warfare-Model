@@ -59,6 +59,7 @@ class Military(Block):
         functionality: Optional[str] = None,
         value: Optional[int] = None,
         region: Optional["Region"] = None
+        
     ) -> None:
         """
         Initialize a Military instance.

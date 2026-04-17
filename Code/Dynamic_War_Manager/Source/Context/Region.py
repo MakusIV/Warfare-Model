@@ -725,7 +725,7 @@ class Region:
         
         return total_morale / count if count > 0 else 0.0
 
-    def get_region_recon_efficiency(self, side: str) -> float:
+    def get_region_recon_efficiency (self, side: str) -> float:
         """Calculate the region's reconnaissance efficiency for a side.
             morale, resource and ammo
         """

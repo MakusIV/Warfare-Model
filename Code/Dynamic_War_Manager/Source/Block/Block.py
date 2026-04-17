@@ -1,4 +1,5 @@
 from __future__ import annotations
+import warnings
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
 from sympy import Point
@@ -415,8 +416,15 @@ class Block:
 
     @property
     def morale(self) -> float:
-        """Evaluate block morale"""
-        return evaluateMorale(State.success_ratio[self], self.efficiency)
+        """Evaluate block morale based on assets' total_success_ratio and efficiency."""
+        if not self._assets:
+            return 0.0
+        ratios = [asset.state.total_success_ratio for asset in self._assets.values()]
+        mean_success_ratio = float(mean(ratios))
+        if mean_success_ratio <= 0 or self.efficiency <= 0:
+            return 0.0
+        _, morale_value = evaluateMorale(mean_success_ratio, self.efficiency)
+        return float(morale_value) #morale_value ritorna anche il valore stringa: high, low,...
 
     @property
     def efficiency(self) -> float:
@@ -449,15 +457,20 @@ class Block:
     def has_resource_manager(self):
         return self._resource_manager is not None
 
-    @DeprecationWarning
     def enemy_side(self) -> str:
-        """Determine enemy side"""
+        """Determine enemy side. Deprecated: use enemySide() from Utility directly."""
+        warnings.warn(
+            "Block.enemy_side() is deprecated; use enemySide() from Utility directly.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         return enemySide(self._side)
+
+    def is_enemy(self, side: str) -> bool:
+        """Check if the given side is the enemy of this block's side."""
+        return side == enemySide(self._side)
     
-    def is_enemy(self, side: str):            
-            return self._side == self.enemy_side(side)
-    
-    def get_recongition_report(self):
+    def get_recognition_report(self):
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
         The actual implementation will depend on the specific requirements of the reconnaissance-
