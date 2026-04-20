@@ -677,7 +677,12 @@ class Region:
 
 
 
-    # DEVI IMPLEMENTARE IN ACTUAL_CONTEXT LA REGISTRAZIONE DELLE MISSIONI DI SUCCESSO PER OGNI BLOCCO, IN MODO DA POTER CALCOLARE LA MORALE IN BASE AL NUMERO DI MISSIONI DI SUCCESSO E MISSIONI TOTALI.
+    # DEVI IMPLEMENTARE IN ACTUAL_CONTEXT LA REGISTRAZIONE DELLE MISSIONI DI SUCCESSO PER OGNI BLOCCO, IN MODO DA POTER CALCOLARE LA MORALE 
+    # IN BASE AL NUMERO DI MISSIONI DI SUCCESSO E MISSIONI TOTALI.
+    # Considera che nel blocco il morale viene calcolato in base al morale degli asset. 
+    # Il morale degli asset viene calcolato in base al numero di missioni di successo e missioni totali 
+    # per quel blocco (definiti nel componente State associato all'asset), quindi è importante che questa logica sia implementata correttamente 
+    # nei blocchi militari, e che i dati sulle missioni siano registrati in Actual_Context in modo accurato.
     
 
     def get_block_morale(self, block_id: str) -> Optional[float]:

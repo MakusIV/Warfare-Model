@@ -123,7 +123,12 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         str: 'big', 'medium', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
     """
     if asset_type not in ['Vehicle', 'Ship']:
+        logger.error(f"Invalid asset type: {asset_type}. Expected 'Vehicle' or 'Ship'. Exit.")
         raise ValueError(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship'.")
+    
+    if length < 0 or width < 0 or height < 0 or weight < 0:
+        logger.error(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative. Exit.")
+        raise ValueError(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative.")
 
     SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY if asset_type == 'Vehicle' else SHIP_SIZE_CATEGORY
 

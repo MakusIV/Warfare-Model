@@ -198,6 +198,16 @@ class Vehicle(Mobile) :
         return (True, "OK")
     
 
+    def get_physical_characteristics(self) -> Dict:
+        """Returns the physical characteristics of the vehicle as defined in the Context module."""
+        if self._model is None:
+            logger.warning("Model not defined: Unable to get physical characteristics")
+            return None
+        
+        vehicle_data = get_vehicle_data(model=self._model)
+        physical_characteristics = vehicle_data.get('physical_characteristics', None)
+        return physical_characteristics
+
     @property
     def isTank(self):
         return self.category == Ground_Vehicle_Asset_Type.TANK.value

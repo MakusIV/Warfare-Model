@@ -213,8 +213,14 @@ class State:
         if not isinstance(object_id, str) or not object_id:
             raise ValueError("object_id must be a non-empty string")
         
-        if success_ratio is not None and (not isinstance(success_ratio, float) or success_ratio < 0):
-            raise TypeError("success_ratio must be a float not negative")
+        if success_ratio is not None and (not isinstance(success_ratio, Dict) 
+                                          or success_ratio.get('success_count', None) is None 
+                                          or success_ratio.get('total_count', None) is None 
+                                          or not isinstance(success_ratio['success_count'], int) 
+                                          or not isinstance(success_ratio['total_count'], int) 
+                                          or success_ratio['success_count'] < 0 
+                                          or success_ratio['total_count'] < 0):
+            raise TypeError("success_ratio must be a Dict with 'success_count' and 'total_count' keys")
         # Puoi aggiungere validazioni per gli elementi della lista limes se Limes ha un tipo specifico
 
         if health is not None and (not isinstance(health, int) or health < 0):

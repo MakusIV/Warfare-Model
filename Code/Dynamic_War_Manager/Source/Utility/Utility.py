@@ -313,7 +313,7 @@ def calcVectProd( vect1, vect2):
     return ( ( vect1[1]*vect2[2] - vect1[2]*vect2[1] ), ( vect1[2]*vect2[0] - vect1[0]*vect2[2] ), ( vect1[0]*vect2[1] - vect1[1]*vect2[0] ) )
 
 
-def calcProbability( probability ):
+def calcProbability( probability ) -> bool:
     """Return true if random number is greater of probability"""
     num = random.uniform(0, 1)
     return num < probability

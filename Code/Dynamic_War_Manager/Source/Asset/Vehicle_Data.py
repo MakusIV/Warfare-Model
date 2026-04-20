@@ -4583,7 +4583,8 @@ for vehicle in Vehicle_Data._registry.values():
 
 
 
-# STATIC METHODS (API)
+# **************************************** API ************************************************************************************
+
 def get_vehicle_data(model: str) -> Dict:
     """ Returns all data of a specific vehicle.
     
@@ -4651,6 +4652,9 @@ def get_vehicle_scores(model: str, scores: Optional[List]=SCORES) -> Dict:
         results[score] = VEHICLE[model][score]
 
     return results
+
+
+# **************************************** END API ********************************************************************************
 
 #TEST
 '''

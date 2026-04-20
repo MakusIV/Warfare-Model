@@ -467,14 +467,14 @@ class Military(Block):
         pass
     #endmilitary
 
-    def get_recongition_report(self, recon_efficiency: Optional[float] = None) -> Dict:
+    def get_recongition_report(self, region_c2c_recon_efficiency: Optional[float] = None) -> Dict:
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
         The actual implementation will depend on the specific requirements of the reconnaissance-
         The implementation of this method is currently a placeholder and will be developed on derivated class."""
 
 
-        # cilcando tutti gli asset devi creare un report che sintetizza le informazioni più rilevanti per la valutazione strategica, come:
+        # ciclando tutti gli asset devi creare un report che sintetizza le informazioni più rilevanti per la valutazione strategica, come:
         # - Numero e tipo di asset presenti (es. 5 carri armati, 3 aerei da combattimento, 2 navi da guerra)
         # - Stato degli asset (es. 3 carri armati in condizioni critiche, 2 aerei da combattimento operativi)
         # - Eventi recenti che hanno coinvolto il blocco (es. attacchi subiti, missioni completate, movimenti di truppe)
@@ -486,68 +486,9 @@ class Military(Block):
         
         self.state.update() if self.state else None,
 
-        target_report = {
-            "position": self.position,
-            "dimension": self.dimension,
-            "events": [event.description for event in self.events],            
-            "state": self.state.state_value if self.state else None,
-            "asset_summary": {
-                "total_assets": len(self.assets),
-                "operative": {
-                    "Soft": {
-                        "Big": 0,
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                    "Hard": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                    "Structure": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                },
-                "damaged": { # SERVE!? 
-                    "Soft": {
-                        "Big": 0,
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                    "Hard": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                    "Structure": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
-                    },
-                },
-            },
-            'supply_status': {
-                'ammunition': self.supply.get('ammunition', {}).get('status') if self.supply else None,
-                'energy': self.supply.get('energy', {}).get('status') if self.supply else None,
-                'fuel': self.supply.get('fuel', {}).get('status') if self.supply else None,
-                'hr': self.supply.get('hr', {}).get('status') if self.supply else None,
-            },
-            'communication_status': self.communication.get('status') if self.communication else None,
-            'defense_status': {
-                'air_defense': self.air_defense() if hasattr(self, 'air_defense') else None,
-                'aa_defense_range': self.defense_aa_range() if hasattr(self, 'defense_aa_range') else None,
-                'combat_range': self.combat_range() if hasattr(self, 'combat_range') else None,
-                'combat_volume': self.combat_volume() if hasattr(self, 'combat_volume') else None,
-                'defense_aa_volume': self.defense_aa_volume() if hasattr(self, 'defense_aa_volume') else None,
-            },
-            'intelligence': self.intelligence() if hasattr(self, 'intelligence') else None,
-            'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,
-            'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,
-            'morale': self.morale if hasattr(self, 'morale') else None,
-            'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None,
-        }
+        target_report = super().get_recognition_report() # per ora non restituisce nulla, ma se in futuro restituirà un report di base, potrai integrarlo con le informazioni specifiche del blocco militare.
+
+        
 
         # Necessarip categorizzare le dimensioni degli asset in base alla loro classe e tipo, ad esempio:
         # - Per i veicoli: Big (es. carri armati pesanti), Medium (es. carri armati medi), Small (es. veicoli leggeri)

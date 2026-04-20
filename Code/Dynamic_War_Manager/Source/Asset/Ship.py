@@ -1,5 +1,6 @@
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import get_ship_data, get_ship_scores
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
@@ -134,5 +135,13 @@ class Ship(Mobile) :
         return self.category == "Submarine"
     
     
-
+    def get_physical_characteristics(self) -> Dict:
+        """Returns the physical characteristics of the ship as defined in the Context module."""
+        if self._model is None:
+            logger.warning("Model not defined: Unable to get physical characteristics")
+            return None
+        
+        ship_data = get_ship_data(model=self._model)
+        physical_characteristics = ship_data.get('physical_characteristics', None)
+        return physical_characteristics
     
