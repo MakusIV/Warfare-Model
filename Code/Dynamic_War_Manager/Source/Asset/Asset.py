@@ -458,6 +458,22 @@ class Asset:
     def is_civilian(self) -> bool:
         return self.block.isCivilian
 
+    def is_operative(self) -> bool:
+        return self._state.isOperative() if self._state else False
+    
+    def is_damaged(self) -> bool:
+        return self._state.isDamaged() if self._state else False   
+    
+    def is_destroyed(self) -> bool:
+        return self._state.isDestroyed() if self._state else False
+    
+    def is_healtful(self) -> bool:
+        return self._state.isHealtful() if self._state else False
+    
+    def is_critical(self) -> bool:
+        return self._state.isCrytical() if self._state else False
+        
+
     def threat_volume(self) -> None:
         """Calculate Threat_Volume from asset Threat_Volume"""
         # Implementation pending

@@ -6,7 +6,7 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Dynamic_War_Manager.Source.DataType.Event import Event
 from Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET, Logistic_Asset_Type as la
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
@@ -24,18 +24,35 @@ logger = Logger(module_name = __name__, class_name = 'Structure').logger
 # ASSET
 class Structure(Asset) :    
 
-    def __init__(self, block: Block, name: Optional[str] = None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
+    def __init__(self, block: Block, 
+                 name: Optional[str] = None, 
+                 description: Optional[str] = None, 
+                 category: Optional[str] = None, 
+                 physical_characteristics: Optional[Dict] = None, # {'length': 333, 'width': 77, 'height': 76, 'weight': 104000},
+                 asset_type:Optional[str] = None, 
+                 functionality: Optional[str] = None, 
+                 cost: Optional[int] = None, 
+                 value: Optional[int] = None, 
+                 acp: Optional[Payload] = None, 
+                 rcp: Optional[Payload] = None, 
+                 payload: Optional[Payload] = None, 
+                 position: Optional[Point3D] = None, 
+                 volume: Optional[Volume] = None, 
+                 crytical: Optional[bool] = False, 
+                 repair_time: Optional[int] = 0, 
+                 role: Optional[str] = None, 
+                 dcs_unit_data: Optional[dict] = None):   
             
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
     
             # propriety             
+            self.physical_characteristics = physical_characteristics if physical_characteristics else self.get_physical_characteristics() # se non viene fornito, prova a caricarlo dal Context
             
-    
             # Association    
             
             
             # check input parameters
-            if not super.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, threat, crytical, repair_time ):    
+            if not super.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, crytical, repair_time ):    
                 raise Exception("Invalid parameters! Object not istantiate.")
 
     # methods
@@ -118,34 +135,60 @@ class Structure(Asset) :
 
         
     def isBridge(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Bridge"]
+        return self.category == la.BRIDGE.value
     
     def isHangar(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Hangar"]
+        return self.category == la.HANGAR.value
     
     def isDepot(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Depot"]
+        return self.category == la.DEPOT.value
     
     def isOilTank(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Oil_Tank"]
+        return self.category == la.OIL_TANK.value
     
     def isFarm(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Farm"]
+        return self.category == la.FARM.value
     
     def isPowerPlant(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Power_Plant"]
-    
-    def isFarm(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Farm"]
-    
+        return self.category == la.POWER_PLANT.value
+        
     def isStation(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Station"]
+        return self.category == la.STATION.value
     
     def isBuilding(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Building"]
+        return self.category == la.BUILDING.value
     
     def isFactory(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Factory"]
+        return self.category == la.FACTORY.value
     
     def isBarrack(self):
-        return self.category == STRUCTURE_ASSET_CATEGORY["Barrack"]
+        return self.category == la.BARRACK.value
+    
+    
+
+    def get_physical_characteristics(self) -> Dict:
+        """Returns the physical characteristics of the structure as defined in the Context module."""
+               
+        return self.physical_characteristics
+
+
+    def set_volume_from_physical_characteristics(self):
+        """Sets the volume of the vehicle based on its physical characteristics defined in the Context module."""
+        
+        
+        if self.physical_characteristics is None:
+            logger.warning("Unable to set volume: Physical characteristics not available")
+            return
+        
+        length = self.physical_characteristics.get('length', None)
+        width = self.physical_characteristics.get('width', None)
+        height = self.physical_characteristics.get('height', None)
+
+        if length is not None and width is not None and height is not None:
+            volume = Volume(length=length, width=width, height=height)
+
+            if self.volume is None:                
+                logger.warning(f"Volume {self.volume} set to {volume} based on physical characteristics")
+                self.volume = volume
+        else:
+            logger.warning("Unable to set volume: Incomplete physical characteristics")

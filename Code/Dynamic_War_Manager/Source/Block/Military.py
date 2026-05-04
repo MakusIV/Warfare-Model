@@ -467,12 +467,11 @@ class Military(Block):
         pass
     #endmilitary
 
-    def get_recongition_report(self, region_c2c_recon_efficiency: Optional[float] = None) -> Dict:
+    def get_recognition_report(self, region_c2c_recon_efficiency: Optional[float] = None) -> Dict:
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
         The actual implementation will depend on the specific requirements of the reconnaissance-
         The implementation of this method is currently a placeholder and will be developed on derivated class."""
-
 
         # ciclando tutti gli asset devi creare un report che sintetizza le informazioni più rilevanti per la valutazione strategica, come:
         # - Numero e tipo di asset presenti (es. 5 carri armati, 3 aerei da combattimento, 2 navi da guerra)
@@ -485,23 +484,6 @@ class Military(Block):
         # nota in Utilty hai evaluateMorale(success_ratio, efficiency) utilizzata per la proprietà morale in Block. Inoltre, success_ratio è presente come proprietà in State
         
         self.state.update() if self.state else None,
-
-        target_report = super().get_recognition_report() # per ora non restituisce nulla, ma se in futuro restituirà un report di base, potrai integrarlo con le informazioni specifiche del blocco militare.
-
+        target_report = super().get_recognition_report(region_c2c_recon_efficiency) # il report è completo e include già le informazioni di base come posizione, dimensione, eventi recenti, asset presenti e loro stato. Ora è necessario arricchirlo con informazioni specifiche per il Military Block, come il numero e tipo di asset operativi e danneggiati, categorizzati per classe di dimensione (Big, Medium, Small) e tipo (Tank, Fighter, Carrier, etc.).
         
 
-        # Necessarip categorizzare le dimensioni degli asset in base alla loro classe e tipo, ad esempio:
-        # - Per i veicoli: Big (es. carri armati pesanti), Medium (es. carri armati medi), Small (es. veicoli leggeri)
-        # - Per gli aerei: Big (es. bombardieri), Medium (es. aerei da combattimento), Small (es. droni)
-
-
-        for asset in self.assets.values():
-            logger.debug(f"Asset: {asset.name}, Type: {asset.__class__.__name__}, State: {asset.state.state_value}")   
-
-            if asset.state.state_value == "Healtful":
-                if asset.__class__.__name__ in ["Vehicle", "Aircraft", "Ship"]:
-                    size_category = asset
-                    target_report["asset_summary"]["operative"][asset.__class__.__name__][size_category] += 1
-                elif asset.__class__.__name__ == "Structure":
-                    size_category = self._categorize_asset_size(asset)
-                    target_report["asset_summary"]["operative"]["Structure"][size_category] += 1 

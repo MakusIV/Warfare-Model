@@ -569,7 +569,6 @@ class Block:
 
         re = region_c2c_recon_efficiency if region_c2c_recon_efficiency is not None else 0.0
 
-
         report_item_probability = {
             'position': calcProbability(re * 0.3 + 0.7), # per position la ricognizione è più efficace, quindi ha una probabilità maggiore di essere rilevata correttamente, mentre per gli altri parametri la probabilità è leggermente inferiore per riflettere l'incertezza della ricognizione.
             'dimension': calcProbability(re * 0.3 + 0.7),
@@ -599,15 +598,23 @@ class Block:
                 raise ValueError(f"Model not found for asset ID: {asset.id}. Asset type: {asset_type}.")   
             asset_dimension = None
 
-            if asset.__class__.__name__ in ['Vehicle', 'Ship']: 
-                asset_physical_characteristics = asset.get_physical_characteristics()                            
+            # determina la classe di dimensione dell'asset (Big, SMall, ...) per 'Vehicle', 'Ship', 'Structure' in base  alle sue caratteristiche fisiche o alla categoria (per gli aerei). Se non riesce a determinare la dimensione, continua con il prossimo asset.
+            if asset.__class__.__name__ in ['Vehicle', 'Ship', 'Structure']: 
+                asset_physical_characteristics = asset.get_physical_characteristics() 
+
+                if asset.__class__.__name__ == 'Structure' and asset_category is not None:                           
+                    structure_type = asset_category
+                else:
+                    structure_type = None
 
                 if asset_physical_characteristics:
-                    asset_dimension = get_dimension(asset.__class__.__name__, asset_physical_characteristics['length'], asset_physical_characteristics['width'], asset_physical_characteristics['height'], asset_physical_characteristics['weight'])
+                    asset_dimension = get_dimension(asset.__class__.__name__, asset_physical_characteristics['length'], asset_physical_characteristics['width'], asset_physical_characteristics['height'], asset_physical_characteristics['weight'], structure_type)
+
                 else:
                     logger.warning(f"Physical characteristics not found for asset class:{asset.__class__.__name__}, asset model: {asset.model}. Asset ID: {asset.id}. Continue for the next asset.")
                     continue
-
+            
+            # determina la classe di dimensione dell'asset (Big, SMall, ...) per 'Aircraft' in base  alle sue caratteristiche fisiche o alla categoria (per gli aerei). Se non riesce a determinare la dimensione, continua con il prossimo asset.
             elif asset.__class__.__name__ == 'Aircraft':
                 
                 if asset_category is None:
@@ -620,19 +627,16 @@ class Block:
                     asset_dimension = 'Medium'
                 elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.TANKER.value, aat.HEAVY_BOMBER]:
                     asset_dimension = 'Big'
-                    
-
-            elif asset.__class__.__name__ == 'Structure':
-                # implementa quanto realizzato per vehicle e ship
-                pass        
-        
+                            
             if asset_dimension is None:            
                 continue
 
             if asset_type is None or asset_type not in ASSET_TYPE:
                 logger.warning(f"Asset type not found or invalid for asset ID: {asset.id}. Asset model: {asset_model}. Continue with next asset.")
                 continue        
-            
+
+
+            # Crea i dizionari per il riepilogo degli asset se non esistono già, e inizializza i conteggi degli asset operativi e danneggiati in base alla loro classe di dimensione. 
             if asset_summary['operative'].get(asset_type) is None:
                 asset_summary['operative'][asset_type] = {}
 
@@ -645,14 +649,14 @@ class Block:
             if asset_summary['damaged'][asset_type].get(asset_dimension) is None:
                 asset_summary['damaged'][asset_type][asset_dimension] = 0
 
+            # Aggiorna i conteggi degli asset operativi e danneggiati in base alla loro classe di dimensione. Se un asset è operativo e la probabilità di rilevamento del riepilogo degli asset è soddisfatta, incrementa il conteggio degli asset operativi per la sua classe di dimensione. Se un asset è danneggiato e la probabilità di rilevamento del riepilogo degli asset è soddisfatta, incrementa il conteggio degli asset danneggiati per la sua classe di dimensione.
             if asset.is_operative() and report_item_probability['asset_summary']:
                 asset_summary['operative'][asset_type][asset_dimension] += 1 
             
             elif asset.is_damaged() and report_item_probability['asset_summary']:
                 asset_summary['damaged'][asset_type][asset_dimension] += 1
-            
 
-
+        # Compila il report finale del blocco, includendo solo le informazioni per cui la probabilità di rilevamento è soddisfatta. Se la probabilità di rilevamento per un elemento specifico non è soddisfatta, quel campo nel report sarà impostato su None per riflettere l'incertezza della ricognizione.    
         target_report = {
             "position": self.position if report_item_probability['position'] else None, 
             "dimension": self.dimension if hasattr(self, 'dimension') and report_item_probability['dimension'] else None,
@@ -684,6 +688,4 @@ class Block:
             'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None,
         }
 
-       
-
-        return
+        return target_report

@@ -32,7 +32,24 @@ logger = Logger(module_name = __name__, class_name = 'Vehicle').logger
 # ASSET
 class Vehicle(Mobile) :    
 
-    def __init__(self, block: Block, name: Optional[str] = None, model: Optional[str]= None, description: Optional[str] = None, category: Optional[str] = None, asset_type:Optional[str] = None, functionality: Optional[str] = None, cost: Optional[int] = None, value: Optional[int] = None, acp: Optional[Payload] = None, rcp: Optional[Payload] = None, payload: Optional[Payload] = None, position: Optional[Point3D] = None, volume: Optional[Volume] = None, crytical: Optional[bool] = False, repair_time: Optional[int] = 0, role: Optional[str] = None, dcs_unit_data: Optional[dict] = None):   
+    def __init__(self, block: Block, 
+                 name: Optional[str] = None, 
+                 model: Optional[str]= None, 
+                 description: Optional[str] = None, 
+                 category: Optional[str] = None, 
+                 asset_type:Optional[str] = None, 
+                 functionality: Optional[str] = None, 
+                 cost: Optional[int] = None, 
+                 value: Optional[int] = None, 
+                 acp: Optional[Payload] = None, 
+                 rcp: Optional[Payload] = None, 
+                 payload: Optional[Payload] = None, 
+                 position: Optional[Point3D] = None, 
+                 volume: Optional[Volume] = None, 
+                 crytical: Optional[bool] = False, 
+                 repair_time: Optional[int] = 0, 
+                 role: Optional[str] = None, 
+                 dcs_unit_data: Optional[dict] = None):   
                         
             super().__init__(block=block, name=name, description=description, category=category, asset_type=asset_type, functionality=functionality, cost=cost, value=value, resources_assigned=acp, resources_to_self_consume=rcp, payload=payload, position=position, volume=volume, crytical=crytical, repair_time=repair_time, role=role, dcs_unit_data=dcs_unit_data) 
 
@@ -207,6 +224,28 @@ class Vehicle(Mobile) :
         vehicle_data = get_vehicle_data(model=self._model)
         physical_characteristics = vehicle_data.get('physical_characteristics', None)
         return physical_characteristics
+
+    def set_volume_from_physical_characteristics(self):
+        """Sets the volume of the vehicle based on its physical characteristics defined in the Context module."""
+        
+        physical_characteristics = self.get_physical_characteristics()
+        
+        if physical_characteristics is None:
+            logger.warning("Unable to set volume: Physical characteristics not available")
+            return
+        
+        length = physical_characteristics.get('length', None)
+        width = physical_characteristics.get('width', None)
+        height = physical_characteristics.get('height', None)
+
+        if length is not None and width is not None and height is not None:
+            volume = Volume(length=length, width=width, height=height)
+
+            if self.volume is None:                
+                logger.warning(f"Volume {self.volume} set to {volume} based on physical characteristics")
+                self.volume = volume
+        else:
+            logger.warning("Unable to set volume: Incomplete physical characteristics")
 
     @property
     def isTank(self):

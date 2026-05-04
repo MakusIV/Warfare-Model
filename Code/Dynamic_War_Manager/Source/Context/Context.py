@@ -8,7 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal['A', 'B, 'C']
 from enum import Enum
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 MAX_WORLD_DISTANCE = float('inf')
@@ -65,6 +65,34 @@ Logica adottata (dimensioni fisiche reali):
 """
 
 
+class Logistic_Asset_Type(Enum):
+    BRIDGE = 'Bridge'
+    CHECK_POINT = 'Check_Point'
+    STATION = 'Station'
+    RAILWAY_INTERCHANGE = 'Railway_Interchange'
+    DOCK = 'Dock'    
+    RUNWAY = 'Runway'    
+    HELI_PLATFORM = 'Heli_Platform'
+    ELECTRIC_INFRASTRUCTURE = 'Electric_Infrastructure'
+    GAS_INFRASTRUCTURE = 'Gas_Infrastructure'
+    PETROL_INFRASTRUCTURE = 'Petrol_Infrastructure'
+    POWER_PLANT = 'Power_Plant'
+    OIL_TANK = 'Oil_Tank'
+    DEPOT = 'Depot'
+    BUILDING = 'Building'
+    FACTORY = 'Factory'
+    FARM = 'Farm'
+    ADMINISTRATIVE_INFRASTRUCTURE = 'Administrative_Infrastructure'
+    ENERGY_INFRASTRUCTURE = 'Energy_Infrastructure'
+    SERVICE_INFRASTRUCTURE = 'Service_Infrastructure'
+    COMMAND_AND_CONTROL = 'Command_&_Control'
+    BARRACK = 'Barrack'
+    HANGAR = 'Hangar'
+    BUNKER = 'Bunker'
+
+la = Logistic_Asset_Type
+
+
 VEHICLE_SIZE_CATEGORY = {
     # Veicoli terrestri: lunghezza e peso sono i criteri primari.
     # Nessun veicolo militare standard supera 4m di larghezza/altezza, quindi
@@ -101,8 +129,63 @@ SHIP_SIZE_CATEGORY = {
     'small':  {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
 }
 
+STRUCTURE_SIZE_CATEGORY = {
+            
+            la.BRIDGE.value: {
+                
+                    "Big": {"length": 100, "width": 20, "height": 20, "weight": None},
+                    "Medium": {"length": 50, "width": 10, "height": 10, "weight": None},
+                    "Small": {"length": 20, "width": 5, "height": 5, "weight": None}
+            },
+            la.HANGAR.value: {
+                    "Big": {"length": 100, "width": 50, "height": 30, "weight": None},
+                    "Medium": {"length": 50, "width": 25, "height": 15, "weight": None},
+                    "Small": {"length": 20, "width": 10, "height": 10, "weight": None}
+            },
+            la.DEPOT.value: {
+                    "Big": {"length": 80, "width": 40, "height": 20, "weight": None},
+                    "Medium": {"length": 40, "width": 20, "height": 10, "weight": None},
+                    "Small": {"length": 20, "width": 10, "height": 5, "weight": None}
+            },
+            la.OIL_TANK.value: {
+                    "Big": {"length": 30, "width": 30, "height": 30, "weight": None},
+                    "Medium": {"length": 20, "width": 20, "height": 20, "weight": None},
+                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+            },
+            la.FARM.value: {
+                    "Big": {"length": 200, "width": 200, "height": 10, "weight": None},
+                    "Medium": {"length": 100, "width": 100, "height": 10, "weight": None},
+                    "Small": {"length": 50, "width": 50, "height": 10, "weight": None}
+            },
+            la.POWER_PLANT.value: {
+                    "Big": {"length": 100, "width": 100, "height": 50, "weight": None},
+                    "Medium": {"length": 50, "width": 50, "height": 25, "weight": None},
+                    "Small": {"length": 20, "width": 20, "height": 10, "weight": None}
+            },
+            la.STATION.value: {
+                    "Big": {"length": 150, "width": 100, "height": 50, "weight": None},
+                    "Medium": {"length": 75, "width": 50, "height": 25, "weight": None},
+                    "Small": {"length": 30, "width": 20, "height": 10, "weight": None}
+            },
+            la.BUILDING.value: {
+                    "Big": {"length": 50, "width": 50, "height": 50, "weight": None},
+                    "Medium": {"length": 25, "width": 25, "height": 25, "weight": None},
+                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+            },
+            la.FACTORY.value: {
+                    "Big": {"length": 100, "width": 100, "height": 50, "weight": None},
+                    "Medium": {"length": 50, "width": 50, "height": 25, "weight": None},
+                    "Small": {"length": 20, "width": 20, "height": 10, "weight": None}
+            },
+            la.BARRACK.value: {
+                    "Big": {"length": 50, "width": 50, "height": 30, "weight": None},
+                    "Medium": {"length": 25, "width": 25, "height": 15, "weight": None},
+                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+            },
+        }
 
-def get_dimension(asset_type: str, length: float, width: float, height: float, weight: float) -> str:
+
+def get_dimension(asset_type: str, length: float, width: float, height: float, weight: float, structure_type: Optional[str] = None) -> str:
     """
     Categorizza un asset in base alle sue dimensioni fisiche in una delle classi
     definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (big, medium, small).
@@ -122,7 +205,8 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
     Returns:
         str: 'big', 'medium', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
     """
-    if asset_type not in ['Vehicle', 'Ship']:
+    
+    if asset_type not in ['Vehicle', 'Ship', 'Structure']:
         logger.error(f"Invalid asset type: {asset_type}. Expected 'Vehicle' or 'Ship'. Exit.")
         raise ValueError(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship'.")
     
@@ -130,7 +214,20 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         logger.error(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative. Exit.")
         raise ValueError(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative.")
 
-    SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY if asset_type == 'Vehicle' else SHIP_SIZE_CATEGORY
+    if asset_type == 'Vehicle':
+        SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY 
+
+    elif asset_type == 'Ship': 
+        SIZE_CATEGORY = SHIP_SIZE_CATEGORY
+
+    elif asset_type == 'Structure':
+        if structure_type is None:
+            logger.error("class_size_structure parameter is required for asset_type 'Structure'. Exit.")
+            raise ValueError("class_size_structure parameter is required for asset_type 'Structure'.")
+        if structure_type not in STRUCTURE_SIZE_CATEGORY:
+            logger.error(f"Invalid class_size_structure: {structure_type}. Expected one of: {list(STRUCTURE_SIZE_CATEGORY.keys())}. Exit.")
+            raise ValueError(f"Invalid class_size_structure: {structure_type}. Expected one of: {list(STRUCTURE_SIZE_CATEGORY.keys())}.")
+        SIZE_CATEGORY = STRUCTURE_SIZE_CATEGORY[structure_type]
 
     for dimension, thresholds in SIZE_CATEGORY.items():
         min_length = thresholds['length']
@@ -139,7 +236,11 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         min_weight = thresholds['weight']
 
         size_match   = (length >= min_length) or (width >= min_width and height >= min_height)
-        weight_match = weight >= min_weight
+
+        if asset_type == 'Structure': # per le strutture è sufficiente che sia soddisfatta la condizione dimensionale, senza considerare il peso
+            weight_match = True
+        else:
+            weight_match = weight >= min_weight
 
         if size_match and weight_match:
             return dimension
@@ -630,31 +731,6 @@ class Weapon_Area_Effect(Enum):
     PRECISION = 'Precision'
     WIDE = 'Wide'
     LOCALIZED = 'Localized'
-
-class Logistic_Asset_Type(Enum):
-    BRIDGE = 'Bridge'
-    CHECK_POINT = 'Check_Point'
-    STATION = 'Station'
-    RAILWAY_INTERCHANGE = 'Railway_Interchange'
-    DOCK = 'Dock'    
-    RUNWAY = 'Runway'    
-    HELI_PLATFORM = 'Heli_Platform'
-    ELECTRIC_INFRASTRUCTURE = 'Electric_Infrastructure'
-    GAS_INFRASTRUCTURE = 'Gas_Infrastructure'
-    PETROL_INFRASTRUCTURE = 'Petrol_Infrastructure'
-    POWER_PLANT = 'Power_Plant'
-    OIL_TANK = 'Oil_Tank'
-    DEPOT = 'Depot'
-    BUILDING = 'Building'
-    FACTORY = 'Factory'
-    FARM = 'Farm'
-    ADMINISTRATIVE_INFRASTRUCTURE = 'Administrative_Infrastructure'
-    ENERGY_INFRASTRUCTURE = 'Energy_Infrastructure'
-    SERVICE_INFRASTRUCTURE = 'Service_Infrastructure'
-    COMMAND_AND_CONTROL = 'Command_&_Control'
-    BARRACK = 'Barrack'
-    HANGAR = 'Hangar'
-    BUNKER = 'Bunker'
     
 class Target_Class_Name(Enum):
     # Military Asset Category
