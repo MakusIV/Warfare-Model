@@ -220,6 +220,198 @@ class TestAsset(unittest.TestCase):
         self.assertFalse(self.asset.is_military())
         self.assertTrue(self.asset.is_logistic())
 
+    # -----------------------------------------------------------------------
+    # State-based status methods
+    # Health thresholds (from State.HEALTH_LEVEL):
+    #   Healthful : health > 80
+    #   Damaged   : 50 < health <= 80
+    #   Critical  : 15 < health <= 50
+    #   Destroyed : health <= 15
+    # -----------------------------------------------------------------------
+
+    # --- is_healtful ---
+    def test_is_healtful_when_healthful(self):
+        """is_healtful() returns True when health > 80."""
+        self.asset.health = 100
+        self.assertTrue(self.asset.is_healtful())
+
+    def test_is_healtful_boundary_above_damaged(self):
+        """is_healtful() returns True at health=81 (just above Damaged threshold)."""
+        self.asset.health = 81
+        self.assertTrue(self.asset.is_healtful())
+
+    def test_is_healtful_when_damaged(self):
+        """is_healtful() returns False when health is in Damaged range."""
+        self.asset.health = 70
+        self.assertFalse(self.asset.is_healtful())
+
+    def test_is_healtful_when_critical(self):
+        """is_healtful() returns False when health is in Critical range."""
+        self.asset.health = 30
+        self.assertFalse(self.asset.is_healtful())
+
+    def test_is_healtful_when_destroyed(self):
+        """is_healtful() returns False when health is in Destroyed range."""
+        self.asset.health = 10
+        self.assertFalse(self.asset.is_healtful())
+
+    # --- is_operative ---
+    def test_is_operative_when_healthful(self):
+        """is_operative() returns True when asset is Healthful."""
+        self.asset.health = 100
+        self.assertTrue(self.asset.is_operative())
+
+    def test_is_operative_when_damaged(self):
+        """is_operative() returns True when asset is Damaged (51-80)."""
+        self.asset.health = 70
+        self.assertTrue(self.asset.is_operative())
+
+    def test_is_operative_when_critical(self):
+        """is_operative() returns False when asset is Critical (16-50)."""
+        self.asset.health = 30
+        self.assertFalse(self.asset.is_operative())
+
+    def test_is_operative_when_destroyed(self):
+        """is_operative() returns False when asset is Destroyed (<=15)."""
+        self.asset.health = 10
+        self.assertFalse(self.asset.is_operative())
+
+    def test_is_operative_boundary_at_80(self):
+        """is_operative() returns True at health=80 (boundary Damaged, still operative)."""
+        self.asset.health = 80
+        self.assertTrue(self.asset.is_operative())
+
+    def test_is_operative_boundary_at_50(self):
+        """is_operative() returns False at health=50 (boundary Critical, not operative)."""
+        self.asset.health = 50
+        self.assertFalse(self.asset.is_operative())
+
+    # --- is_damaged ---
+    def test_is_damaged_when_damaged(self):
+        """is_damaged() returns True when health is in Damaged range (51-80)."""
+        self.asset.health = 70
+        self.assertTrue(self.asset.is_damaged())
+
+    def test_is_damaged_boundary_at_80(self):
+        """is_damaged() returns True at health=80 (upper boundary of Damaged)."""
+        self.asset.health = 80
+        self.assertTrue(self.asset.is_damaged())
+
+    def test_is_damaged_boundary_at_51(self):
+        """is_damaged() returns True at health=51 (lower boundary of Damaged)."""
+        self.asset.health = 51
+        self.assertTrue(self.asset.is_damaged())
+
+    def test_is_damaged_when_healthful(self):
+        """is_damaged() returns False when asset is Healthful."""
+        self.asset.health = 100
+        self.assertFalse(self.asset.is_damaged())
+
+    def test_is_damaged_when_critical(self):
+        """is_damaged() returns False when asset is Critical."""
+        self.asset.health = 30
+        self.assertFalse(self.asset.is_damaged())
+
+    def test_is_damaged_when_destroyed(self):
+        """is_damaged() returns False when asset is Destroyed."""
+        self.asset.health = 10
+        self.assertFalse(self.asset.is_damaged())
+
+    # --- is_critical ---
+    def test_is_critical_when_critical(self):
+        """is_critical() returns True when health is in Critical range (16-50)."""
+        self.asset.health = 30
+        self.assertTrue(self.asset.is_critical())
+
+    def test_is_critical_boundary_at_50(self):
+        """is_critical() returns True at health=50 (upper boundary of Critical)."""
+        self.asset.health = 50
+        self.assertTrue(self.asset.is_critical())
+
+    def test_is_critical_boundary_at_16(self):
+        """is_critical() returns True at health=16 (lower boundary of Critical)."""
+        self.asset.health = 16
+        self.assertTrue(self.asset.is_critical())
+
+    def test_is_critical_when_healthful(self):
+        """is_critical() returns False when asset is Healthful."""
+        self.asset.health = 100
+        self.assertFalse(self.asset.is_critical())
+
+    def test_is_critical_when_damaged(self):
+        """is_critical() returns False when asset is Damaged."""
+        self.asset.health = 70
+        self.assertFalse(self.asset.is_critical())
+
+    def test_is_critical_when_destroyed(self):
+        """is_critical() returns False when asset is Destroyed."""
+        self.asset.health = 10
+        self.assertFalse(self.asset.is_critical())
+
+    # --- is_destroyed ---
+    def test_is_destroyed_when_destroyed(self):
+        """is_destroyed() returns True when health <= 15."""
+        self.asset.health = 10
+        self.assertTrue(self.asset.is_destroyed())
+
+    def test_is_destroyed_boundary_at_15(self):
+        """is_destroyed() returns True at health=15 (Destroyed boundary)."""
+        self.asset.health = 15
+        self.assertTrue(self.asset.is_destroyed())
+
+    def test_is_destroyed_at_zero(self):
+        """is_destroyed() returns True at health=0."""
+        self.asset.health = 0
+        self.assertTrue(self.asset.is_destroyed())
+
+    def test_is_destroyed_when_healthful(self):
+        """is_destroyed() returns False when asset is Healthful."""
+        self.asset.health = 100
+        self.assertFalse(self.asset.is_destroyed())
+
+    def test_is_destroyed_when_critical(self):
+        """is_destroyed() returns False when asset is Critical."""
+        self.asset.health = 30
+        self.assertFalse(self.asset.is_destroyed())
+
+    def test_is_destroyed_boundary_at_16(self):
+        """is_destroyed() returns False at health=16 (just above Destroyed boundary)."""
+        self.asset.health = 16
+        self.assertFalse(self.asset.is_destroyed())
+
+    # --- mutual exclusivity ---
+    def test_state_methods_mutually_exclusive_healthful(self):
+        """Only is_healtful() is True at health=100."""
+        self.asset.health = 100
+        self.assertTrue(self.asset.is_healtful())
+        self.assertFalse(self.asset.is_damaged())
+        self.assertFalse(self.asset.is_critical())
+        self.assertFalse(self.asset.is_destroyed())
+
+    def test_state_methods_mutually_exclusive_damaged(self):
+        """Only is_damaged() is True at health=70."""
+        self.asset.health = 70
+        self.assertFalse(self.asset.is_healtful())
+        self.assertTrue(self.asset.is_damaged())
+        self.assertFalse(self.asset.is_critical())
+        self.assertFalse(self.asset.is_destroyed())
+
+    def test_state_methods_mutually_exclusive_critical(self):
+        """Only is_critical() is True at health=30."""
+        self.asset.health = 30
+        self.assertFalse(self.asset.is_healtful())
+        self.assertFalse(self.asset.is_damaged())
+        self.assertTrue(self.asset.is_critical())
+        self.assertFalse(self.asset.is_destroyed())
+
+    def test_state_methods_mutually_exclusive_destroyed(self):
+        """Only is_destroyed() is True at health=10."""
+        self.asset.health = 10
+        self.assertFalse(self.asset.is_healtful())
+        self.assertFalse(self.asset.is_damaged())
+        self.assertFalse(self.asset.is_critical())
+        self.assertTrue(self.asset.is_destroyed())
+
     def test_volume_and_threat(self):
         mock_volume = MagicMock(spec=Volume)
         mock_threat = MagicMock(spec=Threat)

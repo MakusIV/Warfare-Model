@@ -431,11 +431,24 @@ class Military(Block):
             asset for asset in self.assets.values() 
             if hasattr(asset, 'role') and asset.role == "Recon"
         ]
-        #eff = [asset.efficiency for asset in recognitors] if recognitors else 0.0
         return median(
-            [asset.efficiency() for asset in recognitors]
+            [asset.efficiency for asset in recognitors]
         ) if recognitors else 0.0
     #endmilitary
+
+    def get_c2_efficiency(self) -> float:
+        """Calculate median efficiency of command and control assets.
+
+        Returns:
+            Median efficiency of c2 assets, or 0.0 if none exist.
+        """
+        c2 = [
+            asset for asset in self.assets.values()
+            if hasattr(asset, 'role') and asset.role == "c2"
+        ]
+        return median(
+            [asset.efficiency for asset in c2]
+        ) if c2 else 0.0
 
     #Placeholder Methods for Future Implementation
     def air_defense(self) -> None:
@@ -467,7 +480,7 @@ class Military(Block):
         pass
     #endmilitary
 
-    def get_recognition_report(self, region_c2c_recon_efficiency: Optional[float] = None) -> Dict:
+    def get_recognition_report(self, region_c2_recon_efficiency: Optional[float] = None) -> Dict:
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
         The actual implementation will depend on the specific requirements of the reconnaissance-
@@ -483,7 +496,9 @@ class Military(Block):
 
         # nota in Utilty hai evaluateMorale(success_ratio, efficiency) utilizzata per la proprietà morale in Block. Inoltre, success_ratio è presente come proprietà in State
         
-        self.state.update() if self.state else None,
-        target_report = super().get_recognition_report(region_c2c_recon_efficiency) # il report è completo e include già le informazioni di base come posizione, dimensione, eventi recenti, asset presenti e loro stato. Ora è necessario arricchirlo con informazioni specifiche per il Military Block, come il numero e tipo di asset operativi e danneggiati, categorizzati per classe di dimensione (Big, Medium, Small) e tipo (Tank, Fighter, Carrier, etc.).
+        if self.state:
+            self.state.update()
+        target_report = super().get_recognition_report(region_c2_recon_efficiency)
+        return target_report
         
 

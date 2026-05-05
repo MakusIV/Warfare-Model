@@ -705,66 +705,66 @@ class Region:
             logger.warning(f"Block {block.name} does not have a morale method")
             return None
 
+    def _get_region_average_metric(self, side: str, category: str, method_name: str) -> float:
+        """Average a block-level metric across all blocks of a given category and side."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
+        blocks = self.get_blocks_by_criteria(side=side, category=category)
+        if not blocks:
+            return 0.0
+
+        total = 0.0
+        count = 0
+        for block_item in blocks:
+            method = getattr(block_item.block, method_name, None)
+            if callable(method):
+                value = method()
+                if isinstance(value, (int, float)):
+                    total += value
+                    count += 1
+
+        return total / count if count > 0 else 0.0
+
     def get_region_morale(self, side: str) -> float:
         """Calculate the region's morale for a side."""
+        return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'morale')
+
+    def get_region_recon_efficiency(self, side: str) -> float:
+        """Calculate the region's reconnaissance efficiency for a side."""
+        return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'get_recon_efficiency')
+
+    def get_region_resource_efficiency(self, side: str) -> float:
+        """Calculate the region's resource efficiency for a side."""
+        return self._get_region_average_metric(side, BlockCategory.LOGISTIC.value, 'resource_efficiency')
+
+    def get_region_intelligence_efficiency(self, side: str) -> float:
+        """Calculate the region's intelligence efficiency for a side."""
+        return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'intelligence')
+
+    def get_c2_efficiency(self, side: str) -> float:
+        """Calculate the region's command and control efficiency for a side."""
+        return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'get_c2_efficiency')
+
+    def get_recon_reports(self, side: str) -> List[Dict]:
+        """Get reconnaissance reports for all blocks of a side."""
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
-        
+
         military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
-        
-        if not military_blocks:
-            return 0.0
-        
-        total_morale = 0.0
-        count = 0
-        
-        # Nota che il numero di missioni di successo, cioè lo stato della campagna è memorizzato in Actual_Context.
+        region_c2_recon_efficiency = self.get_c2_efficiency(side=side)
+        recon_reports = []
 
         for block_item in military_blocks:
             block = block_item.block
-            if hasattr(block, 'morale'):
-                morale = block.morale()
-                if isinstance(morale, (int, float)):
-                    total_morale += morale
-                    count += 1
-        
-        return total_morale / count if count > 0 else 0.0
+            report = block.get_recognition_report(region_c2_recon_efficiency)
+            if isinstance(report, dict):
+                recon_reports.append(report)
+            else:
+                logger.warning(f"Invalid recon report for block {block.name}: {report!r}")
 
-    def get_region_recon_efficiency (self, side: str) -> float:
-        """Calculate the region's reconnaissance efficiency for a side.
-            morale, resource and ammo
-        """
-        if not Utility.check_side(side):
-            raise ValueError(f"Invalid side: {side!r}")
-        
-        military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
-        
-        if not military_blocks:
-            return 0.0
-        
-        total_efficiency = 0.0
-        count = 0
-        
-        """
-        Deve calcoare per ogni blocco il rapporto tra missioni recon di successo e missioni recon totali, poi fare la media di questi rapporti per tutti i blocchi militari della regione.
+        return recon_reports
 
-        block.recon_efficiency() = ( recon_asset_operative /recon_asset_total ) * (numero di missioni recon di successo / numero totale di missioni recon )
-
-        Nota che il numero di missioni di successo, cioè lo stato della campagna è memorizzato in Actual_Context.
-        
-        non utilizzo morale in quanto se questo viene calcolatto con missioni_complessive_di_successo / missioni_complessive_totali, allora è già parzialmente incluso nel calcolo dell'efficienza di ricognizione, altrimenti si rischia di sovrastimare l'efficienza di ricognizione.
-
-        """
-
-        for block_item in military_blocks:
-            block = block_item.block
-            if hasattr(block, 'recon_efficiency'):
-                efficiency = block.recon_efficiency()
-                if isinstance(efficiency, (int, float)):
-                    total_efficiency += efficiency
-                    count += 1
-        
-        return total_efficiency / count if count > 0 else 0.0 
     # ************************************  END API *************************************
 
 

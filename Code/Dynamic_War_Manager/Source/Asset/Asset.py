@@ -471,7 +471,7 @@ class Asset:
         return self._state.isHealtful() if self._state else False
     
     def is_critical(self) -> bool:
-        return self._state.isCrytical() if self._state else False
+        return self._state.isCritical() if self._state else False
         
 
     def threat_volume(self) -> None:

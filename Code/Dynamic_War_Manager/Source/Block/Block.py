@@ -4,9 +4,6 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union
 from numpy import mean
 from sympy import Point
 from dataclasses import dataclass
-from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
-from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 # from Code.Dynamic_War_Manager.Source.Asset.Structure_Data import get_structure_data
 from Code.Dynamic_War_Manager.Source.Component.Resource_Manager import Resource_Manager
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point, evaluateMorale, enemySide, calcProbability
@@ -487,10 +484,9 @@ class Block:
         if not recon_assets:
             return 0.0
         efficiencies = [asset.efficiency for asset in recon_assets]
-        recon_efficiency = mean(efficiencies) if efficiencies else 0.0
-        morale = self.morale
+        return mean(efficiencies) if efficiencies else 0.0
 
-    def get_recognition_report(self, region_c2c_recon_efficiency: Optional[float] = None) -> Dict[str, Any]: # Nota il cliente per la ricognizione dovrebbe essere la Region che ha visione e competenza sulla strategia
+    def get_recognition_report(self, region_c2_recon_efficiency: Optional[float] = None) -> Dict[str, Any]: # Nota il cliente per la ricognizione dovrebbe essere la Region che ha visione e competenza sulla strategia
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
         The actual implementation will depend on the specific requirements of the reconnaissance-
@@ -567,7 +563,9 @@ class Block:
         """
         
 
-        re = region_c2c_recon_efficiency if region_c2c_recon_efficiency is not None else 0.0
+        re = region_c2_recon_efficiency if region_c2_recon_efficiency is not None else 0.0
+        if self.state:
+            self.state.update()
 
         report_item_probability = {
             'position': calcProbability(re * 0.3 + 0.7), # per position la ricognizione è più efficace, quindi ha una probabilità maggiore di essere rilevata correttamente, mentre per gli altri parametri la probabilità è leggermente inferiore per riflettere l'incertezza della ricognizione.
@@ -625,7 +623,7 @@ class Block:
                     asset_dimension = 'Small'
                 elif asset_category in [aat.FIGHTER_BOMBER.value, aat.RECON.value]:
                     asset_dimension = 'Medium'
-                elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.TANKER.value, aat.HEAVY_BOMBER]:
+                elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.TANKER.value, aat.HEAVY_BOMBER.value]:
                     asset_dimension = 'Big'
                             
             if asset_dimension is None:            
@@ -656,11 +654,13 @@ class Block:
             elif asset.is_damaged() and report_item_probability['asset_summary']:
                 asset_summary['damaged'][asset_type][asset_dimension] += 1
 
-        # Compila il report finale del blocco, includendo solo le informazioni per cui la probabilità di rilevamento è soddisfatta. Se la probabilità di rilevamento per un elemento specifico non è soddisfatta, quel campo nel report sarà impostato su None per riflettere l'incertezza della ricognizione.    
+        # Compila il report finale del blocco, includendo solo le informazioni per cui la probabilità di rilevamento è soddisfatta. Se la probabilità di rilevamento per un elemento specifico non è soddisfatta, quel campo nel report sarà impostato su None per riflettere l'incertezza della ricognizione.
+        _supply = getattr(self, 'supply', None)
+        _communication = getattr(self, 'communication', None)
         target_report = {
-            "position": self.position if report_item_probability['position'] else None, 
+            "position": self.position if report_item_probability['position'] else None,
             "dimension": self.dimension if hasattr(self, 'dimension') and report_item_probability['dimension'] else None,
-            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,            
+            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,
             "state": self.state.state_value if self.state and report_item_probability['state'] else None,
             "asset_summary": {
                 "total_assets": len(self.assets) if self.assets and report_item_probability['asset_summary'] else None,
@@ -668,12 +668,12 @@ class Block:
                 "damaged": asset_summary['damaged'],
             },
             'supply_status': {
-                'ammunition': self.supply.get('ammunition', {}).get('status') if self.supply else None,
-                'energy': self.supply.get('energy', {}).get('status') if self.supply else None,
-                'fuel': self.supply.get('fuel', {}).get('status') if self.supply else None,
-                'hr': self.supply.get('hr', {}).get('status') if self.supply else None,
+                'ammunition': _supply.get('ammunition', {}).get('status') if _supply else None,
+                'energy': _supply.get('energy', {}).get('status') if _supply else None,
+                'fuel': _supply.get('fuel', {}).get('status') if _supply else None,
+                'hr': _supply.get('hr', {}).get('status') if _supply else None,
             },
-            'communication_status': self.communication.get('status') if self.communication else None,
+            'communication_status': _communication.get('status') if _communication else None,
             'defense_status': {
                 'air_defense': self.air_defense() if hasattr(self, 'air_defense') else None,
                 'aa_defense_range': self.defense_aa_range() if hasattr(self, 'defense_aa_range') else None,

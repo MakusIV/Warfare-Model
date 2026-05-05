@@ -345,5 +345,257 @@ class TestRegion(unittest.TestCase):
         
         
 
+class TestRegionMetrics(unittest.TestCase):
+    """Tests for _get_region_average_metric, get_block_morale,
+    the five region-level metric functions and get_recon_reports."""
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+    def _make_military(self, id_: str, side: str = "Red") -> MagicMock:
+        m = MagicMock(spec=Military)
+        m.id = id_
+        m.name = f"Base_{id_}"
+        m.side = side
+        m.category = "Military"
+        m.region = None
+        return m
+
+    def _make_logistic(self, id_: str, side: str = "Red") -> MagicMock:
+        m = MagicMock(spec=Production)
+        m.id = id_
+        m.name = f"Prod_{id_}"
+        m.side = side
+        m.category = "Logistic"
+        m.region = None
+        return m
+
+    def setUp(self):
+        self.mil1 = self._make_military("mil1")
+        self.mil2 = self._make_military("mil2")
+        self.prod1 = self._make_logistic("prod1")
+
+        self.region = Region(
+            name="Metric Region",
+            blocks=[
+                BlockItem(priority=1.0, block=self.mil1),
+                BlockItem(priority=0.5, block=self.mil2),
+                BlockItem(priority=0.3, block=self.prod1),
+            ]
+        )
+
+    # ------------------------------------------------------------------
+    # _get_region_average_metric
+    # ------------------------------------------------------------------
+    def test_helper_invalid_side_raises(self):
+        """_get_region_average_metric raises ValueError for an unknown side."""
+        with self.assertRaises(ValueError):
+            self.region._get_region_average_metric("Unknown", BlockCategory.MILITARY.value, "morale")
+
+    def test_helper_no_matching_blocks_returns_zero(self):
+        """Returns 0.0 when no blocks match the requested category."""
+        result = self.region._get_region_average_metric("Blue", BlockCategory.MILITARY.value, "morale")
+        self.assertAlmostEqual(result, 0.0)
+
+    def test_helper_method_not_found_returns_zero(self):
+        """Returns 0.0 when the requested method does not exist on any block."""
+        result = self.region._get_region_average_metric("Red", BlockCategory.MILITARY.value, "_nonexistent_xyz_")
+        self.assertAlmostEqual(result, 0.0)
+
+    def test_helper_method_returns_non_numeric_ignored(self):
+        """Returns 0.0 when every block method returns a non-numeric value."""
+        self.mil1.morale.return_value = "not a number"
+        self.mil2.morale.return_value = None
+        result = self.region._get_region_average_metric("Red", BlockCategory.MILITARY.value, "morale")
+        self.assertAlmostEqual(result, 0.0)
+
+    def test_helper_single_block_returns_its_value(self):
+        """Returns the single block's value when only one block contributes."""
+        self.mil1.morale.return_value = 0.8
+        self.mil2.morale.return_value = "bad"
+        result = self.region._get_region_average_metric("Red", BlockCategory.MILITARY.value, "morale")
+        self.assertAlmostEqual(result, 0.8)
+
+    def test_helper_multiple_blocks_returns_mean(self):
+        """Returns the arithmetic mean across all valid blocks."""
+        self.mil1.morale.return_value = 0.6
+        self.mil2.morale.return_value = 0.4
+        result = self.region._get_region_average_metric("Red", BlockCategory.MILITARY.value, "morale")
+        self.assertAlmostEqual(result, 0.5)
+
+    def test_helper_filters_by_category_military_vs_logistic(self):
+        """Logistic blocks are excluded when category=MILITARY, and vice versa."""
+        self.prod1.morale = MagicMock(return_value=1.0)
+        self.mil1.morale.return_value = 0.4
+        self.mil2.morale.return_value = 0.6
+        # logistic block's morale must NOT be included
+        result = self.region._get_region_average_metric("Red", BlockCategory.MILITARY.value, "morale")
+        self.assertAlmostEqual(result, 0.5)
+
+    # ------------------------------------------------------------------
+    # get_block_morale
+    # ------------------------------------------------------------------
+    def test_get_block_morale_valid_block_returns_float(self):
+        """get_block_morale returns the morale float for a known block."""
+        self.mil1.morale.return_value = 0.75
+        result = self.region.get_block_morale("mil1")
+        self.assertAlmostEqual(result, 0.75)
+
+    def test_get_block_morale_unknown_id_returns_none(self):
+        """get_block_morale returns None when the block ID is not in the region."""
+        self.assertIsNone(self.region.get_block_morale("does_not_exist"))
+
+    def test_get_block_morale_non_numeric_returns_none(self):
+        """get_block_morale returns None when morale() returns a non-numeric value."""
+        self.mil1.morale.return_value = "invalid"
+        self.assertIsNone(self.region.get_block_morale("mil1"))
+
+    # ------------------------------------------------------------------
+    # get_region_morale
+    # ------------------------------------------------------------------
+    def test_get_region_morale_invalid_side_raises(self):
+        """get_region_morale raises ValueError for an unknown side."""
+        with self.assertRaises(ValueError):
+            self.region.get_region_morale("InvalidSide")
+
+    def test_get_region_morale_no_military_blocks_returns_zero(self):
+        """get_region_morale returns 0.0 when no military blocks exist for the side."""
+        self.assertAlmostEqual(self.region.get_region_morale("Blue"), 0.0)
+
+    def test_get_region_morale_returns_mean_of_military_blocks(self):
+        """get_region_morale returns the mean morale across military blocks."""
+        self.mil1.morale.return_value = 0.9
+        self.mil2.morale.return_value = 0.7
+        result = self.region.get_region_morale("Red")
+        self.assertAlmostEqual(result, 0.8)
+
+    # ------------------------------------------------------------------
+    # get_region_recon_efficiency
+    # ------------------------------------------------------------------
+    def test_get_region_recon_efficiency_no_blocks_returns_zero(self):
+        """get_region_recon_efficiency returns 0.0 when no military blocks for side."""
+        self.assertAlmostEqual(self.region.get_region_recon_efficiency("Blue"), 0.0)
+
+    def test_get_region_recon_efficiency_returns_mean(self):
+        """get_region_recon_efficiency averages get_recon_efficiency across military blocks."""
+        self.mil1.get_recon_efficiency.return_value = 0.8
+        self.mil2.get_recon_efficiency.return_value = 0.4
+        result = self.region.get_region_recon_efficiency("Red")
+        self.assertAlmostEqual(result, 0.6)
+
+    # ------------------------------------------------------------------
+    # get_region_resource_efficiency
+    # ------------------------------------------------------------------
+    def test_get_region_resource_efficiency_no_logistic_returns_zero(self):
+        """get_region_resource_efficiency returns 0.0 when no logistic blocks for side."""
+        self.assertAlmostEqual(self.region.get_region_resource_efficiency("Blue"), 0.0)
+
+    def test_get_region_resource_efficiency_uses_logistic_blocks_only(self):
+        """get_region_resource_efficiency averages resource_efficiency on logistic blocks."""
+        # resource_efficiency is not yet on Production spec — assign explicitly
+        self.prod1.resource_efficiency = MagicMock(return_value=0.7)
+        # military blocks should be excluded even if they expose the method
+        self.mil1.resource_efficiency = MagicMock(return_value=1.0)
+        result = self.region.get_region_resource_efficiency("Red")
+        self.assertAlmostEqual(result, 0.7)
+
+    # ------------------------------------------------------------------
+    # get_region_intelligence_efficiency
+    # ------------------------------------------------------------------
+    def test_get_region_intelligence_efficiency_no_blocks_returns_zero(self):
+        """get_region_intelligence_efficiency returns 0.0 when no military blocks for side."""
+        self.assertAlmostEqual(self.region.get_region_intelligence_efficiency("Blue"), 0.0)
+
+    def test_get_region_intelligence_efficiency_returns_mean(self):
+        """get_region_intelligence_efficiency averages intelligence() across military blocks."""
+        self.mil1.intelligence.return_value = 0.9
+        self.mil2.intelligence.return_value = 0.5
+        result = self.region.get_region_intelligence_efficiency("Red")
+        self.assertAlmostEqual(result, 0.7)
+
+    # ------------------------------------------------------------------
+    # get_c2_efficiency
+    # ------------------------------------------------------------------
+    def test_get_c2_efficiency_no_blocks_returns_zero(self):
+        """get_c2_efficiency returns 0.0 when no military blocks for the side."""
+        self.assertAlmostEqual(self.region.get_c2_efficiency("Blue"), 0.0)
+
+    def test_get_c2_efficiency_returns_mean(self):
+        """get_c2_efficiency averages get_c2_efficiency() across military blocks."""
+        self.mil1.get_c2_efficiency.return_value = 0.6
+        self.mil2.get_c2_efficiency.return_value = 0.8
+        result = self.region.get_c2_efficiency("Red")
+        self.assertAlmostEqual(result, 0.7)
+
+    # ------------------------------------------------------------------
+    # get_recon_reports
+    # ------------------------------------------------------------------
+    def test_get_recon_reports_invalid_side_raises(self):
+        """get_recon_reports raises ValueError for an unknown side."""
+        with self.assertRaises(ValueError):
+            self.region.get_recon_reports("InvalidSide")
+
+    def test_get_recon_reports_no_military_blocks_returns_empty_list(self):
+        """get_recon_reports returns [] when no military blocks exist for the side."""
+        result = self.region.get_recon_reports("Blue")
+        self.assertEqual(result, [])
+
+    def test_get_recon_reports_single_block_dict_report(self):
+        """get_recon_reports returns a list with one entry for a single valid report."""
+        report = {"position": None, "state": "Healtful"}
+        self.mil1.get_recognition_report.return_value = report
+        self.mil2.get_recognition_report.return_value = report
+        result = self.region.get_recon_reports("Red")
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+        self.assertIn(report, result)
+
+    def test_get_recon_reports_non_dict_report_excluded(self):
+        """get_recon_reports excludes blocks whose get_recognition_report returns non-dict."""
+        self.mil1.get_recognition_report.return_value = {"position": None}
+        self.mil2.get_recognition_report.return_value = None   # non-dict → excluded
+        result = self.region.get_recon_reports("Red")
+        self.assertEqual(len(result), 1)
+        self.assertIn({"position": None}, result)
+
+    def test_get_recon_reports_all_non_dict_returns_empty(self):
+        """get_recon_reports returns [] when every block returns a non-dict report."""
+        self.mil1.get_recognition_report.return_value = "bad"
+        self.mil2.get_recognition_report.return_value = 42
+        result = self.region.get_recon_reports("Red")
+        self.assertEqual(result, [])
+
+    def test_get_recon_reports_passes_c2_efficiency_to_each_block(self):
+        """get_recon_reports passes the region c2 efficiency to every block's get_recognition_report."""
+        c2_value = 0.65
+        report = {"position": None}
+        self.mil1.get_recognition_report.return_value = report
+        self.mil2.get_recognition_report.return_value = report
+
+        with patch.object(self.region, 'get_c2_efficiency', return_value=c2_value) as mock_c2:
+            self.region.get_recon_reports("Red")
+            mock_c2.assert_called_once_with(side="Red")
+            self.mil1.get_recognition_report.assert_called_once_with(c2_value)
+            self.mil2.get_recognition_report.assert_called_once_with(c2_value)
+
+    def test_get_recon_reports_c2_computed_once_not_per_block(self):
+        """get_c2_efficiency is called exactly once, not once per block."""
+        self.mil1.get_recognition_report.return_value = {"k": "v"}
+        self.mil2.get_recognition_report.return_value = {"k": "v"}
+
+        with patch.object(self.region, 'get_c2_efficiency', return_value=0.5) as mock_c2:
+            self.region.get_recon_reports("Red")
+            self.assertEqual(mock_c2.call_count, 1)
+
+    def test_get_recon_reports_result_is_list_of_dicts(self):
+        """get_recon_reports always returns a list, and every element is a dict."""
+        self.mil1.get_recognition_report.return_value = {"a": 1}
+        self.mil2.get_recognition_report.return_value = {"b": 2}
+        result = self.region.get_recon_reports("Red")
+        self.assertIsInstance(result, list)
+        for item in result:
+            self.assertIsInstance(item, dict)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -512,11 +512,117 @@ class TestBlock(unittest.TestCase):
         self.assertFalse(self.block.check_instance_list("not a list"))
 
     # -----------------------------------------------------------------------
+    # get_recon_efficiency
+    # -----------------------------------------------------------------------
+    def test_get_recon_efficiency_no_assets(self):
+        """get_recon_efficiency() returns 0.0 when there are no assets."""
+        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.0)
+
+    def test_get_recon_efficiency_no_recon_assets(self):
+        """get_recon_efficiency() returns 0.0 when no asset has category 'Reconnaissance'."""
+        self.mock_asset1.category = "Vehicle"
+        self.block.set_asset("asset1", self.mock_asset1)
+        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.0)
+
+    def test_get_recon_efficiency_with_recon_assets(self):
+        """get_recon_efficiency() returns the mean efficiency of Reconnaissance assets."""
+        self.mock_asset1.category = "Reconnaissance"
+        self.mock_asset1.efficiency = 0.6
+        self.mock_asset2.category = "Reconnaissance"
+        self.mock_asset2.efficiency = 0.4
+        self.block.set_asset("asset1", self.mock_asset1)
+        self.block.set_asset("asset2", self.mock_asset2)
+        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.5)
+
+    def test_get_recon_efficiency_mixed_categories(self):
+        """get_recon_efficiency() averages only Reconnaissance assets, ignoring others."""
+        self.mock_asset1.category = "Reconnaissance"
+        self.mock_asset1.efficiency = 0.8
+        self.mock_asset2.category = "Vehicle"
+        self.mock_asset2.efficiency = 0.2
+        self.block.set_asset("asset1", self.mock_asset1)
+        self.block.set_asset("asset2", self.mock_asset2)
+        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.8)
+
+    # -----------------------------------------------------------------------
     # get_recognition_report
     # -----------------------------------------------------------------------
-    def test_get_recognition_report_returns_none(self):
-        """get_recognition_report() returns None (placeholder implementation)."""
-        self.assertIsNone(self.block.get_recognition_report())
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_returns_dict(self, _mock_prob):
+        """get_recognition_report() returns a dict with all expected keys."""
+        report = self.block.get_recognition_report()
+        self.assertIsInstance(report, dict)
+        expected_keys = {
+            'position', 'dimension', 'events', 'state', 'asset_summary',
+            'supply_status', 'communication_status', 'defense_status',
+            'intelligence', 'combat_state', 'recon_efficiency', 'morale',
+            'military_category',
+        }
+        self.assertEqual(set(report.keys()), expected_keys)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_calls_state_update(self, _mock_prob):
+        """get_recognition_report() calls state.update() when state is set."""
+        with patch.object(self.block, '_state') as mock_state:
+            mock_state.__bool__ = lambda s: True
+            self.block.get_recognition_report()
+            mock_state.update.assert_called_once()
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_no_supply_attr(self, _mock_prob):
+        """get_recognition_report() does not raise when block has no supply attribute."""
+        self.assertFalse(hasattr(self.block, 'supply'))
+        report = self.block.get_recognition_report()
+        self.assertIn('supply_status', report)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_no_communication_attr(self, _mock_prob):
+        """get_recognition_report() does not raise when block has no communication attribute."""
+        self.assertFalse(hasattr(self.block, 'communication'))
+        report = self.block.get_recognition_report()
+        self.assertIsNone(report['communication_status'])
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_empty_asset_summary(self, _mock_prob):
+        """With no assets, asset_summary contains empty operative and damaged dicts."""
+        report = self.block.get_recognition_report()
+        self.assertEqual(report['asset_summary']['operative'], {})
+        self.assertEqual(report['asset_summary']['damaged'], {})
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_recon_efficiency_in_report(self, _mock_prob):
+        """get_recognition_report() includes recon_efficiency from get_recon_efficiency()."""
+        report = self.block.get_recognition_report()
+        self.assertAlmostEqual(report['recon_efficiency'], 0.0)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=False)
+    def test_get_recognition_report_all_none_when_prob_false(self, _mock_prob):
+        """When all probabilities fail, position/events/state are all None."""
+        report = self.block.get_recognition_report()
+        self.assertIsNone(report['position'])
+        self.assertIsNone(report['events'])
+        self.assertIsNone(report['state'])
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_with_supply(self, _mock_prob):
+        """get_recognition_report() reads supply_status correctly when supply is set."""
+        self.block.supply = {
+            'ammunition': {'status': 'ok'},
+            'energy': {'status': 'low'},
+            'fuel': {'status': 'full'},
+            'hr': {'status': 'ok'},
+        }
+        report = self.block.get_recognition_report()
+        self.assertEqual(report['supply_status']['ammunition'], 'ok')
+        self.assertEqual(report['supply_status']['energy'], 'low')
+        del self.block.supply
+
+    def test_get_recognition_report_default_re_zero(self):
+        """Calling get_recognition_report() with no argument uses re=0.0 without raising."""
+        try:
+            self.block.get_recognition_report()
+        except Exception as exc:
+            self.fail(f"get_recognition_report() raised unexpectedly: {exc}")
 
     # -----------------------------------------------------------------------
     # __repr__ / __str__
