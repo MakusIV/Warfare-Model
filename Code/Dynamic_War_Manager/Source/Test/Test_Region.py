@@ -155,10 +155,10 @@ class TestRegion(unittest.TestCase):
     
     def test_get_route(self):
         route = self.region.get_route("military1", "prod1")
-        self.assertEqual(route, self.mock_route)
+        self.assertEqual(route[0], self.mock_route)
         
         route = self.region.get_route("military1")
-        self.assertEqual(route, self.mock_route)
+        self.assertEqual(route[0], self.mock_route)
     
     def test_calc_strategic_logistic_center(self):
         # Setup production block with position and priority
@@ -344,6 +344,128 @@ class TestRegion(unittest.TestCase):
             self.region._validate_weight_priority_target({"Ground_Base": {"attack": {}, "defense": {}}})
         
         
+
+class TestRegionRoutes(unittest.TestCase):
+    """Tests for get_route, get_shortest_route, get_safest_route, get_shortest_and_safest_route."""
+
+    def setUp(self):
+        self.route_short_dangerous = MagicMock(spec=Route)
+        self.route_short_dangerous.length.return_value = 50.0
+        self.route_short_dangerous.max_danger_level.return_value = 8
+        self.route_short_dangerous.min_danger_level.return_value = 4
+
+        self.route_long_safe = MagicMock(spec=Route)
+        self.route_long_safe.length.return_value = 150.0
+        self.route_long_safe.max_danger_level.return_value = 2
+        self.route_long_safe.min_danger_level.return_value = 1
+
+        self.region = Region(
+            name="Route Test Region",
+            routes={
+                "blockA,blockB": self.route_short_dangerous,
+                "blockA-blockB": self.route_long_safe,
+            }
+        )
+
+    # --- get_route ---
+
+    def test_get_route_returns_all_matching(self):
+        """get_route returns all routes involving both block IDs."""
+        routes = self.region.get_route("blockA", "blockB")
+        self.assertIsNotNone(routes)
+        self.assertEqual(len(routes), 2)
+        self.assertIn(self.route_short_dangerous, routes)
+        self.assertIn(self.route_long_safe, routes)
+
+    def test_get_route_source_only_returns_all(self):
+        """get_route with only source ID returns all routes involving that block."""
+        routes = self.region.get_route("blockA")
+        self.assertIsNotNone(routes)
+        self.assertEqual(len(routes), 2)
+
+    def test_get_route_no_match_returns_none(self):
+        """get_route returns None when no routes match."""
+        result = self.region.get_route("unknown", "block")
+        self.assertIsNone(result)
+
+    def test_get_route_invalid_same_ids_raises(self):
+        """get_route raises ValueError when source and target IDs are identical."""
+        with self.assertRaises(ValueError):
+            self.region.get_route("blockA", "blockA")
+
+    def test_get_route_invalid_type_raises(self):
+        """get_route raises TypeError for non-string block_id."""
+        with self.assertRaises(TypeError):
+            self.region.get_route(123)
+
+    # --- get_shortest_route ---
+
+    def test_get_shortest_route_returns_shorter(self):
+        """get_shortest_route returns the route with the minimum length."""
+        route = self.region.get_shortest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_short_dangerous)
+
+    def test_get_shortest_route_single_match(self):
+        """get_shortest_route returns the only route when there is one match."""
+        region = Region(
+            name="Single Route Region",
+            routes={"blockA,blockB": self.route_short_dangerous}
+        )
+        route = region.get_shortest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_short_dangerous)
+
+    def test_get_shortest_route_no_match_returns_none(self):
+        """get_shortest_route returns None when no routes match."""
+        result = self.region.get_shortest_route("unknown", "block")
+        self.assertIsNone(result)
+
+    # --- get_safest_route ---
+
+    def test_get_safest_route_returns_min_max_danger(self):
+        """get_safest_route returns the route with the lowest max_danger_level."""
+        route = self.region.get_safest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_long_safe)
+
+    def test_get_safest_route_no_match_returns_none(self):
+        """get_safest_route returns None when no routes match."""
+        result = self.region.get_safest_route("unknown", "block")
+        self.assertIsNone(result)
+
+    def test_get_safest_route_equal_danger_returns_first_min(self):
+        """get_safest_route handles equal danger levels without error."""
+        self.route_short_dangerous.max_danger_level.return_value = 2
+        route = self.region.get_safest_route("blockA", "blockB")
+        self.assertIn(route, [self.route_short_dangerous, self.route_long_safe])
+
+    # --- get_shortest_and_safest_route ---
+
+    def test_get_shortest_and_safest_route_prefers_lower_min_danger(self):
+        """get_shortest_and_safest_route sorts by (min_danger_level, length); picks safest first."""
+        # route_long_safe: min_danger=1, route_short_dangerous: min_danger=4
+        route = self.region.get_shortest_and_safest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_long_safe)
+
+    def test_get_shortest_and_safest_route_tie_on_danger_picks_shorter(self):
+        """When min_danger_level ties, get_shortest_and_safest_route picks the shorter route."""
+        self.route_short_dangerous.min_danger_level.return_value = 1
+        self.route_long_safe.min_danger_level.return_value = 1
+        route = self.region.get_shortest_and_safest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_short_dangerous)
+
+    def test_get_shortest_and_safest_route_no_match_returns_none(self):
+        """get_shortest_and_safest_route returns None when no routes match."""
+        result = self.region.get_shortest_and_safest_route("unknown", "block")
+        self.assertIsNone(result)
+
+    def test_get_shortest_and_safest_route_single_match(self):
+        """get_shortest_and_safest_route returns the only route when there is one match."""
+        region = Region(
+            name="Single Route Region",
+            routes={"blockA,blockB": self.route_long_safe}
+        )
+        route = region.get_shortest_and_safest_route("blockA", "blockB")
+        self.assertEqual(route, self.route_long_safe)
+
 
 class TestRegionMetrics(unittest.TestCase):
     """Tests for _get_region_average_metric, get_block_morale,

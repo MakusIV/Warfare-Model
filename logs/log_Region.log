@@ -141,3 +141,33 @@
 2026-05-05 11:49:38,632 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
 2026-05-05 11:49:38,632 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
 2026-05-05 11:49:38,643 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 14:50:30,649 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 14:50:30,657 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 14:50:30,724 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 14:50:30,727 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 14:50:30,937 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 14:52:40,130 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 14:52:40,154 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 14:52:40,269 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 14:52:40,271 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 14:52:40,463 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 14:53:05,550 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 14:53:05,555 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 14:53:05,580 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 14:53:05,581 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 14:53:05,737 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 14:59:11,916 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 14:59:11,922 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 14:59:11,956 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 14:59:11,957 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 14:59:12,117 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 15:55:04,790 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 15:55:04,805 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 15:55:04,870 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 15:55:04,871 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 15:55:04,909 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-05-06 15:57:51,591 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-05-06 15:57:51,596 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-05-06 15:57:51,622 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-05-06 15:57:51,623 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-05-06 15:57:51,654 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None

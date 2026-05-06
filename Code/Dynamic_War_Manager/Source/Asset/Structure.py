@@ -97,7 +97,7 @@ class Structure(Asset) :
 
 
 
-
+    # serve?
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    
         """ Return a List of enemy asset near this block with detailed info: qty, type, efficiency, range, status resupply. Override Block.getBlockInfo()"""
 

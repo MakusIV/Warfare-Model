@@ -52,7 +52,7 @@ class BlockParams:
     category: Optional[str] = None
     sub_category: Optional[str] = None
     functionality: Optional[str] = None
-    value: Optional[int] = None
+    value: Optional[int] = None # from 1 to 10, assigned by campaign maker, represents the strategic weight parameter for calculus of the block's strategic value. default value is 1
     region: Optional["Region"] = None    
 
 class Block:
@@ -99,7 +99,7 @@ class Block:
         self._category = category or ""
         self._sub_category = sub_category or ""
         self._functionality = functionality or ""
-        self._value = value or MIN_VALUE # rappresents strategic weight parameter for calculus of the block's strategic value.  Assigned from campaign maker. default value is 1
+        self._value = value or MIN_VALUE # from 1 to 10 rappresents strategic weight parameter for calculus of the block's strategic value.  Assigned from campaign maker. default value is 1
         self._events = []
         self._assets = {}
         self._region = region

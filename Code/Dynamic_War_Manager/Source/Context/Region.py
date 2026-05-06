@@ -359,13 +359,6 @@ class Region:
                 raise TypeError(f"Target block ID must be a string, got {type(target_block_id).__name__}")
             if target_block_id == block_id:
                 raise ValueError("Target block ID must be different from source block ID")
-
-
-        if target_block_id:
-            if not isinstance(target_block_id, str):
-                raise TypeError("Target block ID must be a string")
-            if target_block_id == block_id:
-                raise ValueError("Target block ID must be different from source block ID")
         
         matching_routes = []
         
@@ -388,16 +381,41 @@ class Region:
         if not matching_routes:
             return None
         
-        # Return shortest route if multiple matches
+        return matching_routes
+        
+    def get_shortest_route(self, block_id: str, target_block_id: str) -> Optional[Route]:
+        """Get the shortest route between two blocks."""
+        matching_routes = self.get_route(block_id, target_block_id)
+
+        if not matching_routes:
+            return None
         if len(matching_routes) == 1:
             return matching_routes[0]
+        return min(matching_routes, key=lambda r: r.length())
+    
+    def get_safest_route(self, block_id: str, target_block_id: str) -> Optional[Route]:
+        """Get the route with lesser danger level between two blocks."""
+        matching_routes = self.get_route(block_id, target_block_id)     
+
+        if not matching_routes:
+            return None
         
         # Usare min con un'espressione lambda per la chiave
-        return min(matching_routes, key=lambda r: r.length())
+        return min(matching_routes, key=lambda r: r.max_danger_level())
+
+    def get_shortest_and_safest_route(self, block_id: str, target_block_id: str) -> Optional[Route]:
+        """Get the shortest route with lesser danger level between two blocks."""
+        matching_routes = self.get_route(block_id, target_block_id)     
+
+        if not matching_routes:
+            return None
+        
+        # Usare min con un'espressione lambda per la chiave
+        return min(matching_routes, key=lambda r: (r.min_danger_level(), r.length()))
     
     # STRATEGIC CALCULATIONS
 
-    @lru_cache(maxsize = 128)
+    @lru_cache(maxsize = 3) # side ha solo tre valori possibili, quindi Caching maxsize=3 è sufficiente per memorizzare i risultati per entrambi i lati
     def calc_strategic_logistic_center(self, side: str) -> Optional[Point2D]:
         """
         Calculate the strategic logistic center for a side. Cached for performance.
@@ -462,7 +480,7 @@ class Region:
                     r_CPP[force][task] = tp[force][task] / ( blocks_quantity[force][task] * tot_CP[force][task] ) # r_CPP: region strategic combat power center position for side blocks
         return r_CPP"""
 
-    @lru_cache(maxsize=128)
+    @lru_cache(maxsize=3) # side ha solo tre valori possibili, quindi Caching maxsize=3 è sufficiente per memorizzare i risultati per entrambi i lati
     def calc_combat_power_center(self, side: str) -> Dict[str, Dict[str, Point2D]]:
         """Calculate combat power center for each force and task."""
         # verifica se  i risultati coincidono con quelli attesi con la logica del vecchio metodo(sopra)
@@ -496,7 +514,7 @@ class Region:
         
         return result
     
-    @lru_cache(maxsize=1) # Caching per un solo risultato, probabilmente chiamato spesso
+    @lru_cache(maxsize=3) # Caching per un solo risultato, probabilmente chiamato spesso
     def calc_total_warehouse(self, side: str) -> Payload:
         """Calculate total warehouse resources."""
         if not Utility.check_side(side):
@@ -517,7 +535,7 @@ class Region:
         
         return total
     
-    @lru_cache(maxsize=1) # Caching per un solo risultato
+    @lru_cache(maxsize=3) # Caching per un solo risultato
     def calc_total_production(self, side: str) -> Payload:
         """Calculate total production resources."""
 
@@ -532,7 +550,7 @@ class Region:
         
         return total
     
-    @lru_cache(maxsize=1) # Caching per un solo risultato
+    @lru_cache(maxsize=3) # Caching per un solo risultato
     def calc_production_values(self, side: str) -> Dict[str, float]:
         """Calculate production values by block type."""
         if not Utility.check_side(side):
@@ -767,6 +785,8 @@ class Region:
 
     # ************************************  END API *************************************
 
+    # Valutare una funzione che costruice la matrice dei collegamenti tra blocchi, in modo da poterla utilizzare nei calcoli di priorità militare, in modo da evitare di dover iterare su tutte le rotte ogni volta.
+
 
     # HELPER METHODS
     def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
@@ -782,9 +802,14 @@ class Region:
         """Check if a block is a logistic block."""
         return isinstance(block, (Production, Storage, Transport))
     
+    
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[(float, Block), ...]) -> float:
-        """Calculate attack priority for a military block."""
+        
+        """Calculates the attack priority of a military block (air, ground or sea) by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets."""
+
         priority = 0.0
         # Assicurati che military_block.get_military_category() ritorni una chiave valida
         block_category = military_block.get_military_category() 
@@ -797,8 +822,8 @@ class Region:
             weight = self._select_weight(target_block=target, task="attack", block_category=block_category) # Seleziona il peso per il blocco target
             
             # priority summatory
-            if military_block.is_Ground_Base() or military_block.is_Naval_Base():                    
-                route = self.get_route(military_block.id, target.id) # get_route è ora memorizzato nella cache
+            if military_block.is_Ground_Base() or military_block.is_Naval_Base():
+                route = self.get_shortest_route(military_block.id, target.id)
                 calc_result = self._calc_surface_priority(block=military_block, target_item=enemy_item, attack_route=route, weight=weight)
                 if calc_result is not None: # Verifica se il risultato è valido
                     priority += calc_result
@@ -809,9 +834,14 @@ class Region:
         
         return priority
     
+    
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[(float, Block), ...]) -> float:
-        """Calculate defense priority for a military block."""
+        
+        """Calculates the defense priority of a military block (air, ground or sea) by evaluating its combat power, 
+        the distance from the target, the combat power of the target or the priority assigned 
+        in the case of logistical targets."""
+
         priority = 0.0
         block_category = military_block.get_military_category()
         if block_category not in self._weight_priority_target:
@@ -827,7 +857,7 @@ class Region:
             weight = self._select_weight(target_block=friendly, task="defense", block_category=block_category) # Seleziona il peso per il blocco target
             
             if military_block.is_Ground_Base() or military_block.is_Naval_Base():
-                route = self.get_route(military_block.id, friendly.id) # get_route è ora memorizzato nella cache
+                route = self.get_shortest_route(military_block.id, friendly.id)
                 calc_result = self._calc_surface_priority(block=military_block, target_item=friendly_item, attack_route=route, weight=weight)
                 if calc_result is not None:
                     priority += calc_result
@@ -839,6 +869,7 @@ class Region:
         return priority
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _select_weight(self, target_block: Block, task: str, block_category: str) -> float:
         """        Select the weight for a block based on its category."""
         if task not in self._weight_priority_target[block_category]:
@@ -870,7 +901,7 @@ class Region:
     range_ratio: float,
     target_priority: Optional[float] = None,
     force_type: Optional[str] = None
-) -> float:
+    ) -> float:
         """Calculate generic priority for a military block towards a target."""
         combat_power = block.combat_power(military_force=force_type)
         if not combat_power or combat_power <= 0:
@@ -880,12 +911,16 @@ class Region:
         if time_to_intercept < 1:
             time_to_intercept = 1.0
 
-        target_value = target_block.value or 1.0
+        target_value = target_block.value or 1.0 # value from 1 to 10
         
         if target_block.is_military():
             target_cp = target_block.combat_power()
             #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
-            combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)
+            #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
+            if block.side == target_block.side: # defense
+                combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
+            else: # attack
+                combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)
             return (target_value * combat_power_ratio * range_ratio * weight) / time_to_intercept
         
         elif target_block.is_logistic():
@@ -897,10 +932,14 @@ class Region:
         
         return 0.0
 
-    # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
-    def _calc_surface_priority(self, block: Military, target_item: Tuple[float, Block],
-                            attack_route: Optional[Route], weight: float) -> float:
-        
+    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
+    def _calc_surface_priority( 
+        self, 
+        block: Military, 
+        target_item: Tuple[float, Block],
+        attack_route: Optional[Route], 
+        weight: float) -> float:
+
         """
         Calculates the priority of a military block (ground or sea) by evaluating its combat power, 
         the distance from the target, the combat power of the target or the priority assigned 
@@ -946,6 +985,7 @@ class Region:
         )
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
+    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> float:
 
         """Calculates the priority of an air military block by evaluating its combat power, 

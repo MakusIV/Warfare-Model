@@ -40,7 +40,7 @@ class AssetParams:
     asset_type: Optional[str] = None
     functionality: Optional[str] = None
     cost: Optional[int] = None
-    value: Optional[int] = None # rappresents relative value parameter refer to other asset's block
+    value: Optional[int] = None # from 1 to 10, rappresents relative value parameter refer to other asset's block
     resources_assigned: Optional[Payload] = None           # assigned consume payload - resource assigned for autoconsume
     resources_to_self_consume: Optional[Payload] = None           # requested consume payload - resource requeste for autoconsume
     payload: Optional[Payload] = None       # payload -payload resource

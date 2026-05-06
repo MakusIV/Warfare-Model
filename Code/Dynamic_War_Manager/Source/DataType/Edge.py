@@ -12,7 +12,13 @@ logger = Logger(module_name = __name__, class_name = 'Edge')
 # ASSET
 class Edge:    
 
-    def __init__(self, wpA: Waypoint, wpB: Waypoint, path_type: str, danger_level: str|None, speed: float|None, name: str|None):   
+    def __init__(self, 
+                 wpA: Waypoint, 
+                 wpB: Waypoint, 
+                 path_type: str, 
+                 danger_level: float|None, 
+                 speed: float|None, 
+                 name: str|None):   
                         
             # propriety  
             self._name = name            
@@ -114,11 +120,11 @@ class Edge:
 
 
     @property
-    def danger_level(self):
+    def danger_level(self) -> float:
         return self._danger_level
 
     @danger_level.setter
-    def danger_level(self, param):
+    def danger_level(self, param) -> bool:
 
         check_result = self.checkParam(danger_level = param)
         
