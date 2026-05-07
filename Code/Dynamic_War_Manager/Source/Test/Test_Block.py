@@ -570,10 +570,12 @@ class TestBlock(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
     def test_get_recognition_report_no_supply_attr(self, _mock_prob):
-        """get_recognition_report() does not raise when block has no supply attribute."""
-        self.assertFalse(hasattr(self.block, 'supply'))
+        """get_recognition_report() does not raise when block has no warehouse attribute; all supply_status values are None."""
+        self.assertFalse(hasattr(self.block, 'warehouse'))
         report = self.block.get_recognition_report()
         self.assertIn('supply_status', report)
+        for key in ('goods', 'energy', 'fuel', 'hr', 'hc', 'hs', 'hb'):
+            self.assertIsNone(report['supply_status'][key])
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
     def test_get_recognition_report_no_communication_attr(self, _mock_prob):
@@ -605,17 +607,34 @@ class TestBlock(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
     def test_get_recognition_report_with_supply(self, _mock_prob):
-        """get_recognition_report() reads supply_status correctly when supply is set."""
-        self.block.supply = {
-            'ammunition': {'status': 'ok'},
+        """get_recognition_report() reads all 7 supply_status keys correctly when warehouse is set."""
+        self.block.warehouse = {
+            'goods':  {'status': 'ok'},
             'energy': {'status': 'low'},
-            'fuel': {'status': 'full'},
-            'hr': {'status': 'ok'},
+            'fuel':   {'status': 'full'},
+            'hr':     {'status': 'ok'},
+            'hc':     {'status': 'critical'},
+            'hs':     {'status': 'ok'},
+            'hb':     {'status': 'low'},
         }
         report = self.block.get_recognition_report()
-        self.assertEqual(report['supply_status']['ammunition'], 'ok')
+        self.assertEqual(report['supply_status']['goods'],  'ok')
         self.assertEqual(report['supply_status']['energy'], 'low')
-        del self.block.supply
+        self.assertEqual(report['supply_status']['fuel'],   'full')
+        self.assertEqual(report['supply_status']['hr'],     'ok')
+        self.assertEqual(report['supply_status']['hc'],     'critical')
+        self.assertEqual(report['supply_status']['hs'],     'ok')
+        self.assertEqual(report['supply_status']['hb'],     'low')
+        del self.block.warehouse
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_recognition_report_supply_status_keys(self, _mock_prob):
+        """supply_status always contains exactly the 7 expected keys."""
+        report = self.block.get_recognition_report()
+        self.assertEqual(
+            set(report['supply_status'].keys()),
+            {'goods', 'energy', 'fuel', 'hr', 'hc', 'hs', 'hb'}
+        )
 
     def test_get_recognition_report_default_re_zero(self):
         """Calling get_recognition_report() with no argument uses re=0.0 without raising."""

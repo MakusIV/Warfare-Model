@@ -64,6 +64,13 @@ Logica adottata (dimensioni fisiche reali):
   
 """
 
+class Asset_Role(Enum):
+    C2 = 'C2'
+    LOGISTIC = 'Logistic'
+    SUPPORT = 'Support'
+    RECONNAISSANCE = 'Reconnaissance'
+    STRUCTURE = 'Structure'
+
 
 class Logistic_Asset_Type(Enum):
     BRIDGE = 'Bridge'
@@ -1010,10 +1017,10 @@ def get_task_from_target(target_type: str, target_dim: str, target_count: int) -
 
     """
      
-    weapon_param = _get_weapon_param_from_target(target_type, target_dim, target_count) 
-    return _get_task_from_weapon_param(weapon_param['area_effect'], weapon_param['power_effect'])
+    weapon_param = _get_weapon_param_from_target(target_type, target_dim, target_count)
+    return _get_task_from_weapon_param([weapon_param['area_effect']], weapon_param['power_effect'])
 
-                
+
 """
 WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
 
@@ -1351,6 +1358,28 @@ TARGET_CLASSIFICATION = {
                             ],
     tc.GENERIC.value:   [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()], # solo per gestire eventuali target sconosciuti
 }
+
+def get_target_classification(target_type: str) -> str:
+
+    """ Restituisce la classificazione del target in relazione al suo tipo, secondo l'enumerazione Target_Class_Name.
+
+    Args:
+        target_type (str): valore dell'enumerazione Target_Class_Name (stringa .value)  
+    Returns:
+        str: classificazione del target (es. 'Soft', 'Armored', 'Air_Defense', etc.) o None se nessuna corrispondenza
+    """
+    
+    for tg_classification, tg_type_items_list in TARGET_CLASSIFICATION.items():
+
+        for tg_type_element in tg_type_items_list:
+
+            if isinstance(tg_type_element, list): # per gestire i casi in cui la lista contiene a sua volta una lista (es. Airbase, Helibase, Port, Shipyard, Farp, Stronghold)
+                raise ValueError(f"Invalid structure in TARGET_CLASSIFICATION: nested list found for classification '{tg_classification}'")
+            
+            if target_type == tg_type_element:
+                return tg_classification # restituisce la classificazione del target (es. 'Soft', 'Armored', 'Air_Defense', etc.)
+
+    return None
 
 
 BLOCK_ASSET_CATEGORY = {

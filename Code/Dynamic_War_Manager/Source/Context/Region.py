@@ -783,9 +783,47 @@ class Region:
 
         return recon_reports
 
+       
+
     # ************************************  END API *************************************
 
+
     # Valutare una funzione che costruice la matrice dei collegamenti tra blocchi, in modo da poterla utilizzare nei calcoli di priorità militare, in modo da evitare di dover iterare su tutte le rotte ogni volta.
+
+    def get_target_classification_report(self, report: Dict) -> Optional[Dict]:
+
+        """Classify a target based on reconnaissance report."""
+
+        if not isinstance(report, dict):
+            raise TypeError(f"Report must be a dictionary, got {type(report).__name__}")
+
+        _assets = report.get('asset_summary', None)
+        _operative = _assets.get('operative', None) if _assets else None
+
+        if not _operative:
+            logger.warning("No operative assets found in report for target classification.")
+            return None
+
+        target_classification_report = {}  # FIX 1: inizializzare prima del loop
+
+        for asset_type, asset_data in _operative.items():
+
+            _classification = Context.get_target_classification(asset_type)
+
+            if _classification is None:  # FIX 4: saltare asset_type senza classificazione
+                logger.warning(f"No target classification found for asset type: {asset_type}. Skipping.")
+                continue
+
+            if target_classification_report.get(_classification) is None:
+                target_classification_report[_classification] = asset_data.copy()  # FIX 2: aggiunge la chiave, non resetta il dict
+
+            else:
+                for dim_key, count in asset_data.items():  # FIX 3: usa le chiavi reali di asset_data
+                    target_classification_report[_classification][dim_key] = (
+                        target_classification_report[_classification].get(dim_key, 0) + count
+                    )
+
+        return target_classification_report
 
 
     # HELPER METHODS

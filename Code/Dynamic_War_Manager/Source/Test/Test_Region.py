@@ -719,5 +719,213 @@ class TestRegionMetrics(unittest.TestCase):
             self.assertIsInstance(item, dict)
 
 
+class TestGetTargetClassificationReport(unittest.TestCase):
+    """
+    Unit tests for Region.get_target_classification_report().
+
+    Context.get_target_classification is mocked throughout to isolate the
+    method under test from the bug in that helper (the comparison
+    `if target_type == tg_type_element` sits outside the inner for-loop,
+    so it only ever matches the last element of each classification list).
+    """
+
+    _PATCH = 'Code.Dynamic_War_Manager.Source.Context.Context.get_target_classification'
+
+    def setUp(self):
+        self.region = Region(name="TCR Region")
+
+    # ------------------------------------------------------------------
+    # Input validation
+    # ------------------------------------------------------------------
+    def test_raises_type_error_for_non_dict_report(self):
+        """Raises TypeError when report is not a dict (string, int, list, None)."""
+        for bad in ("string", 42, None, []):
+            with self.subTest(bad=bad):
+                with self.assertRaises(TypeError):
+                    self.region.get_target_classification_report(bad)
+
+    # ------------------------------------------------------------------
+    # Returns None for absent / empty operative assets
+    # ------------------------------------------------------------------
+    def test_returns_none_when_asset_summary_missing(self):
+        """Returns None when report has no 'asset_summary' key."""
+        result = self.region.get_target_classification_report({})
+        self.assertIsNone(result)
+
+    def test_returns_none_when_asset_summary_is_none(self):
+        """Returns None when asset_summary value is None."""
+        result = self.region.get_target_classification_report({'asset_summary': None})
+        self.assertIsNone(result)
+
+    def test_returns_none_when_operative_key_missing(self):
+        """Returns None when asset_summary dict has no 'operative' key."""
+        result = self.region.get_target_classification_report(
+            {'asset_summary': {'damaged': {'Tank': {'big': 1}}}}
+        )
+        self.assertIsNone(result)
+
+    def test_returns_none_when_operative_is_none(self):
+        """Returns None when operative value is None."""
+        result = self.region.get_target_classification_report(
+            {'asset_summary': {'operative': None}}
+        )
+        self.assertIsNone(result)
+
+    def test_returns_none_when_operative_is_empty_dict(self):
+        """Returns None when operative is an empty dict (no assets to classify)."""
+        result = self.region.get_target_classification_report(
+            {'asset_summary': {'operative': {}}}
+        )
+        self.assertIsNone(result)
+
+    # ------------------------------------------------------------------
+    # Single asset type
+    # ------------------------------------------------------------------
+    def test_single_asset_type_classified_correctly(self):
+        """Single asset type: dimension counts are preserved under the correct key."""
+        with patch(self._PATCH, return_value='Armored'):
+            report = {'asset_summary': {'operative': {
+                'Tank': {'big': 2, 'medium': 1, 'small': 0}
+            }}}
+            result = self.region.get_target_classification_report(report)
+        self.assertIsInstance(result, dict)
+        self.assertIn('Armored', result)
+        self.assertEqual(result['Armored'], {'big': 2, 'medium': 1, 'small': 0})
+
+    def test_result_is_dict_not_none_for_valid_input(self):
+        """Returns a dict (not None) when at least one asset is classified."""
+        with patch(self._PATCH, return_value='Soft'):
+            report = {'asset_summary': {'operative': {'Motorized': {'big': 3}}}}
+            result = self.region.get_target_classification_report(report)
+        self.assertIsInstance(result, dict)
+
+    # ------------------------------------------------------------------
+    # Accumulation — same classification
+    # ------------------------------------------------------------------
+    def test_two_types_same_classification_accumulates_counts(self):
+        """Two asset types mapping to the same classification have counts summed per dimension."""
+        with patch(self._PATCH, return_value='Armored'):
+            report = {'asset_summary': {'operative': {
+                'Tank':    {'big': 3, 'medium': 2, 'small': 1},
+                'Armored': {'big': 1, 'medium': 4, 'small': 3},
+            }}}
+            result = self.region.get_target_classification_report(report)
+        self.assertEqual(result['Armored']['big'],    4)  # 3+1
+        self.assertEqual(result['Armored']['medium'], 6)  # 2+4
+        self.assertEqual(result['Armored']['small'],  4)  # 1+3
+
+    def test_accumulation_handles_disjoint_dimension_keys(self):
+        """Accumulation merges correctly when the two asset_data dicts have different dim keys."""
+        with patch(self._PATCH, return_value='Armored'):
+            report = {'asset_summary': {'operative': {
+                'Tank':    {'big': 2},                # solo 'big'
+                'Armored': {'medium': 3, 'small': 1}, # 'medium' e 'small'
+            }}}
+            result = self.region.get_target_classification_report(report)
+        self.assertEqual(result['Armored']['big'],    2)
+        self.assertEqual(result['Armored']['medium'], 3)
+        self.assertEqual(result['Armored']['small'],  1)
+
+    # ------------------------------------------------------------------
+    # Multiple different classifications
+    # ------------------------------------------------------------------
+    def test_two_types_different_classifications_produce_two_entries(self):
+        """Two asset types that map to different classifications produce separate entries."""
+        def classify(asset_type):
+            return 'Armored' if asset_type == 'Tank' else 'Soft'
+
+        with patch(self._PATCH, side_effect=classify):
+            report = {'asset_summary': {'operative': {
+                'Tank':      {'big': 2, 'medium': 1},
+                'Motorized': {'big': 0, 'medium': 3},
+            }}}
+            result = self.region.get_target_classification_report(report)
+
+        self.assertIn('Armored', result)
+        self.assertIn('Soft', result)
+        self.assertEqual(result['Armored'], {'big': 2, 'medium': 1})
+        self.assertEqual(result['Soft'],    {'big': 0, 'medium': 3})
+
+    def test_three_types_two_classifications(self):
+        """Three asset types: two share one classification, one has another."""
+        def classify(asset_type):
+            return 'Armored' if asset_type in ('Tank', 'Armored') else 'Air_Defense'
+
+        with patch(self._PATCH, side_effect=classify):
+            report = {'asset_summary': {'operative': {
+                'Tank':    {'big': 1},
+                'Armored': {'big': 2},
+                'SAM_Big': {'big': 0, 'medium': 4},
+            }}}
+            result = self.region.get_target_classification_report(report)
+
+        self.assertEqual(result['Armored']['big'],        3)  # 1+2
+        self.assertEqual(result['Air_Defense']['big'],    0)
+        self.assertEqual(result['Air_Defense']['medium'], 4)
+
+    # ------------------------------------------------------------------
+    # Skipping unclassifiable asset types
+    # ------------------------------------------------------------------
+    def test_asset_type_with_no_classification_is_skipped(self):
+        """Asset type for which get_target_classification returns None is excluded from result."""
+        def classify(asset_type):
+            return 'Armored' if asset_type == 'Tank' else None
+
+        with patch(self._PATCH, side_effect=classify):
+            report = {'asset_summary': {'operative': {
+                'Tank':      {'big': 2},
+                'Artillery': {'big': 5},  # senza classificazione → ignorato
+            }}}
+            result = self.region.get_target_classification_report(report)
+
+        self.assertIn('Armored', result)
+        self.assertNotIn(None, result)
+        self.assertEqual(len(result), 1)
+
+    def test_all_unclassifiable_returns_empty_dict(self):
+        """Returns empty dict when every asset type has no classification."""
+        with patch(self._PATCH, return_value=None):
+            report = {'asset_summary': {'operative': {
+                'Tank':      {'big': 2},
+                'Motorized': {'big': 1},
+            }}}
+            result = self.region.get_target_classification_report(report)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
+
+    # ------------------------------------------------------------------
+    # Copy semantics — original report must not be mutated
+    # ------------------------------------------------------------------
+    def test_original_asset_data_not_mutated(self):
+        """The original operative entry inside the report is not modified by the method."""
+        with patch(self._PATCH, return_value='Armored'):
+            original_counts = {'big': 3, 'medium': 2}
+            report = {'asset_summary': {'operative': {
+                'Tank': original_counts,
+            }}}
+            self.region.get_target_classification_report(report)
+        # L'originale non deve essere stato modificato
+        self.assertEqual(original_counts, {'big': 3, 'medium': 2})
+
+    def test_accumulation_does_not_bleed_into_original_on_second_type(self):
+        """When a second type triggers accumulation, the original dict of the first is not changed."""
+        original_tank = {'big': 1, 'medium': 0}
+        original_arm  = {'big': 2, 'medium': 3}
+
+        with patch(self._PATCH, return_value='Armored'):
+            report = {'asset_summary': {'operative': {
+                'Tank':    original_tank,
+                'Armored': original_arm,
+            }}}
+            result = self.region.get_target_classification_report(report)
+
+        # I dict originali non devono essere stati modificati
+        self.assertEqual(original_tank, {'big': 1, 'medium': 0})
+        self.assertEqual(original_arm,  {'big': 2, 'medium': 3})
+        # Il risultato deve contenere i conteggi sommati
+        self.assertEqual(result['Armored']['big'],    3)
+        self.assertEqual(result['Armored']['medium'], 3)
+
+
 if __name__ == '__main__':
     unittest.main()

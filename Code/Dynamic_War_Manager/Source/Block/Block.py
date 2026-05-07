@@ -461,7 +461,7 @@ class Block:
         """Check if block is civilian"""
         return self._category == BLOCK_CATEGORY["Civilian"]
     
-    def has_resource_manager(self):
+    def has_resource_manager(self) -> bool:
         return self._resource_manager is not None
 
     def enemy_side(self) -> str:
@@ -503,29 +503,29 @@ class Block:
             "asset_summary": {
                 "total_assets": len(self.assets) if self.assets and report_item_probability['asset_summary'] else None,
                 "operative": {
-                    "Soft": {
+                    "Tank": {
                         "Big": 0,
                         "Medium": 0,
                         "Small": 0
                     },
-                    "Hard": {
+                    "Armored": {
                         "Big": 0,       
                         "Medium": 0,
                         "Small": 0
                     },
-                    "Structure": {
+                    "Stronghold": {
                         "Big": 0,       
                         "Medium": 0,
                         "Small": 0
                     },
                 },
                 "damaged": { # SERVE!? 
-                    "Soft": {
+                    "Tank": {
                         "Big": 0,
                         "Medium": 0,
                         "Small": 0
                     },
-                    "Hard": {
+                    "Armored": {
                         "Big": 0,       
                         "Medium": 0,
                         "Small": 0
@@ -575,13 +575,8 @@ class Block:
             'asset_summary': calcProbability(re * 0.65 + 0.35),
             'supply_status': calcProbability(re * 0.65 + 0.35),
             'communication_status': calcProbability(re * 0.65 + 0.35),
-            'defense_status': calcProbability(re * 0.7 + 0.3),
-            'intelligence': calcProbability(re * 0.7 + 0.3),
-            'combat_state': calcProbability(re * 0.7 + 0.3),
-            'recon_efficiency': calcProbability(re * 0.8 + 0.2),
-            'morale': calcProbability(re * 0.2 + 0.8),
-            'military_category': calcProbability(re * 0.65 + 0.35),
-
+            'defense_status': calcProbability(re * 0.7 + 0.3),            
+            'morale': calcProbability(re * 0.2 + 0.8),            
         }
         # Asset report
         asset_summary = {'operative':{}, 'damaged':{}}
@@ -655,7 +650,7 @@ class Block:
                 asset_summary['damaged'][asset_type][asset_dimension] += 1
 
         # Compila il report finale del blocco, includendo solo le informazioni per cui la probabilità di rilevamento è soddisfatta. Se la probabilità di rilevamento per un elemento specifico non è soddisfatta, quel campo nel report sarà impostato su None per riflettere l'incertezza della ricognizione.
-        _supply = getattr(self, 'supply', None)
+        _supply = getattr(self, 'warehouse', None)
         _communication = getattr(self, 'communication', None)
         target_report = {
             "position": self.position if report_item_probability['position'] else None,
@@ -668,12 +663,15 @@ class Block:
                 "damaged": asset_summary['damaged'],
             },
             'supply_status': {
-                'ammunition': _supply.get('ammunition', {}).get('status') if _supply else None,
-                'energy': _supply.get('energy', {}).get('status') if _supply else None,
-                'fuel': _supply.get('fuel', {}).get('status') if _supply else None,
-                'hr': _supply.get('hr', {}).get('status') if _supply else None,
+                'goods': _supply.get('goods', {}).get('status') if _supply and report_item_probability['supply_status'] else None,
+                'energy': _supply.get('energy', {}).get('status') if _supply and report_item_probability['supply_status'] else None,
+                'fuel': _supply.get('fuel', {}).get('status') if _supply and report_item_probability['supply_status'] else None,
+                'hr': _supply.get('hr', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
+                'hc': _supply.get('hc', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
+                'hs': _supply.get('hs', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
+                'hb': _supply.get('hb', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
             },
-            'communication_status': _communication.get('status') if _communication else None,
+            'communication_status': _communication.get('status') if _communication and report_item_probability['communication_status'] else None,
             'defense_status': {
                 'air_defense': self.air_defense() if hasattr(self, 'air_defense') else None,
                 'aa_defense_range': self.defense_aa_range() if hasattr(self, 'defense_aa_range') else None,
@@ -685,7 +683,6 @@ class Block:
             'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,
             'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,
             'morale': self.morale if hasattr(self, 'morale') else None,
-            'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None,
+            'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None
         }
-
         return target_report
