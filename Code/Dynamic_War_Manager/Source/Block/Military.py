@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
 from heapq import heappop, heappush
 from numpy import median
-from sympy import Point3D, Point2D
-from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, setId, mean_point
+from sympy import Point3D, Point2D, re
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class, setName, calcProbability
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.State import StateCategory
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
@@ -18,7 +18,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     ACTION_TASKS,
     Ground_Vehicle_Asset_Type as gat,
     Sea_Asset_Type as sat,
-    Air_Asset_Type as aat
+    Air_Asset_Type as aat,
+    Asset_Role
 )
 if TYPE_CHECKING:
     from Code.Dynamic_War_Manager.Source.Context.Region import Region
@@ -429,7 +430,7 @@ class Military(Block):
         """
         recognitors = [
             asset for asset in self.assets.values() 
-            if hasattr(asset, 'role') and asset.role == "Recon"
+            if hasattr(asset, 'role') and asset.role == Asset_Role.RECONNAISSANCE.value
         ]
         return median(
             [asset.efficiency for asset in recognitors]
@@ -444,7 +445,7 @@ class Military(Block):
         """
         c2 = [
             asset for asset in self.assets.values()
-            if hasattr(asset, 'role') and asset.role == "c2"
+            if hasattr(asset, 'role') and asset.role == Asset_Role.C2.value
         ]
         return median(
             [asset.efficiency for asset in c2]
@@ -480,6 +481,7 @@ class Military(Block):
         pass
     #endmilitary
 
+    # serve ? è implementato in Block, ma forse qui puoi aggiungere elementi specifici per Military
     def get_recognition_report(self, region_c2_recon_efficiency: Optional[float] = None) -> Dict:
         """Generate reconnaissance report for block
         This method should analyze the block's assets, events, and state to produce a report that can be used for strategic evaluation. 
@@ -493,12 +495,14 @@ class Military(Block):
         # - Informazioni sulla posizione e la capacità di difesa del blocco (es. presenza di sistemi di difesa aerea, distanza da obiettivi strategici)
         # - Stato generale del blocco (es. morale delle truppe, efficienza logistica, livello di ricognizione)
         # - Stato dei rifornimenti (munizionamento, energy, fuel e hr) e delle linee di comunicazione (es. se sono stati interrotti o se sono ancora operativi)
-
         # nota in Utilty hai evaluateMorale(success_ratio, efficiency) utilizzata per la proprietà morale in Block. Inoltre, success_ratio è presente come proprietà in State
-        
+
+                        
         if self.state:
             self.state.update()
+
+        # il report realizzato in block considera in dettaglio asset e proprietà Military
         target_report = super().get_recognition_report(region_c2_recon_efficiency)
-        return target_report
         
+        return target_report        
 

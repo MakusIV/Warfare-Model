@@ -1,9 +1,11 @@
 
 
-
-
 FATTO
+Nel modulo Region.py ho implementato la funzione get_target_classification_report(). Verifica la corretezza sintattica e logica del codice e aggiorna il modulo Test_Region.py aggiornando ed implementando i test coinvolti
 
+
+
+Realizza il modulo di test Test_Context.py basato sulla libreria unittest, nel quale sono implementati i test di unità delle funzioni e la verifica delle strutture dati implementate nel modulo Context.py.
 
 Considera tutti i dizionari contenenti le informazioni sui veicoli (T90M_data, BMP2_data, K9K37_Buk_data, ...) e inserisci la proprietà "physical_characteristics" = {'lenght': int, 'height': int, 'width': int, weight: int} dove 'lenght', 'height' e 'width' rappresentano le dimensioni massime del veicolo espresse in metri e weight il peso espresso in tonnellate. Determina i valori per physical characteristics 
 

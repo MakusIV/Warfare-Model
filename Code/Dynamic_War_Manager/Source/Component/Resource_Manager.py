@@ -71,7 +71,7 @@ class Resource_Manager:
         self._block = block
         self._clients = clients or {}
         self._server = server or {}
-        self._warehouse = warehouse or Payload() # la capacità max dipende dalle risorse disponibili nei diversi asset si come delivery che come receive quindi non è necessario fissare un valore massimo
+        self._warehouse = warehouse or Payload() # la capacità max dipende dalle risorse disponibili nei diversi asset sia come delivery che come receive quindi non è necessario fissare un valore massimo
         
         
         # Resource calculation (lazy loading to avoid unnecessary computations)
