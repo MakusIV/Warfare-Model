@@ -790,7 +790,7 @@ class Region:
 
     # Valutare una funzione che costruice la matrice dei collegamenti tra blocchi, in modo da poterla utilizzare nei calcoli di priorità militare, in modo da evitare di dover iterare su tutte le rotte ogni volta.
 
-    def get_target_classification_report(self, report: Dict) -> Optional[Dict]:
+    def get_target_report(self, report: Dict) -> Optional[Dict]:
 
         """Classify a target based on reconnaissance report."""
 

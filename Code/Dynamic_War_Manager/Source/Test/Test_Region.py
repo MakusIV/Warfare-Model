@@ -742,38 +742,38 @@ class TestGetTargetClassificationReport(unittest.TestCase):
         for bad in ("string", 42, None, []):
             with self.subTest(bad=bad):
                 with self.assertRaises(TypeError):
-                    self.region.get_target_classification_report(bad)
+                    self.region.get_target_report(bad)
 
     # ------------------------------------------------------------------
     # Returns None for absent / empty operative assets
     # ------------------------------------------------------------------
     def test_returns_none_when_asset_summary_missing(self):
         """Returns None when report has no 'asset_summary' key."""
-        result = self.region.get_target_classification_report({})
+        result = self.region.get_target_report({})
         self.assertIsNone(result)
 
     def test_returns_none_when_asset_summary_is_none(self):
         """Returns None when asset_summary value is None."""
-        result = self.region.get_target_classification_report({'asset_summary': None})
+        result = self.region.get_target_report({'asset_summary': None})
         self.assertIsNone(result)
 
     def test_returns_none_when_operative_key_missing(self):
         """Returns None when asset_summary dict has no 'operative' key."""
-        result = self.region.get_target_classification_report(
+        result = self.region.get_target_report(
             {'asset_summary': {'damaged': {'Tank': {'big': 1}}}}
         )
         self.assertIsNone(result)
 
     def test_returns_none_when_operative_is_none(self):
         """Returns None when operative value is None."""
-        result = self.region.get_target_classification_report(
+        result = self.region.get_target_report(
             {'asset_summary': {'operative': None}}
         )
         self.assertIsNone(result)
 
     def test_returns_none_when_operative_is_empty_dict(self):
         """Returns None when operative is an empty dict (no assets to classify)."""
-        result = self.region.get_target_classification_report(
+        result = self.region.get_target_report(
             {'asset_summary': {'operative': {}}}
         )
         self.assertIsNone(result)
@@ -787,7 +787,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
             report = {'asset_summary': {'operative': {
                 'Tank': {'big': 2, 'medium': 1, 'small': 0}
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
         self.assertIsInstance(result, dict)
         self.assertIn('Armored', result)
         self.assertEqual(result['Armored'], {'big': 2, 'medium': 1, 'small': 0})
@@ -796,7 +796,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
         """Returns a dict (not None) when at least one asset is classified."""
         with patch(self._PATCH, return_value='Soft'):
             report = {'asset_summary': {'operative': {'Motorized': {'big': 3}}}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
         self.assertIsInstance(result, dict)
 
     # ------------------------------------------------------------------
@@ -809,7 +809,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':    {'big': 3, 'medium': 2, 'small': 1},
                 'Armored': {'big': 1, 'medium': 4, 'small': 3},
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
         self.assertEqual(result['Armored']['big'],    4)  # 3+1
         self.assertEqual(result['Armored']['medium'], 6)  # 2+4
         self.assertEqual(result['Armored']['small'],  4)  # 1+3
@@ -821,7 +821,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':    {'big': 2},                # solo 'big'
                 'Armored': {'medium': 3, 'small': 1}, # 'medium' e 'small'
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
         self.assertEqual(result['Armored']['big'],    2)
         self.assertEqual(result['Armored']['medium'], 3)
         self.assertEqual(result['Armored']['small'],  1)
@@ -839,7 +839,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':      {'big': 2, 'medium': 1},
                 'Motorized': {'big': 0, 'medium': 3},
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
 
         self.assertIn('Armored', result)
         self.assertIn('Soft', result)
@@ -857,7 +857,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Armored': {'big': 2},
                 'SAM_Big': {'big': 0, 'medium': 4},
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
 
         self.assertEqual(result['Armored']['big'],        3)  # 1+2
         self.assertEqual(result['Air_Defense']['big'],    0)
@@ -876,7 +876,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':      {'big': 2},
                 'Artillery': {'big': 5},  # senza classificazione → ignorato
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
 
         self.assertIn('Armored', result)
         self.assertNotIn(None, result)
@@ -889,7 +889,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':      {'big': 2},
                 'Motorized': {'big': 1},
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
         self.assertIsInstance(result, dict)
         self.assertEqual(result, {})
 
@@ -903,7 +903,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
             report = {'asset_summary': {'operative': {
                 'Tank': original_counts,
             }}}
-            self.region.get_target_classification_report(report)
+            self.region.get_target_report(report)
         # L'originale non deve essere stato modificato
         self.assertEqual(original_counts, {'big': 3, 'medium': 2})
 
@@ -917,7 +917,7 @@ class TestGetTargetClassificationReport(unittest.TestCase):
                 'Tank':    original_tank,
                 'Armored': original_arm,
             }}}
-            result = self.region.get_target_classification_report(report)
+            result = self.region.get_target_report(report)
 
         # I dict originali non devono essere stati modificati
         self.assertEqual(original_tank, {'big': 1, 'medium': 0})
