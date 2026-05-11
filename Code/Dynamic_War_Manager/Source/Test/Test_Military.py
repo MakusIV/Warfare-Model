@@ -10,7 +10,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_ACTION,
     AIR_TASK,
     Ground_Vehicle_Asset_Type as gat,
-    Air_Asset_Type as aat
+    Air_Asset_Type as aat,
+    Asset_Role
 )
 from Code.Dynamic_War_Manager.Source.DataType.State import StateCategory
 
@@ -101,7 +102,7 @@ class TestMilitary(unittest.TestCase):
 
         # Mock recon asset — efficiency è una property, si accede senza ()
         self.mock_recon = MagicMock()
-        self.mock_recon.role = "Recon"
+        self.mock_recon.role = Asset_Role.RECONNAISSANCE.value
         self.mock_recon.efficiency = 0.75
         self.mock_recon.asset_type = gat.EWR.value
         self.mock_recon.state = MagicMock()
@@ -109,7 +110,7 @@ class TestMilitary(unittest.TestCase):
 
         # Mock c2 asset
         self.mock_c2 = MagicMock()
-        self.mock_c2.role = "c2"
+        self.mock_c2.role = Asset_Role.C2.value
         self.mock_c2.efficiency = 0.8
         self.mock_c2.state = MagicMock()
         self.mock_c2.state.state_value = StateCategory.HEALTHFUL.value
@@ -238,10 +239,10 @@ class TestMilitary(unittest.TestCase):
     def test_get_recon_efficiency_multiple_assets_returns_median(self):
         """Returns the median efficiency across multiple recon assets."""
         recon_a = MagicMock()
-        recon_a.role = "Recon"
+        recon_a.role = Asset_Role.RECONNAISSANCE.value
         recon_a.efficiency = 0.6
         recon_b = MagicMock()
-        recon_b.role = "Recon"
+        recon_b.role = Asset_Role.RECONNAISSANCE.value
         recon_b.efficiency = 0.9
         self.groundbase._assets ={"r1": recon_a, "r2": recon_b}
         self.assertAlmostEqual(self.groundbase.get_recon_efficiency(), median([0.6, 0.9]))
@@ -249,7 +250,7 @@ class TestMilitary(unittest.TestCase):
     def test_get_recon_efficiency_mixed_roles(self):
         """Only assets with role='Recon' contribute to the result."""
         non_recon = MagicMock()
-        non_recon.role = "c2"
+        non_recon.role = Asset_Role.C2.value
         non_recon.efficiency = 0.1
         self.groundbase._assets ={"recon1": self.mock_recon, "other": non_recon}
         self.assertAlmostEqual(self.groundbase.get_recon_efficiency(), 0.75)
@@ -266,7 +267,7 @@ class TestMilitary(unittest.TestCase):
     def test_get_c2_efficiency_no_c2_role(self):
         """Returns 0.0 when no asset has role='c2'."""
         non_c2 = MagicMock()
-        non_c2.role = "Recon"
+        non_c2.role = Asset_Role.RECONNAISSANCE.value
         non_c2.efficiency = 0.9
         self.groundbase._assets ={"a1": non_c2}
         self.assertEqual(self.groundbase.get_c2_efficiency(), 0.0)
@@ -279,10 +280,10 @@ class TestMilitary(unittest.TestCase):
     def test_get_c2_efficiency_multiple_assets_returns_median(self):
         """Returns the median efficiency across multiple c2 assets."""
         c2_a = MagicMock()
-        c2_a.role = "c2"
+        c2_a.role = Asset_Role.C2.value
         c2_a.efficiency = 0.5
         c2_b = MagicMock()
-        c2_b.role = "c2"
+        c2_b.role = Asset_Role.C2.value
         c2_b.efficiency = 0.9
         self.groundbase._assets ={"c1": c2_a, "c2": c2_b}
         self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), median([0.5, 0.9]))
@@ -290,7 +291,7 @@ class TestMilitary(unittest.TestCase):
     def test_get_c2_efficiency_mixed_roles(self):
         """Only assets with role='c2' contribute to the result."""
         recon = MagicMock()
-        recon.role = "Recon"
+        recon.role = Asset_Role.RECONNAISSANCE.value
         recon.efficiency = 0.1
         self.groundbase._assets ={"c2_1": self.mock_c2, "recon": recon}
         self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), 0.8)
@@ -468,11 +469,11 @@ class TestMilitary(unittest.TestCase):
     def test_placeholder_methods(self):
         """Test placeholder methods don't raise exceptions."""
         try:
-            self.airbase.air_defense()
+            self.airbase.air_defense_volume()
             self.airbase.combat_range()
-            self.airbase.defense_aa_range()
+            self.airbase.air_defense_aaa_range()
             self.airbase.combat_volume()
-            self.airbase.defense_aa_volume()
+            self.airbase.air_defense_aaa_volume()
             self.airbase.intelligence()
             self.airbase.combat_state()
         except Exception as e:

@@ -496,10 +496,25 @@ class Block:
         Data Structure
 
         target_report = {
-            "position": self.position if report_item_probability['position'] else None, 
+            "block_name": self.name,
+            "block_id": self.id,            
+            "side": self.side,    
+            "region": self.region.name if self.region else None,   
+            "category": self.category,
+            "sub_category": self.sub_category,
+            "military_category": self.get_military_category() if hasattr(self, 'get_military_category') else None,
+            "functionality": self.functionality,
+            "description": self.description,
+            "position": self.position if report_item_probability['position'] else None,
             "dimension": self.dimension if hasattr(self, 'dimension') and report_item_probability['dimension'] else None,
-            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,            
+            'efficiency': self.efficiency if hasattr(self, 'efficiency') and report_item_probability['efficiency'] else None,
+            'morale': self.morale if hasattr(self, 'morale') and report_item_probability['morale'] else None,
             "state": self.state.state_value if self.state and report_item_probability['state'] else None,
+            'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,            
+            'intelligence': self.intelligence() if hasattr(self, 'intelligence') else None,            
+            'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,                      
+            'communication_status': _communication.get('status') if _communication and report_item_probability['communication_status'] else None,
+            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,       
             "asset_summary": {
                 "total_assets": len(self.assets) if self.assets and report_item_probability['asset_summary'] else None,
                 "operative": {
@@ -519,8 +534,25 @@ class Block:
                         "Small": 0
                     },
                 },
-                "damaged": { # SERVE!? 
+                "damaged": { 
                     "Tank": {
+                        "Big": 0,
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Armored": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                    "Structure": {
+                        "Big": 0,       
+                        "Medium": 0,
+                        "Small": 0
+                    },
+                },
+                "destroyed": { 
+                    "Air_Defense": {
                         "Big": 0,
                         "Medium": 0,
                         "Small": 0
@@ -543,19 +575,13 @@ class Block:
                 'fuel': self.supply.get('fuel', {}).get('status') if self.supply else None,
                 'hr': self.supply.get('hr', {}).get('status') if self.supply else None,
             },
-            'communication_status': self.communication.get('status') if self.communication else None,
             'defense_status': {
-                'air_defense': self.air_defense() if hasattr(self, 'air_defense') else None,
-                'aa_defense_range': self.defense_aa_range() if hasattr(self, 'defense_aa_range') else None,
+                'air_defense_volume': self.air_defense() if hasattr(self, 'air_defense_volume') else None, # air_defense dovrebbe essere in asset_summary
+                'air_defense_aaa_range': self.defense_aa_range() if hasattr(self, 'air_defense_aaa_range') else None,
                 'combat_range': self.combat_range() if hasattr(self, 'combat_range') else None,
                 'combat_volume': self.combat_volume() if hasattr(self, 'combat_volume') else None,
-                'defense_aa_volume': self.defense_aa_volume() if hasattr(self, 'defense_aa_volume') else None,
-            },
-            'intelligence': self.intelligence() if hasattr(self, 'intelligence') else None,
-            'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,
-            'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,
-            'morale': self.morale if hasattr(self, 'morale') else None,
-            'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None,
+                'air_defense_aaa_volume': self.defense_aa_volume() if hasattr(self, 'air_defense_aaa_volume') else None,
+            },            
         }
 
         
@@ -570,6 +596,8 @@ class Block:
         report_item_probability = {
             'position': calcProbability(re * 0.3 + 0.7), # per position la ricognizione è più efficace, quindi ha una probabilità maggiore di essere rilevata correttamente, mentre per gli altri parametri la probabilità è leggermente inferiore per riflettere l'incertezza della ricognizione.
             'dimension': calcProbability(re * 0.3 + 0.7),
+            'efficiency': calcProbability(re * 0.3 + 0.7), 
+            # il balance_trade non serve in quanto utilizzatoper calcolare l'efficienza.            
             'events': calcProbability(re * 0.3 + 0.7),
             'state': calcProbability(re * 0.5 + 0.5),
             'asset_summary': calcProbability(re * 0.65 + 0.35),
@@ -579,12 +607,12 @@ class Block:
             'morale': calcProbability(re * 0.2 + 0.8),            
         }
         # Asset report
-        asset_summary = {'operative':{}, 'damaged':{}}
+        asset_summary = {'operative':{}, 'damaged':{}, 'destroyed': {}}
     
         for asset in self._assets.values():
-            asset_type = asset.get('asset_type', None)
-            asset_category = asset.get('category', None)
-            asset_model = asset.get('model', None)
+            asset_type = getattr(asset, 'asset_type', None)
+            asset_category = getattr(asset, 'category', None)
+            asset_model = getattr(asset, 'model', None)
 
             if asset_model is None:
                 logger.error(f"Model not found for asset ID: {asset.id}. Asset type: {asset_type}. Exit.")
@@ -642,25 +670,50 @@ class Block:
             if asset_summary['damaged'][asset_type].get(asset_dimension) is None:
                 asset_summary['damaged'][asset_type][asset_dimension] = 0
 
+            if asset_summary['destroyed'].get(asset_type) is None:
+                asset_summary['destroyed'][asset_type] = {}
+
+            if asset_summary['destroyed'][asset_type].get(asset_dimension) is None:
+                asset_summary['destroyed'][asset_type][asset_dimension] = 0
+
             # Aggiorna i conteggi degli asset operativi e danneggiati in base alla loro classe di dimensione. Se un asset è operativo e la probabilità di rilevamento del riepilogo degli asset è soddisfatta, incrementa il conteggio degli asset operativi per la sua classe di dimensione. Se un asset è danneggiato e la probabilità di rilevamento del riepilogo degli asset è soddisfatta, incrementa il conteggio degli asset danneggiati per la sua classe di dimensione.
             if asset.is_operative() and report_item_probability['asset_summary']:
                 asset_summary['operative'][asset_type][asset_dimension] += 1 
             
             elif asset.is_damaged() and report_item_probability['asset_summary']:
                 asset_summary['damaged'][asset_type][asset_dimension] += 1
+            
+            elif asset.is_destroyed() and report_item_probability['asset_summary']:
+                asset_summary['destroyed'][asset_type][asset_dimension] += 1
 
         # Compila il report finale del blocco, includendo solo le informazioni per cui la probabilità di rilevamento è soddisfatta. Se la probabilità di rilevamento per un elemento specifico non è soddisfatta, quel campo nel report sarà impostato su None per riflettere l'incertezza della ricognizione.
         _supply = getattr(self, 'warehouse', None)
         _communication = getattr(self, 'communication', None)
         target_report = {
+            "block_name": self.name,
+            "block_id": self.id,            
+            "side": self.side,    
+            "region": self.region.name if self.region else None,   
+            "category": self.category,
+            "sub_category": self.sub_category,
+            "military_category": self.get_military_category() if hasattr(self, 'get_military_category') else None,
+            "functionality": self.functionality,
+            "description": self.description,
             "position": self.position if report_item_probability['position'] else None,
             "dimension": self.dimension if hasattr(self, 'dimension') and report_item_probability['dimension'] else None,
-            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,
+            'efficiency': self.efficiency if hasattr(self, 'efficiency') and report_item_probability['efficiency'] else None,
+            'morale': self.morale if hasattr(self, 'morale') and report_item_probability['morale'] else None,
             "state": self.state.state_value if self.state and report_item_probability['state'] else None,
+            'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,            
+            'intelligence': self.intelligence() if hasattr(self, 'intelligence') else None,            
+            'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,                      
+            'communication_status': _communication.get('status') if _communication and report_item_probability['communication_status'] else None,
+            "events": [event.description for event in self.events] if self.events and report_item_probability['events'] else None,
             "asset_summary": {
                 "total_assets": len(self.assets) if self.assets and report_item_probability['asset_summary'] else None,
                 "operative": asset_summary['operative'],
                 "damaged": asset_summary['damaged'],
+                "destroyed": asset_summary['destroyed'],
             },
             'supply_status': {
                 'goods': _supply.get('goods', {}).get('status') if _supply and report_item_probability['supply_status'] else None,
@@ -670,19 +723,21 @@ class Block:
                 'hc': _supply.get('hc', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
                 'hs': _supply.get('hs', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
                 'hb': _supply.get('hb', {}).get('status') if _supply and report_item_probability['supply_status'] else None,    
-            },
-            'communication_status': _communication.get('status') if _communication and report_item_probability['communication_status'] else None,
+            },            
             'defense_status': {
-                'air_defense': self.air_defense() if hasattr(self, 'air_defense') else None,
-                'aa_defense_range': self.defense_aa_range() if hasattr(self, 'defense_aa_range') else None,
-                'combat_range': self.combat_range() if hasattr(self, 'combat_range') else None,
-                'combat_volume': self.combat_volume() if hasattr(self, 'combat_volume') else None,
-                'defense_aa_volume': self.defense_aa_volume() if hasattr(self, 'defense_aa_volume') else None,
+                'air_defense_volume': self.air_defense_volume() if hasattr(self, 'air_defense_volume') and report_item_probability['defense_status'] else None,
+                'air_defense_aaa_range': self.air_defense_aaa_range() if hasattr(self, 'air_defense_aaa_range') and report_item_probability['defense_status'] else None,
+                'combat_range': self.combat_range() if hasattr(self, 'combat_range') and report_item_probability['defense_status'] else None,
+                'combat_volume': self.combat_volume() if hasattr(self, 'combat_volume') and report_item_probability['defense_status'] else None,
+                'air_defense_aaa_volume': self.air_defense_aaa_volume() if hasattr(self, 'air_defense_aaa_volume') and report_item_probability['defense_status'] else None,
             },
-            'intelligence': self.intelligence() if hasattr(self, 'intelligence') else None,
-            'combat_state': self.combat_state() if hasattr(self, 'combat_state') else None,
-            'recon_efficiency': self.get_recon_efficiency() if hasattr(self, 'get_recon_efficiency') else None,
-            'morale': self.morale if hasattr(self, 'morale') else None,
-            'military_category': self.get_military_category() if hasattr(self, 'get_military_category') else None
         }
         return target_report
+    
+    def get_status_report(self) -> Dict[str, Any]: # Nota il cliente per la ricognizione dovrebbe essere la Region che ha visione e competenza sulla strategia
+        """Generate status report for block
+        """
+        return self.get_recognition_report(region_c2_recon_efficiency=1.0)  # Ottieni il report di ricognizione con efficienza di ricognizione massima    
+        
+        
+        

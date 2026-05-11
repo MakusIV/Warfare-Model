@@ -452,7 +452,7 @@ class Military(Block):
         ) if c2 else 0.0
 
     #Placeholder Methods for Future Implementation
-    def air_defense(self) -> None:
+    def air_defense_volume(self) -> None:
         """Calculate air defense volume (to be implemented)."""
         pass
 
@@ -460,16 +460,16 @@ class Military(Block):
         """Calculate combat range (to be implemented)."""
         pass
 
-    def defense_aa_range(self, height: int = 0) -> None:
-        """Calculate AA defense range (to be implemented)."""
+    def air_defense_aaa_range(self, height: int = 0) -> None:
+        """Calculate AA defense range @ height - serve? hai il volume?(to be implemented)."""
         pass
 
     def combat_volume(self, type: str = "Artillery") -> None:
         """Calculate combat volume (to be implemented)."""
         pass
 
-    def defense_aa_volume(self) -> None:
-        """Calculate AA defense volume (to be implemented)."""
+    def air_defense_aaa_volume(self) -> None:
+        """Calculate AAA defense volume (to be implemented)."""
         pass
 
     def intelligence(self) -> None:

@@ -553,10 +553,12 @@ class TestBlock(unittest.TestCase):
         report = self.block.get_recognition_report()
         self.assertIsInstance(report, dict)
         expected_keys = {
-            'position', 'dimension', 'events', 'state', 'asset_summary',
-            'supply_status', 'communication_status', 'defense_status',
-            'intelligence', 'combat_state', 'recon_efficiency', 'morale',
-            'military_category',
+            'block_name', 'block_id', 'side', 'region', 'category',
+            'sub_category', 'military_category', 'functionality', 'description',
+            'position', 'dimension', 'efficiency', 'morale',
+            'state', 'combat_state', 'intelligence', 'recon_efficiency',
+            'communication_status', 'events', 'asset_summary',
+            'supply_status', 'defense_status',
         }
         self.assertEqual(set(report.keys()), expected_keys)
 
@@ -599,11 +601,15 @@ class TestBlock(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=False)
     def test_get_recognition_report_all_none_when_prob_false(self, _mock_prob):
-        """When all probabilities fail, position/events/state are all None."""
+        """When all probabilities fail, all probability-gated fields are None."""
         report = self.block.get_recognition_report()
         self.assertIsNone(report['position'])
         self.assertIsNone(report['events'])
         self.assertIsNone(report['state'])
+        self.assertIsNone(report['morale'])
+        for key in ('air_defense_volume', 'air_defense_aaa_range', 'combat_range',
+                    'combat_volume', 'air_defense_aaa_volume'):
+            self.assertIsNone(report['defense_status'][key])
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
     def test_get_recognition_report_with_supply(self, _mock_prob):
@@ -642,6 +648,43 @@ class TestBlock(unittest.TestCase):
             self.block.get_recognition_report()
         except Exception as exc:
             self.fail(f"get_recognition_report() raised unexpectedly: {exc}")
+
+    # -----------------------------------------------------------------------
+    # get_status_report
+    # -----------------------------------------------------------------------
+    def test_get_status_report_delegates_with_max_efficiency(self):
+        """get_status_report() calls get_recognition_report with region_c2_recon_efficiency=1.0."""
+        with patch.object(self.block, 'get_recognition_report', return_value={}) as mock_gr:
+            self.block.get_status_report()
+            mock_gr.assert_called_once_with(region_c2_recon_efficiency=1.0)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_status_report_returns_dict(self, _mock_prob):
+        """get_status_report() returns a dict."""
+        report = self.block.get_status_report()
+        self.assertIsInstance(report, dict)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_status_report_same_keys_as_recognition_report(self, _mock_prob):
+        """get_status_report() returns the same key set as get_recognition_report()."""
+        status_keys = set(self.block.get_status_report().keys())
+        recon_keys = set(self.block.get_recognition_report().keys())
+        self.assertEqual(status_keys, recon_keys)
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_status_report_state_not_none(self, _mock_prob):
+        """get_status_report() populates state (probability always True at max efficiency)."""
+        report = self.block.get_status_report()
+        self.assertIsNotNone(report['state'])
+
+    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
+    def test_get_status_report_base_fields_always_present(self, _mock_prob):
+        """get_status_report() always includes non-gated fields with correct values."""
+        report = self.block.get_status_report()
+        self.assertEqual(report['block_name'], self.block.name)
+        self.assertEqual(report['block_id'], self.block.id)
+        self.assertEqual(report['side'], self.block.side)
+        self.assertEqual(report['category'], self.block.category)
 
     # -----------------------------------------------------------------------
     # __repr__ / __str__

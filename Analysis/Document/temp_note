@@ -1,6 +1,18 @@
 
 
+Ottimo. Adesso devo realizzare due funzioni per Asset.py e i suoi derivati: Mobile.py, Structure.py, Vehicle.py, Aircraft.py, Ship.py  che mi consenta la serializzazione in un file json dello stato di una istanza e una funzione inversa che consente la creazione di una istanza dal file json. Crea le due funzioni in ogni classe a partire da Asset.py ed implementa i test in Test_Asset.py 
+
+
+
+
+
+
+
 FATTO
+bene, adesso mi devi aiutare a definire come realizzare quanto segue: 
+per ogni missione identificata da un mission_id che verrà eseguita in una determinata data e orario, devo memorizzare le informazioni contenute negli  status_report di ogni blocco presente in una determinata regione e per tutte le regioni. Queste informazioni sono utilizzate come memoria di tutta la campagna militare costituita da tutte le missioni svolte dai diversi asset. Le informazioni saranno utilizzata la valutazione dello stato operativo dei blocchi (Block) e dei relativi asset (Asset) delle diverse fazioni. 
+Secondo te è opportuno utilizzare una soluzione su database oppure, più semplicemente, utilizzare un formato tipo dizionario con le diverse chiave per rappresentare missione, data, orario, regione, blocco e memorizzare in esso lo status_report?
+
 Nel modulo Region.py ho implementato la funzione get_target_classification_report(). Verifica la corretezza sintattica e logica del codice e aggiorna il modulo Test_Region.py aggiornando ed implementando i test coinvolti
 
 

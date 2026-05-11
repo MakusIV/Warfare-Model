@@ -1,0 +1,38 @@
+2026-05-11 14:11:11,550 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,552 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,554 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,561 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,562 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,563 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,565 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=South block=B002
+2026-05-11 14:11:11,566 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,568 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,570 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B002
+2026-05-11 14:11:11,571 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,573 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,575 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,577 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B002
+2026-05-11 14:11:11,578 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-05-11 14:11:11,580 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,581 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,583 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,585 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,586 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,587 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-05-11 14:11:11,590 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,592 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-05-11 14:11:11,592 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,595 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,596 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,596 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,597 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,597 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-05-11 14:11:11,598 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,600 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=South block=B002
+2026-05-11 14:11:11,603 - Dynamic_War_Manager.Source.Context.Campaign_History - INFO - save - CampaignHistory saved to /tmp/tmpgc36xuye.json (2 missions).
+2026-05-11 14:11:11,604 - Dynamic_War_Manager.Source.Context.Campaign_History - INFO - load - CampaignHistory loaded from /tmp/tmpgc36xuye.json (2 missions).
+2026-05-11 14:11:11,606 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,606 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-05-11 14:11:11,607 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,608 - Dynamic_War_Manager.Source.Context.Campaign_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-05-11 14:11:11,609 - Dynamic_War_Manager.Source.Context.Campaign_History - INFO - save - CampaignHistory saved to /tmp/tmpjbq609td.json (1 missions).
