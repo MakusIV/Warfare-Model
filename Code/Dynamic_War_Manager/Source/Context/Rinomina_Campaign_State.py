@@ -34,43 +34,6 @@ logger = Logger(module_name = __name__, class_name = 'Campaign_State')
 
 
 """
-DATA STRUCTURE
-
-_ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {   
-
-        'air': {at.FIGHTER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14B Tomcat': 100,        
-                },
-                at.FIGHTER_BOMBER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                                
-        }, 
-
-        'ground': {
-                ag.TANK.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14B Tomcat': 100,
-                    },
-                ag.ARMORED.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,
-                },
-                
-        },
-
-        'sea': {asea.CARRIER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                    
-                },
-                asea.DESTROYER.value: {
-                    'F-14A Tomcat': 100,
-                    'F-14A Tomcat': 100,                    
-                },                           
-            },
-}
-
-
     blocks_state = {
             "block_name": self.name,
             "block_id": self.id,            
@@ -110,13 +73,7 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
             },
         }
 
-
-
-
-    Stores status_report snapshots for every block in every region, indexed by mission.
-
-    La usi per le valutazioni strategiche e tattiche dopo ogni missione, per tenere traccia dell'evoluzione della campagna e per analizzare trend e pattern nei dati storici.
-
+    
     Internal structure:
         _state: {
             mission_id: {
@@ -133,72 +90,7 @@ _ASSET_AVAILABILITY: Dict[str, Tuple[float, float]] = {
                 }
             }
         }
-
-      ---
-  Context/Campaign_History.py
-
-  Struttura dati interna
-
-  _history[mission_id] → { date, time, regions → { region_name → { block_id →
-  status_report } } }                                                           
-   
-  API Write                                                                     
-
-  ┌────────────────────────────────────────┬────────────────────────────────┐
-  │                 Metodo                 │          Descrizione           │
-  ├────────────────────────────────────────┼────────────────────────────────┤
-  │                                        │ Aggiunge il report di un       │
-  │ add_block_snapshot(mission_id, date,   │ singolo blocco; crea la        │
-  │ time, region, block_id, report)        │ missione se non esiste; rileva │
-  │                                        │  conflitti di data/ora         │
-  ├────────────────────────────────────────┼────────────────────────────────┤
-  │ add_region_snapshot(mission_id, date,  │ Aggiunge tutti i blocchi di    │
-  │ time, region, blocks)                  │ una regione in un colpo        │
-  │                                        │ ({block_id: report})           │
-  └────────────────────────────────────────┴────────────────────────────────┘
-
-  API Read
-
-  ┌─────────────────────────────────────┬───────────────────────────────────┐
-  │               Metodo                │              Ritorna              │
-  ├─────────────────────────────────────┼───────────────────────────────────┤
-  │ missions                            │ Lista di mission_id in ordine di  │
-  │                                     │ inserimento                       │
-  ├─────────────────────────────────────┼───────────────────────────────────┤
-  │ get_mission(mission_id)             │ Snapshot completo della missione  │
-  ├─────────────────────────────────────┼───────────────────────────────────┤
-  │ get_region_snapshot(mission_id,     │ {block_id: report} per una        │
-  │ region)                             │ regione                           │
-  ├─────────────────────────────────────┼───────────────────────────────────┤
-  │ get_block_snapshot(mission_id,      │ Report singolo o None             │
-  │ region, block_id)                   │                                   │
-  ├─────────────────────────────────────┼───────────────────────────────────┤
-  │ get_block_history(region, block_id) │ Lista (mission_id, date, time,    │
-  │                                     │ report) ordinata cronologicamente │
-  ├─────────────────────────────────────┼───────────────────────────────────┤   
-  │ get_field_trend(region, block_id,   │ Lista (mission_id, date, time,    │
-  │ field)                              │ valore) per analisi trend (es.    │   
-  │                                     │ "efficiency", "state")            │   
-  └─────────────────────────────────────┴───────────────────────────────────┘
-                                                                                
-  Persistenza                                               
-
-  ch.save("campaign_history.json")          # serializza su file JSON
-  ch2 = CampaignHistory.load("campaign_history.json")  # ricarica      
-
-
-
-
-
-
-
-    
-
-
-
 """
-
-
 
 class Campaign_State:
 

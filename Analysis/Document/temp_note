@@ -1,6 +1,10 @@
 
 
-Ottimo. Adesso devo realizzare due funzioni per Asset.py e i suoi derivati: Mobile.py, Structure.py, Vehicle.py, Aircraft.py, Ship.py  che mi consenta la serializzazione in un file json dello stato di una istanza e una funzione inversa che consente la creazione di una istanza dal file json. Crea le due funzioni in ogni classe a partire da Asset.py ed implementa i test in Test_Asset.py 
+Analogalmente a quanto realizzato per la serializzazione delle informazioni relative ai target con il modulo Target_Status_History.py, implementa il nuovo modulo Campaign_State.py con tutte le funzioni necessarie per salvare lo stato di tutti i componenti della campagna Regioni (Region), Blocchi (Block) presenti nelle Regioni, Asset appartenenti ai blocchi i quali sono costituiti da classi derivate come Vehicle, Aircraft, Ship e Structure. Considera che i Blocchi oltre ad essere costituiti da Asset, hanno anche come componenti istanze specifiche di State e Resource_Manager e, come per gli Asset, è importante salvare le informazioni di stato di questi componenti in modo da essere in grado di analizzare ed eventualmente ripristinare un determinato stato della campagna. 
+Le informazioni che identificano uno stato della campagna sono il mission_id: str, date: str, time: str. Se le informazioni che ti ho data non sono sufficienti per eliminare qualsiasi ambiguita o dubbio sullo sviluppo del modulo, non esitare a chiedermi eventuali ulteriori dettagli ovvero chiarimenti.
+
+
+
 
 
 
@@ -9,6 +13,12 @@ Ottimo. Adesso devo realizzare due funzioni per Asset.py e i suoi derivati: Mobi
 
 
 FATTO
+
+Dobbiamo implementare un nuovo modulo per il salvataggio dello stato della campagna, prima di fare questo è necessario eliminare alcune possibili ambiguità nella definizione e gestione delle informazioni di stato:
+Con il modulo Campaign_History.py sono state implementate le funzionalità di lettura e scrittura delle informazioni relative ai blocchi presenti in una specifica regione. Queste informazioni NON rappresentano le informazioni di stato dei blocchi presenti nella regione ma informazioni che rappresentano i blocchi da un punto di vista di obiettivi militari (target). Infatti la funzione utilizzata è get_status_report che utilizza tutte le informazioni fornite dalla get_recognition_report. Quindi rinomina il modulo Campaign_History.py con Target_Status_History.py e per l'acquisizione delle informazioni sui blocchi utilizza direttamente la funzione get_recognition_report(region_c2_recon_efficiency = 1.0). Succcessivamente elimina la funzione get_status_report ed i relativi metodi di test presenti in Test_Block.py. Inoltre cambia il nome del modulo Test_Campaign_History.py in Test_Target_Status_History.py aggiornando i test coerentemente con le modifiche apportate.
+
+
+
 bene, adesso mi devi aiutare a definire come realizzare quanto segue: 
 per ogni missione identificata da un mission_id che verrà eseguita in una determinata data e orario, devo memorizzare le informazioni contenute negli  status_report di ogni blocco presente in una determinata regione e per tutte le regioni. Queste informazioni sono utilizzate come memoria di tutta la campagna militare costituita da tutte le missioni svolte dai diversi asset. Le informazioni saranno utilizzata la valutazione dello stato operativo dei blocchi (Block) e dei relativi asset (Asset) delle diverse fazioni. 
 Secondo te è opportuno utilizzare una soluzione su database oppure, più semplicemente, utilizzare un formato tipo dizionario con le diverse chiave per rappresentare missione, data, orario, regione, blocco e memorizzare in esso lo status_report?

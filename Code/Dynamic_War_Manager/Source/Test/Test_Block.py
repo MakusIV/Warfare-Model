@@ -650,43 +650,6 @@ class TestBlock(unittest.TestCase):
             self.fail(f"get_recognition_report() raised unexpectedly: {exc}")
 
     # -----------------------------------------------------------------------
-    # get_status_report
-    # -----------------------------------------------------------------------
-    def test_get_status_report_delegates_with_max_efficiency(self):
-        """get_status_report() calls get_recognition_report with region_c2_recon_efficiency=1.0."""
-        with patch.object(self.block, 'get_recognition_report', return_value={}) as mock_gr:
-            self.block.get_status_report()
-            mock_gr.assert_called_once_with(region_c2_recon_efficiency=1.0)
-
-    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
-    def test_get_status_report_returns_dict(self, _mock_prob):
-        """get_status_report() returns a dict."""
-        report = self.block.get_status_report()
-        self.assertIsInstance(report, dict)
-
-    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
-    def test_get_status_report_same_keys_as_recognition_report(self, _mock_prob):
-        """get_status_report() returns the same key set as get_recognition_report()."""
-        status_keys = set(self.block.get_status_report().keys())
-        recon_keys = set(self.block.get_recognition_report().keys())
-        self.assertEqual(status_keys, recon_keys)
-
-    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
-    def test_get_status_report_state_not_none(self, _mock_prob):
-        """get_status_report() populates state (probability always True at max efficiency)."""
-        report = self.block.get_status_report()
-        self.assertIsNotNone(report['state'])
-
-    @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
-    def test_get_status_report_base_fields_always_present(self, _mock_prob):
-        """get_status_report() always includes non-gated fields with correct values."""
-        report = self.block.get_status_report()
-        self.assertEqual(report['block_name'], self.block.name)
-        self.assertEqual(report['block_id'], self.block.id)
-        self.assertEqual(report['side'], self.block.side)
-        self.assertEqual(report['category'], self.block.category)
-
-    # -----------------------------------------------------------------------
     # __repr__ / __str__
     # -----------------------------------------------------------------------
     def test_repr_contains_name_and_category(self):

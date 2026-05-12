@@ -68,6 +68,7 @@ class Resource_Manager:
         self._validate_all_params(block=block, clients=clients, server=server, warehouse=warehouse)
         
         # Property initialization
+        self._id = f"Resource_Manager_{block.id}_{block.name}"
         self._block = block
         self._clients = clients or {}
         self._server = server or {}

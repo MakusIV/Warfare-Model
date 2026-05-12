@@ -733,11 +733,3 @@ class Block:
             },
         }
         return target_report
-    
-    def get_status_report(self) -> Dict[str, Any]: # Nota il cliente per la ricognizione dovrebbe essere la Region che ha visione e competenza sulla strategia
-        """Generate status report for block
-        """
-        return self.get_recognition_report(region_c2_recon_efficiency=1.0)  # Ottieni il report di ricognizione con efficienza di ricognizione massima    
-        
-        
-        

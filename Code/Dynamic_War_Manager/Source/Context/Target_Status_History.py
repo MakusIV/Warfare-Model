@@ -7,14 +7,17 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
-logger = Logger(module_name=__name__, class_name='CampaignHistory').logger
+logger = Logger(module_name=__name__, class_name='TargetStatusHistory').logger
 
 
-class CampaignHistory:
+class TargetStatusHistory:
     """
-    Stores status_report snapshots for every block in every region, indexed by mission.
+    Stores recognition_report snapshots for every block in every region, indexed by mission.
 
-    La usi per le valutazioni strategiche e tattiche dopo ogni missione, per tenere traccia dell'evoluzione della campagna e per analizzare trend e pattern nei dati storici.
+    I dati memorizzati rappresentano i blocchi dal punto di vista degli obiettivi militari
+    (target), acquisiti tramite get_recognition_report(region_c2_recon_efficiency=1.0).
+    Li usi per le valutazioni strategiche e tattiche dopo ogni missione, per tenere traccia
+    dell'evoluzione della campagna e per analizzare trend e pattern nei dati storici.
 
     Internal structure:
         _history: {
@@ -23,21 +26,21 @@ class CampaignHistory:
                 "time":    str,    # "HH:MM" or "HH:MM:SS"
                 "regions": {
                     region_name: {
-                        block_id: status_report_dict
+                        block_id: recognition_report_dict
                     }
                 }
             }
         }
 
       ---
-  Context/Campaign_History.py
+  Context/Target_Status_History.py
 
   Struttura dati interna
 
   _history[mission_id] → { date, time, regions → { region_name → { block_id →
-  status_report } } }                                                           
-   
-  API Write                                                                     
+  recognition_report } } }
+
+  API Write
 
   ┌────────────────────────────────────────┬────────────────────────────────┐
   │                 Metodo                 │          Descrizione           │
@@ -70,19 +73,16 @@ class CampaignHistory:
   ├─────────────────────────────────────┼───────────────────────────────────┤
   │ get_block_history(region, block_id) │ Lista (mission_id, date, time,    │
   │                                     │ report) ordinata cronologicamente │
-  ├─────────────────────────────────────┼───────────────────────────────────┤   
+  ├─────────────────────────────────────┼───────────────────────────────────┤
   │ get_field_trend(region, block_id,   │ Lista (mission_id, date, time,    │
-  │ field)                              │ valore) per analisi trend (es.    │   
-  │                                     │ "efficiency", "state")            │   
+  │ field)                              │ valore) per analisi trend (es.    │
+  │                                     │ "efficiency", "state")            │
   └─────────────────────────────────────┴───────────────────────────────────┘
-                                                                                
-  Persistenza                                               
 
-  ch.save("campaign_history.json")          # serializza su file JSON
-  ch2 = CampaignHistory.load("campaign_history.json")  # ricarica      
+  Persistenza
 
-
-
+  tsh.save("target_status_history.json")           # serializza su file JSON
+  tsh2 = TargetStatusHistory.load("target_status_history.json")  # ricarica
 
 
 
@@ -103,9 +103,9 @@ class CampaignHistory:
         time: str,
         region_name: str,
         block_id: str,
-        status_report: Dict[str, Any],
+        recognition_report: Dict[str, Any],
     ) -> None:
-        """Register the status_report of one block for a given mission.
+        """Register the recognition_report of one block for a given mission.
 
         If the mission does not yet exist it is created with the supplied
         date/time.  Supplying a different date or time for an already
@@ -116,7 +116,7 @@ class CampaignHistory:
         self._validate_time(time)
         self._validate_str(region_name, "region_name")
         self._validate_str(block_id, "block_id")
-        self._validate_status_report(status_report)
+        self._validate_recognition_report(recognition_report)
 
         if mission_id not in self._history:
             self._history[mission_id] = {"date": date, "time": time, "regions": {}}
@@ -132,7 +132,7 @@ class CampaignHistory:
         regions = self._history[mission_id]["regions"]
         if region_name not in regions:
             regions[region_name] = {}
-        regions[region_name][block_id] = status_report
+        regions[region_name][block_id] = recognition_report
         logger.debug(
             "Snapshot added: mission=%s region=%s block=%s", mission_id, region_name, block_id
         )
@@ -145,10 +145,10 @@ class CampaignHistory:
         region_name: str,
         blocks: Dict[str, Dict[str, Any]],
     ) -> None:
-        """Register status_reports for all blocks in a region at once.
+        """Register recognition_reports for all blocks in a region at once.
 
         Args:
-            blocks: mapping {block_id: status_report}.
+            blocks: mapping {block_id: recognition_report}.
         """
         if not isinstance(blocks, dict):
             raise TypeError(f"blocks must be a dict, got {type(blocks).__name__}.")
@@ -176,7 +176,7 @@ class CampaignHistory:
         return self._history[mission_id]
 
     def get_region_snapshot(self, mission_id: str, region_name: str) -> Dict[str, Dict]:
-        """Return {block_id: status_report} for a region in a mission.
+        """Return {block_id: recognition_report} for a region in a mission.
 
         Returns an empty dict if the region was not recorded for that mission.
         """
@@ -186,7 +186,7 @@ class CampaignHistory:
     def get_block_snapshot(
         self, mission_id: str, region_name: str, block_id: str
     ) -> Optional[Dict[str, Any]]:
-        """Return the status_report of a block in a given mission, or None."""
+        """Return the recognition_report of a block in a given mission, or None."""
         self._validate_str(block_id, "block_id")
         return self.get_region_snapshot(mission_id, region_name).get(block_id)
 
@@ -196,7 +196,7 @@ class CampaignHistory:
         """Return all snapshots of a block across missions, sorted by date then time.
 
         Returns:
-            List of (mission_id, date, time, status_report).
+            List of (mission_id, date, time, recognition_report).
         """
         self._validate_str(region_name, "region_name")
         self._validate_str(block_id, "block_id")
@@ -230,7 +230,7 @@ class CampaignHistory:
         return mission_id in self._history
 
     def __repr__(self) -> str:
-        return f"CampaignHistory(missions={len(self)}, ids={self.missions})"
+        return f"TargetStatusHistory(missions={len(self)}, ids={self.missions})"
 
     # ------------------------------------------------------------------ #
     # Persistence                                                          #
@@ -243,19 +243,19 @@ class CampaignHistory:
         pathlib.Path(path).write_text(
             json.dumps(self._history, default=str, indent=2), encoding="utf-8"
         )
-        logger.info("CampaignHistory saved to %s (%d missions).", path, len(self))
+        logger.info("TargetStatusHistory saved to %s (%d missions).", path, len(self))
 
     @classmethod
-    def load(cls, path: str) -> "CampaignHistory":
-        """Load a CampaignHistory from a JSON file produced by save().
+    def load(cls, path: str) -> "TargetStatusHistory":
+        """Load a TargetStatusHistory from a JSON file produced by save().
 
-        Returns a new CampaignHistory instance.
+        Returns a new TargetStatusHistory instance.
         """
         if not isinstance(path, str) or not path:
             raise TypeError("path must be a non-empty string.")
         instance = cls()
         instance._history = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
-        logger.info("CampaignHistory loaded from %s (%d missions).", path, len(instance))
+        logger.info("TargetStatusHistory loaded from %s (%d missions).", path, len(instance))
         return instance
 
     # ------------------------------------------------------------------ #
@@ -291,8 +291,8 @@ class CampaignHistory:
             raise TypeError(f"{name} must be a non-empty string.")
 
     @staticmethod
-    def _validate_status_report(report: Any) -> None:
+    def _validate_recognition_report(report: Any) -> None:
         if not isinstance(report, dict):
             raise TypeError(
-                f"status_report must be a dict, got {type(report).__name__}."
+                f"recognition_report must be a dict, got {type(report).__name__}."
             )
