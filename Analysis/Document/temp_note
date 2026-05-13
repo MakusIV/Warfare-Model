@@ -1,10 +1,18 @@
-Nel modulo Military.py implenta la funzione combat_state(self) -> Optional[float]: che restituisce il valore un valore compreso tra 0 e 1 che rappresenta lo stato operativo per il combattimento del Blocco. Calcola questo valore considerando il numero di Asset con stato is_operative rispetto al totale degli asset che compongono il blocco. Inoltre determina la distanza massima calcolata in base all'Asset di classe derivata Vehicle o Ship che rappresenta o implementa un arma di attacco al suolo o navale (artiglieria, lanciarazzi, missili terra-terra, siluri ecc.).  
-rappresenta o implementa un arma di attacco al suolo o navale (artiglieria, lanciarazzi, missili terra-terra, siluri ecc.).  
-
+Nel modulo Military.py implenta la funzione combat_state(self) -> Optional[float]: che restituisce il valore un valore compreso tra 0 e 1 che rappresenta lo stato operativo per il combattimento del Blocco. Calcola questo valore considerando il numero di Asset con stato is_operative rispetto al totale degli asset che compongono il blocco. Inoltre il calcolo deve considerare il valore di get_c2_efficiency e 
 
 
 
 FATTO
+
+
+Nel modulo Military.py implenta la funzione combat_range(self) -> Optional[float]: che restituisce un tupla che contiene:
+            - max_range: combat_range massimo dei combat_range calcolati utilizzando la funzione combat_range() implementata in Mobile.py considerando esclusivamente tutti gli asset con stato is_operative che costituiscono il blocco 
+            - med_range: combat_range medio  dei combat_range calcolati utilizzando la funzione combat_range() implementata in Mobile.py considerando esclusivamente tutti gli asset con stato is_operative che costituiscono il blocco
+            - ratio: rapporto tra med_range e max_range
+            - quantity: numero totale degli asset con stato is_operative considerati (attenzione a non considerare due volte gli asset is_operative)
+
+
+
 
 Nel modulo Military.py implenta la funzioni Air_Defense_Volume() che determina e restituisce oggetti di classe Cylinder (Modulo Cylinder.py) ognuno calcolato in base agli Asset di tipo Vehicle o Ship, che costituiscono il blocco e in codnizione is_operative, utilizzando l'omonima funzione presente nella classe di riferimento Mobile.py
 
