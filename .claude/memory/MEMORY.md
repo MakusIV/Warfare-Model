@@ -40,6 +40,7 @@
 
 ## Aircraft_Data Key Facts
 - `combat_score(task, loadout)` — no target info; `combat_score_target_effectiveness(task, loadout, target_type: List, target_dimension: List)` — with target
+- `get_normalized_intercept_speed_score(...)` — metodo di Aircraft_Data per scoring intercettazione
 - `combat_score_target_effectiveness` is NOT bounded to [0,1] — loadout component alone can exceed 1 (e.g. F-14A Phoenix Fleet Defense returns ~2.6)
 - `get_list_of_aircrafts(side, task, target_distribuition, role, route_length, route_speed)` — BUG BLA3: sorting key raises StopIteration per aircraft senza loadout del task (next(iter({})))
 - `AIRCRAFT_ROLE = [e.value for e in Air_Asset_Type]` — lista di stringhe
@@ -59,6 +60,7 @@
 
 ## Aircraft_Loadouts Key Facts
 - `loadout_target_effectiveness_by_distribuition(aircraft, loadout_name, target_dist, route_length, route_speed)` — target_dist è dict {type: {perc_type, perc_dimension: {dim: pct}}}
+- `get_aircrafts_quantity(aircraft_model)` e `loadout_cost(aircraft_model, loadout_name)` — disponibili in Aircraft_Loadouts
 - Bug corretto: score accumulation usava `score *= perc_dimension` sul totale cumulativo; ora usa `dim_score` locale per ogni (type×dim)
 - Bug corretto: `get_weapon_score_target` veniva chiamato con stringhe invece di liste → passare `[target_type]`, `[target_dimension]`
 - Tu-160 Strategic Strike ora usa `Kh-101` (6+6); Tu-95MS Strategic Strike usa `Kh-55` (6)
@@ -122,12 +124,20 @@
 - Git remote: `git@github.com:MakusIV/Warfare-Model.git` (SSH, non HTTPS)
 - Memory lives in repo: `Warfare-Model/.claude/memory/` — tracked by git
 - On VM: `~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/` → symlink to repo folder
-- On Notebook (setup pendente): same symlink must be created after first `git pull`:
+- On Notebook (setup completato 2026-05-13): same symlink created after first `git pull`:
   ```bash
   rm -rf ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
   ln -s ~/Sviluppo/Warfare-Model/.claude/memory ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
   ```
 - Sync workflow: `git push` at end of VM session → `git pull` on Notebook (and vice versa)
+
+## Project Files
+- [Military_Resources_Assigner — stato implementazione](project_mra_state.md) — formula _reduce_target_data, derating_factor, formato tabelle output
+- [UML Generation Workflow](project_uml_generation.md) — PlantUML tool, struttura cartelle, tipi diagrammi, stile, moduli già documentati
+
+## Feedback
+- [Pattern mixin per test base class](feedback_test_base_class.md) — classi base test NON devono ereditare da unittest.TestCase
+- [Usare venv per esecuzione Python](feedback_venv.md) — sempre `venv/bin/python3`, non python3 di sistema
 
 ## Test Patterns
 - Logger mock: `patch("Code.Dynamic_War_Manager.Source.Asset.XXX.logger", MagicMock())`
