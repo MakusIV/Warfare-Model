@@ -124,6 +124,7 @@
 - Git remote: `git@github.com:MakusIV/Warfare-Model.git` (SSH, non HTTPS)
 - Memory lives in repo: `Warfare-Model/.claude/memory/` — tracked by git
 - On VM: `~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/` → symlink to repo folder
+- On Notebook: remote usa **HTTPS** (`https://github.com/MakusIV/Warfare-Model.git`), non SSH — la chiave `id_ed25519` è per uso personale ma ssh-add richiede passphrase interattiva; HTTPS è più pratico
 - On Notebook (setup completato 2026-05-13): same symlink created after first `git pull`:
   ```bash
   rm -rf ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
