@@ -90,11 +90,25 @@
 - Persistence: `save(path)` / `CampaignState.load(path)` — JSON UTF-8
 - Test: `Test/Test_Campaign_State.py` — 78 tests OK (stub objects, no live Asset imports)
 
+## Mobile.py — New Methods (2026-05-13)
+- `air_defense_volume() → Optional[Cylinder]` — lazy-imports Vehicle_Data/Ship_Data/GROUND_WEAPONS/SHIP_WEAPONS; discriminates SAM missiles via `'min_altitude' in wdata`; returns Cylinder(center=Point3D(x,y,pos.z+min_alt), radius=max_range, height=max_alt-min_alt) or None
+- `combat_range() → Optional[float]` — Vehicle: CANNONS/ARTILLERY/MORTARS (max of direct+indirect), ROCKETS (plain metres), MISSILES without min_altitude (anti-tank); Ship: MISSILES_ASM/MISSILES_TORPEDO/GUNS ×1000 (km→m); returns max across all or None
+- Both methods skip SAM MISSILES via `'min_altitude' in wdata` (added to all AD weapons in Ground_Weapon_Data + Ship_Weapon_Data)
+- `Ship.py`: added `model: Optional[str] = None` parameter → `self._model = model` (needed for Ship_Data._registry lookup)
+- Ground_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all AA_CANNONS (5) and SAM MISSILES (11)
+- Ship_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all MISSILES_SAM (12)
+
+## Military.py — New Methods (2026-05-13)
+- `air_defense_volume() → List[Cylinder]` — iterates all assets, filters by validate_class(Vehicle|Ship) + is_operative() + hasattr; calls asset.air_defense_volume(); collects non-None; returns list (empty if none)
+- `combat_range() → Optional[Tuple[float,float,float,int]]` — (max_range, med_range, ratio, quantity); iterates all assets once; filters is_operative() + hasattr('combat_range'); excludes None returns; uses numpy.median; returns None if no ranges
+- `combat_power()` line 207: guard `if hasattr(asset,'combat_power') and asset.is_operative()` — hasattr skips non-combat assets, is_operative() excludes damaged; mocks must set `is_operative.return_value` explicitly
+
 ## Test Files — Current State (2026-05-13)
 - `Test/Test_Block.py` — 95 tests OK (5 get_status_report tests removed)
 - `Test/Test_Asset.py` — 41 tests OK
 - `Test/Test_Region.py` — 50 tests OK (incl. TestRegionMetrics class)
-- `Test/Test_Military.py` — 33 tests OK
+- `Test/Test_Military.py` — 59 tests OK (incl. air_defense_volume + combat_range + is_operative filtering)
+- `Test/Test_Mobile.py` — 46 tests OK (air_defense_volume + combat_range for Vehicle and Ship)
 - `Test/Test_Target_Status_History.py` — 44 tests OK
 - `Test/Test_Campaign_State.py` — 78 tests OK
 
@@ -139,6 +153,15 @@
 ## Feedback
 - [Pattern mixin per test base class](feedback_test_base_class.md) — classi base test NON devono ereditare da unittest.TestCase
 - [Usare venv per esecuzione Python](feedback_venv.md) — sempre `venv/bin/python3`, non python3 di sistema
+
+## Test_Mobile.py — Import Strategy (circular import workaround)
+- Pre-inject Aircraft chain into sys.modules as MagicMock before any import
+- Fake Vehicle_Data module: `_vd_mod.Vehicle_Data = _FakeVehicleData` (class with `_registry = {}`)
+- Fake Ground_Weapon_Data module: `_gwd_mod.GROUND_WEAPONS = _FAKE_GW` (mutable dict, mutated per test)
+- Real Ship_Data and Ship_Weapon_Data imported directly (no circular deps)
+- `_MobileStub`: class with `air_defense_volume = Mobile.air_defense_volume` and `combat_range = Mobile.combat_range`
+- `assertIsInstance(cyl, Cylinder)` fails (dual module path) → use `type(cyl).__name__ == 'Cylinder'` instead
+- Mock operative assets must set `is_operative.return_value` explicitly (MagicMock default is truthy but not False for damaged)
 
 ## Test Patterns
 - Logger mock: `patch("Code.Dynamic_War_Manager.Source.Asset.XXX.logger", MagicMock())`
