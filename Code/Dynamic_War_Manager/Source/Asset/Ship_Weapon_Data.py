@@ -926,6 +926,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        254,     # mm
             'warhead':        39,      # kg
             'range':          50,      # km
+            'min_altitude':   15,      # m AGL
+            'max_altitude':   15000,   # m AGL
             'speed':          1360,    # m/s  (Mach 4)
             'guidance':       'Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -940,6 +942,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        203,
             'warhead':        39,
             'range':          19,
+            'min_altitude':   15,     # m AGL
+            'max_altitude':   6000,   # m AGL
             'speed':          850,     # m/s  (Mach 2.5)
             'guidance':       'Semi_Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -954,6 +958,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        343,
             'warhead':        62,
             'range':          74,
+            'min_altitude':   60,     # m AGL
+            'max_altitude':   24000,  # m AGL
             'speed':          1190,    # m/s  (Mach 3.5)
             'guidance':       'Semi_Active_Radar',
             'task':           ['Anti_Air'],
@@ -968,6 +974,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        343,
             'warhead':        62,
             'range':          167,
+            'min_altitude':   25,     # m AGL
+            'max_altitude':   24000,  # m AGL
             'speed':          1190,
             'guidance':       'Semi_Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -982,6 +990,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        343,
             'warhead':        115,
             'range':          240,
+            'min_altitude':   25,     # m AGL
+            'max_altitude':   33000,  # m AGL
             'speed':          1190,
             'guidance':       'Semi_Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -996,6 +1006,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        120,
             'warhead':        15,
             'range':          12,
+            'min_altitude':   10,     # m AGL
+            'max_altitude':   6000,   # m AGL
             'speed':          850,
             'guidance':       'Radio_Command',
             'task':           ['Anti_Air'],
@@ -1010,6 +1022,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        152,
             'warhead':        15,
             'range':          15,
+            'min_altitude':   10,     # m AGL
+            'max_altitude':   6000,   # m AGL
             'speed':          950,
             'guidance':       'Radio_Command',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -1024,6 +1038,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        508,
             'warhead':        145,
             'range':          150,
+            'min_altitude':   25,     # m AGL
+            'max_altitude':   27000,  # m AGL
             'speed':          2040,    # m/s  (Mach 6)
             'guidance':       'Semi_Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile', 'Anti_Ballistic'],
@@ -1038,6 +1054,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        156,
             'warhead':        15,
             'range':          13,
+            'min_altitude':   8,      # m AGL
+            'max_altitude':   5000,   # m AGL
             'speed':          780,
             'guidance':       'Radio_Command',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -1052,6 +1070,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        212,
             'warhead':        180,
             'range':          200,
+            'min_altitude':   25,     # m AGL
+            'max_altitude':   27000,  # m AGL
             'speed':          1430,    # m/s  (Mach 4.2)
             'guidance':       'Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile', 'Anti_Ballistic'],
@@ -1066,6 +1086,8 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'caliber':        220,
             'warhead':        60,
             'range':          70,
+            'min_altitude':   15,     # m AGL
+            'max_altitude':   12000,  # m AGL
             'speed':          1190,
             'guidance':       'Active_Radar',
             'task':           ['Anti_Air', 'Anti_Missile'],
@@ -1074,13 +1096,15 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
         },
 
         'URK-5-Rastrub': {
-            # Dual-purpose: anti-submarine rocket + limited anti-ship capability
+            # Dual-purpose: anti-submarine rocket + limited anti-air capability
             'model':          'URK-5-Rastrub',
             'start_service':  1985,
             'end_service':    None,
             'caliber':        533,
             'warhead':        185,
             'range':          15,
+            'min_altitude':   30,     # m AGL
+            'max_altitude':   8000,   # m AGL
             'speed':          306,     # m/s  (subsonic, rocket-propelled torpedo)
             'guidance':       'Inertial',
             'task':           ['Anti_Air', 'Anti_Submarine'],

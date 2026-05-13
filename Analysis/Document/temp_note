@@ -1,18 +1,24 @@
-
-
-Analogalmente a quanto realizzato per la serializzazione delle informazioni relative ai target con il modulo Target_Status_History.py, implementa il nuovo modulo Campaign_State.py con tutte le funzioni necessarie per salvare lo stato di tutti i componenti della campagna Regioni (Region), Blocchi (Block) presenti nelle Regioni, Asset appartenenti ai blocchi i quali sono costituiti da classi derivate come Vehicle, Aircraft, Ship e Structure. Considera che i Blocchi oltre ad essere costituiti da Asset, hanno anche come componenti istanze specifiche di State e Resource_Manager e, come per gli Asset, è importante salvare le informazioni di stato di questi componenti in modo da essere in grado di analizzare ed eventualmente ripristinare un determinato stato della campagna. 
-Le informazioni che identificano uno stato della campagna sono il mission_id: str, date: str, time: str. Se le informazioni che ti ho data non sono sufficienti per eliminare qualsiasi ambiguita o dubbio sullo sviluppo del modulo, non esitare a chiedermi eventuali ulteriori dettagli ovvero chiarimenti.
-
-
-
-
-
-
+Nel modulo Military.py implenta la funzione combat_state(self) -> Optional[float]: che restituisce il valore un valore compreso tra 0 e 1 che rappresenta lo stato operativo per il combattimento del Blocco. Calcola questo valore considerando il numero di Asset con stato is_operative rispetto al totale degli asset che compongono il blocco. Inoltre determina la distanza massima calcolata in base all'Asset di classe derivata Vehicle o Ship che rappresenta o implementa un arma di attacco al suolo o navale (artiglieria, lanciarazzi, missili terra-terra, siluri ecc.).  
+rappresenta o implementa un arma di attacco al suolo o navale (artiglieria, lanciarazzi, missili terra-terra, siluri ecc.).  
 
 
 
 
 FATTO
+
+Nel modulo Military.py implenta la funzioni Air_Defense_Volume() che determina e restituisce oggetti di classe Cylinder (Modulo Cylinder.py) ognuno calcolato in base agli Asset di tipo Vehicle o Ship, che costituiscono il blocco e in codnizione is_operative, utilizzando l'omonima funzione presente nella classe di riferimento Mobile.py
+
+Nel modulo Mobile.py Dobbiamo implentare la funzione combat_range(slef) -> Optional[float]: che determina la distanza massima calcolata in base all'Asset di classe derivata Vehicle o Ship che rappresenta o implementa un arma di attacco al suolo o navale (artiglieria, lanciarazzi, missili terra-terra, siluri ecc.).  
+
+
+Nel modulo Mobile.py Dobbiamo implentare la funzione Air_Defense_Volume() che determina e restituisce oggetti di classe Cylinder (Modulo Cylinder.py) ognuno calcolato in base all'Asset di classe derivata Vehicle o Ship che rappresenta o implementa un sistema di difesa Aerea: SAM o AAA. 
+L'istanza di Cylinder da restituire è definita considerando raggio, altezza e altezza della base del cilindro (bottom_center.z) uguale rispettivamente alla gittata massima, alla quota massima e alla quota minima dell'arma antiaerea considerata.
+Valuta questa informazioni in base alle caratteristiche specificate nei moduli Vehicle_Data.py e Ship_Data.py (la classe Aircraft_Data è esclusa per ovvi motivi)
+
+
+
+Analogalmente a quanto realizzato per la serializzazione delle informazioni relative ai target con il modulo Target_Status_History.py, implementa il nuovo modulo Campaign_State.py con tutte le funzioni necessarie per salvare lo stato di tutti i componenti della campagna Regioni (Region), Blocchi (Block) presenti nelle Regioni, Asset appartenenti ai blocchi i quali sono costituiti da classi derivate come Vehicle, Aircraft, Ship e Structure. Considera che i Blocchi oltre ad essere costituiti da Asset, hanno anche come componenti istanze specifiche di State e Resource_Manager e, come per gli Asset, è importante salvare le informazioni di stato di questi componenti in modo da essere in grado di analizzare ed eventualmente ripristinare un determinato stato della campagna. 
+Le informazioni che identificano uno stato della campagna sono il mission_id: str, date: str, time: str. Se le informazioni che ti ho data non sono sufficienti per eliminare qualsiasi ambiguita o dubbio sullo sviluppo del modulo, non esitare a chiedermi eventuali ulteriori dettagli ovvero chiarimenti.
 
 Dobbiamo implementare un nuovo modulo per il salvataggio dello stato della campagna, prima di fare questo è necessario eliminare alcune possibili ambiguità nella definizione e gestione delle informazioni di stato:
 Con il modulo Campaign_History.py sono state implementate le funzionalità di lettura e scrittura delle informazioni relative ai blocchi presenti in una specifica regione. Queste informazioni NON rappresentano le informazioni di stato dei blocchi presenti nella regione ma informazioni che rappresentano i blocchi da un punto di vista di obiettivi militari (target). Infatti la funzione utilizzata è get_status_report che utilizza tutte le informazioni fornite dalla get_recognition_report. Quindi rinomina il modulo Campaign_History.py con Target_Status_History.py e per l'acquisizione delle informazioni sui blocchi utilizza direttamente la funzione get_recognition_report(region_c2_recon_efficiency = 1.0). Succcessivamente elimina la funzione get_status_report ed i relativi metodi di test presenti in Test_Block.py. Inoltre cambia il nome del modulo Test_Campaign_History.py in Test_Target_Status_History.py aggiornando i test coerentemente con le modifiche apportate.

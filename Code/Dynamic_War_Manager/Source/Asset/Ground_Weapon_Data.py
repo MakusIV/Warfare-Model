@@ -2146,6 +2146,8 @@ GROUND_WEAPONS = {
             'muzzle_speed': 1000, # m/s
             'fire_rate': 240, # shot per minute (combined twin barrels, 120 each)
             'range': {'direct': 4000, 'indirect': 12000 }, # m
+            'min_altitude': 50,   # m AGL
+            'max_altitude': 4000, # m AGL
             'ammo_type': ['HE', 'AP'],
             'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
@@ -2160,6 +2162,8 @@ GROUND_WEAPONS = {
             'muzzle_speed': 970, # m/s
             'fire_rate': 3400, # shot per minute (combined quad barrels, ~850 each)
             'range': {'direct': 2500, 'indirect': 0 }, # m
+            'min_altitude': 0,    # m AGL
+            'max_altitude': 1500, # m AGL
             'ammo_type': ['HE', 'AP'],
             'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
@@ -2174,6 +2178,8 @@ GROUND_WEAPONS = {
             'muzzle_speed': 1030, # m/s (M56 HEI)
             'fire_rate': 3000, # shot per minute (M163 VADS configuration)
             'range': {'direct': 1200, 'indirect': 0 }, # m
+            'min_altitude': 0,    # m AGL
+            'max_altitude': 1000, # m AGL
             'ammo_type': ['HE', 'AP'],
             'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
@@ -2188,6 +2194,8 @@ GROUND_WEAPONS = {
             'muzzle_speed': 1175, # m/s (APDS-T)
             'fire_rate': 1100, # shot per minute (combined twin barrels, 550 each)
             'range': {'direct': 4000, 'indirect': 0 }, # m
+            'min_altitude': 0,    # m AGL
+            'max_altitude': 3000, # m AGL
             'ammo_type': ['HE', 'AP'],
             'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
@@ -2202,6 +2210,8 @@ GROUND_WEAPONS = {
             'muzzle_speed': 960, # m/s
             'fire_rate': 5000, # shot per minute (combined twin barrels, 2500 each)
             'range': {'direct': 4000, 'indirect': 0 }, # m
+            'min_altitude': 0,    # m AGL
+            'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'AP'],
             'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.2,
@@ -2437,6 +2447,8 @@ GROUND_WEAPONS = {
             'warhead': 9, # kg
             'speed': 900, # m/s
             'range': {'direct': 8000, 'indirect': 0 }, # m
+            'min_altitude': 15,   # m AGL
+            'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.15,
@@ -2451,6 +2463,8 @@ GROUND_WEAPONS = {
             'warhead': 3, # kg
             'speed': 430, # m/s
             'range': {'direct': 4200, 'indirect': 0 }, # m
+            'min_altitude': 30,   # m AGL
+            'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.2,
@@ -2465,6 +2479,8 @@ GROUND_WEAPONS = {
             'warhead': 11, # kg
             'speed': 760, # m/s
             'range': {'direct': 9000, 'indirect': 0 }, # m
+            'min_altitude': 15,   # m AGL
+            'max_altitude': 3000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.2,
@@ -2479,6 +2495,8 @@ GROUND_WEAPONS = {
             'warhead': 19, # kg
             'speed': 500, # m/s
             'range': {'direct': 10000, 'indirect': 0 }, # m
+            'min_altitude': 25,   # m AGL
+            'max_altitude': 5000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.15,
@@ -2493,6 +2511,8 @@ GROUND_WEAPONS = {
             'warhead': 3, # kg
             'speed': 517, # m/s
             'range': {'direct': 5000, 'indirect': 0 }, # m
+            'min_altitude': 10,   # m AGL
+            'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.2,
@@ -2507,6 +2527,8 @@ GROUND_WEAPONS = {
             'warhead': 6.5, # kg
             'speed': 500, # m/s
             'range': {'direct': 6300, 'indirect': 0 }, # m
+            'min_altitude': 20,   # m AGL
+            'max_altitude': 5500, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.15,
@@ -2521,6 +2543,8 @@ GROUND_WEAPONS = {
             'warhead': 15, # kg
             'speed': 850, # m/s
             'range': {'direct': 12000, 'indirect': 0 }, # m
+            'min_altitude': 10,   # m AGL
+            'max_altitude': 6000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.15,
@@ -2535,6 +2559,8 @@ GROUND_WEAPONS = {
             'warhead': 3, # kg
             'speed': 750, # m/s
             'range': {'direct': 4800, 'indirect': 0 }, # m
+            'min_altitude': 30,   # m AGL
+            'max_altitude': 3800, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.2,
@@ -2549,6 +2575,8 @@ GROUND_WEAPONS = {
             'warhead': 59, # kg
             'speed': 600, # m/s
             'range': {'direct': 24000, 'indirect': 0 }, # m
+            'min_altitude': 100,    # m AGL
+            'max_altitude': 14000,  # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.15,
@@ -2563,6 +2591,8 @@ GROUND_WEAPONS = {
             'warhead': 70, # kg
             'speed': 850, # m/s
             'range': {'direct': 35000, 'indirect': 0 }, # m
+            'min_altitude': 15,    # m AGL
+            'max_altitude': 22000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.1,
@@ -2577,6 +2607,8 @@ GROUND_WEAPONS = {
             'warhead': 133, # kg
             'speed': 1700, # m/s
             'range': {'direct': 75000, 'indirect': 0 }, # m
+            'min_altitude': 25,    # m AGL
+            'max_altitude': 27000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
             'task': [GROUND_WEAPON_TASK['Anti_Air']],
             'perc_efficiency_variability': 0.1,

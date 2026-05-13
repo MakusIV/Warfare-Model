@@ -204,7 +204,7 @@ class Military(Block):
                 for force in MILITARY_FORCES}
         
         for asset in self.assets.values(): 
-            if hasattr(asset, 'combat_power'):
+            if hasattr(asset, 'combat_power') and asset.is_operative():
                 result[force][action] += asset.combat_power[force][action]
 
         return result
@@ -452,29 +452,65 @@ class Military(Block):
         ) if c2 else 0.0
 
     #Placeholder Methods for Future Implementation
-    def air_defense_volume(self) -> None:
-        """Calculate air defense volume (to be implemented)."""
-        pass
+    def air_defense_volume(self) -> List:
+        """Return air-defense Cylinders for all operative Vehicle/Ship assets in this block.
 
-    def combat_range(self, type: str = "Artillery", height: int = 0) -> None:
-        """Calculate combat range (to be implemented)."""
-        pass
+        Delegates to Mobile.air_defense_volume() on each operative Vehicle or Ship.
+        Assets without AD weapons (SAM/AAA) return None from that call and are excluded.
 
-    def air_defense_aaa_range(self, height: int = 0) -> None:
-        """Calculate AA defense range @ height - serve? hai il volume?(to be implemented)."""
-        pass
+        Returns:
+            List[Cylinder] — one Cylinder per operative AD asset; empty if none present.
+        """
+        cylinders = []
+        for asset in self.assets.values():
+            if not (validate_class(asset, "Vehicle") or validate_class(asset, "Ship")):
+                continue
+            if not asset.is_operative():
+                continue
+            if not hasattr(asset, 'air_defense_volume'):
+                continue
+            cyl = asset.air_defense_volume()
+            if cyl is not None:
+                cylinders.append(cyl)
+        return cylinders
 
-    def combat_volume(self, type: str = "Artillery") -> None:
-        """Calculate combat volume (to be implemented)."""
-        pass
+    def combat_range(self) -> Optional[Tuple[float, float, float, int]]:
+        """Return combat-range statistics across all operative assets in the block.
 
-    def air_defense_aaa_volume(self) -> None:
-        """Calculate AAA defense volume (to be implemented)."""
-        pass
+        Calls Mobile.combat_range() on every operative asset that exposes the method.
+        Each asset is evaluated exactly once (dict iteration guarantees uniqueness).
 
-    def intelligence(self) -> None:
-        """Calculate intelligence level (to be implemented)."""
-        pass
+        Returns:
+            Tuple (max_range, med_range, ratio, quantity) or None if no ranges found.
+            - max_range : maximum range in metres across operative assets
+            - med_range : median range in metres across operative assets
+            - ratio     : med_range / max_range  (0.0 if max_range == 0)
+            - quantity  : number of operative assets that returned a valid range
+        """
+        ranges = []
+        for asset in self.assets.values():
+            if not asset.is_operative():
+                continue
+            if not hasattr(asset, 'combat_range'):
+                continue
+            r = asset.combat_range()
+            if r is not None:
+                ranges.append(r)
+
+        if not ranges:
+            return None
+
+        max_range = float(max(ranges))
+        med_range = float(median(ranges))
+        ratio     = med_range / max_range if max_range > 0.0 else 0.0
+        quantity  = len(ranges)
+
+        return max_range, med_range, ratio, quantity
+
+    # Non serve: c'è c2 efficiency, che è più specifico e pertinente per valutare la capacità di comando e controllo del blocco.
+    #def intelligence(self) -> None:
+    #    """Calculate intelligence level (to be implemented)."""
+    #    pass
 
     def combat_state(self) -> None:
         """Calculate combat state (to be implemented)."""

@@ -54,6 +54,7 @@ class TestMilitary(unittest.TestCase):
         self.mock_aircraft = MagicMock()
         self.mock_aircraft.__class__ = _Aircraft
         self.mock_aircraft.combat_power = {"air": {"Intercept": 15}}
+        self.mock_aircraft.is_operative.return_value = True
         self.mock_aircraft.speed = {"nominal": 800, "max": 1000}
         self.mock_aircraft.isTransport = False
         self.mock_aircraft.isAwacs = False
@@ -64,10 +65,11 @@ class TestMilitary(unittest.TestCase):
         self.mock_aircraft.state = MagicMock()
         self.mock_aircraft.state.state_value = StateCategory.HEALTHFUL.value
 
-        # Mock vehicle (Tank, Healtful)
+        # Mock vehicle (Tank, Healthful)
         self.mock_vehicle = MagicMock()
         self.mock_vehicle.__class__ = _Vehicle
         self.mock_vehicle.combat_power = {"ground": {"Attack": 10}}
+        self.mock_vehicle.is_operative.return_value = True
         self.mock_vehicle.speed = {"off_road": {"nominal": 30, "max": 50}}
         self.mock_vehicle.isTank = True
         self.mock_vehicle.artillery_range = 1000
@@ -76,10 +78,11 @@ class TestMilitary(unittest.TestCase):
         self.mock_vehicle.state = MagicMock()
         self.mock_vehicle.state.state_value = StateCategory.HEALTHFUL.value
 
-        # Mock vehicle danneggiato (Armored, Damaged)
+        # Mock vehicle danneggiato (Armored, Damaged) — is_operative() → False
         self.mock_vehicle_damaged = MagicMock()
         self.mock_vehicle_damaged.__class__ = _Vehicle
         self.mock_vehicle_damaged.combat_power = {"ground": {"Attack": 5}}
+        self.mock_vehicle_damaged.is_operative.return_value = False
         self.mock_vehicle_damaged.speed = {"off_road": {"nominal": 25, "max": 40}}
         self.mock_vehicle_damaged.isTank = False
         self.mock_vehicle_damaged.isArmor = True
@@ -93,6 +96,7 @@ class TestMilitary(unittest.TestCase):
         self.mock_ship = MagicMock()
         self.mock_ship.__class__ = _Ship
         self.mock_ship.combat_power = {"sea": {"Attack": 8}}
+        self.mock_ship.is_operative.return_value = True
         self.mock_ship.speed = {"nominal": 30, "max": 35}
         self.mock_ship.isDestroyer = True
         self.mock_ship.artillery_range = 2000
@@ -156,16 +160,251 @@ class TestMilitary(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_combat_power_calculations(self):
-        """Test combat power calculations."""
-        self.groundbase._assets ={"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
+        """All operative assets contribute their combat_power."""
+        self.groundbase._assets = {"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
         combat_power = self.groundbase.combat_power(force="ground", action="Attack")
-        self.assertEqual(combat_power['ground']['Attack'], 20)
+        self.assertEqual(combat_power['ground']['Attack'], 20)  # 10 + 10
 
-        self.airbase._assets ={"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
-        self.assertEqual(self.airbase.combat_power(force="air", action="Intercept")['air']['Intercept'], 30)
+        self.airbase._assets = {"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
+        self.assertEqual(self.airbase.combat_power(force="air", action="Intercept")['air']['Intercept'], 30)  # 15 + 15
 
-        self.navalbase._assets ={"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.navalbase.combat_power(force="sea", action="Attack")['sea']['Attack'], 16)
+        self.navalbase._assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
+        self.assertEqual(self.navalbase.combat_power(force="sea", action="Attack")['sea']['Attack'], 16)  # 8 + 8
+
+    def test_combat_power_excludes_non_operative_assets(self):
+        """Non-operative assets (is_operative()=False) must be excluded from the sum."""
+        # mock_vehicle: is_operative=True, cp=10
+        # mock_vehicle_damaged: is_operative=False, cp=5 → must NOT contribute
+        self.groundbase._assets = {
+            'v1': self.mock_vehicle,
+            'v2': self.mock_vehicle_damaged,
+        }
+        result = self.groundbase.combat_power(force='ground', action='Attack')
+        self.assertEqual(result['ground']['Attack'], 10)  # only operative vehicle
+
+    def test_combat_power_all_non_operative_returns_zero(self):
+        """When all assets are non-operative the result is 0.0."""
+        self.groundbase._assets = {
+            'v1': self.mock_vehicle_damaged,
+            'v2': self.mock_vehicle_damaged,
+        }
+        result = self.groundbase.combat_power(force='ground', action='Attack')
+        self.assertEqual(result['ground']['Attack'], 0.0)
+
+    # ------------------------------------------------------------------ #
+    # combat_range                                                        #
+    # ------------------------------------------------------------------ #
+
+    def test_combat_range_no_assets_returns_none(self):
+        """No assets → None."""
+        self.groundbase._assets = {}
+        self.assertIsNone(self.groundbase.combat_range())
+
+    def test_combat_range_all_non_operative_returns_none(self):
+        """All assets non-operative → None."""
+        self.mock_vehicle_damaged.combat_range.return_value = 18500.0
+        self.groundbase._assets = {'v1': self.mock_vehicle_damaged}
+        self.assertIsNone(self.groundbase.combat_range())
+
+    def test_combat_range_asset_returns_none_excluded(self):
+        """Operative asset whose combat_range() returns None (no weapons) → excluded."""
+        self.mock_vehicle.combat_range.return_value = None
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        self.assertIsNone(self.groundbase.combat_range())
+
+    def test_combat_range_single_asset_max_equals_value(self):
+        """Single operative asset: max_range equals asset's range."""
+        self.mock_vehicle.combat_range.return_value = 35000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        result = self.groundbase.combat_range()
+        self.assertIsNotNone(result)
+        max_r, med_r, ratio, qty = result
+        self.assertEqual(max_r, 35000.0)
+
+    def test_combat_range_single_asset_med_equals_max(self):
+        """Single asset: median equals max, ratio equals 1.0."""
+        self.mock_vehicle.combat_range.return_value = 35000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        max_r, med_r, ratio, qty = self.groundbase.combat_range()
+        self.assertEqual(med_r, 35000.0)
+        self.assertAlmostEqual(ratio, 1.0)
+
+    def test_combat_range_single_asset_quantity_one(self):
+        """Single operative asset → quantity == 1."""
+        self.mock_vehicle.combat_range.return_value = 20000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        _, _, _, qty = self.groundbase.combat_range()
+        self.assertEqual(qty, 1)
+
+    def test_combat_range_multiple_assets_max_range(self):
+        """max_range is the maximum across all operative assets."""
+        self.mock_vehicle.combat_range.return_value = 20000.0
+        self.mock_ship.combat_range.return_value    = 280000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+        max_r, _, _, _ = self.groundbase.combat_range()
+        self.assertEqual(max_r, 280000.0)
+
+    def test_combat_range_multiple_assets_median(self):
+        """med_range is the median of ranges from operative assets."""
+        self.mock_vehicle.combat_range.return_value = 20000.0
+        self.mock_ship.combat_range.return_value    = 280000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+        _, med_r, _, _ = self.groundbase.combat_range()
+        self.assertAlmostEqual(med_r, (20000.0 + 280000.0) / 2)
+
+    def test_combat_range_multiple_assets_ratio(self):
+        """ratio == med_range / max_range."""
+        self.mock_vehicle.combat_range.return_value = 20000.0
+        self.mock_ship.combat_range.return_value    = 280000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+        max_r, med_r, ratio, _ = self.groundbase.combat_range()
+        self.assertAlmostEqual(ratio, med_r / max_r)
+
+    def test_combat_range_multiple_assets_quantity(self):
+        """quantity counts only operative assets that returned a range."""
+        self.mock_vehicle.combat_range.return_value = 20000.0
+        self.mock_ship.combat_range.return_value    = 280000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+        _, _, _, qty = self.groundbase.combat_range()
+        self.assertEqual(qty, 2)
+
+    def test_combat_range_excludes_non_operative(self):
+        """Non-operative assets are excluded; quantity counts only operative ones."""
+        self.mock_vehicle.combat_range.return_value         = 20000.0
+        self.mock_vehicle_damaged.combat_range.return_value = 50000.0  # damaged → excluded
+        self.groundbase._assets = {
+            'v1': self.mock_vehicle,
+            'v2': self.mock_vehicle_damaged,
+        }
+        max_r, med_r, ratio, qty = self.groundbase.combat_range()
+        self.assertEqual(max_r, 20000.0)
+        self.assertEqual(qty, 1)
+
+    def test_combat_range_returns_tuple_of_correct_types(self):
+        """Return value is a tuple (float, float, float, int)."""
+        self.mock_vehicle.combat_range.return_value = 18500.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        result = self.groundbase.combat_range()
+        max_r, med_r, ratio, qty = result
+        self.assertIsInstance(max_r, float)
+        self.assertIsInstance(med_r, float)
+        self.assertIsInstance(ratio, float)
+        self.assertIsInstance(qty, int)
+
+    def test_combat_range_asset_without_method_skipped(self):
+        """Assets that lack combat_range (hasattr guard) are skipped safely."""
+        mock_no_cr = MagicMock(spec=['is_operative'])
+        mock_no_cr.__class__ = _Vehicle
+        mock_no_cr.is_operative.return_value = True
+
+        self.groundbase._assets = {'v1': mock_no_cr}
+        self.assertIsNone(self.groundbase.combat_range())
+
+    # ------------------------------------------------------------------ #
+    # air_defense_volume                                                  #
+    # ------------------------------------------------------------------ #
+
+    def test_air_defense_volume_empty_block(self):
+        """No assets → empty list."""
+        self.groundbase._assets = {}
+        self.assertEqual(self.groundbase.air_defense_volume(), [])
+
+    def test_air_defense_volume_returns_list_always(self):
+        """Return value is always a list, even when no AD assets are present."""
+        self.groundbase._assets = {}
+        result = self.groundbase.air_defense_volume()
+        self.assertIsInstance(result, list)
+
+    def test_air_defense_volume_single_operative_vehicle(self):
+        """Operative Vehicle with AD weapons → one Cylinder in the list."""
+        fake_cyl = MagicMock()
+        self.mock_vehicle.air_defense_volume.return_value = fake_cyl
+
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        result = self.groundbase.air_defense_volume()
+
+        self.assertEqual(len(result), 1)
+        self.assertIs(result[0], fake_cyl)
+
+    def test_air_defense_volume_single_operative_ship(self):
+        """Operative Ship with AD weapons → one Cylinder in the list."""
+        fake_cyl = MagicMock()
+        self.mock_ship.air_defense_volume.return_value = fake_cyl
+
+        self.navalbase._assets = {'s1': self.mock_ship}
+        result = self.navalbase.air_defense_volume()
+
+        self.assertEqual(len(result), 1)
+        self.assertIs(result[0], fake_cyl)
+
+    def test_air_defense_volume_excludes_non_operative_asset(self):
+        """Non-operative (damaged) assets are excluded even if they have AD weapons."""
+        fake_cyl = MagicMock()
+        self.mock_vehicle_damaged.air_defense_volume.return_value = fake_cyl
+        # mock_vehicle_damaged.is_operative() → False (set in setUp)
+
+        self.groundbase._assets = {'v1': self.mock_vehicle_damaged}
+        result = self.groundbase.air_defense_volume()
+
+        self.assertEqual(result, [])
+
+    def test_air_defense_volume_excludes_aircraft(self):
+        """Aircraft are not Vehicle/Ship → ignored."""
+        self.mock_aircraft.air_defense_volume.return_value = MagicMock()
+
+        self.airbase._assets = {'a1': self.mock_aircraft}
+        result = self.airbase.air_defense_volume()
+
+        self.assertEqual(result, [])
+
+    def test_air_defense_volume_excludes_non_ad_asset(self):
+        """Operative Vehicle without AD weapons (air_defense_volume returns None) → excluded."""
+        self.mock_vehicle.air_defense_volume.return_value = None
+
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        result = self.groundbase.air_defense_volume()
+
+        self.assertEqual(result, [])
+
+    def test_air_defense_volume_multiple_operative_ad_assets(self):
+        """Multiple operative AD assets → one Cylinder per asset."""
+        cyl_v = MagicMock()
+        cyl_s = MagicMock()
+        self.mock_vehicle.air_defense_volume.return_value = cyl_v
+        self.mock_ship.air_defense_volume.return_value = cyl_s
+
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+        result = self.groundbase.air_defense_volume()
+
+        self.assertEqual(len(result), 2)
+        self.assertIn(cyl_v, result)
+        self.assertIn(cyl_s, result)
+
+    def test_air_defense_volume_mixed_operative_and_damaged(self):
+        """Only operative AD assets contribute; damaged ones are excluded."""
+        cyl_v = MagicMock()
+        self.mock_vehicle.air_defense_volume.return_value = cyl_v
+        self.mock_vehicle_damaged.air_defense_volume.return_value = MagicMock()
+        # mock_vehicle_damaged.is_operative() → False
+
+        self.groundbase._assets = {
+            'v1': self.mock_vehicle,
+            'v2': self.mock_vehicle_damaged,
+        }
+        result = self.groundbase.air_defense_volume()
+
+        self.assertEqual(len(result), 1)
+        self.assertIs(result[0], cyl_v)
+
+    def test_air_defense_volume_asset_without_method_skipped(self):
+        """Assets that lack air_defense_volume (hasattr guard) are skipped safely."""
+        mock_no_adv = MagicMock(spec=['is_operative'])
+        mock_no_adv.__class__ = _Vehicle
+        mock_no_adv.is_operative.return_value = True
+
+        self.groundbase._assets = {'v1': mock_no_adv}
+        result = self.groundbase.air_defense_volume()
+        self.assertEqual(result, [])
 
     # ------------------------------------------------------------------ #
     # artillery_in_range                                                  #
@@ -467,17 +706,27 @@ class TestMilitary(unittest.TestCase):
     # ------------------------------------------------------------------ #
 
     def test_placeholder_methods(self):
-        """Test placeholder methods don't raise exceptions."""
+        """Placeholder stubs defined on Military must not raise exceptions."""
         try:
             self.airbase.air_defense_volume()
             self.airbase.combat_range()
-            self.airbase.air_defense_aaa_range()
-            self.airbase.combat_volume()
-            self.airbase.air_defense_aaa_volume()
-            self.airbase.intelligence()
             self.airbase.combat_state()
         except Exception as e:
             self.fail(f"Placeholder method raised exception: {e}")
+
+    def test_combat_power_skips_asset_without_combat_power(self):
+        """Assets without a combat_power attribute are silently skipped (hasattr guard)."""
+        # spec=['is_operative'] → hasattr(mock, 'combat_power') returns False
+        mock_no_cp = MagicMock(spec=['is_operative'])
+        mock_no_cp.is_operative.return_value = True
+
+        self.groundbase._assets = {
+            'v1': self.mock_vehicle,  # has combat_power={'ground': {'Attack': 10}}
+            'v2': mock_no_cp,         # no combat_power → must be skipped
+        }
+        result = self.groundbase.combat_power(force='ground', action='Attack')
+        # Only mock_vehicle contributes; mock_no_cp must not cause AttributeError
+        self.assertEqual(result['ground']['Attack'], 10)
 
 
 if __name__ == "__main__":

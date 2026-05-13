@@ -3,8 +3,7 @@ from Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Dynamic_War_Manager.Source.DataType.Event import Event
-from Dynamic_War_Manager.Source.DataType.Sphere import Sphere
-from Dynamic_War_Manager.Source.DataType.Hemisphere import Hemisphere
+from Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
 from Dynamic_War_Manager.Source.DataType.Volume import Volume
 from Dynamic_War_Manager.Source.DataType.Payload import Payload
 from typing import Literal, List, Dict, Union, Optional, Tuple
@@ -126,15 +125,7 @@ class Mobile(Asset) :
 
         self._fire_range = param  
         return True
-
-    def attackRange(self):
-         #return value
-         pass
     
-
-    def airDefense(self):
-        #return Volume
-        pass
 
     def combat_power(self, force: Optional[str] = None, action: Optional[str] = None) -> Optional[Union[Dict, float]]:
         """
@@ -234,7 +225,142 @@ class Mobile(Asset) :
         
         self._combat_power = combat_power
 
+    def air_defense_volume(self) -> Optional[Cylinder]:
+        """Return the Cylinder representing the engagement envelope of this AD asset.
 
+        radius    = max engagement range across all AD weapons (metres)
+        height    = max_altitude - min_altitude (metres AGL)
+        bottom_center.z = asset position.z + min_altitude across all AD weapons
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+        if self._position is None:
+            logger.warning("air_defense_volume: position not set")
+            return None
+
+        model = getattr(self, '_model', None)
+        if model is None:
+            logger.warning("air_defense_volume: _model not set")
+            return None
+
+        data_record = _VehicleData._registry.get(model) or _ShipData._registry.get(model)
+        if data_record is None:
+            logger.warning(f"air_defense_volume: no registry entry for model {model!r}")
+            return None
+
+        is_ship = isinstance(data_record, _ShipData)
+
+        max_range = 0.0
+        min_alt = float('inf')
+        max_alt = 0.0
+
+        for weapon_type, weapon_list in data_record.weapons.items():
+            if is_ship:
+                if weapon_type != 'MISSILES_SAM':
+                    continue
+                weapon_db = SHIP_WEAPONS.get('MISSILES_SAM', {})
+            else:
+                if weapon_type not in ('AA_CANNONS', 'MISSILES'):
+                    continue
+                weapon_db = GROUND_WEAPONS.get(weapon_type, {})
+
+            for weapon_model, _qty in weapon_list:
+                wdata = weapon_db.get(weapon_model)
+                if wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata:
+                    continue
+
+                w_min = float(wdata['min_altitude'])
+                w_max = float(wdata['max_altitude'])
+                if w_max <= 0.0:
+                    continue
+
+                if is_ship:
+                    w_range = float(wdata.get('range', 0)) * 1000.0  # km → m
+                else:
+                    w_range = float(wdata.get('range', {}).get('direct', 0))  # m
+
+                max_range = max(max_range, w_range)
+                min_alt = min(min_alt, w_min)
+                max_alt = max(max_alt, w_max)
+
+        if max_range == 0.0:
+            logger.warning(f"air_defense_volume: no AD weapons with altitude data for model {model!r}")
+            return None
+
+        if min_alt == float('inf'):
+            min_alt = 0.0
+
+        pos = self._position
+        bottom_center = Point3D(float(pos.x), float(pos.y), float(pos.z) + min_alt)
+        return Cylinder(center=bottom_center, radius=max_range, height=max_alt - min_alt)
+
+    def combat_range(self) -> Optional[float]:
+        """Return max engagement range (metres) across all ground-attack / naval-attack weapons.
+
+        Vehicle offensive types: CANNONS, ARTILLERY, MORTARS, ROCKETS, MISSILES (non-AA).
+        Ship offensive types:    MISSILES_ASM, MISSILES_TORPEDO, GUNS.
+        MISSILES with min_altitude (SAM) are skipped via the same discriminator used in
+        air_defense_volume().  Ship weapon ranges are stored in km and converted to metres.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+        model = getattr(self, '_model', None)
+        if model is None:
+            logger.warning("combat_range: _model not set")
+            return None
+
+        data_record = _VehicleData._registry.get(model) or _ShipData._registry.get(model)
+        if data_record is None:
+            logger.warning(f"combat_range: no registry entry for model {model!r}")
+            return None
+
+        is_ship = isinstance(data_record, _ShipData)
+
+        _GROUND_ATTACK = ('CANNONS', 'ARTILLERY', 'MORTARS', 'ROCKETS', 'MISSILES')
+        _SHIP_ATTACK   = ('MISSILES_ASM', 'MISSILES_TORPEDO', 'GUNS')
+
+        max_range = 0.0
+
+        for weapon_type, weapon_list in data_record.weapons.items():
+            if is_ship:
+                if weapon_type not in _SHIP_ATTACK:
+                    continue
+                weapon_db = SHIP_WEAPONS.get(weapon_type, {})
+            else:
+                if weapon_type not in _GROUND_ATTACK:
+                    continue
+                weapon_db = GROUND_WEAPONS.get(weapon_type, {})
+
+            for weapon_model, _qty in weapon_list:
+                wdata = weapon_db.get(weapon_model)
+                if wdata is None:
+                    continue
+
+                # MISSILES that carry min_altitude are SAM weapons → skip
+                if weapon_type == 'MISSILES' and 'min_altitude' in wdata:
+                    continue
+
+                raw = wdata.get('range', 0)
+                if isinstance(raw, dict):
+                    # dict format {'direct': N, 'indirect': N} — used by CANNONS/ARTILLERY/MORTARS/MISSILES
+                    w_range = float(max(raw.get('direct', 0), raw.get('indirect', 0)))
+                else:
+                    # plain number — ROCKETS (metres) or ship weapons (km → metres)
+                    w_range = float(raw) * (1000.0 if is_ship else 1.0)
+
+                max_range = max(max_range, w_range)
+
+        if max_range == 0.0:
+            logger.warning(f"combat_range: no offensive weapons found for model {model!r}")
+            return None
+
+        return max_range
 
     def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          

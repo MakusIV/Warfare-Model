@@ -58,7 +58,7 @@ class Vehicle(Mobile) :
             self._speed_off_road = {"nominal": None, "max": None}
             
             #vehicle_scores = get_vehicle_scores(model=model)
-            self._vehicle_scores = get_vehicle_scores(model=model)
+            self._vehicle_scores = get_vehicle_scores(model=model) # load data from Vehicle_Data.py module
 
             #for task in ACTION_TASKS['ground']:                 
             self.set_combat_power(ACTION_TASKS['ground'])
@@ -290,7 +290,9 @@ class Vehicle(Mobile) :
     def isCommandControl(self):
         return self.category == "Command_&_Control"
     
-
+     #Placeholder Methods for Future Implementation
+    
+  
 
     def set_combat_power(self, actions: Optional[Dict]=ACTION_TASKS["ground"]):
         """
@@ -326,18 +328,7 @@ class Vehicle(Mobile) :
             logger.warning("self.category not defined: Unable to set combat_power")
             return
 
-
-
-        for act in actions:
-
-            #if action and act!= action:# if action!=None set combat_power only for specific action, otherwise set combat_power value for any action
-            #    continue
-
-            # NOTA: Questo calcolo si basa sul valore di efficacia attibuito alla classificazione definita nel Context: tank, armor, ...
-            # è opportuno rivederlo nell'ottica (1 + self._vehicle_scores['combat score'])di una valutazione più accurata: 
-            #    attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
-            # Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).
-
+        for act in actions:            
             # Check if category exists in GROUND_COMBAT_EFFICACY for this action
             # Calcolo della combat_power in relazione:
             # - all'azione da eseguire, 
@@ -346,16 +337,17 @@ class Vehicle(Mobile) :
             # - alla sua efficienza 
             # - applicando anche i pesi di confronto tra classi di veicoli, riportati mparametri della tabella GROUND_COMBAT_EFFICACY definita nel Context
             categories_in_action = GROUND_COMBAT_EFFICACY.get(act, {}).keys()
+
             if self.category in categories_in_action:
                 relative_weight = 1 + GROUND_COMBAT_EFFICACY[act][self.category]  * 0.3 / 5  # weight of vehicle class effectiveness respect to other class vehicles (30% of specific vehicle weight)
-                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # score modifier based on vehicle combat score
+                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # # load data from Vehicle_Data.py module (score modifier based on vehicle combat score)
                 combat_power[act] = relative_weight * score_modifier * self.efficiency
+
             else:
                 # Category not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)
                 # Set a default combat power or skip
                 logger.debug(f"Category '{self.category}' not found in GROUND_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
                 combat_power[act] = 0
-
         # call parent method
         self.set_combat_power_value({"ground": combat_power})
 
