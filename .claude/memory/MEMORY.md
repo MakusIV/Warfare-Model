@@ -78,11 +78,23 @@
 - `Block.get_status_report()` has been removed — callers use `get_recognition_report(region_c2_recon_efficiency=1.0)` directly
 - Test: `Test/Test_Target_Status_History.py` — 44 tests OK
 
-## Test Files — Current State (2026-05-12)
+## Campaign_State Key Facts
+- Module: `Context/Campaign_State.py` — class `CampaignState`
+- Stores full campaign state snapshots (Region, Block, Asset, Route) indexed by mission_id
+- Serializes: block class/name/side/priority, State (health, success_ratio), Resource_Manager (warehouse, actual_production, clients_ids, server_ids), all Asset payloads + model + class_name, Route edges (danger_level, speed)
+- `restore(mission_id, regions)` applies snapshot to live objects: Region.attack_weight, BlockItem.priority, Block/Asset State.health, Payload fields, Route.Edge danger_level/speed
+- Write API: `add_campaign_snapshot(atomic)`, `add_region_snapshot`, `add_block_snapshot` (granular)
+- Read API: `get_mission`, `get_region_snapshot`, `get_block_snapshot`, `get_block_history`, `get_field_trend`, `get_asset_history`
+- Persistence: `save(path)` / `CampaignState.load(path)` — JSON UTF-8
+- Test: `Test/Test_Campaign_State.py` — 78 tests OK (stub objects, no live Asset imports)
+
+## Test Files — Current State (2026-05-13)
 - `Test/Test_Block.py` — 95 tests OK (5 get_status_report tests removed)
 - `Test/Test_Asset.py` — 41 tests OK
 - `Test/Test_Region.py` — 50 tests OK (incl. TestRegionMetrics class)
 - `Test/Test_Military.py` — 33 tests OK
+- `Test/Test_Target_Status_History.py` — 44 tests OK
+- `Test/Test_Campaign_State.py` — 78 tests OK
 
 ## Circular Import — Known Issue
 - `Aircraft.py → Aircraft_Data → Aircraft_Loadouts → Aircraft_Weapon_Data → Aircraft.py` — unresolved
