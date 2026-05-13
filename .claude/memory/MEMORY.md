@@ -117,6 +117,18 @@
 - Uses `getattr(block, method_name, None)` + `callable()` check → safe for non-existent methods
 - `get_recon_reports(side)` calls `get_c2_efficiency` once (not per-block), passes value to each `block.get_recognition_report(c2_value)`
 
+## Dev Environment & Memory Sync
+- Two machines: **VM** (`/home/marco/Sviluppo/Warfare-Model`) and **Notebook**
+- Git remote: `git@github.com:MakusIV/Warfare-Model.git` (SSH, non HTTPS)
+- Memory lives in repo: `Warfare-Model/.claude/memory/` — tracked by git
+- On VM: `~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/` → symlink to repo folder
+- On Notebook (setup pendente): same symlink must be created after first `git pull`:
+  ```bash
+  rm -rf ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
+  ln -s ~/Sviluppo/Warfare-Model/.claude/memory ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
+  ```
+- Sync workflow: `git push` at end of VM session → `git pull` on Notebook (and vice versa)
+
 ## Test Patterns
 - Logger mock: `patch("Code.Dynamic_War_Manager.Source.Asset.XXX.logger", MagicMock())`
 - Per combat score test: mock anche `Aircraft_Weapon_Data.logger` e `Aircraft_Loadouts.logger`
