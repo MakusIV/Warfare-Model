@@ -1,0 +1,115 @@
+# Warfare-Model Project Memory
+
+## Project Structure
+- Root: `/home/marco/Sviluppo/Warfare-Model`
+- Main source: `Code/Dynamic_War_Manager/Source/`
+- Tests: `Code/Dynamic_War_Manager/Source/Test/`
+- PDF output: `out/` (project root)
+- Venv: `venv/` (activate with `source venv/bin/activate`)
+
+## Key Modules
+- `Asset/Vehicle_Data.py` — Vehicle_Data dataclass, VEHICLE dict, SCORES tuple, get_vehicle_data(), get_vehicle_scores()
+- `Asset/Ground_Weapon_Data.py` — GROUND_WEAPONS, get_weapon_score(), get_weapon_score_target()
+- `Asset/Aircraft_Data.py`, `Aircraft_Weapon_Data.py`, `Aircraft_Loadouts.py`
+- `Context/Context.py` — Ground_Vehicle_Asset_Type enum, BLOCK_ASSET_CATEGORY
+
+## Known Data / Bugs
+- `Vehicle_Data.py`: `STAMPA=True` at module level runs table printing + PDF generation on import
+- `get_vehicle_scores()` has a validation bug: `if scores and scores not in SCORES` fails for any usable input
+- Vehicle model names use hyphens: "M1A2-Abrams", "Leopard-2A6M", "M2-Bradley" (not spaces)
+- `Vehicle_Data._registry`: dict {model_str → Vehicle_Data}, populated at module load
+- CATEGORY set: {'Tank','Armored','Motorized','Artillery_Fixed','Artillery_Semovent','SAM_Big','SAM_Medium','SAM_Small','EWR','AAA'}
+
+## Test Files Created
+- `Test/Test_Vehicle_Data.py` — 117 unit tests + terminal/PDF tables for Vehicle_Data
+- `Test/Test_Ground_Weapon_Data.py` — unit tests + PDF tables for Ground_Weapon_Data
+- `Test/Test_Aircraft_Weapon_Data.py` — unit tests for Aircraft_Weapon_Data
+- `Test/Test_Aircraft_Loadouts.py` — 178 unit tests for Aircraft_Loadouts (incl. Aircraft target type)
+- `Test/Test_Aircraft_Data.py` — 189 unit tests + terminal/PDF tables for Aircraft_Data (incl. Aircraft target type)
+- `Test/Test_Military_Resources_Assigner.py` — 70 unit tests for Military_Resources_Assigner (all helpers + get_aircraft_mission)
+
+## PDF Output Files (in `out/`)
+- `Vehicle_Scores.pdf` — all vehicle scores grouped by category (matplotlib, heatmap colors)
+- `vehicle_weapon_score_tables.pdf` — get_normalized_weapon_score() per weapon type × vehicle category
+- `vehicle_weapon_score_target_tables.pdf` — get_normalized_weapon_target_effectiveness() per weapon type × category
+- `ground_weapon_score_tables.pdf` / `ground_weapon_score_target_tables.pdf` — ground weapon scores
+- `weapon_score_tables.pdf` / `weapon_score_target_tables.pdf` — aircraft weapon scores
+- `loadout_eval_tables.pdf` / `loadout_target_eff_tables.pdf` — aircraft loadout tables
+- `Aircraft_List_Strike_Red.pdf` — get_list_of_aircrafts(Red, Strike, target_dist)
+- `Aircraft_List_Strike_Red_FighterBomber.pdf` — idem con role='Fighter_Bomber'
+
+## Aircraft_Data Key Facts
+- `combat_score(task, loadout)` — no target info; `combat_score_target_effectiveness(task, loadout, target_type: List, target_dimension: List)` — with target
+- `combat_score_target_effectiveness` is NOT bounded to [0,1] — loadout component alone can exceed 1 (e.g. F-14A Phoenix Fleet Defense returns ~2.6)
+- `get_list_of_aircrafts(side, task, target_distribuition, role, route_length, route_speed)` — BUG BLA3: sorting key raises StopIteration per aircraft senza loadout del task (next(iter({})))
+- `AIRCRAFT_ROLE = [e.value for e in Air_Asset_Type]` — lista di stringhe
+- `Air_Asset_Type.FIGHTER_BOMBER.value = 'Fighter_Bomber'`
+- Logger mock per Aircraft_Data richiede anche `Aircraft_Weapon_Data.logger` (ha `logger.debug` non implementato in Logger class)
+- `get_weapon_score_target(model, target_type: List, target_dimension: List)` — vuole LISTE, non stringhe
+
+## Military_Resources_Assigner Key Facts
+- Module: `Logic/Military_Resources_Assigner.py`
+- Public API: `get_aircraft_mission(task, aircraft_availability, mission_requirements, target_data, max_aircraft_for_mission, max_missions, directive)` → `{'fully_compliant': [...], 'derated': [...]}`
+- Each entry: `{'aircraft_model': str, 'loadout': str, 'score': float}`, sorted descending by score
+- `directive` values: `'performance_high'(1,0)`, `'performance'(0.75,0.25)`, `'balanced'(0.50,0.50)`, `'economy'(0.25,0.75)`, `'economy_high'(0.10,0.90)`
+- `_REFERENCE_COST_K = 303_000.0` — normalisation constant for cost factor
+- `_reduce_target_data`: with a single target, `weight=1.0` so `qty = round(qty*ratio*2)`; with ratio=0.5 quantity is unchanged (expected)
+- `_check_mission_requirements`: `altitude_min` check is `lo_altitude_min <= req_altitude_min`
+- Logger paths: `_LOGGER_MRA = "Code.Dynamic_War_Manager.Source.Logic.Military_Resources_Assigner.logger"` + _LOGGER_LO, _LOGGER_AWD, _LOGGER_AD
+
+## Aircraft_Loadouts Key Facts
+- `loadout_target_effectiveness_by_distribuition(aircraft, loadout_name, target_dist, route_length, route_speed)` — target_dist è dict {type: {perc_type, perc_dimension: {dim: pct}}}
+- Bug corretto: score accumulation usava `score *= perc_dimension` sul totale cumulativo; ora usa `dim_score` locale per ogni (type×dim)
+- Bug corretto: `get_weapon_score_target` veniva chiamato con stringhe invece di liste → passare `[target_type]`, `[target_dimension]`
+- Tu-160 Strategic Strike ora usa `Kh-101` (6+6); Tu-95MS Strategic Strike usa `Kh-55` (6)
+- `Kh-55` e `Kh-101` aggiunti a MISSILES_ASM in `Aircraft_Weapon_Data.py` con efficiency per Soft/Armored/Hard/Structure/Air_Defense/infrastrutture
+
+## Ship_Weapon_Data Key Facts
+- `Asset/Ship_Weapon_Data.py` — SHIP_WEAPONS, template efficienza, get_weapon_score(), get_weapon_score_target(), get_weapon_score_target_distribuition()
+- Principio scoring: score = accuracy × destroy_capacity; ordine atteso **Soft > Armored > ship > Structure > Hard**
+- `accuracy` = specializzazione arma; `destroy_capacity` = fragilità bersaglio una volta colpito
+- Template corretti (2026-04-02): ASM subsonic/supersonic/supersonic_heavy + tutti i GUNS + CIWS — vedi `project_ship_weapon_scoring.md`
+- Run tests: `python -m unittest discover -s Code/Dynamic_War_Manager/Source/Test -p "Test_Ship_Weapon_Data.py"` (--tests-only NON implementato)
+
+## Target_Status_History Key Facts
+- Module: `Context/Target_Status_History.py` — class `TargetStatusHistory`
+- Stores `get_recognition_report(region_c2_recon_efficiency=1.0)` snapshots per block per mission
+- Represents blocks as military targets (NOT operational state); formerly `Campaign_History.py` / `CampaignHistory`
+- `Block.get_status_report()` has been removed — callers use `get_recognition_report(region_c2_recon_efficiency=1.0)` directly
+- Test: `Test/Test_Target_Status_History.py` — 44 tests OK
+
+## Test Files — Current State (2026-05-12)
+- `Test/Test_Block.py` — 95 tests OK (5 get_status_report tests removed)
+- `Test/Test_Asset.py` — 41 tests OK
+- `Test/Test_Region.py` — 50 tests OK (incl. TestRegionMetrics class)
+- `Test/Test_Military.py` — 33 tests OK
+
+## Circular Import — Known Issue
+- `Aircraft.py → Aircraft_Data → Aircraft_Loadouts → Aircraft_Weapon_Data → Aircraft.py` — unresolved
+- Vehicle.py and Ship.py also trigger this chain (via Ground_Weapon_Data → Aircraft)
+- **Cannot import Vehicle, Ship, Aircraft directly in any test file**
+- Workaround in Test_Military: `_Vehicle = type('Vehicle', (), {})` stub + `mock.__class__ = _Vehicle`
+- `validate_class(mock, "Vehicle")` uses MRO name → works with stubs
+- `Block.assets` setter validates `isinstance(v, Asset)` → bypass with `block._assets = {...}` in tests
+
+## Key Bug Fixes (2026-05-05)
+- `Block.py`: removed unused `Vehicle`/`Ship`/`Aircraft` imports (broke all tests via circular import)
+- `Asset.is_critical()`: `isCrytical()` → `isCritical()` (typo in State method name)
+- `Military.get_recon_efficiency` and `get_c2_efficiency`: `asset.efficiency()` → `asset.efficiency` (property, not method call)
+- `Military.get_recognition_report`: missing `return target_report` added
+- `Block.get_recon_efficiency`: missing `return` statement added
+- `Block.get_recognition_report`: `self.supply`/`self.communication` wrapped with `getattr(..., None)`
+
+## Region.py — Metric Helper Pattern
+- `_get_region_average_metric(side, category, method_name)` — central helper for all 5 metric functions
+- Uses `getattr(block, method_name, None)` + `callable()` check → safe for non-existent methods
+- `get_recon_reports(side)` calls `get_c2_efficiency` once (not per-block), passes value to each `block.get_recognition_report(c2_value)`
+
+## Test Patterns
+- Logger mock: `patch("Code.Dynamic_War_Manager.Source.Asset.XXX.logger", MagicMock())`
+- Per combat score test: mock anche `Aircraft_Weapon_Data.logger` e `Aircraft_Loadouts.logger`
+- Se mock serve dopo import: usare `p = patch(...); p.start()` invece di `with patch(...)`
+- Menu: interactive (default), `--tests-only`, `--tables-only` flags
+- PDF: matplotlib + PdfPages (one page per category), RdYlGn heatmap colormap
+- Run tests: `python Code/Dynamic_War_Manager/Source/Test/Test_XXX.py --tests-only`
+- `_all_loggers_mocked()` in Test_Aircraft_Data: mocka _LOGGER_PATH, _LOADOUTS_LOGGER_PATH, _GWD_LOGGER_PATH, _AWD_LOGGER_PATH
