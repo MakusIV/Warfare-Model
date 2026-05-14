@@ -98,16 +98,18 @@
 - Ground_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all AA_CANNONS (5) and SAM MISSILES (11)
 - Ship_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all MISSILES_SAM (12)
 
-## Military.py — New Methods (2026-05-13)
+## Military.py — New Methods (2026-05-13/14)
 - `air_defense_volume() → List[Cylinder]` — iterates all assets, filters by validate_class(Vehicle|Ship) + is_operative() + hasattr; calls asset.air_defense_volume(); collects non-None; returns list (empty if none)
 - `combat_range() → Optional[Tuple[float,float,float,int]]` — (max_range, med_range, ratio, quantity); iterates all assets once; filters is_operative() + hasattr('combat_range'); excludes None returns; uses numpy.median; returns None if no ranges
 - `combat_power()` line 207: guard `if hasattr(asset,'combat_power') and asset.is_operative()` — hasattr skips non-combat assets, is_operative() excludes damaged; mocks must set `is_operative.return_value` explicitly
+- `combat_state() → Optional[float]` — formula: `(0.3 * operative_efficiency + 0.7 * c2_efficiency) * ratio_operative`; uses mean efficiency of OPERATIVE assets only (not all); returns None if no assets; result ∈ [0,1]
+- `get_c2_efficiency()` modified: added `hasattr(asset,'efficiency')` + `asset.is_operative()` filters; non-operative C2 assets excluded
 
 ## Test Files — Current State (2026-05-13)
 - `Test/Test_Block.py` — 95 tests OK (5 get_status_report tests removed)
 - `Test/Test_Asset.py` — 41 tests OK
 - `Test/Test_Region.py` — 50 tests OK (incl. TestRegionMetrics class)
-- `Test/Test_Military.py` — 59 tests OK (incl. air_defense_volume + combat_range + is_operative filtering)
+- `Test/Test_Military.py` — 72 tests OK (incl. air_defense_volume + combat_range + combat_state + get_c2_efficiency is_operative filtering)
 - `Test/Test_Mobile.py` — 46 tests OK (air_defense_volume + combat_range for Vehicle and Ship)
 - `Test/Test_Target_Status_History.py` — 44 tests OK
 - `Test/Test_Campaign_State.py` — 78 tests OK

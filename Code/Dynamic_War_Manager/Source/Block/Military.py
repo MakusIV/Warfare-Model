@@ -445,7 +445,7 @@ class Military(Block):
         """
         c2 = [
             asset for asset in self.assets.values()
-            if hasattr(asset, 'role') and asset.role == Asset_Role.C2.value
+            if hasattr(asset, 'role') and asset.role == Asset_Role.C2.value and hasattr(asset, 'efficiency') and asset.is_operative()
         ]
         return median(
             [asset.efficiency for asset in c2]
@@ -512,9 +512,35 @@ class Military(Block):
     #    """Calculate intelligence level (to be implemented)."""
     #    pass
 
-    def combat_state(self) -> None:
-        """Calculate combat state (to be implemented)."""
-        pass
+    def combat_state(self) -> Optional[float]:
+        """Calculate combat operational state in [0, 1].
+
+        Formula:
+            combat_state = (0.3 * operative_efficiency + 0.7 * c2_efficiency)
+                           * (n_operative / n_total)
+
+        Where operative_efficiency is the mean efficiency of operative assets only,
+        so that ratio_operative captures quantity attrition while operative_efficiency
+        captures quality of surviving assets — cleaner separation than using the
+        block-level efficiency (which averages all assets including destroyed ones).
+
+        Returns None when no assets are present.
+        """
+        total = len(self.assets)
+        if total == 0:
+            return None
+
+        operative_assets = [a for a in self.assets.values() if a.is_operative()]
+        n_operative = len(operative_assets)
+        ratio_operative = n_operative / total
+
+        operative_efficiency = (
+            sum(a.efficiency for a in operative_assets) / n_operative
+            if n_operative > 0 else 0.0
+        )
+        c2_efficiency = self.get_c2_efficiency()
+
+        return (0.3 * operative_efficiency + 0.7 * c2_efficiency) * ratio_operative
     #endmilitary
 
     # serve ? è implementato in Block, ma forse qui puoi aggiungere elementi specifici per Military

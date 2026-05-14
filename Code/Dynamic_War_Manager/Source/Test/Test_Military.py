@@ -112,10 +112,11 @@ class TestMilitary(unittest.TestCase):
         self.mock_recon.state = MagicMock()
         self.mock_recon.state.state_value = StateCategory.HEALTHFUL.value
 
-        # Mock c2 asset
+        # Mock c2 asset (operative)
         self.mock_c2 = MagicMock()
         self.mock_c2.role = Asset_Role.C2.value
         self.mock_c2.efficiency = 0.8
+        self.mock_c2.is_operative.return_value = True
         self.mock_c2.state = MagicMock()
         self.mock_c2.state.state_value = StateCategory.HEALTHFUL.value
 
@@ -517,13 +518,15 @@ class TestMilitary(unittest.TestCase):
         self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), 0.8)
 
     def test_get_c2_efficiency_multiple_assets_returns_median(self):
-        """Returns the median efficiency across multiple c2 assets."""
+        """Returns the median efficiency across multiple operative c2 assets."""
         c2_a = MagicMock()
         c2_a.role = Asset_Role.C2.value
         c2_a.efficiency = 0.5
+        c2_a.is_operative.return_value = True
         c2_b = MagicMock()
         c2_b.role = Asset_Role.C2.value
         c2_b.efficiency = 0.9
+        c2_b.is_operative.return_value = True
         self.groundbase._assets ={"c1": c2_a, "c2": c2_b}
         self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), median([0.5, 0.9]))
 
@@ -534,6 +537,40 @@ class TestMilitary(unittest.TestCase):
         recon.efficiency = 0.1
         self.groundbase._assets ={"c2_1": self.mock_c2, "recon": recon}
         self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), 0.8)
+
+    def test_get_c2_efficiency_excludes_non_operative(self):
+        """Non-operative C2 asset is excluded; only operative one counts."""
+        operative_c2 = MagicMock()
+        operative_c2.role = Asset_Role.C2.value
+        operative_c2.efficiency = 0.6
+        operative_c2.is_operative.return_value = True
+
+        non_operative_c2 = MagicMock()
+        non_operative_c2.role = Asset_Role.C2.value
+        non_operative_c2.efficiency = 0.95
+        non_operative_c2.is_operative.return_value = False
+
+        self.groundbase._assets = {"c1": operative_c2, "c2": non_operative_c2}
+        self.assertAlmostEqual(self.groundbase.get_c2_efficiency(), 0.6)
+
+    def test_get_c2_efficiency_all_non_operative_returns_zero(self):
+        """All C2 assets non-operative → 0.0."""
+        non_op = MagicMock()
+        non_op.role = Asset_Role.C2.value
+        non_op.efficiency = 0.9
+        non_op.is_operative.return_value = False
+
+        self.groundbase._assets = {"c1": non_op}
+        self.assertEqual(self.groundbase.get_c2_efficiency(), 0.0)
+
+    def test_get_c2_efficiency_without_efficiency_attr_excluded(self):
+        """C2 asset without 'efficiency' attribute is excluded (hasattr guard)."""
+        no_eff = MagicMock(spec=['role', 'is_operative'])
+        no_eff.role = Asset_Role.C2.value
+        no_eff.is_operative.return_value = True
+
+        self.groundbase._assets = {"c1": no_eff}
+        self.assertEqual(self.groundbase.get_c2_efficiency(), 0.0)
 
     # ------------------------------------------------------------------ #
     # get_recognition_report                                               #
@@ -702,17 +739,128 @@ class TestMilitary(unittest.TestCase):
         self.assertIn(mock_vehicle2, tanks)
 
     # ------------------------------------------------------------------ #
-    # Placeholder methods                                                  #
+    # combat_state                                                        #
     # ------------------------------------------------------------------ #
 
-    def test_placeholder_methods(self):
-        """Placeholder stubs defined on Military must not raise exceptions."""
+    def _make_asset(self, is_operative=True, efficiency=0.8, role="other"):
+        """Helper: build a minimal mock asset for combat_state tests."""
+        mock = MagicMock()
+        mock.is_operative.return_value = is_operative
+        mock.efficiency = efficiency
+        mock.role = role
+        return mock
+
+    def test_combat_state_no_assets_returns_none(self):
+        """No assets → None."""
+        self.groundbase._assets = {}
+        self.assertIsNone(self.groundbase.combat_state())
+
+    def test_combat_state_all_operative_full_efficiency(self):
+        """All at max: operative_efficiency=1.0, c2_efficiency=1.0, ratio=1.0 → 1.0."""
+        c2 = self._make_asset(is_operative=True, efficiency=1.0, role=Asset_Role.C2.value)
+        self.groundbase._assets = {"c1": c2}
+        self.assertAlmostEqual(self.groundbase.combat_state(), 1.0)
+
+    def test_combat_state_no_operative_returns_zero(self):
+        """All assets non-operative → ratio=0 → combat_state=0.0."""
+        a1 = self._make_asset(is_operative=False, efficiency=0.9, role=Asset_Role.C2.value)
+        a2 = self._make_asset(is_operative=False, efficiency=0.7, role="other")
+        self.groundbase._assets = {"a1": a1, "a2": a2}
+        self.assertAlmostEqual(self.groundbase.combat_state(), 0.0)
+
+    def test_combat_state_formula_numerical(self):
+        """Verify formula numerically with controlled inputs.
+
+        Setup:
+          - asset1: operative C2, efficiency=0.6
+          - asset2: non-operative other, efficiency=0.4
+        Expected:
+          operative_efficiency = mean([0.6]) = 0.6  (only operative)
+          c2_efficiency        = median([0.6]) = 0.6  (only operative C2)
+          ratio_operative      = 1 / 2 = 0.5
+          result = (0.3*0.6 + 0.7*0.6) * 0.5 = 0.6 * 0.5 = 0.3
+        """
+        a1 = self._make_asset(is_operative=True,  efficiency=0.6, role=Asset_Role.C2.value)
+        a2 = self._make_asset(is_operative=False, efficiency=0.4, role="other")
+        self.groundbase._assets = {"a1": a1, "a2": a2}
+        expected = (0.3 * 0.6 + 0.7 * 0.6) * 0.5
+        self.assertAlmostEqual(self.groundbase.combat_state(), expected, places=9)
+
+    def test_combat_state_formula_mixed_assets(self):
+        """Three assets: 2 operative (1 C2), 1 non-operative.
+
+        Setup:
+          - a1: operative C2, efficiency=0.8
+          - a2: operative non-C2, efficiency=0.5
+          - a3: non-operative C2, efficiency=0.9
+        Expected:
+          operative_efficiency = mean([0.8, 0.5]) = 0.65
+          c2_efficiency        = median([0.8]) = 0.8  (a3 excluded: non-operative)
+          ratio_operative      = 2 / 3
+          result = (0.3*0.65 + 0.7*0.8) * (2/3)
+                 = (0.195 + 0.56) * 0.6667
+                 = 0.755 * 0.6667 ≈ 0.5033
+        """
+        a1 = self._make_asset(is_operative=True,  efficiency=0.8, role=Asset_Role.C2.value)
+        a2 = self._make_asset(is_operative=True,  efficiency=0.5, role="other")
+        a3 = self._make_asset(is_operative=False, efficiency=0.9, role=Asset_Role.C2.value)
+        self.groundbase._assets = {"a1": a1, "a2": a2, "a3": a3}
+        expected = (0.3 * ((0.8 + 0.5) / 2) + 0.7 * 0.8) * (2 / 3)
+        self.assertAlmostEqual(self.groundbase.combat_state(), expected, places=9)
+
+    def test_combat_state_no_c2_only_efficiency_contributes(self):
+        """No C2 assets → c2_efficiency=0, only the 0.3*efficiency term survives.
+
+        Setup: 1 operative non-C2 asset, efficiency=0.5, ratio=1.0
+        Expected = (0.3*0.5 + 0.7*0.0) * 1.0 = 0.15
+        """
+        a1 = self._make_asset(is_operative=True, efficiency=0.5, role="other")
+        self.groundbase._assets = {"a1": a1}
+        self.assertAlmostEqual(self.groundbase.combat_state(), 0.15)
+
+    def test_combat_state_only_non_operative_c2(self):
+        """Non-operative C2 → c2_efficiency=0; operative non-C2 assets still count."""
+        a1 = self._make_asset(is_operative=True,  efficiency=0.5, role="other")
+        a2 = self._make_asset(is_operative=False, efficiency=0.9, role=Asset_Role.C2.value)
+        self.groundbase._assets = {"a1": a1, "a2": a2}
+        # operative_efficiency = 0.5, c2_efficiency = 0.0, ratio = 1/2
+        expected = (0.3 * 0.5 + 0.7 * 0.0) * 0.5
+        self.assertAlmostEqual(self.groundbase.combat_state(), expected, places=9)
+
+    def test_combat_state_result_bounded_0_to_1(self):
+        """Result is always within [0, 1]."""
+        a1 = self._make_asset(is_operative=True, efficiency=1.0, role=Asset_Role.C2.value)
+        a2 = self._make_asset(is_operative=True, efficiency=1.0, role="other")
+        self.groundbase._assets = {"a1": a1, "a2": a2}
+        result = self.groundbase.combat_state()
+        self.assertIsNotNone(result)
+        self.assertGreaterEqual(result, 0.0)
+        self.assertLessEqual(result, 1.0)
+
+    def test_combat_state_single_operative_asset(self):
+        """Single operative non-C2 asset: ratio=1, c2=0, result=0.3*efficiency."""
+        a1 = self._make_asset(is_operative=True, efficiency=0.7, role="other")
+        self.groundbase._assets = {"a1": a1}
+        self.assertAlmostEqual(self.groundbase.combat_state(), 0.3 * 0.7)
+
+    def test_combat_state_returns_float_when_assets_present(self):
+        """Return type is float (not None) when assets exist."""
+        a1 = self._make_asset(is_operative=True, efficiency=0.5, role=Asset_Role.C2.value)
+        self.groundbase._assets = {"a1": a1}
+        result = self.groundbase.combat_state()
+        self.assertIsInstance(result, float)
+
+    # ------------------------------------------------------------------ #
+    # Smoke test for formerly-placeholder methods                         #
+    # ------------------------------------------------------------------ #
+
+    def test_non_raising_methods(self):
+        """air_defense_volume and combat_range must not raise on empty block."""
         try:
             self.airbase.air_defense_volume()
             self.airbase.combat_range()
-            self.airbase.combat_state()
         except Exception as e:
-            self.fail(f"Placeholder method raised exception: {e}")
+            self.fail(f"Method raised unexpected exception: {e}")
 
     def test_combat_power_skips_asset_without_combat_power(self):
         """Assets without a combat_power attribute are silently skipped (hasattr guard)."""
