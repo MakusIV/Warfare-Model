@@ -14,7 +14,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     SEA_TASK,
     MILITARY_CATEGORY,    
     MILITARY_FORCES,
-    ACTION_TASKS
+    ACTION_TASKS,
+    GROUND_WEAPON_TASK
 )
 
 # LOGGING --
@@ -47,8 +48,7 @@ class Mobile(Asset) :
                  repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, 
                  speed: Optional[Dict] = {"nominal": None, "max": None}, 
-                 range: Optional[float] = None, 
-                 fire_range: Optional[float] = None, 
+                 range: Optional[float] = None,                  
                  dcs_unit_data: Optional[dict] = None):   
             
 
@@ -57,11 +57,6 @@ class Mobile(Asset) :
 
             # propriety   
             self._speed = speed
-            
-            # UTILIZZARE PER CALCOLO COMBAT_POWER
-            # LA COMBAT_POWER PUO ASSUMERE QUALUNQUE VALORE, TUTTAVIA IL CONFRONTO DEVE ESSERE OMOGNENO PER UGUAL TIPI DI FORCE:
-            # ground <-> ground, air <->air
-            self._fire_range = fire_range
             self._range = range
             self._weapon = {}
             self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
@@ -110,21 +105,6 @@ class Mobile(Asset) :
         self._speed = param  
         return True
     
-
-    @property
-    def fire_range(self):
-        return self._fire_range
-
-    @fire_range.setter
-    def fire_range(self, param):
-
-        check_result = self.checkParam(fire_range = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
-
-        self._fire_range = param  
-        return True
     
 
     def combat_power(self, force: Optional[str] = None, action: Optional[str] = None) -> Optional[Union[Dict, float]]:
@@ -269,7 +249,7 @@ class Mobile(Asset) :
 
             for weapon_model, _qty in weapon_list:
                 wdata = weapon_db.get(weapon_model)
-                if wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata:
+                if ( wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata ) or ( 'task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'] ):
                     continue
 
                 w_min = float(wdata['min_altitude'])
@@ -322,7 +302,7 @@ class Mobile(Asset) :
 
         is_ship = isinstance(data_record, _ShipData)
 
-        _GROUND_ATTACK = ('CANNONS', 'ARTILLERY', 'MORTARS', 'ROCKETS', 'MISSILES')
+        _GROUND_ATTACK = ('CANNONS', 'ARTILLERY', 'MORTARS', 'ROCKETS', 'MISSILES', 'AUTO_CANNONS')
         _SHIP_ATTACK   = ('MISSILES_ASM', 'MISSILES_TORPEDO', 'GUNS')
 
         max_range = 0.0
@@ -343,7 +323,7 @@ class Mobile(Asset) :
                     continue
 
                 # MISSILES that carry min_altitude are SAM weapons → skip
-                if weapon_type == 'MISSILES' and 'min_altitude' in wdata:
+                if ( weapon_type == 'MISSILES' and 'min_altitude' in wdata ) or ( 'task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] in wdata['task'] ):
                     continue
 
                 raw = wdata.get('range', 0)

@@ -1304,6 +1304,7 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
     },
 
     # ─────────────────────────────────────────────────────────────────────────
+    # Nota: differentemente da Ground_Weapon_Data i cannoni navali non sono distinti tra cannoni antiaerei e cannoni navali, ma sono tutti raggruppati in 'GUNS' l'utilizzo sulle diverse categorie di target è specificato nella propèrietà 'task' di ogni modello.
     'GUNS': {
 
         'Mk-45-5in': {

@@ -294,9 +294,9 @@ class Military(Block):
             - quantity: Number of artillery assets
         """
         range_values = [
-            asset.artillery_range 
-            for asset in self.assets.values() 
-            if ( validate_class(asset, "Vehicle") or validate_class(asset, "Ship") ) and hasattr(asset, 'artillery_range')            
+            asset.combat_range()
+            for asset in self.assets.values()
+            if ( validate_class(asset, "Vehicle") and asset.category in [gat.ARTILLERY_FIXED.value, gat.ARTILLERY_SEMOVENT.value, gat.TANK.value] ) or ( validate_class(asset, "Ship") and asset.category in [sat.CORVETTE.value, sat.CRUISER.value, sat.DESTROYER.value, sat.FRIGATE.value] )
         ]
         
         if not range_values:

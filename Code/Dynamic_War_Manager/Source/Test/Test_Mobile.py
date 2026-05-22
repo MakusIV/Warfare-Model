@@ -314,6 +314,47 @@ class TestVehicle(unittest.TestCase):
         self.assertIsNotNone(cyl)
         self.assertEqual(cyl.radius, 35000.0)
 
+    def test_adv_task_with_anti_air_included(self):
+        """Weapon WITH altitude data AND task=['Anti_Air'] is included."""
+        _FAKE_GW['AA_CANNONS'] = {
+            'test-aa-gun': {
+                'range': {'direct': 3000}, 'min_altitude': 0, 'max_altitude': 2000,
+                'task': ['Anti_Air'],
+            },
+        }
+        _FakeVehicleData._registry['test-aa-vehicle'] = _VehicleRecord(
+            {'AA_CANNONS': [('test-aa-gun', 1)]}
+        )
+        cyl = _MobileStub(position=_pos(), model='test-aa-vehicle').air_defense_volume()
+        self.assertIsNotNone(cyl)
+        self.assertEqual(cyl.radius, 3000.0)
+
+    def test_adv_task_without_anti_air_excluded(self):
+        """Weapon WITH altitude data but task=['Anti_Tank'] (no Anti_Air) is excluded."""
+        _FAKE_GW['MISSILES'] = {
+            'test-atgm': {
+                'range': {'direct': 5000}, 'min_altitude': 0, 'max_altitude': 1000,
+                'task': ['Anti_Tank'],
+            },
+        }
+        _FakeVehicleData._registry['test-atgm-vehicle'] = _VehicleRecord(
+            {'MISSILES': [('test-atgm', 1)]}
+        )
+        cyl = _MobileStub(position=_pos(), model='test-atgm-vehicle').air_defense_volume()
+        self.assertIsNone(cyl)
+
+    def test_adv_no_task_field_backward_compatible(self):
+        """Weapon with altitude data but NO task field is included (backward compat)."""
+        _FAKE_GW['AA_CANNONS'] = {
+            'test-notask': {'range': {'direct': 2000}, 'min_altitude': 0, 'max_altitude': 1500},
+        }
+        _FakeVehicleData._registry['test-notask-vehicle'] = _VehicleRecord(
+            {'AA_CANNONS': [('test-notask', 1)]}
+        )
+        cyl = _MobileStub(position=_pos(), model='test-notask-vehicle').air_defense_volume()
+        self.assertIsNotNone(cyl)
+        self.assertEqual(cyl.radius, 2000.0)
+
 
 class TestShip(unittest.TestCase):
     """Ship air defense — uses real Ship_Data._registry + real SHIP_WEAPONS."""
@@ -557,6 +598,57 @@ class TestCombatRangeVehicle(unittest.TestCase):
         result = _MobileStub(position=_pos(), model='BM-21-type').combat_range()
         self.assertIsInstance(result, float)
 
+    def test_auto_cannons_included(self):
+        """AUTO_CANNONS type is included in _GROUND_ATTACK → range returned."""
+        _FAKE_GW['AUTO_CANNONS'] = {
+            'M242-Bushmaster': {'range': {'direct': 3000, 'indirect': 0}},
+        }
+        _FakeVehicleData._registry['M2-Bradley'] = _VehicleRecord(
+            {'AUTO_CANNONS': [('M242-Bushmaster', 900)]}
+        )
+        self.assertEqual(
+            _MobileStub(position=_pos(), model='M2-Bradley').combat_range(),
+            3000.0
+        )
+
+    def test_weapon_with_anti_air_task_excluded_from_combat_range(self):
+        """Weapon whose task list contains Anti_Air is excluded even in ground types."""
+        _FAKE_GW['CANNONS'] = {
+            'test-aa-gun': {'range': {'direct': 5000}, 'task': ['Anti_Air']},
+        }
+        _FakeVehicleData._registry['test-aa-vehicle'] = _VehicleRecord(
+            {'CANNONS': [('test-aa-gun', 1)]}
+        )
+        self.assertIsNone(
+            _MobileStub(position=_pos(), model='test-aa-vehicle').combat_range()
+        )
+
+    def test_weapon_with_non_anti_air_task_included(self):
+        """Weapon whose task list does NOT contain Anti_Air is not excluded."""
+        _FAKE_GW['CANNONS'] = {
+            'test-tank-gun': {'range': {'direct': 3000}, 'task': ['Anti_Tank', 'Infantry_Support']},
+        }
+        _FakeVehicleData._registry['test-tank'] = _VehicleRecord(
+            {'CANNONS': [('test-tank-gun', 1)]}
+        )
+        self.assertEqual(
+            _MobileStub(position=_pos(), model='test-tank').combat_range(),
+            3000.0
+        )
+
+    def test_weapon_without_task_field_included(self):
+        """Weapon without a task field is not excluded by the task filter."""
+        _FAKE_GW['ARTILLERY'] = {
+            'test-howitzer': {'range': {'direct': 0, 'indirect': 15000}},
+        }
+        _FakeVehicleData._registry['test-arty'] = _VehicleRecord(
+            {'ARTILLERY': [('test-howitzer', 1)]}
+        )
+        self.assertEqual(
+            _MobileStub(position=_pos(), model='test-arty').combat_range(),
+            15000.0
+        )
+
 
 class TestCombatRangeShip(unittest.TestCase):
     """Ship naval-attack weapon scenarios — ranges in km converted to metres."""
@@ -592,15 +684,29 @@ class TestCombatRangeShip(unittest.TestCase):
             50_000.0
         )
 
-    def test_guns_range_converted_km_to_m(self):
-        """GUNS range 24 km → 24 000 m."""
+    def test_guns_with_anti_air_task_excluded(self):
+        """Real Mk-45-5in has task=['Anti_Air',...] → excluded from combat_range → None."""
         Ship_Data._registry['test-frigate-gun'] = _ship_record(
             {'GUNS': [('Mk-45-5in', 1)]}
         )
-        self.assertEqual(
-            _MobileStub(position=_pos(), model='test-frigate-gun').combat_range(),
-            24_000.0
+        self.assertIsNone(
+            _MobileStub(position=_pos(), model='test-frigate-gun').combat_range()
         )
+
+    def test_guns_range_converted_km_to_m(self):
+        """GUNS without Anti_Air task: range 24 km → 24 000 m (km→m conversion)."""
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS as _SW
+        _SW['GUNS']['_test_gun_no_aa'] = {'range': 24}  # no task key → not excluded
+        try:
+            Ship_Data._registry['test-frigate-gun-noaa'] = _ship_record(
+                {'GUNS': [('_test_gun_no_aa', 1)]}
+            )
+            self.assertEqual(
+                _MobileStub(position=_pos(), model='test-frigate-gun-noaa').combat_range(),
+                24_000.0
+            )
+        finally:
+            del _SW['GUNS']['_test_gun_no_aa']
 
     def test_multiple_ship_weapons_returns_max(self):
         """Harpoon (280 km) + Mk-48 torpedo (50 km) + Mk-45 gun (24 km) → 280 000 m."""

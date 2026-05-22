@@ -90,27 +90,29 @@
 - Persistence: `save(path)` / `CampaignState.load(path)` — JSON UTF-8
 - Test: `Test/Test_Campaign_State.py` — 78 tests OK (stub objects, no live Asset imports)
 
-## Mobile.py — New Methods (2026-05-13)
-- `air_defense_volume() → Optional[Cylinder]` — lazy-imports Vehicle_Data/Ship_Data/GROUND_WEAPONS/SHIP_WEAPONS; discriminates SAM missiles via `'min_altitude' in wdata`; returns Cylinder(center=Point3D(x,y,pos.z+min_alt), radius=max_range, height=max_alt-min_alt) or None
-- `combat_range() → Optional[float]` — Vehicle: CANNONS/ARTILLERY/MORTARS (max of direct+indirect), ROCKETS (plain metres), MISSILES without min_altitude (anti-tank); Ship: MISSILES_ASM/MISSILES_TORPEDO/GUNS ×1000 (km→m); returns max across all or None
-- Both methods skip SAM MISSILES via `'min_altitude' in wdata` (added to all AD weapons in Ground_Weapon_Data + Ship_Weapon_Data)
+## Mobile.py — New Methods (2026-05-22 update)
+- `air_defense_volume() → Optional[Cylinder]` — Vehicle: checks AA_CANNONS + MISSILES with min/max_altitude; extra filter: if weapon has `task` field, must contain `'Anti_Air'`; Ship: MISSILES_SAM only; returns Cylinder or None
+- `combat_range() → Optional[float]` — Vehicle types: CANNONS/ARTILLERY/MORTARS/ROCKETS/MISSILES/AUTO_CANNONS; Ship: MISSILES_ASM/MISSILES_TORPEDO/GUNS; two exclusion rules: (1) MISSILES with min_altitude (SAM), (2) any weapon whose task list contains `'Anti_Air'`; Ship ranges km→m
+- `fire_range` property and getter/setter removed from Mobile (2026-05-22)
 - `Ship.py`: added `model: Optional[str] = None` parameter → `self._model = model` (needed for Ship_Data._registry lookup)
-- Ground_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all AA_CANNONS (5) and SAM MISSILES (11)
-- Ship_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all MISSILES_SAM (12)
+- Ground_Weapon_Data: `min_altitude`/`max_altitude` (m AGL) added to all AA_CANNONS and SAM MISSILES; `task` field present on all ground weapons
+- Ship_Weapon_Data GUNS: ALL have `task: ['Anti_Air', ...]` → excluded from combat_range; MISSILES_ASM/TORPEDO have no Anti_Air → included
+- GROUND_WEAPON_TASK['Anti_Air'] = 'Anti_Air' (string); task field in weapon data is a list of strings
 
-## Military.py — New Methods (2026-05-13/14)
+## Military.py — Updated Methods (2026-05-22)
+- `_get_artillery_stats()` — now uses `asset.combat_range()` (not `artillery_range` attr); filters by category: Vehicle must be ARTILLERY_FIXED/ARTILLERY_SEMOVENT/TANK; Ship must be CORVETTE/CRUISER/DESTROYER/FRIGATE (all using `.value`); Bug fixed: was using `gat.TANK` / `sat.CORVETTE` etc without `.value` (enum vs string comparison always False)
 - `air_defense_volume() → List[Cylinder]` — iterates all assets, filters by validate_class(Vehicle|Ship) + is_operative() + hasattr; calls asset.air_defense_volume(); collects non-None; returns list (empty if none)
 - `combat_range() → Optional[Tuple[float,float,float,int]]` — (max_range, med_range, ratio, quantity); iterates all assets once; filters is_operative() + hasattr('combat_range'); excludes None returns; uses numpy.median; returns None if no ranges
 - `combat_power()` line 207: guard `if hasattr(asset,'combat_power') and asset.is_operative()` — hasattr skips non-combat assets, is_operative() excludes damaged; mocks must set `is_operative.return_value` explicitly
-- `combat_state() → Optional[float]` — formula: `(0.3 * operative_efficiency + 0.7 * c2_efficiency) * ratio_operative`; uses mean efficiency of OPERATIVE assets only (not all); returns None if no assets; result ∈ [0,1]
-- `get_c2_efficiency()` modified: added `hasattr(asset,'efficiency')` + `asset.is_operative()` filters; non-operative C2 assets excluded
+- `combat_state() → Optional[float]` — formula: `(0.3 * operative_efficiency + 0.7 * c2_efficiency) * ratio_operative`; returns None if no assets; result ∈ [0,1]
+- `get_c2_efficiency()`: hasattr(asset,'efficiency') + asset.is_operative() filters; non-operative C2 excluded
 
-## Test Files — Current State (2026-05-13)
-- `Test/Test_Block.py` — 95 tests OK (5 get_status_report tests removed)
+## Test Files — Current State (2026-05-22)
+- `Test/Test_Block.py` — 95 tests OK
 - `Test/Test_Asset.py` — 41 tests OK
-- `Test/Test_Region.py` — 50 tests OK (incl. TestRegionMetrics class)
-- `Test/Test_Military.py` — 72 tests OK (incl. air_defense_volume + combat_range + combat_state + get_c2_efficiency is_operative filtering)
-- `Test/Test_Mobile.py` — 46 tests OK (air_defense_volume + combat_range for Vehicle and Ship)
+- `Test/Test_Region.py` — 50 tests OK
+- `Test/Test_Military.py` — 83 tests OK (incl. _get_artillery_stats category filter + combat_range + combat_state + c2_efficiency)
+- `Test/Test_Mobile.py` — 54 tests OK (incl. task filter for air_defense_volume + combat_range; AUTO_CANNONS; GUNS Anti_Air exclusion)
 - `Test/Test_Target_Status_History.py` — 44 tests OK
 - `Test/Test_Campaign_State.py` — 78 tests OK
 
