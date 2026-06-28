@@ -138,17 +138,16 @@
 - `get_recon_reports(side)` calls `get_c2_efficiency` once (not per-block), passes value to each `block.get_recognition_report(c2_value)`
 
 ## Dev Environment & Memory Sync
-- Two machines: **VM** (`/home/marco/Sviluppo/Warfare-Model`) and **Notebook**
-- Git remote: `git@github.com:MakusIV/Warfare-Model.git` (SSH, non HTTPS)
+- Three machines: **VM** (VirtualBox Ubuntu), **Notebook** (Ubuntu), **ProArt P16** (Asus, WSL2 Ubuntu 26.04 su Windows 11 Pro)
+- Git remote: `git@github.com:MakusIV/Warfare-Model.git` (SSH) — ProArt P16 usa SSH confermato 2026-06-28
 - Memory lives in repo: `Warfare-Model/.claude/memory/` — tracked by git
-- On VM: `~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/` → symlink to repo folder
-- On Notebook: remote usa **HTTPS** (`https://github.com/MakusIV/Warfare-Model.git`), non SSH — la chiave `id_ed25519` è per uso personale ma ssh-add richiede passphrase interattiva; HTTPS è più pratico
-- On Notebook (setup completato 2026-05-13): same symlink created after first `git pull`:
+- On all machines: `~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/` → symlink to repo folder
   ```bash
-  rm -rf ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
   ln -s ~/Sviluppo/Warfare-Model/.claude/memory ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
   ```
-- Sync workflow: `git push` at end of VM session → `git pull` on Notebook (and vice versa)
+- Sync workflow: `git push` at end of session → `git pull` on other machines
+- **ProArt P16 venv setup (2026-06-28):** direnv 2.37.1 + Python 3.12.13 (deadsnakes PPA); `.envrc`: `layout python python3.12`; venv at `.direnv/python-3.12/`; hook in `~/.bashrc`
+- **VM/Notebook venv:** venv classico in `venv/` (ora escluso da git tramite `.gitignore`)
 
 ## Project Files
 - [Military_Resources_Assigner — stato implementazione](project_mra_state.md) — formula _reduce_target_data, derating_factor, formato tabelle output
