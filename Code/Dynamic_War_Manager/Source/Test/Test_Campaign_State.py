@@ -6,7 +6,7 @@ import types
 import unittest
 from pathlib import Path
 
-from Dynamic_War_Manager.Source.Context.Campaign_State import CampaignState
+from Code.Dynamic_War_Manager.Source.Context.Campaign_State import CampaignState
 
 
 # ---------------------------------------------------------------------------

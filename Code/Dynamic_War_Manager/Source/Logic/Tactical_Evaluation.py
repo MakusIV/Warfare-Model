@@ -16,6 +16,7 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
+from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
@@ -39,7 +40,7 @@ print("\n".join(sys.path))
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, class_name='').logger
+logger = Logger(module_name=__name__, class_name='Tactical_Evaluation').logger
 
 
 LOW_LIMIT_DAMAGE = 0.35 # limite minimo sotto il quale le valutazioni di calcFihtResult() restituiscono 1 (parity)ù

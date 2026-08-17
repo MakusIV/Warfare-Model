@@ -2,10 +2,16 @@
 
 Setup strategy
 --------------
-* Aircraft circular-import chain (Aircraft → Aircraft_Data → … → Aircraft) is
-  pre-injected as MagicMock in sys.modules so that Mobile can be imported.
-* Vehicle_Data and Ground_Weapon_Data (which also pull in Aircraft) are replaced
-  with thin fake modules whose internal dicts are mutated per test.
+* Mobile itself imports cleanly now (no circular-import blocker), so it is
+  imported directly from the real module.
+* Vehicle_Data and Ground_Weapon_Data are resolved lazily *inside*
+  Mobile.air_defense_volume()/combat_range() (function-local imports), so
+  they can be swapped for thin fake modules whose internal dicts are mutated
+  per test. That swap is installed in setUpModule()/removed in
+  tearDownModule() — scoped to this module's own test run — instead of at
+  import time, so it can never leak into other test files collected by
+  `unittest discover` in the same process (see [[feedback_circular_import_workaround]]
+  for the leakage this used to cause).
 * Ship_Data and Ship_Weapon_Data are imported from the real modules (they have
   no circular dependency) and used with stub instances.
 """
@@ -16,42 +22,48 @@ import unittest
 from unittest.mock import MagicMock, patch
 from sympy import Point3D
 
-# ── Pre-inject Aircraft circular-import chain ──────────────────────────────
-for _m in [
-    'Code.Dynamic_War_Manager.Source.Asset.Aircraft',
-    'Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data',
-    'Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts',
-    'Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data',
-]:
-    sys.modules.setdefault(_m, MagicMock())
-
-# ── Fake Vehicle_Data module ───────────────────────────────────────────────
-class _FakeVehicleData:
-    _registry: dict = {}
-
-_vd_mod = types.ModuleType('Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data')
-_vd_mod.Vehicle_Data = _FakeVehicleData
-sys.modules['Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data'] = _vd_mod
-
-# ── Fake Ground_Weapon_Data module ─────────────────────────────────────────
-# Mutable dict — mutated in setUp/test, cleared between tests.
-_FAKE_GW: dict = {}
-
-_gwd_mod = types.ModuleType('Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data')
-_gwd_mod.GROUND_WEAPONS = _FAKE_GW
-sys.modules['Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data'] = _gwd_mod
-
-# ── Real Ship_Data and Ship_Weapon_Data (safe — no circular deps) ──────────
+# ── Real Mobile, Ship_Data and Ship_Weapon_Data (all import cleanly) ───────
+from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile                # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data          # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS  # noqa (real data)
-
-# ── Mobile (importable now that the chain is mocked) ──────────────────────
-from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile                # noqa
 # Cylinder is intentionally NOT imported here: Mobile.py uses a different
 # sys.modules path ('Dynamic_War_Manager…' vs 'Code.Dynamic_War_Manager…'),
 # so isinstance checks would always fail.  We verify by class name instead.
 
 _MOBILE_LOGGER = 'Code.Dynamic_War_Manager.Source.Asset.Mobile.logger'
+
+_VD_MODULE_NAME = 'Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data'
+_GWD_MODULE_NAME = 'Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data'
+
+
+# ── Fake Vehicle_Data module ───────────────────────────────────────────────
+class _FakeVehicleData:
+    _registry: dict = {}
+
+_vd_mod = types.ModuleType(_VD_MODULE_NAME)
+_vd_mod.Vehicle_Data = _FakeVehicleData
+
+# ── Fake Ground_Weapon_Data module ─────────────────────────────────────────
+# Mutable dict — mutated in setUp/test, cleared between tests.
+_FAKE_GW: dict = {}
+
+_gwd_mod = types.ModuleType(_GWD_MODULE_NAME)
+_gwd_mod.GROUND_WEAPONS = _FAKE_GW
+
+_sys_modules_patcher = patch.dict(sys.modules, {
+    _VD_MODULE_NAME: _vd_mod,
+    _GWD_MODULE_NAME: _gwd_mod,
+})
+
+
+def setUpModule():
+    """Install the fakes only for the duration of this module's own test run."""
+    _sys_modules_patcher.start()
+
+
+def tearDownModule():
+    """Remove the fakes immediately so other test files never see them."""
+    _sys_modules_patcher.stop()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -1663,17 +1663,17 @@ class TestIsWeaponIntroduced(unittest.TestCase):
         with self.assertRaises(TypeError):
             is_weapon_introduced("AIM-9L", [1975])
 
-    # ── Arma sconosciuta → False ───────────────────────────────────────────
+    # ── Arma sconosciuta → True (per design: vedi commento in is_weapon_introduced) ──
 
-    def test_unknown_weapon_returns_false(self):
-        """is_weapon_introduced restituisce False per un modello sconosciuto."""
+    def test_unknown_weapon_returns_true(self):
+        """is_weapon_introduced restituisce True per un modello sconosciuto (per evitare falsi negativi nei confronti tra piloni/database armi)."""
         result = is_weapon_introduced("WEAPON_NOT_EXISTING_XYZ", 2000)
-        self.assertFalse(result)
+        self.assertTrue(result)
 
-    def test_unknown_weapon_returns_false_past_year(self):
-        """Arma sconosciuta → False anche con un anno molto passato."""
+    def test_unknown_weapon_returns_true_past_year(self):
+        """Arma sconosciuta → True anche con un anno molto passato."""
         result = is_weapon_introduced("WEAPON_NOT_EXISTING_XYZ", 1900)
-        self.assertFalse(result)
+        self.assertTrue(result)
 
     # ── True: anno >= start_service ────────────────────────────────────────
 

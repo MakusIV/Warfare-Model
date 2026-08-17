@@ -7684,3 +7684,7 @@
 2026-03-25 15:20:24,974 - Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - INFO - get_aircraft_mission - Aircraft 'Su-30' / loadout 'Anti-Ship': does not meet mission performance requirements.
 2026-03-25 15:20:24,982 - Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - INFO - get_aircraft_mission - Aircraft 'Su-30' / loadout 'Anti-Ship': does not meet mission performance requirements.
 2026-03-25 15:20:24,991 - Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - INFO - get_aircraft_mission - Aircraft 'Su-30' / loadout 'Anti-Ship': does not meet mission performance requirements.
+2026-08-17 11:07:37,663 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 2: formato non valido ('invalid_entry'), ignorato.
+2026-08-17 11:07:37,665 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.
+2026-08-17 11:09:16,154 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 2: formato non valido ('invalid_entry'), ignorato.
+2026-08-17 11:09:16,154 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.

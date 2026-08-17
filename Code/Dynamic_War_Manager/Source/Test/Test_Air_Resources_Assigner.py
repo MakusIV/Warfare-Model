@@ -54,7 +54,7 @@ from typing import Dict, List
 
 sys.path.insert(
     0,
-    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), *(['..'] * 5))),
+    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), *(['..'] * 4))),
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -66,15 +66,15 @@ _LOGGER_LO    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts.logger"
 _LOGGER_AWD   = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data.logger"
 _LOGGER_AD    = "Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.logger"
 
-_PATCH_GET_TASK_FROM_TARGET = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_task_from_target"
-_PATCH_GET_AIRCRAFT_MISSION = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_aircraft_mission"
-_PATCH_CREATE_TASK_TABLE    = "Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner._create_ground_mission_task_table"
+_PATCH_GET_TASK_FROM_TARGET = "Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_task_from_target"
+_PATCH_GET_AIRCRAFT_MISSION = "Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_aircraft_mission"
+_PATCH_CREATE_TASK_TABLE    = "Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner._create_ground_mission_task_table"
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  IMPORT DEL MODULO SOTTO TEST
 # ─────────────────────────────────────────────────────────────────────────────
 
-from Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
+from Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     get_aircraft_mission,
     get_loadouts_availability,
     get_ground_mission_task_list,

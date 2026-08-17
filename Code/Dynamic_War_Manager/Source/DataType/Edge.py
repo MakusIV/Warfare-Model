@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple, Union
-from Dynamic_War_Manager.Source.Asset.Asset import Asset
-from Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
+from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
+from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Context.Context import PATH_TYPE
 from sympy import Point, Line, Point3D, Line3D, Line2D, symbols, solve, Eq, sqrt, And
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger

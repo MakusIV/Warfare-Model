@@ -13,8 +13,8 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 #import skfuzzy as fuzz
 #import numpy as np
-from Dynamic_War_Manager.Source.Block.Military import Military
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_Military_VEHICLE_ASSET, GROUND_ACTION
+from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MILITARY_VEHICLE_ASSET, GROUND_ACTION
 
 
 
@@ -25,7 +25,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY
     # INFO 	20
     # DEBUG 	10
     # NOTSET 	0
-logger = Logger(module_name=__name__, class_name='').logger
+logger = Logger(module_name=__name__, class_name='Strategical_Evaluation').logger
 
 """ 
 NO, DEVE VALUTARE LE AZIONI CONSIDERANDO TRE GRAFI: QUELLO DEL CONFLITTO COSTITUITO DA BASI_MIL AMICHE E NEMICHE, QUELLO LOGISTICO

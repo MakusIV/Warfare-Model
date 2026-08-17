@@ -1077,12 +1077,12 @@ class TestThreatAA(unittest.TestCase):
     def setUp(self):
         self.center = Point3D(0, 0, 100)
         self.cylinder = Cylinder(self.center, 10, 20) #MockCylinder(self.center, 10, 20)
-        self.threat = ThreatAA(5, 500, 2, self.cylinder)
+        self.threat = ThreatAA(5, 500, 2, 7, self.cylinder)
         
         # Create test waypoints and edges
         self.wp_a = Waypoint("A", Point3D(-20, 0, 100), "A")
         self.wp_b = Waypoint("B", Point3D(20, 0, 100), "B")
-        self.edge = Edge("test_edge", self.wp_a, self.wp_b, 200)
+        self.edge = Edge("test_edge", 0, self.wp_a, self.wp_b, 200)
     
     def test_init(self):
         """Test the initialization of ThreatAA"""
@@ -1160,12 +1160,12 @@ class TestEdge(unittest.TestCase):
     def setUp(self):
         self.wp_a = Waypoint("A", Point3D(0, 0, 0), "A")
         self.wp_b = Waypoint("B", Point3D(3, 4, 0), "B")
-        self.edge = Edge("Test Edge", self.wp_a, self.wp_b, 100)
+        self.edge = Edge("Test Edge", 0, self.wp_a, self.wp_b, 100)
         
         # Create a mock threat
         center = Point3D(1.5, 2, 0)
         cylinder = Cylinder(center, 1, 5)
-        self.threat = ThreatAA(10, 500, 2, cylinder)
+        self.threat = ThreatAA(10, 500, 2, 7, cylinder)
     
     def test_init(self):
         """Test edge initialization"""
@@ -1212,10 +1212,10 @@ class TestPath(unittest.TestCase):
         self.wp_c = Waypoint("C", Point3D(7, 7, 0), "C")
         
         # Create test edges
-        self.edge1 = Edge("Edge1", self.wp_a, self.wp_b, 100)
+        self.edge1 = Edge("Edge1", 0, self.wp_a, self.wp_b, 100)
         self.edge1.danger = 2
         
-        self.edge2 = Edge("Edge2", self.wp_b, self.wp_c, 100)
+        self.edge2 = Edge("Edge2", 1, self.wp_b, self.wp_c, 100)
         self.edge2.danger = 3
     
     def test_init(self):
@@ -1267,10 +1267,10 @@ class TestPathCollection(unittest.TestCase):
         self.wp_c = Waypoint("C", Point3D(7, 7, 0), "C")
         
         # Create test edges
-        self.edge1 = Edge("Edge1", self.wp_a, self.wp_b, 100)
+        self.edge1 = Edge("Edge1", 0, self.wp_a, self.wp_b, 100)
         self.edge1.danger = 2
         
-        self.edge2 = Edge("Edge2", self.wp_b, self.wp_c, 100)
+        self.edge2 = Edge("Edge2", 1, self.wp_b, self.wp_c, 100)
         self.edge2.danger = 3
     
     def test_add_path(self):
@@ -1346,7 +1346,7 @@ class TestRoutePlanner(unittest.TestCase):
         # Create a threat
         center = Point3D(50, 50, 100)
         cylinder = Cylinder(center, 20, 30)
-        self.threat = ThreatAA(5, 500, 2, cylinder)
+        self.threat = ThreatAA(5, 500, 2, 7, cylinder)
         
         # Create the route planner
         self.route_planner = RoutePlanner(self.start, self.end, [self.threat])
@@ -1364,7 +1364,7 @@ class TestRoutePlanner(unittest.TestCase):
         self.wp_mid = Waypoint("Mid", Point3D(25, 25, 100), "Mid")
         
         # Edge for testing
-        self.edge = Edge("TestEdge", self.wp_a, self.wp_mid, self.aircraft_speed)
+        self.edge = Edge("TestEdge", 0, self.wp_a, self.wp_mid, self.aircraft_speed)
     
     def test_excludeThreat(self):
         """Test excluding threats that include a point"""
@@ -1389,11 +1389,11 @@ class TestRoutePlanner(unittest.TestCase):
         # Create multiple threats
         center1 = Point3D(30, 30, 100)
         cylinder1 = MockCylinder(center1, 10, 20)
-        threat1 = ThreatAA(3, 400, 1, cylinder1)
+        threat1 = ThreatAA(3, 400, 1, 7, cylinder1)
         
         center2 = Point3D(15, 15, 100)
         cylinder2 = MockCylinder(center2, 5, 10)
-        threat2 = ThreatAA(2, 300, 1, cylinder2)
+        threat2 = ThreatAA(2, 300, 1, 7, cylinder2)
         
         threats = [self.threat, threat1, threat2]
         

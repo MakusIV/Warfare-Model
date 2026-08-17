@@ -109,6 +109,7 @@ class MockPayload:
 class MockBlock:
     def __init__(self, block_id: str, has_rm: bool = True):
         self.id = block_id
+        self.name = block_id
         self.region = MagicMock(spec= Region)
         self.assets = []
         self._resource_manager = None

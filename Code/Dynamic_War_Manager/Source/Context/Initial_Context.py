@@ -98,7 +98,7 @@ PRODUCTION_ASSET:Dict[str, Tuple[float, float]] = {
                      asea.DESTROYER.value: 1,
                      asea.CRUISER.value: 1,
                      asea.FRIGATE.value: 1,
-                     asea.FAST_ATTACK.value: 1,
+                     asea.CORVETTE.value: 1,
                      asea.SUBMARINE.value: 1,
                      asea.AMPHIBIOUS_ASSAULT_SHIP.value: 1,
                      asea.TRANSPORT.value: 1,

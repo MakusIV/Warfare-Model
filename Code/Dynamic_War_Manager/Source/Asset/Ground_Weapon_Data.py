@@ -2,7 +2,6 @@ from functools import lru_cache
 import random
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Context.Context import TARGET_CLASSIFICATION, GROUND_WEAPON_TASK #GROUND_ACTION, ACTION_TASKS,
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger

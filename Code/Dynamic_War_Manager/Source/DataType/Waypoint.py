@@ -1,4 +1,4 @@
-from Dynamic_War_Manager.Source.Asset.Asset import Asset
+from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
 from sympy import Point3D, Point2D
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 

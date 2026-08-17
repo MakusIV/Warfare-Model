@@ -27,7 +27,6 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     get_block_infrastructure_components,
     get_task_from_target
 )
-from Dynamic_War_Manager.Source.Context.Rinomina_Campaign_State import Campaign_State
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
     get_aircrafts_quantity,

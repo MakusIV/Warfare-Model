@@ -1,0 +1,820 @@
+2026-08-16 17:50:17,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,642 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,642 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,642 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpcmiqslm5.json (2 missions).
+2026-08-16 17:50:17,642 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpcmiqslm5.json (2 missions).
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpl48a14xi.json (1 missions).
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp6kv4sqa8.json (1 missions).
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp6kv4sqa8.json (1 missions).
+2026-08-16 17:50:17,643 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpys4zn5_1.json (1 missions).
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpys4zn5_1.json (1 missions).
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,644 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,645 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,646 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,647 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,648 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:50:17,649 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:50:17,650 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:50:17,651 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,567 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,568 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,568 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,568 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpsmay8hlw.json (2 missions).
+2026-08-16 17:52:09,568 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpsmay8hlw.json (2 missions).
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpukyzlm8a.json (1 missions).
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp7i0vqc65.json (1 missions).
+2026-08-16 17:52:09,569 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp7i0vqc65.json (1 missions).
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmps8h1z_zr.json (1 missions).
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmps8h1z_zr.json (1 missions).
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,570 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,571 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,572 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,573 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-16 17:52:09,574 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,575 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:52:09,576 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:52:09,577 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,578 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-16 17:52:09,578 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,578 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:52:09,578 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,834 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,835 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,835 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,835 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpg92y3kdl.json (2 missions).
+2026-08-16 17:53:46,835 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpg92y3kdl.json (2 missions).
+2026-08-16 17:53:46,835 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp031qetfz.json (1 missions).
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp21kl_4p_.json (1 missions).
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp21kl_4p_.json (1 missions).
+2026-08-16 17:53:46,836 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpat5vjkwf.json (1 missions).
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpat5vjkwf.json (1 missions).
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,837 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,838 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,839 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,840 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,841 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,842 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:53:46,843 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 17:53:46,844 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,845 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-16 17:53:46,845 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,845 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 17:53:46,845 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,749 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,749 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,749 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,749 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp7nhi8ndv.json (2 missions).
+2026-08-16 18:13:04,749 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp7nhi8ndv.json (2 missions).
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp_fjhzyur.json (1 missions).
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp4ddw59xc.json (1 missions).
+2026-08-16 18:13:04,750 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp4ddw59xc.json (1 missions).
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpv7j7p43r.json (1 missions).
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpv7j7p43r.json (1 missions).
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,751 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,752 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,753 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,754 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,755 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,756 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,757 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 18:13:04,758 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-16 18:13:04,758 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 18:13:04,758 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-16 18:13:04,758 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 18:13:04,758 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-16 18:13:04,759 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,609 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,631 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,631 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,632 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp53smkzq0.json (2 missions).
+2026-08-17 09:48:58,632 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp53smkzq0.json (2 missions).
+2026-08-17 09:48:58,632 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,632 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp6e84ibbq.json (1 missions).
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp7akzdqbz.json (1 missions).
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp7akzdqbz.json (1 missions).
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp7p_kz_lb.json (1 missions).
+2026-08-17 09:48:58,633 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp7p_kz_lb.json (1 missions).
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,634 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,635 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,636 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 09:48:58,637 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 09:48:58,638 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,639 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,640 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,640 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 09:48:58,640 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 09:48:58,640 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:48:58,641 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,957 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,957 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,957 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,958 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpcma9e4hk.json (2 missions).
+2026-08-17 09:50:40,958 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpcma9e4hk.json (2 missions).
+2026-08-17 09:50:40,958 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,958 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmptx5o8gpl.json (1 missions).
+2026-08-17 09:50:40,959 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,959 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,960 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp6rqzj70_.json (1 missions).
+2026-08-17 09:50:40,960 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp6rqzj70_.json (1 missions).
+2026-08-17 09:50:40,960 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpegwvqkml.json (1 missions).
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpegwvqkml.json (1 missions).
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,961 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,962 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,963 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 09:50:40,964 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 09:50:40,965 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 09:50:40,966 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,967 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,967 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,967 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 09:50:40,967 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 09:50:40,968 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,969 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 09:50:40,969 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,969 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 09:50:40,969 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,969 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,995 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,995 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:46,996 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp6walj61p.json (2 missions).
+2026-08-17 10:52:46,997 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp6walj61p.json (2 missions).
+2026-08-17 10:52:46,997 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,997 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp0qvixzlx.json (1 missions).
+2026-08-17 10:52:46,997 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,997 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,998 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpl4_mg81n.json (1 missions).
+2026-08-17 10:52:46,998 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpl4_mg81n.json (1 missions).
+2026-08-17 10:52:46,998 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,998 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpya8hokhk.json (1 missions).
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpya8hokhk.json (1 missions).
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:46,999 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,000 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,001 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,002 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,003 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 10:52:47,004 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:52:47,005 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,710 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,710 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,710 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpb9r50owi.json (2 missions).
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpb9r50owi.json (2 missions).
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpc2lz0as7.json (1 missions).
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,711 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpst42b_v1.json (1 missions).
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpst42b_v1.json (1 missions).
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpsgkme9fb.json (1 missions).
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpsgkme9fb.json (1 missions).
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,712 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,713 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 10:58:16,714 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,256 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,256 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,256 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,256 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp8bcwgv41.json (2 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp8bcwgv41.json (2 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp5s8ifojc.json (1 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp3ae7q4ir.json (1 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp3ae7q4ir.json (1 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpmwfzs9lh.json (1 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpmwfzs9lh.json (1 missions).
+2026-08-17 11:05:21,257 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,258 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,259 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:05:21,260 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,656 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,656 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,656 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp88mkkfka.json (2 missions).
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp88mkkfka.json (2 missions).
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpeuf05hwl.json (1 missions).
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,657 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmp4w2hui8i.json (1 missions).
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmp4w2hui8i.json (1 missions).
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - save - CampaignState saved to /tmp/tmpa0u82qoa.json (1 missions).
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - INFO - load - CampaignState loaded from /tmp/tmpa0u82qoa.json (1 missions).
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,658 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - WARNING - restore - Region 'NonExistent' not in snapshot for mission 'M001'. Skipped.
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M_SR region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,659 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M003 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M002 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=B1
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=South block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_002
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_block_snapshot - Block snapshot added: mission=M001 region=North block=BLK_001
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Crimea
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
+2026-08-17 11:10:42,660 - Code.Dynamic_War_Manager.Source.Context.Campaign_State - DEBUG - add_region_snapshot - Region snapshot added: mission=M001 region=Donbas
