@@ -1,7 +1,11 @@
 ---
-name: Ship_Weapon_Data scoring fixes
+name: ship-weapon-data-scoring-fixes
 description: Correzioni ai template di efficienza in Ship_Weapon_Data.py — principio destroy_capacity e ordinamento punteggi
-type: project
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 54069b25-fc3b-495d-81bb-9efd11133381
+  modified: 2026-08-16T16:06:37.324Z
 ---
 
 Corretti i template di efficienza in `Asset/Ship_Weapon_Data.py` per rispettare il principio:
@@ -39,3 +43,6 @@ Corretti i template di efficienza in `Asset/Ship_Weapon_Data.py` per rispettare 
 ## Run tests
 `python -m unittest discover -s Code/Dynamic_War_Manager/Source/Test -p "Test_Ship_Weapon_Data.py"`
 (il flag --tests-only NON è implementato in questo file — usare unittest discover o pytest)
+
+## API surface
+`Asset/Ship_Weapon_Data.py` — `SHIP_WEAPONS` dict, `get_weapon_score()`, `get_weapon_score_target()`, `get_weapon_score_target_distribuition()`.
