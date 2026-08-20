@@ -1,0 +1,195 @@
+
+IL testo che segue è l'articolo di Andrej Karpathy: karpathy/llm-wiki.md  pubblicato in https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+
+
+
+Wiki LLM
+
+
+
+
+Un modello per la creazione di basi di conoscenza personali utilizzando LLM.
+
+
+
+
+Questo è un file di idee, progettato per essere copiato e incollato nel proprio agente LLM (ad esempio OpenAI Codex, Claude Code, OpenCode/Pi, ecc.). Il suo scopo è comunicare l'idea generale, ma il vostro agente svilupperà i dettagli specifici in collaborazione con voi.
+
+
+
+
+L'idea centrale
+
+
+
+
+L'esperienza della maggior parte delle persone con LLM e documenti è simile al modello RAG: si carica una raccolta di file, l'LLM recupera i frammenti rilevanti al momento della query e genera una risposta. Questo funziona, ma l'LLM riscopre la conoscenza da zero per ogni domanda. Non c'è accumulo. Se si pone una domanda complessa che richiede la sintesi di cinque documenti, l'LLM deve trovare e assemblare i frammenti rilevanti ogni volta. Non si crea nulla di consolidato. NotebookLM, il caricamento di file ChatGPT e la maggior parte dei sistemi RAG funzionano in questo modo.
+
+
+
+
+L'idea qui è diversa. Invece di limitarsi a recuperare le informazioni dai documenti originali al momento della ricerca, LLM costruisce e mantiene in modo incrementale un wiki persistente: una raccolta strutturata e interconnessa di file Markdown che si interpone tra l'utente e le fonti originali. Quando si aggiunge una nuova fonte, LLM non si limita a indicizzarla per un successivo recupero. La legge, estrae le informazioni chiave e le integra nel wiki esistente, aggiornando le pagine delle entità, rivedendo i riepiloghi degli argomenti, segnalando le contraddizioni tra i nuovi dati e rafforzando o mettendo in discussione la sintesi in continua evoluzione. La conoscenza viene compilata una sola volta e poi mantenuta aggiornata, non ricostruita a ogni ricerca.
+
+
+
+
+Questa è la differenza fondamentale: il wiki è un artefatto persistente e in continua evoluzione. I riferimenti incrociati sono già presenti. Le contraddizioni sono già state segnalate. La sintesi riflette già tutto ciò che l'utente ha letto. Il wiki si arricchisce costantemente con ogni fonte aggiunta e ogni domanda posta.
+
+
+
+
+L'utente non scrive mai (o quasi mai) il wiki personalmente: LLM lo scrive e lo mantiene interamente. Tu ti occupi di reperire le informazioni, esplorarle e porre le domande giuste. L'LLM si occupa di tutto il lavoro più gravoso: riassumere, creare riferimenti incrociati, archiviare e tenere la contabilità, elementi che rendono una base di conoscenza effettivamente utile nel tempo. In pratica, tengo l'agente LLM aperto da un lato e Obsidian dall'altro. L'LLM apporta modifiche in base alla nostra conversazione e io consulto i risultati in tempo reale: seguo i link, controllo la visualizzazione grafica e leggo le pagine aggiornate. Obsidian è l'IDE; l'LLM è il programmatore; il wiki è il codice sorgente.
+
+
+
+
+Questo approccio può essere applicato a molti contesti diversi. Alcuni esempi:
+
+
+
+
+Personale: monitorare i propri obiettivi, la salute, la psicologia, il miglioramento personale, archiviando annotazioni sul diario, articoli, appunti di podcast e costruendo nel tempo un quadro strutturato di sé stessi.
+
+
+
+
+Ricerca: approfondire un argomento per settimane o mesi, leggendo articoli, report e costruendo gradualmente un wiki completo con una tesi in continua evoluzione.
+
+
+
+
+Leggere un libro: archiviare ogni capitolo man mano che si procede, creando pagine per personaggi, temi, intrecci narrativi e i loro collegamenti. Alla fine si ottiene una ricca wiki di accompagnamento. Pensate alle wiki dei fan come Tolkien Gateway: migliaia di pagine interconnesse che trattano personaggi, luoghi, eventi, lingue, create da una comunità di volontari nel corso degli anni. Potreste costruire qualcosa di simile personalmente mentre leggete, con il LLM (Learning Life Manager) che si occupa di tutti i riferimenti incrociati e della manutenzione.
+
+
+
+
+Azienda/team: una wiki interna gestita dai LLM, alimentata da thread di Slack, trascrizioni di riunioni, documenti di progetto, chiamate ai clienti. Eventualmente con l'intervento umano per la revisione degli aggiornamenti. La wiki rimane aggiornata perché il LLM si occupa della manutenzione che nessun altro membro del team vuole fare.
+
+
+
+
+Analisi della concorrenza, due diligence, pianificazione di viaggi, appunti di corsi, approfondimenti su hobby: qualsiasi attività in cui si accumula conoscenza nel tempo e si desidera organizzarla anziché averla dispersa.
+
+
+
+
+Architettura
+
+
+
+
+Ci sono tre livelli:
+
+
+
+
+Fonti grezze: la vostra raccolta curata di documenti di origine. Articoli, documenti, immagini, file di dati. Questi sono immutabili: LLM li legge, ma non li modifica mai. Questa è la vostra fonte di verità.
+
+
+
+
+Il wiki: una directory di file Markdown generati da LLM. Riepiloghi, pagine di entità, pagine di concetti, confronti, una panoramica, una sintesi. LLM gestisce interamente questo livello. Crea le pagine, le aggiorna quando arrivano nuove fonti, mantiene i riferimenti incrociati e garantisce la coerenza di tutto. Voi lo leggete; LLM lo scrive.
+
+
+
+
+Lo schema: un documento (ad esempio CLAUDE.md per Claude Code o AGENTS.md per Codex) che indica a LLM come è strutturato il wiki, quali sono le convenzioni e quali flussi di lavoro seguire per acquisire fonti, rispondere a domande o gestire il wiki. Questo è il file di configurazione chiave: è ciò che rende LLM un gestore di wiki disciplinato, anziché un chatbot generico. Voi e LLM lo sviluppate insieme nel tempo, man mano che individuate le soluzioni più adatte al vostro ambito.
+
+
+
+
+Operazioni
+
+
+
+
+Ingestione. Si inserisce una nuova fonte nella raccolta raw e si indica al LLM di elaborarla. Un esempio di flusso: il LLM legge la fonte, discute con voi i punti chiave, scrive una pagina di riepilogo nel wiki, aggiorna l'indice, aggiorna le pagine relative a entità e concetti nel wiki e aggiunge una voce al registro. Una singola fonte potrebbe interessare 10-15 pagine wiki. Personalmente, preferisco ingerire le fonti una alla volta e rimanere coinvolto: leggo i riepiloghi, verifico gli aggiornamenti e guido il LLM su cosa enfatizzare. Tuttavia, è possibile ingerire più fonti contemporaneamente con meno supervisione. Sta a voi sviluppare il flusso di lavoro più adatto al vostro stile e documentarlo nello schema per le sessioni future.
+
+
+
+
+Interrogazione. Si pongono domande al wiki. Il LLM cerca le pagine pertinenti, le legge e sintetizza una risposta con le relative citazioni. Le risposte possono assumere diverse forme a seconda della domanda: una pagina in formato Markdown, una tabella comparativa, una presentazione (Marp), un grafico (matplotlib), un'immagine. L'aspetto fondamentale: le risposte valide possono essere archiviate nel wiki come nuove pagine. Un confronto richiesto, un'analisi, una connessione scoperta: questi elementi sono preziosi e non dovrebbero scomparire nella cronologia della chat. In questo modo, le vostre ricerche si accumulano nella base di conoscenza, proprio come le fonti acquisite.
+
+
+
+
+Controllo periodico. Chiedete periodicamente al LLM di effettuare un controllo di integrità del wiki. Cercate: contraddizioni tra le pagine, affermazioni obsolete superate da fonti più recenti, pagine orfane senza link in entrata, concetti importanti menzionati ma privi di una pagina dedicata, riferimenti incrociati mancanti, lacune nei dati che potrebbero essere colmate con una ricerca sul web. Il LLM è bravo a suggerire nuove domande da approfondire e nuove fonti da consultare. Questo mantiene il wiki in salute man mano che cresce.
+
+
+
+
+Indicizzazione e registrazione
+
+
+
+
+Due file speciali aiutano il LLM (e voi) a navigare nel wiki man mano che cresce. Hanno scopi diversi:
+
+
+
+
+index.md è orientato al contenuto. Si tratta di un catalogo di tutto il contenuto del wiki: ogni pagina è elencata con un link, un breve riepilogo e, facoltativamente, metadati come la data o il numero di fonti. È organizzato per categoria (entità, concetti, fonti, ecc.). L'LLM lo aggiorna a ogni ingestione. Quando risponde a una query, l'LLM legge prima l'indice per trovare le pagine pertinenti, quindi le approfondisce. Questo sistema funziona sorprendentemente bene su scala moderata (circa 100 fonti, circa centinaia di pagine) ed evita la necessità di un'infrastruttura RAG basata sull'incorporamento.
+
+
+
+
+Il file log.md è cronologico. È una registrazione in sola aggiunta di ciò che è accaduto e quando: ingestioni, query, passaggi di linting. Un consiglio utile: se ogni voce inizia con un prefisso coerente (ad esempio ## [2026-04-02] ingestione | Titolo articolo), il log diventa analizzabile con semplici strumenti Unix: `grep "^## \[" log.md | tail -5` restituisce le ultime 5 voci. Il registro fornisce una cronologia dell'evoluzione del wiki e aiuta l'LLM a capire cosa è stato fatto di recente.
+
+
+
+
+Opzionale: strumenti da riga di comando
+
+
+
+
+A un certo punto potresti voler creare piccoli strumenti che aiutino l'LLM a operare sul wiki in modo più efficiente. Un motore di ricerca per le pagine del wiki è la soluzione più ovvia: su piccola scala, il file indice è sufficiente, ma man mano che il wiki cresce, avrai bisogno di una ricerca adeguata. qmd è una buona opzione: è un motore di ricerca locale per file Markdown con ricerca ibrida BM25/vettoriale e riordinamento LLM, tutto sul dispositivo. Ha sia un'interfaccia a riga di comando (in modo che l'LLM possa interagire con esso tramite shell) sia un server MCP (in modo che l'LLM possa usarlo come strumento nativo). Potresti anche creare qualcosa di più semplice da solo: l'LLM può aiutarti a programmare un semplice script di ricerca quando necessario.
+Suggerimenti e trucchi
+
+
+
+
+Obsidian Web Clipper è un'estensione per browser che converte gli articoli web in Markdown. Molto utile per aggiungere rapidamente le fonti alla tua raccolta raw.
+Scarica le immagini localmente. In Impostazioni di Obsidian → File e collegamenti, imposta "Percorso cartella allegati" su una directory fissa (ad esempio raw/assets/). Quindi in Impostazioni → Tasti di scelta rapida, cerca "Scarica" ​​per trovare "Scarica allegati per il file corrente" e associalo a un tasto di scelta rapida (ad esempio Ctrl+Maiusc+D). Dopo aver ritagliato un articolo, premi il tasto di scelta rapida e tutte le immagini verranno scaricate sul disco locale. Questa operazione è facoltativa ma utile: consente al LLM di visualizzare e fare riferimento alle immagini direttamente, invece di affidarsi a URL che potrebbero non funzionare. Tieni presente che i LLM non possono leggere nativamente il Markdown con immagini incorporate in un'unica passata: la soluzione alternativa consiste nel far leggere prima il testo al LLM, quindi visualizzare separatamente alcune o tutte le immagini a cui si fa riferimento per ottenere un contesto aggiuntivo. È un po' macchinoso, ma funziona abbastanza bene.
+
+
+
+
+La visualizzazione a grafico di Obsidian è il modo migliore per vedere la struttura del tuo wiki: cosa è collegato a cosa, quali pagine sono hub e quali sono orfane.
+
+
+
+
+Marp è un formato di presentazione basato su Markdown. Obsidian offre un plugin dedicato. È utile per generare presentazioni direttamente dai contenuti wiki.
+Dataview è un plugin di Obsidian che esegue query sul frontmatter delle pagine. Se il tuo LLM aggiunge frontmatter YAML alle pagine wiki (tag, date, conteggi delle fonti), Dataview può generare tabelle ed elenchi dinamici.
+Il wiki è semplicemente un repository Git di file Markdown. Offre gratuitamente cronologia delle versioni, branching e collaborazione.
+
+
+
+
+Perché funziona
+
+
+
+
+La parte più noiosa della gestione di una base di conoscenza non è la lettura o la riflessione, bensì la contabilità. Aggiornare i riferimenti incrociati, mantenere aggiornati i riassunti, segnalare quando i nuovi dati contraddicono le affermazioni precedenti, garantire la coerenza tra decine di pagine. Gli esseri umani abbandonano i wiki perché il carico di lavoro per la manutenzione cresce più rapidamente del valore. Gli LLM non si annoiano, non dimenticano di aggiornare un riferimento incrociato e possono gestire 15 file in una sola volta. Il wiki viene mantenuto perché il costo di manutenzione è pressoché nullo.
+
+
+
+
+Il compito dell'essere umano è quello di curare le fonti, dirigere l'analisi, porre le domande giuste e riflettere sul significato di tutto ciò. Il compito dell'LLM è tutto il resto.
+
+
+
+
+L'idea è affine, nello spirito, a Memex (1945) di Vannevar Bush: un archivio di conoscenza personale e curato, con percorsi associativi tra i documenti. La visione di Bush era più vicina a questo concetto rispetto a ciò che il web è diventato: privato, attivamente curato, con le connessioni tra i documenti preziose quanto i documenti stessi. La parte che non riusciva a risolvere era chi si occupasse della manutenzione. L'LLM se ne occupa.
+
+
+
+
+Nota
+
+
+
+
+Questo documento è volutamente astratto. Descrive l'idea, non un'implementazione specifica. La struttura esatta delle directory, le convenzioni dello schema, i formati delle pagine, gli strumenti: tutto dipenderà dal tuo dominio, dalle tue preferenze e dall'LLM che hai scelto. Tutto ciò che è stato menzionato sopra è opzionale e modulare: scegli ciò che ti è utile e ignora il resto. Ad esempio: le tue fonti potrebbero essere solo testuali, quindi non hai bisogno di gestire le immagini. Il tuo wiki potrebbe essere così piccolo che il file indice è tutto ciò di cui hai bisogno, senza bisogno di un motore di ricerca. Potresti non essere interessato alle presentazioni e volere solo pagine in Markdown. Potresti volere un set di formati di output completamente diverso. Il modo corretto di utilizzare questo documento è condividerlo con il tuo agente LLM e collaborare per creare una versione adatta alle tue esigenze. Il solo scopo del documento è comunicare il modello. Il tuo LLM può occuparsi del resto.

@@ -1,0 +1,17 @@
+# Obsidian cache e file di sistema
+.obsidian/cache
+.obsidian/workspace-mobile.json
+.trash/
+
+# File temporanei
+*.tmp
+*.bak
+~$*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# File grandi (gestiti separatamente se necessario)
+# RAW/*.pdf  # decommenta se vuoi escludere i PDF dal git
