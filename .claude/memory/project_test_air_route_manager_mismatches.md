@@ -1,12 +1,16 @@
 ---
 name: project-test-air-route-manager-mismatches
-description: "Precise, verified breakdown of API mismatches in Test_Air_Route_Manager.py's legacy test block (2026-08-20) — for when the user resumes this module"
+description: "RESOLVED (2026-08-21) — all mismatches below were fixed in commit 9460733c. Kept as a record of the diagnosis/fix rationale, not an open task."
 metadata: 
   node_type: memory
   type: project
   originSessionId: 10d17acb-ff9b-4def-a1c6-03a74b239958
-  modified: 2026-08-20T19:29:58.347Z
+  modified: 2026-08-21T08:43:22.485Z
 ---
+
+**Status: DONE.** Fixed in commit `9460733c` (2026-08-21): `TestThreatAA`/`TestEdge` repaired, `TestRoutePlanner` rewritten, 4 redundant/dead tests deleted (`TestThreatAA.test_calcMaxLenghtCrossSegment`, `TestEdge.test_calculate_danger`, `TestEdge.test_intersects_threat`, `TestRoutePlanner.test_calcRoute`). Verified: `Test_Air_Route_Manager.py` now 48/48 green; project-wide suite 2317 tests, down to the single pre-existing `Test_Region`/`Military.intelligence()` error (see [[project_module_audit]] point 2, a separate open Fase 2 design decision, not touched by this fix). `GPT_TestModule` (22/22) was left untouched per the user's explicit instruction — its threat-placement scenarios are deliberate algorithm-edge-case coverage, not duplication.
+
+The breakdown below is the diagnosis that drove the fix (kept for reference if this code regresses or the approach needs revisiting) — it no longer describes the current state of the file.
 
 **Context:** part of the remaining-17 test failures from [[project_module_audit]] Fase 1. `Test_Air_Route_Manager.py` has TWO test suites for the same classes (`Edge`, `ThreatAA`, `RoutePlanner`, `Path`, `PathCollection`, `Waypoint`): `GPT_TestModule` (lines ~28-1035, 22/22 pass) and a legacy block (`TestThreatAA`/`TestWaypoint`/`TestEdge`/`TestPath`/`TestPathCollection`/`TestRoutePlanner`, lines ~1076-1848) written against an older API shape.
 
