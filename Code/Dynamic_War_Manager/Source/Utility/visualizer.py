@@ -156,6 +156,38 @@ if __name__ == "__main__":
     from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import ThreatAA, RoutePlanner
     from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
 
+    start_point = Point3D(0, 0, 10)
+    end_point = Point3D(22, 25, 10)#end_point = Point3D(32, 37, 10)
+    
+    # Istanza del cilindro (si assume che il costruttore di Cylinder accetti questi parametri)
+    cylinder = Cylinder(center = Point3D(12, 10, 10), radius = 4, height = 5)        
+    # Creazione di una minaccia utilizzando il cilindro reale
+    threat = ThreatAA(danger_level = 2.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_ = [threat]
+    
+    cylinder = Cylinder(center = Point3D(14, 22, 10), radius = 5, height = 7)
+    threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_.append(threat)
+
+    cylinder = Cylinder(center = Point3D(19, 18, 7), radius = 3, height = 25)
+    threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_.append(threat)
+
+    cylinder = Cylinder(center = Point3D(26, 21, 7), radius = 4.315, height = 15)
+    threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_.append(threat)
+
+    cylinder = Cylinder(center = Point3D(4.1, 20.64, 7), radius = 11.91, height = 25)
+    threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_.append(threat)
+
+    cylinder = Cylinder(center = Point3D(29.3, 16.04, 7), radius = 8.89, height = 25)
+    threat = ThreatAA(danger_level = 4.0, interception_speed = 6, min_fire_time = 5.0, min_detection_time = 7,  cylinder = cylinder)
+    threats_.append(threat)
+
+
+
+
     start = Point3D(0, 0, 10)
     end = Point3D(80, 80, 10)
     threat = ThreatAA(
@@ -163,9 +195,11 @@ if __name__ == "__main__":
         cylinder=Cylinder(Point3D(40, 40, 0), 15, 30)
     )
 
-    planner = RoutePlanner(start, end, [threat])
+
+
+    planner = RoutePlanner(start, end, threats_)
     route = planner.calcRoute(
-        start, end, [threat], aircraft_altitude_route=10,
+        start, end, threats_, aircraft_altitude_route=10,
         aircraft_altitude_min=5, aircraft_altitude_max=20,
         aircraft_speed_max=3, aircraft_speed=2,
         aircraft_range_max=1000, aircraft_time_to_inversion=20,
@@ -174,7 +208,10 @@ if __name__ == "__main__":
     )
 
     space = Space(space_x=100, space_y=100, space_z=100)
-    space.add_threat(threat)
+
+    for threat in threats_:
+        space.add_threat(threat)
+
     if route:
         space.add_route(route)
 

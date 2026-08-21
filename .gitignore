@@ -14,3 +14,6 @@ __pycache__/
 
 # Editor
 .obsidian/
+
+# visualizer.py output when no interactive matplotlib backend is available
+visualizer_*.png

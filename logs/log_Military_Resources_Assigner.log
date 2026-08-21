@@ -7696,3 +7696,7 @@
 2026-08-21 14:28:17,343 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.
 2026-08-21 14:30:05,946 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 2: formato non valido ('invalid_entry'), ignorato.
 2026-08-21 14:30:05,946 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.
+2026-08-21 15:33:33,970 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 2: formato non valido ('invalid_entry'), ignorato.
+2026-08-21 15:33:33,973 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.
+2026-08-21 15:44:21,217 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 2: formato non valido ('invalid_entry'), ignorato.
+2026-08-21 15:44:21,218 - Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner - WARNING - _pylons_to_weapons_dict - Pylon 1: formato non valido (['AIM-9L']), ignorato.
