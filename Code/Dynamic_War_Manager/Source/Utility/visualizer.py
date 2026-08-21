@@ -4,20 +4,26 @@ rotte (Route) calcolate da Air_Route_Manager. Serve per definire/verificare a co
 d'occhio gli scenari usati nei test (vedi Test_Air_Route_Manager.py) prima di scriverli.
 """
 import matplotlib
+import matplotlib.pyplot as plt
+
 # Prova un backend interattivo per la visualizzazione a schermo; se nessuno e'
 # disponibile nell'ambiente corrente (es. ne' tkinter ne' Qt installati) ripiega su
 # 'Agg' (sempre disponibile, non interattivo: figure() e savefig() funzionano comunque,
 # show() diventa un no-op) invece di rompere l'import del modulo o lasciare che
 # matplotlib tenti da solo, in modo rumoroso, altri backend a caso al primo utilizzo.
+# matplotlib.use() puo' "riuscire" senza sollevare eccezioni ma fallire solo dopo,
+# alla prima vera creazione di una figura (import differito del toolkit grafico) -
+# quindi la verifica va fatta creando e chiudendo davvero una figura di prova.
 for _backend in ("TkAgg", "Qt5Agg", "QtAgg", "Agg"):
     try:
         matplotlib.use(_backend)
+        _fig = plt.figure()
+        plt.close(_fig)
         break
-    except ImportError:
+    except Exception:
         continue
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def _cylinder_geometry(cylinder, resolution=30):
@@ -118,6 +124,23 @@ class Space:
 
 
 if __name__ == "__main__":
+    # Esegui questo file direttamente (es. `python visualizer.py`) da qualunque cartella:
+    # aggiunge la root del repo a sys.path perche' i moduli del progetto si importano
+    # sempre con il path assoluto Code.Dynamic_War_Manager.Source... (vedi CLAUDE.md /
+    # feedback_test_patterns), che altrimenti risolve solo quando lo script e' lanciato
+    # con `python -m` dalla root del repo.
+    import os
+    import sys
+    _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../'))
+    if _repo_root not in sys.path:
+        sys.path.insert(0, _repo_root)
+    # Logger/Utility.py risolvono la cartella logs/ come 'os.getcwd()/logs' (bug noto,
+    # non specifico a questo file - vedi project_fase2_design_decisions.md): ci si
+    # sposta sulla root del repo prima di importare qualunque modulo di progetto,
+    # cosi' il logging risolve sempre logs/ della repo invece di crashare o crearne
+    # una nuova nella cartella da cui e' stato lanciato lo script.
+    os.chdir(_repo_root)
+
     # Esempio: visualizza uno scenario reale calcolato da Air_Route_Manager.RoutePlanner
     from sympy import Point3D
     from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import ThreatAA, RoutePlanner
