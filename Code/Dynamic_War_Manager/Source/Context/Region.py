@@ -756,10 +756,6 @@ class Region:
         """Calculate the region's resource efficiency for a side."""
         return self._get_region_average_metric(side, BlockCategory.LOGISTIC.value, 'resource_efficiency')
 
-    def get_region_intelligence_efficiency(self, side: str) -> float:
-        """Calculate the region's intelligence efficiency for a side."""
-        return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'intelligence')
-
     def get_c2_efficiency(self, side: str) -> float:
         """Calculate the region's command and control efficiency for a side."""
         return self._get_region_average_metric(side, BlockCategory.MILITARY.value, 'get_c2_efficiency')

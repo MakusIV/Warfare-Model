@@ -622,20 +622,6 @@ class TestRegionMetrics(unittest.TestCase):
         self.assertAlmostEqual(result, 0.7)
 
     # ------------------------------------------------------------------
-    # get_region_intelligence_efficiency
-    # ------------------------------------------------------------------
-    def test_get_region_intelligence_efficiency_no_blocks_returns_zero(self):
-        """get_region_intelligence_efficiency returns 0.0 when no military blocks for side."""
-        self.assertAlmostEqual(self.region.get_region_intelligence_efficiency("Blue"), 0.0)
-
-    def test_get_region_intelligence_efficiency_returns_mean(self):
-        """get_region_intelligence_efficiency averages intelligence() across military blocks."""
-        self.mil1.intelligence.return_value = 0.9
-        self.mil2.intelligence.return_value = 0.5
-        result = self.region.get_region_intelligence_efficiency("Red")
-        self.assertAlmostEqual(result, 0.7)
-
-    # ------------------------------------------------------------------
     # get_c2_efficiency
     # ------------------------------------------------------------------
     def test_get_c2_efficiency_no_blocks_returns_zero(self):
