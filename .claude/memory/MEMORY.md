@@ -1,5 +1,8 @@
 # Warfare-Model Project Memory
 
+## Start here
+- [Session recap 2026-08-21 — read this first](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end. Suite: 2315 tests/0 errors, pushed to origin/main (9aed24db). No next task queued — natural next step is Fase 3.
+
 ## Project & environment
 - [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory
 - [Dev environment & machines](project_dev_environment.md) — 3 machines, git remote, memory sync workflow
@@ -11,7 +14,7 @@
 - [Fase 2 design decisions — ALL CLOSED](project_fase2_design_decisions.md) — 2026-08-21: 7 resolved-and-actioned (#1,2,3,4,5,8,9), 2 explicitly deferred (#6,#7). #3 (Route/Edge/Waypoint canonical: DataType wins for ground) required fixing ~10 mechanical bugs across Waypoint/Edge/Route/Military/Tactical_Evaluation to actually make DataType.Route constructible — verified end-to-end with real objects, full suite still 2315/0/0. 00_Sintesi.md updated in place with status markers. Ground_Route_Manager.py still needs to actually produce DataType.Route objects (Fase 3, not started).
 - **KNOWN SYSTEMIC RISK, unfixed**: `LoggerClass.Logger` (`Utility/LoggerClass.py:28-29`) resolves its log dir as `os.getcwd()/logs` — any module breaks with `FileNotFoundError` if run with cwd != repo root. Invisible today only because everything is always run via `-m unittest discover` from repo root. See [[project_fase2_design_decisions]] visualizer.py follow-up.
 
-## Next session — first task
+## Standing reminders (no action needed unless relevant)
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too
 - [WIKI_LLM_SIMULATION merged into Analysis/](project_wiki_llm_simulation_merge.md) — moved 2026-08-20, fully complete (old GitHub repo deleted, confirmed)
 - [Rinomina_Campaign_State.py — reserved, do not delete](project_rinomina_campaign_state.md) — looks dead but user will reuse/rename it later
