@@ -5,9 +5,9 @@
 - [Dev environment & machines](project_dev_environment.md) — 3 machines, git remote, memory sync workflow
 - [Python venv per machine](feedback_venv.md) — always use the machine-specific interpreter path, never bare `python3`
 
-## Module audit (completed 2026-08-16) — Fase 1 done 2026-08-17
-- [Module audit — read this first for project status](project_module_audit.md) — Fase 1 mechanical fixes all applied (47→17 test errors, 1088→2321 tests collected); remaining 17 need real decisions, not quick fixes; Fase 2 (9 design decisions) still open
-- [Test_Air_Route_Manager mismatches — RESOLVED](project_test_air_route_manager_mismatches.md) — fixed 2026-08-21 (commit 9460733c); 48/48 green; project-wide suite now 2317 tests/1 error (only the known Test_Region issue left)
+## Module audit (completed 2026-08-16) — Fase 1 fully done 2026-08-21
+- [Module audit — read this first for project status](project_module_audit.md) — ALL 17 remaining test errors resolved 2026-08-21; suite is 2315 tests/0 errors/0 failures; Fase 2 now 8 of 9 design decisions open (was 9)
+- [Test_Air_Route_Manager mismatches — RESOLVED](project_test_air_route_manager_mismatches.md) — fixed 2026-08-21 (commit 9460733c); 48/48 green
 
 ## Next session — first task
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too

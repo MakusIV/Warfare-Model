@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 54069b25-fc3b-495d-81bb-9efd11133381
-  modified: 2026-08-21T08:43:45.851Z
+  modified: 2026-08-21T09:54:07.915Z
 ---
 
 **What happened:** After a ~7 week pause, the user asked for a first phase of deep, per-subsystem analysis before planning further development ("development had been a scatti, no unified view"). Result: 11 subsystem docs in `Analysis/Modules/01_...md`–`11_...md` (Italian, one per logical subsystem, not per file — ~57 files grouped into 11 areas), each produced by a parallel subagent that read the real source and executed the real test suite (not just static reading), plus a consolidated synthesis at **`Analysis/Modules/00_Sintesi.md`**.
@@ -32,22 +32,13 @@ Also fixed 2 test-vs-production mismatches surfaced by the unblocking: `Test_Res
 
 **Net result:** full suite went from 1088 tests collected / 47 errors (with several files failing to import at all, undercounting real test methods) to **2321 tests collected / 16 errors + 1 failure** (run via `python3 -m unittest discover -s Code/Dynamic_War_Manager/Source/Test -p "Test_*.py"`).
 
-## Remaining 17 (16 errors + 1 fail) — genuinely deeper, not mechanical
+## Remaining 17 (16 errors + 1 fail) — ALL RESOLVED as of 2026-08-21
 
-**Update 2026-08-21: point 1 below is RESOLVED** — see [[project_test_air_route_manager_mismatches]] (fixed in commit `9460733c`). Only point 2 (`Test_Region`) is still open; project-wide suite is now 2317 tests / 1 error.
+**Both points below are now fixed.** Project-wide suite: **2315 tests, 0 errors, 0 failures** (commits `9460733c`, `7a5fa679`).
 
-1. ~~**`Test_Air_Route_Manager.py`: `TestEdge`(2)/`TestThreatAA`(3+1 fail)/`TestRoutePlanner`(9) — a stale, duplicate legacy test suite.**~~ RESOLVED 2026-08-21, see above. The file has TWO test suites for the same `Edge`/`ThreatAA`/`RoutePlanner`/`Path`/`PathCollection` classes: `GPT_TestModule` (lines ~27-1035, passes 22/22, matches the current API) and a second block from line ~1076 to EOF (`TestThreatAA`/`TestWaypoint`/`TestEdge`/`TestPath`/`TestPathCollection`/`TestRoutePlanner`) written against an older/incompatible shape of the same API — wrong positional-arg order (`n_edge, path_id, path_collection` vs test's `n_edge, path_collection, path_id`), missing `time_to_inversion`/`change_alt_option` args on `calcPathWithoutThreat`/`calcPathWithThreat`/`_handle_threat_crossing`/`_handle_threat_avoidance`, and two methods the test expects (`Edge.intersects_threat`, `Edge.calculate_danger`) that don't exist on production `Edge` at all (that logic lives on `ThreatAA.edgeIntersect` instead). `TestWaypoint`/`TestPath`/`TestPathCollection` in this second block are now fully fixed (see above) since those only needed constructor-arg fixes; the remaining 14+1 need either a careful signature-by-signature rewrite or deleting the block as pure duplication of `GPT_TestModule`. **Needs a user decision before touching further** — this is real effort, not a 1-line fix.
-2. **`Test_Region.test_get_region_intelligence_efficiency_returns_mean`** — not a bug, it's open design decision #5 from `00_Sintesi.md`: `Military.intelligence()` was deliberately left commented out in favor of `get_c2_efficiency()`, but `Region.py` and this one test still assume it exists. Leave until the user decides to implement or delete it.
+1. ~~**`Test_Air_Route_Manager.py`: `TestEdge`(2)/`TestThreatAA`(3+1 fail)/`TestRoutePlanner`(9) — a stale, duplicate legacy test suite.**~~ RESOLVED 2026-08-21 (commit `9460733c`) — see [[project_test_air_route_manager_mismatches]] for the full diagnosis/fix.
+2. ~~**`Test_Region.test_get_region_intelligence_efficiency_returns_mean`**~~ RESOLVED 2026-08-21 (commit `7a5fa679`) — this was open design decision #5 below. **User confirmed the decision**: `Military.get_c2_efficiency()` is the sole command/intelligence metric; `Military.intelligence()` stays unimplemented (commented out). Deleted `Region.get_region_intelligence_efficiency()` (no production callers — `Region.get_c2_efficiency()` was already the one production code uses, via `get_recon_reports`) and its 2 tests.
 
-## Next session — first task
+## Fase 2 — 8 of 9 design decisions still open
 
-The user was asked how to proceed on the remaining 17 (point 1 above, `Test_Air_Route_Manager.py`'s stale duplicate suite) and chose to stop and defer the decision — **start the next session by asking which of these 3 options the user wants**, unless they've already said so at the top of the new conversation:
-- **Rewrite**: go through `TestEdge`(2)/`TestThreatAA`(3+1 fail)/`TestRoutePlanner`(9) signature-by-signature to match the current `RoutePlanner`/`Edge`/`ThreatAA` API (real effort — positional-arg order differs, some params are altogether missing from the test calls, and 2 test methods expect production methods that don't exist at all: `Edge.intersects_threat`/`Edge.calculate_danger`).
-- **Delete**: drop the whole stale block (`TestThreatAA`/`TestWaypoint`/`TestEdge`/`TestPath`/`TestPathCollection`/`TestRoutePlanner`, lines ~1076-EOF) since `GPT_TestModule` in the same file already covers the same classes correctly (22/22) — would lose `TestWaypoint`/`TestPath`/`TestPathCollection`'s now-passing coverage too unless first confirmed as pure duplicates of what `GPT_TestModule` already checks.
-- **Stop and verify first**: hold before any further change; let the user (re-)review what's already been committed, optionally re-run the suite themselves, before deciding.
-
-Point 2 (`Test_Region` / `Military.intelligence()`) is a separate, already-understood open design decision (#5 in Fase 2's list) — no action needed until the user tackles Fase 2 generally.
-
-## Fase 2 — still not started
-
-The 9 open design decisions in `00_Sintesi.md` (fate of `Structure.py`, Production/Storage/Transport/Urban rewrite, which Route/Edge/Waypoint implementation is canonical — see point 1 above, `Threat`/`Sphere`/`Hemisphere`/`Volume` vs `Cylinder`, `Military.intelligence()` — see point 2 above, `Manager.py` vs `Scenario_Manager`/`CommandControl` as the real DWM entry point, `Coalition.py`, `Classi.py`, `visualizer.py`) are all still open and untouched.
+Design decision #5 (`Military.intelligence()`) is now resolved, see point 2 above. The remaining 8 open design decisions in `00_Sintesi.md` (fate of `Structure.py`, Production/Storage/Transport/Urban rewrite, which Route/Edge/Waypoint implementation is canonical — see point 1 above, `Threat`/`Sphere`/`Hemisphere`/`Volume` vs `Cylinder`, `Manager.py` vs `Scenario_Manager`/`CommandControl` as the real DWM entry point, `Coalition.py`, `Classi.py`, `visualizer.py`) are all still open and untouched.
