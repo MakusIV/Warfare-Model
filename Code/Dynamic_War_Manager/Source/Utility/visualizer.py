@@ -1,54 +1,87 @@
+"""
+Utility di debug per la visualizzazione 2D/3D delle minacce (ThreatAA/Cylinder) e delle
+rotte (Route) calcolate da Air_Route_Manager. Serve per definire/verificare a colpo
+d'occhio gli scenari usati nei test (vedi Test_Air_Route_Manager.py) prima di scriverli.
+"""
 import matplotlib
-matplotlib.use('TkAgg')  # oppure 'Qt5Agg' o 'MacOSX' se sei su mac
+# Prova un backend interattivo per la visualizzazione a schermo; se nessuno e'
+# disponibile nell'ambiente corrente (es. ne' tkinter ne' Qt installati) ripiega su
+# 'Agg' (sempre disponibile, non interattivo: figure() e savefig() funzionano comunque,
+# show() diventa un no-op) invece di rompere l'import del modulo o lasciare che
+# matplotlib tenti da solo, in modo rumoroso, altri backend a caso al primo utilizzo.
+for _backend in ("TkAgg", "Qt5Agg", "QtAgg", "Agg"):
+    try:
+        matplotlib.use(_backend)
+        break
+    except ImportError:
+        continue
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
-class Cylinder:
-    def __init__(self, base, radius, height):
-        self.base = np.array(base)
-        self.radius = radius
-        self.height = height
-
-    def get_mesh(self, resolution=30):
-        theta = np.linspace(0, 2 * np.pi, resolution)
-        z = np.array([0, self.height])
-        theta_grid, z_grid = np.meshgrid(theta, z)
-        x_grid = self.radius * np.cos(theta_grid) + self.base[0]
-        y_grid = self.radius * np.sin(theta_grid) + self.base[1]
-        z_grid += self.base[2]
-        return x_grid, y_grid, z_grid
+def _cylinder_geometry(cylinder, resolution=30):
+    """Estrae la geometria di plotting (base, raggio, altezza) da un DataType.Cylinder reale."""
+    base = np.array([float(cylinder.bottom_center.x), float(cylinder.bottom_center.y), float(cylinder.bottom_center.z)])
+    theta = np.linspace(0, 2 * np.pi, resolution)
+    z = np.array([0, float(cylinder.height)])
+    theta_grid, z_grid = np.meshgrid(theta, z)
+    x_grid = float(cylinder.radius) * np.cos(theta_grid) + base[0]
+    y_grid = float(cylinder.radius) * np.sin(theta_grid) + base[1]
+    z_grid = z_grid + base[2]
+    return base, x_grid, y_grid, z_grid
 
 
-class Path3D:
-    def __init__(self, points):
-        self.points = np.array(points)
-
-    def get_segments(self):
-        return self.points
-
+def _route_points(route_or_points):
+    """Accetta una Route di Air_Route_Manager (via getPoints()) o una lista di punti (x, y, z)."""
+    if hasattr(route_or_points, 'getPoints'):
+        points = route_or_points.getPoints()
+        return [(float(p.x), float(p.y), float(p.z)) for p in points]
+    return [(float(p[0]), float(p[1]), float(p[2])) for p in route_or_points]
 
 
 class Space:
+    """Spazio di visualizzazione: raccoglie minacce/cilindri e rotte di uno scenario."""
+
     def __init__(self, space_x, space_y, space_z):
-        self.origin = (0, 0, 0)
         self.space_x = space_x
         self.space_y = space_y
         self.space_z = space_z
-        self.cylinders = []
-        self.paths = []
+        self.cylinders = []  # DataType.Cylinder reali
+        self.paths = []      # liste di punti (x, y, z)
+
+    def add_threat(self, threat):
+        """Aggiunge una minaccia (ThreatAA di Air_Route_Manager) tramite il suo cylinder."""
+        self.cylinders.append(threat.cylinder)
 
     def add_cylinder(self, cylinder):
+        """Aggiunge direttamente un DataType.Cylinder reale."""
         self.cylinders.append(cylinder)
 
-    def add_path(self, path):
-        self.paths.append(path)
+    def add_route(self, route):
+        """Aggiunge una Route di Air_Route_Manager (via getPoints()) o una lista di punti (x, y, z)."""
+        self.paths.append(_route_points(route))
 
     def show_3d(self):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
+        self._draw_3d(ax)
+        plt.show()
+
+    def show_2d_top(self):
+        fig, ax = plt.subplots()
+        self._draw_2d(ax)
+        plt.show()
+
+    def show_all_views(self):
+        fig = plt.figure()
+        ax3d = fig.add_subplot(121, projection='3d')
+        self._draw_3d(ax3d)
+        ax2d = fig.add_subplot(122)
+        self._draw_2d(ax2d)
+        plt.show()
+
+    def _draw_3d(self, ax):
         ax.set_xlim(0, self.space_x)
         ax.set_ylim(0, self.space_y)
         ax.set_zlim(0, self.space_z)
@@ -57,100 +90,59 @@ class Space:
         ax.set_zlabel("Z")
         ax.set_title("3D View")
 
-        # Draw cylinders
         for cylinder in self.cylinders:
-            x, y, z = cylinder.get_mesh()
+            _, x, y, z = _cylinder_geometry(cylinder)
             ax.plot_surface(x, y, z, alpha=0.6, color='orange', edgecolor='k')
 
-        # Draw paths
-        for path in self.paths:
-            points = path.get_segments()
+        for points in self.paths:
             xs, ys, zs = zip(*points)
             ax.plot(xs, ys, zs, marker='o', color='blue')
 
-        plt.show()
-
-    def show_2d_top(self):
-        
-        fig, ax = plt.subplots()
+    def _draw_2d(self, ax):
         ax.set_xlim(0, self.space_x)
         ax.set_ylim(0, self.space_y)
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
         ax.set_title("2D Top View (XY Plane)")
 
-        # Draw cylinders as circles
         for cylinder in self.cylinders:
-            circle = plt.Circle((cylinder.base[0], cylinder.base[1]), cylinder.radius, color='orange', alpha=0.6)
+            base, _, _, _ = _cylinder_geometry(cylinder)
+            circle = plt.Circle((base[0], base[1]), float(cylinder.radius), color='orange', alpha=0.6)
             ax.add_patch(circle)
 
-        # Draw paths
-        for path in self.paths:
-            points = np.array(path.get_segments())
-            ax.plot(points[:, 0], points[:, 1], marker='o', color='blue')
+        for points in self.paths:
+            arr = np.array(points)
+            ax.plot(arr[:, 0], arr[:, 1], marker='o', color='blue')
 
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
+        ax.set_aspect('equal', adjustable='box')
 
-
-    def show_all_views(self):
-        # Vista 3D
-        fig3d = plt.figure()
-        ax3d = fig3d.add_subplot(121, projection='3d')
-        ax3d.set_xlim(0, self.space_x)
-        ax3d.set_ylim(0, self.space_y)
-        ax3d.set_zlim(0, self.space_z)
-        ax3d.set_title("3D View")
-        for cylinder in self.cylinders:
-            x, y, z = cylinder.get_mesh()
-            ax3d.plot_surface(x, y, z, alpha=0.6, color='orange', edgecolor='k')
-        for path in self.paths:
-            xs, ys, zs = zip(*path.get_segments())
-            ax3d.plot(xs, ys, zs, marker='o', color='blue')
-
-        # Vista 2D
-        ax2d = fig3d.add_subplot(122)
-        ax2d.set_xlim(0, self.space_x)
-        ax2d.set_ylim(0, self.space_y)
-        ax2d.set_title("2D Top View")
-        for cylinder in self.cylinders:
-            circle = plt.Circle((cylinder.base[0], cylinder.base[1]), cylinder.radius, color='orange', alpha=0.6)
-            ax2d.add_patch(circle)
-        for path in self.paths:
-            points = np.array(path.get_segments())
-            ax2d.plot(points[:, 0], points[:, 1], marker='o', color='blue')
-        ax2d.set_aspect('equal', adjustable='box')
-
-        plt.show()
-
-   
 
 if __name__ == "__main__":
+    # Esempio: visualizza uno scenario reale calcolato da Air_Route_Manager.RoutePlanner
+    from sympy import Point3D
+    from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import ThreatAA, RoutePlanner
+    from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
+
+    start = Point3D(0, 0, 10)
+    end = Point3D(80, 80, 10)
+    threat = ThreatAA(
+        danger_level=2.0, interception_speed=600, min_fire_time=1.0, min_detection_time=7,
+        cylinder=Cylinder(Point3D(40, 40, 0), 15, 30)
+    )
+
+    planner = RoutePlanner(start, end, [threat])
+    route = planner.calcRoute(
+        start, end, [threat], aircraft_altitude_route=10,
+        aircraft_altitude_min=5, aircraft_altitude_max=20,
+        aircraft_speed_max=3, aircraft_speed=2,
+        aircraft_range_max=1000, aircraft_time_to_inversion=20,
+        change_alt_option="no_change", intersecate_threat=False,
+        consider_aircraft_altitude_route=True
+    )
 
     space = Space(space_x=100, space_y=100, space_z=100)
+    space.add_threat(threat)
+    if route:
+        space.add_route(route)
 
-    #self.cylinder = Cylinder(Point3D(6, 9, 5), 2, 10)
-        
-    # Crea i segmenti per i test specifici
-    #self.edge_A = Segment3D(Point3D(4, 2, 7), Point3D(9, 15, 7)) # interseca
-    #self.edge_B = Segment3D(Point3D(6, 2, 7), Point3D(9, 15, 7)) # interseca
-    #self.edge_C = Segment3D(Point3D(4, 2, 4), Point3D(9, 15, 4)) # non interseca
-    #self.edge_D = Segment3D(Point3D(6, 6, 0), Point3D(9, 15, 6)) # non interseca
-    #self.edge_E = Segment3D(Point3D(16, 1, 0), Point3D(4, 11, 6)) # interseca solo in un punto, l'altro passa attraverso la superficie inferiore
-    #self.edge_F = Segment3D(Point3D(4, 14, 9), Point3D(5, 6, 14)) # interseca
-    #self.edge_G = Segment3D(Point3D(8, 9.1, 5), Point3D(4, 8.9, 15))  # interseca
-
-    # Aggiunta cilindri
-    c1 = Cylinder(base=(6, 9, 5), radius=5, height=30)
-    #c2 = Cylinder(base=(60, 60, 0), radius=10, height=50)
-    space.add_cylinder(c1)
-    #space.add_cylinder(c2)
-
-    # Aggiunta percorso
-    path1 = Path3D([(4, 2, 7), (9, 15, 7), (30, 50, 20), (70, 80, 90)])
-    space.add_path(path1)
-
-    # Visualizzazioni
-    #space.show_3d()
-    #space.show_2d_top()
     space.show_all_views()

@@ -379,3 +379,29 @@
 2026-08-21 11:53:03,196 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
 2026-08-21 11:53:03,196 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
 2026-08-21 11:53:03,199 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-08-21 14:29:47,801 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Tank. Skipping.
+2026-08-21 14:29:47,803 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Motorized. Skipping.
+2026-08-21 14:29:47,803 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Artillery. Skipping.
+2026-08-21 14:29:47,804 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:29:47,804 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:29:47,804 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:29:47,804 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:29:47,804 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:29:47,840 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-08-21 14:29:47,840 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-08-21 14:29:47,843 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-08-21 14:29:47,844 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-08-21 14:29:47,847 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None
+2026-08-21 14:31:35,062 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Tank. Skipping.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Motorized. Skipping.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No target classification found for asset type: Artillery. Skipping.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:31:35,063 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_target_report - No operative assets found in report for target classification.
+2026-08-21 14:31:35,101 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Invalid morale value for block Base_mil1: 'invalid'
+2026-08-21 14:31:35,102 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_block_morale - Block with ID does_not_exist not found in region Metric Region
+2026-08-21 14:31:35,105 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil1: 'bad'
+2026-08-21 14:31:35,105 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: 42
+2026-08-21 14:31:35,108 - Code.Dynamic_War_Manager.Source.Context.Region - WARNING - get_recon_reports - Invalid recon report for block Base_mil2: None

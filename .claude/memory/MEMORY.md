@@ -8,7 +8,7 @@
 ## Module audit (completed 2026-08-16) — Fase 1 fully done 2026-08-21
 - [Module audit — read this first for project status](project_module_audit.md) — ALL 17 remaining test errors resolved 2026-08-21; suite is 2315 tests/0 errors/0 failures; Fase 2 now 8 of 9 design decisions open (was 9)
 - [Test_Air_Route_Manager mismatches — RESOLVED](project_test_air_route_manager_mismatches.md) — fixed 2026-08-21 (commit 9460733c); 48/48 green
-- [Fase 2 design decisions — IN PROGRESS](project_fase2_design_decisions.md) — user answering the 9 open decisions from 00_Sintesi.md incrementally; 1-5 answered 2026-08-21 (verified against code, one correction on decision 3), 6-9 still open
+- [Fase 2 design decisions — mostly closed](project_fase2_design_decisions.md) — 2026-08-21: 6 resolved (#1,2,4,5,8,9 — Classi.py deleted, visualizer.py rewritten to use real ThreatAA/Cylinder/Route), 2 explicitly deferred (#6,#7), #3 (Route/Edge/Waypoint canonical model) still genuinely open, full picture recorded. 00_Sintesi.md updated in place with status markers.
 
 ## Next session — first task
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too

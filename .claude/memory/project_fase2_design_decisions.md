@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 10d17acb-ff9b-4def-a1c6-03a74b239958
-  modified: 2026-08-21T11:07:35.894Z
+  modified: 2026-08-21T12:32:12.710Z
 ---
 
 Context: [[project_module_audit]] Fase 1 is fully done (2315 tests, 0 errors). Fase 2 is the 9 open design decisions listed in `Analysis/Modules/00_Sintesi.md` under "Decisioni di design che servono da te prima di poter procedere" — explicitly scoped as "conversazione con te, non codice" (their outcome shapes Fase 3's actual rewrite work, not itself implementation). The user is answering them incrementally across messages; this memory accumulates the answers as they land.
@@ -43,5 +43,25 @@ Context: [[project_module_audit]] Fase 1 is fully done (2315 tests, 0 errors). F
 ## Decision 5 — `Military.intelligence()` / `Region.get_region_intelligence_efficiency()`
 **"Superato"** — already resolved in a prior part of this same session, before Fase 2 started: `Region.get_region_intelligence_efficiency()` and its 2 tests deleted (commit `7a5fa679`), `Military.get_c2_efficiency()` confirmed as the sole metric. See [[project_module_audit]].
 
-## Decisions 6-9 — not yet answered
-Still open: #6 (`Manager.py` vs `Scenario_Manager.CommandControl` — real DWM orchestrator), #7 (`Coalition.py`), #8 (`Classi.py`), #9 (`visualizer.py`). Wording is in `Analysis/Modules/00_Sintesi.md` lines 70-73.
+## Decision 3 — follow-up clarification (2026-08-21, same day)
+The user corrected/extended decision 3 with new facts: **`Strategical_Evaluation.py`... no — actually `Region.py`** has `add_route`/`get_route`/`get_shortest_route`/`get_safest_route`/`get_shortest_and_safest_route`, all operating on `DataType.Route` (confirmed: `Region._routes: Dict[str, Route]`, `Route.checkParam` requires `edges: dict` of `DataType.Edge` values). `Tactical_Evaluation.evaluateGroundRouteDangerLevel(enemy_bases, route: Route, ...)` also references `DataType.Route`/`Edge.calcTravelTime()`.
+
+**This corrects my earlier claim that `DataType.Edge`/`Waypoint` were dead imports in `Tactical_Evaluation.py`** — my grep only checked for the literal substrings "Edge"/"Waypoint" and missed indirect usage through `Route`/`v_edge`. They ARE referenced, just not through those exact tokens.
+
+**Verified in full:**
+- `DataType/Edge.py.__init__` has **two separate bugs**, not one: `self.calcLenght(self)` (line ~32 — wrong method name; the real method is `calcLength(self)`, no extra arg) **and** `self.calcTravelTime(self)` (right name, but `calcTravelTime(self)` takes zero extra args — passing `self` again is a second, independent bug). Either one alone would crash construction.
+- `Tactical_Evaluation.evaluateGroundRouteDangerLevel` (line ~560) itself has a bug: `for k, v_edge in Route.edges:` iterates the **class** `Route`'s `edges` property descriptor, not the `route` parameter (`route.edges.items()` is almost certainly what was intended).
+- Nobody calls `evaluateGroundRouteDangerLevel` anywhere in the codebase.
+- `Ground_Route_Manager.py` already has its own local `Waypoint`/`Edge`/`NavigationGraph` classes (contrary to the user's recollection of "only Dijkstra") — simpler than Air's (no threat-avoidance recursion, just 2D/3D distance + road-slope adjustment). Spotted in passing: `Edge.__repr__` references `self.slope`, never set as an attribute (would `AttributeError` if called) — noted, not fixed.
+
+**Net picture:** `DataType.Route`/`Edge`/`Waypoint` are the intended "public" model — `Region` (storage/query) and `Tactical_Evaluation` (consumption) are both built around them — but `Edge` can't actually be constructed today due to the two bugs above, so nothing has ever really exercised this path. `Air_Route_Manager`'s local classes are the only ones that actually *work* (real pathfinding), but their output (`Path.to_route()` → a local `Air_Route_Manager.Route`) is a different, incompatible class from `DataType.Route` and is never bridged into `Region.add_route`.
+
+**Still open as of 2026-08-21** — not yet given a final answer by the user. The real choice, now that both sides of the picture are clear: (a) fix `DataType.Edge`'s two constructor bugs and build a converter from `Air_Route_Manager`/`Ground_Route_Manager`'s local pathfinding output into `DataType.Route`, so `Region.add_route` and `Tactical_Evaluation` become reachable; vs (b) something else. Recorded in `00_Sintesi.md` decision #3 as "⏳ APERTO — chiarimento in corso" with this full picture, pending the user's actual call.
+
+## Decisions 6-9
+- **#6 (`Manager.py` vs `Scenario_Manager.CommandControl`)** — explicitly deferred by the user ("lasciamo in sospeso"), not decided.
+- **#7 (`Coalition.py`)** — explicitly deferred by the user ("lasciamo in sospeso"), consistent with it already being held back from the 2026-08-16 dead-file cleanup.
+- **#8 (`Classi.py`)** — DECIDED: delete. Done same session — verified zero references anywhere in `Code/`, then `git rm`'d.
+- **#9 (`visualizer.py`)** — DECIDED: keep, verify, update. User's actual use case: visually defining/checking threat-cylinder placement and route scenarios for `Test_Air_Route_Manager.py` before writing them as test code. Done same session: rewrote `Space`/helper functions to work directly with real `ThreatAA`/`Cylinder`/`Air_Route_Manager.Route` objects (previously had its own disconnected toy `Cylinder`/`Path3D` duplicate classes with zero relation to the real data model); made backend selection robust (`TkAgg`→`Qt5Agg`→`QtAgg`→`Agg` fallback chain) after discovering the hardcoded `matplotlib.use('TkAgg')` reliably crashes on import in this session's venv (no tkinter, no PyQt/PySide installed — `pip list` confirmed). Verified end-to-end with a real `RoutePlanner.calcRoute()` scenario (threat + computed avoidance route), rendered and visually confirmed correct (cylinder + route bending around it) via `savefig` (never call `.show_*()`/`plt.show()` from a non-interactive shell — it blocks waiting for a window that will never close).
+
+All 9 decisions now have a status: 5 resolved-and-actioned (#1 roadmap-keep noted only, #2 spec confirmed, #4, #5, #8, #9 — actually 6 resolved), 2 explicitly deferred (#6, #7), 1 still genuinely open pending the user (#3). `Analysis/Modules/00_Sintesi.md` decision list updated in place with a status marker per item (2026-08-21) rather than left to go stale — this is the up-to-date source, this memory file is the detailed backing record.
