@@ -416,3 +416,41 @@
 2026-08-17 11:10:52,631 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
 2026-08-17 11:10:52,631 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
 2026-08-17 11:10:52,631 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - INFO - save - TargetStatusHistory saved to /tmp/tmpyr6wodl4.json (1 missions).
+2026-08-21 10:42:14,514 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,514 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,514 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,515 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,515 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=South block=B002
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B002
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,516 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B002
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,517 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,518 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=South block=B002
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - INFO - save - TargetStatusHistory saved to /tmp/tmp5pnya6f_.json (2 missions).
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - INFO - load - TargetStatusHistory loaded from /tmp/tmp5pnya6f_.json (2 missions).
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,519 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M002 region=North block=B001
+2026-08-21 10:42:14,520 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,520 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - DEBUG - add_block_snapshot - Snapshot added: mission=M001 region=North block=B001
+2026-08-21 10:42:14,520 - Code.Dynamic_War_Manager.Source.Context.Target_Status_History - INFO - save - TargetStatusHistory saved to /tmp/tmpo5g8qz8n.json (1 missions).

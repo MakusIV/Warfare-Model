@@ -152,3 +152,14 @@
 2026-08-17 11:10:42,662 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=10, width=3, height=3, weight=50. Returning 'Unknown'.
 2026-08-17 11:10:42,662 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=5, width=2, height=2, weight=0. Returning 'Unknown'.
 2026-08-17 11:10:42,662 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=0.5, width=0.5, height=0.5, weight=0.5. Returning 'Unknown'.
+2026-08-21 10:42:03,845 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid asset type: Missile. Expected 'Vehicle' or 'Ship'. Exit.
+2026-08-21 10:42:03,846 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid dimensions: length=5, width=2, height=-1, weight=10. All values must be non-negative. Exit.
+2026-08-21 10:42:03,846 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid dimensions: length=-1, width=2, height=2, weight=10. All values must be non-negative. Exit.
+2026-08-21 10:42:03,847 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid dimensions: length=5, width=2, height=2, weight=-1. All values must be non-negative. Exit.
+2026-08-21 10:42:03,847 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid dimensions: length=5, width=-1, height=2, weight=10. All values must be non-negative. Exit.
+2026-08-21 10:42:03,847 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - Invalid class_size_structure: NonExistentStructure. Expected one of: ['Bridge', 'Hangar', 'Depot', 'Oil_Tank', 'Farm', 'Power_Plant', 'Station', 'Building', 'Factory', 'Barrack']. Exit.
+2026-08-21 10:42:03,847 - Code.Dynamic_War_Manager.Source.Context.Context - ERROR - get_dimension - class_size_structure parameter is required for asset_type 'Structure'. Exit.
+2026-08-21 10:42:03,847 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=0, width=0, height=0, weight=0. Returning 'Unknown'.
+2026-08-21 10:42:03,848 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=10, width=3, height=3, weight=50. Returning 'Unknown'.
+2026-08-21 10:42:03,849 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=5, width=2, height=2, weight=0. Returning 'Unknown'.
+2026-08-21 10:42:03,849 - Code.Dynamic_War_Manager.Source.Context.Context - WARNING - get_dimension - Asset dimensions do not fit any category: length=0.5, width=0.5, height=0.5, weight=0.5. Returning 'Unknown'.

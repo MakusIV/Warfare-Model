@@ -7,9 +7,11 @@
 
 ## Module audit (completed 2026-08-16) — Fase 1 done 2026-08-17
 - [Module audit — read this first for project status](project_module_audit.md) — Fase 1 mechanical fixes all applied (47→17 test errors, 1088→2321 tests collected); remaining 17 need real decisions, not quick fixes; Fase 2 (9 design decisions) still open
+- [Test_Air_Route_Manager mismatches — verified detail](project_test_air_route_manager_mismatches.md) — precise per-test breakdown (2026-08-20) of the legacy test block's API mismatches; GPT_TestModule (22/22) must NOT be touched — user confirmed it's deliberate threat-placement coverage, not duplication
 
 ## Next session — first task
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too
+- [WIKI_LLM_SIMULATION merged into Analysis/](project_wiki_llm_simulation_merge.md) — moved 2026-08-20, fully complete (old GitHub repo deleted, confirmed)
 - [Rinomina_Campaign_State.py — reserved, do not delete](project_rinomina_campaign_state.md) — looks dead but user will reuse/rename it later
 
 ## Subsystem facts

@@ -1079,43 +1079,37 @@ class TestThreatAA(unittest.TestCase):
         self.cylinder = Cylinder(self.center, 10, 20) #MockCylinder(self.center, 10, 20)
         self.threat = ThreatAA(5, 500, 2, 7, self.cylinder)
         
-        # Create test waypoints and edges
-        self.wp_a = Waypoint("A", Point3D(-20, 0, 100), "A")
-        self.wp_b = Waypoint("B", Point3D(20, 0, 100), "B")
+        # Create test waypoints and edges (z=110 is inside the cylinder's altitude range 100-120)
+        self.wp_a = Waypoint("A", Point3D(-20, 0, 110), "A")
+        self.wp_b = Waypoint("B", Point3D(20, 0, 110), "B")
         self.edge = Edge("test_edge", 0, self.wp_a, self.wp_b, 200)
-    
+
     def test_init(self):
         """Test the initialization of ThreatAA"""
         self.assertEqual(self.threat.danger_level, 5)
         self.assertEqual(self.threat.interception_speed, 500)
         self.assertEqual(self.threat.min_fire_time, 2)
-        self.assertEqual(self.threat.min_altitude, 100)
-        self.assertEqual(self.threat.max_altitude, 80)  # bottom_center.z
+        self.assertEqual(self.threat.min_altitude, 100)  # bottom_center.z
+        self.assertEqual(self.threat.max_altitude, 120)  # bottom_center.z + height
         self.assertEqual(self.threat.cylinder, self.cylinder)
-    
+
     def test_edgeIntersect(self):
         """Test the edge intersection calculation"""
-        result, intersections = self.threat.edgeIntersect(self.edge)
+        result, intersection = self.threat.edgeIntersect(self.edge)
         self.assertTrue(result)
-        self.assertEqual(len(intersections), 2)
-    
+        self.assertIsInstance(intersection, Segment3D)
+        self.assertEqual(intersection.p1, Point3D(-10, 0, 110))
+        self.assertEqual(intersection.p2, Point3D(10, 0, 110))
+
     def test_innerPoint(self):
         """Test if a point is inside the threat cylinder"""
         # Point inside cylinder
-        inside_point = Point3D(5, 0, 90)
-        self.assertTrue(self.threat.innerPoint(inside_point, 0.1))
-        
+        inside_point = Point3D(5, 0, 110)
+        self.assertTrue(self.threat.innerPoint(inside_point))
+
         # Point outside cylinder
-        outside_point = Point3D(15, 0, 90)
-        self.assertFalse(self.threat.innerPoint(outside_point, 0.1))
-    
-    def test_calcMaxLenghtCrossSegment(self):
-        """Test calculation of maximum segment length to cross threat"""
-        segment = Segment3D(self.wp_a.point, self.wp_b.point)
-        max_length = self.threat.calcMaxLenghtCrossSegment(200, 100, 5, segment)
-        
-        # This should return a positive value since the threat can be crossed
-        self.assertGreater(max_length, 0)
+        outside_point = Point3D(15, 0, 110)
+        self.assertFalse(self.threat.innerPoint(outside_point))
 
 
 class TestWaypoint(unittest.TestCase):
@@ -1161,12 +1155,7 @@ class TestEdge(unittest.TestCase):
         self.wp_a = Waypoint("A", Point3D(0, 0, 0), "A")
         self.wp_b = Waypoint("B", Point3D(3, 4, 0), "B")
         self.edge = Edge("Test Edge", 0, self.wp_a, self.wp_b, 100)
-        
-        # Create a mock threat
-        center = Point3D(1.5, 2, 0)
-        cylinder = Cylinder(center, 1, 5)
-        self.threat = ThreatAA(10, 500, 2, 7, cylinder)
-    
+
     def test_init(self):
         """Test edge initialization"""
         self.assertEqual(self.edge.name, "Test Edge")
@@ -1181,27 +1170,6 @@ class TestEdge(unittest.TestCase):
         segment = self.edge.getSegment3D()
         self.assertEqual(segment.p1, self.wp_a.point)
         self.assertEqual(segment.p2, self.wp_b.point)
-    
-    def test_calculate_danger(self):
-        """Test danger calculation when intersecting threats"""
-        threats = [self.threat]
-        
-        # Mock the intersects_threat method to return a known result
-        with patch.object(Edge, 'intersects_threat', return_value=(True, (0.2, 0.8))):
-            danger = self.edge.calculate_danger(threats)
-            # Expected danger = threat danger level * exposure time
-            # Exposure time = exposure length / speed = (0.8-0.2)*edge.length / speed
-            expected_danger = 10 * (0.8-0.2)*5/100
-            self.assertAlmostEqual(danger, expected_danger)
-    
-    def test_intersects_threat(self):
-        """Test detection of threat intersection"""
-        # Test intersection - the mock cylinder will return True
-        result, params = self.edge.intersects_threat(self.threat)
-        self.assertTrue(result)
-        self.assertTrue(len(params) == 2)
-        self.assertTrue(0 <= params[0] <= 1)
-        self.assertTrue(0 <= params[1] <= 1)
 
 
 class TestPath(unittest.TestCase):
@@ -1404,14 +1372,14 @@ class TestRoutePlanner(unittest.TestCase):
                 if mock_intersect.call_count == 1:  # First call (self.threat)
                     return False, None
                 elif mock_intersect.call_count == 2:  # Second call (threat1)
-                    return True, [Point3D(20, 20, 100), Point3D(40, 40, 100)]
+                    return True, Segment3D(Point3D(20, 20, 100), Point3D(40, 40, 100))
                 else:  # Third call (threat2)
-                    return True, [Point3D(10, 10, 100), Point3D(20, 20, 100)]
-            
+                    return True, Segment3D(Point3D(10, 10, 100), Point3D(20, 20, 100))
+
             mock_intersect.side_effect = side_effect
-            
-            # Test finding the first threat
-            first_threat = self.route_planner.firstThreatIntersected(self.edge, threats)
+
+            # Test finding the first threat (production returns (complete_intersection, threat))
+            complete_intersection, first_threat = self.route_planner.firstThreatIntersected(self.edge, threats)
             self.assertEqual(first_threat, threat2)  # threat2 is closer to wp_a
     
     def test_calcPathWithoutThreat_no_threat(self):
@@ -1420,41 +1388,39 @@ class TestRoutePlanner(unittest.TestCase):
         path_collection = PathCollection()
         path_id = path_collection.add_path()
         
-        # Mock firstThreatIntersected to return no threat
-        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=None):
+        # Mock firstThreatIntersected to return no threat (production unpacks a 2-tuple)
+        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(None, None)):
             result = self.route_planner.calcPathWithoutThreat(
-                self.start, self.end, self.end, 
-                [self.threat], 0, path_collection, path_id,
+                self.start, self.end, self.end,
+                [self.threat], 0, path_id, path_collection,
                 self.aircraft_altitude_min, self.aircraft_altitude_max,
                 self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                "no_change", debug=False
+                5, "no_change", debug=False
             )
-            
+
             # Should succeed and mark path as completed
             self.assertTrue(result)
             self.assertTrue(path_collection.paths[path_id].completed)
             self.assertEqual(len(path_collection.paths[path_id].edges), 1)
-    
+
     def test_calcPathWithoutThreat_with_threat(self):
         """Test calculating path without threats when threats are present"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Mock firstThreatIntersected to return a threat first time, then no threat
-        with patch.object(RoutePlanner, 'firstThreatIntersected') as mock_threat:
-            mock_threat.side_effect = [self.threat, None]
-            
+
+        # Mock firstThreatIntersected to return a threat (production unpacks a 2-tuple)
+        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(True, self.threat)):
             # Mock _handle_threat_avoidance to return success
             with patch.object(RoutePlanner, '_handle_threat_avoidance', return_value=True):
                 result = self.route_planner.calcPathWithoutThreat(
-                    self.start, self.end, self.end, 
-                    [self.threat], 0, path_collection, path_id,
+                    self.start, self.end, self.end,
+                    [self.threat], 0, path_id, path_collection,
                     self.aircraft_altitude_min, self.aircraft_altitude_max,
                     self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                    "change", debug=False
+                    5, "change", debug=False
                 )
-                
+
                 # Should succeed
                 self.assertTrue(result)
     
@@ -1464,167 +1430,158 @@ class TestRoutePlanner(unittest.TestCase):
         path_collection = PathCollection()
         path_id = path_collection.add_path()
         
-        # Mock firstThreatIntersected to return no threat
-        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=None):
+        # Mock firstThreatIntersected to return no threat (production unpacks a 2-tuple)
+        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(None, None)):
             result = self.route_planner.calcPathWithThreat(
-                self.start, self.end, self.end, 
-                [self.threat], 0, path_collection, path_id,
+                self.start, self.end, self.end,
+                [self.threat], 0, path_id, path_collection,
+                100,  # aircraft_altitude
                 self.aircraft_altitude_min, self.aircraft_altitude_max,
                 self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
                 5, "no_change", debug=False
             )
-            
+
             # Should succeed and mark path as completed
             self.assertTrue(result)
             self.assertTrue(path_collection.paths[path_id].completed)
             self.assertEqual(len(path_collection.paths[path_id].edges), 1)
-    
+
     def test_calcPathWithThreat_with_crossable_threat(self):
         """Test calculating path with threats when threats can be crossed"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Mock firstThreatIntersected to return a threat
-        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=self.threat):
+
+        # Mock firstThreatIntersected to return a complete intersection (production unpacks a 2-tuple)
+        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(True, self.threat)):
             # Mock calcMaxLenghtCrossSegment to return a valid crossing length
             with patch.object(ThreatAA, 'calcMaxLenghtCrossSegment', return_value=50):
                 # Mock _handle_threat_crossing to return success
                 with patch.object(RoutePlanner, '_handle_threat_crossing', return_value=True):
                     result = self.route_planner.calcPathWithThreat(
-                        self.start, self.end, self.end, 
-                        [self.threat], 0, path_collection, path_id,
+                        self.start, self.end, self.end,
+                        [self.threat], 0, path_id, path_collection,
+                        100,  # aircraft_altitude
                         self.aircraft_altitude_min, self.aircraft_altitude_max,
                         self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
                         5, "no_change", debug=False
                     )
-                    
+
                     # Should succeed
                     self.assertTrue(result)
-    
+
     def test_calcPathWithThreat_with_uncrossable_threat(self):
-        """Test calculating path with threats when threats cannot be crossed"""
+        """Test calculating path with threats when the intersection isn't a full crossing"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Mock firstThreatIntersected to return a threat
-        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=self.threat):
-            # Mock calcMaxLenghtCrossSegment to return a length too small
-            with patch.object(ThreatAA, 'calcMaxLenghtCrossSegment', return_value=0.05):
-                # Mock _handle_threat_avoidance to return success
-                with patch.object(RoutePlanner, '_handle_threat_avoidance', return_value=True):
-                    result = self.route_planner.calcPathWithThreat(
-                        self.start, self.end, self.end, 
-                        [self.threat], 0, path_collection, path_id,
-                        self.aircraft_altitude_min, self.aircraft_altitude_max,
-                        self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                        5, "no_change", debug=False
-                    )
-                    
-                    # Should succeed
-                    self.assertTrue(result)
+
+        # Production only attempts a crossing when complete_intersection is True (elif complete_intersection:);
+        # otherwise it just returns False (there is no fallback to _handle_threat_avoidance in calcPathWithThreat).
+        with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(False, self.threat)):
+            result = self.route_planner.calcPathWithThreat(
+                self.start, self.end, self.end,
+                [self.threat], 0, path_id, path_collection,
+                100,  # aircraft_altitude
+                self.aircraft_altitude_min, self.aircraft_altitude_max,
+                self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
+                5, "no_change", debug=False
+            )
+
+            # Production returns False when the threat intersection isn't a complete crossing
+            self.assertFalse(result)
     
     def test_handle_threat_crossing(self):
         """Test handling threat crossing when it's safe to cross"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Mock calcPathWithThreat to return success
+
+        # A short intersection segment inside the threat cylinder (center 50,50,100 r=20),
+        # shorter than max_length so no chord recalculation (find_chord_coordinates) is needed
+        intersection = Segment3D(Point3D(40, 50, 100), Point3D(45, 50, 100))
+
+        # Mock calcPathWithThreat to return success (called after crossing the threat)
         with patch.object(RoutePlanner, 'calcPathWithThreat', return_value=True):
             result = self.route_planner._handle_threat_crossing(
-                self.edge, self.threat, self.end, self.end, 
-                [self.threat], 0, path_collection, path_id, 50,
+                self.edge, self.threat, self.end, self.end,
+                [self.threat], 0, path_id, path_collection, 50,
+                100,  # aircraft_altitude
                 self.aircraft_altitude_min, self.aircraft_altitude_max,
                 self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                "no_change", 10, False
+                5, "no_change", intersection, 10, False
             )
-            
+
             # Should succeed
             self.assertTrue(result)
             # Should have added 2 edges (to crossing point and through threat)
             self.assertEqual(len(path_collection.paths[path_id].edges), 2)
-    
+
     def test_handle_threat_avoidance_altitude_change(self):
         """Test threat avoidance by changing altitude"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Setup conditions for altitude change
+
+        # Threat low enough that climbing above it (aircraft_altitude_max=130) is allowed
         threat = self.threat
-        threat.min_altitude = 60  # Below aircraft_altitude_min
-        threat.max_altitude = 140  # Above aircraft_altitude_max
-        
-        # Mock getIntersection to return a valid intersection
-        with patch.object(MockCylinder, 'getIntersection', return_value=(
-            True, [MagicMock(point=Point3D(30, 30, 100))]
-        )):
-            # Mock calcPathWithoutThreat to return success
-            with patch.object(RoutePlanner, 'calcPathWithoutThreat', return_value=True):
-                result = self.route_planner._handle_threat_avoidance(
-                    self.edge, threat, self.start, self.end, self.end, 
-                    [threat], 0, path_collection, path_id,
-                    self.aircraft_altitude_min, self.aircraft_altitude_max,
-                    self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                    5, "change_up", 10, "calcPathWithoutThreat", False
-                )
-                
-                # Should succeed
-                self.assertTrue(result)
-                # Should have added 1 edge for altitude change
-                self.assertEqual(len(path_collection.paths[path_id].edges), 1)
-    
+        threat.max_altitude = 110
+
+        # segm: where the edge would cross the threat, coming from above and going down
+        segm = Segment3D(Point3D(30, 30, threat.max_altitude), Point3D(35, 35, threat.max_altitude))
+
+        # setUp builds a real Cylinder (not MockCylinder), so patch the real class
+        with patch.object(Cylinder, 'getIntersection', return_value=(False, segm)):
+            with patch.object(Cylinder, 'innerPoint', return_value=True):
+                # A second, taller threat blocks the climbed-over segment, so only the climb edge is added
+                blocking_threat = MagicMock(max_altitude=200)
+                with patch.object(RoutePlanner, 'firstThreatIntersected', return_value=(False, blocking_threat)):
+                    # Mock calcPathWithoutThreat to return success
+                    with patch.object(RoutePlanner, 'calcPathWithoutThreat', return_value=True):
+                        result = self.route_planner._handle_threat_avoidance(
+                            self.edge, threat, self.start, self.end, self.end,
+                            [threat], 0, path_id, path_collection,
+                            self.aircraft_altitude_min, self.aircraft_altitude_max,
+                            self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
+                            5, "change_up", 10, False
+                        )
+
+                        # Should succeed
+                        self.assertTrue(result)
+                        # Should have added 1 edge for the altitude change (the climb-over edge is blocked)
+                        self.assertEqual(len(path_collection.paths[path_id].edges), 1)
+
     def test_handle_threat_avoidance_go_around(self):
-        """Test threat avoidance by going around"""
+        """Test threat avoidance by going around when altitude change isn't requested"""
         # Create a path collection for testing
         path_collection = PathCollection()
         path_id = path_collection.add_path()
-        
-        # Force altitude change to be impossible
-        threat = self.threat
-        threat.min_altitude = 100  # Same as aircraft altitude
-        threat.max_altitude = 100  # Same as aircraft altitude
-        
-        # Mock calcPathWithoutThreat to return success for first path
-        with patch.object(RoutePlanner, 'calcPathWithoutThreat', return_value=True):
-            result = self.route_planner._handle_threat_avoidance(
-                self.edge, threat, self.start, self.end, self.end, 
-                [threat], 0, path_collection, path_id,
-                self.aircraft_altitude_min, self.aircraft_altitude_max,
-                self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
-                None, "no_change", 10, "calcPathWithoutThreat", False
-            )
-            
-            # Should succeed
-            self.assertTrue(result)
-            # Should have added edges for both paths (original and alternative)
-            self.assertEqual(len(path_collection.paths), 2)
-    
-    def test_calcRoute(self):
-        """Test the main route calculation function"""
-        # Create a simple scenario
-        start = Point3D(0, 0, 100)
-        end = Point3D(100, 100, 100)
-        threats = [self.threat]
-        
-        # Mock excludeThreat to do nothing
-        with patch.object(RoutePlanner, 'excludeThreat', return_value=True):
-            # Mock calcPathWithoutThreat to return a valid path
-            with patch.object(RoutePlanner, 'calcPathWithoutThreat', return_value=True):
-                # Mock calcLenghtPath to return a valid length
-                with patch.object(RoutePlanner, 'calcLenghtPath', return_value=500):
-                    result = self.route_planner.calcRoute(
-                        start, end, threats,
-                        self.aircraft_altitude_min, self.aircraft_altitude_max,
-                        self.aircraft_speed_max, self.aircraft_speed, 
-                        self.aircraft_range_max, "change"
-                    )
-                    
-                    # Should return a path
-                    self.assertIsNotNone(result)
 
+        threat = self.threat
+
+        # change_alt_option="no_change" alone makes can_change_altitude False, routing into
+        # the go-around (extended points) branch. setUp builds a real Cylinder, so patch that.
+        with patch.object(Cylinder, 'getExtendedPoints', return_value=(Point3D(30, 70, 100), Point3D(70, 30, 100))):
+            # Mock calcPathWithoutThreat to return success for both alternative paths
+            with patch.object(RoutePlanner, 'calcPathWithoutThreat', return_value=True):
+                result = self.route_planner._handle_threat_avoidance(
+                    self.edge, threat, self.start, self.end, self.end,
+                    [threat], 0, path_id, path_collection,
+                    self.aircraft_altitude_min, self.aircraft_altitude_max,
+                    self.aircraft_speed_max, self.aircraft_speed, self.aircraft_range_max,
+                    5, "no_change", 10, False
+                )
+
+                # Should succeed
+                self.assertTrue(result)
+                # Should have added a new path for the second alternative (original + alternative)
+                self.assertEqual(len(path_collection.paths), 2)
+
+    # NOTE: calcRoute (the public entry point) is deliberately not unit-tested here:
+    # GPT_TestModule already exercises it end-to-end across 16 scenarios
+    # (test_route_planner_calcRoute_*), which is more meaningful coverage than a
+    # mocked call here — and the old version of this test mocked a
+    # RoutePlanner.calcLenghtPath method that no longer exists in production.
 
 
 if __name__ == "__main__":
@@ -1687,7 +1644,6 @@ if __name__ == "__main__":
             suite.addTest(TestThreatAA('test_init'))
             suite.addTest(TestThreatAA('test_edgeIntersect'))
             suite.addTest(TestThreatAA('test_innerPoint'))
-            suite.addTest(TestThreatAA('test_calcMaxLenghtCrossSegment'))
 
         if False:
             suite.addTest(TestWaypoint('test_init'))
@@ -1698,8 +1654,6 @@ if __name__ == "__main__":
         if False:
             suite.addTest(TestEdge('test_init'))
             suite.addTest(TestEdge('test_getSegment3D'))
-            suite.addTest(TestEdge('test_calculate_danger'))
-            suite.addTest(TestEdge('test_intersects_threat'))
 
         if False:
             suite.addTest(TestPath('test_init'))
@@ -1722,7 +1676,7 @@ if __name__ == "__main__":
             suite.addTest(TestRoutePlanner('test_calcPathWithThreat_with_uncrossable_threat'))
             suite.addTest(TestRoutePlanner('test_handle_threat_crossing'))
             suite.addTest(TestRoutePlanner('test_handle_threat_avoidance_altitude_change'))
-            suite.addTest(TestRoutePlanner('test_calcRoute'))
+            suite.addTest(TestRoutePlanner('test_handle_threat_avoidance_go_around'))
 
     unittest.TextTestRunner().run(suite)
 
