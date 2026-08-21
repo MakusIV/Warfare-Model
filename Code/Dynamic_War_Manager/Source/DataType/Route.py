@@ -92,9 +92,9 @@ class Route:
                 min_distance = md
         return min_distance
 
-    def travelTime(self) -> float:
-        """Total travel time across all edges."""
-        return sum(v.calcTravelTime() for v in self._edges.values())
+    def travelTime(self, speed: Optional[float] = None) -> float:
+        """Total travel time across all edges. If speed is given, overrides each edge's own speed."""
+        return sum(v.calcTravelTime(speed) for v in self._edges.values())
 
     def travelTimeToEdge(self, edge: Edge) -> float:
         """Cumulative travel time up to (but not including) the given edge."""

@@ -557,7 +557,7 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
     danger = dict
     danger = {"air_attack": list, "ground_attack": list, "artillery_range": list}
 
-    for k, v_edge in Route.edges:
+    for k, v_edge in route.edges.items():
         travel_time = v_edge.calcTravelTime()
 
         for k_base, v_base in enemy_bases:

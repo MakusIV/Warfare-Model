@@ -19,15 +19,16 @@ class Waypoint:
     
             
             # check input parameters
-            check_results =  self.checkParam( point, obj_reference )
+            check_results = self.checkParam(name=name, obj_reference=obj_reference, position=point)
+
+            if not check_results[0]:
+                raise Exception(check_results[1] + ". Object not istantiate.")
             
-            if not check_results[1]:
-                raise Exception(check_results[2] + ". Object not istantiate.")
-            
 
 
 
-    def checkParam(name: str, obj_reference: Asset, position: Point3D) -> (bool, str): # type: ignore
+    @staticmethod
+    def checkParam(name: str = None, obj_reference: Asset = None, position: Point3D = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")        
@@ -76,7 +77,7 @@ class Waypoint:
     @point.setter
     def point(self, param) -> bool: #override
         
-        check_result = self.checkParam(point = param)
+        check_result = self.checkParam(position = param)
 
         if not check_result[0]:
             raise Exception(check_result[1])                
@@ -86,7 +87,7 @@ class Waypoint:
 
     @property
     def point2d(self):
-        return Point2D(self._point.x, self._point.x)
+        return Point2D(self._point.x, self._point.y)
 
     def distanceFrom(self, point: Point2D|Point3D) -> list:        
 

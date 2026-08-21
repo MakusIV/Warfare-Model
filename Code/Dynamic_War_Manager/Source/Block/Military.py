@@ -337,24 +337,20 @@ class Military(Block):
             "min_time": distance / max_speed if max_speed > 0 else float('inf')
         }
 
-    def time_to_ground_intercept(self, route: Route, speed: Optional[float]) -> Optional[Dict[str, float]]:
+    def time_to_ground_intercept(self, route: Route, speed: Optional[float] = None) -> Optional[float]:
 
-        route = route.copy()
-        if speed:
-            route.speed = speed
+        return route.travelTime(speed=speed)
 
-        return route.travelTime()
-        
 
-    def time2attack(self, target: Optional[Union[Point2D, Point3D, Asset, Block]], route = Optional[Route], speed = Optional[ float ]) -> Optional[ Dict[str, float] ]:
-        
-        if not(target and route):
-            raise ValueError("target or route value must be assigned")      
+    def time2attack(self, target: Optional[Union[Point2D, Point3D, Asset, Block]] = None, route: Optional[Route] = None, speed: Optional[float] = None) -> Optional[float]:
 
-        if self.is_Air_Base and target:
+        if not target and not route:
+            raise ValueError("target or route value must be assigned")
+
+        if self.is_Air_Base() and target:
             return self.time_to_direct_line_attack(target = target)
-        
-        elif self.is_Ground_Base and route:
+
+        elif (self.is_Ground_Base() or self.is_Naval_Base()) and route:
             return self.time_to_ground_intercept(route = route, speed = speed)
 
 

@@ -27,21 +27,22 @@ class Edge:
             self._path_type = path_type # 'onroad', 'offroad', 'air', "water"
             self._danger_level = danger_level
             self._speed = speed
-            self._line = Line3D(wpA, wpB)
+            self._line = Line3D(wpA.point, wpB.point)
             self._line2d = Line2D(wpA.point2d, wpB.point2d)
-            self._lenght = self.calcLenght(self) # distance2D if path_type = [onroad, offroad, water] or distance 3D if path_type = air
-            self._travel_time = self.calcTravelTime(self) 
-                
+            self._lenght = self.calcLength() # distance2D if path_type = [onroad, offroad, water] or distance 3D if path_type = air
+            self._travel_time = self.calcTravelTime()
+
             # check input parameters
-            check_results = self.checkParam( wpA, wpB, path_type, danger_level, speed, name )
+            check_results = self.checkParam(wpA, wpB, path_type, danger_level, speed, name)
+
+            if not check_results[0]:
+                raise Exception(check_results[1] + ". Object not istantiate.")
             
-            if not check_results[1]:
-                raise Exception(check_results[2] + ". Object not istantiate.")
-            
 
 
 
-    def checkParam( wpA: Waypoint, wpB: Waypoint, path_type: str, danger_level: str, speed: float, name: str) -> (bool, str): # type: ignore
+    @staticmethod
+    def checkParam(wpA: Waypoint = None, wpB: Waypoint = None, path_type: str = None, danger_level: float = None, speed: float = None, name: str = None) -> (bool, str): # type: ignore
         """Return True if type compliance of the parameters is verified"""          
         if name and not isinstance(name, str):
             return (False, "Bad Arg: name must be a str")        
@@ -155,10 +156,12 @@ class Edge:
             return self._wpA.distanceFrom(self._wpB)
         
 
-    def calcTravelTime(self):
+    def calcTravelTime(self, speed: Optional[float] = None):
+        """Travel time for this edge. If speed is given, overrides the edge's own speed."""
+        _speed = speed if speed else self._speed
 
-        if self._speed > 0:
-            return self._lenght / self._speed
+        if _speed and _speed > 0:
+            return self._lenght / _speed
         else:
             return float('inf')
             
