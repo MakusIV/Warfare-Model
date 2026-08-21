@@ -3,6 +3,7 @@ Utility di debug per la visualizzazione 2D/3D delle minacce (ThreatAA/Cylinder) 
 rotte (Route) calcolate da Air_Route_Manager. Serve per definire/verificare a colpo
 d'occhio gli scenari usati nei test (vedi Test_Air_Route_Manager.py) prima di scriverli.
 """
+import os
 import matplotlib
 import matplotlib.pyplot as plt
 
@@ -68,24 +69,33 @@ class Space:
         """Aggiunge una Route di Air_Route_Manager (via getPoints()) o una lista di punti (x, y, z)."""
         self.paths.append(_route_points(route))
 
-    def show_3d(self):
+    def _show_or_save(self, fig, out_name):
+        """Mostra la figura a schermo se il backend e' interattivo, altrimenti la
+        salva su file (nessun ambiente grafico disponibile, es. TkAgg/Qt mancanti)."""
+        if matplotlib.get_backend().lower() == 'agg':
+            fig.savefig(out_name, dpi=150)
+            print(f"Backend non interattivo ({matplotlib.get_backend()}): figura salvata in {os.path.abspath(out_name)}")
+        else:
+            plt.show()
+
+    def show_3d(self, out_name='visualizer_3d.png'):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         self._draw_3d(ax)
-        plt.show()
+        self._show_or_save(fig, out_name)
 
-    def show_2d_top(self):
+    def show_2d_top(self, out_name='visualizer_2d.png'):
         fig, ax = plt.subplots()
         self._draw_2d(ax)
-        plt.show()
+        self._show_or_save(fig, out_name)
 
-    def show_all_views(self):
+    def show_all_views(self, out_name='visualizer_all_views.png'):
         fig = plt.figure()
         ax3d = fig.add_subplot(121, projection='3d')
         self._draw_3d(ax3d)
         ax2d = fig.add_subplot(122)
         self._draw_2d(ax2d)
-        plt.show()
+        self._show_or_save(fig, out_name)
 
     def _draw_3d(self, ax):
         ax.set_xlim(0, self.space_x)
