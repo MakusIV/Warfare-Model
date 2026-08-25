@@ -5,14 +5,14 @@
 
 ## Project & environment
 - [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory
-- [Dev environment & machines](project_dev_environment.md) — 3 machines, git remote, memory sync workflow
+- [Dev environment & machines](project_dev_environment.md) — 3 machines, git remote, memory sync workflow; SessionStart hook (2026-08-25) reports if local is behind origin, no auto-pull
 - [Python venv per machine](feedback_venv.md) — always use the machine-specific interpreter path, never bare `python3`
 
 ## Module audit (completed 2026-08-16) — Fase 1 fully done 2026-08-21
 - [Module audit — read this first for project status](project_module_audit.md) — ALL 17 remaining test errors resolved 2026-08-21; suite is 2315 tests/0 errors/0 failures; Fase 2 now 8 of 9 design decisions open (was 9)
 - [Test_Air_Route_Manager mismatches — RESOLVED](project_test_air_route_manager_mismatches.md) — fixed 2026-08-21 (commit 9460733c); 48/48 green
 - [Fase 2 design decisions — ALL CLOSED](project_fase2_design_decisions.md) — 2026-08-21: 7 resolved-and-actioned (#1,2,3,4,5,8,9), 2 explicitly deferred (#6,#7). #3 (Route/Edge/Waypoint canonical: DataType wins for ground) required fixing ~10 mechanical bugs across Waypoint/Edge/Route/Military/Tactical_Evaluation to actually make DataType.Route constructible — verified end-to-end with real objects, full suite still 2315/0/0. 00_Sintesi.md updated in place with status markers. Ground_Route_Manager.py still needs to actually produce DataType.Route objects (Fase 3, not started).
-- **KNOWN SYSTEMIC RISK, unfixed**: `LoggerClass.Logger` (`Utility/LoggerClass.py:28-29`) resolves its log dir as `os.getcwd()/logs` — any module breaks with `FileNotFoundError` if run with cwd != repo root. Invisible today only because everything is always run via `-m unittest discover` from repo root. See [[project_fase2_design_decisions]] visualizer.py follow-up.
+- [LoggerClass/Utility.py cwd bug — FIXED 2026-08-25](project_loggerclass_cwd_fix.md) — was: resolved log dir as `os.getcwd()/logs`, crashed if cwd != repo root. Now anchored to `__file__`, pushed (9a7342a1). Also fixed, machine-local to `osboxes` only (not checked on VM/Notebook/ProArt P16): numpy2/matplotlib ABI conflict, and stale apt `python3-matplotlib`/`python-matplotlib-data` shadowing `mpl_toolkits`/Axes3D (both resolved).
 
 ## Standing reminders (no action needed unless relevant)
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too

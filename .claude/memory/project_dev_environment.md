@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 54069b25-fc3b-495d-81bb-9efd11133381
-  modified: 2026-08-16T16:08:33.619Z
+  modified: 2026-08-25T16:12:10.801Z
 ---
 
 ## Machines
@@ -21,6 +21,9 @@ Three machines: **VM** (VirtualBox Ubuntu), **Notebook** (Ubuntu), **ProArt P16*
   ln -s ~/Sviluppo/Warfare-Model/.claude/memory ~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory
   ```
 - Sync workflow: `git push` at end of session → `git pull` on other machines
+
+## Session-start git sync check (added 2026-08-25)
+- `.claude/settings.json` has a `SessionStart` hook (`.claude/hooks/check_git_sync.sh`) that runs `git fetch` and reports via `additionalContext` if the local branch is behind its upstream — never pulls automatically, just flags it so the user can decide. Both files are git-tracked, so this is live on every machine once pulled. Hardcodes `/home/marco/Sviluppo/Warfare-Model` as the repo path in `settings.json`'s hook command (same absolute path on all 3 machines per [[project_dev_environment]] conventions); the script itself self-locates via `BASH_SOURCE` as a fallback.
 
 ## Python environment per machine
 See [[feedback_venv]] for which interpreter path to use.

@@ -2,5 +2,19 @@
   "statusLine": {
     "type": "command",
     "command": "/home/marco/.claude/statusline.sh"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/marco/Sviluppo/Warfare-Model/.claude/hooks/check_git_sync.sh",
+            "timeout": 15,
+            "statusMessage": "Verifico allineamento con origin..."
+          }
+        ]
+      }
+    ]
   }
 }
