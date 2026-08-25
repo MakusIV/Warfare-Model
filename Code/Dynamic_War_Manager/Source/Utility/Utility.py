@@ -23,7 +23,9 @@ logging.basicConfig( level = logging.DEBUG )
 # Create a custom logger
 logger = logging.getLogger( __name__ )
 
-log_dir = os.path.join(os.path.normpath(os.getcwd()), 'logs')
+_repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+log_dir = os.path.join(_repo_root, 'logs')
+os.makedirs(log_dir, exist_ok=True)
 log_fname = os.path.join(log_dir, 'log_Utility.log')
 
 

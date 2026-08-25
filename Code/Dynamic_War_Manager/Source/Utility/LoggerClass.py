@@ -25,7 +25,9 @@ class Logger:
         self._class_name = class_name
         self._set_consolle_log_level =  set_consolle_log_level
         self._set_file_log_level =  set_file_log_level        
-        self._log_dir = os.path.join(os.path.normpath(os.getcwd()), 'logs')
+        self._repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))
+        self._log_dir = os.path.join(self._repo_root, 'logs')
+        os.makedirs(self._log_dir, exist_ok=True)
         self._log_fname = os.path.join(self._log_dir, 'log_' + self._class_name + '.log')
 
 

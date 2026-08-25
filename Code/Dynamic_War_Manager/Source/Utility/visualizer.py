@@ -144,12 +144,6 @@ if __name__ == "__main__":
     _repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../'))
     if _repo_root not in sys.path:
         sys.path.insert(0, _repo_root)
-    # Logger/Utility.py risolvono la cartella logs/ come 'os.getcwd()/logs' (bug noto,
-    # non specifico a questo file - vedi project_fase2_design_decisions.md): ci si
-    # sposta sulla root del repo prima di importare qualunque modulo di progetto,
-    # cosi' il logging risolve sempre logs/ della repo invece di crashare o crearne
-    # una nuova nella cartella da cui e' stato lanciato lo script.
-    os.chdir(_repo_root)
 
     # Esempio: visualizza uno scenario reale calcolato da Air_Route_Manager.RoutePlanner
     from sympy import Point3D
