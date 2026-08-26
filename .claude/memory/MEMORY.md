@@ -1,7 +1,8 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Session recap 2026-08-21 — read this first](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end. Suite: 2315 tests/0 errors, pushed to origin/main (9aed24db). No next task queued — natural next step is Fase 3.
+- [Session recap 2026-08-26 — read this first](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work. Natural next step is still Fase 3.
+- [Session recap 2026-08-21](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end.
 
 ## Project & environment
 - [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory
