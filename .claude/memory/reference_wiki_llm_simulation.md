@@ -1,0 +1,35 @@
+---
+name: reference-wiki-llm-simulation
+description: "Standing pointer + memory-layering boundary rule: Warfare-Model sessions should also consult Analysis/WIKI_LLM_SIMULATION for conceptual/methodological simulation questions, alongside (not instead of, not above) project memory; that wiki intentionally does not carry Warfare-Model implementation memory back"
+metadata: 
+  node_type: memory
+  type: reference
+  originSessionId: 9980c40e-9dcc-4a07-8d4b-87c43a9d4e36
+  modified: 2026-09-08T14:53:50.251Z
+---
+
+## What it is
+`Analysis/WIKI_LLM_SIMULATION/` is a separate, self-contained Karpathy-style LLM-maintained wiki inside the Warfare-Model repo (moved there 2026-08-20, see [[project_wiki_llm_simulation_merge]]). It has its own operating schema at `Analysis/WIKI_LLM_SIMULATION/CLAUDE.md` and its own commands (`ingesta`, `query`, `health check`, `aggiorna`, ...). Content lives in `wiki/index.md` (catalog), `wiki/overview.md` (domain summary), `wiki/entities/` (models, systems, authors — e.g. `philip-sabin.md`, `rand-corporation.md`, `jicm-model.md`...), `wiki/concepts/` (methodologies — `wargaming.md`, `comparative-dynamic-modelling.md`, `event-driven-simulation.md`...), `wiki/sources/`, `wiki/analyses/`.
+
+## The boundary rule (user decision, 2026-09-08)
+Two knowledge layers, one direction of reference:
+- **This project's auto-memory (`~/.claude/projects/-home-marco-Sviluppo-Warfare-Model/memory/`)** = implementation/dev facts: module APIs, bugs, test status, environment, feedback on how to work in this repo. Scoped to sessions opened with cwd = Warfare-Model root (or below).
+- **The wiki (`Analysis/WIKI_LLM_SIMULATION/`)** = conceptual/methodological research supporting *design*: simulation theory, campaign-model literature (JICM/CEM/TLC/TACWAR...), wargaming methodology (Sabin, RAND...). Purpose: support conceptual reasoning about how to design the system, independent of current code state.
+- **Warfare-Model root sessions SHOULD also consult the wiki** for conceptual/design questions (read `wiki/index.md` + `wiki/overview.md`, then the relevant entity/concept pages) — as a complementary source, not a first-stop or higher-authority one. Project memory (implementation facts, prior design decisions actually taken in this codebase — e.g. [[project_fase2_design_decisions]]) can be, and often is, more significant to a concrete design question than the wiki's general theory. Neither layer outranks the other by default; which one matters more depends on the specific question, and both should be weighed rather than one consulted only as a fallback from the other.
+- **The wiki should NOT need or reference Warfare-Model implementation memory** to do its job — it's meant to stand alone as a research base. This holds naturally: Claude Code's auto-memory is scoped per exact working-directory path, so a session opened with cwd inside `Analysis/WIKI_LLM_SIMULATION/` gets its own separate (currently nonexistent/empty) memory space and has no automatic visibility into this project's memory. Verified 2026-09-08: no such memory folder exists yet, meaning all wiki work so far has happened from Warfare-Model-root sessions (the intended direction) — never the reverse.
+
+## Known risk: layer bleed
+Nothing currently cross-checks the two layers for contradictions or duplication — the wiki's own `health check` command doesn't know about this project's memory, and vice versa. Concrete instance: on 2026-09-08 conceptual research on Philip Sabin was (correctly, but only as an interim step) written into project auto-memory (see [[reference_philip_sabin_simulating_war]]) instead of the wiki, because the wiki transfer was explicitly deferred to the Fase 3 resumption. **When resuming Fase 3, treat "reconcile any conceptual content sitting in project auto-memory into the wiki, then slim the auto-memory copy to a pointer" as a standing housekeeping step**, not just for Sabin but for any similar case that accumulates in the meantime.
+
+## How to apply
+When a task in this project is about *what technique/model/approach to use* (design-level, not "what does this function currently do"), check both this wiki and project memory — don't treat either as the default starting point over the other, and don't assume the wiki's theory outweighs a design decision already reasoned through and recorded in project memory. When a task is purely implementation (fixing a bug, matching an existing API), project memory and the code itself are what's actually authoritative; the wiki simply won't have anything relevant to add.
+
+## Transfer procedure: session research → wiki (defined 2026-09-08, worked example: the Sabin research)
+No need to open a separate Claude Code session scoped to `Analysis/WIKI_LLM_SIMULATION/` to do this. File tool access (Read/Write/Edit/Bash) is not restricted by the cwd a session was opened with — only this project's *auto-memory* is path-scoped, and the wiki doesn't depend on that system at all (its persistence is `wiki/log.md`/`wiki/index.md`, plain files any session can write). So: do the transfer from whatever session is already holding the research context, following `Analysis/WIKI_LLM_SIMULATION/CLAUDE.md`'s own workflow directly.
+
+Before running the standard `ingesta` workflow, sort what a research session produced into three buckets — they're handled differently:
+1. **Primary source(s) fully retrieved** (e.g. a paper read in full, PDF captured) → save into `RAW/`, then run the wiki's normal `ingesta` workflow on it (creates `wiki/sources/...md`, updates/creates `wiki/entities/` and `wiki/concepts/` pages, updates `index.md`/`overview.md`/`log.md`).
+2. **Secondary/web sources** (search results, pages fetched for summaries only, no full text held) → **decision (user, 2026-09-08): always take the full-snapshot route, not the light-citation route.** Snapshot the fetched page content into `RAW/web/` (as markdown, one file per page) *before* running `ingesta` on them, then treat them through the normal RAW → ingestion pipeline like any other source. Do not settle for a bare URL citation in an entity/concept page's "Fonti" field as the default — that's only a fallback for a page that genuinely can't be snapshotted (paywalled, JS-rendered content WebFetch can't retrieve, etc.), not the standard path.
+3. **Already-synthesized analysis** (e.g. a "how does this apply to Warfare-Model" writeup produced during the session) → this is not something to "ingest" from RAW at all; write it directly as a `wiki/analyses/` page per that schema (query, synthetic answer, detailed analysis, sources used, "Conclusioni e Implicazioni per Warfare-Model").
+
+Pending concrete example (deferred to Fase 3 resumption, see [[reference_philip_sabin_simulating_war]]): PDF "Modelling Time in Wargames" (Sabin, 2020) → bucket 1; KCL/Wikipedia/PAXsims/sabinwargames.com pages → bucket 2, full snapshot each into `RAW/web/` per the decision above; the Force/Space/Time/Command → Campaign_State/Air_Resources_Assigner/Route applicability mapping → bucket 3.

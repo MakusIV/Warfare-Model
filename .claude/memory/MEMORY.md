@@ -1,8 +1,12 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Session recap 2026-08-26 — read this first](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work. Natural next step is still Fase 3.
+- [Session recap 2026-09-08 — read this first](project_session_2026_09_08_summary.md) — Sabin/wargaming research saved, memory-vs-wiki boundary + transfer procedure defined, core DCS-vs-synthetic-events campaign architecture recorded. No code changes. Next: design the synthetic-events turn structure.
+- [Session recap 2026-08-26](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work.
 - [Session recap 2026-08-21](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end.
+
+## Campaign temporal model (core architecture, design in progress)
+- [DCS sessions vs. synthetic sessions — read before any turn/time-structure work](project_campaign_temporal_model_dcs_vs_synthetic.md) — event generation splits into real-time DCS game events (small asset subset, HW-limited) + synthetic-generator events (extrapolated to realistic campaign-scale asset count), combined with weights per time unit; turn structure for the synthetic side still undefined — next design topic
 
 ## Project & environment
 - [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory
@@ -19,6 +23,10 @@
 - [Analysis/ Obsidian decision — RESOLVED](project_analysis_symlink_decision.md) — Option C chosen: Obsidian installed natively on ProArt P16 (WSL2); still needs installing on VM/Notebook too
 - [WIKI_LLM_SIMULATION merged into Analysis/](project_wiki_llm_simulation_merge.md) — moved 2026-08-20, fully complete (old GitHub repo deleted, confirmed)
 - [Rinomina_Campaign_State.py — reserved, do not delete](project_rinomina_campaign_state.md) — looks dead but user will reuse/rename it later
+
+## External references
+- [WIKI_LLM_SIMULATION — also consult for conceptual/design questions](reference_wiki_llm_simulation.md) — standing pointer to Analysis/WIKI_LLM_SIMULATION (conceptual simulation-theory wiki), complementary to (not above) project memory; wiki never references this project's memory back
+- [Philip Sabin (KCL) wargame-design theory](reference_philip_sabin_simulating_war.md) — Force/Space/Time/Command framework, Igo-Ugo turn-design rationale; interim copy, slim to a pointer once merged into the wiki at Fase 3
 
 ## Subsystem facts
 - [Aircraft_Data / Aircraft_Loadouts facts](project_aircraft_data_facts.md) — API, scoring quirks, known bugs (BUG BLA3), logger mocking
