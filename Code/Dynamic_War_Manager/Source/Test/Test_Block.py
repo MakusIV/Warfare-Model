@@ -512,39 +512,6 @@ class TestBlock(unittest.TestCase):
         self.assertFalse(self.block.check_instance_list("not a list"))
 
     # -----------------------------------------------------------------------
-    # get_recon_efficiency
-    # -----------------------------------------------------------------------
-    def test_get_recon_efficiency_no_assets(self):
-        """get_recon_efficiency() returns 0.0 when there are no assets."""
-        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.0)
-
-    def test_get_recon_efficiency_no_recon_assets(self):
-        """get_recon_efficiency() returns 0.0 when no asset has category 'Reconnaissance'."""
-        self.mock_asset1.category = "Vehicle"
-        self.block.set_asset("asset1", self.mock_asset1)
-        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.0)
-
-    def test_get_recon_efficiency_with_recon_assets(self):
-        """get_recon_efficiency() returns the mean efficiency of Reconnaissance assets."""
-        self.mock_asset1.category = "Reconnaissance"
-        self.mock_asset1.efficiency = 0.6
-        self.mock_asset2.category = "Reconnaissance"
-        self.mock_asset2.efficiency = 0.4
-        self.block.set_asset("asset1", self.mock_asset1)
-        self.block.set_asset("asset2", self.mock_asset2)
-        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.5)
-
-    def test_get_recon_efficiency_mixed_categories(self):
-        """get_recon_efficiency() averages only Reconnaissance assets, ignoring others."""
-        self.mock_asset1.category = "Reconnaissance"
-        self.mock_asset1.efficiency = 0.8
-        self.mock_asset2.category = "Vehicle"
-        self.mock_asset2.efficiency = 0.2
-        self.block.set_asset("asset1", self.mock_asset1)
-        self.block.set_asset("asset2", self.mock_asset2)
-        self.assertAlmostEqual(self.block.get_recon_efficiency(), 0.8)
-
-    # -----------------------------------------------------------------------
     # get_recognition_report
     # -----------------------------------------------------------------------
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
@@ -595,9 +562,9 @@ class TestBlock(unittest.TestCase):
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=True)
     def test_get_recognition_report_recon_efficiency_in_report(self, _mock_prob):
-        """get_recognition_report() includes recon_efficiency from get_recon_efficiency()."""
+        """get_recognition_report() has recon_efficiency as None since Block has no get_recon_efficiency (only Military does)."""
         report = self.block.get_recognition_report()
-        self.assertAlmostEqual(report['recon_efficiency'], 0.0)
+        self.assertIsNone(report['recon_efficiency'])
 
     @patch('Code.Dynamic_War_Manager.Source.Block.Block.calcProbability', return_value=False)
     def test_get_recognition_report_all_none_when_prob_false(self, _mock_prob):

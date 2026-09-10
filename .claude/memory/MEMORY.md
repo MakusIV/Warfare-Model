@@ -1,6 +1,8 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [Block.get_recon_efficiency removed — 2026-09-10](project_block_get_recon_efficiency_removed.md) — was dead code shadowed by Military's override; Test_Block.py updated; full suite 2311/OK (skipped=5)
+- [Region.py unattributed dead-code removal — OPEN, needs user input](project_region_unattributed_dead_code_removal.md) — uncommitted diff Claude didn't make, found 2026-09-10, excluded from the get_recon_efficiency commit, still unresolved
 - [Session recap 2026-09-08 — read this first](project_session_2026_09_08_summary.md) — Sabin/wargaming research saved, memory-vs-wiki boundary + transfer procedure defined, core DCS-vs-synthetic-events campaign architecture recorded. No code changes. Next: design the synthetic-events turn structure.
 - [Session recap 2026-08-26](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work.
 - [Session recap 2026-08-21](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end.

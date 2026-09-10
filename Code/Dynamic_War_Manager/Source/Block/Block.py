@@ -476,15 +476,6 @@ class Block:
     def is_enemy(self, side: str) -> bool:
         """Check if the given side is the enemy of this block's side."""
         return side == enemySide(self._side)
-    
-    def get_recon_efficiency(self) -> float:
-        """Calculate average efficiency of reconnaissance assets"""
-        # Nota il morale è influenzato dall'efficienza, pertanto devi considerare solo l'efficienza degli asset da ricognizione nel calcolo del report.
-        recon_assets = [asset for asset in self._assets.values() if asset.category == "Reconnaissance"]
-        if not recon_assets:
-            return 0.0
-        efficiencies = [asset.efficiency for asset in recon_assets]
-        return mean(efficiencies) if efficiencies else 0.0
 
     def get_recognition_report(self, region_c2_recon_efficiency: Optional[float] = None) -> Dict[str, Any]: # Nota il cliente per la ricognizione dovrebbe essere la Region che ha visione e competenza sulla strategia
         """Generate reconnaissance report for block
