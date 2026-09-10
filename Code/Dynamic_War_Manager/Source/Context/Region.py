@@ -445,41 +445,6 @@ class Region:
         
         return Point2D(weighted_position_x / total_priority, weighted_position_y / total_priority)
 
-    # old
-    """
-    @lru_cache(maxsize = 128) # Aggiunta cache
-    def calc_combat_power_center(self, side: str): 
-        Calculation of baricenter point of the complessive military block's combat power 
-
-
-        Args:
-            side (str): side of blocks
-            force (str): type of military force (air, ground, sea)
-
-        Returns:
-            Point2D: combat power baricenter
-         
-        if not Utility.check_side(side):
-            raise ValueError(f"Invalid side: {side!r}")               
-        blocks_quantity = {force: {task: 0 for task in ACTION_TASKS[force]} for force in MILITARY_FORCES}
-
-        Militarys = self.get_blocks("Military", side)                                
-        r_CPP, tot_CP, tp = {}, {}, {} # tot_CP: summmatory of strategic block combat power
-        
-        for force in MILITARY_FORCES:
-            for task in ACTION_TASKS[force]:                                    
-                for block in Militarys:
-                    if ( block.is_Air_Base and force == "air" ) or (block.is_Ground_Base and force == "ground") or ( block.is_navalbase and force == "sea" ):
-                        cp = block.combat_power(action = task, military_force = force) # block combat power 
-                        tot_CP[force][task] += cp  # sum of block's combat power 
-                        tp[force][task] += block.position * cp  # sum of ponderate position block's point
-                        blocks_quantity[force][task] += 1 # number of blocks counted
-        
-        for force in MILITARY_FORCES:
-                for task in ACTION_TASKS[force]:                    
-                    r_CPP[force][task] = tp[force][task] / ( blocks_quantity[force][task] * tot_CP[force][task] ) # r_CPP: region strategic combat power center position for side blocks
-        return r_CPP"""
-
     @lru_cache(maxsize=3) # side ha solo tre valori possibili, quindi Caching maxsize=3 è sufficiente per memorizzare i risultati per entrambi i lati
     def calc_combat_power_center(self, side: str) -> Dict[str, Dict[str, Point2D]]:
         """Calculate combat power center for each force and task."""
@@ -779,7 +744,19 @@ class Region:
 
         return recon_reports
 
-       
+
+    def get_meteorological_reports(self, side: str) -> List[Dict]:
+        """Get meteorological reports for all blocks of a side."""
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
+        region_c2_recon_efficiency = self.get_c2_efficiency(side=side)
+        meteorological_reports = []
+
+        # implementare il sistema di elaborazione del meteo (vedi quanto fatto da MBot)
+        pass
+
+        return meteorological_reports
 
     # ************************************  END API *************************************
 
