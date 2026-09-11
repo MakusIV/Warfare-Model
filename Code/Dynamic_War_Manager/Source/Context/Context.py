@@ -102,28 +102,32 @@ la = Logistic_Asset_Type
 
 # Classi dimensionali canoniche condivise da tutte le classificazioni di taglia
 # (VEHICLE_SIZE_CATEGORY, SHIP_SIZE_CATEGORY, STRUCTURE_SIZE_CATEGORY, e la
-# classificazione categoria→dimensione degli aerei in Block.get_recognition_report).
+# classificazione categoria→dimensione degli aerei in Block.get_recognition_report),
+# E dal vocabolario dimensionale delle tabelle di efficacia armi (TARGET_DIMENSION in
+# Aircraft_Weapon_Data.py/Ground_Weapon_Data.py/Ship_Weapon_Data.py, già minuscolo/abbreviato
+# ed era la convenzione più diffusa nel codice): un solo vocabolario per tutta la pipeline
+# recon → priorità → efficacia armi, invece di tre forme incompatibili (unificazione 2026-09).
 # Sono anche le chiavi usate in asset_summary['operative'/'damaged'/'destroyed'][asset_type][dimension]
-# nei recon report (Block.get_recognition_report) e vanno mantenute con questa
-# identica capitalizzazione ovunque, altrimenti i lookup per bucket (asset_type, dimension)
-# falliscono silenziosamente (bug B0, Region/Military combat-power redesign 2026-09).
-DIMENSION_CLASSES = ('Big', 'Medium', 'Small')
+# nei recon report (Block.get_recognition_report) e vanno mantenute identiche ovunque,
+# altrimenti i lookup per bucket (asset_type, dimension) falliscono silenziosamente
+# (bug B0, Region/Military combat-power redesign 2026-09).
+DIMENSION_CLASSES = ('big', 'med', 'small')
 
 VEHICLE_SIZE_CATEGORY = {
     # Veicoli terrestri: lunghezza e peso sono i criteri primari.
     # Nessun veicolo militare standard supera 4m di larghezza/altezza, quindi
     # le soglie width/height sono tarate sui valori reali del dataset.
-    # Controllo in ordine Big → Medium → Small (primo match vince).
+    # Controllo in ordine big → med → small (primo match vince).
     #
-    # Big:    peso ≥ 40t  → MBT moderni (T-90M 48t, Abrams 62t, ...),
-    #                        SAM pesanti (S-300PS 48t), artiglieria pesante (Smerch 44t)
-    # Medium: peso 20–39t → SAM medi (Buk 32t, Tunguska 34t), MBT leggeri (T-55 36t),
-    #                        IFV pesanti (Bradley 28t), artiglieria media (2S3 28t)
-    # Small:  peso  < 20t → APC leggeri (BMP-1 13t, BTR-80 14t),
-    #                        SAM piccoli (Osa 18t, Strela 7t)
-    'Big':    {'length': 8,  'height': 2, 'width': 3, 'weight': 40},
-    'Medium': {'length': 6,  'height': 2, 'width': 2, 'weight': 20},
-    'Small':  {'length': 2,  'height': 1, 'width': 1, 'weight': 1},
+    # big:  peso ≥ 40t  → MBT moderni (T-90M 48t, Abrams 62t, ...),
+    #                      SAM pesanti (S-300PS 48t), artiglieria pesante (Smerch 44t)
+    # med:  peso 20–39t → SAM medi (Buk 32t, Tunguska 34t), MBT leggeri (T-55 36t),
+    #                      IFV pesanti (Bradley 28t), artiglieria media (2S3 28t)
+    # small: peso  < 20t → APC leggeri (BMP-1 13t, BTR-80 14t),
+    #                       SAM piccoli (Osa 18t, Strela 7t)
+    'big':   {'length': 8,  'height': 2, 'width': 3, 'weight': 40},
+    'med':   {'length': 6,  'height': 2, 'width': 2, 'weight': 20},
+    'small': {'length': 2,  'height': 1, 'width': 1, 'weight': 1},
 }
 
 
@@ -131,72 +135,72 @@ SHIP_SIZE_CATEGORY = {
     # Navi: lunghezza e peso sono i criteri primari.
     # Le soglie width/height riflettono i valori reali del dataset
     # (carrier W=75m H=76m; corvetta W=10m H=12m).
-    # Controllo in ordine Big → Medium → Small (primo match vince).
+    # Controllo in ordine big → med → small (primo match vince).
     #
-    # Big:    peso ≥ 24000t  → portaerei (Nimitz 104000t, Kuznetsov 59000t),
-    #                           incrociatori nucleari (Piotr Velikiy 24000t),
-    #                           portaelicotteri (LHA-1 Tarawa 39000t)
-    # Medium: peso ≥  3000t  → cacciatorpediniere (Arleigh Burke 9100t),
-    #                           incrociatori (CG-65 9800t), fregate (FFG-46 4100t),
-    #                           sottomarini (Type-093 6000t), anfibio (Type-071 20000t)
-    # Small:  peso ≥   100t  → corvette (Grisha 950t, Tarantul 455t)
-    'Big':    {'length': 200, 'height': 40, 'width': 28, 'weight': 24000},
-    'Medium': {'length': 90,  'height': 10, 'width': 10, 'weight': 3000},
-    'Small':  {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
+    # big:  peso ≥ 24000t  → portaerei (Nimitz 104000t, Kuznetsov 59000t),
+    #                         incrociatori nucleari (Piotr Velikiy 24000t),
+    #                         portaelicotteri (LHA-1 Tarawa 39000t)
+    # med:  peso ≥  3000t  → cacciatorpediniere (Arleigh Burke 9100t),
+    #                         incrociatori (CG-65 9800t), fregate (FFG-46 4100t),
+    #                         sottomarini (Type-093 6000t), anfibio (Type-071 20000t)
+    # small: peso ≥   100t  → corvette (Grisha 950t, Tarantul 455t)
+    'big':   {'length': 200, 'height': 40, 'width': 28, 'weight': 24000},
+    'med':   {'length': 90,  'height': 10, 'width': 10, 'weight': 3000},
+    'small': {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
 }
 
 STRUCTURE_SIZE_CATEGORY = {
             
             la.BRIDGE.value: {
                 
-                    "Big": {"length": 100, "width": 20, "height": 20, "weight": None},
-                    "Medium": {"length": 50, "width": 10, "height": 10, "weight": None},
-                    "Small": {"length": 20, "width": 5, "height": 5, "weight": None}
+                    "big": {"length": 100, "width": 20, "height": 20, "weight": None},
+                    "med": {"length": 50, "width": 10, "height": 10, "weight": None},
+                    "small": {"length": 20, "width": 5, "height": 5, "weight": None}
             },
             la.HANGAR.value: {
-                    "Big": {"length": 100, "width": 50, "height": 30, "weight": None},
-                    "Medium": {"length": 50, "width": 25, "height": 15, "weight": None},
-                    "Small": {"length": 20, "width": 10, "height": 10, "weight": None}
+                    "big": {"length": 100, "width": 50, "height": 30, "weight": None},
+                    "med": {"length": 50, "width": 25, "height": 15, "weight": None},
+                    "small": {"length": 20, "width": 10, "height": 10, "weight": None}
             },
             la.DEPOT.value: {
-                    "Big": {"length": 80, "width": 40, "height": 20, "weight": None},
-                    "Medium": {"length": 40, "width": 20, "height": 10, "weight": None},
-                    "Small": {"length": 20, "width": 10, "height": 5, "weight": None}
+                    "big": {"length": 80, "width": 40, "height": 20, "weight": None},
+                    "med": {"length": 40, "width": 20, "height": 10, "weight": None},
+                    "small": {"length": 20, "width": 10, "height": 5, "weight": None}
             },
             la.OIL_TANK.value: {
-                    "Big": {"length": 30, "width": 30, "height": 30, "weight": None},
-                    "Medium": {"length": 20, "width": 20, "height": 20, "weight": None},
-                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+                    "big": {"length": 30, "width": 30, "height": 30, "weight": None},
+                    "med": {"length": 20, "width": 20, "height": 20, "weight": None},
+                    "small": {"length": 10, "width": 10, "height": 10, "weight": None}
             },
             la.FARM.value: {
-                    "Big": {"length": 200, "width": 200, "height": 10, "weight": None},
-                    "Medium": {"length": 100, "width": 100, "height": 10, "weight": None},
-                    "Small": {"length": 50, "width": 50, "height": 10, "weight": None}
+                    "big": {"length": 200, "width": 200, "height": 10, "weight": None},
+                    "med": {"length": 100, "width": 100, "height": 10, "weight": None},
+                    "small": {"length": 50, "width": 50, "height": 10, "weight": None}
             },
             la.POWER_PLANT.value: {
-                    "Big": {"length": 100, "width": 100, "height": 50, "weight": None},
-                    "Medium": {"length": 50, "width": 50, "height": 25, "weight": None},
-                    "Small": {"length": 20, "width": 20, "height": 10, "weight": None}
+                    "big": {"length": 100, "width": 100, "height": 50, "weight": None},
+                    "med": {"length": 50, "width": 50, "height": 25, "weight": None},
+                    "small": {"length": 20, "width": 20, "height": 10, "weight": None}
             },
             la.STATION.value: {
-                    "Big": {"length": 150, "width": 100, "height": 50, "weight": None},
-                    "Medium": {"length": 75, "width": 50, "height": 25, "weight": None},
-                    "Small": {"length": 30, "width": 20, "height": 10, "weight": None}
+                    "big": {"length": 150, "width": 100, "height": 50, "weight": None},
+                    "med": {"length": 75, "width": 50, "height": 25, "weight": None},
+                    "small": {"length": 30, "width": 20, "height": 10, "weight": None}
             },
             la.BUILDING.value: {
-                    "Big": {"length": 50, "width": 50, "height": 50, "weight": None},
-                    "Medium": {"length": 25, "width": 25, "height": 25, "weight": None},
-                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+                    "big": {"length": 50, "width": 50, "height": 50, "weight": None},
+                    "med": {"length": 25, "width": 25, "height": 25, "weight": None},
+                    "small": {"length": 10, "width": 10, "height": 10, "weight": None}
             },
             la.FACTORY.value: {
-                    "Big": {"length": 100, "width": 100, "height": 50, "weight": None},
-                    "Medium": {"length": 50, "width": 50, "height": 25, "weight": None},
-                    "Small": {"length": 20, "width": 20, "height": 10, "weight": None}
+                    "big": {"length": 100, "width": 100, "height": 50, "weight": None},
+                    "med": {"length": 50, "width": 50, "height": 25, "weight": None},
+                    "small": {"length": 20, "width": 20, "height": 10, "weight": None}
             },
             la.BARRACK.value: {
-                    "Big": {"length": 50, "width": 50, "height": 30, "weight": None},
-                    "Medium": {"length": 25, "width": 25, "height": 15, "weight": None},
-                    "Small": {"length": 10, "width": 10, "height": 10, "weight": None}
+                    "big": {"length": 50, "width": 50, "height": 30, "weight": None},
+                    "med": {"length": 25, "width": 25, "height": 15, "weight": None},
+                    "small": {"length": 10, "width": 10, "height": 10, "weight": None}
             },
         }
 
@@ -204,9 +208,9 @@ STRUCTURE_SIZE_CATEGORY = {
 def get_dimension(asset_type: str, length: float, width: float, height: float, weight: float, structure_type: Optional[str] = None) -> str:
     """
     Categorizza un asset in base alle sue dimensioni fisiche in una delle classi
-    definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (Big, Medium, Small).
+    definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (big, med, small).
 
-    La funzione scorre le categorie nell'ordine Big → Medium → Small e restituisce
+    La funzione scorre le categorie nell'ordine big → med → small e restituisce
     la prima categoria per cui sia la condizione dimensionale sia quella di peso
     risultano soddisfatte:
         (length >= min_length  OR  (width >= min_width AND height >= min_height))  AND  weight >= min_weight
@@ -219,7 +223,7 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         weight:     peso in tonnellate
 
     Returns:
-        str: 'Big', 'Medium', 'Small' oppure 'Unknown' se nessuna categoria corrisponde.
+        str: 'big', 'med', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
     """
     
     if asset_type not in ['Vehicle', 'Ship', 'Structure']:
@@ -890,60 +894,60 @@ WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
     'area_effect': {
 
         (tc.SOFT.value, tc.ARMORED.value, tc.AIR_DEFENSE.value): {
-            'Big': {
+            'big': {
                 (1,2):    wae.PRECISION.value,
                 (3,6):    wae.LOCALIZED.value,
                 (7,None): wae.WIDE.value,
             },
-            'Med': {
+            'med': {
                 (1,4):    wae.PRECISION.value,  # i med normalmente sono raggruppati in aree più piccole, quindi minore è il numero maggiore è la precisione richiesta
                 (5,8):    wae.LOCALIZED.value,
                 (9,None): wae.WIDE.value,
             },
-            'Small': {
+            'small': {
                 (1,1):    wae.PRECISION.value,
                 (2,7):    wae.LOCALIZED.value,
                 (8,None): wae.WIDE.value,
             },
         },
         (tc.HARD.value,): {
-            'Big': {
+            'big': {
                 (1,4):     wae.PRECISION.value,
                 (5,9):     wae.LOCALIZED.value,
                 (10,None): wae.WIDE.value,
             },
-            'Med': {
+            'med': {
                 (1,3):    wae.PRECISION.value,
                 (4,7):    wae.LOCALIZED.value,
                 (8,None): wae.WIDE.value,
             },
-            'Small': {
+            'small': {
                 (1,2):    wae.PRECISION.value,
                 (3,6):    wae.LOCALIZED.value,
                 (7,None): wae.WIDE.value,
             },
         },
         (tc.STRUCTURE.value, tc.AIRBASE.value, tc.HELIBASE.value, tc.PORT.value, tc.SHIPYARD.value, tc.STRONGHOLD.value, tc.FARP.value, tc.GENERIC.value): {
-            'Big': {
+            'big': {
                 (1,2):    wae.PRECISION.value,
                 (3,4):    wae.LOCALIZED.value,
                 (5,None): wae.WIDE.value,
             },
-            'Med': {
+            'med': {
                 (1,1):    wae.PRECISION.value,
                 (2,5):    wae.LOCALIZED.value,
                 (6,None): wae.WIDE.value,
             },
-            'Small': {
+            'small': {
                 (1,1):    wae.PRECISION.value,
                 (2,7):    wae.LOCALIZED.value,
                 (8,None): wae.WIDE.value,
             },
         },
         (tc.SHIP.value,): {
-            'Big':   {(1,None): wae.PRECISION.value},
-            'Med':   {(1,None): wae.PRECISION.value},
-            'Small': {(1,None): wae.PRECISION.value},
+            'big':   {(1,None): wae.PRECISION.value},
+            'med':   {(1,None): wae.PRECISION.value},
+            'small': {(1,None): wae.PRECISION.value},
         },
 
     },
@@ -951,29 +955,29 @@ WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE = {
     'power_effect': {
 
         (tc.SOFT.value, tc.ARMORED.value, tc.AIR_DEFENSE.value): {
-            'Big':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
-            'Med':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
-            'Small': [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
+            'big':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
+            'med':   [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
+            'small': [wpe.BLAST.value, wpe.CLUSTER.value, wpe.FRAGMENTATION.value, wpe.THERMOBARIC.value],
         },
         (tc.HARD.value, tc.STRONGHOLD.value): {
-            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
-            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
-            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+            'big':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
+            'med':   [wpe.HIGH_EXPLOSIVE.value, wpe.PENETRATION.value, wpe.KINETIC.value],
+            'small': [wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
         },
         (tc.STRUCTURE.value, tc.GENERIC.value): {
-            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
-            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value],
-            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
+            'big':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+            'med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value],
+            'small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
         },
         (tc.AIRBASE.value, tc.HELIBASE.value, tc.PORT.value, tc.SHIPYARD.value, tc.FARP.value): {
-            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
-            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
-            'Small': [wpe.BLAST.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value],
+            'big':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
+            'med':   [wpe.HIGH_EXPLOSIVE.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value, wpe.BLAST.value],
+            'small': [wpe.BLAST.value, wpe.THERMAL.value, wpe.FRAGMENTATION.value],
         },
         (tc.SHIP.value,): {
-            'Big':   [wpe.HIGH_EXPLOSIVE.value, wpe.KINETIC.value],
-            'Med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
-            'Small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
+            'big':   [wpe.HIGH_EXPLOSIVE.value, wpe.KINETIC.value],
+            'med':   [wpe.HIGH_EXPLOSIVE.value, wpe.BLAST.value, wpe.FRAGMENTATION.value, wpe.KINETIC.value],
+            'small': [wpe.BLAST.value, wpe.FRAGMENTATION.value],
         },
 
     },
@@ -1051,7 +1055,7 @@ def _get_weapon_param_from_target(target_type: str, target_dim: str, target_coun
 
     """ Seleziona e restituisce i weapon params da WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE in relazione agli argomenti:
         target_type  : valore dell'enumerazione Target_Class_Name (stringa .value)
-        target_dim   : categoria dimensionale del target ('Big', 'Med', 'Small')
+        target_dim   : categoria dimensionale del target ('big', 'med', 'small', v. Context.DIMENSION_CLASSES)
         target_count : numero di unità del target, usato per determinare l'area_effect
 
     Returns:
@@ -1060,7 +1064,7 @@ def _get_weapon_param_from_target(target_type: str, target_dim: str, target_coun
     valid_types = {e.value for e in Target_Class_Name}
     if target_type not in valid_types:
         raise ValueError(f"get_weapon_param_from_target: target_type non valido: '{target_type}'. Valori consentiti: {valid_types}")
-    valid_dims = {'Big', 'Med', 'Small'}
+    valid_dims = set(DIMENSION_CLASSES)
     if target_dim not in valid_dims:
         raise ValueError(f"get_weapon_param_from_target: target_dim non valido: '{target_dim}'. Valori consentiti: {valid_dims}")
     if not isinstance(target_count, int) or target_count < 1:
@@ -1093,7 +1097,7 @@ def get_task_from_target(target_type: str, target_dim: str, target_count: int) -
      
     """ Seleziona e restituisce uno dei task previsti nella enumerazione Air_To_Ground in relazione agli argomenti:
         target_type  : valore dell'enumerazione Target_Class_Name (stringa .value)
-        target_dim   : categoria dimensionale del target ('Big', 'Med', 'Small')
+        target_dim   : categoria dimensionale del target ('big', 'med', 'small', v. Context.DIMENSION_CLASSES)
         target_count : numero di unità del target, usato per determinare l'area_effect
 
     Returns:

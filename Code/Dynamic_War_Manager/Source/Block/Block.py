@@ -510,53 +510,53 @@ class Block:
                 "total_assets": len(self.assets) if self.assets and report_item_probability['asset_summary'] else None,
                 "operative": {
                     "Tank": {
-                        "Big": 0,
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,
+                        "med": 0,
+                        "small": 0
                     },
                     "Armored": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                     "Stronghold": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                 },
                 "damaged": { 
                     "Tank": {
-                        "Big": 0,
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,
+                        "med": 0,
+                        "small": 0
                     },
                     "Armored": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                     "Structure": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                 },
                 "destroyed": { 
                     "Air_Defense": {
-                        "Big": 0,
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,
+                        "med": 0,
+                        "small": 0
                     },
                     "Armored": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                     "Structure": {
-                        "Big": 0,       
-                        "Medium": 0,
-                        "Small": 0
+                        "big": 0,       
+                        "med": 0,
+                        "small": 0
                     },
                 },
             },
@@ -634,11 +634,11 @@ class Block:
                     continue
 
                 if asset_category in [aat.FIGHTER.value, aat.HELICOPTER.value, aat.ATTACKER.value]:
-                    asset_dimension = 'Small'
+                    asset_dimension = 'small'
                 elif asset_category in [aat.FIGHTER_BOMBER.value, aat.RECON.value]:
-                    asset_dimension = 'Medium'
+                    asset_dimension = 'med'
                 elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.HEAVY_BOMBER.value]:
-                    asset_dimension = 'Big'
+                    asset_dimension = 'big'
                             
             if asset_dimension is None:            
                 continue

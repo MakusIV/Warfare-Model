@@ -251,7 +251,7 @@ class TestConstants(unittest.TestCase):
 
     def test_vehicle_size_category_levels(self):
         """VEHICLE_SIZE_CATEGORY has the three levels Big/Medium/Small."""
-        self.assertEqual(set(VEHICLE_SIZE_CATEGORY.keys()), {'Big', 'Medium', 'Small'})
+        self.assertEqual(set(VEHICLE_SIZE_CATEGORY.keys()), {'big', 'med', 'small'})
 
     def test_vehicle_size_category_fields(self):
         """Each level of VEHICLE_SIZE_CATEGORY has the 4 required fields."""
@@ -262,19 +262,19 @@ class TestConstants(unittest.TestCase):
     def test_vehicle_size_big_heavier_than_medium(self):
         """Big vehicle weight threshold is strictly greater than Medium."""
         self.assertGreater(
-            VEHICLE_SIZE_CATEGORY['Big']['weight'],
-            VEHICLE_SIZE_CATEGORY['Medium']['weight'],
+            VEHICLE_SIZE_CATEGORY['big']['weight'],
+            VEHICLE_SIZE_CATEGORY['med']['weight'],
         )
 
     def test_ship_size_category_levels(self):
         """SHIP_SIZE_CATEGORY has the three levels Big/Medium/Small."""
-        self.assertEqual(set(SHIP_SIZE_CATEGORY.keys()), {'Big', 'Medium', 'Small'})
+        self.assertEqual(set(SHIP_SIZE_CATEGORY.keys()), {'big', 'med', 'small'})
 
     def test_ship_size_big_heavier_than_medium(self):
         """Big ship weight threshold is strictly greater than Medium."""
         self.assertGreater(
-            SHIP_SIZE_CATEGORY['Big']['weight'],
-            SHIP_SIZE_CATEGORY['Medium']['weight'],
+            SHIP_SIZE_CATEGORY['big']['weight'],
+            SHIP_SIZE_CATEGORY['med']['weight'],
         )
 
     def test_structure_size_category_contains_expected_types(self):
@@ -287,13 +287,13 @@ class TestConstants(unittest.TestCase):
         """Each structure type has exactly the Big/Medium/Small sub-keys."""
         for stype, levels in STRUCTURE_SIZE_CATEGORY.items():
             with self.subTest(structure_type=stype):
-                self.assertEqual(set(levels.keys()), {'Big', 'Medium', 'Small'})
+                self.assertEqual(set(levels.keys()), {'big', 'med', 'small'})
 
     def test_structure_size_thresholds_ordered(self):
         """For Bridge, Big.length > Medium.length > Small.length."""
         bridge = STRUCTURE_SIZE_CATEGORY['Bridge']
-        self.assertGreater(bridge['Big']['length'], bridge['Medium']['length'])
-        self.assertGreater(bridge['Medium']['length'], bridge['Small']['length'])
+        self.assertGreater(bridge['big']['length'], bridge['med']['length'])
+        self.assertGreater(bridge['med']['length'], bridge['small']['length'])
 
     # ---- PRODUCTION_WEIGHT ------------------------------------------------
 
@@ -444,40 +444,40 @@ class TestGetDimensionVehicle(unittest.TestCase):
     """Unit tests for get_dimension() with asset_type='Vehicle'."""
 
     def test_big_vehicle_typical_tank(self):
-        """Tank-class vehicle (62t, 9.8m) is classified as 'Big'."""
+        """Tank-class vehicle (62t, 9.8m) is classified as 'big'."""
         result = get_dimension('Vehicle', length=9.8, width=3.7, height=2.4, weight=62)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_big_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the big threshold (8m, 40t) is 'Big'."""
+        """Vehicle exactly at the big threshold (8m, 40t) is 'big'."""
         result = get_dimension('Vehicle', length=8.0, width=3.0, height=2.0, weight=40)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_big_vehicle_via_width_height(self):
-        """Vehicle qualifies as 'Big' via width+height match even with shorter length."""
+        """Vehicle qualifies as 'big' via width+height match even with shorter length."""
         # length < 8 but width >= 3 AND height >= 2 AND weight >= 40
         result = get_dimension('Vehicle', length=7, width=3.5, height=2.5, weight=45)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_medium_vehicle_typical_ifv(self):
-        """IFV-class vehicle (28t, 7m) is classified as 'Medium'."""
+        """IFV-class vehicle (28t, 7m) is classified as 'med'."""
         result = get_dimension('Vehicle', length=7.0, width=2.5, height=2.5, weight=30)
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_medium_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the medium threshold (6m, 20t) is 'Medium'."""
+        """Vehicle exactly at the medium threshold (6m, 20t) is 'med'."""
         result = get_dimension('Vehicle', length=6.0, width=2.0, height=2.0, weight=20)
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_small_vehicle_typical_apc(self):
-        """APC-class vehicle (14t, 4m) is classified as 'Small'."""
+        """APC-class vehicle (14t, 4m) is classified as 'small'."""
         result = get_dimension('Vehicle', length=4.0, width=1.8, height=1.8, weight=14)
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_small_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the small threshold (2m, 1t) is 'Small'."""
+        """Vehicle exactly at the small threshold (2m, 1t) is 'small'."""
         result = get_dimension('Vehicle', length=2.0, width=1.0, height=1.0, weight=1)
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_unknown_vehicle_tiny_dimensions(self):
         """Vehicle below all thresholds returns 'Unknown'."""
@@ -485,15 +485,15 @@ class TestGetDimensionVehicle(unittest.TestCase):
         self.assertEqual(result, 'Unknown')
 
     def test_below_big_weight_falls_to_medium(self):
-        """Vehicle with big-length but insufficient weight falls to 'Medium'."""
+        """Vehicle with big-length but insufficient weight falls to 'med'."""
         # length=9 satisfies big size, but weight=30 < 40 → big fails; medium matches
         result = get_dimension('Vehicle', length=9, width=2.5, height=2.5, weight=30)
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_below_medium_weight_falls_to_small(self):
-        """Vehicle with medium-length but insufficient weight falls to 'Small'."""
+        """Vehicle with medium-length but insufficient weight falls to 'small'."""
         result = get_dimension('Vehicle', length=7, width=2.5, height=2.5, weight=5)
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
 
 # ---------------------------------------------------------------------------
@@ -504,29 +504,29 @@ class TestGetDimensionShip(unittest.TestCase):
     """Unit tests for get_dimension() with asset_type='Ship'."""
 
     def test_big_ship_carrier_class(self):
-        """Carrier-class ship (103kt, 333m) is classified as 'Big'."""
+        """Carrier-class ship (103kt, 333m) is classified as 'big'."""
         result = get_dimension('Ship', length=333, width=76, height=65, weight=103000)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_big_ship_exactly_at_threshold(self):
-        """Ship exactly at the big threshold (200m, 24000t) is 'Big'."""
+        """Ship exactly at the big threshold (200m, 24000t) is 'big'."""
         result = get_dimension('Ship', length=200, width=28, height=40, weight=24000)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_medium_ship_destroyer_class(self):
-        """Destroyer-class ship (9100t, 155m) is classified as 'Medium'."""
+        """Destroyer-class ship (9100t, 155m) is classified as 'med'."""
         result = get_dimension('Ship', length=155, width=20, height=20, weight=9100)
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_medium_ship_exactly_at_threshold(self):
-        """Ship exactly at the medium threshold (90m, 3000t) is 'Medium'."""
+        """Ship exactly at the medium threshold (90m, 3000t) is 'med'."""
         result = get_dimension('Ship', length=90, width=10, height=10, weight=3000)
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_small_ship_corvette_class(self):
-        """Corvette-class ship (950t, 71m) is classified as 'Small'."""
+        """Corvette-class ship (950t, 71m) is classified as 'small'."""
         result = get_dimension('Ship', length=71, width=10, height=12, weight=950)
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_unknown_ship_tiny_dimensions(self):
         """Boat below all ship thresholds returns 'Unknown'."""
@@ -534,9 +534,9 @@ class TestGetDimensionShip(unittest.TestCase):
         self.assertEqual(result, 'Unknown')
 
     def test_big_ship_via_width_height(self):
-        """Ship with width>=28 and height>=40 qualifies as 'Big' regardless of length."""
+        """Ship with width>=28 and height>=40 qualifies as 'big' regardless of length."""
         result = get_dimension('Ship', length=150, width=30, height=45, weight=25000)
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
 
 # ---------------------------------------------------------------------------
@@ -547,34 +547,34 @@ class TestGetDimensionStructure(unittest.TestCase):
     """Unit tests for get_dimension() with asset_type='Structure'."""
 
     def test_bridge_big(self):
-        """Bridge with length>=100 is 'Big'."""
+        """Bridge with length>=100 is 'big'."""
         result = get_dimension('Structure', length=120, width=25, height=25, weight=0,
                                structure_type='Bridge')
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_bridge_big_exactly_at_threshold(self):
-        """Bridge exactly at Big threshold (100m, 20m, 20m) is 'Big'."""
+        """Bridge exactly at Big threshold (100m, 20m, 20m) is 'big'."""
         result = get_dimension('Structure', length=100, width=20, height=20, weight=0,
                                structure_type='Bridge')
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_bridge_medium(self):
-        """Bridge with 50<=length<100 is 'Medium'."""
+        """Bridge with 50<=length<100 is 'med'."""
         result = get_dimension('Structure', length=70, width=12, height=12, weight=0,
                                structure_type='Bridge')
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_bridge_medium_exactly_at_threshold(self):
-        """Bridge exactly at Medium threshold (50m) is 'Medium'."""
+        """Bridge exactly at Medium threshold (50m) is 'med'."""
         result = get_dimension('Structure', length=50, width=10, height=10, weight=0,
                                structure_type='Bridge')
-        self.assertEqual(result, 'Medium')
+        self.assertEqual(result, 'med')
 
     def test_bridge_small(self):
-        """Bridge with 20<=length<50 is 'Small'."""
+        """Bridge with 20<=length<50 is 'small'."""
         result = get_dimension('Structure', length=30, width=6, height=6, weight=0,
                                structure_type='Bridge')
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_bridge_unknown(self):
         """Bridge below all thresholds returns 'Unknown'."""
@@ -591,34 +591,34 @@ class TestGetDimensionStructure(unittest.TestCase):
         self.assertEqual(r1, r2)
 
     def test_hangar_big(self):
-        """Hangar with length>=100 is 'Big'."""
+        """Hangar with length>=100 is 'big'."""
         result = get_dimension('Structure', length=110, width=60, height=35, weight=0,
                                structure_type='Hangar')
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_hangar_small(self):
-        """Hangar with length>=20 (but <50) is 'Small'."""
+        """Hangar with length>=20 (but <50) is 'small'."""
         result = get_dimension('Structure', length=25, width=12, height=12, weight=0,
                                structure_type='Hangar')
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_farm_big(self):
-        """Farm with length>=200 is 'Big'."""
+        """Farm with length>=200 is 'big'."""
         result = get_dimension('Structure', length=200, width=200, height=10, weight=0,
                                structure_type='Farm')
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
     def test_oil_tank_small(self):
-        """Oil_Tank with length>=10 is 'Small'."""
+        """Oil_Tank with length>=10 is 'small'."""
         result = get_dimension('Structure', length=12, width=12, height=12, weight=0,
                                structure_type='Oil_Tank')
-        self.assertEqual(result, 'Small')
+        self.assertEqual(result, 'small')
 
     def test_oil_tank_big(self):
-        """Oil_Tank with length>=30 is 'Big'."""
+        """Oil_Tank with length>=30 is 'big'."""
         result = get_dimension('Structure', length=35, width=35, height=35, weight=0,
                                structure_type='Oil_Tank')
-        self.assertEqual(result, 'Big')
+        self.assertEqual(result, 'big')
 
 
 # ---------------------------------------------------------------------------
@@ -801,79 +801,79 @@ class TestGetWeaponParamFromTarget(unittest.TestCase):
 
     def test_soft_big_count_1_area_precision(self):
         """Soft / Big / 1 unit → area_effect=Precision."""
-        wp = _get_weapon_param_from_target('Soft', 'Big', 1)
+        wp = _get_weapon_param_from_target('Soft', 'big', 1)
         self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_soft_big_count_2_area_precision(self):
         """Soft / Big / 2 units → still Precision (range 1-2)."""
-        wp = _get_weapon_param_from_target('Soft', 'Big', 2)
+        wp = _get_weapon_param_from_target('Soft', 'big', 2)
         self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_soft_big_count_3_area_localized(self):
         """Soft / Big / 3 units → area_effect=Localized."""
-        wp = _get_weapon_param_from_target('Soft', 'Big', 3)
+        wp = _get_weapon_param_from_target('Soft', 'big', 3)
         self.assertEqual(wp['area_effect'], 'Localized')
 
     def test_soft_big_count_7_area_wide(self):
         """Soft / Big / 7 units → area_effect=Wide."""
-        wp = _get_weapon_param_from_target('Soft', 'Big', 7)
+        wp = _get_weapon_param_from_target('Soft', 'big', 7)
         self.assertEqual(wp['area_effect'], 'Wide')
 
     def test_soft_big_power_effect(self):
         """Soft / Big → power_effect includes Blast, Cluster, Fragmentation, Thermobaric."""
-        wp = _get_weapon_param_from_target('Soft', 'Big', 1)
+        wp = _get_weapon_param_from_target('Soft', 'big', 1)
         expected = {'Blast', 'Cluster', 'Fragmentation', 'Thermobaric'}
         self.assertEqual(set(wp['power_effect']), expected)
 
     # ---- Soft target (Med) -----------------------------------------------
 
     def test_soft_med_count_1_area_precision(self):
-        """Soft / Med / 1 unit → Precision (range 1-4 for Med)."""
-        wp = _get_weapon_param_from_target('Soft', 'Med', 1)
+        """Soft / med / 1 unit → Precision (range 1-4 for med)."""
+        wp = _get_weapon_param_from_target('Soft', 'med', 1)
         self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_soft_med_count_5_area_localized(self):
-        """Soft / Med / 5 units → Localized (range 5-8 for Med)."""
-        wp = _get_weapon_param_from_target('Soft', 'Med', 5)
+        """Soft / med / 5 units → Localized (range 5-8 for med)."""
+        wp = _get_weapon_param_from_target('Soft', 'med', 5)
         self.assertEqual(wp['area_effect'], 'Localized')
 
     def test_soft_med_count_9_area_wide(self):
-        """Soft / Med / 9 units → Wide (range 9+ for Med)."""
-        wp = _get_weapon_param_from_target('Soft', 'Med', 9)
+        """Soft / med / 9 units → Wide (range 9+ for med)."""
+        wp = _get_weapon_param_from_target('Soft', 'med', 9)
         self.assertEqual(wp['area_effect'], 'Wide')
 
     # ---- Soft target (Small) ---------------------------------------------
 
     def test_soft_small_count_1_area_precision(self):
         """Soft / Small / 1 unit → Precision (range 1-1)."""
-        wp = _get_weapon_param_from_target('Soft', 'Small', 1)
+        wp = _get_weapon_param_from_target('Soft', 'small', 1)
         self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_soft_small_count_2_area_localized(self):
         """Soft / Small / 2 units → Localized (range 2-7)."""
-        wp = _get_weapon_param_from_target('Soft', 'Small', 2)
+        wp = _get_weapon_param_from_target('Soft', 'small', 2)
         self.assertEqual(wp['area_effect'], 'Localized')
 
     # ---- Hard target -----------------------------------------------------
 
     def test_hard_big_count_1_area_precision(self):
         """Hard / Big / 1 unit → Precision (range 1-4)."""
-        wp = _get_weapon_param_from_target('Hard', 'Big', 1)
+        wp = _get_weapon_param_from_target('Hard', 'big', 1)
         self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_hard_big_count_5_area_localized(self):
         """Hard / Big / 5 units → Localized (range 5-9)."""
-        wp = _get_weapon_param_from_target('Hard', 'Big', 5)
+        wp = _get_weapon_param_from_target('Hard', 'big', 5)
         self.assertEqual(wp['area_effect'], 'Localized')
 
     def test_hard_big_count_10_area_wide(self):
         """Hard / Big / 10 units → Wide (range 10+)."""
-        wp = _get_weapon_param_from_target('Hard', 'Big', 10)
+        wp = _get_weapon_param_from_target('Hard', 'big', 10)
         self.assertEqual(wp['area_effect'], 'Wide')
 
     def test_hard_big_power_effect(self):
         """Hard / Big → power_effect includes High_Explosive, Penetration, Kinetic."""
-        wp = _get_weapon_param_from_target('Hard', 'Big', 1)
+        wp = _get_weapon_param_from_target('Hard', 'big', 1)
         expected = {'High_Explosive', 'Penetration', 'Kinetic'}
         self.assertEqual(set(wp['power_effect']), expected)
 
@@ -883,12 +883,12 @@ class TestGetWeaponParamFromTarget(unittest.TestCase):
         """Ship / Big → always Precision regardless of count."""
         for count in (1, 5, 100):
             with self.subTest(count=count):
-                wp = _get_weapon_param_from_target('ship', 'Big', count)
+                wp = _get_weapon_param_from_target('ship', 'big', count)
                 self.assertEqual(wp['area_effect'], 'Precision')
 
     def test_ship_big_power_effect(self):
         """Ship / Big → power_effect includes High_Explosive and Kinetic."""
-        wp = _get_weapon_param_from_target('ship', 'Big', 1)
+        wp = _get_weapon_param_from_target('ship', 'big', 1)
         self.assertIn('High_Explosive', wp['power_effect'])
         self.assertIn('Kinetic', wp['power_effect'])
 
@@ -897,7 +897,7 @@ class TestGetWeaponParamFromTarget(unittest.TestCase):
     def test_invalid_target_type_raises_value_error(self):
         """Unknown target_type raises ValueError."""
         with self.assertRaises(ValueError):
-            _get_weapon_param_from_target('InvalidType', 'Big', 1)
+            _get_weapon_param_from_target('InvalidType', 'big', 1)
 
     def test_invalid_target_dim_raises_value_error(self):
         """Unknown target_dim raises ValueError."""
@@ -907,17 +907,17 @@ class TestGetWeaponParamFromTarget(unittest.TestCase):
     def test_target_count_zero_raises_value_error(self):
         """target_count=0 raises ValueError (must be >= 1)."""
         with self.assertRaises(ValueError):
-            _get_weapon_param_from_target('Soft', 'Big', 0)
+            _get_weapon_param_from_target('Soft', 'big', 0)
 
     def test_target_count_negative_raises_value_error(self):
         """Negative target_count raises ValueError."""
         with self.assertRaises(ValueError):
-            _get_weapon_param_from_target('Soft', 'Big', -3)
+            _get_weapon_param_from_target('Soft', 'big', -3)
 
     def test_target_count_non_int_raises_value_error(self):
         """Float target_count raises ValueError."""
         with self.assertRaises(ValueError):
-            _get_weapon_param_from_target('Soft', 'Big', 1.5)
+            _get_weapon_param_from_target('Soft', 'big', 1.5)
 
 
 # ---------------------------------------------------------------------------
@@ -929,48 +929,48 @@ class TestGetTaskFromTarget(unittest.TestCase):
 
     def test_hard_big_single_gives_pinpoint_strike(self):
         """Hard / Big / 1 unit → Pinpoint_Strike (Precision + HE/Penetration/Kinetic)."""
-        result = get_task_from_target('Hard', 'Big', 1)
+        result = get_task_from_target('Hard', 'big', 1)
         self.assertEqual(result, 'Pinpoint_Strike')
 
     def test_soft_big_single_gives_strike(self):
         """Soft / Big / 1 unit → Strike (Precision + Blast/Cluster/Frag/Thermobaric)."""
-        result = get_task_from_target('Soft', 'Big', 1)
+        result = get_task_from_target('Soft', 'big', 1)
         self.assertEqual(result, 'Strike')
 
     def test_soft_big_many_units_gives_strike(self):
         """Soft / Big / 7 units → Strike (Wide + Blast/...)."""
-        result = get_task_from_target('Soft', 'Big', 7)
+        result = get_task_from_target('Soft', 'big', 7)
         self.assertEqual(result, 'Strike')
 
     def test_armored_big_single_gives_strike(self):
         """Armored / Big / 1 unit → Strike (same power group as Soft)."""
-        result = get_task_from_target('Armored', 'Big', 1)
+        result = get_task_from_target('Armored', 'big', 1)
         self.assertEqual(result, 'Strike')
 
     def test_ship_big_single_gives_pinpoint_strike(self):
         """Ship / Big / 1 unit → Pinpoint_Strike (Precision + HE/Kinetic)."""
-        result = get_task_from_target('ship', 'Big', 1)
+        result = get_task_from_target('ship', 'big', 1)
         self.assertEqual(result, 'Pinpoint_Strike')
 
     def test_structure_big_single_gives_pinpoint_strike(self):
         """Structure / Big / 1 unit → Pinpoint_Strike (Precision + HE/Blast/Frag/Kinetic)."""
-        result = get_task_from_target('Structure', 'Big', 1)
+        result = get_task_from_target('Structure', 'big', 1)
         self.assertEqual(result, 'Pinpoint_Strike')
 
     def test_airbase_big_single_gives_pinpoint_strike(self):
         """Airbase / Big / 1 unit → Pinpoint_Strike (Precision + HE/Thermal/Frag/Blast)."""
-        result = get_task_from_target('Airbase', 'Big', 1)
+        result = get_task_from_target('Airbase', 'big', 1)
         self.assertEqual(result, 'Pinpoint_Strike')
 
     def test_stronghold_big_single_gives_pinpoint_strike(self):
         """Stronghold / Big / 1 unit → Pinpoint_Strike (Precision + HE/Penetration/Kinetic)."""
-        result = get_task_from_target('Stronghold', 'Big', 1)
+        result = get_task_from_target('Stronghold', 'big', 1)
         self.assertEqual(result, 'Pinpoint_Strike')
 
     def test_invalid_target_type_propagates_value_error(self):
         """Invalid target_type propagates ValueError from the inner helper."""
         with self.assertRaises(ValueError):
-            get_task_from_target('InvalidType', 'Big', 1)
+            get_task_from_target('InvalidType', 'big', 1)
 
     def test_invalid_target_dim_propagates_value_error(self):
         """Invalid target_dim propagates ValueError."""
@@ -980,17 +980,17 @@ class TestGetTaskFromTarget(unittest.TestCase):
     def test_zero_count_propagates_value_error(self):
         """target_count=0 propagates ValueError."""
         with self.assertRaises(ValueError):
-            get_task_from_target('Soft', 'Big', 0)
+            get_task_from_target('Soft', 'big', 0)
 
     def test_result_is_valid_air_to_ground_task(self):
         """get_task_from_target always returns an Air_To_Ground_Task value (or None)."""
         valid_tasks = {m.value for m in Air_To_Ground_Task} | {None}
         test_cases = [
-            ('Soft', 'Big', 1),
-            ('Hard', 'Big', 1),
-            ('ship', 'Big', 1),
-            ('Structure', 'Med', 3),
-            ('Armored', 'Small', 8),
+            ('Soft', 'big', 1),
+            ('Hard', 'big', 1),
+            ('ship', 'big', 1),
+            ('Structure', 'med', 3),
+            ('Armored', 'small', 8),
         ]
         for tt, td, tc in test_cases:
             with self.subTest(target_type=tt, target_dim=td, target_count=tc):
