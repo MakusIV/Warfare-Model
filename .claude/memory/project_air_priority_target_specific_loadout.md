@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-11T17:30:51.727Z
+  modified: 2026-09-11T18:05:11.612Z
 ---
 
 # Target-specific air combat priority via best-available-loadout — design proposal
@@ -28,8 +28,8 @@ Both fixed and committed before this design work; full suite 2332/OK/5 skipped.
 
 - **`_calc_air_priority` has no notion of "task" at all** — confirmed, it's a structural gap shared with the still-open `feedback_combat_power_action_selection` question, but independent of it (that one is about `Military.combat_power(force, action)`; this is about `combat_score_target_effectiveness`, a different call). Recommendation: don't introduce a task parameter — maximize over all tasks with available loadouts (see design below), leave task selection to mission assignment.
 - **"Available loadouts" is NOT a new concept — it already exists, unused**: `Logic/Air_Resources_Assigner.py` has `_loadout_availability`, `get_loadouts_availability`, `_reduction_weapons_availability`, `_increase_weapons_availability`, all operating on a `{weapon_type: {weapon_name: qty}}` structure — but **grepping the whole non-test source finds no producer of that structure and no caller of these functions**. The stock/inventory side needs to be *connected*, not invented. `Payload` (goods/energy/hr/hc/hs/hb) has no munitions concept; `Block.supply` doesn't exist as real code (only in a docstring example) — the live attribute is `warehouse`.
-- **Three incompatible dimension vocabularies, not two** (B0 in Fase 0 fixed only the first pair): recon/asset dimension is `Big/Medium/Small` (`Context.DIMENSION_CLASSES`); weapon-param assignment uses `Big/Med/Small`; weapon *efficiency* tables (`Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Weapon_Data`) use lowercase `big/med/small`. `get_weapon_score_target` silently returns 0.0 on an unrecognized dimension — no error. Needs an explicit adapter, not another ad-hoc normalization.
-- **Weapon efficiency tables only cover 7 target classes** (Soft, Armored, Hard, Structure, Air_Defense, ship, Aircraft) — everything else (Airbase, Port, Road, Railway, Farp, ...) needs a collapse/fallback map, they're not just a capitalization fix away from working.
+- ~~Three incompatible dimension vocabularies~~ — **UNIFIED, commit `6ab1e6dc` (2026-09-11)**: everything now uses the lowercase-abbreviated `big/med/small` (`Context.DIMENSION_CLASSES`, matching what was already the dominant convention across 7 files in the weapon-efficacy subsystem). `_get_weapon_param_from_target` now validates `target_dim` against `DIMENSION_CLASSES` directly instead of a separate hardcoded set, so the two can't drift apart again. Fixed a live bug found while verifying feasibility: `Air_Resources_Assigner._create_ground_mission_task_table` documented and used lowercase `target_data` but fed it into `get_task_from_target`, which validated against the old capitalized set → `ValueError` on every real call. `to_weapon_target_keys`/`WEAPON_DIMENSION_MAP` etc. from the design below are no longer needed for the *dimension* half of the adapter — only the target-*class* collapse (next point) is still needed.
+- **Weapon efficiency tables cover 12 target classes, not 7** (corrected by direct enumeration of the real dicts, the original "7" estimate was wrong): `Soft, Armored, Hard, Structure, Air_Defense, Airbase, Port, Shipyard, Farp, Stronghold, ship, Aircraft`. Coverage varies per weapon (e.g. only Aircraft_Weapon_Data's weapons cover `Aircraft`). Still missing entirely (14 classes, `.get()` always → 0.0): `Administrative, Airport, Civilian, Electric, Factory, Farm, Fuel_Line, Generic, Helibase, Heliport, Power_Plant, Railway, Road, Service` — almost all the "Logistic Asset Category" half of `Target_Class_Name`. A collapse/fallback map (`WEAPON_TARGET_CLASS_MAP` in the design below) is still needed for these.
 - `combat_score_target_effectiveness` doesn't propagate `route_length`/`route_speed` (always defaults `0.0`/`1.0`) — the range gate is effectively disabled; distance only enters via `time_to_intercept` elsewhere in the pipeline. Flagged as a follow-up, not blocking.
 - Existing precedent to align with: `Air_Resources_Assigner.py:898` already calls `combat_score_target_effectiveness(task, loadout_name, target_types, target_dims)` with **lists**, not the weighted-distribution variant (`loadout_target_effectiveness_by_distribuition`, which loses radar/TVD/avionics/speed scoring because it bypasses `combat_score_eval`). Recommendation: follow that precedent (lists), but only include target (class, dimension) pairs covering most of the target's actual composition — `get_weapon_score_target` *averages* across all listed combos including absent ones, so a long tail dilutes the score.
 
@@ -37,7 +37,9 @@ Both fixed and committed before this design work; full suite 2332/OK/5 skipped.
 
 **1. Target profile derivation** (`Context/Region.py`) — two producers, one format, so Fase 2's `EnemyTargetSnapshot` can swap the producer later without touching consumers:
 ```python
-TargetProfile = Dict[str, Dict[str, int]]   # {classification: {'Big'|'Medium'|'Small': count}}
+TargetProfile = Dict[str, Dict[str, int]]   # {classification: {'big'|'med'|'small': count}} — dimension
+                                             # vocabulary now unified (commit 6ab1e6dc), no adapter needed
+                                             # for this half anymore.
 
 def _target_profile_from_block(self, target_block: Block) -> TargetProfile:
     """Ground-truth profile from the block's real assets (classify each operative asset with
@@ -51,11 +53,14 @@ def _target_profile_from_report(self, report: Dict) -> Optional[TargetProfile]:
 @staticmethod
 def _profile_to_weapon_lists(profile: TargetProfile, coverage: float = 0.85) -> Tuple[List[str], List[str]]:
     """Converts to the (target_type list, target_dimension list) combat_score_target_effectiveness
-    expects, translated into the WEAPON vocabulary via a new Context.to_weapon_target_keys adapter.
+    expects. Dimension strings pass through unchanged (unified vocabulary); target_type classification
+    strings still need collapsing to the 12 classes the weapon efficiency tables actually cover, via a
+    new Context.WEAPON_TARGET_CLASS_MAP (see below) — Context.get_target_classification's output
+    (any of the 26 Target_Class_Name values) is not guaranteed to be one of those 12.
     Includes only (class, dimension) pairs covering `coverage` of total count, since
     get_weapon_score_target averages across all listed combos — a long tail dilutes the score."""
 ```
-New `Context.py` adapters needed: `WEAPON_DIMENSION_MAP` (`Big/Medium/Small` → `big/med/small`), `WEAPON_TARGET_CLASS_MAP` (collapses the 20 `Target_Class_Name` values down to the 7 the weapon efficiency tables actually cover), `to_weapon_target_keys(classification, dimension) -> Tuple[str,str]` (raises `ValueError` on anything out of vocabulary instead of the current silent-0.0 behavior).
+New `Context.py` adapter still needed: `WEAPON_TARGET_CLASS_MAP` (collapses `Target_Class_Name`'s ~26 values down to the 12 the weapon efficiency tables actually cover — `Soft, Armored, Hard, Structure, Air_Defense, Airbase, Port, Shipyard, Farp, Stronghold, ship, Aircraft` — with a sane fallback, e.g. `Structure`, for the 14 uncovered Logistic classes). No dimension adapter needed anymore (unified). Also consider making `get_weapon_score_target` raise on an out-of-vocabulary *class* instead of silently returning 0.0, matching what `to_weapon_target_keys` would have done — same rationale, smaller surface now that only the class side remains.
 
 **2. Best loadout against a target** (`Asset/Aircraft_Data.py`, next to `combat_aggregate`):
 ```python
@@ -126,7 +131,7 @@ def _operative_aircraft_by_model(self, block: Military) -> Dict[str, List]:
 
 1. ~~Fix `Military.get_military_category()`~~ — **done**, commit `b38bab1f`.
 2. ~~Fix `Context.TARGET_CLASSIFICATION`~~ — **done**, commit `b38bab1f`.
-3. Add the dimension/target-class adapters (`WEAPON_DIMENSION_MAP`, `WEAPON_TARGET_CLASS_MAP`, `to_weapon_target_keys`) in `Context.py`; make `get_weapon_score_target` raise on out-of-vocabulary input instead of silently returning 0.0.
+3. ~~Dimension vocabulary unification~~ — done, commit `6ab1e6dc`. Remaining: add `WEAPON_TARGET_CLASS_MAP` (target-class collapse, 26 → 12) in `Context.py`; make `get_weapon_score_target` raise on out-of-vocabulary class input instead of silently returning 0.0.
 4. `Region._target_profile_from_block`, `_profile_to_weapon_lists`; alias `get_target_report` as `_target_profile_from_report`. Tests: mixed armor+SAM block, empty block, unclassifiable assets.
 5. `Aircraft_Data.best_loadout_against_target` + `combat_aggregate_against_target`, with `available_loadouts` filtering. Test: a model with both anti-tank and anti-ship loadouts should rank differently against `Armored` vs `ship` targets.
 6. Loadout availability: `Context.LOADOUT_DOCTRINE` + `get_doctrine_loadouts`; `Air_Resources_Assigner.get_available_loadouts`; `Military.weapons_availability` + wrapper. Verify each filter is truly a no-op when its argument is `None`.
