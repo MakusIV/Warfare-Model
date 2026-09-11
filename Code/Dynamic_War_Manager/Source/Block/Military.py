@@ -237,11 +237,11 @@ class Military(Block):
     
         military_category = None
 
-        if self.is_Air_Base:
+        if self.is_Air_Base():
             military_category = "Air_Base"
-        if self.is_Ground_Base:
+        if self.is_Ground_Base():
             military_category = "Ground_Base"
-        if self.is_Naval_Base:
+        if self.is_Naval_Base():
             military_category = "Naval_Base"
 
         return military_category

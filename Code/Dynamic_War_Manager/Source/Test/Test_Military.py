@@ -160,6 +160,14 @@ class TestMilitary(unittest.TestCase):
         self.assertFalse(self.navalbase.is_Air_Base())
         self.assertFalse(self.navalbase.is_Ground_Base())
 
+    def test_get_military_category(self):
+        """get_military_category must match the block's actual mil_category, not always 'Naval_Base'
+        (regression test: is_Air_Base/is_Ground_Base/is_Naval_Base are methods, calling them without
+        parentheses makes every check truthy and the last if-branch always wins)."""
+        self.assertEqual(self.airbase.get_military_category(), "Air_Base")
+        self.assertEqual(self.groundbase.get_military_category(), "Ground_Base")
+        self.assertEqual(self.navalbase.get_military_category(), "Naval_Base")
+
     # ------------------------------------------------------------------ #
     # combat_power                                                        #
     # ------------------------------------------------------------------ #

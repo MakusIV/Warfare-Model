@@ -1412,16 +1412,16 @@ TARGET_CLASSIFICATION = {
                                 Ground_Vehicle_Asset_Type.SAM_BIG.value,
                                 Ground_Vehicle_Asset_Type.AAA.value
                             ],
-    tc.AIRBASE.value:      [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase'].keys()],
-    tc.HELIBASE.value:     [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Helibase'].keys()],
-    tc.PORT.value:         [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Port'].keys()],
-    tc.SHIPYARD.value:     [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard'].keys()],
-    tc.FARP.value:         [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp'].keys()],
-    tc.STRONGHOLD.value:   [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()],
+    tc.AIRBASE.value:      [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase'].keys()],
+    tc.HELIBASE.value:     [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Helibase'].keys()],
+    tc.PORT.value:         [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Port'].keys()],
+    tc.SHIPYARD.value:     [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Shipyard'].keys()],
+    tc.FARP.value:         [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Farp'].keys()],
+    tc.STRONGHOLD.value:   [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()],
     tc.SHIP.value:         [   Parked_Asset_Type.Transport_Ship_Large.value,
                                 Parked_Asset_Type.Transport_Ship_Medium.value,
                                 Parked_Asset_Type.Transport_Ship_Small.value,
-                                SEA_MILITARY_CRAFT_ASSET.keys()                        
+                                *SEA_MILITARY_CRAFT_ASSET.keys()
                             ],
     #'SAM':                 [   Ground_Vehicle_Asset_Type.SAM_MEDIUM.value,
     #                           Ground_Vehicle_Asset_Type.SAM_SMALL.value,
@@ -1440,7 +1440,7 @@ TARGET_CLASSIFICATION = {
                                 Air_Asset_Type.RECON.value,
                                 Air_Asset_Type.TRANSPORT.value
                             ],
-    tc.GENERIC.value:   [   BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()], # solo per gestire eventuali target sconosciuti
+    tc.GENERIC.value:   [   *BLOCK_INFRASTRUCTURE_ASSET['Military']['Stronghold'].keys()], # solo per gestire eventuali target sconosciuti
 }
 
 def get_target_classification(target_type: str) -> str:
@@ -1457,9 +1457,9 @@ def get_target_classification(target_type: str) -> str:
 
         for tg_type_element in tg_type_items_list:
 
-            if isinstance(tg_type_element, list): # per gestire i casi in cui la lista contiene a sua volta una lista (es. Airbase, Helibase, Port, Shipyard, Farp, Stronghold)
-                raise ValueError(f"Invalid structure in TARGET_CLASSIFICATION: nested list found for classification '{tg_classification}'")
-            
+            if not isinstance(tg_type_element, str): # es. una list o dict_keys finita per errore come singolo elemento invece di essere espansa con *
+                raise ValueError(f"Invalid structure in TARGET_CLASSIFICATION: non-string element {tg_type_element!r} found for classification '{tg_classification}'")
+
             if target_type == tg_type_element:
                 return tg_classification # restituisce la classificazione del target (es. 'Soft', 'Armored', 'Air_Defense', etc.)
 
