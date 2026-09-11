@@ -1,7 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Region/Military combat-power & priority-calc redesign — IN PROGRESS](project_priority_calc_combat_power_redesign.md) — 2026-09-11: Fase 0 (bug fixes) done, full suite 2316/2315 OK/5 skipped; Fase 1/2 (Ship/Aircraft combat power, fog-of-war EnemyTargetSnapshot) not started; open design question, see [[feedback_combat_power_action_selection]]
+- [Region/Military combat-power & priority-calc redesign — IN PROGRESS](project_priority_calc_combat_power_redesign.md) — 2026-09-11: Fase 0+1 done (full suite 2331 OK/5 skipped) — Vehicle/Ship/Aircraft combat power all working for real; Fase 2 (fog-of-war EnemyTargetSnapshot) not started; also queued: priority lists split by mil_category (design decided, not implemented), see [[feedback_combat_power_action_selection]]
 - [Combat-power action-selection guidance](feedback_combat_power_action_selection.md) — use 'Attack' task specifically for attack-priority ratio, not sum/avg; user wants a per-action priority vector eventually (Attack/Defense/Maintain/Retrait) feeding a later tactical decision layer
 - [Block.get_recon_efficiency removed — 2026-09-10](project_block_get_recon_efficiency_removed.md) — was dead code shadowed by Military's override; Test_Block.py updated; full suite 2311/OK (skipped=5)
 - [Region.py unattributed dead-code removal — RESOLVED](project_region_unattributed_dead_code_removal.md) — was the user's own live editor autosave, confirmed 2026-09-10, committed 74065590

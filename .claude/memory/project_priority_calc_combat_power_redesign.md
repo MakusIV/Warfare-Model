@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-11T15:39:15.212Z
+  modified: 2026-09-11T17:13:34.844Z
 ---
 
 # Region/Military priority calc & combat power redesign
@@ -41,8 +41,56 @@ Full suite 2316 tests / 2315 OK / 0 failures / 5 skipped after. Fixed, in order:
 
 `Region._is_logistic_block()` was found mid-session with `Urban` added to the `isinstance(block, (Production, Storage, Transport, ...))` tuple — an unattributed diff (same pattern as the prior resolved incident, see [[project_region_unattributed_dead_code_removal]]). **Confirmed by user 2026-09-11: intentional, their own edit.** Rationale: Urban blocks produce human resources (`hr`) and affect morale, so they are legitimately a logistic/strategic target — explicit Douhet (strategic bombing theory) framing from the user. `Test_Region.py::test_update_logistic_priorities` updated accordingly (gave `mock_urban.resource_manager.production_value` a harmless 0 return) — full suite green (2316/2315 OK/5 skipped) as of 2026-09-11.
 
+## Fase 1 — DONE 2026-09-11 (Ship + Aircraft combat power)
+
+Full suite 2331 tests / OK / 0 failures / 5 skipped after (2323 after Ship alone, +8 Aircraft tests).
+
+**Ship** (straightforward, same pattern as Vehicle):
+- New `SEA_COMBAT_EFFICACY` table in `Context.py` (Attack/Defense/Retrait × 9 ship categories, first-pass values, documented rationale in the table's comment).
+- `Ship.set_combat_power()` added, mirrors `Vehicle.set_combat_power` via `combat_power_from_score`. Removed the dead `combatPower` property stub.
+- New `Test_Ship.py` (didn't exist before) — 7 tests, includes a direct numeric check against `combat_power_from_score`.
+- **Bug found and fixed, blocking ALL real (non-mocked) Ship AND Aircraft construction**: `Ship.__init__`/`Aircraft.__init__` did `self.speed = {"nominal": None, "max": None}`, which goes through `Mobile.speed`'s property setter → calls `self.checkParam(speed=...)` → neither `Ship.checkParam` nor `Aircraft.checkParam` accept a `speed` kwarg → `TypeError` on every real instantiation. `Mobile.__init__` already sets the exact same placeholder as `self._speed` directly (default `speed` param), so the reassignment was redundant — removed it in both files (Vehicle never had this bug: it uses a private `_speed_off_road` dict instead of touching `self.speed`).
+
+**Aircraft** (needed a dedicated Opus-high-effort analysis — user overrode my first-pass proposal with real constraints, see below):
+- User feedback (verbatim reasoning, now implemented): air tasks (CAP, Intercept, Strike, SEAD, ...) are mission *roles*, not mutually-exclusive tactical postures like ground/sea's Attack/Defense/Retrait — a CAP loadout serves both offense and defense simultaneously. So instead of Vehicle/Ship's per-action combat power, aircraft get **one aggregate value** (best loadout per role, summed), replicated across all `ACTION_TASKS['air']` keys to satisfy `Mobile.combat_power(force, action)`'s existing contract without changing it. User also specified: use `Aircraft_Data.combat_score()` (target-independent), never `combat_score_target_effectiveness()` (target-specific) — this is the ground-truth/planning value, not a report-time evaluation against a known target.
+- `Aircraft_Data.combat_aggregate()`: for each task in `AIR_TASK`, takes `max(combat_score(task, loadout) for loadout in get_loadouts(model, task))` — `get_loadouts` already returns `{}` for tasks the model has no loadout for, so role-relevance comes for free from the loadout DB, no hand-written role→task map needed. Sums the per-task maxima.
+- `_build_combat_aggregates()`: normalizes with **log1p before min-max**, not plain min-max — measured raw sums span ~0 to ~362 (bomber outliers dominated by loadout quantity), a linear min-max would compress 63 of 65 registry models under 0.05. Populates `AIRCRAFT[model]['combat aggregate']` and a separate `AIRCRAFT_TASK_BEST_SCORES[model]` (kept out of `AIRCRAFT[model]` itself to not break its flat-float convention, unlike Vehicle/Ship's nested `{'global_score':...}` shape).
+- New `AIR_COMBAT_EFFICACY`: replaced the old broken one (2 hardcoded models, indexed by model not role, never imported where read) with a flat `{role: efficacy}` table (Fighter 5.0 down to Transport 1.0) — no per-action nesting, since aircraft don't have per-action combat power.
+- `Aircraft.set_combat_power()`/`air_combat_power()` added (Aircraft had literally no working combat power before — the `combatPower` property was dead: wrong signature, unimported name). Aircraft also got a `model` constructor param it never had.
+- **New universal fix**: added `Asset.model` read-only property (`getattr(self, '_model', None)`) to the base class — `Block.get_recognition_report` does `getattr(asset, 'model', None)` and **raises** if `None`, but no class exposed a public `model`, only `_model`. This blocked recon-report `asset_summary` population for Vehicle/Ship/Aircraft alike (found via an end-to-end smoke test in Fase 0, deferred at the time, now fixed for good).
+- **Bug fixed**: `Block.py:640` referenced `aat.TANKER.value` — `TANKER` doesn't exist on `Air_Asset_Type` → `AttributeError` the moment an Aircraft asset reached that branch.
+- **Bug fixed**: `Region._calculate_priority`'s Fase-0 "sum across all tasks" stand-in (see open question below) would 10x-inflate air combat power now that all 10 air tasks carry the identical value. Extracted `Region._representative_combat_power(block, force)`: sums for ground/sea (still the Fase-0 stand-in, unchanged), takes a single task for air (they're all equal, summing would be wrong twice over).
+- New `Test_Aircraft.py` — 8 tests, includes uniform-across-tasks check and a Fighter-vs-Transport ordering check.
+- Also fixed en route (`Aircraft_Data.py`): `get_aircraft_scores` had the exact same "whole-argument-membership" validation bug as Vehicle's old B1-adjacent bug (`get_vehicle_scores`, fixed in Fase 0) — every default call crashed. Fixed the same way.
+
+## Open design question — combat power action for `_calculate_priority`'s ratio (still deferred for ground/sea)
+
+Unchanged from Fase 0 for ground/sea: `_representative_combat_power` still sums across all tasks as a stand-in. User wants the `'Attack'` task specifically there (see [[feedback_combat_power_action_selection]]) — not yet implemented, read that memory before touching `_calculate_priority`/`_representative_combat_power` again. Air is no longer affected by this question (it now has a single well-defined aggregate, not a per-task breakdown to choose from).
+
+## Next feature (not started) — priority lists split by mil_category
+
+User request 2026-09-11: split the flat priority list into separate lists per military block type/echelon (air base, ground base, stronghold, company, battalion, regiment, division, etc.), "per effettuare valutazioni strategiche più accurate distinguendo le diverse forze militari utilizzabili" — comparing a lone Company's priority against an entire Division's on the same scale isn't tactically meaningful; the consumer (mission assignment) needs to pick among forces of comparable scale/role separately.
+
+**No new data model needed**: `Military.mil_category` already holds exactly this taxonomy (`Context.MILITARY_CATEGORY`):
+```python
+MILITARY_CATEGORY = {
+    'Ground_Base': ('Stronghold', 'Farp', 'Regiment', 'Battallion', 'Company', 'Brigade', 'Division', 'Command_&_Control_C2', 'Command_&_Control_C4'),
+    'Air_Base': ('Airbase', 'Heliport'),
+    'Naval_Base': ('Port', 'Shipyard', 'Naval_Group'),
+}
+```
+The gap is purely in the query layer: `Region.get_blocks_by_criteria(side, category, block_class)` (used by `get_sorted_priority_blocks`/`get_normalized_priority_blocks`) filters `category` against `BlockCategory` (Military/Logistic/Civilian) or the block's generic `.category`, never against `Military.mil_category` — there's currently no way to ask "just the Battallions."
+
+**Design decided with the user (AskUserQuestion, 2026-09-11)**:
+1. **Extend `get_blocks_by_criteria`** with a new `mil_category: Optional[str] = None` parameter (validate against the flattened values of `Context.MILITARY_CATEGORY`), filtering `isinstance(block, Military) and block.mil_category == mil_category`. This flows through to `get_sorted_priority_blocks`/`get_normalized_priority_blocks` for free (they already forward `category` — add `mil_category` alongside it) — so `region.get_sorted_priority_blocks(count=10, side="Red", category="Military", mil_category="Battallion")` becomes possible per-list.
+2. **Add a grouped helper** `get_priority_lists_by_mil_category(self, side: str, sort_by: str = "highest") -> Dict[str, List[BlockItem]]` that returns one sorted list per `mil_category` actually present in the region for that side (skip empty ones), built on top of (1) rather than duplicating the sort logic.
+3. Remember `_invalidate_caches()` iterates cached methods by name (`Region.py` ~line 1170s) — if `get_blocks_by_criteria`'s cache key shape changes (new param), no code change needed there since `cache_clear()` clears the whole method regardless of signature, but double check nothing else calls `get_blocks_by_criteria` positionally (grep before changing the signature — adding the new param at the end, with a default, should be safe either way).
+
+**Timing**: deferred, not this session — user chose to record it and continue with Fase 2 (or whatever's next) instead of implementing immediately.
+
 ## Next steps (not started)
 - Apply the `get_recon_reports` one-line semantic fix (v1 finding above) when a real caller needs it.
-- Fase 1: Ship `set_combat_power` (+ new `SEA_COMBAT_EFFICACY` table — doesn't exist yet) and Aircraft `set_combat_power` (max-over-loadouts table).
 - Fase 2: `EnemyTargetSnapshot`, `build_estimated_combat_power_table`, `update_military_priorities(side, use_recon=True)`.
-- Resolve the action-selection design question per [[feedback_combat_power_action_selection]] before touching `_calculate_priority` again.
+- Resolve the action-selection design question per [[feedback_combat_power_action_selection]] for ground/sea before touching `_calculate_priority`/`_representative_combat_power` again.
+- Consider whether `Vehicle`/`Ship` should also get the `air_combat_power()`-style single-aggregate treatment reconsidered — no, not needed, their per-action breakdown is real and wanted (Attack/Defense/Maintain/Retrait are genuine mutually-exclusive postures); this was Aircraft-specific.
+- Implement the mil_category priority-list split above (see previous section) whenever picked back up.
