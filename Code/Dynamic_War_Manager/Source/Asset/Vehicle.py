@@ -6,15 +6,16 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import ( 
-    GROUND_COMBAT_EFFICACY, 
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    GROUND_COMBAT_EFFICACY,
     GROUND_ACTION,
-    AIR_DEFENSE_ASSET, 
-    BLOCK_ASSET_CATEGORY, 
-    BLOCK_INFRASTRUCTURE_ASSET, 
-    ACTION_TASKS, 
+    AIR_DEFENSE_ASSET,
+    BLOCK_ASSET_CATEGORY,
+    BLOCK_INFRASTRUCTURE_ASSET,
+    ACTION_TASKS,
     GROUND_MILITARY_VEHICLE_ASSET,
-    Ground_Vehicle_Asset_Type
+    Ground_Vehicle_Asset_Type,
+    combat_power_from_score
 )
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
@@ -339,9 +340,12 @@ class Vehicle(Mobile) :
             categories_in_action = GROUND_COMBAT_EFFICACY.get(act, {}).keys()
 
             if self.category in categories_in_action:
-                relative_weight = 1 + GROUND_COMBAT_EFFICACY[act][self.category]  * 0.3 / 5  # weight of vehicle class effectiveness respect to other class vehicles (30% of specific vehicle weight)
-                score_modifier = 1 + self._vehicle_scores['combat score']['global score']  # # load data from Vehicle_Data.py module (score modifier based on vehicle combat score)
-                combat_power[act] = relative_weight * score_modifier * self.efficiency
+                combat_power[act] = combat_power_from_score(
+                    category=self.category,
+                    score=self._vehicle_scores['combat score']['global_score'],  # global_score: normalizzato su tutto il registro, non solo sulla categoria (v. Vehicle_Data.py)
+                    efficacy_table=GROUND_COMBAT_EFFICACY[act],
+                    efficiency=self.efficiency,
+                )
 
             else:
                 # Category not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)

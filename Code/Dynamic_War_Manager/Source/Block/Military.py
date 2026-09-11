@@ -174,40 +174,59 @@ class Military(Block):
 
         return asset_list
                     
-    def combat_power(self, force: str, action: str) -> float:
-        #action=task, military_force=force
+    def combat_power(self, force: Optional[str] = None, action: Optional[str] = None) -> Union[Dict, float]:
         """
-        Calculate total combat power for specified action and military force.
-        
+        Aggregate combat power of this block's operative assets, summing each asset's
+        Mobile.combat_power(force, action). Mirrors Mobile.combat_power's (force, action)
+        contract: both given returns a float, one given returns a Dict, neither given
+        returns the full {force: {task: value}} breakdown.
+
         Args:
-            
-            
-            
+            force: military force ('ground', 'air', 'sea'), from Context.MILITARY_FORCES.
+            action: task within that force, from Context.ACTION_TASKS[force].
+
         Returns:
-            Total combat power of applicable assets
-        """        
-
-        if not isinstance(force, str):
+            float if both force and action are given, Dict otherwise.
+        """
+        if force is not None and not isinstance(force, str):
             raise TypeError(f"Expected str instance, got {type(force).__name__}")
-        
-        if force not in MILITARY_FORCES:
-            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
-        
-        admit_task = [task for task in ACTION_TASKS[force]]
-        if action not in admit_task:
-            raise ValueError(f"action must be: {admit_task}")
 
-        if not isinstance(action, str):
+        if force is not None and force not in MILITARY_FORCES:
+            raise ValueError(f"force must be: {MILITARY_FORCES!r}")
+
+        if action is not None and not isinstance(action, str):
             raise TypeError(f"Expected str instance, got {type(action).__name__}")
 
-        result = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
-                for force in MILITARY_FORCES}
-        
-        for asset in self.assets.values(): 
-            if hasattr(asset, 'combat_power') and asset.is_operative():
-                result[force][action] += asset.combat_power[force][action]
+        if force is not None:
+            admit_task = [task for task in ACTION_TASKS[force]]
+            if action is not None and action not in admit_task:
+                raise ValueError(f"action must be: {admit_task}")
 
-        return result
+        operative_assets = [
+            asset for asset in self.assets.values()
+            if hasattr(asset, 'combat_power') and asset.is_operative()
+        ]
+
+        if force and action:
+            return sum(asset.combat_power(force, action) for asset in operative_assets)
+
+        if force:
+            return {
+                task: sum(asset.combat_power(force, task) for asset in operative_assets)
+                for task in ACTION_TASKS[force]
+            }
+
+        if action:
+            result = {}
+            for f in MILITARY_FORCES:
+                if action in ACTION_TASKS[f]:
+                    result[f] = {action: sum(asset.combat_power(f, action) for asset in operative_assets)}
+            return result
+
+        return {
+            f: {task: sum(asset.combat_power(f, task) for asset in operative_assets) for task in ACTION_TASKS[f]}
+            for f in MILITARY_FORCES
+        }
 
     def get_military_category(self):
         """ Returns military category (Air_Base, Ground_Base, Naval_Base) of Block

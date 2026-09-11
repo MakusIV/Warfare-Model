@@ -253,10 +253,16 @@ class TestShipDataModuleStructure(unittest.TestCase):
                 with self.subTest(model=model, key=key):
                     self.assertIn(key, data)
 
+    # physical_characteristics/category sono metadati (non punteggi normalizzati) aggiunti a SHIP[model]
+    # per Ship.get_physical_characteristics(); i test di forma dei punteggi li escludono esplicitamente.
+    _NON_SCORE_KEYS = {"physical_characteristics", "category"}
+
     def test_ship_score_dicts_have_global_and_category(self):
         """Ogni sotto-dict di punteggio deve avere global_score e category_score."""
         for model, data in SHIP.items():
             for score_name, score_dict in data.items():
+                if score_name in self._NON_SCORE_KEYS:
+                    continue
                 with self.subTest(model=model, score=score_name):
                     self.assertIn("global_score", score_dict)
                     self.assertIn("category_score", score_dict)
@@ -265,6 +271,8 @@ class TestShipDataModuleStructure(unittest.TestCase):
         """I valori dei punteggi normalizzati devono essere float in [0, 1]."""
         for model, data in SHIP.items():
             for score_name, score_dict in data.items():
+                if score_name in self._NON_SCORE_KEYS:
+                    continue
                 for scope, val in score_dict.items():
                     with self.subTest(model=model, score=score_name, scope=scope):
                         self.assertIsInstance(val, (int, float))

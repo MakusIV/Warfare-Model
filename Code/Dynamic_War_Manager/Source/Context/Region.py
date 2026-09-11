@@ -65,6 +65,15 @@ class BlockCategory(Enum):
     CIVILIAN = "Civilian"
 
 
+# Mappa military_category (Military.get_military_category()) -> force (Context.MILITARY_FORCES),
+# usata per invocare Military.combat_power(force, action) con il force corretto.
+MILITARY_CATEGORY_TO_FORCE = {
+    "Ground_Base": "ground",
+    "Naval_Base": "sea",
+    "Air_Base": "air",
+}
+
+
 @dataclass
 class BlockItem:
     """Represents a block with its priority in the region"""
@@ -461,13 +470,13 @@ class Region:
         for block_item in military_blocks:
             block = block_item.block
             for force in Context.MILITARY_FORCES:
-                if ((block.is_Air_Base and force == "air") or 
-                    (block.is_Ground_Base and force == "ground") or 
-                    (block.is_Naval_Base and force == "sea")):
-                    
+                if ((block.is_Air_Base() and force == "air") or
+                    (block.is_Ground_Base() and force == "ground") or
+                    (block.is_Naval_Base() and force == "sea")):
+
                     for task in Context.ACTION_TASKS[force]:
-                        cp = block.combat_power(action=task, military_force=force)
-                        if cp > 0:
+                        cp = block.combat_power(force=force, action=task)
+                        if cp > 0 and block.position is not None:
                             result[force][task] += block.position * cp
                             counts[force][task] += cp
         
@@ -811,7 +820,7 @@ class Region:
 
     def _is_logistic_block(self, block: Block) -> bool:
         """Check if a block is a logistic block."""
-        return isinstance(block, (Production, Storage, Transport))
+        return isinstance(block, (Production, Storage, Transport, Urban))
     
     
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
@@ -913,8 +922,14 @@ class Region:
     target_priority: Optional[float] = None,
     force_type: Optional[str] = None
     ) -> float:
-        """Calculate generic priority for a military block towards a target."""
-        combat_power = block.combat_power(military_force=force_type)
+        """Calculate generic priority for a military block towards a target. Considers combat power, time to intercept, range ratio, and weight."""
+        # force_type: se non passato esplicitamente (solo _calc_air_priority lo fa oggi), derivalo dalla
+        # categoria militare del blocco. NOTA: qui si usa la combat power TOTALE del blocco (somma su tutti
+        # i task di quel force), non quella di un'azione specifica: la pipeline non porta ancora un'azione
+        # (Attack/Defense/...) fino a questo punto. Affinare l'azione è demandato al redesign fog-of-war
+        # (EnemyTargetSnapshot) che sta introducendo force/action espliciti lungo tutta la catena.
+        force_type = force_type or MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
+        combat_power = sum(block.combat_power(force=force_type).values()) if force_type else 0.0
         if not combat_power or combat_power <= 0:
             return 0.0
 
@@ -923,12 +938,15 @@ class Region:
             time_to_intercept = 1.0
 
         target_value = target_block.value or 1.0 # value from 1 to 10
-        
+
         if target_block.is_military():
-            target_cp = target_block.combat_power()
+            target_force_type = MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
+            target_cp = sum(target_block.combat_power(force=target_force_type).values()) if target_force_type else 0.0
             #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
             #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
-            if block.side == target_block.side: # defense
+            if target_cp <= 0: # target senza combat power nota: evita ZeroDivisionError, satura al bound corrispondente
+                combat_power_ratio = 10.0 if block.side == target_block.side else 0.1
+            elif block.side == target_block.side: # defense
                 combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
             else: # attack
                 combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)

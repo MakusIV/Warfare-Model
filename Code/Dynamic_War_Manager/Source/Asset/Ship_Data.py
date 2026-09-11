@@ -1451,6 +1451,11 @@ SHIP: Dict[str, Dict] = {}
 for ship in Ship_Data._registry.values():
     model = ship.model
     SHIP[model] = {
+        # physical_characteristics/category: non sono score, servono a Ship.get_physical_characteristics()
+        # per popolare asset_summary nei recon report (Block.get_recognition_report). Senza queste due chiavi
+        # nessuna Ship compariva mai in un report (bug B2, Region/Military combat-power redesign 2026-09).
+        'physical_characteristics':    ship.physical_characteristics,
+        'category':                    ship.category,
         'combat score':                 {'global_score': ship.get_normalized_combat_score(),       'category_score': ship.get_normalized_combat_score(category=ship.category)},
         'weapon score':                 {'global_score': ship.get_normalized_weapon_score(),        'category_score': ship.get_normalized_weapon_score(category=ship.category)},
         'radar score':                  {'global_score': ship.get_normalized_radar_score(),         'category_score': ship.get_normalized_radar_score(category=ship.category)},

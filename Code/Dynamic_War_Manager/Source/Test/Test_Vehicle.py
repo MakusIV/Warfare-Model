@@ -31,10 +31,10 @@ class TestVehicle(unittest.TestCase):
 
         # Mock vehicle data
         self.mock_vehicle_scores = {
-            'combat score': {'global score': 0.75, 'category score': 0.7}, 
-            'avalaibility score': {'global score': 0.85, 'category score': 0.8},
-            'manutenability score': {'global score': 0.65, 'category score': 0.6},
-            'speed score': {'global score': 0.9, 'category score': 0.77},
+            'combat score': {'global_score': 0.75, 'category_score': 0.7},
+            'avalaibility score': {'global_score': 0.85, 'category_score': 0.8},
+            'manutenability score': {'global_score': 0.65, 'category_score': 0.6},
+            'speed score': {'global_score': 0.9, 'category_score': 0.77},
         }
 
         # Basic test payloads

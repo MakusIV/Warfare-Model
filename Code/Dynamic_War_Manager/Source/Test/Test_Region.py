@@ -228,17 +228,35 @@ class TestRegion(unittest.TestCase):
             self.mock_production.resource_manager = MagicMock()
             self.mock_production.resource_manager.production_value.return_value = 100
             self.mock_production.value = 1.0
-            
+
+            # Urban is a logistic block too (produces hr, affects morale — a legitimate
+            # logistic/strategic-bombing target), so _is_logistic_block(urban1) is now True;
+            # give it a harmless zero production value, this test only asserts on prod1.
+            self.mock_urban.resource_manager = MagicMock()
+            self.mock_urban.resource_manager.production_value.return_value = 0
+
             updated = self.region.update_logistic_priorities("Red")
             self.assertTrue(updated)
             
             block_item = self.region.get_block_by_id("prod1")
             self.assertAlmostEqual(block_item.priority, 0.1)  # 100 * 1.0 / ( 100 *10 (MAX_VALUE)) = 0.1
     
+    @staticmethod
+    def _combat_power_side_effect(value):
+        """Mimics Military.combat_power's (force, action) contract: float if both given,
+        Dict[task, float] if only force is given (each task set to `value`)."""
+        def _side_effect(force=None, action=None):
+            if force and action:
+                return value
+            if force:
+                return {t: value for t in Context.ACTION_TASKS[force]}
+            return {f: {t: value for t in Context.ACTION_TASKS[f]} for f in Context.MILITARY_FORCES}
+        return _side_effect
+
     def test_update_military_priorities(self):
         # Setup military block
-        self.mock_military.combat_power.return_value = 100
-        
+        self.mock_military.combat_power.side_effect = self._combat_power_side_effect(100)
+
         # Setup enemy block
         enemy_block = MagicMock(spec=Military)
         enemy_block.id = "enemy1"
@@ -247,7 +265,7 @@ class TestRegion(unittest.TestCase):
         enemy_block.is_military.return_value = True
         enemy_block.is_logistic.return_value = False
         enemy_block.is_civilian.return_value = False
-        enemy_block.combat_power.return_value = 80
+        enemy_block.combat_power.side_effect = self._combat_power_side_effect(80)
         enemy_block.position = Point2D(50, 50)
         enemy_block.value = 1
         # Add enemy block to region

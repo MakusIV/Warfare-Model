@@ -4564,13 +4564,19 @@ target_type = ['Armored']
 target_dimension = ['med']
 key_name_weapon_effectiveness = f'weapon target effectiveness {target_type} {target_dimension}'
 
-for vehicle in Vehicle_Data._registry.values():    
+for vehicle in Vehicle_Data._registry.values():
     model = vehicle.model
     VEHICLE[model] = {}
+    # physical_characteristics/category: non sono score, servono a Vehicle.get_physical_characteristics()
+    # per popolare asset_summary nei recon report (Block.get_recognition_report). Senza queste due chiavi
+    # nessun Vehicle compariva mai in un report (bug B2, Region/Military combat-power redesign 2026-09).
+    VEHICLE[model]['physical_characteristics'] = vehicle.physical_characteristics
+    VEHICLE[model]['category'] = vehicle.category
     VEHICLE[model]['combat score'] = {'global_score': vehicle.get_normalized_combat_score(), 'category_score': vehicle.get_normalized_combat_score(category=vehicle.category)}
     VEHICLE[model]['weapon score'] = {'global_score': vehicle.get_normalized_weapon_score(), 'category_score': vehicle.get_normalized_weapon_score(category=vehicle.category) }
     VEHICLE[model][key_name_weapon_effectiveness] = {'global_score': vehicle.get_normalized_weapon_target_effectiveness(target_type, target_dimension), 'category_score': vehicle.get_normalized_weapon_target_effectiveness(target_type, target_dimension, category=vehicle.category) }
     VEHICLE[model]['radar score'] = {'global_score': vehicle.get_normalized_radar_score(), 'category_score': vehicle.get_normalized_radar_score(category=vehicle.category) }
+    VEHICLE[model]['radar score air'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['air']), 'category_score': vehicle.get_normalized_radar_score(modes = ['air'], category=vehicle.category) }
     VEHICLE[model]['radar score ground'] = {'global_score': vehicle.get_normalized_radar_score(modes = ['ground']), 'category_score': vehicle.get_normalized_radar_score(modes = ['ground'], category=vehicle.category) }
     VEHICLE[model]['speed score'] = {'global_score': vehicle.get_normalized_speed_score(), 'category_score': vehicle.get_normalized_speed_score(category=vehicle.category) }
     VEHICLE[model]['communication score'] = {'global_score': vehicle.get_normalized_communication_score(), 'category_score': vehicle.get_normalized_communication_score(category=vehicle.category) }
@@ -4605,7 +4611,7 @@ def get_vehicle_data(model: str) -> Dict:
     
     return VEHICLE[model]
 
-def get_vehicle_scores(model: str, scores: Optional[List]=SCORES) -> Dict:
+def get_vehicle_scores(model: str, scores: Optional[List] = None) -> Dict:
     """ Returns the overall and category scores for a specific vehicle.
         Overall scores are calculated considering all vehicles in the database,
         while category scores are calculated considering only vehicles of the same category as the specified vehicle.
@@ -4641,12 +4647,15 @@ def get_vehicle_scores(model: str, scores: Optional[List]=SCORES) -> Dict:
         Dict: Scores
     """
     if model not in VEHICLE.keys():
-        raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")    
+        raise ValueError(f"model unknow. model must be: {VEHICLE.keys()}")
 
-    if scores and scores not in SCORES:
-        raise ValueError(f"scores unknow. scores must be: {SCORES!r}")
-    
-    
+    if scores is None:
+        scores = list(SCORES)
+
+    invalid = [s for s in scores if s not in SCORES]
+    if invalid:
+        raise ValueError(f"scores unknow: {invalid!r}. scores must be: {SCORES!r}")
+
     results = {}
     for score in scores:
         results[score] = VEHICLE[model][score]

@@ -250,8 +250,8 @@ class TestConstants(unittest.TestCase):
     # ---- SIZE CATEGORIES ---------------------------------------------------
 
     def test_vehicle_size_category_levels(self):
-        """VEHICLE_SIZE_CATEGORY has the three levels big/medium/small."""
-        self.assertEqual(set(VEHICLE_SIZE_CATEGORY.keys()), {'big', 'medium', 'small'})
+        """VEHICLE_SIZE_CATEGORY has the three levels Big/Medium/Small."""
+        self.assertEqual(set(VEHICLE_SIZE_CATEGORY.keys()), {'Big', 'Medium', 'Small'})
 
     def test_vehicle_size_category_fields(self):
         """Each level of VEHICLE_SIZE_CATEGORY has the 4 required fields."""
@@ -260,21 +260,21 @@ class TestConstants(unittest.TestCase):
             self.assertEqual(set(level.keys()), required)
 
     def test_vehicle_size_big_heavier_than_medium(self):
-        """big vehicle weight threshold is strictly greater than medium."""
+        """Big vehicle weight threshold is strictly greater than Medium."""
         self.assertGreater(
-            VEHICLE_SIZE_CATEGORY['big']['weight'],
-            VEHICLE_SIZE_CATEGORY['medium']['weight'],
+            VEHICLE_SIZE_CATEGORY['Big']['weight'],
+            VEHICLE_SIZE_CATEGORY['Medium']['weight'],
         )
 
     def test_ship_size_category_levels(self):
-        """SHIP_SIZE_CATEGORY has the three levels big/medium/small."""
-        self.assertEqual(set(SHIP_SIZE_CATEGORY.keys()), {'big', 'medium', 'small'})
+        """SHIP_SIZE_CATEGORY has the three levels Big/Medium/Small."""
+        self.assertEqual(set(SHIP_SIZE_CATEGORY.keys()), {'Big', 'Medium', 'Small'})
 
     def test_ship_size_big_heavier_than_medium(self):
-        """big ship weight threshold is strictly greater than medium."""
+        """Big ship weight threshold is strictly greater than Medium."""
         self.assertGreater(
-            SHIP_SIZE_CATEGORY['big']['weight'],
-            SHIP_SIZE_CATEGORY['medium']['weight'],
+            SHIP_SIZE_CATEGORY['Big']['weight'],
+            SHIP_SIZE_CATEGORY['Medium']['weight'],
         )
 
     def test_structure_size_category_contains_expected_types(self):
@@ -444,40 +444,40 @@ class TestGetDimensionVehicle(unittest.TestCase):
     """Unit tests for get_dimension() with asset_type='Vehicle'."""
 
     def test_big_vehicle_typical_tank(self):
-        """Tank-class vehicle (62t, 9.8m) is classified as 'big'."""
+        """Tank-class vehicle (62t, 9.8m) is classified as 'Big'."""
         result = get_dimension('Vehicle', length=9.8, width=3.7, height=2.4, weight=62)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
     def test_big_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the big threshold (8m, 40t) is 'big'."""
+        """Vehicle exactly at the big threshold (8m, 40t) is 'Big'."""
         result = get_dimension('Vehicle', length=8.0, width=3.0, height=2.0, weight=40)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
     def test_big_vehicle_via_width_height(self):
-        """Vehicle qualifies as 'big' via width+height match even with shorter length."""
+        """Vehicle qualifies as 'Big' via width+height match even with shorter length."""
         # length < 8 but width >= 3 AND height >= 2 AND weight >= 40
         result = get_dimension('Vehicle', length=7, width=3.5, height=2.5, weight=45)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
     def test_medium_vehicle_typical_ifv(self):
-        """IFV-class vehicle (28t, 7m) is classified as 'medium'."""
+        """IFV-class vehicle (28t, 7m) is classified as 'Medium'."""
         result = get_dimension('Vehicle', length=7.0, width=2.5, height=2.5, weight=30)
-        self.assertEqual(result, 'medium')
+        self.assertEqual(result, 'Medium')
 
     def test_medium_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the medium threshold (6m, 20t) is 'medium'."""
+        """Vehicle exactly at the medium threshold (6m, 20t) is 'Medium'."""
         result = get_dimension('Vehicle', length=6.0, width=2.0, height=2.0, weight=20)
-        self.assertEqual(result, 'medium')
+        self.assertEqual(result, 'Medium')
 
     def test_small_vehicle_typical_apc(self):
-        """APC-class vehicle (14t, 4m) is classified as 'small'."""
+        """APC-class vehicle (14t, 4m) is classified as 'Small'."""
         result = get_dimension('Vehicle', length=4.0, width=1.8, height=1.8, weight=14)
-        self.assertEqual(result, 'small')
+        self.assertEqual(result, 'Small')
 
     def test_small_vehicle_exactly_at_threshold(self):
-        """Vehicle exactly at the small threshold (2m, 1t) is 'small'."""
+        """Vehicle exactly at the small threshold (2m, 1t) is 'Small'."""
         result = get_dimension('Vehicle', length=2.0, width=1.0, height=1.0, weight=1)
-        self.assertEqual(result, 'small')
+        self.assertEqual(result, 'Small')
 
     def test_unknown_vehicle_tiny_dimensions(self):
         """Vehicle below all thresholds returns 'Unknown'."""
@@ -485,15 +485,15 @@ class TestGetDimensionVehicle(unittest.TestCase):
         self.assertEqual(result, 'Unknown')
 
     def test_below_big_weight_falls_to_medium(self):
-        """Vehicle with big-length but insufficient weight falls to 'medium'."""
+        """Vehicle with big-length but insufficient weight falls to 'Medium'."""
         # length=9 satisfies big size, but weight=30 < 40 → big fails; medium matches
         result = get_dimension('Vehicle', length=9, width=2.5, height=2.5, weight=30)
-        self.assertEqual(result, 'medium')
+        self.assertEqual(result, 'Medium')
 
     def test_below_medium_weight_falls_to_small(self):
-        """Vehicle with medium-length but insufficient weight falls to 'small'."""
+        """Vehicle with medium-length but insufficient weight falls to 'Small'."""
         result = get_dimension('Vehicle', length=7, width=2.5, height=2.5, weight=5)
-        self.assertEqual(result, 'small')
+        self.assertEqual(result, 'Small')
 
 
 # ---------------------------------------------------------------------------
@@ -504,29 +504,29 @@ class TestGetDimensionShip(unittest.TestCase):
     """Unit tests for get_dimension() with asset_type='Ship'."""
 
     def test_big_ship_carrier_class(self):
-        """Carrier-class ship (103kt, 333m) is classified as 'big'."""
+        """Carrier-class ship (103kt, 333m) is classified as 'Big'."""
         result = get_dimension('Ship', length=333, width=76, height=65, weight=103000)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
     def test_big_ship_exactly_at_threshold(self):
-        """Ship exactly at the big threshold (200m, 24000t) is 'big'."""
+        """Ship exactly at the big threshold (200m, 24000t) is 'Big'."""
         result = get_dimension('Ship', length=200, width=28, height=40, weight=24000)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
     def test_medium_ship_destroyer_class(self):
-        """Destroyer-class ship (9100t, 155m) is classified as 'medium'."""
+        """Destroyer-class ship (9100t, 155m) is classified as 'Medium'."""
         result = get_dimension('Ship', length=155, width=20, height=20, weight=9100)
-        self.assertEqual(result, 'medium')
+        self.assertEqual(result, 'Medium')
 
     def test_medium_ship_exactly_at_threshold(self):
-        """Ship exactly at the medium threshold (90m, 3000t) is 'medium'."""
+        """Ship exactly at the medium threshold (90m, 3000t) is 'Medium'."""
         result = get_dimension('Ship', length=90, width=10, height=10, weight=3000)
-        self.assertEqual(result, 'medium')
+        self.assertEqual(result, 'Medium')
 
     def test_small_ship_corvette_class(self):
-        """Corvette-class ship (950t, 71m) is classified as 'small'."""
+        """Corvette-class ship (950t, 71m) is classified as 'Small'."""
         result = get_dimension('Ship', length=71, width=10, height=12, weight=950)
-        self.assertEqual(result, 'small')
+        self.assertEqual(result, 'Small')
 
     def test_unknown_ship_tiny_dimensions(self):
         """Boat below all ship thresholds returns 'Unknown'."""
@@ -534,9 +534,9 @@ class TestGetDimensionShip(unittest.TestCase):
         self.assertEqual(result, 'Unknown')
 
     def test_big_ship_via_width_height(self):
-        """Ship with width>=28 and height>=40 qualifies as 'big' regardless of length."""
+        """Ship with width>=28 and height>=40 qualifies as 'Big' regardless of length."""
         result = get_dimension('Ship', length=150, width=30, height=45, weight=25000)
-        self.assertEqual(result, 'big')
+        self.assertEqual(result, 'Big')
 
 
 # ---------------------------------------------------------------------------

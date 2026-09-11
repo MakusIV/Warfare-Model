@@ -100,21 +100,30 @@ class Logistic_Asset_Type(Enum):
 la = Logistic_Asset_Type
 
 
+# Classi dimensionali canoniche condivise da tutte le classificazioni di taglia
+# (VEHICLE_SIZE_CATEGORY, SHIP_SIZE_CATEGORY, STRUCTURE_SIZE_CATEGORY, e la
+# classificazione categoria→dimensione degli aerei in Block.get_recognition_report).
+# Sono anche le chiavi usate in asset_summary['operative'/'damaged'/'destroyed'][asset_type][dimension]
+# nei recon report (Block.get_recognition_report) e vanno mantenute con questa
+# identica capitalizzazione ovunque, altrimenti i lookup per bucket (asset_type, dimension)
+# falliscono silenziosamente (bug B0, Region/Military combat-power redesign 2026-09).
+DIMENSION_CLASSES = ('Big', 'Medium', 'Small')
+
 VEHICLE_SIZE_CATEGORY = {
     # Veicoli terrestri: lunghezza e peso sono i criteri primari.
     # Nessun veicolo militare standard supera 4m di larghezza/altezza, quindi
     # le soglie width/height sono tarate sui valori reali del dataset.
-    # Controllo in ordine big → medium → small (primo match vince).
+    # Controllo in ordine Big → Medium → Small (primo match vince).
     #
-    # big:    peso ≥ 40t  → MBT moderni (T-90M 48t, Abrams 62t, ...),
+    # Big:    peso ≥ 40t  → MBT moderni (T-90M 48t, Abrams 62t, ...),
     #                        SAM pesanti (S-300PS 48t), artiglieria pesante (Smerch 44t)
-    # medium: peso 20–39t → SAM medi (Buk 32t, Tunguska 34t), MBT leggeri (T-55 36t),
+    # Medium: peso 20–39t → SAM medi (Buk 32t, Tunguska 34t), MBT leggeri (T-55 36t),
     #                        IFV pesanti (Bradley 28t), artiglieria media (2S3 28t)
-    # small:  peso  < 20t → APC leggeri (BMP-1 13t, BTR-80 14t),
+    # Small:  peso  < 20t → APC leggeri (BMP-1 13t, BTR-80 14t),
     #                        SAM piccoli (Osa 18t, Strela 7t)
-    'big':    {'length': 8,  'height': 2, 'width': 3, 'weight': 40},
-    'medium': {'length': 6,  'height': 2, 'width': 2, 'weight': 20},
-    'small':  {'length': 2,  'height': 1, 'width': 1, 'weight': 1},
+    'Big':    {'length': 8,  'height': 2, 'width': 3, 'weight': 40},
+    'Medium': {'length': 6,  'height': 2, 'width': 2, 'weight': 20},
+    'Small':  {'length': 2,  'height': 1, 'width': 1, 'weight': 1},
 }
 
 
@@ -122,18 +131,18 @@ SHIP_SIZE_CATEGORY = {
     # Navi: lunghezza e peso sono i criteri primari.
     # Le soglie width/height riflettono i valori reali del dataset
     # (carrier W=75m H=76m; corvetta W=10m H=12m).
-    # Controllo in ordine big → medium → small (primo match vince).
+    # Controllo in ordine Big → Medium → Small (primo match vince).
     #
-    # big:    peso ≥ 24000t  → portaerei (Nimitz 104000t, Kuznetsov 59000t),
+    # Big:    peso ≥ 24000t  → portaerei (Nimitz 104000t, Kuznetsov 59000t),
     #                           incrociatori nucleari (Piotr Velikiy 24000t),
     #                           portaelicotteri (LHA-1 Tarawa 39000t)
-    # medium: peso ≥  3000t  → cacciatorpediniere (Arleigh Burke 9100t),
+    # Medium: peso ≥  3000t  → cacciatorpediniere (Arleigh Burke 9100t),
     #                           incrociatori (CG-65 9800t), fregate (FFG-46 4100t),
     #                           sottomarini (Type-093 6000t), anfibio (Type-071 20000t)
-    # small:  peso ≥   100t  → corvette (Grisha 950t, Tarantul 455t)
-    'big':    {'length': 200, 'height': 40, 'width': 28, 'weight': 24000},
-    'medium': {'length': 90,  'height': 10, 'width': 10, 'weight': 3000},
-    'small':  {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
+    # Small:  peso ≥   100t  → corvette (Grisha 950t, Tarantul 455t)
+    'Big':    {'length': 200, 'height': 40, 'width': 28, 'weight': 24000},
+    'Medium': {'length': 90,  'height': 10, 'width': 10, 'weight': 3000},
+    'Small':  {'length': 20,  'height': 5,  'width': 5,  'weight': 100},
 }
 
 STRUCTURE_SIZE_CATEGORY = {
@@ -195,9 +204,9 @@ STRUCTURE_SIZE_CATEGORY = {
 def get_dimension(asset_type: str, length: float, width: float, height: float, weight: float, structure_type: Optional[str] = None) -> str:
     """
     Categorizza un asset in base alle sue dimensioni fisiche in una delle classi
-    definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (big, medium, small).
+    definite in VEHICLE_SIZE_CATEGORY o SHIP_SIZE_CATEGORY (Big, Medium, Small).
 
-    La funzione scorre le categorie nell'ordine big → medium → small e restituisce
+    La funzione scorre le categorie nell'ordine Big → Medium → Small e restituisce
     la prima categoria per cui sia la condizione dimensionale sia quella di peso
     risultano soddisfatte:
         (length >= min_length  OR  (width >= min_width AND height >= min_height))  AND  weight >= min_weight
@@ -210,7 +219,7 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         weight:     peso in tonnellate
 
     Returns:
-        str: 'big', 'medium', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
+        str: 'Big', 'Medium', 'Small' oppure 'Unknown' se nessuna categoria corrisponde.
     """
     
     if asset_type not in ['Vehicle', 'Ship', 'Structure']:
@@ -413,8 +422,51 @@ GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
     GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
     GROUND_ACTION['Maintain']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 4, 'Artillery_Semovent': 2, 'Artillery_Fixed': 3},    
-    GROUND_ACTION['Retrait']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 2, 'Artillery_Fixed': 1},    
+    GROUND_ACTION['Retrait']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 2, 'Artillery_Fixed': 1},
 }
+
+
+def combat_power_from_score(
+    category: str,
+    score: float,
+    efficacy_table: Dict[str, float],
+    efficiency: float = 1.0,
+    max_efficacy: float = 5.0,
+    efficacy_weight: float = 0.3,
+) -> float:
+    """Combat power di un singolo asset a partire dal suo score di combattimento normalizzato.
+
+    Formula condivisa, estratta da Vehicle.set_combat_power per evitare che il calcolo
+    "vero" (per singolo modello, usato dal lato ground-truth) e una sua eventuale stima
+    aggregata (fog-of-war, per bucket asset_type/dimension) divergano nel tempo: entrambi
+    devono chiamare questa stessa funzione.
+
+        relative_weight = 1 + efficacy_table[category] * efficacy_weight / max_efficacy
+        score_modifier  = 1 + score
+        combat_power    = relative_weight * score_modifier * efficiency
+
+    Args:
+        category: categoria tattica dell'asset (es. Ground_Vehicle_Asset_Type.value) usata
+            come chiave in efficacy_table.
+        score: score di combattimento normalizzato [0, 1] del modello (tipicamente
+            'combat score'['global_score'] dal registro Vehicle_Data/Ship_Data/Aircraft_Data).
+        efficacy_table: mappa categoria -> efficacia [0, max_efficacy] per il task/azione in corso
+            (es. GROUND_COMBAT_EFFICACY[action]). Se category non è presente, ritorna 0.0.
+        efficiency: efficienza operativa dell'asset [0, 1].
+        max_efficacy: valore massimo atteso in efficacy_table (default 5, coerente con
+            GROUND_COMBAT_EFFICACY).
+        efficacy_weight: peso della componente di efficacia di classe sul totale (default 0.3,
+            cioè al più il 30% del punteggio deriva dal confronto fra classi di veicoli).
+
+    Returns:
+        float: combat power dell'asset, 0.0 se category non è presente in efficacy_table.
+    """
+    if category not in efficacy_table:
+        return 0.0
+
+    relative_weight = 1 + efficacy_table[category] * efficacy_weight / max_efficacy
+    score_modifier = 1 + score
+    return relative_weight * score_modifier * efficiency
 
 
 MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale

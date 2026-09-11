@@ -54,7 +54,7 @@ class TestMilitary(unittest.TestCase):
         # Mock aircraft — __class__ set to stub so validate_class/get_asset_list work
         self.mock_aircraft = MagicMock()
         self.mock_aircraft.__class__ = _Aircraft
-        self.mock_aircraft.combat_power = {"air": {"Intercept": 15}}
+        self.mock_aircraft.combat_power = MagicMock(return_value=15)
         self.mock_aircraft.is_operative.return_value = True
         self.mock_aircraft.speed = {"nominal": 800, "max": 1000}
         self.mock_aircraft.isTransport = False
@@ -69,7 +69,7 @@ class TestMilitary(unittest.TestCase):
         # Mock vehicle (Tank, Healthful)
         self.mock_vehicle = MagicMock()
         self.mock_vehicle.__class__ = _Vehicle
-        self.mock_vehicle.combat_power = {"ground": {"Attack": 10}}
+        self.mock_vehicle.combat_power = MagicMock(return_value=10)
         self.mock_vehicle.is_operative.return_value = True
         self.mock_vehicle.speed = {"off_road": {"nominal": 30, "max": 50}}
         self.mock_vehicle.isTank = True
@@ -83,7 +83,7 @@ class TestMilitary(unittest.TestCase):
         # Mock vehicle danneggiato (Armored, Damaged) — is_operative() → False
         self.mock_vehicle_damaged = MagicMock()
         self.mock_vehicle_damaged.__class__ = _Vehicle
-        self.mock_vehicle_damaged.combat_power = {"ground": {"Attack": 5}}
+        self.mock_vehicle_damaged.combat_power = MagicMock(return_value=5)
         self.mock_vehicle_damaged.is_operative.return_value = False
         self.mock_vehicle_damaged.speed = {"off_road": {"nominal": 25, "max": 40}}
         self.mock_vehicle_damaged.isTank = False
@@ -98,7 +98,7 @@ class TestMilitary(unittest.TestCase):
         # Mock ship
         self.mock_ship = MagicMock()
         self.mock_ship.__class__ = _Ship
-        self.mock_ship.combat_power = {"sea": {"Attack": 8}}
+        self.mock_ship.combat_power = MagicMock(return_value=8)
         self.mock_ship.is_operative.return_value = True
         self.mock_ship.speed = {"nominal": 30, "max": 35}
         self.mock_ship.isDestroyer = True
@@ -168,13 +168,13 @@ class TestMilitary(unittest.TestCase):
         """All operative assets contribute their combat_power."""
         self.groundbase._assets = {"vehicle1": self.mock_vehicle, "vehicle2": self.mock_vehicle}
         combat_power = self.groundbase.combat_power(force="ground", action="Attack")
-        self.assertEqual(combat_power['ground']['Attack'], 20)  # 10 + 10
+        self.assertEqual(combat_power, 20)  # 10 + 10
 
         self.airbase._assets = {"aircraft1": self.mock_aircraft, "aircraft2": self.mock_aircraft}
-        self.assertEqual(self.airbase.combat_power(force="air", action="Intercept")['air']['Intercept'], 30)  # 15 + 15
+        self.assertEqual(self.airbase.combat_power(force="air", action="Intercept"), 30)  # 15 + 15
 
         self.navalbase._assets = {"ship1": self.mock_ship, "ship2": self.mock_ship}
-        self.assertEqual(self.navalbase.combat_power(force="sea", action="Attack")['sea']['Attack'], 16)  # 8 + 8
+        self.assertEqual(self.navalbase.combat_power(force="sea", action="Attack"), 16)  # 8 + 8
 
     def test_combat_power_excludes_non_operative_assets(self):
         """Non-operative assets (is_operative()=False) must be excluded from the sum."""
@@ -185,7 +185,7 @@ class TestMilitary(unittest.TestCase):
             'v2': self.mock_vehicle_damaged,
         }
         result = self.groundbase.combat_power(force='ground', action='Attack')
-        self.assertEqual(result['ground']['Attack'], 10)  # only operative vehicle
+        self.assertEqual(result, 10)  # only operative vehicle
 
     def test_combat_power_all_non_operative_returns_zero(self):
         """When all assets are non-operative the result is 0.0."""
@@ -194,7 +194,23 @@ class TestMilitary(unittest.TestCase):
             'v2': self.mock_vehicle_damaged,
         }
         result = self.groundbase.combat_power(force='ground', action='Attack')
-        self.assertEqual(result['ground']['Attack'], 0.0)
+        self.assertEqual(result, 0.0)
+
+    def test_combat_power_force_only_returns_dict_of_tasks(self):
+        """force given, action=None → Dict[task, float] over all tasks of that force."""
+        self.groundbase._assets = {"vehicle1": self.mock_vehicle}
+        result = self.groundbase.combat_power(force="ground")
+        self.assertIsInstance(result, dict)
+        self.assertEqual(set(result.keys()), set(GROUND_ACTION.values()))
+        self.assertEqual(result["Attack"], 10)
+
+    def test_combat_power_no_args_returns_full_breakdown(self):
+        """force=None, action=None → full {force: {task: float}} breakdown."""
+        self.groundbase._assets = {"vehicle1": self.mock_vehicle}
+        result = self.groundbase.combat_power()
+        self.assertIsInstance(result, dict)
+        self.assertIn("ground", result)
+        self.assertEqual(result["ground"]["Attack"], 10)
 
     # ------------------------------------------------------------------ #
     # combat_range                                                        #
@@ -873,12 +889,12 @@ class TestMilitary(unittest.TestCase):
         mock_no_cp.is_operative.return_value = True
 
         self.groundbase._assets = {
-            'v1': self.mock_vehicle,  # has combat_power={'ground': {'Attack': 10}}
+            'v1': self.mock_vehicle,  # has combat_power(force, action) -> 10
             'v2': mock_no_cp,         # no combat_power → must be skipped
         }
         result = self.groundbase.combat_power(force='ground', action='Attack')
         # Only mock_vehicle contributes; mock_no_cp must not cause AttributeError
-        self.assertEqual(result['ground']['Attack'], 10)
+        self.assertEqual(result, 10)
 
     # ------------------------------------------------------------------ #
     # _get_artillery_stats (tested via artillery_in_range)               #

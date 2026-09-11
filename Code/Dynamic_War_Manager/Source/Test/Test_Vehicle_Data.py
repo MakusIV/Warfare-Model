@@ -234,10 +234,16 @@ class TestVehicleDataModuleStructure(unittest.TestCase):
                 with self.subTest(model=model, key=key):
                     self.assertIn(key, data)
 
+    # physical_characteristics/category sono metadati (non punteggi normalizzati) aggiunti a VEHICLE[model]
+    # per Vehicle.get_physical_characteristics(); i test di forma dei punteggi li escludono esplicitamente.
+    _NON_SCORE_KEYS = {"physical_characteristics", "category"}
+
     def test_vehicle_score_dicts_have_global_and_category(self):
         """Ogni sotto-dict di punteggio deve avere global_score e category_score."""
         for model, data in VEHICLE.items():
             for score_name, score_dict in data.items():
+                if score_name in self._NON_SCORE_KEYS:
+                    continue
                 with self.subTest(model=model, score=score_name):
                     self.assertIn("global_score", score_dict)
                     self.assertIn("category_score", score_dict)
@@ -246,6 +252,8 @@ class TestVehicleDataModuleStructure(unittest.TestCase):
         """I valori dei punteggi normalizzati devono essere float in [0, 1]."""
         for model, data in VEHICLE.items():
             for score_name, score_dict in data.items():
+                if score_name in self._NON_SCORE_KEYS:
+                    continue
                 for scope, val in score_dict.items():
                     with self.subTest(model=model, score=score_name, scope=scope):
                         self.assertIsInstance(val, (int, float))
@@ -1576,13 +1584,12 @@ class TestGetVehicleData(unittest.TestCase):
 class TestGetVehicleScores(unittest.TestCase):
     """Unit test per get_vehicle_scores().
 
-    DATA BUG — get_vehicle_scores(): la validazione usa
-    ``if scores and scores not in SCORES`` che controlla se il valore del
-    parametro scores è un ELEMENTO del tuple SCORES. Poiché SCORES è una
-    tupla di stringhe, il test funziona solo con una singola stringa. Ma
-    poi ``for score in scores`` itera sui CARATTERI della stringa anziché
-    sui nomi dei punteggi → KeyError. La funzione è inutilizzabile con la
-    sua firma attuale. I test documentano questo comportamento.
+    Corregge il bug B_new (Region/Military combat-power redesign 2026-09): la
+    validazione confrontava ``scores not in SCORES`` (appartenenza del valore
+    dell'intero parametro come ELEMENTO della tupla SCORES) invece di validare
+    ogni elemento di ``scores`` individualmente. Con la firma precedente,
+    QUALSIASI chiamata reale (incluso il default, usato da Vehicle.__init__)
+    sollevava ValueError — nessun Vehicle non mockato poteva essere costruito.
     """
 
     def setUp(self):
@@ -1597,17 +1604,38 @@ class TestGetVehicleScores(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_vehicle_scores("VEHICLE_NOT_EXISTING_XYZ")
 
-    def test_validation_bug_documented_default_scores_raises(self):
-        """BUG DOCUMENTATO: chiamata con scores=SCORES (default) solleva
-        ValueError perché SCORES (tuple) non è un elemento di se stesso."""
-        with self.assertRaises((ValueError, TypeError, KeyError)):
-            get_vehicle_scores(_TANK_MODEL)
+    def test_default_scores_returns_all(self):
+        """Senza parametro scores, restituisce tutti i punteggi (SCORES)."""
+        result = get_vehicle_scores(_TANK_MODEL)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(set(result.keys()), set(SCORES))
 
-    def test_validation_bug_documented_single_string_raises_key_error(self):
-        """BUG DOCUMENTATO: scores='combat score' supera la validazione ma
-        poi ``for score in 'combat score'`` itera sui caratteri → KeyError."""
-        with self.assertRaises((KeyError, ValueError, TypeError)):
-            get_vehicle_scores(_TANK_MODEL, "combat score")
+    def test_single_score_returns_subset(self):
+        """Con scores=['combat score'], restituisce solo combat score."""
+        result = get_vehicle_scores(_TANK_MODEL, scores=["combat score"])
+        self.assertIsInstance(result, dict)
+        self.assertIn("combat score", result)
+        self.assertEqual(len(result), 1)
+
+    def test_multiple_scores_returns_requested_subset(self):
+        result = get_vehicle_scores(
+            _TANK_MODEL,
+            scores=["combat score", "radar score", "speed score"],
+        )
+        self.assertIn("combat score", result)
+        self.assertIn("radar score", result)
+        self.assertIn("speed score", result)
+        self.assertEqual(len(result), 3)
+
+    def test_invalid_score_name_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            get_vehicle_scores(_TANK_MODEL, scores=["INVALID_SCORE_XYZ"])
+
+    def test_result_values_have_global_and_category(self):
+        result = get_vehicle_scores(_TANK_MODEL, scores=["combat score"])
+        score_dict = result["combat score"]
+        self.assertIn("global_score", score_dict)
+        self.assertIn("category_score", score_dict)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
