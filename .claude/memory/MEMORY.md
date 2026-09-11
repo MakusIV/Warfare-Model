@@ -1,6 +1,8 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [Region/Military combat-power & priority-calc redesign — IN PROGRESS](project_priority_calc_combat_power_redesign.md) — 2026-09-11: Fase 0 (bug fixes) done, full suite 2316/2315 OK/5 skipped; Fase 1/2 (Ship/Aircraft combat power, fog-of-war EnemyTargetSnapshot) not started; open design question, see [[feedback_combat_power_action_selection]]
+- [Combat-power action-selection guidance](feedback_combat_power_action_selection.md) — use 'Attack' task specifically for attack-priority ratio, not sum/avg; user wants a per-action priority vector eventually (Attack/Defense/Maintain/Retrait) feeding a later tactical decision layer
 - [Block.get_recon_efficiency removed — 2026-09-10](project_block_get_recon_efficiency_removed.md) — was dead code shadowed by Military's override; Test_Block.py updated; full suite 2311/OK (skipped=5)
 - [Region.py unattributed dead-code removal — RESOLVED](project_region_unattributed_dead_code_removal.md) — was the user's own live editor autosave, confirmed 2026-09-10, committed 74065590
 - [Session recap 2026-09-08 — read this first](project_session_2026_09_08_summary.md) — Sabin/wargaming research saved, memory-vs-wiki boundary + transfer procedure defined, core DCS-vs-synthetic-events campaign architecture recorded. No code changes. Next: design the synthetic-events turn structure.
