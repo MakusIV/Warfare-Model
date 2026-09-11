@@ -469,6 +469,21 @@ def combat_power_from_score(
     return relative_weight * score_modifier * efficiency
 
 
+# Parametri per il calcolo della combat power delle navi, analogo a GROUND_COMBAT_EFFICACY.
+# Usata in Ship.set_combat_power (Context.combat_power_from_score). Max value = 5, min value = 1.
+# Valori di primo impianto, da tarare:
+# - Carrier: domina l'attacco (potenza aerea imbarcata) ma è debole in difesa autonoma (dipende dalla scorta).
+# - Destroyer: il difensore d'area per eccellenza (AAW/BMD), meno specializzato in attacco puro.
+# - Submarine: alto in attacco (siluri/missili da stealth) e massimo in ritirata (capacità di sganciamento).
+# - Corvette/Frigate: rapide ma poco resilienti, valori bassi/medi su tutte le azioni.
+# - Transport/Civilian: nessuna capacità di combattimento significativa.
+SEA_COMBAT_EFFICACY = {
+    SEA_TASK['Attack']: {'Carrier': 5, 'Cruiser': 4.5, 'Destroyer': 4, 'Submarine': 4.5, 'Frigate': 3, 'Corvette': 2.5, 'Amphibious_Assault_Ship': 1.5, 'Transport': 1, 'Civilian': 0},
+    SEA_TASK['Defense']: {'Carrier': 3, 'Cruiser': 4.5, 'Destroyer': 5, 'Submarine': 2.5, 'Frigate': 4, 'Corvette': 3, 'Amphibious_Assault_Ship': 1.5, 'Transport': 1, 'Civilian': 0},
+    SEA_TASK['Retrait']: {'Carrier': 2, 'Cruiser': 3, 'Destroyer': 3.5, 'Submarine': 5, 'Frigate': 3.5, 'Corvette': 4, 'Amphibious_Assault_Ship': 2, 'Transport': 2, 'Civilian': 1},
+}
+
+
 MAX_AIRCRAFT_TYPE_FOR_MISSION = 8 # massimo numero di aerei per una stessa tipologia per una missione, altrimenti si rischia di avere un numero eccessivo di aerei per una stessa tipologia, con conseguente distorsione dello score totale
 
 STATE = {'Operational': True, 'Not_Operational': True , 'Destroyed': True, 'Critical': True, 'Damaged': True}
@@ -483,12 +498,29 @@ AIRCRAFT_TYPE = {# necessario?
     'F-14B': 'F-14B4',
 }
 
-#[action][asset.type]
+# Efficacia di classe per ruolo aereo (Air_Asset_Type), usata da Aircraft.set_combat_power via
+# Context.combat_power_from_score. A differenza di GROUND_COMBAT_EFFICACY/SEA_COMBAT_EFFICACY NON e'
+# indicizzata per azione: per gli aerei i task (CAP, Strike, Intercept, ...) sono ruoli di missione, non
+# posture tattiche mutuamente esclusive come Attack/Defense/Retrait, quindi la combat power dell'aereo e'
+# un unico aggregato (v. Aircraft_Data.combat_aggregate/get_aircraft_combat_score), non un valore per task.
+# Max value = 5, min value = 1.
+# - Fighter: superiorita' aerea, massima sopravvivenza in spazio conteso.
+# - Fighter_Bomber: quasi alla pari del Fighter, penalizzato dal compromesso aria-suolo.
+# - Attacker: letale sul campo di battaglia, ma vulnerabile alla caccia avversaria.
+# - Bomber/Heavy_Bomber: massa d'urto elevata (gia' catturata nello score), ma dipendente da scorta.
+# - Recon/Awacs: moltiplicatori di forza, contributo diretto al combattimento marginale.
+# - Helicopter: efficace a bassa quota e di supporto, fragile.
+# - Transport: nessuna capacita' di combattimento.
 AIR_COMBAT_EFFICACY = {
-    
-    'F-15': {AIR_TASK['CAP']: 8, AIR_TASK['Fighter_Sweep']: 8, AIR_TASK['Intercept']: 7, AIR_TASK['Escort']: 8, AIR_TASK['Recon']: 5, AIR_TASK['CAS']: 4, AIR_TASK['Strike']: 4, AIR_TASK['Pinpoint_Strike']: 4, AIR_TASK['SEAD']: 2},
-    'F-4E': {AIR_TASK['CAP']: 6, AIR_TASK['Fighter_Sweep']: 6, AIR_TASK['Intercept']: 6, AIR_TASK['Escort']: 6, AIR_TASK['Recon']: 7, AIR_TASK['CAS']: 8, AIR_TASK['Strike']: 8, AIR_TASK['Pinpoint_Strike']: 7, AIR_TASK['SEAD']: 6}
-
+    'Fighter':        5.0,
+    'Fighter_Bomber': 4.5,
+    'Attacker':       4.0,
+    'Bomber':         3.0,
+    'Heavy_Bomber':   3.0,
+    'Helicopter':     2.5,
+    'Recon':          2.0,
+    'Awacs':          2.0,
+    'Transport':      1.0,
 }
 
 

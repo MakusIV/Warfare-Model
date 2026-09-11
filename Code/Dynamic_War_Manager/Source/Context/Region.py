@@ -911,6 +911,25 @@ class Region:
         # weight selection
         return self._weight_priority_target[block_category][task].get(target_category, 0.0) # Uso .get per default 0.0
         
+    def _representative_combat_power(self, block: Military, force: Optional[str]) -> float:
+        """Combat power 'totale' di un blocco per una forza, usata dal rapporto di confronto in
+        _calculate_priority.
+
+        Per 'air': Aircraft.set_combat_power replica LO STESSO valore aggregato su tutti i task di
+        ACTION_TASKS['air'] (i task aria — CAP, Strike, Intercept, ... — non sono posture tattiche
+        mutuamente esclusive come Attack/Defense/Retrait, v. Context.AIR_COMBAT_EFFICACY), quindi sommare
+        il dict moltiplicherebbe il valore per 10: si prende un solo task.
+        Per 'ground'/'sea': resta una somma su tutti i task come ripiego provvisorio — l'utente ha chiesto
+        di usare specificamente il task 'Attack' qui (v. memoria di progetto
+        feedback_combat_power_action_selection), non ancora implementato.
+        """
+        if not force:
+            return 0.0
+        breakdown = block.combat_power(force=force)
+        if force == 'air':
+            return next(iter(breakdown.values()), 0.0)
+        return sum(breakdown.values())
+
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _calculate_priority(
     self,
@@ -924,12 +943,9 @@ class Region:
     ) -> float:
         """Calculate generic priority for a military block towards a target. Considers combat power, time to intercept, range ratio, and weight."""
         # force_type: se non passato esplicitamente (solo _calc_air_priority lo fa oggi), derivalo dalla
-        # categoria militare del blocco. NOTA: qui si usa la combat power TOTALE del blocco (somma su tutti
-        # i task di quel force), non quella di un'azione specifica: la pipeline non porta ancora un'azione
-        # (Attack/Defense/...) fino a questo punto. Affinare l'azione è demandato al redesign fog-of-war
-        # (EnemyTargetSnapshot) che sta introducendo force/action espliciti lungo tutta la catena.
+        # categoria militare del blocco.
         force_type = force_type or MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
-        combat_power = sum(block.combat_power(force=force_type).values()) if force_type else 0.0
+        combat_power = self._representative_combat_power(block, force_type)
         if not combat_power or combat_power <= 0:
             return 0.0
 
@@ -941,7 +957,7 @@ class Region:
 
         if target_block.is_military():
             target_force_type = MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
-            target_cp = sum(target_block.combat_power(force=target_force_type).values()) if target_force_type else 0.0
+            target_cp = self._representative_combat_power(target_block, target_force_type)
             #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
             #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
             if target_cp <= 0: # target senza combat power nota: evita ZeroDivisionError, satura al bound corrispondente

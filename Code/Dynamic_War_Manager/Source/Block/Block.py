@@ -637,7 +637,7 @@ class Block:
                     asset_dimension = 'Small'
                 elif asset_category in [aat.FIGHTER_BOMBER.value, aat.RECON.value]:
                     asset_dimension = 'Medium'
-                elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.TANKER.value, aat.HEAVY_BOMBER.value]:
+                elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.HEAVY_BOMBER.value]:
                     asset_dimension = 'Big'
                             
             if asset_dimension is None:            

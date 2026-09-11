@@ -6,7 +6,14 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import SEA_MILITARY_CRAFT_ASSET, BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    SEA_MILITARY_CRAFT_ASSET,
+    BLOCK_ASSET_CATEGORY,
+    BLOCK_INFRASTRUCTURE_ASSET,
+    SEA_COMBAT_EFFICACY,
+    ACTION_TASKS,
+    combat_power_from_score,
+)
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point3D
 
@@ -29,12 +36,14 @@ class Ship(Mobile) :
 
             self._model = model  # key per Ship_Data._registry
 
-            # propriety
-            self.speed = {
+            # NOTA: self.speed è già inizializzato da Mobile.__init__ con lo stesso placeholder
+            # {"nominal": None, "max": None}. Riassegnarlo qui passerebbe per Mobile.speed.setter,
+            # che chiama self.checkParam(speed=...) — Ship.checkParam non accetta 'speed' e
+            # solleverebbe TypeError ad ogni istanziazione reale (bug analogo a quello in Aircraft.py).
 
-                "nominal": None,
-                "max": None
-            }
+            self._ship_scores = get_ship_scores(model=model)  # load data from Ship_Data.py module
+
+            self.set_combat_power(ACTION_TASKS['sea'])
     
             # Association    
             
@@ -110,9 +119,58 @@ class Ship(Mobile) :
 
 
 
-    @property
-    def combatPower(self, task):
-        pass
+    def set_combat_power(self, actions: Optional[Dict] = ACTION_TASKS["sea"]):
+        """
+        Calculates and sets the combat power value for the specific ship based on the specified action.
+        If actions is None, calculates the combat power for all actions defined in ACTION_TASKS["sea"].
+
+        args:
+        action - action from Sea_Task: 'Attack', 'Defense', 'Retrait'
+
+        raises:
+        TypeError - if action is not in ACTION_TASKS["sea"]
+
+        -------------------------------
+
+        Calcola ed imposta il valore di combat_power per la specifica nave in funzione dell'azione specificata.
+        Se actions è None, calcola il combat_power per tutte le azioni definite in ACTION_TASKS["sea"].
+
+        args:
+        action - action from Sea_Task: 'Attack', 'Defense', 'Retrait'
+
+        raises:
+        TypeError - if action is not in ACTION_TASKS["sea"]
+        """
+
+        combat_power = {}
+
+        if actions and any(action not in ACTION_TASKS["sea"] for action in actions):
+            raise TypeError(f"Unexpected action in actions: {actions}. Expected actions are: {ACTION_TASKS['sea']}")
+
+        if self.category == None:
+            logger.warning("self.category not defined: Unable to set combat_power")
+            return
+
+        for act in actions:
+            # Calcolo della combat_power in relazione: all'azione da eseguire, alla categoria della nave,
+            # al suo punteggio di combattimento, alla sua efficienza, applicando i pesi di confronto tra
+            # classi di navi riportati nella tabella SEA_COMBAT_EFFICACY definita nel Context.
+            categories_in_action = SEA_COMBAT_EFFICACY.get(act, {}).keys()
+
+            if self.category in categories_in_action:
+                combat_power[act] = combat_power_from_score(
+                    category=self.category,
+                    score=self._ship_scores['combat score']['global_score'],  # global_score: normalizzato su tutto il registro, non solo sulla categoria (v. Ship_Data.py)
+                    efficacy_table=SEA_COMBAT_EFFICACY[act],
+                    efficiency=self.efficiency,
+                )
+
+            else:
+                # Category not in SEA_COMBAT_EFFICACY (e.g., logistic ships)
+                logger.debug(f"Category '{self.category}' not found in SEA_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
+                combat_power[act] = 0
+
+        self.set_combat_power_value({"sea": combat_power})
 
     @property
     def isDestroyer(self):

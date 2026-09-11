@@ -132,6 +132,13 @@ class Asset:
             self._id = setId(self._name)
 
     @property
+    def model(self) -> Optional[str]:
+        """Model key into the asset's data registry (Vehicle_Data/Ship_Data/Aircraft_Data), if any.
+        Read-only base accessor for `self._model`, set by Vehicle/Ship/Aircraft subclasses; None for
+        asset classes (e.g. Structure) that have no model registry. Used by Block.get_recognition_report."""
+        return getattr(self, '_model', None)
+
+    @property
     def description(self) -> Optional[str]:
         return self._description
 

@@ -16,6 +16,7 @@ NO:
 
 
 from functools import lru_cache
+from math import log1p
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -797,7 +798,29 @@ class Aircraft_Data:
     def combat_score(self, task: str, loadout: Dict[str, any]):                
         """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
         return self.combat_score_eval(task, loadout, False)
-    
+
+    def combat_aggregate(self) -> Tuple[float, Dict[str, float]]:
+        """Aggregato non normalizzato della capacita' di combattimento del modello, indipendente dal task e dal target.
+
+        Per ogni task di AIR_TASK prende il combat_score() del loadout migliore disponibile per quel task
+        (get_loadouts(model, task) -> {} per i task non pertinenti al ruolo dell'aereo, quindi contribuiscono 0
+        senza bisogno di una mappa ruolo->task scritta a mano: la pertinenza e' gia' codificata nel database
+        dei loadout) e ne somma i massimi. Usa combat_score(), MAI combat_score_target_effectiveness(): il
+        valore deve rappresentare la potenza dell'aereo indipendentemente da un bersaglio specifico.
+
+        Returns:
+            Tuple[float, Dict[str, float]]: (raw_sum, best_per_task) — raw_sum e' la somma dei massimi;
+            best_per_task = {task: max combat_score} con una voce solo per i task che hanno almeno un loadout.
+        """
+        best_per_task: Dict[str, float] = {}
+        for task in AIR_TASK:
+            loadouts = self.get_loadouts(self.model, task)
+            if not loadouts:
+                continue
+            best_per_task[task] = max(self.combat_score(task, loadout_name) for loadout_name in loadouts)
+
+        return sum(best_per_task.values()), best_per_task
+
     def get_normalized_combat_score(self, task: str, loadout: Dict[str, any], category: Optional[str] = None):
         """Returns a normalized score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
         if not category:
@@ -3448,23 +3471,81 @@ for aircraft in Aircraft_Data._registry.values():
     AIRCRAFT[model]['manutenability score (mttr)'] = aircraft.get_normalized_maintenance_score()
     AIRCRAFT[model]['reliability score (mtbf)'] = aircraft.get_normalized_reliability_score()
 
+# AIRCRAFT_TASK_BEST_SCORES[model] = {task: best combat_score() over the loadouts available for that task}.
+# Kept separate from AIRCRAFT[model] (which is flat floats) rather than nesting a dict there, to avoid
+# breaking the flat-float assumption of get_aircraft_scores()/the print loop below.
+AIRCRAFT_TASK_BEST_SCORES: Dict[str, Dict[str, float]] = {}
+
+
+def _build_combat_aggregates() -> None:
+    """Popola AIRCRAFT[model]['combat aggregate'] (float normalizzato [0,1]) e
+    AIRCRAFT_TASK_BEST_SCORES[model] (dict task -> best combat_score) per ogni modello del registry.
+
+    Compressione logaritmica prima della normalizzazione min-max: la somma grezza per modello (vedi
+    Aircraft_Data.combat_aggregate) e' dominata da outlier — bombardieri con loadout ad alta quantita'
+    di armamento arrivano a ~360 su questo registry mentre la mediana e' a una piccola frazione di quello
+    — un min-max lineare comprimerebbe la stragrande maggioranza dei modelli sotto 0.05, rendendo il
+    punteggio inutile per confronti fra ruoli diversi (Fighter vs Bomber vs Attacker, ...).
+    """
+    raw_by_model: Dict[str, float] = {}
+    for model, aircraft in Aircraft_Data._registry.items():
+        raw_sum, best_per_task = aircraft.combat_aggregate()
+        raw_by_model[model] = raw_sum
+        AIRCRAFT_TASK_BEST_SCORES[model] = best_per_task
+
+    log_values = {model: log1p(raw) for model, raw in raw_by_model.items()}
+    min_log = min(log_values.values())
+    max_log = max(log_values.values())
+    span = max_log - min_log
+
+    for model, log_val in log_values.items():
+        AIRCRAFT[model]['combat aggregate'] = (log_val - min_log) / span if span > 0 else 0.5
+
+
+_build_combat_aggregates()
+
+
 # STATIC METHODS (API)
 def get_aircraft_data(model: str):
     return AIRCRAFT[model]
 
-def get_aircraft_scores(model: str, scores: Optional[List]=None):
+def get_aircraft_scores(model: str, scores: Optional[List] = None):
 
     if model not in AIRCRAFT.keys():
         raise ValueError(f"model unknow. model must be: {AIRCRAFT.keys()}")
-    
-    if scores and scores in SCORES:
-        raise ValueError(f"scores unknow. scores must be: {SCORES!r}")
-    
+
+    if scores is None:
+        scores = list(SCORES)
+
+    invalid = [s for s in scores if s not in SCORES]
+    if invalid:
+        raise ValueError(f"scores unknow: {invalid!r}. scores must be: {SCORES!r}")
+
     results = {}
     for score in scores:
         results[score] = AIRCRAFT[model][score]
 
     return results
+
+
+def get_aircraft_combat_score(model: str) -> float:
+    """Score di combattimento normalizzato [0,1] del modello, indipendente dal task e dal target.
+    Equivalente aereo di VEHICLE[model]['combat score']['global_score'] / SHIP[model][...]['global_score'].
+
+    Raises:
+        ValueError: se model non e' nel registry.
+    """
+    if model not in AIRCRAFT:
+        raise ValueError(f"model unknow. model must be: {AIRCRAFT.keys()}")
+    return AIRCRAFT[model]['combat aggregate']
+
+
+def get_aircraft_best_scores_per_task(model: str) -> Dict[str, float]:
+    """Massimi combat_score per task (loadout migliore) del modello; dict vuoto se il modello non ha
+    loadout da combattimento per nessun task (es. AWACS, tanker, trasporti)."""
+    if model not in AIRCRAFT_TASK_BEST_SCORES:
+        raise ValueError(f"model unknow. model must be: {AIRCRAFT.keys()}")
+    return AIRCRAFT_TASK_BEST_SCORES[model]
 
 #TEST
 for model, data in AIRCRAFT.items():
