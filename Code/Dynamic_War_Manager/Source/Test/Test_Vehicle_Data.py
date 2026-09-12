@@ -980,17 +980,17 @@ class TestWeaponTargetEffectivenessDistribuition(unittest.TestCase):
         score = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {})
         self.assertEqual(score, 0.0)
 
-    def test_invalid_target_type_only_returns_zero(self):
-        """target_type sconosciuto → 0.0."""
+    def test_invalid_target_type_raises_value_error(self):
+        """target_type non riconosciuto (non è un Target_Class_Name valido) → ValueError."""
         tank = Vehicle_Data._registry[_TANK_MODEL]
-        score = tank._weapon_target_effectiveness_distribuition({"UNKNOWN_XYZ": 1.0}, {"big": 1.0})
-        self.assertEqual(score, 0.0)
+        with self.assertRaises(ValueError):
+            tank._weapon_target_effectiveness_distribuition({"UNKNOWN_XYZ": 1.0}, {"big": 1.0})
 
-    def test_invalid_target_dimension_only_returns_zero(self):
-        """target_dimension sconosciuta → 0.0."""
+    def test_invalid_target_dimension_raises_value_error(self):
+        """target_dimension non in DIMENSION_CLASSES → ValueError."""
         tank = Vehicle_Data._registry[_TANK_MODEL]
-        score = tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"UNKNOWN_DIM": 1.0})
-        self.assertEqual(score, 0.0)
+        with self.assertRaises(ValueError):
+            tank._weapon_target_effectiveness_distribuition({"Armored": 1.0}, {"UNKNOWN_DIM": 1.0})
 
     # ── coerenza con la versione List ─────────────────────────────────────────
 

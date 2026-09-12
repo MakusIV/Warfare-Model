@@ -1,11 +1,11 @@
 ---
 name: project-air-priority-target-specific-loadout
-description: Design proposal (not implemented) for using Aircraft_Data.combat_score_target_effectiveness() with actually-available loadouts when computing air-base attack priority against a specific target — ready to implement in a future session
+description: Design proposal for using Aircraft_Data.combat_score_target_effectiveness() with actually-available loadouts when computing air-base attack priority against a specific target. Checklist item 3 (WEAPON_TARGET_CLASS_MAP) done 2026-09-12; items 4-8 still not implemented.
 metadata: 
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-11T18:05:11.612Z
+  modified: 2026-09-12T07:31:12.076Z
 ---
 
 # Target-specific air combat priority via best-available-loadout — design proposal
@@ -131,7 +131,7 @@ def _operative_aircraft_by_model(self, block: Military) -> Dict[str, List]:
 
 1. ~~Fix `Military.get_military_category()`~~ — **done**, commit `b38bab1f`.
 2. ~~Fix `Context.TARGET_CLASSIFICATION`~~ — **done**, commit `b38bab1f`.
-3. ~~Dimension vocabulary unification~~ — done, commit `6ab1e6dc`. Remaining: add `WEAPON_TARGET_CLASS_MAP` (target-class collapse, 26 → 12) in `Context.py`; make `get_weapon_score_target` raise on out-of-vocabulary class input instead of silently returning 0.0.
+3. ~~Dimension vocabulary unification~~ — done, commit `6ab1e6dc`. ~~Target-class collapse (26 → 12) + raise-on-invalid~~ — **done 2026-09-12**: `Context.WEAPON_TARGET_CLASS_MAP` + `get_weapon_target_class()` added (Context.py, right after `get_target_classification`); identity for the 12 covered classes, `Helibase/Airport/Heliport → Airbase`, `Generic` + the 9 remaining Logistic classes → `Structure`. `get_weapon_score_target` (+ `get_weapon_score_target_distribuition` sibling) in all 3 `*_Weapon_Data.py` files now normalizes `t_type` through `get_weapon_target_class` (raises `ValueError` for a genuinely unrecognized string, e.g. typo) and raises `ValueError` for `t_dim not in DIMENSION_CLASSES` — replacing the old silent skip-and-continue-to-0.0 behavior. Key finding during implementation: this fixes a real latent bug in the already-tested-but-unwired `Air_Resources_Assigner._create_ground_mission_task_table` pipeline, which normalizes unknown targets to `'Generic'` by design (`test_unknown_type_mapped_to_generic`) — `'Generic'`/`'Helibase'` were valid `TARGET_CLASSIFICATION` keys so they never hit the old `continue` branch, but no weapon table covered them, so they silently scored 0.0; now they correctly collapse to `Structure`/`Airbase` before the efficiency lookup. `Aircraft_Weapon_Data.get_weapon_efficiency` (a separate, similarly-shaped function) was deliberately left untouched — out of scope. All ~14 pre-existing "returns 0.0 for invalid class" unit tests across `Test_Ground_Weapon_Data.py`, `Test_Aircraft_Weapon_Data.py`, `Test_Ship_Weapon_Data.py`, `Test_Vehicle_Data.py` were rewritten to expect `ValueError`; new tests added in `Test_Context.py::TestWeaponTargetClassMap` and a `Generic→Structure` parity test per weapon-data file. Full suite: 2343 tests OK (skipped=5).
 4. `Region._target_profile_from_block`, `_profile_to_weapon_lists`; alias `get_target_report` as `_target_profile_from_report`. Tests: mixed armor+SAM block, empty block, unclassifiable assets.
 5. `Aircraft_Data.best_loadout_against_target` + `combat_aggregate_against_target`, with `available_loadouts` filtering. Test: a model with both anti-tank and anti-ship loadouts should rank differently against `Armored` vs `ship` targets.
 6. Loadout availability: `Context.LOADOUT_DOCTRINE` + `get_doctrine_loadouts`; `Air_Resources_Assigner.get_available_loadouts`; `Military.weapons_availability` + wrapper. Verify each filter is truly a no-op when its argument is `None`.

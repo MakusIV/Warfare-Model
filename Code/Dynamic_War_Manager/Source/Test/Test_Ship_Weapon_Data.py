@@ -938,27 +938,34 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
         score = get_weapon_score_target("RGM-84-Harpoon", [], [])
         self.assertEqual(score, 0.0)
 
-    def test_invalid_target_type_only_returns_zero(self):
-        """target_type sconosciuto → 0.0."""
-        score = get_weapon_score_target("RGM-84-Harpoon", ["UNKNOWN_TARGET_XYZ"], ["big"])
-        self.assertEqual(score, 0.0)
+    def test_invalid_target_type_raises_value_error(self):
+        """target_type non riconosciuto (non è un Target_Class_Name valido) → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RGM-84-Harpoon", ["UNKNOWN_TARGET_XYZ"], ["big"])
 
-    def test_invalid_target_dimension_only_returns_zero(self):
-        """target_dimension sconosciuta → 0.0."""
-        score = get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["UNKNOWN_DIM_XYZ"])
-        self.assertEqual(score, 0.0)
+    def test_invalid_target_dimension_raises_value_error(self):
+        """target_dimension non in DIMENSION_CLASSES → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["UNKNOWN_DIM_XYZ"])
 
-    def test_mixed_valid_invalid_target_type(self):
-        """Un target_type invalido viene ignorato; risultato uguale al solo valido."""
-        score_only_valid = get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["big"])
-        score_mixed      = get_weapon_score_target("RGM-84-Harpoon", ["ship", "UNKNOWN_XYZ"], ["big"])
-        self.assertAlmostEqual(score_only_valid, score_mixed, places=9)
+    def test_mixed_valid_invalid_target_type_raises_value_error(self):
+        """Un target_type non riconosciuto fa fallire l'intera chiamata, anche se
+        mescolato a un target_type valido (nessun fallback silenzioso)."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RGM-84-Harpoon", ["ship", "UNKNOWN_XYZ"], ["big"])
 
-    def test_mixed_valid_invalid_target_dimension(self):
-        """Una target_dimension invalida viene ignorata; risultato uguale alla sola valida."""
-        score_only_valid = get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["big"])
-        score_mixed      = get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["big", "UNKNOWN_DIM_XYZ"])
-        self.assertAlmostEqual(score_only_valid, score_mixed, places=9)
+    def test_mixed_valid_invalid_target_dimension_raises_value_error(self):
+        """Una target_dimension non riconosciuta fa fallire l'intera chiamata, anche se
+        mescolata a una dimensione valida (nessun fallback silenzioso)."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RGM-84-Harpoon", ["ship"], ["big", "UNKNOWN_DIM_XYZ"])
+
+    def test_generic_target_type_collapses_to_structure(self):
+        """'Generic' viene collassato su 'Structure' da WEAPON_TARGET_CLASS_MAP invece di
+        sollevare o essere ignorato: stesso punteggio di 'Structure' passato direttamente."""
+        score_generic = get_weapon_score_target("RGM-84-Harpoon", ["Generic"], ["big"])
+        score_structure = get_weapon_score_target("RGM-84-Harpoon", ["Structure"], ["big"])
+        self.assertAlmostEqual(score_generic, score_structure, places=9)
 
     # ── valori di ritorno per combinazioni valide ─────────────────────────────
 
@@ -1157,39 +1164,46 @@ class TestGetWeaponScoreTargetDistribuition(unittest.TestCase):
 
     # ── chiavi non valide (ignorate con warning) ──────────────────────────────
 
-    def test_invalid_target_type_only_returns_zero(self):
-        """target_type sconosciuto → 0.0."""
-        score = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"UNKNOWN_TARGET_XYZ": 1.0}, {"big": 1.0}
-        )
-        self.assertEqual(score, 0.0)
+    def test_invalid_target_type_raises_value_error(self):
+        """target_type non riconosciuto (non è un Target_Class_Name valido) → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target_distribuition(
+                "RGM-84-Harpoon", {"UNKNOWN_TARGET_XYZ": 1.0}, {"big": 1.0}
+            )
 
-    def test_invalid_target_dimension_only_returns_zero(self):
-        """target_dimension sconosciuta → 0.0."""
-        score = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"ship": 1.0}, {"UNKNOWN_DIM_XYZ": 1.0}
-        )
-        self.assertEqual(score, 0.0)
+    def test_invalid_target_dimension_raises_value_error(self):
+        """target_dimension non in DIMENSION_CLASSES → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target_distribuition(
+                "RGM-84-Harpoon", {"ship": 1.0}, {"UNKNOWN_DIM_XYZ": 1.0}
+            )
 
-    def test_invalid_target_type_ignored_mixed(self):
-        """target_type invalido ignorato; risultato uguale a solo la chiave valida."""
-        score_valid = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"ship": 1.0}, {"big": 1.0}
-        )
-        score_mixed = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"ship": 1.0, "UNKNOWN_XYZ": 0.5}, {"big": 1.0}
-        )
-        self.assertAlmostEqual(score_valid, score_mixed, places=9)
+    def test_mixed_valid_invalid_target_type_raises_value_error(self):
+        """Una chiave target_type non riconosciuta fa fallire l'intera chiamata, anche
+        se mescolata a una chiave valida (nessun fallback silenzioso)."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target_distribuition(
+                "RGM-84-Harpoon", {"ship": 1.0, "UNKNOWN_XYZ": 0.5}, {"big": 1.0}
+            )
 
-    def test_invalid_target_dimension_ignored_mixed(self):
-        """target_dimension invalida ignorata; risultato uguale a solo la chiave valida."""
-        score_valid = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"ship": 1.0}, {"big": 1.0}
+    def test_mixed_valid_invalid_target_dimension_raises_value_error(self):
+        """Una chiave target_dimension non riconosciuta fa fallire l'intera chiamata,
+        anche se mescolata a una chiave valida (nessun fallback silenzioso)."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target_distribuition(
+                "RGM-84-Harpoon", {"ship": 1.0}, {"big": 1.0, "UNKNOWN_DIM_XYZ": 0.5}
+            )
+
+    def test_generic_target_type_collapses_to_structure(self):
+        """'Generic' viene collassato su 'Structure' da WEAPON_TARGET_CLASS_MAP invece di
+        sollevare o essere ignorato: stesso punteggio di 'Structure' passato direttamente."""
+        score_generic = get_weapon_score_target_distribuition(
+            "RGM-84-Harpoon", {"Generic": 1.0}, {"big": 1.0}
         )
-        score_mixed = get_weapon_score_target_distribuition(
-            "RGM-84-Harpoon", {"ship": 1.0}, {"big": 1.0, "UNKNOWN_DIM_XYZ": 0.5}
+        score_structure = get_weapon_score_target_distribuition(
+            "RGM-84-Harpoon", {"Structure": 1.0}, {"big": 1.0}
         )
-        self.assertAlmostEqual(score_valid, score_mixed, places=9)
+        self.assertAlmostEqual(score_generic, score_structure, places=9)
 
     # ── semantica della somma ponderata ──────────────────────────────────────
 

@@ -23,7 +23,7 @@ import random
 import sys
 from typing import Optional, List, Dict, Any
 
-from Code.Dynamic_War_Manager.Source.Context.Context import TARGET_CLASSIFICATION
+from Code.Dynamic_War_Manager.Source.Context.Context import get_weapon_target_class, DIMENSION_CLASSES
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 # ── LOGGING ───────────────────────────────────────────────────────────────────
@@ -33,7 +33,6 @@ logger = Logger(module_name=__name__, class_name='Ship_Weapon_Data').logger
 # ── COSTANTI ──────────────────────────────────────────────────────────────────
 
 TARGET_DIMENSION = ['small', 'med', 'big']
-TARGET_CLASSIFICATION = TARGET_CLASSIFICATION.keys()
 
 _INFRA_MIN = sys.float_info.min   # capacità di distruzione quasi nulla per infrastrutture
 
@@ -820,17 +819,10 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
     count = 0
 
     for t_type in target_type:
-        if t_type not in TARGET_CLASSIFICATION:
-            logger.warning(
-                f"target_type {t_type!r} unknown, got {target_type}. Continue."
-            )
-            continue
+        t_type = get_weapon_target_class(t_type)
         for t_dim in target_dimension:
-            if t_dim not in TARGET_DIMENSION:
-                logger.warning(
-                    f"target_dimension {t_dim!r} unknown, got {target_dimension}. Continue."
-                )
-                continue
+            if t_dim not in DIMENSION_CLASSES:
+                raise ValueError(f"target_dimension {t_dim!r} non valido, got {target_dimension}. Valori consentiti: {DIMENSION_CLASSES}")
             eff = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
             score += eff.get('accuracy', 0.0) * eff.get('destroy_capacity', 0.0)
             count += 1
@@ -871,17 +863,10 @@ def get_weapon_score_target_distribuition(
     score = 0.0
 
     for t_type, t_type_w in target_type.items():
-        if t_type not in TARGET_CLASSIFICATION:
-            logger.warning(
-                f"target_type {t_type!r} unknown, got {target_type}. Continue."
-            )
-            continue
+        t_type = get_weapon_target_class(t_type)
         for t_dim, t_dim_w in target_dimension.items():
-            if t_dim not in TARGET_DIMENSION:
-                logger.warning(
-                    f"target_dimension {t_dim!r} unknown, got {target_dimension}. Continue."
-                )
-                continue
+            if t_dim not in DIMENSION_CLASSES:
+                raise ValueError(f"target_dimension {t_dim!r} non valido, got {target_dimension}. Valori consentiti: {DIMENSION_CLASSES}")
             eff = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
             score += (
                 eff.get('accuracy', 0.0)

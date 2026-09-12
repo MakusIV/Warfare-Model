@@ -51,11 +51,14 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     TASK_FOR_WEAPON_PARAM,
     WEAPON_PARAM_ASSIGNATION_FOR_ASSET_TYPE,
     MAX_AIRCRAFT_TYPE_FOR_MISSION,
+    WEAPON_TARGET_CLASS_MAP,
+    DIMENSION_CLASSES,
     # Functions
     get_dimension,
     _get_task_from_weapon_param,
     _get_weapon_param_from_target,
     get_task_from_target,
+    get_weapon_target_class,
 )
 
 
@@ -996,6 +999,59 @@ class TestGetTaskFromTarget(unittest.TestCase):
             with self.subTest(target_type=tt, target_dim=td, target_count=tc):
                 result = get_task_from_target(tt, td, tc)
                 self.assertIn(result, valid_tasks)
+
+
+# ---------------------------------------------------------------------------
+# TestWeaponTargetClassMap
+# ---------------------------------------------------------------------------
+
+class TestWeaponTargetClassMap(unittest.TestCase):
+    """get_weapon_target_class() / WEAPON_TARGET_CLASS_MAP: collasso delle 26 classi
+    Target_Class_Name sulle 12 classi coperte dalle tabelle di efficacia armi."""
+
+    _COVERED_CLASSES = {
+        'Soft', 'Armored', 'Hard', 'Structure', 'Air_Defense', 'Airbase',
+        'Port', 'Shipyard', 'Farp', 'Stronghold', 'ship', 'Aircraft',
+    }
+
+    def test_covers_all_26_target_class_name_values(self):
+        """WEAPON_TARGET_CLASS_MAP ha una voce per ognuno dei 26 valori di Target_Class_Name."""
+        all_classes = {member.value for member in Target_Class_Name}
+        self.assertEqual(len(all_classes), 26)
+        self.assertEqual(set(WEAPON_TARGET_CLASS_MAP.keys()), all_classes)
+
+    def test_covered_classes_map_to_identity(self):
+        """Le 12 classi coperte dalle tabelle di efficacia armi restano invariate."""
+        for target_class in self._COVERED_CLASSES:
+            with self.subTest(target_class=target_class):
+                self.assertEqual(get_weapon_target_class(target_class), target_class)
+
+    def test_helibase_airport_heliport_collapse_to_airbase(self):
+        """Basi non coperte -> Airbase (fedeltà fisica: piste/hangar)."""
+        for target_class in ('Helibase', 'Airport', 'Heliport'):
+            with self.subTest(target_class=target_class):
+                self.assertEqual(get_weapon_target_class(target_class), 'Airbase')
+
+    def test_generic_and_logistic_classes_collapse_to_structure(self):
+        """Generic + le 9 classi Logistic rimanenti -> Structure."""
+        for target_class in (
+            'Generic', 'Road', 'Railway', 'Electric', 'Fuel_Line', 'Power_Plant',
+            'Factory', 'Farm', 'Administrative', 'Service', 'Civilian',
+        ):
+            with self.subTest(target_class=target_class):
+                self.assertEqual(get_weapon_target_class(target_class), 'Structure')
+
+    def test_all_fallback_targets_land_on_a_covered_class(self):
+        """Ogni valore della mappa è una delle 12 classi coperte (nessun collasso a cascata)."""
+        for target_class, mapped in WEAPON_TARGET_CLASS_MAP.items():
+            with self.subTest(target_class=target_class, mapped=mapped):
+                self.assertIn(mapped, self._COVERED_CLASSES)
+
+    def test_unrecognized_target_type_raises_value_error(self):
+        """Una stringa che non è un Target_Class_Name valido (typo/bug) solleva ValueError,
+        a differenza del collasso Generic/Helibase/Logistic che è un fallback intenzionale."""
+        with self.assertRaises(ValueError):
+            get_weapon_target_class('NOT_A_REAL_TARGET_CLASS')
 
 
 if __name__ == '__main__':

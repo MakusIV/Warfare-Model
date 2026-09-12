@@ -3,7 +3,7 @@ import random
 import sys
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Context.Context import TARGET_CLASSIFICATION, GROUND_WEAPON_TASK #GROUND_ACTION, ACTION_TASKS,
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_WEAPON_TASK, get_weapon_target_class, DIMENSION_CLASSES #GROUND_ACTION, ACTION_TASKS,
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from sympy import Point3D
@@ -30,7 +30,6 @@ Calibro (mm)	Calibro (pollici)	Esempi di mitragliatrici	Note
 14,5 × 114 mm	~0.57	KPV (Russia)	Calibro più grande, elevata potenza'''
 
 
-TARGET_CLASSIFICATION = TARGET_CLASSIFICATION.keys()
 TARGET_DIMENSION = ['small', 'med', 'big']
 _INFRA_MIN = sys.float_info.min  # shorthand for near-zero infrastructure dc
 
@@ -1418,21 +1417,18 @@ def get_weapon_score_target(model: str, target_type: List, target_dimension: Lis
 
     for t_type in target_type:
 
-        if t_type not in TARGET_CLASSIFICATION:
-            logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
-            continue
+        t_type = get_weapon_target_class(t_type)
 
         for t_dim in target_dimension:
 
-            if t_dim not in TARGET_DIMENSION:
-                logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
-                continue
+            if t_dim not in DIMENSION_CLASSES:
+                raise ValueError(f"target_dimension {t_dim!r} non valido, got {target_dimension}. Valori consentiti: {DIMENSION_CLASSES}")
 
             efficiency_param = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
             accuracy = efficiency_param.get('accuracy', 0.0)
             destroy_capacity = efficiency_param.get('destroy_capacity', 0.0)
             score += accuracy * destroy_capacity
-            target_evaluation_count += 1            
+            target_evaluation_count += 1
 
     return score / target_evaluation_count if target_evaluation_count > 0 else 0.0
 
@@ -1468,15 +1464,12 @@ def get_weapon_score_target_distribuition(model: str, target_type: Dict, target_
 
     for t_type, t_type_value in target_type.items():
 
-        if t_type not in TARGET_CLASSIFICATION:
-            logger.warning(f"target_type {t_type} unknow, got {target_type}. Continue with next target type.")
-            continue
+        t_type = get_weapon_target_class(t_type)
 
         for t_dim, t_dim_value in target_dimension.items():
 
-            if t_dim not in TARGET_DIMENSION:
-                logger.warning(f"target_dimension {t_dim} unknow, got {target_dimension}. Continue with next target dimension.")
-                continue
+            if t_dim not in DIMENSION_CLASSES:
+                raise ValueError(f"target_dimension {t_dim!r} non valido, got {target_dimension}. Valori consentiti: {DIMENSION_CLASSES}")
 
             efficiency_param = weapon.get('efficiency', {}).get(t_type, {}).get(t_dim, {})
             accuracy = efficiency_param.get('accuracy', 0.0)

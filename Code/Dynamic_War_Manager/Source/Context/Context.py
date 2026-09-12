@@ -1470,6 +1470,70 @@ def get_target_classification(target_type: str) -> str:
     return None
 
 
+# Le tabelle di efficacia armi (Aircraft_Weapon_Data.py/Ground_Weapon_Data.py/Ship_Weapon_Data.py)
+# coprono solo 12 delle 26 classi di Target_Class_Name: Soft, Armored, Hard, Structure, Air_Defense,
+# Airbase, Port, Shipyard, Farp, Stronghold, ship, Aircraft. Questa mappa collassa le altre 14 classi
+# (Helibase/Generic + le 12 classi "Logistic Asset Category") sulla classe coperta più vicina, così
+# get_weapon_score_target ottiene sempre un punteggio sensato invece di uno 0.0 silenzioso (es. per
+# 'Generic', già usato come fallback esplicito per target sconosciuti da
+# Air_Resources_Assigner._create_ground_mission_task_table).
+WEAPON_TARGET_CLASS_MAP: Dict[str, str] = {
+    # 12 classi coperte dalle tabelle di efficacia — identità
+    tc.SOFT.value: tc.SOFT.value,
+    tc.ARMORED.value: tc.ARMORED.value,
+    tc.HARD.value: tc.HARD.value,
+    tc.STRUCTURE.value: tc.STRUCTURE.value,
+    tc.AIR_DEFENSE.value: tc.AIR_DEFENSE.value,
+    tc.AIRBASE.value: tc.AIRBASE.value,
+    tc.PORT.value: tc.PORT.value,
+    tc.SHIPYARD.value: tc.SHIPYARD.value,
+    tc.FARP.value: tc.FARP.value,
+    tc.STRONGHOLD.value: tc.STRONGHOLD.value,
+    tc.SHIP.value: tc.SHIP.value,
+    tc.AIRCRAFT.value: tc.AIRCRAFT.value,
+    # Basi non coperte -> Airbase (fedeltà fisica: piste/hangar)
+    tc.HELIBASE.value: tc.AIRBASE.value,
+    tc.AIRPORT.value: tc.AIRBASE.value,
+    tc.HELIPORT.value: tc.AIRBASE.value,
+    # Target generico/sconosciuto e classi Logistic -> Structure (stesso precedente già usato in
+    # TARGET_CLASSIFICATION per Power_Plant, Factory, Railway_Interchange,
+    # Administrative_Infrastructure, Energy_Infrastructure, Service_Infrastructure)
+    tc.GENERIC.value: tc.STRUCTURE.value,
+    tc.ROAD.value: tc.STRUCTURE.value,
+    tc.RAILWAY.value: tc.STRUCTURE.value,
+    tc.ELECTRIC.value: tc.STRUCTURE.value,
+    tc.FUEL_LINE.value: tc.STRUCTURE.value,
+    tc.POWER_PLANT.value: tc.STRUCTURE.value,
+    tc.FACTORY.value: tc.STRUCTURE.value,
+    tc.FARM.value: tc.STRUCTURE.value,
+    tc.ADMINISTRATIVE.value: tc.STRUCTURE.value,
+    tc.SERVICE.value: tc.STRUCTURE.value,
+    tc.CIVILIAN.value: tc.STRUCTURE.value,
+}
+
+
+def get_weapon_target_class(target_type: str) -> str:
+
+    """ Collassa un Target_Class_Name (26 valori) su una delle 12 classi coperte dalle tabelle di
+    efficacia armi, secondo WEAPON_TARGET_CLASS_MAP.
+
+    Args:
+        target_type (str): valore dell'enumerazione Target_Class_Name (stringa .value)
+    Returns:
+        str: una delle 12 classi coperte dalle tabelle di efficacia armi
+    Raises:
+        ValueError: se target_type non è un Target_Class_Name valido (typo/bug), a differenza del
+            collasso Generic/Helibase/Logistic->Structure|Airbase che è un fallback intenzionale.
+    """
+
+    if target_type not in WEAPON_TARGET_CLASS_MAP:
+        raise ValueError(
+            f"get_weapon_target_class: target_type non valido: '{target_type}'. "
+            f"Valori consentiti: {sorted(WEAPON_TARGET_CLASS_MAP)}"
+        )
+    return WEAPON_TARGET_CLASS_MAP[target_type]
+
+
 BLOCK_ASSET_CATEGORY = {
     'Block_Infrastructure_Asset': {},
     'Ground_Military_Vehicle_Asset': {},

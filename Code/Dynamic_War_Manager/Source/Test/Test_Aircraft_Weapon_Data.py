@@ -1061,20 +1061,22 @@ class TestGetWeaponScoreTarget(unittest.TestCase):
         """Lista target_dimension vuota → loop interno non eseguito → 0.0."""
         self.assertEqual(get_weapon_score_target("RB-05A", ["Soft"], []), 0.0)
 
-    def test_all_unknown_target_types_returns_zero(self):
-        """Tutti i target_type sconosciuti → skip completo del loop → 0.0."""
-        self.assertEqual(
-            get_weapon_score_target("RB-05A", ["UNKNOWN_XYZ"], ["small"]), 0.0
-        )
+    def test_all_unknown_target_types_raises_value_error(self):
+        """target_type non riconosciuto (non è un Target_Class_Name valido) → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RB-05A", ["UNKNOWN_XYZ"], ["small"])
 
-    def test_all_unknown_target_dimensions_returns_zero(self):
-        """
-        Bug B6: "big" e "med" non sono in TARGET_DIMENSION del modulo
-        ['small','medium','large'] → skip → 0.0.
-        """
-        self.assertEqual(
-            get_weapon_score_target("RB-05A", ["Soft"], ["UNKNOWN_DIM_XYZ"]), 0.0
-        )
+    def test_all_unknown_target_dimensions_raises_value_error(self):
+        """target_dimension non in DIMENSION_CLASSES → ValueError."""
+        with self.assertRaises(ValueError):
+            get_weapon_score_target("RB-05A", ["Soft"], ["UNKNOWN_DIM_XYZ"])
+
+    def test_generic_target_type_collapses_to_structure(self):
+        """'Generic' viene collassato su 'Structure' da WEAPON_TARGET_CLASS_MAP invece di
+        sollevare o essere ignorato: stesso punteggio di 'Structure' passato direttamente."""
+        score_generic = get_weapon_score_target("Mk-84", ["Generic"], ["small"])
+        score_structure = get_weapon_score_target("Mk-84", ["Structure"], ["small"])
+        self.assertAlmostEqual(score_generic, score_structure, places=9)
 
     def test_target_dim_big_valid(self):
         """
