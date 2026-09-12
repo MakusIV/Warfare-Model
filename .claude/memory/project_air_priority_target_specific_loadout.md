@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-12T15:00:54.262Z
+  modified: 2026-09-12T15:24:54.265Z
 ---
 
 # Target-specific air combat priority via best-available-loadout — design proposal
@@ -197,14 +197,40 @@ The **weighted-distribution half was implemented and committed**:
   mirrors the existing list-based test class); `TestBestLoadoutAgainstTarget`/
   `TestCombatAggregateAgainstTarget` updated in place to use distributions.
 - Full suite: **2439 tests OK (skipped=5)**, 0 errors/failures.
-- **Committed and pushed** — this was the explicit final instruction for this session (items 4-8,
-  the entire target-specific air-priority design, landed in one continuous run).
+- **Committed and pushed**, commit `ed4d74d5` — this was the explicit final instruction for this
+  session (items 4-8, the entire target-specific air-priority design, landed in one continuous run).
+
+## Diagnostic table for _target_affinity (2026-09-12, same session)
+
+Added `print_target_affinity_scenarios()` to `Test/Test_Region.py`, gated by a module-level
+`STAMPA_TARGET_AFFINITY = False` flag (same pattern as `Vehicle_Data.py`'s `STAMPA` flag — inert
+by default, doesn't run under `unittest discover`). Builds a fixed attacking fleet (Military
+Air_Base, side='Blue', with mocked F-14A Tomcat + F-16CM Block 50 aircraft assets) and computes
+`Region._target_affinity`/`_calculate_priority` (civilian-branch target, value=5/weight=2/tti=2 so
+base_priority without affinity = 5.0, isolating the multiplicative effect) across 4 target
+composition scenarios: 100% Armored (3 Tank), 100% Air_Defense (3 SAM_Small), mixed
+Armored+Air_Defense (2+2), 100% Aircraft (3 parked fighters). Prints via `tabulate`.
+
+Real output when run (sanity-checked, makes sense): the three ground-target scenarios all clip to
+the affinity floor `0.25` (a pure-fighter fleet has no competitive CAS/SEAD loadouts, so its
+target-specific score is far below its generic reference score); the air-target scenario scores
+higher at `0.482` (CAP/Intercept is what F-14/F-16 are actually good at) — directionally correct,
+though the ground-scenario floor-clipping means the real underlying ratios (all <0.25) aren't
+distinguishable from each other in this particular fleet composition.
+
+**User will ask in a future session to extend this with additional/different scenarios** — when
+that happens, re-read `print_target_affinity_scenarios()` in `Test/Test_Region.py` first (scope
+was deliberately narrowed to `_target_affinity` only, per user's explicit choice among three
+options offered — NOT `_calc_surface_priority`/Ground_Base/Naval_Base attackers, NOT
+logistic/civilian branches in general — confirm whether that scope still holds before adding
+scenarios that fall outside it).
 
 ## Next session
 
 The target-specific air-priority design (items 3-7 + the distribution half of item 8) is complete,
 tested, and shipped. Nothing left open on this specific thread except the explicitly-deferred
-route_length/route_speed question (do not re-raise proactively). Other threads still available:
+route_length/route_speed question (do not re-raise proactively) and the diagnostic-table extension
+noted above (user-initiated, wait for them to raise it). Other threads still available:
 - **Independent thread**: per-`mil_category` priority list split (design decided, not implemented) —
   see [[feedback_combat_power_action_selection]].
 - **Independent thread**: Fase 2 fog-of-war `EnemyTargetSnapshot` — see

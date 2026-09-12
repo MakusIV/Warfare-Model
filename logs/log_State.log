@@ -48364,3 +48364,191 @@
 2026-09-12 17:00:13,153 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#9380_#290801', success_ratio=None, health=100, state_value=Healtful)
 2026-09-12 17:00:13,154 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
 2026-09-12 17:00:13,154 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Asset', object_id='Asset_unamed_#444_#463378', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,192 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,192 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#647665', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,192 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,193 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#413528', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,193 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,193 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#482024', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,193 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,193 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#605773', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,194 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,194 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#594985', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#590061', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#516964', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,315 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#554177', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#288240', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#725455', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#169547', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,318 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#61628', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#448374', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#358146', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#977712', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#566161', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,319 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#163950', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#519330', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#40412', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#396205', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,320 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#568737', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#256519', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#568353', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,321 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#998488', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#112946', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#549993', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#957370', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,322 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#875827', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#314539', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Friendly_#566885', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#588881', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#232816', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,323 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#901534', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#210524', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#227660', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,324 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#850689', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,325 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,325 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#537415', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,326 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,326 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#315532', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,326 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,326 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#953623', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,327 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,327 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#660504', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,328 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,328 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#201916', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,328 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,328 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#189956', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,329 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,329 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#580100', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,329 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,329 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#272794', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,330 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,330 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#667469', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,330 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,330 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#657044', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:17:52,331 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:17:52,331 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#477823', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,261 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#34043', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#397862', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#652769', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,262 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#680823', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,263 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,263 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#710472', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#291268', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#943300', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,387 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#474828', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#279069', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#895019', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#890304', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#352460', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#623276', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,390 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#367610', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#453649', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#793637', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#600411', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#956414', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,391 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#648266', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#513006', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#565937', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#559840', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,392 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#242526', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#212445', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#722641', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,393 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#178037', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#219447', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#595420', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,394 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#403552', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Friendly_#386852', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#183105', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#651726', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,395 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#876128', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.AB_#222870', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Military.GB_#269953', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,396 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target_#367781', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,397 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,397 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#965849', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,398 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,398 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#398166', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,398 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,398 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#884994', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,398 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#22138', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#256789', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#966366', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,399 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,400 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#502590', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,400 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,400 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#215378', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,400 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,400 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#423611', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,401 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,401 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#23637', success_ratio=None, health=100, state_value=Healtful)
+2026-09-12 17:19:12,401 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - update - State updated. state_value: Healtful
+2026-09-12 17:19:12,402 - Code.Dynamic_War_Manager.Source.DataType.State - DEBUG - __init__ - State created State(object_type='Block', object_id='Target Block_#616967', success_ratio=None, health=100, state_value=Healtful)

@@ -19,6 +19,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
 )
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from tabulate import tabulate
 
 # Lightweight class stubs used only to set mock.__class__ for classification-loop dispatch,
 # mirroring Test_Military.py -- Vehicle/Ship/Aircraft cannot be imported directly because they
@@ -1485,6 +1486,125 @@ class TestCalcSurfacePriorityUnaffectedByAffinity(unittest.TestCase):
             )
         mock_affinity.assert_not_called()
         self.assertGreater(result, 0.0)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  DIAGNOSTIC TABLE — Region._target_affinity() across target-composition scenarios
+# ─────────────────────────────────────────────────────────────────────────────
+# Analogo ai blocchi diagnostici di Aircraft_Data.py (#TEST, incondizionato) e
+# Vehicle_Data.py (STAMPA, disattivabile): NON è un test automatico (nessuna
+# asserzione) -- serve per ispezionare a colpo d'occhio se target_affinity si
+# comporta in modo sensato al variare della composizione del bersaglio, a parità
+# di flotta aerea attaccante (F-14A Tomcat + F-16CM Block 50). Disattivato di
+# default (STAMPA_TARGET_AFFINITY = False): per vederla, impostare a True ed
+# eseguire il file direttamente (non tramite `unittest discover`, che comunque
+# non attiva mai questo blocco essendo gated dal flag).
+
+STAMPA_TARGET_AFFINITY = False
+
+_DIAG_TANK_PHYSICAL = {'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48}   # -> big
+_DIAG_SAM_PHYSICAL  = {'length': 5, 'width': 2.5, 'height': 2,   'weight': 18}   # -> small
+
+
+def _diag_mock_ground_vehicle(asset_type, physical):
+    """Asset Vehicle mockato per il bersaglio (classificazione/dimensione reali)."""
+    m = MagicMock()
+    m.__class__ = _Vehicle
+    m.asset_type = asset_type
+    m.category = None
+    m.is_operative.return_value = True
+    m.get_physical_characteristics.return_value = physical
+    return m
+
+
+def _diag_mock_parked_aircraft(role):
+    """Asset Aircraft mockato per il bersaglio (es. velivoli a terra su un aeroporto nemico)."""
+    m = MagicMock()
+    m.__class__ = _Aircraft
+    m.asset_type = role
+    m.category = role
+    m.is_operative.return_value = True
+    return m
+
+
+def _diag_mock_attacking_aircraft(model):
+    """Asset Aircraft mockato per la flotta attaccante (serve .model per _operative_aircraft_by_model)."""
+    m = MagicMock()
+    m.__class__ = _Aircraft
+    m.model = model
+    m.asset_type = aat.FIGHTER.value
+    m.is_operative.return_value = True
+    m.combat_power = MagicMock(return_value=10.0)
+    return m
+
+
+def print_target_affinity_scenarios():
+    """Stampa una tabella diagnostica di Region._target_affinity() su 4 scenari a
+    composizione del bersaglio diversa, a parità di flotta aerea attaccante.
+
+    priorità finale = _calculate_priority() con target civile, value=5, weight=2, tti=2,
+    range_ratio=1 -- base_priority senza affinità = (5*1*2)/2 = 5.0, quindi
+    priorità finale = 5.0 * target_affinity: isolare l'effetto moltiplicativo
+    dell'affinità senza la complessità del ramo militare (combat_power_ratio) o di
+    time2attack/posizioni reali, non pertinenti a questo controllo.
+    """
+    region = Region(name="Affinity Diagnostic Region")
+    airbase = Military(
+        mil_category=Context.MILITARY_CATEGORY["Air_Base"][1], name="Diag Airbase", side="Blue"
+    )
+    airbase._assets = {
+        'f14': _diag_mock_attacking_aircraft('F-14A Tomcat'),
+        'f16': _diag_mock_attacking_aircraft('F-16CM Block 50'),
+    }
+
+    scenarios = {
+        '100% Armored (3 Tank)': {
+            'v1': _diag_mock_ground_vehicle(gat.TANK.value, _DIAG_TANK_PHYSICAL),
+            'v2': _diag_mock_ground_vehicle(gat.TANK.value, _DIAG_TANK_PHYSICAL),
+            'v3': _diag_mock_ground_vehicle(gat.TANK.value, _DIAG_TANK_PHYSICAL),
+        },
+        '100% Air_Defense (3 SAM_Small)': {
+            's1': _diag_mock_ground_vehicle(gat.SAM_SMALL.value, _DIAG_SAM_PHYSICAL),
+            's2': _diag_mock_ground_vehicle(gat.SAM_SMALL.value, _DIAG_SAM_PHYSICAL),
+            's3': _diag_mock_ground_vehicle(gat.SAM_SMALL.value, _DIAG_SAM_PHYSICAL),
+        },
+        'Misto Armored + Air_Defense (2+2)': {
+            'v1': _diag_mock_ground_vehicle(gat.TANK.value, _DIAG_TANK_PHYSICAL),
+            'v2': _diag_mock_ground_vehicle(gat.TANK.value, _DIAG_TANK_PHYSICAL),
+            's1': _diag_mock_ground_vehicle(gat.SAM_SMALL.value, _DIAG_SAM_PHYSICAL),
+            's2': _diag_mock_ground_vehicle(gat.SAM_SMALL.value, _DIAG_SAM_PHYSICAL),
+        },
+        '100% Aircraft (3 caccia a terra)': {
+            'a1': _diag_mock_parked_aircraft(aat.FIGHTER.value),
+            'a2': _diag_mock_parked_aircraft(aat.FIGHTER.value),
+            'a3': _diag_mock_parked_aircraft(aat.FIGHTER.value),
+        },
+    }
+
+    _WEIGHT, _TTI, _VALUE = 2.0, 2.0, 5  # base_priority senza affinità = 5.0
+
+    rows = []
+    for name, assets in scenarios.items():
+        target = Block(
+            name="Diag Target", description="", side="Red", category="Civilian",
+            sub_category="", functionality="", value=_VALUE,
+        )
+        target._assets = assets
+
+        affinity = region._target_affinity(airbase, target)
+        priority = region._calculate_priority(
+            block=airbase, target_block=target, weight=_WEIGHT,
+            time_to_intercept=_TTI, range_ratio=1.0, target_affinity=affinity,
+        )
+        rows.append([name, f"{affinity:.3f}", f"{priority:.3f}"])
+
+    print("\n--- Region._target_affinity() diagnostic (base_priority senza affinità = 5.0) ---")
+    print(tabulate(rows, headers=["Scenario (composizione target)", "target_affinity", "priorità finale"], tablefmt="grid"))
+    print()
+
+
+if STAMPA_TARGET_AFFINITY:
+    print_target_affinity_scenarios()
 
 
 if __name__ == '__main__':
