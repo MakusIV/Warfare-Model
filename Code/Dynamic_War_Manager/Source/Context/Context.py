@@ -1534,6 +1534,48 @@ def get_weapon_target_class(target_type: str) -> str:
     return WEAPON_TARGET_CLASS_MAP[target_type]
 
 
+# LOADOUT_DOCTRINE: tabella sparsa di override di dottrina/politica di impiego per (side, model).
+# La stragrande maggioranza delle coppie (model, side) non ha alcuna voce: l'assenza è il caso
+# normale e significa "nessuna restrizione di dottrina", NON un errore (a differenza di
+# WEAPON_TARGET_CLASS_MAP, che è una mappa esaustiva su un enum chiuso). get_doctrine_loadouts
+# per questo NON solleva mai eccezioni per una chiave mancante.
+#
+# Struttura: {side: {model: {'allowed': [...]} | {'denied': [...]}}}
+#   side è uno dei valori di SIDE ('Blue', 'Red', 'Neutral') oppure '*' (regola valida per ogni
+#   side, usata come fallback quando non esiste una voce side-specifica per lo stesso model).
+#   'allowed' è una whitelist; 'denied' è una blacklist. Mutuamente esclusive nella stessa voce.
+#
+# NOTA: contiene solo la REGOLA GREZZA per (model, side); risolvere whitelist/blacklist contro
+# l'insieme reale dei loadout del modello (in Aircraft_Loadouts.AIRCRAFT_LOADOUTS) è responsabilità
+# del chiamante (Air_Resources_Assigner.get_available_loadouts) — Context.py non deve dipendere da
+# Aircraft_Loadouts.py, che già dipende da Context.py (dipendenza circolare).
+#
+# Vuota per ora: nessuna restrizione di dottrina è ancora stata modellata.
+LOADOUT_DOCTRINE: Dict[str, Dict[str, Dict[str, List[str]]]] = {}
+
+
+def get_doctrine_loadouts(model: str, side: Optional[str] = None) -> Optional[Dict[str, List[str]]]:
+
+    """ Restituisce la regola grezza di dottrina per (model, side), o None se non esiste.
+
+    Una voce side-specifica ha precedenza su una voce '*' per lo stesso model. Non risolve la
+    regola in un insieme di loadout: restituisce {'allowed': [...]} o {'denied': [...]} così come
+    definiti in LOADOUT_DOCTRINE. L'assenza di voce (il caso comune) è normale, non un errore.
+
+    Args:
+        model (str): nome del modello aereo.
+        side (Optional[str]): 'Blue' | 'Red' | 'Neutral' | None. None cerca solo la voce '*'.
+    Returns:
+        Optional[Dict[str, List[str]]]: {'allowed': [...]} o {'denied': [...]}, oppure None.
+    """
+
+    if side is not None:
+        side_rules = LOADOUT_DOCTRINE.get(side, {})
+        if model in side_rules:
+            return side_rules[model]
+    return LOADOUT_DOCTRINE.get('*', {}).get(model)
+
+
 BLOCK_ASSET_CATEGORY = {
     'Block_Infrastructure_Asset': {},
     'Ground_Military_Vehicle_Asset': {},

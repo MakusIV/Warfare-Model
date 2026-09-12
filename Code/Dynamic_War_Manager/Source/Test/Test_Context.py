@@ -53,13 +53,16 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     MAX_AIRCRAFT_TYPE_FOR_MISSION,
     WEAPON_TARGET_CLASS_MAP,
     DIMENSION_CLASSES,
+    LOADOUT_DOCTRINE,
     # Functions
     get_dimension,
     _get_task_from_weapon_param,
     _get_weapon_param_from_target,
     get_task_from_target,
     get_weapon_target_class,
+    get_doctrine_loadouts,
 )
+import copy
 
 
 # ---------------------------------------------------------------------------
@@ -1052,6 +1055,52 @@ class TestWeaponTargetClassMap(unittest.TestCase):
         a differenza del collasso Generic/Helibase/Logistic che è un fallback intenzionale."""
         with self.assertRaises(ValueError):
             get_weapon_target_class('NOT_A_REAL_TARGET_CLASS')
+
+
+class TestLoadoutDoctrine(unittest.TestCase):
+    """Unit tests for LOADOUT_DOCTRINE / get_doctrine_loadouts()."""
+
+    def setUp(self):
+        self._original = copy.deepcopy(LOADOUT_DOCTRINE)
+
+    def tearDown(self):
+        LOADOUT_DOCTRINE.clear()
+        LOADOUT_DOCTRINE.update(self._original)
+
+    def test_is_dict(self):
+        self.assertIsInstance(LOADOUT_DOCTRINE, dict)
+
+    def test_missing_entry_returns_none(self):
+        self.assertIsNone(get_doctrine_loadouts('Nonexistent Model XYZ'))
+
+    def test_missing_entry_with_side_returns_none(self):
+        self.assertIsNone(get_doctrine_loadouts('Nonexistent Model XYZ', side='Red'))
+
+    def test_side_specific_rule_returned(self):
+        LOADOUT_DOCTRINE['Red'] = {'F-4E Phantom II': {'denied': ['Strike']}}
+        self.assertEqual(
+            get_doctrine_loadouts('F-4E Phantom II', side='Red'),
+            {'denied': ['Strike']},
+        )
+
+    def test_wildcard_rule_used_when_no_side_specific(self):
+        LOADOUT_DOCTRINE['*'] = {'F-4E Phantom II': {'allowed': ['Air Superiority']}}
+        self.assertEqual(
+            get_doctrine_loadouts('F-4E Phantom II', side='Blue'),
+            {'allowed': ['Air Superiority']},
+        )
+
+    def test_side_specific_wins_over_wildcard(self):
+        LOADOUT_DOCTRINE['*'] = {'F-4E Phantom II': {'allowed': ['Air Superiority']}}
+        LOADOUT_DOCTRINE['Red'] = {'F-4E Phantom II': {'denied': ['Strike']}}
+        self.assertEqual(
+            get_doctrine_loadouts('F-4E Phantom II', side='Red'),
+            {'denied': ['Strike']},
+        )
+
+    def test_side_none_only_checks_wildcard(self):
+        LOADOUT_DOCTRINE['Red'] = {'F-4E Phantom II': {'denied': ['Strike']}}
+        self.assertIsNone(get_doctrine_loadouts('F-4E Phantom II', side=None))
 
 
 if __name__ == '__main__':

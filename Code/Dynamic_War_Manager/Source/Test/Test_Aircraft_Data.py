@@ -1851,6 +1851,211 @@ class TestCombatScoreTargetEffectivenessAircraft(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  TEST Aircraft_Data.combat_score_target_effectiveness_by_distribution
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Distribuzione di riferimento: bersaglio 100% 'Aircraft', 100% 'big' -- confrontabile 1:1 con le
+# liste ["Aircraft"], ["big"] usate da TestCombatScoreTargetEffectivenessAircraft.
+_DIST_AIRCRAFT_BIG: dict = {"Aircraft": {"perc_type": 1.0, "perc_dimension": {"big": 1.0}}}
+_DIST_SOFT_BIG: dict = {"Soft": {"perc_type": 1.0, "perc_dimension": {"big": 1.0}}}
+
+
+class TestCombatScoreTargetEffectivenessByDistributionAircraft(unittest.TestCase):
+    """Unit test per combat_score_target_effectiveness_by_distribution() con Aircraft.
+
+    Stessa logica di TestCombatScoreTargetEffectivenessAircraft ma con target espresso come
+    distribuzione pesata invece che come coppia di liste (target_type, target_dimension).
+    """
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_returns_float(self):
+        result = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        self.assertIsInstance(result, float)
+
+    def test_non_negative(self):
+        result = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        self.assertGreaterEqual(result, 0.0)
+
+    def test_positive(self):
+        result = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        self.assertGreater(result, 0.0)
+
+    def test_aircraft_distribution_scores_higher_than_soft(self):
+        """Come nella variante a liste: le AAM (score Aircraft > 0) battono Soft (score = 0)."""
+        aircraft_score = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        soft_score = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_SOFT_BIG
+        )
+        self.assertGreater(aircraft_score, soft_score)
+
+    def test_combat_score_eval_matches_direct_call(self):
+        score_eval = self._ac.combat_score_eval(
+            "CAP", _FIGHTER_LOADOUT, True, target_distribution=_DIST_AIRCRAFT_BIG
+        )
+        score_direct = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        self.assertAlmostEqual(score_eval, score_direct, places=9)
+
+    def test_equivalent_to_list_based_for_single_type_single_dimension(self):
+        """Una distribuzione 100%/100% su un solo (tipo, dimensione) deve coincidere con il
+        punteggio ottenuto dalla variante a liste per la stessa coppia (stesso weapon_score
+        sottostante, nessuna diluizione essendoci un solo termine)."""
+        by_distribution = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        by_list = self._ac.combat_score_target_effectiveness(
+            "CAP", _FIGHTER_LOADOUT, ["Aircraft"], ["big"]
+        )
+        self.assertAlmostEqual(by_distribution, by_list, places=9)
+
+    def test_invalid_task_raises(self):
+        with self.assertRaises((ValueError, TypeError)):
+            self._ac.combat_score_target_effectiveness_by_distribution(
+                "INVALID_TASK_XYZ", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+            )
+
+    def test_deterministic(self):
+        score1 = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        score2 = self._ac.combat_score_target_effectiveness_by_distribution(
+            "CAP", _FIGHTER_LOADOUT, _DIST_AIRCRAFT_BIG
+        )
+        self.assertEqual(score1, score2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  TEST Aircraft_Data.best_loadout_against_target / combat_aggregate_against_target
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestBestLoadoutAgainstTarget(unittest.TestCase):
+    """Unit test per Aircraft_Data.best_loadout_against_target()."""
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_returns_tuple_name_and_float(self):
+        name, score = self._ac.best_loadout_against_target("CAP", _DIST_AIRCRAFT_BIG)
+        self.assertIsInstance(name, str)
+        self.assertIsInstance(score, float)
+
+    def test_none_when_task_has_no_loadouts(self):
+        """Un task senza loadout per questo modello -> (None, 0.0)."""
+        result = self._ac.best_loadout_against_target("Anti_Ship", _DIST_AIRCRAFT_BIG)
+        self.assertEqual(result, (None, 0.0))
+
+    def test_available_loadouts_filters_candidates(self):
+        loadouts = list(self._ac.get_loadouts(self._ac.model, "CAP").keys())
+        single = loadouts[0]
+        name, _ = self._ac.best_loadout_against_target(
+            "CAP", _DIST_AIRCRAFT_BIG, available_loadouts=[single]
+        )
+        self.assertEqual(name, single)
+
+    def test_available_loadouts_no_overlap_returns_none(self):
+        result = self._ac.best_loadout_against_target(
+            "CAP", _DIST_AIRCRAFT_BIG, available_loadouts=["Nonexistent Loadout XYZ"]
+        )
+        self.assertEqual(result, (None, 0.0))
+
+    def test_available_loadouts_none_means_no_filter(self):
+        all_names = list(self._ac.get_loadouts(self._ac.model, "CAP").keys())
+        result_no_filter = self._ac.best_loadout_against_target("CAP", _DIST_AIRCRAFT_BIG)
+        result_explicit = self._ac.best_loadout_against_target(
+            "CAP", _DIST_AIRCRAFT_BIG, available_loadouts=all_names
+        )
+        self.assertEqual(result_no_filter, result_explicit)
+
+    def test_picks_highest_scoring_candidate(self):
+        """Il nome restituito deve avere lo score massimo tra tutti i candidati del task."""
+        loadouts = list(self._ac.get_loadouts(self._ac.model, "CAP").keys())
+        scores = {
+            name: self._ac.combat_score_target_effectiveness_by_distribution("CAP", name, _DIST_AIRCRAFT_BIG)
+            for name in loadouts
+        }
+        best_name, best_score = self._ac.best_loadout_against_target("CAP", _DIST_AIRCRAFT_BIG)
+        self.assertEqual(best_score, max(scores.values()))
+        self.assertEqual(scores[best_name], best_score)
+
+    def test_zero_score_candidate_not_dropped(self):
+        """Regressione: un candidato con punteggio esattamente 0.0 non deve mai risultare
+        scartato in favore di (None, 0.0) -- bug presente in get_list_of_aircrafts, dove il
+        seed a 0.0 con confronto '>' stretto lascia il risultato non assegnato se ogni
+        candidato pareggia esattamente lo 0.0 sentinella."""
+        with patch.object(
+            Aircraft_Data, "combat_score_target_effectiveness_by_distribution", return_value=0.0
+        ):
+            name, score = self._ac.best_loadout_against_target("CAP", _DIST_AIRCRAFT_BIG)
+        self.assertIsNotNone(name)
+        self.assertEqual(score, 0.0)
+
+
+class TestCombatAggregateAgainstTarget(unittest.TestCase):
+    """Unit test per Aircraft_Data.combat_aggregate_against_target()."""
+
+    def setUp(self):
+        self._ac = Aircraft_Data._registry[_FIGHTER_MODEL]   # F-14A Tomcat
+        self._mock_ctx = _all_loggers_mocked()
+        self._mock_ctx.__enter__()
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+
+    def test_returns_tuple_float_and_dict(self):
+        best_score, best_per_task = self._ac.combat_aggregate_against_target(_DIST_AIRCRAFT_BIG)
+        self.assertIsInstance(best_score, float)
+        self.assertIsInstance(best_per_task, dict)
+
+    def test_best_score_is_max_not_sum(self):
+        best_score, best_per_task = self._ac.combat_aggregate_against_target(_DIST_AIRCRAFT_BIG)
+        scores = [score for _, score in best_per_task.values()]
+        self.assertEqual(best_score, max(scores))
+        self.assertNotEqual(best_score, sum(scores))
+
+    def test_tasks_filter_restricts_candidate_tasks(self):
+        _, best_per_task = self._ac.combat_aggregate_against_target(
+            _DIST_AIRCRAFT_BIG, tasks=["CAP"]
+        )
+        self.assertEqual(set(best_per_task.keys()) - {"CAP"}, set())
+
+    def test_available_loadouts_by_task_applied_per_task(self):
+        loadouts = list(self._ac.get_loadouts(self._ac.model, "CAP").keys())
+        single = loadouts[0]
+        _, best_per_task = self._ac.combat_aggregate_against_target(
+            _DIST_AIRCRAFT_BIG, tasks=["CAP"],
+            available_loadouts_by_task={"CAP": [single]},
+        )
+        self.assertEqual(best_per_task["CAP"][0], single)
+
+    def test_empty_when_no_task_has_loadouts(self):
+        result = self._ac.combat_aggregate_against_target(
+            _DIST_AIRCRAFT_BIG, tasks=["Anti_Ship"]
+        )
+        self.assertEqual(result, (0.0, {}))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  TEST Aircraft_Data.get_aircrafts_quantity — TARGET AIRCRAFT (aria-aria)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -3036,6 +3241,9 @@ def _run_tests() -> unittest.TestResult:
         TestGetAircraftsQuantityIntegrative,
         TestLoadoutTargetEffectivenessAircraft,
         TestCombatScoreTargetEffectivenessAircraft,
+        TestCombatScoreTargetEffectivenessByDistributionAircraft,
+        TestBestLoadoutAgainstTarget,
+        TestCombatAggregateAgainstTarget,
         TestGetAircraftsQuantityAircraft,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))

@@ -90,11 +90,17 @@ from Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import (
     _reduction_weapons_availability,
     _increase_weapons_availability,
     _create_ground_mission_task_table,
+    get_available_loadouts,
     _DIRECTIVE_WEIGHTS,
     _REFERENCE_COST_K,
 )
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
+    AIRCRAFT_LOADOUTS,
+    get_aircraft_loadouts,
+    get_aircraft_loadouts_by_task,
+)
 from Code.Dynamic_War_Manager.Source.Context.Initial_Context import _WEAPONS_AVAILABILITY
+from Code.Dynamic_War_Manager.Source.Context.Context import LOADOUT_DOCTRINE
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  FIXTURE GLOBALI
@@ -769,6 +775,123 @@ class TestLoadoutAvailability(unittest.TestCase):
         wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
         with self.assertRaises(TypeError):
             _loadout_availability(wa, 42, self._LOADOUT)
+
+
+class TestGetAvailableLoadouts(unittest.TestCase):
+    """Unit test per get_available_loadouts(model, task, year, side, weapons_availability, min_units).
+
+    Cascata L1 (anno) -> L2 (dottrina) -> L3 (scorte), ciascuno saltato se il relativo
+    argomento è None. Aereo di riferimento: F-14A Tomcat, task 'CAP'
+    (loadout: Phoenix Fleet Defense, Sparrow CAP/Escort, Sidewinder Dogfight).
+    """
+
+    _AIRCRAFT = 'F-14A Tomcat'
+    _LOADOUT  = 'Phoenix Fleet Defense'
+
+    def setUp(self):
+        self._mock_ctx = _mra_logger_mocked()
+        self._mock_ctx.__enter__()
+        self._original_doctrine = copy.deepcopy(LOADOUT_DOCTRINE)
+
+    def tearDown(self):
+        self._mock_ctx.__exit__(None, None, None)
+        LOADOUT_DOCTRINE.clear()
+        LOADOUT_DOCTRINE.update(self._original_doctrine)
+
+    # ── Nessun filtro ────────────────────────────────────────────────────────
+
+    def test_no_filters_returns_all_task_loadouts(self):
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP')
+        self.assertEqual(set(result), set(get_aircraft_loadouts_by_task(self._AIRCRAFT, 'CAP').keys()))
+
+    def test_task_none_returns_all_model_loadouts(self):
+        result = get_available_loadouts(self._AIRCRAFT, None)
+        self.assertEqual(set(result), set(get_aircraft_loadouts(self._AIRCRAFT).keys()))
+
+    # ── L1 anno ──────────────────────────────────────────────────────────────
+
+    def test_year_filter_excludes_incompatible_loadouts(self):
+        """1980: nessun loadout CAP di F-14A è ancora compatibile."""
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', year=1980)
+        self.assertEqual(result, [])
+
+    def test_year_filter_includes_compatible_loadouts(self):
+        """2024: tutti i loadout CAP sono compatibili."""
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', year=2024)
+        self.assertEqual(set(result), set(get_aircraft_loadouts_by_task(self._AIRCRAFT, 'CAP').keys()))
+
+    def test_year_none_skips_l1(self):
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', year=None)
+        self.assertEqual(set(result), set(get_aircraft_loadouts_by_task(self._AIRCRAFT, 'CAP').keys()))
+
+    # ── L2 dottrina ──────────────────────────────────────────────────────────
+
+    def test_doctrine_allowed_restricts_to_whitelist(self):
+        LOADOUT_DOCTRINE['Red'] = {self._AIRCRAFT: {'allowed': [self._LOADOUT]}}
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', side='Red')
+        self.assertEqual(result, [self._LOADOUT])
+
+    def test_doctrine_denied_removes_blacklisted(self):
+        LOADOUT_DOCTRINE['Red'] = {self._AIRCRAFT: {'denied': [self._LOADOUT]}}
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', side='Red')
+        self.assertNotIn(self._LOADOUT, result)
+        self.assertIn('Sidewinder Dogfight', result)
+
+    def test_doctrine_side_none_skips_l2(self):
+        LOADOUT_DOCTRINE['Red'] = {self._AIRCRAFT: {'denied': [self._LOADOUT]}}
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', side=None)
+        self.assertIn(self._LOADOUT, result)
+
+    def test_doctrine_no_rule_for_side_is_noop(self):
+        LOADOUT_DOCTRINE['Red'] = {self._AIRCRAFT: {'denied': [self._LOADOUT]}}
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', side='Blue')
+        self.assertIn(self._LOADOUT, result)
+
+    # ── L3 scorte ────────────────────────────────────────────────────────────
+
+    def test_stock_filter_respects_min_units(self):
+        wa = copy.deepcopy(_WEAPONS_AVAIL_AIM7_LIMITED)  # 1 loadout assemblabile
+        self.assertIn(self._LOADOUT, get_available_loadouts(
+            self._AIRCRAFT, 'CAP', weapons_availability=wa, min_units=1
+        ))
+        self.assertNotIn(self._LOADOUT, get_available_loadouts(
+            self._AIRCRAFT, 'CAP', weapons_availability=copy.deepcopy(_WEAPONS_AVAIL_AIM7_LIMITED), min_units=2
+        ))
+
+    def test_stock_filter_insufficient_excludes(self):
+        wa = copy.deepcopy(_WEAPONS_AVAIL_INSUFFICIENT)
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', weapons_availability=wa)
+        self.assertNotIn(self._LOADOUT, result)
+
+    def test_stock_none_skips_l3(self):
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', weapons_availability=None)
+        self.assertIn(self._LOADOUT, result)
+
+    def test_empty_weapons_availability_is_not_none_and_excludes_everything(self):
+        """weapons_availability={} (dict vuoto, non None) esclude tutto: scorte esplicitamente nulle."""
+        result = get_available_loadouts(self._AIRCRAFT, 'CAP', weapons_availability={})
+        self.assertEqual(result, [])
+
+    # ── Composizione filtri ──────────────────────────────────────────────────
+
+    def test_filters_compose_in_cascade(self):
+        wa = copy.deepcopy(_WEAPONS_AVAIL_NOMINAL)
+        LOADOUT_DOCTRINE['Red'] = {self._AIRCRAFT: {'denied': ['Sidewinder Dogfight']}}
+        result = get_available_loadouts(
+            self._AIRCRAFT, 'CAP', year=2024, side='Red', weapons_availability=wa, min_units=1
+        )
+        self.assertIn(self._LOADOUT, result)
+        self.assertNotIn('Sidewinder Dogfight', result)
+
+    # ── Validazione input ────────────────────────────────────────────────────
+
+    def test_invalid_model_type_raises_type_error(self):
+        with self.assertRaises(TypeError):
+            get_available_loadouts(42, 'CAP')
+
+    def test_unknown_model_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            get_available_loadouts('Nonexistent Model XYZ', 'CAP')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2728,6 +2851,7 @@ def _run_tests() -> unittest.TestResult:
         TestFindWeaponInAvailability,
         TestPylonsToWeaponsDict,
         TestLoadoutAvailability,
+        TestGetAvailableLoadouts,
         TestReductionWeaponsAvailability,
         TestIncreaseWeaponsAvailability,
         TestGetLoadoutsAvailability,

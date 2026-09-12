@@ -169,6 +169,55 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(self.navalbase.get_military_category(), "Naval_Base")
 
     # ------------------------------------------------------------------ #
+    # weapons_availability / get_available_loadouts                       #
+    # ------------------------------------------------------------------ #
+
+    def test_weapons_availability_defaults_to_none(self):
+        """Un Military appena creato ha scorte non modellate (None), non {} ({}
+        significherebbe scorte esplicitamente nulle e farebbe fallire ogni loadout)."""
+        self.assertIsNone(self.airbase.weapons_availability)
+
+    def test_weapons_availability_setter_accepts_dict(self):
+        stock = {'MISSILES_AAM': {'AIM-54A-MK47': 8}}
+        self.airbase.weapons_availability = stock
+        self.assertEqual(self.airbase.weapons_availability, stock)
+
+    def test_weapons_availability_setter_accepts_none(self):
+        self.airbase.weapons_availability = {'MISSILES_AAM': {}}
+        self.airbase.weapons_availability = None
+        self.assertIsNone(self.airbase.weapons_availability)
+
+    def test_weapons_availability_setter_rejects_non_dict(self):
+        with self.assertRaises(TypeError):
+            self.airbase.weapons_availability = ['not', 'a', 'dict']
+        with self.assertRaises(TypeError):
+            self.airbase.weapons_availability = "not_a_dict"
+
+    def test_get_available_loadouts_delegates_with_side_and_stock(self):
+        """get_available_loadouts delega a Air_Resources_Assigner.get_available_loadouts
+        passando self.side e self.weapons_availability."""
+        stock = {'MISSILES_AAM': {'AIM-54A-MK47': 8}}
+        self.airbase.weapons_availability = stock
+        with patch(
+            "Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner.get_available_loadouts"
+        ) as mock_get_available:
+            mock_get_available.return_value = ['Phoenix Fleet Defense']
+            result = self.airbase.get_available_loadouts('F-14A Tomcat', task='CAP', year=1985)
+
+        mock_get_available.assert_called_once_with(
+            'F-14A Tomcat', 'CAP', year=1985, side=self.airbase.side, weapons_availability=stock,
+        )
+        self.assertEqual(result, ['Phoenix Fleet Defense'])
+
+    def test_get_available_loadouts_integration_real_data(self):
+        """Senza mock: side='Blue' senza regole di dottrina e scorte non modellate (None)
+        -> L2/L3 saltati, risultato coincide con i loadout reali del task."""
+        self.airbase.weapons_availability = None
+        result = self.airbase.get_available_loadouts('F-14A Tomcat', task='CAP')
+        self.assertTrue(result)
+        self.assertEqual(set(result), {'Phoenix Fleet Defense', 'Sparrow CAP/Escort', 'Sidewinder Dogfight'})
+
+    # ------------------------------------------------------------------ #
     # combat_power                                                        #
     # ------------------------------------------------------------------ #
 

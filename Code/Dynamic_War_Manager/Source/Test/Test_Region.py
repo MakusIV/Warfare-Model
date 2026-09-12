@@ -13,7 +13,20 @@ from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
 from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    Ground_Vehicle_Asset_Type as gat,
+    Air_Asset_Type as aat,
+)
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+
+# Lightweight class stubs used only to set mock.__class__ for classification-loop dispatch,
+# mirroring Test_Military.py -- Vehicle/Ship/Aircraft cannot be imported directly because they
+# trigger a pre-existing circular import in the Aircraft->Aircraft_Weapon_Data chain.
+_Vehicle  = type('Vehicle',  (), {})
+_Ship     = type('Ship',     (), {})
+_Aircraft = type('Aircraft', (), {})
+_Structure = type('Structure', (), {})
 
 
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
@@ -929,6 +942,549 @@ class TestGetTargetClassificationReport(unittest.TestCase):
         # Il risultato deve contenere i conteggi sommati
         self.assertEqual(result['Armored']['big'],    3)
         self.assertEqual(result['Armored']['medium'], 3)
+
+
+class TestTargetProfileFromBlock(unittest.TestCase):
+    """Unit tests for Region._target_profile_from_block()."""
+
+    def setUp(self):
+        self.region = Region(name="TPB Region")
+        self.target_block = Block(
+            name="Target Block", description="", side="Red",
+            category="Military", sub_category="Base", functionality="Attack", value=10,
+        )
+
+    @staticmethod
+    def _mock_asset(cls, asset_type, category=None, operative=True, physical=None):
+        m = MagicMock()
+        m.__class__ = cls
+        m.asset_type = asset_type
+        m.category = category
+        m.is_operative.return_value = operative
+        m.id = f"{asset_type}-mock"
+        if physical is not None:
+            m.get_physical_characteristics.return_value = physical
+        return m
+
+    def _call(self):
+        # Bypassa la lru_cache per chiamare direttamente l'implementazione, cosi' ogni test
+        # lavora su uno stato fresco senza doversi preoccupare della cache condivisa.
+        return self.region._target_profile_from_block.__wrapped__(self.region, self.target_block)
+
+    def test_empty_block_returns_empty_dict(self):
+        self.target_block._assets = {}
+        self.assertEqual(self._call(), {})
+
+    def test_mixed_armor_and_sam_block_ground_truth_counts(self):
+        tank = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        sam = self._mock_asset(
+            _Vehicle, gat.SAM_SMALL.value,
+            physical={'length': 5, 'width': 2.5, 'height': 2, 'weight': 18},
+        )
+        self.target_block._assets = {'v1': tank, 'v2': sam}
+        result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 1}, 'Air_Defense': {'small': 1}})
+
+    def test_damaged_and_destroyed_assets_excluded(self):
+        tank = self._mock_asset(
+            _Vehicle, gat.TANK.value, operative=False,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': tank}
+        self.assertEqual(self._call(), {})
+
+    def test_unclassifiable_asset_skipped(self):
+        asset = self._mock_asset(
+            _Vehicle, 'NotARealAssetType',
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_aircraft_dimension_mapping_small_med_big(self):
+        # Un asset per chiamata: FIGHTER e RECON collassano entrambi sulla stessa
+        # classificazione ('Aircraft'), quindi combinarli nello stesso block mischierebbe le
+        # dimensioni sotto un'unica chiave -- qui si isola solo il mapping dimensione/categoria.
+        for asset_type, expected_dimension in (
+            (aat.FIGHTER.value, 'small'),
+            (aat.RECON.value, 'med'),
+            (aat.TRANSPORT.value, 'big'),
+        ):
+            with self.subTest(asset_type=asset_type):
+                aircraft = self._mock_asset(_Aircraft, asset_type, category=asset_type)
+                self.target_block._assets = {'a1': aircraft}
+                result = self._call()
+                classification = Context.get_target_classification(asset_type)
+                self.assertEqual(result, {classification: {expected_dimension: 1}})
+
+    def test_aircraft_missing_category_skipped(self):
+        aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=None)
+        self.target_block._assets = {'a1': aircraft}
+        self.assertEqual(self._call(), {})
+
+    def test_vehicle_missing_physical_characteristics_skipped(self):
+        asset = self._mock_asset(_Vehicle, gat.TANK.value, physical=None)
+        asset.get_physical_characteristics.return_value = None
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_asset_type_none_skipped(self):
+        asset = self._mock_asset(
+            _Vehicle, None,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_two_assets_same_classification_and_dimension_accumulate(self):
+        tank1 = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        tank2 = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': tank1, 'v2': tank2}
+        result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 2}})
+
+    def test_no_randomness_calc_probability_never_invoked(self):
+        with patch(
+            'Code.Dynamic_War_Manager.Source.Utility.Utility.calcProbability',
+            side_effect=AssertionError("calcProbability must not be called by _target_profile_from_block"),
+        ):
+            tank = self._mock_asset(
+                _Vehicle, gat.TANK.value,
+                physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+            )
+            self.target_block._assets = {'v1': tank}
+            result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 1}})
+
+    def test_lru_cache_used_and_invalidated(self):
+        self.target_block._assets = {}
+        self.region._target_profile_from_block(self.target_block)
+        self.assertGreater(self.region._target_profile_from_block.cache_info().currsize, 0)
+        self.region._invalidate_caches()
+        self.assertEqual(self.region._target_profile_from_block.cache_info().currsize, 0)
+
+
+class TestProfileToWeaponDistribution(unittest.TestCase):
+    """Unit tests for Region._profile_to_weapon_distribution().
+
+    Sostituisce l'euristica a copertura troncata (_profile_to_weapon_lists, rimossa) con una
+    distribuzione pesata: ogni classificazione/dimensione presente nel profilo contribuisce
+    sempre, pesata per la sua quota reale, invece di essere inclusa/esclusa tramite una soglia.
+    """
+
+    def test_empty_dict_profile_returns_empty_dict(self):
+        self.assertEqual(Region._profile_to_weapon_distribution({}), {})
+
+    def test_none_profile_returns_empty_dict(self):
+        self.assertEqual(Region._profile_to_weapon_distribution(None), {})
+
+    def test_single_class_single_dimension(self):
+        result = Region._profile_to_weapon_distribution({'Armored': {'big': 5}})
+        self.assertEqual(result, {'Armored': {'perc_type': 1.0, 'perc_dimension': {'big': 1.0}}})
+
+    def test_two_classes_perc_type_proportional_to_count(self):
+        result = Region._profile_to_weapon_distribution(
+            {'Armored': {'big': 3}, 'Soft': {'small': 1}}
+        )
+        self.assertAlmostEqual(result['Armored']['perc_type'], 0.75)
+        self.assertAlmostEqual(result['Soft']['perc_type'], 0.25)
+
+    def test_perc_type_sums_to_one(self):
+        result = Region._profile_to_weapon_distribution(
+            {'Armored': {'big': 3}, 'Soft': {'small': 1}, 'Hard': {'med': 6}}
+        )
+        self.assertAlmostEqual(sum(v['perc_type'] for v in result.values()), 1.0)
+
+    def test_perc_dimension_sums_to_one_within_each_class(self):
+        result = Region._profile_to_weapon_distribution(
+            {'Armored': {'big': 2, 'med': 1, 'small': 1}}
+        )
+        self.assertAlmostEqual(sum(result['Armored']['perc_dimension'].values()), 1.0)
+
+    def test_perc_dimension_proportional_within_class(self):
+        result = Region._profile_to_weapon_distribution({'Armored': {'big': 3, 'small': 1}})
+        self.assertAlmostEqual(result['Armored']['perc_dimension']['big'], 0.75)
+        self.assertAlmostEqual(result['Armored']['perc_dimension']['small'], 0.25)
+
+    def test_zero_count_dimension_excluded_from_perc_dimension(self):
+        result = Region._profile_to_weapon_distribution({'Armored': {'big': 0, 'small': 4}})
+        self.assertEqual(result, {'Armored': {'perc_type': 1.0, 'perc_dimension': {'small': 1.0}}})
+
+    def test_classification_with_all_zero_counts_excluded(self):
+        result = Region._profile_to_weapon_distribution(
+            {'Armored': {'big': 0}, 'Soft': {'small': 5}}
+        )
+        self.assertNotIn('Armored', result)
+        self.assertIn('Soft', result)
+
+    def test_zero_total_returns_empty_dict(self):
+        result = Region._profile_to_weapon_distribution({'Armored': {'big': 0, 'small': 0}})
+        self.assertEqual(result, {})
+
+    def test_no_truncation_all_classes_present_regardless_of_share(self):
+        """A differenza della vecchia euristica a copertura, non c'è soglia: anche una classe con
+        una quota minima resta nel risultato."""
+        profile = {'Dominant': {'big': 970}}
+        for i in range(10):
+            profile[f"Tail{i}"] = {'small': 3}
+        result = Region._profile_to_weapon_distribution(profile)
+        self.assertEqual(len(result), 11)
+        for i in range(10):
+            self.assertIn(f"Tail{i}", result)
+
+    def test_is_staticmethod(self):
+        # Chiamabile direttamente sulla classe, senza istanza.
+        result = Region._profile_to_weapon_distribution({'Armored': {'big': 1}})
+        self.assertEqual(result, {'Armored': {'perc_type': 1.0, 'perc_dimension': {'big': 1.0}}})
+
+
+class TestTargetProfileFromReport(unittest.TestCase):
+    """Unit tests for Region._target_profile_from_report()."""
+
+    def setUp(self):
+        self.region = Region(name="TPR Region")
+
+    def test_delegates_to_get_target_report_with_same_args(self):
+        report = {'asset_summary': {'operative': {'Tank': {'big': 1}}}}
+        with patch.object(self.region, 'get_target_report', return_value={'sentinel': True}) as mock_gtr:
+            result = self.region._target_profile_from_report(report)
+        mock_gtr.assert_called_once_with(report)
+        self.assertEqual(result, {'sentinel': True})
+
+    def test_equivalent_to_get_target_report_real_call(self):
+        with patch(
+            'Code.Dynamic_War_Manager.Source.Context.Context.get_target_classification',
+            return_value='Armored',
+        ):
+            report = {'asset_summary': {'operative': {'Tank': {'big': 2}}}}
+            self.assertEqual(
+                self.region._target_profile_from_report(report),
+                self.region.get_target_report(report),
+            )
+
+    def test_returns_none_when_get_target_report_returns_none(self):
+        result = self.region._target_profile_from_report({'asset_summary': {'operative': {}}})
+        self.assertIsNone(result)
+
+
+class TestOperativeAircraftByModel(unittest.TestCase):
+    """Unit tests for Region._operative_aircraft_by_model()."""
+
+    def setUp(self):
+        self.region = Region(name="OAM Region")
+        self.airbase = Military(
+            mil_category=Context.MILITARY_CATEGORY["Air_Base"][1], name="AB", side="Blue"
+        )
+
+    @staticmethod
+    def _mock_aircraft(model, operative=True):
+        m = MagicMock()
+        m.__class__ = _Aircraft
+        m.model = model
+        m.asset_type = aat.FIGHTER.value
+        m.is_operative.return_value = operative
+        return m
+
+    def test_empty_block_returns_empty_dict(self):
+        self.airbase._assets = {}
+        self.assertEqual(self.region._operative_aircraft_by_model(self.airbase), {})
+
+    def test_groups_by_model(self):
+        a1 = self._mock_aircraft('F-14A Tomcat')
+        a2 = self._mock_aircraft('F-14A Tomcat')
+        a3 = self._mock_aircraft('F-16C Block 50')
+        self.airbase._assets = {'a1': a1, 'a2': a2, 'a3': a3}
+        result = self.region._operative_aircraft_by_model(self.airbase)
+        self.assertEqual(set(result.keys()), {'F-14A Tomcat', 'F-16C Block 50'})
+        self.assertEqual(len(result['F-14A Tomcat']), 2)
+        self.assertEqual(len(result['F-16C Block 50']), 1)
+
+    def test_excludes_non_operative(self):
+        a1 = self._mock_aircraft('F-14A Tomcat', operative=False)
+        self.airbase._assets = {'a1': a1}
+        self.assertEqual(self.region._operative_aircraft_by_model(self.airbase), {})
+
+    def test_excludes_model_none(self):
+        a1 = self._mock_aircraft(None)
+        self.airbase._assets = {'a1': a1}
+        self.assertEqual(self.region._operative_aircraft_by_model(self.airbase), {})
+
+    def test_non_aircraft_assets_ignored(self):
+        v = MagicMock()
+        v.__class__ = _Vehicle
+        v.is_operative.return_value = True
+        self.airbase._assets = {'v1': v}
+        self.assertEqual(self.region._operative_aircraft_by_model(self.airbase), {})
+
+
+class TestTargetAffinity(unittest.TestCase):
+    """Unit tests for Region._target_affinity()."""
+
+    def setUp(self):
+        self.region = Region(name="TA Region")
+        self.airbase = Military(
+            mil_category=Context.MILITARY_CATEGORY["Air_Base"][1], name="AB", side="Blue"
+        )
+        self.groundbase = Military(
+            mil_category=Context.MILITARY_CATEGORY["Ground_Base"][1], name="GB", side="Blue"
+        )
+        self.target = Block(
+            name="Target", description="", side="Red", category="Military",
+            sub_category="Base", functionality="Attack", value=5,
+        )
+        self.target._assets = {}
+
+    @staticmethod
+    def _mock_aircraft(model):
+        m = MagicMock()
+        m.__class__ = _Aircraft
+        m.model = model
+        m.asset_type = aat.FIGHTER.value
+        m.is_operative.return_value = True
+        return m
+
+    def _call(self, block, target_block):
+        # Bypassa la lru_cache per lavorare su stato fresco ad ogni test.
+        return self.region._target_affinity.__wrapped__(self.region, block, target_block)
+
+    def test_same_side_returns_neutral(self):
+        friendly = Block(
+            name="Friendly", description="", side="Blue", category="Military",
+            sub_category="Base", functionality="Attack", value=5,
+        )
+        self.assertEqual(self._call(self.airbase, friendly), 1.0)
+
+    def test_non_air_base_returns_neutral(self):
+        self.assertEqual(self._call(self.groundbase, self.target), 1.0)
+
+    def test_empty_target_profile_returns_neutral(self):
+        """target senza asset -> _target_profile_from_block restituisce {} -> neutro."""
+        self.assertEqual(self._call(self.airbase, self.target), 1.0)
+
+    def test_no_operative_aircraft_returns_neutral(self):
+        self.airbase._assets = {}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}):
+            self.assertEqual(self._call(self.airbase, self.target), 1.0)
+
+    def test_weighted_generic_score_zero_returns_neutral(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(0.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.0, {})):
+            self.assertEqual(self._call(self.airbase, self.target), 1.0)
+
+    def test_ratio_computed_within_bounds(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(2.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(3.0, {})):
+            result = self._call(self.airbase, self.target)
+        self.assertAlmostEqual(result, 1.5)
+
+    def test_ratio_clipped_to_max(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(1.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(100.0, {})):
+            result = self._call(self.airbase, self.target)
+        self.assertEqual(result, 2.0)
+
+    def test_ratio_clipped_to_min(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(10.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.01, {})):
+            result = self._call(self.airbase, self.target)
+        self.assertEqual(result, 0.25)
+
+    def test_weighted_by_aircraft_count(self):
+        """Due modelli con conteggi diversi: la media è pesata per numero di velivoli, non per modello."""
+        self.airbase._assets = {
+            'a1': self._mock_aircraft('F-14A Tomcat'),
+            'a2': self._mock_aircraft('F-14A Tomcat'),
+            'a3': self._mock_aircraft('F-16CM Block 50'),
+        }
+
+        def fake_generic(self_ac):
+            return (1.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
+
+        def fake_target(self_ac, *args, **kwargs):
+            return (2.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
+
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', new=fake_generic), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', new=fake_target):
+            result = self._call(self.airbase, self.target)
+        # weighted_generic = 2*1.0 + 1*2.0 = 4.0 ; weighted_target = 2*2.0 + 1*2.0 = 6.0 -> 1.5
+        self.assertAlmostEqual(result, 1.5)
+
+    def test_cache_used_and_invalidated(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Region, '_target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(2.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(3.0, {})):
+            self.region._target_affinity(self.airbase, self.target)
+        self.assertGreater(self.region._target_affinity.cache_info().currsize, 0)
+        self.region._invalidate_caches()
+        self.assertEqual(self.region._target_affinity.cache_info().currsize, 0)
+
+
+class TestCalculatePriorityTargetAffinity(unittest.TestCase):
+    """Unit tests for the target_affinity parameter of Region._calculate_priority()."""
+
+    def setUp(self):
+        self.region = Region(name="CP Region")
+
+    @staticmethod
+    def _military_block(side, category, cp_task, cp_value):
+        m = MagicMock(spec=Military)
+        m.side = side
+        m.get_military_category.return_value = category
+        m.combat_power.return_value = {cp_task: cp_value}
+        return m
+
+    @staticmethod
+    def _target(side, value, is_military=False, is_logistic=False, is_civilian=False,
+                category=None, cp_task=None, cp_value=None):
+        t = MagicMock(spec=Military)
+        t.side = side
+        t.value = value
+        t.is_military.return_value = is_military
+        t.is_logistic.return_value = is_logistic
+        t.is_civilian.return_value = is_civilian
+        if is_military:
+            t.get_military_category.return_value = category
+            t.combat_power.return_value = {cp_task: cp_value}
+        return t
+
+    def test_default_target_affinity_is_neutral(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_military=True, category='Ground_Base',
+                               cp_task='Attack', cp_value=4.0)
+        result_default = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        result_explicit = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=1.0,
+        )
+        self.assertEqual(result_default, result_explicit)
+
+    def test_target_affinity_scales_military_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_military=True, category='Ground_Base',
+                               cp_task='Attack', cp_value=4.0)
+        base = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        scaled = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+    def test_target_affinity_scales_logistic_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_logistic=True)
+        base = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_priority=3.0,
+        )
+        scaled = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_priority=3.0, target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+    def test_target_affinity_scales_civilian_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_civilian=True)
+        base = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        scaled = self.region._calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+
+class TestCalcAirPriorityTargetAffinity(unittest.TestCase):
+    """Unit tests confirming Region._calc_air_priority() wires target_affinity through."""
+
+    def setUp(self):
+        self.region = Region(name="CAP Region")
+
+    def test_calc_air_priority_uses_target_affinity(self):
+        block = MagicMock(spec=Military)
+        block.position = Point2D(0, 0)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Air_Base'
+        block.combat_power.return_value = {'CAP': 10.0}
+        block.time2attack.return_value = 5.0
+
+        target = MagicMock(spec=Military)
+        target.position = Point2D(10, 10)
+        target.side = 'Red'
+        target.id = 'target1'
+        target.value = 5
+        target.is_military.return_value = True
+        target.is_logistic.return_value = False
+        target.is_civilian.return_value = False
+        target.get_military_category.return_value = 'Ground_Base'
+        target.combat_power.return_value = {'Attack': 4.0}
+
+        with patch.object(Region, '_target_affinity', return_value=1.0) as mock_affinity:
+            result_neutral = self.region._calc_air_priority.__wrapped__(self.region, block, target, weight=2.0)
+            mock_affinity.assert_called_once_with(block, target)
+
+        with patch.object(Region, '_target_affinity', return_value=2.0):
+            result_scaled = self.region._calc_air_priority.__wrapped__(self.region, block, target, weight=2.0)
+
+        self.assertAlmostEqual(result_scaled, result_neutral * 2.0)
+
+
+class TestCalcSurfacePriorityUnaffectedByAffinity(unittest.TestCase):
+    """Regression: Region._calc_surface_priority() must never consult _target_affinity —
+    the design keeps the defense/surface branch bit-identical to before item 7."""
+
+    def setUp(self):
+        self.region = Region(name="CSP Region")
+
+    def test_calc_surface_priority_never_calls_target_affinity(self):
+        block = MagicMock(spec=Military)
+        block.position = Point2D(0, 0)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Ground_Base'
+        block.combat_power.return_value = {'Attack': 10.0}
+        block.time2attack.return_value = 5.0
+        block.artillery_in_range.return_value = {'target_within_med_range': False, 'med_range_ratio': 1.0}
+
+        target = MagicMock(spec=Military)
+        target.position = Point2D(10, 10)
+        target.side = 'Red'
+        target.value = 5
+        target.is_military.return_value = True
+        target.is_logistic.return_value = False
+        target.is_civilian.return_value = False
+        target.get_military_category.return_value = 'Ground_Base'
+        target.combat_power.return_value = {'Attack': 4.0}
+
+        with patch.object(Region, '_target_affinity') as mock_affinity:
+            result = self.region._calc_surface_priority.__wrapped__(
+                self.region, block, (0.0, target), None, 2.0
+            )
+        mock_affinity.assert_not_called()
+        self.assertGreater(result, 0.0)
 
 
 if __name__ == '__main__':

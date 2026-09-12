@@ -9,12 +9,13 @@ from enum import Enum
 # Assuming these imports exist in your codebase
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, MIN_VALUE
+from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, MIN_VALUE, ASSET_TYPE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
 from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
 from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.DataType.Limes import Limes
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
@@ -72,6 +73,16 @@ MILITARY_CATEGORY_TO_FORCE = {
     "Naval_Base": "sea",
     "Air_Base": "air",
 }
+
+# Shape shared by both "target classification" producers: Region.get_target_report (fog-of-war,
+# built from a recon report) and Region._target_profile_from_block (ground truth, built directly
+# from a block's real assets). {classification: {'big'|'med'|'small': count}}.
+TargetProfile = Dict[str, Dict[str, int]]
+
+# Bound per Region._target_affinity: fattore moltiplicativo, non sostitutivo, applicato al ramo
+# attacco di _calculate_priority (v. quel metodo) — resta vicino a 1.0 (neutro) invece di poter
+# dominare il resto del calcolo di priorità.
+_AFFINITY_MIN, _AFFINITY_MAX = 0.25, 2.0
 
 
 @dataclass
@@ -807,6 +818,152 @@ class Region:
 
         return target_classification_report
 
+    @lru_cache(maxsize=256)
+    def _target_profile_from_block(self, target_block: Block) -> TargetProfile:
+        """Ground-truth (non-random) target classification profile built directly from target_block's assets.
+
+        Deterministic counterpart of get_target_report: replicates the classification loop inside
+        Block.get_recognition_report (Block.py:601-679) directly against target_block's real
+        assets, with all recon probability/randomness gating removed -- every operative asset is
+        counted unconditionally. Damaged/destroyed assets are ignored: only live threats matter
+        for the priority calculations this feeds.
+        """
+        target_profile: TargetProfile = {}
+
+        for asset in target_block._assets.values():
+
+            if not asset.is_operative():
+                continue
+
+            asset_type = getattr(asset, 'asset_type', None)
+            asset_category = getattr(asset, 'category', None)
+            asset_dimension = None
+
+            if asset.__class__.__name__ in ('Vehicle', 'Ship', 'Structure'):
+                asset_physical_characteristics = asset.get_physical_characteristics()
+
+                structure_type = (
+                    asset_category
+                    if asset.__class__.__name__ == 'Structure' and asset_category is not None
+                    else None
+                )
+
+                if asset_physical_characteristics:
+                    asset_dimension = Context.get_dimension(
+                        asset.__class__.__name__,
+                        asset_physical_characteristics['length'],
+                        asset_physical_characteristics['width'],
+                        asset_physical_characteristics['height'],
+                        asset_physical_characteristics['weight'],
+                        structure_type,
+                    )
+                else:
+                    logger.warning(
+                        f"Physical characteristics not found for asset class: {asset.__class__.__name__}, "
+                        f"asset id: {getattr(asset, 'id', None)}. Skipping for target profile."
+                    )
+                    continue
+
+            elif asset.__class__.__name__ == 'Aircraft':
+                if asset_category is None:
+                    logger.warning(
+                        f"Category not found for aircraft asset id: {getattr(asset, 'id', None)}. "
+                        f"Skipping for target profile."
+                    )
+                    continue
+
+                if asset_category in (
+                    Context.Air_Asset_Type.FIGHTER.value,
+                    Context.Air_Asset_Type.HELICOPTER.value,
+                    Context.Air_Asset_Type.ATTACKER.value,
+                ):
+                    asset_dimension = 'small'
+                elif asset_category in (
+                    Context.Air_Asset_Type.FIGHTER_BOMBER.value,
+                    Context.Air_Asset_Type.RECON.value,
+                ):
+                    asset_dimension = 'med'
+                elif asset_category in (
+                    Context.Air_Asset_Type.BOMBER.value,
+                    Context.Air_Asset_Type.TRANSPORT.value,
+                    Context.Air_Asset_Type.AWACS.value,
+                    Context.Air_Asset_Type.HEAVY_BOMBER.value,
+                ):
+                    asset_dimension = 'big'
+
+            if asset_dimension is None:
+                continue
+
+            if asset_type is None or asset_type not in ASSET_TYPE:
+                logger.warning(
+                    f"Asset type not found or invalid for asset id: {getattr(asset, 'id', None)}. "
+                    f"Skipping for target profile."
+                )
+                continue
+
+            classification = Context.get_target_classification(asset_type)
+            if classification is None:
+                logger.warning(f"No target classification found for asset type: {asset_type}. Skipping.")
+                continue
+
+            class_counts = target_profile.setdefault(classification, {})
+            class_counts[asset_dimension] = class_counts.get(asset_dimension, 0) + 1
+
+        return target_profile
+
+    @staticmethod
+    def _profile_to_weapon_distribution(profile: TargetProfile) -> Dict[str, Dict[str, Any]]:
+        """Convert a TargetProfile into the weighted-distribution shape used by
+        Aircraft_Data.combat_score_target_effectiveness_by_distribution /
+        Aircraft_Loadouts.loadout_target_effectiveness_by_distribuition:
+        {classification: {'perc_type': float, 'perc_dimension': {dim: float}}}.
+
+        Replaces the previous coverage-truncation heuristic (_profile_to_weapon_lists, which
+        included/excluded (class, dimension) pairs via an 85% coverage cutoff): every
+        classification/dimension actually present in the profile contributes to the score,
+        weighted by its real share of the target's composition, instead of being dropped once a
+        coverage threshold was already met. No pre-collapsing through Context.get_weapon_target_class
+        is needed here -- get_weapon_score_target already normalizes each classification internally
+        when scoring, and the weighted sum is mathematically equivalent whether or not distinct
+        classifications that collapse onto the same weapon-table class are merged beforehand.
+
+        perc_type values sum to 1.0 across the returned classifications (rounding aside); each
+        classification's perc_dimension values sum to 1.0 among themselves. Zero-count dimensions
+        and classifications with a zero total are dropped. Returns {} for an empty/falsy profile or
+        one whose total count is zero.
+        """
+        if not profile:
+            return {}
+
+        total = sum(sum(dims.values()) for dims in profile.values())
+        if total <= 0:
+            return {}
+
+        distribution: Dict[str, Dict[str, Any]] = {}
+        for classification, dims in profile.items():
+            class_total = sum(dims.values())
+            if class_total <= 0:
+                continue
+            distribution[classification] = {
+                'perc_type': class_total / total,
+                'perc_dimension': {
+                    dimension: count / class_total
+                    for dimension, count in dims.items()
+                    if count > 0
+                },
+            }
+
+        return distribution
+
+    def _target_profile_from_report(self, report: Dict) -> Optional[TargetProfile]:
+        """Recon-report-based producer of a TargetProfile (fog-of-war), delegates to get_target_report.
+
+        Mirrors _target_profile_from_block (ground-truth producer) so future callers needing "a
+        TargetProfile, from whichever source" can depend on this name regardless of which producer
+        backs it. get_target_report remains the canonical, public, separately-tested implementation.
+        """
+        return self.get_target_report(report)
+
 
     # HELPER METHODS
     def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
@@ -939,9 +1096,17 @@ class Region:
     time_to_intercept: Optional[float],
     range_ratio: float,
     target_priority: Optional[float] = None,
-    force_type: Optional[str] = None
+    force_type: Optional[str] = None,
+    target_affinity: float = 1.0
     ) -> float:
-        """Calculate generic priority for a military block towards a target. Considers combat power, time to intercept, range ratio, and weight."""
+        """Calculate generic priority for a military block towards a target. Considers combat power, time to intercept, range ratio, and weight.
+
+        target_affinity: fattore moltiplicativo opzionale (default 1.0 = neutro, nessun effetto)
+        che modula la priorità in base a quanto bene i loadout disponibili del blocco (se aereo)
+        rendono contro la composizione reale del target — v. _target_affinity, che restituisce
+        sempre 1.0 per il ramo difesa/blocchi non aerei, così _calc_surface_priority (che non lo
+        passa mai) resta bit-identico.
+        """
         # force_type: se non passato esplicitamente (solo _calc_air_priority lo fa oggi), derivalo dalla
         # categoria militare del blocco.
         force_type = force_type or MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
@@ -966,15 +1131,15 @@ class Region:
                 combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
             else: # attack
                 combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)
-            return (target_value * combat_power_ratio * range_ratio * weight) / time_to_intercept
-        
+            return (target_value * combat_power_ratio * range_ratio * weight * target_affinity) / time_to_intercept
+
         elif target_block.is_logistic():
             target_priority = target_priority or 0.0
-            return (target_priority * range_ratio * weight) / time_to_intercept
-        
+            return (target_priority * range_ratio * weight * target_affinity) / time_to_intercept
+
         elif target_block.is_civilian():
-            return (target_value * range_ratio * weight) / time_to_intercept
-        
+            return (target_value * range_ratio * weight * target_affinity) / time_to_intercept
+
         return 0.0
 
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
@@ -1029,22 +1194,99 @@ class Region:
             target_priority=target_item[0]
         )
 
+    def _operative_aircraft_by_model(self, block: Military) -> Dict[str, List]:
+        """{model: [Aircraft operativi]} per block, raggruppati per modello (non per ruolo/asset_type
+        come fa get_asset_list). Usato da _target_affinity per pesare il contributo di ciascun
+        modello per numero di velivoli."""
+        asset_list = block.get_asset_list(asset_class='Aircraft')
+        if not asset_list:
+            return {}
+
+        by_model: Dict[str, List] = {}
+        for assets in asset_list.get('Aircraft', {}).values():
+            for asset in assets:
+                if not asset.is_operative():
+                    continue
+                model = getattr(asset, 'model', None)
+                if model is None:
+                    continue
+                by_model.setdefault(model, []).append(asset)
+
+        return by_model
+
+    @lru_cache(maxsize=256)
+    def _target_affinity(self, block: Military, target_block: Block) -> float:
+        """Fattore moltiplicativo [_AFFINITY_MIN, _AFFINITY_MAX] che modula la priorità di attacco
+        in base a quanto bene i loadout disponibili della flotta aerea di block rendono contro la
+        composizione reale (ground truth, _target_profile_from_block) di target_block, rispetto
+        alla potenza di combattimento generica (target-agnostica) della stessa flotta.
+
+        Restituisce 1.0 (neutro, nessun effetto su _calculate_priority) se: target amico (ramo
+        difesa — l'affinità di targeting non ha senso quando non si sta scegliendo un'arma per
+        colpire il bersaglio), block non è una base aerea, il profilo del target è vuoto/
+        non classificabile, o la flotta non ha aeromobili operativi.
+        """
+        if block.side == target_block.side:
+            return 1.0
+        if not block.is_Air_Base():
+            return 1.0
+
+        profile = self._target_profile_from_block(target_block)
+        if not profile:
+            return 1.0
+
+        target_distribution = self._profile_to_weapon_distribution(profile)
+        if not target_distribution:
+            return 1.0
+
+        aircraft_by_model = self._operative_aircraft_by_model(block)
+        if not aircraft_by_model:
+            return 1.0
+
+        weighted_target_score = 0.0
+        weighted_generic_score = 0.0
+
+        for model, aircraft_list in aircraft_by_model.items():
+            count = len(aircraft_list)
+            if count == 0:
+                continue
+
+            aircraft_data = Aircraft_Data._registry.get(model)
+            if aircraft_data is None:
+                continue
+
+            available_loadouts_by_task = {
+                task: block.get_available_loadouts(model, task=task) for task in Context.AIR_TASK
+            }
+            target_score, _ = aircraft_data.combat_aggregate_against_target(
+                target_distribution, available_loadouts_by_task=available_loadouts_by_task
+            )
+            generic_score, _ = aircraft_data.combat_aggregate()
+
+            weighted_target_score += target_score * count
+            weighted_generic_score += generic_score * count
+
+        if weighted_generic_score <= 0:
+            return 1.0
+
+        return clip(weighted_target_score / weighted_generic_score, _AFFINITY_MIN, _AFFINITY_MAX)
+
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_air_priority(self, block: Military, target_block: Block, weight: float) -> float:
 
-        """Calculates the priority of an air military block by evaluating its combat power, 
-        the distance from the target, the combat power of the target or the priority assigned 
+        """Calculates the priority of an air military block by evaluating its combat power,
+        the distance from the target, the combat power of the target or the priority assigned
         in the case of logistical targets.
 
-        Args:                
+        Args:
             block (Military): block to calculates priority
-            target_block (Block): target of the block                
+            target_block (Block): target of the block
             weight (float): assigned weight for calculates priority
 
         Returns:
             priority (float): priority value of the block, returns 0.0 if not applicable"""
-        
+
         if not block.position or not target_block.position:
             return 0.0
 
@@ -1056,7 +1298,8 @@ class Region:
             time_to_intercept=tti,
             range_ratio=1.0,
             target_priority=self.get_block_by_id(target_block.id).priority if self.get_block_by_id(target_block.id) else 0.0,
-            force_type="air"
+            force_type="air",
+            target_affinity=self._target_affinity(block, target_block)
         )
 
 
@@ -1209,7 +1452,9 @@ class Region:
         if cache_type is None or cache_type == "priority":
             self._calc_attack_priority.cache_clear()
             self._calc_defense_priority.cache_clear()
-        
+            self._target_profile_from_block.cache_clear()
+            self._target_affinity.cache_clear()
+
         logger.debug(f"Caches for Region {self.name} invalidated ({cache_type or 'all'}).")
 
     # VALIDATION METHODS (mantenuti quasi invariati, con piccole migliorie)

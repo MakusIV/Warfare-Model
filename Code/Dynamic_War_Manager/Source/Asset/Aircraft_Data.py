@@ -17,7 +17,7 @@ NO:
 
 from functools import lru_cache
 from math import log1p
-from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
+from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple, Iterable
 from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
@@ -523,7 +523,19 @@ class Aircraft_Data:
         """
 
         return loadout_target_effectiveness(aircraft_name = self.model, loadout_name = loadout, target_type = target_type, target_dimension = target_dimension, route_length = route_length, route_speed = route_speed)
-    
+
+    def _loadout_target_effectiveness_by_distribution(self, loadout: str, target_distribution: Dict, route_length: float = 0.0, route_speed: float = 1.0) -> float:
+        """Returns the score of installed loadout against a target expressed as a weighted
+        distribution ({classification: {'perc_type': float, 'perc_dimension': {dim: float}}})
+        instead of a (target_type, target_dimension) list pair — see
+        Aircraft_Loadouts.loadout_target_effectiveness_by_distribuition.
+
+        Returns:
+            float: weapons combat score against the target distribution
+        """
+
+        return loadout_target_effectiveness_by_distribuition(aircraft_name = self.model, loadout_name = loadout, target_distribution = target_distribution, route_length = route_length, route_speed = route_speed)
+
     # --- Metodi di confronto normalizzati ---
     def get_normalized_radar_score(self, modes: Optional[List] = None, category: Optional[str] = None):
         """returns radar score normalized from 0 (min score) 1 (max score)
@@ -708,8 +720,15 @@ class Aircraft_Data:
             return 0.5
         return (value - min_val) / (max_val - min_val)
     
-    def combat_score_eval(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None):
-        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout."""    
+    def combat_score_eval(self, task: str, loadout: Dict[str, any], calc_scores_options:bool, target_type: List = None, target_dimension: List = None, target_distribution: Dict = None):
+        """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout.
+
+        target_distribution, se fornito, ha precedenza su target_type/target_dimension: usa
+        _loadout_target_effectiveness_by_distribution (pesata per la composizione reale del
+        target) invece di _loadout_target_effectiveness (lista troncata) per il componente
+        loadout dello score — tutti gli altri componenti (radar/TVD/engine/avionics/speed) restano
+        identici in entrambi i casi.
+        """
 
         if not task or not isinstance(task, str):
             raise TypeError ("task must be a string")
@@ -739,9 +758,12 @@ class Aircraft_Data:
             'speed':        1,
             }
             sum_weights = sum(scores_weights.values())
-            scores["loadout"] = self._loadout_target_effectiveness(loadout, target_type, target_dimension) * scores_weights['loadout'] / sum_weights
+            if target_distribution is not None:
+                scores["loadout"] = self._loadout_target_effectiveness_by_distribution(loadout, target_distribution) * scores_weights['loadout'] / sum_weights
+            else:
+                scores["loadout"] = self._loadout_target_effectiveness(loadout, target_type, target_dimension) * scores_weights['loadout'] / sum_weights
 
-        else:            
+        else:
             scores_weights = { # 
             'engine':       2,
             'radar':        5, # 1-10
@@ -794,8 +816,16 @@ class Aircraft_Data:
     def combat_score_target_effectiveness(self, task: str, loadout: Dict[str, any], target_type: List = None, target_dimension: List = None):
         """Returns a score representing the effectiveness of the aircraft for a specific task against a specific target, considering its capabilities and the loadout."""
         return self.combat_score_eval(task, loadout, True, target_type, target_dimension)
-    
-    def combat_score(self, task: str, loadout: Dict[str, any]):                
+
+    def combat_score_target_effectiveness_by_distribution(self, task: str, loadout: Dict[str, any], target_distribution: Dict = None):
+        """Returns a score representing the effectiveness of the aircraft for a specific task against
+        a target composition expressed as a weighted distribution ({classification: {'perc_type':
+        float, 'perc_dimension': {dim: float}}}), instead of the (target_type, target_dimension)
+        list pair used by combat_score_target_effectiveness — see
+        _loadout_target_effectiveness_by_distribution / Region._profile_to_weapon_distribution."""
+        return self.combat_score_eval(task, loadout, True, target_distribution=target_distribution)
+
+    def combat_score(self, task: str, loadout: Dict[str, any]):
         """Returns a score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""
         return self.combat_score_eval(task, loadout, False)
 
@@ -820,6 +850,82 @@ class Aircraft_Data:
             best_per_task[task] = max(self.combat_score(task, loadout_name) for loadout_name in loadouts)
 
         return sum(best_per_task.values()), best_per_task
+
+    def best_loadout_against_target(
+        self,
+        task: str,
+        target_distribution: Dict = None,
+        available_loadouts: Optional[Iterable[str]] = None,
+    ) -> Tuple[Optional[str], float]:
+        """Miglior loadout (nome, punteggio) per questo aereo/task contro un bersaglio specifico.
+
+        Analogo di combat_aggregate() ma per un singolo task e un bersaglio specifico, usando
+        combat_score_target_effectiveness_by_distribution() al posto di combat_score() — pesa
+        ogni combinazione (classificazione, dimensione) per la sua quota reale nella composizione
+        del target (v. Region._profile_to_weapon_distribution), invece di troncare a un
+        sottoinsieme che copre una soglia di copertura. Restringe i candidati a
+        available_loadouts (es. da Air_Resources_Assigner.get_available_loadouts) quando fornito.
+
+        Returns:
+            Tuple[Optional[str], float]: (nome, punteggio) o (None, 0.0) se nessun loadout è
+            disponibile/idoneo.
+        """
+        loadouts = self.get_loadouts(self.model, task)
+        if not loadouts:
+            return None, 0.0
+
+        candidate_names = list(loadouts.keys())
+        if available_loadouts is not None:
+            allowed = set(available_loadouts)
+            candidate_names = [name for name in candidate_names if name in allowed]
+
+        if not candidate_names:
+            return None, 0.0
+
+        # Seed con il primo candidato reale (non uno 0.0 sentinella): evita di scartare un loadout
+        # genuinamente disponibile solo perché ogni candidato ha punteggio esattamente 0.0 contro
+        # questo bersaglio (bug presente in get_list_of_aircrafts, da non ripetere qui).
+        best_name = candidate_names[0]
+        best_score = self.combat_score_target_effectiveness_by_distribution(task, best_name, target_distribution)
+
+        for name in candidate_names[1:]:
+            score = self.combat_score_target_effectiveness_by_distribution(task, name, target_distribution)
+            if score > best_score:
+                best_score = score
+                best_name = name
+
+        return best_name, best_score
+
+    def combat_aggregate_against_target(
+        self,
+        target_distribution: Dict = None,
+        tasks: Optional[Iterable[str]] = None,
+        available_loadouts_by_task: Optional[Dict[str, Iterable[str]]] = None,
+    ) -> Tuple[float, Dict[str, Tuple[Optional[str], float]]]:
+        """Aggregato non normalizzato della capacità di combattimento del modello contro un bersaglio.
+
+        Analogo di combat_aggregate(), ma MAX sui task invece di somma: contro un bersaglio specifico
+        conta la singola miglior combinazione (task, loadout), non la somma sui task.
+
+        Returns:
+            Tuple[float, Dict[str, Tuple[Optional[str], float]]]: (best_score, best_per_task) —
+            best_score è il massimo tra i task con almeno un loadout idoneo (0.0 se nessuno);
+            best_per_task = {task: (nome, punteggio)} solo per i task con un candidato dopo il filtro.
+        """
+        task_list = list(tasks) if tasks is not None else list(AIR_TASK)
+        best_per_task: Dict[str, Tuple[Optional[str], float]] = {}
+
+        for task in task_list:
+            available = available_loadouts_by_task.get(task) if available_loadouts_by_task is not None else None
+            name, score = self.best_loadout_against_target(task, target_distribution, available)
+            if name is None:
+                continue
+            best_per_task[task] = (name, score)
+
+        if not best_per_task:
+            return 0.0, {}
+
+        return max(score for _, score in best_per_task.values()), best_per_task
 
     def get_normalized_combat_score(self, task: str, loadout: Dict[str, any], category: Optional[str] = None):
         """Returns a normalized score representing the effectiveness of the aircraft for a specific task, considering its capabilities and the loadout, without considering the specific target characteristics."""

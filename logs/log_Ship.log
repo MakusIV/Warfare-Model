@@ -1,0 +1,48 @@
+2026-09-11 18:30:44,765 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-11 18:30:44,771 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-11 18:30:44,771 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-11 18:30:44,772 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-11 18:32:33,274 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-11 18:32:33,280 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-11 18:32:33,280 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-11 18:32:33,280 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-11 18:40:48,265 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-11 18:40:48,269 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-11 18:40:48,270 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-11 18:40:48,270 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-11 19:29:29,885 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-11 19:29:29,890 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-11 19:29:29,891 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-11 19:29:29,891 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-11 20:03:36,650 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-11 20:03:36,655 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-11 20:03:36,655 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-11 20:03:36,655 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 09:28:30,569 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 09:28:30,613 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 09:28:30,613 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 09:28:30,613 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 09:30:28,471 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 09:30:28,477 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 09:30:28,477 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 09:30:28,477 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 14:47:24,721 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 14:47:24,726 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 14:47:24,726 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 14:47:24,726 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 14:49:14,956 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 14:49:14,960 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 14:49:14,961 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 14:49:14,961 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 15:57:26,863 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 15:57:26,869 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 15:57:26,869 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 15:57:26,869 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 16:21:52,404 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 16:21:52,409 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 16:21:52,409 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 16:21:52,409 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.
+2026-09-12 17:00:03,724 - Code.Dynamic_War_Manager.Source.Asset.Ship - WARNING - get_physical_characteristics - Model not defined: Unable to get physical characteristics
+2026-09-12 17:00:03,729 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Attack'. Setting combat_power to 0.
+2026-09-12 17:00:03,729 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Defense'. Setting combat_power to 0.
+2026-09-12 17:00:03,729 - Code.Dynamic_War_Manager.Source.Asset.Ship - DEBUG - set_combat_power - Category 'Not_A_Real_Category' not found in SEA_COMBAT_EFFICACY for action 'Retrait'. Setting combat_power to 0.

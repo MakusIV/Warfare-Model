@@ -25,16 +25,19 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     Weapon_Power_Effect,
     Weapon_Area_Effect,
     get_block_infrastructure_components,
-    get_task_from_target
+    get_task_from_target,
+    get_doctrine_loadouts
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import (
     AIRCRAFT_LOADOUTS,
     get_aircrafts_quantity,
     loadout_cost,
     get_loadout,
+    get_aircraft_loadouts,
     get_aircraft_loadouts_by_task,
     get_weapons_by_loadout,
-    
+    loadout_year_compatibility,
+
 )
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -361,6 +364,66 @@ def _loadout_availability(weapons_availability: Dict, aircraft_model: str, loado
         loadout_quantity = possible if loadout_quantity is None else min(loadout_quantity, possible)
 
     return loadout_quantity if loadout_quantity is not None else 0
+
+def get_available_loadouts(
+    model: str,
+    task: Optional[str] = None,
+    *,
+    year: Optional[int] = None,
+    side: Optional[str] = None,
+    weapons_availability: Optional[Dict] = None,
+    min_units: int = 1,
+) -> List[str]:
+    """Loadout disponibili per (model, task), tre filtri ortogonali applicati in cascata.
+
+    L1 anno -> L2 dottrina -> L3 scorte; ciascun filtro è SALTATO (non "nega tutto") quando il
+    relativo argomento è None. Attenzione: weapons_availability={} (dict vuoto) NON equivale a
+    None — significa scorte esplicitamente nulle e fa fallire ogni loadout.
+
+    Args:
+        model (str): nome del modello aereo (deve esistere in AIRCRAFT_LOADOUTS).
+        task (Optional[str]): se fornito, restringe l'insieme di partenza ai loadout di quel task;
+            None = tutti i loadout del modello.
+        year (Optional[int]): anno di riferimento per L1; None = filtro L1 saltato.
+        side (Optional[str]): side per L2; None = filtro L2 saltato.
+        weapons_availability (Optional[Dict]): scorte {weapon_type: {weapon_name: qty}} per L3;
+            None = filtro L3 saltato.
+        min_units (int): loadout completi minimi richiesti da L3 (default 1).
+
+    Returns:
+        List[str]: nomi dei loadout che superano tutti i filtri attivi.
+    """
+    if not isinstance(model, str) or not model:
+        raise TypeError("model deve essere una stringa non vuota")
+
+    if task is not None:
+        candidates: List[str] = list(get_aircraft_loadouts_by_task(model, task).keys())
+    else:
+        candidates = list(get_aircraft_loadouts(model).keys())
+
+    # L1 — anno
+    if year is not None:
+        candidates = [name for name in candidates if loadout_year_compatibility(model, name, year)]
+
+    # L2 — dottrina
+    if side is not None:
+        rule = get_doctrine_loadouts(model, side)
+        if rule is not None:
+            if 'allowed' in rule:
+                allowed = set(rule['allowed'])
+                candidates = [name for name in candidates if name in allowed]
+            elif 'denied' in rule:
+                denied = set(rule['denied'])
+                candidates = [name for name in candidates if name not in denied]
+
+    # L3 — scorte
+    if weapons_availability is not None:
+        candidates = [
+            name for name in candidates
+            if _loadout_availability(weapons_availability, model, name) >= min_units
+        ]
+
+    return candidates
 
 def _reduction_weapons_availability(weapons_availability: Dict, weapons_list: Dict) -> bool:
     """Riduce la disponibilità delle armi scalando le quantità indicate in *weapons_list*.

@@ -89,6 +89,7 @@ class Military(Block):
         
         self._mil_category = mil_category
         self._validate_mil_category(mil_category)
+        self._weapons_availability: Optional[Dict[str, Dict[str, int]]] = None
 
     #military Properties
     @property
@@ -101,6 +102,19 @@ class Military(Block):
         """Set military category after validation."""
         self._validate_mil_category(value)
         self._mil_category = value
+
+    @property
+    def weapons_availability(self) -> Optional[Dict[str, Dict[str, int]]]:
+        """Get munitions stock available for this block's loadouts (None = non modellato: il
+        filtro di scorte in get_available_loadouts viene saltato, non forzato a zero)."""
+        return self._weapons_availability
+
+    @weapons_availability.setter
+    def weapons_availability(self, value: Optional[Dict[str, Dict[str, int]]]) -> None:
+        """Set munitions stock; None = non modellato, {} = scorte esplicitamente nulle."""
+        if value is not None and not isinstance(value, dict):
+            raise TypeError(f"weapons_availability deve essere un dict o None, ricevuto {type(value).__name__!r}")
+        self._weapons_availability = value
     #endmilitary
 
     #military Validation Methods
@@ -245,6 +259,22 @@ class Military(Block):
             military_category = "Naval_Base"
 
         return military_category
+
+    #military Loadout Availability
+    def get_available_loadouts(self, model: str, task: Optional[str] = None, year: Optional[int] = None) -> List[str]:
+        """Loadout disponibili per questo Block, secondo la cascata anno/dottrina/scorte.
+
+        Delega a Air_Resources_Assigner.get_available_loadouts usando self.side (L2) e
+        self.weapons_availability (L3, saltato se None). Import locale: Air_Resources_Assigner
+        importa Block.Military a livello di modulo, quindi un import a livello di modulo qui
+        creerebbe un import circolare irrisolvibile.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic.Air_Resources_Assigner import get_available_loadouts
+
+        return get_available_loadouts(
+            model, task, year=year, side=self.side, weapons_availability=self.weapons_availability,
+        )
+    #endmilitary
 
     #military Base Type Checks
     def is_Air_Base(self) -> bool:
