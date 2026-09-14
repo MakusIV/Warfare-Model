@@ -257,30 +257,38 @@ class Region:
         return self._blocks.get(block_id) # Accesso O(1)
     
     @lru_cache(maxsize=128)
-    def get_blocks_by_criteria(self, side: Optional[str] = None, 
+    def get_blocks_by_criteria(self, side: Optional[str] = None,
                               category: Optional[str] = None,
-                              block_class: Optional[type] = None) -> List[BlockItem]:
+                              block_class: Optional[type] = None,
+                              mil_category: Optional[str] = None) -> List[BlockItem]:
         """
         Get blocks filtered by criteria. Cached for performance.
-        
+
         Args:
             side: Filter by side (e.g., 'red', 'blue')
             category: Filter by category ('Military', 'Logistic', 'Civilian')
             block_class: Filter by block class type
-        
+            mil_category: Filter by Military.mil_category (e.g. 'Regiment', 'Airbase')
+
         Returns:
             List of matching BlockItem objects
         """
-        
+        if mil_category is not None:
+            valid_mil_categories = {c for tup in Context.MILITARY_CATEGORY.values() for c in tup}
+            if mil_category not in valid_mil_categories:
+                raise ValueError(
+                    f"Invalid mil_category: {mil_category}. Must be one of: {', '.join(valid_mil_categories)}"
+                )
+
         result = []
-        
+
         for block_item in self._blocks.values(): # Itera sui valori del dizionario
             block = block_item.block
-            
+
             # Filter by side
             if side and hasattr(block, 'side') and block.side != side:
                 continue
-            
+
             # Filter by category - Uso diretto di BlockCategory Enum per robustezza
             if category:
                 if category == BlockCategory.MILITARY.value and not isinstance(block, Military):
@@ -292,58 +300,92 @@ class Region:
                 # Se la categoria è un'altra stringa, si basa sull'attributo 'category' del blocco
                 elif block.category != category:
                     continue
-            
+
             # Filter by class
             if block_class and not isinstance(block, block_class):
                 continue
-            
+
+            # Filter by military category
+            if mil_category and not (isinstance(block, Military) and block.mil_category == mil_category):
+                continue
+
             result.append(block_item)
-        
+
         return result
-    
+
 
     def get_sorted_priority_blocks(self, count: int, side: str, sort_by: str = "highest",
-                                   category: Optional[str] = None) -> List[BlockItem]:
+                                   category: Optional[str] = None,
+                                   mil_category: Optional[str] = None) -> List[BlockItem]:
         """Get the sorted priority blocks matching criteria. if sort_by is 'lowest', returns the lowest priority blocks. if 'highest', returns the highest priority blocks."""
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
         if not isinstance(count, int):
             raise TypeError(f"Count must be an integer, got {type(count).__name__}")
-        
+
         if count < 1:
             raise ValueError("Count must be positive")
-        
+
         if sort_by not in ["highest", "lowest"]:
             raise ValueError("sort_by must be 'highest' or 'lowest'")
-        
+
         if sort_by == "lowest":
             sort_by = False
         else:
             sort_by = True
 
         # get_blocks_by_criteria è ora memorizzato nella cache
-        blocks = self.get_blocks_by_criteria(side=side, category=category)
+        blocks = self.get_blocks_by_criteria(side=side, category=category, mil_category=mil_category)
         blocks.sort(key=lambda x: x.priority, reverse = sort_by) # Ordina in base alla priorità
-        
+
         return blocks[:count]
 
     def get_normalized_priority_blocks(self, count: int, side: str, sort_by: str = "highest",
-                                   category: Optional[str] = None) -> List[BlockItem]:
+                                   category: Optional[str] = None,
+                                   mil_category: Optional[str] = None) -> List[BlockItem]:
 
-        blocks = self.get_sorted_priority_blocks(count=len(self.blocks), side=side, sort_by=sort_by, category=category)
+        blocks = self.get_sorted_priority_blocks(count=len(self.blocks), side=side, sort_by=sort_by,
+                                                   category=category, mil_category=mil_category)
         normalized_blocks = []
+
+        # Un solo blocco nel gruppo: nessun range su cui normalizzare, la priorità resta quella del blocco.
+        if len(blocks) == 1:
+            return [BlockItem(priority=blocks[0].priority, block=blocks[0].block)][:count]
+
         min = blocks[-1].priority
         delta = blocks[0].priority - min
 
         if sort_by == 'lowest':
             delta = -delta
-            min = blocks[0].priority 
-        
+            min = blocks[0].priority
+
         for blockItem in blocks:
             normalized_blocks.append( BlockItem(priority = (blockItem.priority - min)/delta, block = blockItem.block) )
 
-        return normalized_blocks[:count]    
-    
+        return normalized_blocks[:count]
+
+    def get_priority_lists_by_mil_category(self, side: str, sort_by: str = "highest") -> Dict[str, List[BlockItem]]:
+        """
+        Split the priority list for a side into one sorted list per Military.mil_category
+        actually present on that side. Categories with no blocks are omitted.
+        """
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
+
+        military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
+        present = {block_item.block.mil_category for block_item in military_blocks}
+
+        ordered_categories = [c for tup in Context.MILITARY_CATEGORY.values() for c in tup]
+
+        result: Dict[str, List[BlockItem]] = {}
+        for cat in ordered_categories:
+            if cat not in present:
+                continue
+            result[cat] = self.get_sorted_priority_blocks(count=len(self.blocks), side=side,
+                                                            sort_by=sort_by, mil_category=cat)
+
+        return result
+
     
     # ************************************  API *************************************
     # ROUTE MANAGEMENT
@@ -797,6 +839,19 @@ class Region:
             logger.warning("No operative assets found in report for target classification.")
             return None
 
+        # FIX 5: un dict non vuoto ma con conteggi tutti a zero non è "dati validi con zero asset" --
+        # è il caso in cui asset_summary esiste (asset_type/dimension bucket popolati dal loop di
+        # Block.get_recognition_report) ma il gate probabilistico di rilevamento non è scattato per
+        # questo report, quindi nessun conteggio è stato incrementato. Va trattato come "nessuna
+        # visibilità" alla pari del dict vuoto sopra, non come un profilo target reale a zero asset.
+        # Controllato sui conteggi grezzi di _operative, PRIMA del raggruppamento per classificazione,
+        # per non confondere questo caso con quello (preesistente, diverso) in cui gli asset_type
+        # presenti sono reali/con conteggi ma nessuno è coperto da TARGET_CLASSIFICATION.
+        raw_total = sum(count for asset_data in _operative.values() for count in asset_data.values())
+        if raw_total == 0:
+            logger.warning("Operative asset counts all zero (no detection this report) -- no visibility for target classification.")
+            return None
+
         target_classification_report = {}  # FIX 1: inizializzare prima del loop
 
         for asset_type, asset_data in _operative.items():
@@ -822,11 +877,11 @@ class Region:
     def _target_profile_from_block(self, target_block: Block) -> TargetProfile:
         """Ground-truth (non-random) target classification profile built directly from target_block's assets.
 
-        Deterministic counterpart of get_target_report: replicates the classification loop inside
-        Block.get_recognition_report (Block.py:601-679) directly against target_block's real
-        assets, with all recon probability/randomness gating removed -- every operative asset is
-        counted unconditionally. Damaged/destroyed assets are ignored: only live threats matter
-        for the priority calculations this feeds.
+        Deterministic counterpart of get_target_report: classifies target_block's real assets with
+        the same rule as Block.get_recognition_report (Context.classify_asset_dimension), with all
+        recon probability/randomness gating removed -- every operative asset is counted
+        unconditionally. Damaged/destroyed assets are ignored: only live threats matter for the
+        priority calculations this feeds.
         """
         target_profile: TargetProfile = {}
 
@@ -836,68 +891,12 @@ class Region:
                 continue
 
             asset_type = getattr(asset, 'asset_type', None)
-            asset_category = getattr(asset, 'category', None)
-            asset_dimension = None
 
-            if asset.__class__.__name__ in ('Vehicle', 'Ship', 'Structure'):
-                asset_physical_characteristics = asset.get_physical_characteristics()
-
-                structure_type = (
-                    asset_category
-                    if asset.__class__.__name__ == 'Structure' and asset_category is not None
-                    else None
-                )
-
-                if asset_physical_characteristics:
-                    asset_dimension = Context.get_dimension(
-                        asset.__class__.__name__,
-                        asset_physical_characteristics['length'],
-                        asset_physical_characteristics['width'],
-                        asset_physical_characteristics['height'],
-                        asset_physical_characteristics['weight'],
-                        structure_type,
-                    )
-                else:
-                    logger.warning(
-                        f"Physical characteristics not found for asset class: {asset.__class__.__name__}, "
-                        f"asset id: {getattr(asset, 'id', None)}. Skipping for target profile."
-                    )
-                    continue
-
-            elif asset.__class__.__name__ == 'Aircraft':
-                if asset_category is None:
-                    logger.warning(
-                        f"Category not found for aircraft asset id: {getattr(asset, 'id', None)}. "
-                        f"Skipping for target profile."
-                    )
-                    continue
-
-                if asset_category in (
-                    Context.Air_Asset_Type.FIGHTER.value,
-                    Context.Air_Asset_Type.HELICOPTER.value,
-                    Context.Air_Asset_Type.ATTACKER.value,
-                ):
-                    asset_dimension = 'small'
-                elif asset_category in (
-                    Context.Air_Asset_Type.FIGHTER_BOMBER.value,
-                    Context.Air_Asset_Type.RECON.value,
-                ):
-                    asset_dimension = 'med'
-                elif asset_category in (
-                    Context.Air_Asset_Type.BOMBER.value,
-                    Context.Air_Asset_Type.TRANSPORT.value,
-                    Context.Air_Asset_Type.AWACS.value,
-                    Context.Air_Asset_Type.HEAVY_BOMBER.value,
-                ):
-                    asset_dimension = 'big'
-
+            asset_dimension = Context.classify_asset_dimension(asset, valid_asset_types=ASSET_TYPE)
             if asset_dimension is None:
-                continue
-
-            if asset_type is None or asset_type not in ASSET_TYPE:
                 logger.warning(
-                    f"Asset type not found or invalid for asset id: {getattr(asset, 'id', None)}. "
-                    f"Skipping for target profile."
+                    f"Asset not classifiable for target profile (asset id: {getattr(asset, 'id', None)}, "
+                    f"asset type: {asset_type}). Skipping."
                 )
                 continue
 

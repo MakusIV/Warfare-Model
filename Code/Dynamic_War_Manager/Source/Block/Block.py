@@ -17,7 +17,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     Ground_Vehicle_Asset_Type as gat,
     Sea_Asset_Type as sat,
     Air_Asset_Type as aat,
-    get_dimension
+    classify_asset_dimension
     )
 
 if TYPE_CHECKING:
@@ -602,50 +602,20 @@ class Block:
     
         for asset in self._assets.values():
             asset_type = getattr(asset, 'asset_type', None)
-            asset_category = getattr(asset, 'category', None)
             asset_model = getattr(asset, 'model', None)
 
             if asset_model is None:
                 logger.error(f"Model not found for asset ID: {asset.id}. Asset type: {asset_type}. Exit.")
-                raise ValueError(f"Model not found for asset ID: {asset.id}. Asset type: {asset_type}.")   
-            asset_dimension = None
+                raise ValueError(f"Model not found for asset ID: {asset.id}. Asset type: {asset_type}.")
 
-            # determina la classe di dimensione dell'asset (Big, SMall, ...) per 'Vehicle', 'Ship', 'Structure' in base  alle sue caratteristiche fisiche o alla categoria (per gli aerei). Se non riesce a determinare la dimensione, continua con il prossimo asset.
-            if asset.__class__.__name__ in ['Vehicle', 'Ship', 'Structure']: 
-                asset_physical_characteristics = asset.get_physical_characteristics() 
+            # determina la classe di dimensione dell'asset (big/med/small) e valida l'asset_type; None copre sia
+            # asset non classificabili (classe/caratteristiche/categoria mancanti o non riconosciute) sia asset_type
+            # fuori da ASSET_TYPE -- vedi Context.classify_asset_dimension per la regola condivisa coi Region producer.
+            asset_dimension = classify_asset_dimension(asset, valid_asset_types=ASSET_TYPE)
 
-                if asset.__class__.__name__ == 'Structure' and asset_category is not None:                           
-                    structure_type = asset_category
-                else:
-                    structure_type = None
-
-                if asset_physical_characteristics:
-                    asset_dimension = get_dimension(asset.__class__.__name__, asset_physical_characteristics['length'], asset_physical_characteristics['width'], asset_physical_characteristics['height'], asset_physical_characteristics['weight'], structure_type)
-
-                else:
-                    logger.warning(f"Physical characteristics not found for asset class:{asset.__class__.__name__}, asset model: {asset.model}. Asset ID: {asset.id}. Continue for the next asset.")
-                    continue
-            
-            # determina la classe di dimensione dell'asset (Big, SMall, ...) per 'Aircraft' in base  alle sue caratteristiche fisiche o alla categoria (per gli aerei). Se non riesce a determinare la dimensione, continua con il prossimo asset.
-            elif asset.__class__.__name__ == 'Aircraft':
-                
-                if asset_category is None:
-                    logger.warning(f"Category not found for aircraft asset ID: {asset.id}, aircraft model {asset_model}. Continue with next asset.")
-                    continue
-
-                if asset_category in [aat.FIGHTER.value, aat.HELICOPTER.value, aat.ATTACKER.value]:
-                    asset_dimension = 'small'
-                elif asset_category in [aat.FIGHTER_BOMBER.value, aat.RECON.value]:
-                    asset_dimension = 'med'
-                elif asset_category in [aat.BOMBER.value, aat.TRANSPORT.value, aat.AWACS.value, aat.HEAVY_BOMBER.value]:
-                    asset_dimension = 'big'
-                            
-            if asset_dimension is None:            
+            if asset_dimension is None:
+                logger.warning(f"Asset not classifiable for recognition report (asset ID: {asset.id}, asset model: {asset_model}, asset type: {asset_type}). Continue with next asset.")
                 continue
-
-            if asset_type is None or asset_type not in ASSET_TYPE:
-                logger.warning(f"Asset type not found or invalid for asset ID: {asset.id}. Asset model: {asset_model}. Continue with next asset.")
-                continue        
 
 
             # Crea i dizionari per il riepilogo degli asset se non esistono già, e inizializza i conteggi degli asset operativi e danneggiati in base alla loro classe di dimensione. 

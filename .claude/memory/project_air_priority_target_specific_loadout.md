@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-12T15:24:54.265Z
+  modified: 2026-09-14T14:49:52.085Z
 ---
 
 # Target-specific air combat priority via best-available-loadout — design proposal
@@ -231,7 +231,66 @@ The target-specific air-priority design (items 3-7 + the distribution half of it
 tested, and shipped. Nothing left open on this specific thread except the explicitly-deferred
 route_length/route_speed question (do not re-raise proactively) and the diagnostic-table extension
 noted above (user-initiated, wait for them to raise it). Other threads still available:
-- **Independent thread**: per-`mil_category` priority list split (design decided, not implemented) —
-  see [[feedback_combat_power_action_selection]].
+- **Independent thread**: per-`mil_category` priority list split — **implemented** 2026-09-14
+  (uncommitted, see below), design was decided in [[project_priority_calc_combat_power_redesign]].
 - **Independent thread**: Fase 2 fog-of-war `EnemyTargetSnapshot` — see
   [[project_priority_calc_combat_power_redesign]], not started.
+
+## 2026-09-14 session — producer duplication resolved (Solution A) + no-visibility fix
+
+Continuation after an accidental session close; user resumed with 4 numbered points, only 2
+resulted in code changes (the other 2 — Vehicle asset_type/category coherence, and where the
+no-visibility policy applies — are recorded separately, see [[project_vehicle_asset_type_category_conflict]]
+and [[feedback_no_visibility_low_priority]]).
+
+**Producer duplication (the "two producers, one format" note in item 1 above) — resolved.**
+`Region._target_profile_from_block` was reimplementing the exact same asset→(classification,
+dimension) classification rule already living in `Block.get_recognition_report`
+(Vehicle/Ship/Structure via physical characteristics + `get_dimension`; Aircraft via
+`Air_Asset_Type` category → small/med/big). User was offered two solutions (extract a shared pure
+classification function vs. have the ground-truth producer call `get_recognition_report(efficiency=1.0)`
+and reuse `get_target_report`) and picked **the shared-function extraction** — the reuse-via-full-
+visibility-report alternative was rejected for two reasons surfaced during analysis: it would
+invoke `get_recognition_report`'s side effect (`self.state.update()`) purely to compute a query,
+and `calcProbability(1.0)` isn't a mathematically guaranteed `True` (rare `random.uniform(0,1) == 1.0`
+edge), which would have undermined `_target_profile_from_block`'s `@lru_cache` purity guarantee.
+
+Implemented: `Context.classify_asset_dimension(asset, valid_asset_types=None)` (`Context.py`, right
+after `get_dimension`) — single source of truth for the per-asset classification rule, returns the
+dimension bucket or `None` (covers unrecognized class, missing physical characteristics/category,
+or an out-of-vocabulary `asset_type` when `valid_asset_types` is passed). Both
+`Block.get_recognition_report` (passes `valid_asset_types=ASSET_TYPE`) and
+`Region._target_profile_from_block` (same) now call it instead of maintaining their own copies —
+removed ~30 duplicated lines from each. `Block.py`'s `Context` import swapped `get_dimension` for
+`classify_asset_dimension` (no longer called directly there). New direct unit tests in
+`Test_Context.py::TestClassifyAssetDimension` (10 tests); existing `Test_Region.py::TestTargetProfileFromBlock`
+tests (mixed armor+SAM, damaged excluded, unclassifiable skipped, aircraft dimension mapping) serve
+as the integration check and all still pass unchanged.
+
+**`get_target_report` no-visibility fix (item 4/point 3 from the user's list) — implemented.**
+`Region.get_target_report` (`Region.py`, right after the mil_category priority-list helpers) had a
+falsy-check bug: `if not _operative: return None` only catches a genuinely empty/absent operative
+dict. But `Block.get_recognition_report` always populates `asset_summary['operative'][asset_type][dimension]`
+skeleton keys (initialized to 0) for every real asset in a block *regardless* of whether the
+report's detection-probability gate passed — only the increment is gated. So when the gate fails,
+`_operative` is a **non-empty dict of real keys, all zero counts** — previously this slipped past
+the falsy check and got returned as if it were valid "target has zero assets of these types" data,
+which is backwards (it's actually "we don't know," not "we know it's empty"). Fixed by checking the
+**raw** total count in `_operative` (summed across all asset_type/dimension entries, before the
+classification grouping loop) and returning `None` when it's zero — deliberately checked on the
+raw dict, not on the built `target_classification_report`, so it doesn't get confused with the
+different, pre-existing case where real nonzero-count asset_types exist but none of them map to a
+known `TARGET_CLASSIFICATION` entry (that case correctly keeps returning `{}`, unchanged — see
+`test_all_unclassifiable_returns_empty_dict`). 3 new tests added to
+`Test_Region.py::TestGetTargetClassificationReport`. Since `_target_profile_from_report` just
+delegates to `get_target_report`, this fix flows through automatically; `_target_affinity`'s
+existing empty-profile → neutral `1.0` handling required no change (see
+[[feedback_no_visibility_low_priority]] for why that's correct and deliberate).
+
+Full suite after both fixes: **2465 tests OK (skipped=5)**, 0 errors/failures. **Not committed** —
+working tree has `Block.py`/`Context.py`/`Region.py` + `Test_Context.py`/`Test_Region.py` pending,
+user has not been asked about a commit yet. Note: the working tree also already had the
+`get_blocks_by_criteria`/`get_sorted_priority_blocks`/`get_normalized_priority_blocks`/
+`get_priority_lists_by_mil_category` mil_category split (from the prior, accidentally-closed
+session) uncommitted in `Region.py`/`Test_Region.py` before this session started — both sets of
+changes are now mixed together in the same uncommitted working tree.

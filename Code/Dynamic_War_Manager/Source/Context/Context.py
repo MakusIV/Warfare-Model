@@ -8,7 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal['A', 'B, 'C']
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 MAX_WORLD_DISTANCE = float('inf')
@@ -270,7 +270,60 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         f"length={length}, width={width}, height={height}, weight={weight}. Returning 'Unknown'."
     )
     return "Unknown"
-    
+
+
+def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] = None) -> Optional[str]:
+    """Recon/target-profile dimension bucket ('big'/'med'/'small') for a single asset.
+
+    Vehicle/Ship/Structure: derived from physical characteristics via get_dimension (Structure
+    additionally needs its own category as structure_type). Aircraft: derived from its
+    Air_Asset_Type category (Fighter/Helicopter/Attacker -> small, Fighter_Bomber/Recon -> med,
+    Bomber/Transport/Awacs/Heavy_Bomber -> big). Returns None if the asset's class isn't one of
+    these four, physical characteristics/category are missing/unrecognized, or (when
+    valid_asset_types is given) asset.asset_type isn't a member of it.
+
+    Single source of truth for the classification rule shared by Block.get_recognition_report
+    (fog-of-war, gated by per-report detection probability) and
+    Region._target_profile_from_block (ground-truth, no gating) -- both build a target profile
+    from the same asset shape and must not be able to drift apart on this rule. Callers remain
+    responsible for their own logging/gating around a None result.
+    """
+    class_name = asset.__class__.__name__
+    asset_category = getattr(asset, 'category', None)
+    dimension = None
+
+    if class_name in ('Vehicle', 'Ship', 'Structure'):
+        physical = asset.get_physical_characteristics()
+        if not physical:
+            return None
+        structure_type = asset_category if class_name == 'Structure' and asset_category is not None else None
+        dimension = get_dimension(
+            class_name,
+            physical['length'], physical['width'], physical['height'], physical['weight'],
+            structure_type,
+        )
+
+    elif class_name == 'Aircraft':
+        if asset_category is None:
+            return None
+        if asset_category in (Air_Asset_Type.FIGHTER.value, Air_Asset_Type.HELICOPTER.value, Air_Asset_Type.ATTACKER.value):
+            dimension = 'small'
+        elif asset_category in (Air_Asset_Type.FIGHTER_BOMBER.value, Air_Asset_Type.RECON.value):
+            dimension = 'med'
+        elif asset_category in (Air_Asset_Type.BOMBER.value, Air_Asset_Type.TRANSPORT.value, Air_Asset_Type.AWACS.value, Air_Asset_Type.HEAVY_BOMBER.value):
+            dimension = 'big'
+    else:
+        return None
+
+    if dimension is None:
+        return None
+
+    if valid_asset_types is not None:
+        asset_type = getattr(asset, 'asset_type', None)
+        if asset_type is None or asset_type not in valid_asset_types:
+            return None
+
+    return dimension
 
 
 

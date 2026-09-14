@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock
 
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     # Enums
@@ -56,6 +57,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     LOADOUT_DOCTRINE,
     # Functions
     get_dimension,
+    classify_asset_dimension,
     _get_task_from_weapon_param,
     _get_weapon_param_from_target,
     get_task_from_target,
@@ -674,6 +676,95 @@ class TestGetDimensionErrors(unittest.TestCase):
         """All-zero dimensions return 'Unknown' (no negative values, no error)."""
         result = get_dimension('Vehicle', length=0, width=0, height=0, weight=0)
         self.assertEqual(result, 'Unknown')
+
+
+# ---------------------------------------------------------------------------
+# TestClassifyAssetDimension
+# ---------------------------------------------------------------------------
+
+_CAD_Vehicle  = type('Vehicle', (), {})
+_CAD_Ship     = type('Ship', (), {})
+_CAD_Structure = type('Structure', (), {})
+_CAD_Aircraft = type('Aircraft', (), {})
+
+
+class TestClassifyAssetDimension(unittest.TestCase):
+    """Unit tests for Context.classify_asset_dimension() -- the single source of truth for the
+    asset -> dimension classification rule shared by Block.get_recognition_report (fog-of-war)
+    and Region._target_profile_from_block (ground-truth)."""
+
+    @staticmethod
+    def _mock_asset(cls, asset_type=None, category=None, physical=None):
+        m = MagicMock()
+        m.__class__ = cls
+        m.asset_type = asset_type
+        m.category = category
+        if physical is not None:
+            m.get_physical_characteristics.return_value = physical
+        else:
+            m.get_physical_characteristics.return_value = None
+        return m
+
+    def test_vehicle_dimension_from_physical_characteristics(self):
+        """Vehicle: dimension derived via get_dimension from its physical characteristics."""
+        asset = self._mock_asset(
+            _CAD_Vehicle, asset_type=Ground_Vehicle_Asset_Type.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.assertEqual(classify_asset_dimension(asset), 'big')
+
+    def test_vehicle_missing_physical_characteristics_returns_none(self):
+        """Vehicle without physical characteristics can't be classified."""
+        asset = self._mock_asset(_CAD_Vehicle, asset_type=Ground_Vehicle_Asset_Type.TANK.value)
+        self.assertIsNone(classify_asset_dimension(asset))
+
+    def test_structure_uses_category_as_structure_type(self):
+        """Structure: its own category is passed to get_dimension as structure_type."""
+        asset = self._mock_asset(
+            _CAD_Structure, asset_type='Bridge', category='Bridge',
+            physical={'length': 100, 'width': 10, 'height': 10, 'weight': 0},
+        )
+        result = classify_asset_dimension(asset)
+        self.assertIn(result, ('big', 'med', 'small', 'Unknown'))
+
+    def test_aircraft_fighter_category_is_small(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter', category=Air_Asset_Type.FIGHTER.value)
+        self.assertEqual(classify_asset_dimension(asset), 'small')
+
+    def test_aircraft_fighter_bomber_category_is_med(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter_Bomber', category=Air_Asset_Type.FIGHTER_BOMBER.value)
+        self.assertEqual(classify_asset_dimension(asset), 'med')
+
+    def test_aircraft_bomber_category_is_big(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type='Bomber', category=Air_Asset_Type.BOMBER.value)
+        self.assertEqual(classify_asset_dimension(asset), 'big')
+
+    def test_aircraft_missing_category_returns_none(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter')
+        self.assertIsNone(classify_asset_dimension(asset))
+
+    def test_unrecognized_class_returns_none(self):
+        """An asset whose class isn't Vehicle/Ship/Structure/Aircraft can't be classified."""
+        other_cls = type('Payload', (), {})
+        asset = self._mock_asset(other_cls, asset_type='Tank')
+        self.assertIsNone(classify_asset_dimension(asset))
+
+    def test_valid_asset_types_filters_out_of_vocabulary_type(self):
+        """When valid_asset_types is given, an asset_type outside it returns None even though the
+        dimension itself would be classifiable."""
+        asset = self._mock_asset(
+            _CAD_Vehicle, asset_type='NotARealAssetType',
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.assertIsNone(classify_asset_dimension(asset, valid_asset_types=[Ground_Vehicle_Asset_Type.TANK.value]))
+
+    def test_valid_asset_types_none_skips_validation(self):
+        """valid_asset_types=None (default) means no asset_type validation is performed."""
+        asset = self._mock_asset(
+            _CAD_Vehicle, asset_type='NotARealAssetType',
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.assertEqual(classify_asset_dimension(asset), 'big')
 
 
 # ---------------------------------------------------------------------------

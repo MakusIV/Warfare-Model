@@ -377,6 +377,145 @@ class TestRegion(unittest.TestCase):
         
         
 
+class TestGetBlocksByCriteriaMilCategory(unittest.TestCase):
+    """Tests for the mil_category filter on get_blocks_by_criteria/get_sorted_priority_blocks/
+    get_normalized_priority_blocks, and for the new get_priority_lists_by_mil_category."""
+
+    def setUp(self):
+        self.mock_regiment = MagicMock(spec=Military)
+        self.mock_regiment.id = "regiment1"
+        self.mock_regiment.side = "Red"
+        self.mock_regiment.category = 'Military'
+        self.mock_regiment.mil_category = 'Regiment'
+
+        self.mock_regiment2 = MagicMock(spec=Military)
+        self.mock_regiment2.id = "regiment2"
+        self.mock_regiment2.side = "Red"
+        self.mock_regiment2.category = 'Military'
+        self.mock_regiment2.mil_category = 'Regiment'
+
+        self.mock_airbase = MagicMock(spec=Military)
+        self.mock_airbase.id = "airbase1"
+        self.mock_airbase.side = "Red"
+        self.mock_airbase.category = 'Military'
+        self.mock_airbase.mil_category = 'Airbase'
+
+        self.mock_blue_regiment = MagicMock(spec=Military)
+        self.mock_blue_regiment.id = "regiment_blue"
+        self.mock_blue_regiment.side = "Blue"
+        self.mock_blue_regiment.category = 'Military'
+        self.mock_blue_regiment.mil_category = 'Regiment'
+
+        self.mock_production = MagicMock(spec=Production)
+        self.mock_production.id = "prod1"
+        self.mock_production.side = "Red"
+        self.mock_production.category = 'Logistic'
+
+        self.region = Region(
+            name="Test Region",
+            description="Test Description",
+            blocks=[
+                BlockItem(priority=0.9, block=self.mock_regiment),
+                BlockItem(priority=0.5, block=self.mock_regiment2),
+                BlockItem(priority=0.7, block=self.mock_airbase),
+                BlockItem(priority=0.4, block=self.mock_blue_regiment),
+                BlockItem(priority=0.2, block=self.mock_production),
+            ],
+        )
+
+    def test_get_blocks_by_criteria_filters_by_mil_category(self):
+        result = self.region.get_blocks_by_criteria(mil_category='Regiment')
+        self.assertEqual({b.block.id for b in result}, {"regiment1", "regiment2", "regiment_blue"})
+
+    def test_get_blocks_by_criteria_mil_category_excludes_non_military(self):
+        result = self.region.get_blocks_by_criteria(mil_category='Regiment')
+        self.assertNotIn(self.mock_production, [b.block for b in result])
+
+    def test_get_blocks_by_criteria_invalid_mil_category_raises(self):
+        with self.assertRaises(ValueError):
+            self.region.get_blocks_by_criteria(mil_category='Not_A_Category')
+
+    def test_get_blocks_by_criteria_mil_category_combines_with_side_and_category(self):
+        result = self.region.get_blocks_by_criteria(side="Red", category="Military", mil_category='Regiment')
+        self.assertEqual({b.block.id for b in result}, {"regiment1", "regiment2"})
+
+    def test_get_sorted_priority_blocks_mil_category_forwarded(self):
+        result = self.region.get_sorted_priority_blocks(count=10, side="Red", mil_category='Regiment')
+        self.assertEqual([b.block.id for b in result], ["regiment1", "regiment2"])
+
+    def test_get_normalized_priority_blocks_mil_category_forwarded(self):
+        result = self.region.get_normalized_priority_blocks(count=10, side="Red", mil_category='Regiment')
+        self.assertEqual([b.block.id for b in result], ["regiment1", "regiment2"])
+        self.assertEqual(result[0].priority, 1)
+        self.assertEqual(result[1].priority, 0)
+
+    def test_get_normalized_priority_blocks_single_block_group_returns_block_priority(self):
+        result = self.region.get_normalized_priority_blocks(count=10, side="Red", mil_category='Airbase')
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].priority, 0.7)
+
+
+class TestGetPriorityListsByMilCategory(unittest.TestCase):
+    def setUp(self):
+        self.mock_regiment = MagicMock(spec=Military)
+        self.mock_regiment.id = "regiment1"
+        self.mock_regiment.side = "Red"
+        self.mock_regiment.category = 'Military'
+        self.mock_regiment.mil_category = 'Regiment'
+
+        self.mock_regiment2 = MagicMock(spec=Military)
+        self.mock_regiment2.id = "regiment2"
+        self.mock_regiment2.side = "Red"
+        self.mock_regiment2.category = 'Military'
+        self.mock_regiment2.mil_category = 'Regiment'
+
+        self.mock_airbase = MagicMock(spec=Military)
+        self.mock_airbase.id = "airbase1"
+        self.mock_airbase.side = "Red"
+        self.mock_airbase.category = 'Military'
+        self.mock_airbase.mil_category = 'Airbase'
+
+        self.region = Region(
+            name="Test Region",
+            description="Test Description",
+            blocks=[
+                BlockItem(priority=0.9, block=self.mock_regiment),
+                BlockItem(priority=0.5, block=self.mock_regiment2),
+                BlockItem(priority=0.7, block=self.mock_airbase),
+            ],
+        )
+
+    def test_returns_one_list_per_present_mil_category(self):
+        result = self.region.get_priority_lists_by_mil_category(side="Red")
+        self.assertEqual(set(result.keys()), {"Regiment", "Airbase"})
+        self.assertEqual([b.block.id for b in result["Regiment"]], ["regiment1", "regiment2"])
+        self.assertEqual([b.block.id for b in result["Airbase"]], ["airbase1"])
+
+    def test_skips_categories_not_present(self):
+        result = self.region.get_priority_lists_by_mil_category(side="Red")
+        self.assertNotIn("Naval_Group", result)
+        self.assertNotIn("Farp", result)
+
+    def test_empty_region_returns_empty_dict(self):
+        empty_region = Region(name="Empty", description="Empty", blocks=[])
+        result = empty_region.get_priority_lists_by_mil_category(side="Red")
+        self.assertEqual(result, {})
+
+    def test_side_with_no_military_blocks_returns_empty_dict(self):
+        result = self.region.get_priority_lists_by_mil_category(side="Blue")
+        self.assertEqual(result, {})
+
+    def test_invalid_side_raises(self):
+        with self.assertRaises(ValueError):
+            self.region.get_priority_lists_by_mil_category(side="Green")
+
+    def test_sort_by_lowest_and_highest(self):
+        highest = self.region.get_priority_lists_by_mil_category(side="Red", sort_by="highest")
+        lowest = self.region.get_priority_lists_by_mil_category(side="Red", sort_by="lowest")
+        self.assertEqual([b.block.id for b in highest["Regiment"]], ["regiment1", "regiment2"])
+        self.assertEqual([b.block.id for b in lowest["Regiment"]], ["regiment2", "regiment1"])
+
+
 class TestRegionRoutes(unittest.TestCase):
     """Tests for get_route, get_shortest_route, get_safest_route, get_shortest_and_safest_route."""
 
@@ -795,6 +934,47 @@ class TestGetTargetClassificationReport(unittest.TestCase):
             {'asset_summary': {'operative': {}}}
         )
         self.assertIsNone(result)
+
+    # ------------------------------------------------------------------
+    # No visibility: non-empty operative dict, but all counts zero
+    # (Block.get_recognition_report's per-report detection gate failed --
+    # asset_type/dimension buckets are still populated with 0, unlike a
+    # genuinely empty operative dict). Must be treated the same as "no
+    # report at all", not as valid zero-asset data.
+    # ------------------------------------------------------------------
+    def test_returns_none_when_operative_counts_all_zero(self):
+        """Returns None when every asset_type/dimension count is zero, even though the
+        operative dict itself has real keys (recon didn't reveal quantities this report)."""
+        with patch(self._PATCH, return_value='Armored'):
+            result = self.region.get_target_report(
+                {'asset_summary': {'operative': {
+                    'Tank':    {'big': 0, 'medium': 0, 'small': 0},
+                    'Armored': {'big': 0},
+                }}}
+            )
+        self.assertIsNone(result)
+
+    def test_all_zero_counts_distinct_from_empty_dict_result(self):
+        """A single asset_type with all-zero counts is no-visibility (None), not a valid dict
+        reporting zero assets of that classification."""
+        with patch(self._PATCH, return_value='Soft'):
+            result = self.region.get_target_report(
+                {'asset_summary': {'operative': {'Motorized': {'big': 0}}}}
+            )
+        self.assertIsNone(result)
+
+    def test_some_nonzero_counts_not_treated_as_no_visibility(self):
+        """As soon as at least one raw count is nonzero, the result is a real dict, even if some
+        asset_type/dimension entries are individually zero."""
+        with patch(self._PATCH, return_value='Armored'):
+            result = self.region.get_target_report(
+                {'asset_summary': {'operative': {
+                    'Tank':    {'big': 0, 'medium': 0},
+                    'Armored': {'big': 1},
+                }}}
+            )
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result['Armored']['big'], 1)
 
     # ------------------------------------------------------------------
     # Single asset type
