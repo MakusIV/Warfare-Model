@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-14T14:49:52.085Z
+  modified: 2026-09-14T16:37:13.793Z
 ---
 
 # Target-specific air combat priority via best-available-loadout — design proposal
@@ -287,10 +287,8 @@ delegates to `get_target_report`, this fix flows through automatically; `_target
 existing empty-profile → neutral `1.0` handling required no change (see
 [[feedback_no_visibility_low_priority]] for why that's correct and deliberate).
 
-Full suite after both fixes: **2465 tests OK (skipped=5)**, 0 errors/failures. **Not committed** —
-working tree has `Block.py`/`Context.py`/`Region.py` + `Test_Context.py`/`Test_Region.py` pending,
-user has not been asked about a commit yet. Note: the working tree also already had the
-`get_blocks_by_criteria`/`get_sorted_priority_blocks`/`get_normalized_priority_blocks`/
-`get_priority_lists_by_mil_category` mil_category split (from the prior, accidentally-closed
-session) uncommitted in `Region.py`/`Test_Region.py` before this session started — both sets of
-changes are now mixed together in the same uncommitted working tree.
+Full suite after both fixes: **2465 tests OK (skipped=5)**, 0 errors/failures. **Committed and
+pushed**, commit `3fe680c4` — bundled together with the mil_category priority-list split
+(`get_blocks_by_criteria`/`get_sorted_priority_blocks`/`get_normalized_priority_blocks`/
+`get_priority_lists_by_mil_category`), which had been sitting uncommitted in `Region.py`/
+`Test_Region.py` since the prior, accidentally-closed session and got swept into this same commit.

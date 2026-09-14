@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-11T17:13:34.844Z
+  modified: 2026-09-14T16:36:35.892Z
 ---
 
 # Region/Military priority calc & combat power redesign
@@ -67,7 +67,7 @@ Full suite 2331 tests / OK / 0 failures / 5 skipped after (2323 after Ship alone
 
 Unchanged from Fase 0 for ground/sea: `_representative_combat_power` still sums across all tasks as a stand-in. User wants the `'Attack'` task specifically there (see [[feedback_combat_power_action_selection]]) — not yet implemented, read that memory before touching `_calculate_priority`/`_representative_combat_power` again. Air is no longer affected by this question (it now has a single well-defined aggregate, not a per-task breakdown to choose from).
 
-## Next feature (not started) — priority lists split by mil_category
+## Feature — priority lists split by mil_category — IMPLEMENTED 2026-09-14 (commit 3fe680c4)
 
 User request 2026-09-11: split the flat priority list into separate lists per military block type/echelon (air base, ground base, stronghold, company, battalion, regiment, division, etc.), "per effettuare valutazioni strategiche più accurate distinguendo le diverse forze militari utilizzabili" — comparing a lone Company's priority against an entire Division's on the same scale isn't tactically meaningful; the consumer (mission assignment) needs to pick among forces of comparable scale/role separately.
 
@@ -86,11 +86,12 @@ The gap is purely in the query layer: `Region.get_blocks_by_criteria(side, categ
 2. **Add a grouped helper** `get_priority_lists_by_mil_category(self, side: str, sort_by: str = "highest") -> Dict[str, List[BlockItem]]` that returns one sorted list per `mil_category` actually present in the region for that side (skip empty ones), built on top of (1) rather than duplicating the sort logic.
 3. Remember `_invalidate_caches()` iterates cached methods by name (`Region.py` ~line 1170s) — if `get_blocks_by_criteria`'s cache key shape changes (new param), no code change needed there since `cache_clear()` clears the whole method regardless of signature, but double check nothing else calls `get_blocks_by_criteria` positionally (grep before changing the signature — adding the new param at the end, with a default, should be safe either way).
 
-**Timing**: deferred, not this session — user chose to record it and continue with Fase 2 (or whatever's next) instead of implementing immediately.
+**Timing**: implemented 2026-09-14 (commit `3fe680c4`), alongside unrelated fixes from that
+session — see [[project_session_2026_09_14_summary]].
 
 ## Next steps (not started)
 - Apply the `get_recon_reports` one-line semantic fix (v1 finding above) when a real caller needs it.
-- Fase 2: `EnemyTargetSnapshot`, `build_estimated_combat_power_table`, `update_military_priorities(side, use_recon=True)`.
+- Fase 2: `EnemyTargetSnapshot`, `build_estimated_combat_power_table`, `update_military_priorities(side, use_recon=True)`. When built, apply the no-visibility-as-low-priority policy from [[feedback_no_visibility_low_priority]] (decided 2026-09-14, not yet implemented since Fase 2 doesn't exist).
 - Resolve the action-selection design question per [[feedback_combat_power_action_selection]] for ground/sea before touching `_calculate_priority`/`_representative_combat_power` again.
 - Consider whether `Vehicle`/`Ship` should also get the `air_combat_power()`-style single-aggregate treatment reconsidered — no, not needed, their per-action breakdown is real and wanted (Attack/Defense/Maintain/Retrait are genuine mutually-exclusive postures); this was Aircraft-specific.
-- Implement the mil_category priority-list split above (see previous section) whenever picked back up.
+- Separate open thread (2026-09-14): [[project_vehicle_asset_type_category_conflict]] — ground Vehicle's `category` vs `asset_type` conflict, needs deeper analysis before fixing, do not implement without re-reading that memory.

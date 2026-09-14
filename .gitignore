@@ -17,3 +17,6 @@ __pycache__/
 
 # visualizer.py output when no interactive matplotlib backend is available
 visualizer_*.png
+
+# Test_Tactical_Evaluation.py diagnostic output
+tactical_evaluation_results.csv
