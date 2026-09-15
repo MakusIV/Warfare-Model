@@ -58,8 +58,8 @@ class TestVehicle(unittest.TestCase):
             name="Test Tank",
             model="T-90M",
             description="Test Description",
-            category=Ground_Vehicle_Asset_Type.TANK,
-            asset_type="Main_Battle_Tank",
+            category="Main_Battle_Tank",
+            asset_type=Ground_Vehicle_Asset_Type.TANK,
             functionality="Combat",
             cost=1000,
             value=10,
@@ -76,8 +76,8 @@ class TestVehicle(unittest.TestCase):
         self.assertEqual(vehicle.name, "Test Tank")
         self.assertEqual(vehicle._model, "T-90M")
         self.assertEqual(vehicle.description, "Test Description")
-        self.assertEqual(vehicle.category, Ground_Vehicle_Asset_Type.TANK.value)  # category is converted to string
-        self.assertEqual(vehicle.asset_type, "Main_Battle_Tank")
+        self.assertEqual(vehicle.category, "Main_Battle_Tank")
+        self.assertEqual(vehicle.asset_type, Ground_Vehicle_Asset_Type.TANK.value)  # asset_type is converted to string
         self.assertEqual(vehicle.functionality, "Combat")
         self.assertEqual(vehicle.cost, 1000)
         self.assertEqual(vehicle.value, 10)
@@ -122,8 +122,8 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK,
-            asset_type="Main_Battle_Tank"
+            category="Main_Battle_Tank",
+            asset_type=Ground_Vehicle_Asset_Type.TANK
         )
 
         result = vehicle.loadAssetDataFromContext()
@@ -222,7 +222,7 @@ class TestVehicle(unittest.TestCase):
             "Block_Infrastructure_Asset": {}
         }.get(key, default))
 
-        result = vehicle.checkParam(category=Ground_Vehicle_Asset_Type.TANK.value, asset_type="Main_Battle_Tank")
+        result = vehicle.checkParam(category="Main_Battle_Tank", asset_type=Ground_Vehicle_Asset_Type.TANK.value)
 
         # The result should be a tuple (bool, str)
         self.assertIsInstance(result, tuple)
@@ -253,16 +253,16 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK,
+            asset_type=Ground_Vehicle_Asset_Type.TANK,
             volume=self.test_volume
         )
 
         self.assertTrue(vehicle.isTank)
 
-        # Test with non-tank category
+        # Test with non-tank asset_type
         vehicle_armor = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARMORED
+            asset_type=Ground_Vehicle_Asset_Type.ARMORED
         )
 
         self.assertFalse(vehicle_armor.isTank)
@@ -276,7 +276,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARMORED, 
+            asset_type=Ground_Vehicle_Asset_Type.ARMORED,
             volume=self.test_volume
         )
 
@@ -291,7 +291,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.MOTORIZED,
+            asset_type=Ground_Vehicle_Asset_Type.MOTORIZED,
             volume=self.test_volume
         )
 
@@ -306,7 +306,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT, 
+            asset_type=Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT,
             volume=self.test_volume
         )
 
@@ -321,7 +321,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARTILLERY_FIXED
+            asset_type=Ground_Vehicle_Asset_Type.ARTILLERY_FIXED
         )
 
         self.assertTrue(vehicle.isArtillery_Fixed)
@@ -336,21 +336,21 @@ class TestVehicle(unittest.TestCase):
         # Test with semovent artillery
         vehicle_semovent = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT
+            asset_type=Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT
         )
         self.assertTrue(vehicle_semovent.isArtillery)
 
         # Test with fixed artillery
         vehicle_fixed = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.ARTILLERY_FIXED
+            asset_type=Ground_Vehicle_Asset_Type.ARTILLERY_FIXED
         )
         self.assertTrue(vehicle_fixed.isArtillery)
 
         # Test with non-artillery
         vehicle_tank = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK
+            asset_type=Ground_Vehicle_Asset_Type.TANK
         )
         self.assertFalse(vehicle_tank.isArtillery)
 
@@ -363,7 +363,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category="SAM_Big"
+            asset_type="SAM_Big"
         )
 
         self.assertTrue(vehicle.isSAM_Big)
@@ -377,7 +377,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category="SAM_Medium"
+            asset_type="SAM_Medium"
         )
 
         self.assertTrue(vehicle.isSAM_Medium)
@@ -391,7 +391,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category="SAM_Small"
+            asset_type="SAM_Small"
         )
 
         self.assertTrue(vehicle.isSAM_Small)
@@ -404,19 +404,19 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_data.return_value = {}
 
         # Test SAM_Big
-        vehicle_big = Vehicle(block=self.mock_block, category="SAM_Big")
+        vehicle_big = Vehicle(block=self.mock_block, asset_type="SAM_Big")
         self.assertTrue(vehicle_big.isSAM)
 
         # Test SAM_Med
-        vehicle_med = Vehicle(block=self.mock_block, category="SAM_Medium")
+        vehicle_med = Vehicle(block=self.mock_block, asset_type="SAM_Medium")
         self.assertTrue(vehicle_med.isSAM)
 
         # Test SAM_Small
-        vehicle_small = Vehicle(block=self.mock_block, category="SAM_Small")
+        vehicle_small = Vehicle(block=self.mock_block, asset_type="SAM_Small")
         self.assertTrue(vehicle_small.isSAM)
 
         # Test non-SAM
-        vehicle_tank = Vehicle(block=self.mock_block, category=Ground_Vehicle_Asset_Type.TANK.value)
+        vehicle_tank = Vehicle(block=self.mock_block, asset_type=Ground_Vehicle_Asset_Type.TANK.value)
         self.assertFalse(vehicle_tank.isSAM)
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
@@ -428,7 +428,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category="AAA"
+            asset_type="AAA"
         )
 
         self.assertTrue(vehicle.isAAA)
@@ -441,15 +441,15 @@ class TestVehicle(unittest.TestCase):
         mock_get_vehicle_data.return_value = {}
 
         # Test with SAM
-        vehicle_sam = Vehicle(block=self.mock_block, category="SAM_Medium")
+        vehicle_sam = Vehicle(block=self.mock_block, asset_type="SAM_Medium")
         self.assertTrue(vehicle_sam.isAntiAircraft)
 
         # Test with AAA
-        vehicle_aaa = Vehicle(block=self.mock_block, category="AAA")
+        vehicle_aaa = Vehicle(block=self.mock_block, asset_type="AAA")
         self.assertTrue(vehicle_aaa.isAntiAircraft)
 
         # Test with non-anti-aircraft
-        vehicle_tank = Vehicle(block=self.mock_block, category=Ground_Vehicle_Asset_Type.TANK.value)
+        vehicle_tank = Vehicle(block=self.mock_block, asset_type=Ground_Vehicle_Asset_Type.TANK.value)
         self.assertFalse(vehicle_tank.isAntiAircraft)
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
@@ -461,7 +461,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category="EWR"
+            asset_type="EWR"
         )
 
         self.assertTrue(vehicle.isEWR)
@@ -492,7 +492,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK,
+            asset_type=Ground_Vehicle_Asset_Type.TANK,
             model="T-90M"
         )
         vehicle.set_combat_power() # No actions provided, should compute for all
@@ -520,7 +520,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK,
+            asset_type=Ground_Vehicle_Asset_Type.TANK,
             model="T-90M"
         )        
         vehicle.set_combat_power(actions=["Attack"])
@@ -545,7 +545,7 @@ class TestVehicle(unittest.TestCase):
 
         vehicle = Vehicle(
             block=self.mock_block,
-            category=Ground_Vehicle_Asset_Type.TANK,
+            asset_type=Ground_Vehicle_Asset_Type.TANK,
             model="T-90M"
         )
 

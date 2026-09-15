@@ -54,8 +54,8 @@ class TestShip(unittest.TestCase):
             name="Test Carrier",
             model="CVN-70 Carl Vinson",
             description="Test Description",
-            category=Sea_Asset_Type.CARRIER,
-            asset_type="Carrier",
+            category="Carrier",
+            asset_type=Sea_Asset_Type.CARRIER,
             functionality="Combat",
             cost=1000,
             value=10,
@@ -71,8 +71,8 @@ class TestShip(unittest.TestCase):
 
         self.assertEqual(ship.name, "Test Carrier")
         self.assertEqual(ship._model, "CVN-70 Carl Vinson")
-        self.assertEqual(ship.category, Sea_Asset_Type.CARRIER.value)
-        self.assertEqual(ship.asset_type, "Carrier")
+        self.assertEqual(ship.category, "Carrier")
+        self.assertEqual(ship.asset_type, Sea_Asset_Type.CARRIER.value)
         self.assertTrue(ship.crytical)
         self.assertEqual(ship.repair_time, 48)
 
@@ -85,10 +85,10 @@ class TestShip(unittest.TestCase):
         mock_get_ship_scores.return_value = self.mock_ship_scores
         mock_get_ship_data.return_value = {}
 
-        ship = Ship(block=self.mock_block, category=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
         self.assertTrue(ship.isCarrier)
 
-        ship_destroyer = Ship(block=self.mock_block, category=Sea_Asset_Type.DESTROYER, model="Arleigh Burke")
+        ship_destroyer = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.DESTROYER, model="Arleigh Burke")
         self.assertFalse(ship_destroyer.isCarrier)
         self.assertTrue(ship_destroyer.isDestroyer)
 
@@ -100,7 +100,7 @@ class TestShip(unittest.TestCase):
         mock_get_ship_scores.return_value = self.mock_ship_scores
         mock_get_ship_data.return_value = {}
 
-        ship = Ship(block=self.mock_block, category=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
         ship.set_combat_power()  # No actions provided, should compute for all sea tasks
 
         combat_power_result = ship.combat_power(force='sea')
@@ -118,7 +118,7 @@ class TestShip(unittest.TestCase):
         mock_get_ship_scores.return_value = self.mock_ship_scores
         mock_get_ship_data.return_value = {}
 
-        ship = Ship(block=self.mock_block, category=Sea_Asset_Type.DESTROYER, model="Arleigh Burke")
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.DESTROYER, model="Arleigh Burke")
         ship.set_combat_power(actions=["Attack"])
 
         combat_power_result = ship.combat_power(force='sea', action='Attack')
@@ -137,7 +137,7 @@ class TestShip(unittest.TestCase):
         mock_get_ship_scores.return_value = self.mock_ship_scores
         mock_get_ship_data.return_value = {}
 
-        ship = Ship(block=self.mock_block, category=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
 
         with self.assertRaises(TypeError):
             ship.set_combat_power(actions=["Attack", "invalid_action"])
@@ -150,7 +150,7 @@ class TestShip(unittest.TestCase):
         mock_get_ship_scores.return_value = self.mock_ship_scores
         mock_get_ship_data.return_value = {}
 
-        ship = Ship(block=self.mock_block, category="Not_A_Real_Category", model="CVN-70 Carl Vinson")
+        ship = Ship(block=self.mock_block, asset_type="Not_A_Real_Category", model="CVN-70 Carl Vinson")
         combat_power_result = ship.combat_power(force='sea', action='Attack')
         self.assertEqual(combat_power_result, 0)
 
@@ -158,7 +158,7 @@ class TestShip(unittest.TestCase):
         """get_physical_characteristics returns None when no model is set."""
         with patch('Code.Dynamic_War_Manager.Source.Asset.Ship.get_ship_scores', return_value=self.mock_ship_scores), \
              patch('Code.Dynamic_War_Manager.Source.Asset.Ship.get_ship_data', return_value={}):
-            ship = Ship(block=self.mock_block, category=Sea_Asset_Type.CARRIER)
+            ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER)
             self.assertIsNone(ship.get_physical_characteristics())
 
 

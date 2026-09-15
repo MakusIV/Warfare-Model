@@ -70,6 +70,8 @@ class Asset:
         # Convert enum to string if necessary (before validation)
         if isinstance(category, Enum):
             category = str(category.value)
+        if isinstance(asset_type, Enum):
+            asset_type = str(asset_type.value)
 
         self._id = setId(name)
         self._description = description
@@ -164,6 +166,8 @@ class Asset:
 
     @asset_type.setter
     def asset_type(self, value: Optional[str]) -> None:
+        if isinstance(value, Enum):
+            value = str(value.value)
         self._validate_param('asset_type', value, str)
         self._asset_type = value
 

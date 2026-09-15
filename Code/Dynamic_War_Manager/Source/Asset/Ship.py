@@ -60,11 +60,11 @@ class Ship(Mobile) :
         """     
 
         if self.block.isMilitary():
-            asset_data = SEA_MILITARY_CRAFT_ASSET            
+            asset_data = SEA_MILITARY_CRAFT_ASSET
 
-            for k, v in asset_data[self.category]:            
-                    
-                if self.asset_type == k:
+            for k, v in asset_data[self.asset_type]:
+
+                if self.category == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
                     self.requested_for_consume = v["rcp"]
@@ -147,52 +147,53 @@ class Ship(Mobile) :
         if actions and any(action not in ACTION_TASKS["sea"] for action in actions):
             raise TypeError(f"Unexpected action in actions: {actions}. Expected actions are: {ACTION_TASKS['sea']}")
 
-        if self.category == None:
-            logger.warning("self.category not defined: Unable to set combat_power")
+        if self.asset_type == None:
+            logger.warning("self.asset_type not defined: Unable to set combat_power")
             return
 
         for act in actions:
-            # Calcolo della combat_power in relazione: all'azione da eseguire, alla categoria della nave,
-            # al suo punteggio di combattimento, alla sua efficienza, applicando i pesi di confronto tra
-            # classi di navi riportati nella tabella SEA_COMBAT_EFFICACY definita nel Context.
+            # Calcolo della combat_power in relazione: all'azione da eseguire, alla classe generale
+            # della nave (asset_type), al suo punteggio di combattimento, alla sua efficienza,
+            # applicando i pesi di confronto tra classi di navi riportati nella tabella
+            # SEA_COMBAT_EFFICACY definita nel Context.
             categories_in_action = SEA_COMBAT_EFFICACY.get(act, {}).keys()
 
-            if self.category in categories_in_action:
+            if self.asset_type in categories_in_action:
                 combat_power[act] = combat_power_from_score(
-                    category=self.category,
+                    category=self.asset_type,
                     score=self._ship_scores['combat score']['global_score'],  # global_score: normalizzato su tutto il registro, non solo sulla categoria (v. Ship_Data.py)
                     efficacy_table=SEA_COMBAT_EFFICACY[act],
                     efficiency=self.efficiency,
                 )
 
             else:
-                # Category not in SEA_COMBAT_EFFICACY (e.g., logistic ships)
-                logger.debug(f"Category '{self.category}' not found in SEA_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
+                # asset_type not in SEA_COMBAT_EFFICACY (e.g., logistic ships)
+                logger.debug(f"asset_type '{self.asset_type}' not found in SEA_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
                 combat_power[act] = 0
 
         self.set_combat_power_value({"sea": combat_power})
 
     @property
     def isDestroyer(self):
-        return self.category == "Destroyer"
+        return self.asset_type == "Destroyer"
     @property
     def isCarrier(self):
-        return self.category == "Carrier"
+        return self.asset_type == "Carrier"
     @property
     def isCruiser(self):
-        return self.category == "Cruiser"
-    @property   
+        return self.asset_type == "Cruiser"
+    @property
     def isFrigate(self):
-        return self.category == "Frigate"
+        return self.asset_type == "Frigate"
     @property
     def isFastAttackShip(self):
-        return self.category == "FastAttackShip"
+        return self.asset_type == "FastAttackShip"
     @property
     def isTransport(self):
-        return self.category == "Transport"
+        return self.asset_type == "Transport"
     @property
     def isSubmarine(self):
-        return self.category == "Submarine"
+        return self.asset_type == "Submarine"
     
     
     def get_physical_characteristics(self) -> Dict:

@@ -44,8 +44,8 @@ class TestAircraft(unittest.TestCase):
             name="Test Fighter",
             model="F-15C Eagle",
             description="Test Description",
-            category=Air_Asset_Type.FIGHTER,
-            asset_type="Fighter",
+            category="Fighter",
+            asset_type=Air_Asset_Type.FIGHTER,
             functionality="Combat",
             cost=1000,
             value=10,
@@ -62,7 +62,8 @@ class TestAircraft(unittest.TestCase):
         self.assertEqual(aircraft.name, "Test Fighter")
         self.assertEqual(aircraft._model, "F-15C Eagle")
         self.assertEqual(aircraft.model, "F-15C Eagle")  # base Asset.model property
-        self.assertEqual(aircraft.category, Air_Asset_Type.FIGHTER.value)
+        self.assertEqual(aircraft.category, "Fighter")
+        self.assertEqual(aircraft.asset_type, Air_Asset_Type.FIGHTER.value)
         self.assertTrue(aircraft.crytical)
         self.assertEqual(aircraft.repair_time, 48)
 
@@ -72,7 +73,7 @@ class TestAircraft(unittest.TestCase):
         """set_combat_power populates every air task with the SAME aggregate value (not per-task)."""
         mock_get_aircraft_combat_score.return_value = 0.5
 
-        aircraft = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
 
         combat_power_result = aircraft.combat_power(force='air')
         self.assertIsInstance(combat_power_result, dict)
@@ -87,7 +88,7 @@ class TestAircraft(unittest.TestCase):
         """air_combat_power() matches Context.combat_power_from_score() applied to AIR_COMBAT_EFFICACY."""
         mock_get_aircraft_combat_score.return_value = 0.5
 
-        aircraft = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
 
         expected = (1 + AIR_COMBAT_EFFICACY['Fighter'] * 0.3 / 5) * (1 + 0.5) * 0.8
         self.assertAlmostEqual(aircraft.air_combat_power(), expected)
@@ -99,8 +100,8 @@ class TestAircraft(unittest.TestCase):
         """A Fighter has higher combat power than a Transport with the identical model score."""
         mock_get_aircraft_combat_score.return_value = 0.5
 
-        fighter = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
-        transport = Aircraft(block=self.mock_block, category=Air_Asset_Type.TRANSPORT, model="C-17A")
+        fighter = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
+        transport = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.TRANSPORT, model="C-17A")
 
         self.assertGreater(fighter.air_combat_power(), transport.air_combat_power())
 
@@ -110,19 +111,19 @@ class TestAircraft(unittest.TestCase):
         """A category absent from AIR_COMBAT_EFFICACY gets combat power 0."""
         mock_get_aircraft_combat_score.return_value = 0.5
 
-        aircraft = Aircraft(block=self.mock_block, category="Not_A_Real_Role", model="F-15C Eagle")
+        aircraft = Aircraft(block=self.mock_block, asset_type="Not_A_Real_Role", model="F-15C Eagle")
         self.assertEqual(aircraft.air_combat_power(), 0.0)
 
     def test_no_model_returns_zero_combat_power(self):
         """Without a model, air_combat_power is 0.0 (no crash, no registry lookup)."""
-        aircraft = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER)
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER)
         self.assertIsNone(aircraft._model)
         self.assertEqual(aircraft.air_combat_power(), 0.0)
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
     def test_set_combat_power_invalid_action_raises(self, mock_get_aircraft_combat_score):
         mock_get_aircraft_combat_score.return_value = 0.5
-        aircraft = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
 
         with self.assertRaises(TypeError):
             aircraft.set_combat_power(actions=["CAP", "invalid_action"])
@@ -130,10 +131,10 @@ class TestAircraft(unittest.TestCase):
     @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
     def test_property_isFighter(self, mock_get_aircraft_combat_score):
         mock_get_aircraft_combat_score.return_value = 0.5
-        aircraft = Aircraft(block=self.mock_block, category=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
         self.assertTrue(aircraft.isFighter)
 
-        transport = Aircraft(block=self.mock_block, category=Air_Asset_Type.TRANSPORT, model="C-17A")
+        transport = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.TRANSPORT, model="C-17A")
         self.assertFalse(transport.isFighter)
         self.assertTrue(transport.isTransport)
 

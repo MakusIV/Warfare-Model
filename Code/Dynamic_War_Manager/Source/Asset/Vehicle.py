@@ -95,10 +95,10 @@ class Vehicle(Mobile) :
             asset_data = GROUND_MILITARY_VEHICLE_ASSET # load data from Context
             asset_data_air_defense = AIR_DEFENSE_ASSET # load data from Context
 
-            # load primary asset data for his category
-            for k, v in asset_data[self.category].items(): # block_class = "Military", category = "Armor", asset_type = "Infantry_Fighting_Vehicle"
+            # load primary asset data for his asset_type
+            for k, v in asset_data[self.asset_type].items(): # block_class = "Military", asset_type = "Armored", category = "Infantry_Fighting_Vehicle"
 
-                if self.asset_type == k:
+                if self.category == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
                     self.requested_for_consume = v["rcp"]
@@ -106,18 +106,18 @@ class Vehicle(Mobile) :
                     self._payload_perc = v["payload%"]
                     return True
 
-            # air defence asset data for his category
-            for k, v in asset_data_air_defense[self.category].items(): # block_class = "Military", category = "SAM_Big", asset_type = "Track_Radar"
+            # air defence asset data for his asset_type
+            for k, v in asset_data_air_defense[self.asset_type].items(): # block_class = "Military", asset_type = "SAM_Big", category = "Track_Radar"
 
                 for k1, v1 in v.items():
                     key = k + "_" + k1
-                if self.asset_type == key:
+                if self.category == key:
                     self.cost = v["cost"]
                     self.value = v["value"]
                     self.requested_for_consume = v["rcp"]
                     self.repair_time = v["t2r"]
                     self._payload_perc = v["payload%"]
-                    return True             
+                    return True
 
         
 
@@ -148,40 +148,40 @@ class Vehicle(Mobile) :
         if asset_type and (isinstance(asset_type, str)):
 
             if self.block.block_class == "Military": # asset is a Military component
-                
-                vehicle_asset = []
-                air_defense_asset = []                
 
-                # Check in Ground_Military_Vehicle_Asset
+                vehicle_asset = []
+                air_defense_asset = []
+
+                # Check in Ground_Military_Vehicle_Asset (bucket key = asset_type, general class)
                 ground_military = BLOCK_ASSET_CATEGORY.get("Ground_Military_Vehicle_Asset", {})
-                if category in ground_military.keys():
-                    vehicle_asset = list(ground_military[category].keys())
+                if asset_type in ground_military.keys():
+                    vehicle_asset = list(ground_military[asset_type].keys())
 
                 # Check in Air_Defense_Asset
                 air_defense = BLOCK_ASSET_CATEGORY.get("Air_Defense_Asset", {})
-                if category in air_defense.keys():
-                    air_defense_asset = list(air_defense[category].keys())
+                if asset_type in air_defense.keys():
+                    air_defense_asset = list(air_defense[asset_type].keys())
 
                 # Check in Block_Infrastructure_Asset for Military blocks
                 # Note: Military blocks may have infrastructure assets too
                 # block_infra = BLOCK_ASSET_CATEGORY.get("Block_Infrastructure_Asset", {})
                 # military_infra = block_infra.get("Military", {})
-                # if category in military_infra.keys():
-                #    struct_asset = list(military_infra[category].keys())
+                # if asset_type in military_infra.keys():
+                #    struct_asset = list(military_infra[asset_type].keys())
 
                 if not vehicle_asset and not air_defense_asset:
-                    logger.warning(f"Military category ({category}) not found in BLOCK_ASSET_CATEGORY")
+                    logger.warning(f"Military asset_type ({asset_type}) not found in BLOCK_ASSET_CATEGORY")
 
-                if asset_type in vehicle_asset or asset_type in air_defense_asset:
+                if category in vehicle_asset or category in air_defense_asset:
                    return (True, "OK")
 
                 else:
-                    # Check if asset_type exists in any category 
+                    # Check if category (sub-class) exists under any asset_type bucket
                     for cat in ground_military.values():
-                        if asset_type in cat.keys():
+                        if category in cat.keys():
                             return (True, "OK")
                     for cat in air_defense.values():
-                        if asset_type in cat.keys():
+                        if category in cat.keys():
                             return (True, "OK")
 
             else:  # asset isn't a Military component
@@ -250,19 +250,19 @@ class Vehicle(Mobile) :
 
     @property
     def isTank(self):
-        return self.category == Ground_Vehicle_Asset_Type.TANK.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.TANK.value
     @property
     def isArmor(self):
-        return self.category == Ground_Vehicle_Asset_Type.ARMORED.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.ARMORED.value
     @property
     def isMotorized(self):
-        return self.category == Ground_Vehicle_Asset_Type.MOTORIZED.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.MOTORIZED.value
     @property
     def isArtillery_Semovent(self):
-        return self.category == Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value
     @property
     def isArtillery_Fixed(self):
-        return self.category == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.ARTILLERY_FIXED.value
     @property
     def isArtillery(self):
         return self.isArtillery_Fixed or self.isArtillery_Semovent
@@ -274,19 +274,19 @@ class Vehicle(Mobile) :
         return self.isSAM_Big or self.isSAM_Medium or self.isSAM_Small
     @property
     def isSAM_Big(self):
-        return self.category == Ground_Vehicle_Asset_Type.SAM_BIG.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.SAM_BIG.value
     @property
     def isSAM_Medium(self):
-        return self.category == Ground_Vehicle_Asset_Type.SAM_MEDIUM.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.SAM_MEDIUM.value
     @property
     def isSAM_Small(self):
-        return self.category == Ground_Vehicle_Asset_Type.SAM_SMALL.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.SAM_SMALL.value
     @property
     def isAAA(self):
-        return self.category == Ground_Vehicle_Asset_Type.AAA.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.AAA.value
     @property
     def isEWR(self):
-        return self.category == Ground_Vehicle_Asset_Type.EWR.value
+        return self.asset_type == Ground_Vehicle_Asset_Type.EWR.value
     @property
     def isCommandControl(self):
         return self.category == "Command_&_Control"
@@ -325,32 +325,32 @@ class Vehicle(Mobile) :
         if actions and any(action not in ACTION_TASKS["ground"] for action in actions):
             raise TypeError(f"Unexpected action in actions: {actions}. Expected actions are: {ACTION_TASKS['ground']}")
                 
-        if self.category == None:
-            logger.warning("self.category not defined: Unable to set combat_power")
+        if self.asset_type == None:
+            logger.warning("self.asset_type not defined: Unable to set combat_power")
             return
 
-        for act in actions:            
-            # Check if category exists in GROUND_COMBAT_EFFICACY for this action
+        for act in actions:
+            # Check if asset_type exists in GROUND_COMBAT_EFFICACY for this action
             # Calcolo della combat_power in relazione:
-            # - all'azione da eseguire, 
-            # - alla categoria del veicolo, 
-            # - al suo punteggio di combattimento, 
-            # - alla sua efficienza 
+            # - all'azione da eseguire,
+            # - alla classe generale del veicolo (asset_type),
+            # - al suo punteggio di combattimento,
+            # - alla sua efficienza
             # - applicando anche i pesi di confronto tra classi di veicoli, riportati mparametri della tabella GROUND_COMBAT_EFFICACY definita nel Context
             categories_in_action = GROUND_COMBAT_EFFICACY.get(act, {}).keys()
 
-            if self.category in categories_in_action:
+            if self.asset_type in categories_in_action:
                 combat_power[act] = combat_power_from_score(
-                    category=self.category,
+                    category=self.asset_type,
                     score=self._vehicle_scores['combat score']['global_score'],  # global_score: normalizzato su tutto il registro, non solo sulla categoria (v. Vehicle_Data.py)
                     efficacy_table=GROUND_COMBAT_EFFICACY[act],
                     efficiency=self.efficiency,
                 )
 
             else:
-                # Category not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)
+                # asset_type not in GROUND_COMBAT_EFFICACY (e.g., SAM, AAA, logistic vehicles)
                 # Set a default combat power or skip
-                logger.debug(f"Category '{self.category}' not found in GROUND_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
+                logger.debug(f"asset_type '{self.asset_type}' not found in GROUND_COMBAT_EFFICACY for action '{act}'. Setting combat_power to 0.")
                 combat_power[act] = 0
         # call parent method
         self.set_combat_power_value({"ground": combat_power})

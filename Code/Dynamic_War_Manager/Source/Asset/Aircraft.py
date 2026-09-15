@@ -61,11 +61,11 @@ class Aircraft(Mobile) :
         """     
 
         if self.block.isMilitary():
-            asset_data = AIR_MILITARY_CRAFT_ASSET            
+            asset_data = AIR_MILITARY_CRAFT_ASSET
 
-            for k, v in asset_data[self.category]:            
-                    
-                if self.asset_type == k:
+            for k, v in asset_data[self.asset_type]:
+
+                if self.category == k:
                     self.cost = v["cost"]
                     self.value = v["value"]
                     self.requested_for_consume = v["rcp"]
@@ -132,10 +132,10 @@ class Aircraft(Mobile) :
         per ciascun task, sommato — v. Aircraft_Data.combat_aggregate/get_aircraft_combat_score) pesato
         per l'efficacia di classe del ruolo dell'aereo (Context.AIR_COMBAT_EFFICACY) e per l'efficienza.
         """
-        if self._model is None or self.category is None:
+        if self._model is None or self.asset_type is None:
             return 0.0
         return combat_power_from_score(
-            category=self.category,
+            category=self.asset_type,
             score=get_aircraft_combat_score(self._model),
             efficacy_table=AIR_COMBAT_EFFICACY,
             efficiency=self.efficiency,
@@ -179,30 +179,30 @@ class Aircraft(Mobile) :
 
     @property
     def isFighter(self):
-        return self.category == "Fighter"
+        return self.asset_type == "Fighter"
     @property
     def isFighterBomber(self):
-        return self.category == "Fighter_Bomber"
+        return self.asset_type == "Fighter_Bomber"
     @property
     def isAttacker(self):
-        return self.category == "Attacker"
+        return self.asset_type == "Attacker"
     @property
     def isBomber(self):
-        return self.category == "Bomber"
+        return self.asset_type == "Bomber"
     @property
     def isHeavyBomber(self):
-        return self.category == "Heavy_Bomber"
+        return self.asset_type == "Heavy_Bomber"
     @property
     def isAwacs(self):
-        return self.category == "Awacs"
+        return self.asset_type == "Awacs"
     @property
     def isRecon(self):
-        return self.category == "Recon"
+        return self.asset_type == "Recon"
     @property
     def isTransport(self):
-        return self.category == "Transport"
+        return self.asset_type == "Transport"
     @property
     def isHelicopter(self):
-        return self.category == "Helicopter"
+        return self.asset_type == "Helicopter"
     
 

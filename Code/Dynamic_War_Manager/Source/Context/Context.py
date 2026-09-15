@@ -277,9 +277,9 @@ def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] =
 
     Vehicle/Ship/Structure: derived from physical characteristics via get_dimension (Structure
     additionally needs its own category as structure_type). Aircraft: derived from its
-    Air_Asset_Type category (Fighter/Helicopter/Attacker -> small, Fighter_Bomber/Recon -> med,
+    Air_Asset_Type asset_type (Fighter/Helicopter/Attacker -> small, Fighter_Bomber/Recon -> med,
     Bomber/Transport/Awacs/Heavy_Bomber -> big). Returns None if the asset's class isn't one of
-    these four, physical characteristics/category are missing/unrecognized, or (when
+    these four, physical characteristics/asset_type are missing/unrecognized, or (when
     valid_asset_types is given) asset.asset_type isn't a member of it.
 
     Single source of truth for the classification rule shared by Block.get_recognition_report
@@ -304,13 +304,14 @@ def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] =
         )
 
     elif class_name == 'Aircraft':
-        if asset_category is None:
+        aircraft_asset_type = getattr(asset, 'asset_type', None)
+        if aircraft_asset_type is None:
             return None
-        if asset_category in (Air_Asset_Type.FIGHTER.value, Air_Asset_Type.HELICOPTER.value, Air_Asset_Type.ATTACKER.value):
+        if aircraft_asset_type in (Air_Asset_Type.FIGHTER.value, Air_Asset_Type.HELICOPTER.value, Air_Asset_Type.ATTACKER.value):
             dimension = 'small'
-        elif asset_category in (Air_Asset_Type.FIGHTER_BOMBER.value, Air_Asset_Type.RECON.value):
+        elif aircraft_asset_type in (Air_Asset_Type.FIGHTER_BOMBER.value, Air_Asset_Type.RECON.value):
             dimension = 'med'
-        elif asset_category in (Air_Asset_Type.BOMBER.value, Air_Asset_Type.TRANSPORT.value, Air_Asset_Type.AWACS.value, Air_Asset_Type.HEAVY_BOMBER.value):
+        elif aircraft_asset_type in (Air_Asset_Type.BOMBER.value, Air_Asset_Type.TRANSPORT.value, Air_Asset_Type.AWACS.value, Air_Asset_Type.HEAVY_BOMBER.value):
             dimension = 'big'
     else:
         return None
@@ -1687,10 +1688,10 @@ for k1, v1 in BLOCK_INFRASTRUCTURE_ASSET.items():
 k = 'Ground_Military_Vehicle_Asset'
 
 for k1, v1 in GROUND_MILITARY_VEHICLE_ASSET.items():
-    BLOCK_ASSET_CATEGORY[k][k1] = {} # asset Category
+    BLOCK_ASSET_CATEGORY[k][k1] = {} # asset_type (general class, e.g. Tank/Armored)
 
     for k2, v2 in v1.items():
-        BLOCK_ASSET_CATEGORY[k][k1][k2] = k2  # asset type
+        BLOCK_ASSET_CATEGORY[k][k1][k2] = k2  # category (sub-class, e.g. Main_Battle_Tank)
         
         
 

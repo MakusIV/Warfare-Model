@@ -727,20 +727,20 @@ class TestClassifyAssetDimension(unittest.TestCase):
         result = classify_asset_dimension(asset)
         self.assertIn(result, ('big', 'med', 'small', 'Unknown'))
 
-    def test_aircraft_fighter_category_is_small(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter', category=Air_Asset_Type.FIGHTER.value)
+    def test_aircraft_fighter_asset_type_is_small(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER.value, category='Fighter')
         self.assertEqual(classify_asset_dimension(asset), 'small')
 
-    def test_aircraft_fighter_bomber_category_is_med(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter_Bomber', category=Air_Asset_Type.FIGHTER_BOMBER.value)
+    def test_aircraft_fighter_bomber_asset_type_is_med(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER_BOMBER.value, category='Fighter_Bomber')
         self.assertEqual(classify_asset_dimension(asset), 'med')
 
-    def test_aircraft_bomber_category_is_big(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type='Bomber', category=Air_Asset_Type.BOMBER.value)
+    def test_aircraft_bomber_asset_type_is_big(self):
+        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.BOMBER.value, category='Bomber')
         self.assertEqual(classify_asset_dimension(asset), 'big')
 
-    def test_aircraft_missing_category_returns_none(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type='Fighter')
+    def test_aircraft_missing_asset_type_returns_none(self):
+        asset = self._mock_asset(_CAD_Aircraft, category='Fighter')
         self.assertIsNone(classify_asset_dimension(asset))
 
     def test_unrecognized_class_returns_none(self):

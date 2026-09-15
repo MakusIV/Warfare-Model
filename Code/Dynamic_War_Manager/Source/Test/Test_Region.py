@@ -1201,8 +1201,8 @@ class TestTargetProfileFromBlock(unittest.TestCase):
                 classification = Context.get_target_classification(asset_type)
                 self.assertEqual(result, {classification: {expected_dimension: 1}})
 
-    def test_aircraft_missing_category_skipped(self):
-        aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=None)
+    def test_aircraft_missing_asset_type_skipped(self):
+        aircraft = self._mock_asset(_Aircraft, None, category=aat.FIGHTER.value)
         self.target_block._assets = {'a1': aircraft}
         self.assertEqual(self._call(), {})
 

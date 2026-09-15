@@ -957,30 +957,30 @@ class TestMilitary(unittest.TestCase):
     # _get_artillery_stats (tested via artillery_in_range)               #
     # ------------------------------------------------------------------ #
 
-    def _make_vehicle(self, category: str, combat_range_val: float,
+    def _make_vehicle(self, asset_type: str, combat_range_val: float,
                       is_operative: bool = True) -> MagicMock:
-        """Helper: build a minimal vehicle mock with category and combat_range."""
+        """Helper: build a minimal vehicle mock with asset_type and combat_range."""
         m = MagicMock()
         m.__class__ = _Vehicle
-        m.category = category
+        m.asset_type = asset_type
         m.combat_range.return_value = combat_range_val
         m.is_operative.return_value = is_operative
         m.position = Point2D(0, 0)
         return m
 
-    def _make_ship(self, category: str, combat_range_val: float,
+    def _make_ship(self, asset_type: str, combat_range_val: float,
                    is_operative: bool = True) -> MagicMock:
-        """Helper: build a minimal ship mock with category and combat_range."""
+        """Helper: build a minimal ship mock with asset_type and combat_range."""
         m = MagicMock()
         m.__class__ = _Ship
-        m.category = category
+        m.asset_type = asset_type
         m.combat_range.return_value = combat_range_val
         m.is_operative.return_value = is_operative
         m.position = Point2D(0, 0)
         return m
 
     def test_get_artillery_stats_tank_vehicle_included(self):
-        """Vehicle with category=Tank is included in artillery stats."""
+        """Vehicle with asset_type=Tank is included in artillery stats."""
         tank = self._make_vehicle(gat.TANK.value, 1500.0)
         self.groundbase._assets = {'t1': tank}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -989,7 +989,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(qty, 1)
 
     def test_get_artillery_stats_artillery_fixed_included(self):
-        """Vehicle with category=Artillery_Fixed is included."""
+        """Vehicle with asset_type=Artillery_Fixed is included."""
         arty = self._make_vehicle(gat.ARTILLERY_FIXED.value, 18500.0)
         self.groundbase._assets = {'a1': arty}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -997,7 +997,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(max_r, 18500.0)
 
     def test_get_artillery_stats_artillery_semovent_included(self):
-        """Vehicle with category=Artillery_Semovent is included."""
+        """Vehicle with asset_type=Artillery_Semovent is included."""
         spa = self._make_vehicle(gat.ARTILLERY_SEMOVENT.value, 24000.0)
         self.groundbase._assets = {'s1': spa}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -1005,7 +1005,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(max_r, 24000.0)
 
     def test_get_artillery_stats_armored_vehicle_excluded(self):
-        """Vehicle with category=Armored is NOT included (only Tank/Artillery)."""
+        """Vehicle with asset_type=Armored is NOT included (only Tank/Artillery)."""
         apc = self._make_vehicle(gat.ARMORED.value, 5000.0)
         self.groundbase._assets = {'a1': apc}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -1013,7 +1013,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(qty, 0)
 
     def test_get_artillery_stats_ship_destroyer_included(self):
-        """Ship with category=Destroyer is included."""
+        """Ship with asset_type=Destroyer is included."""
         destroyer = self._make_ship(sat.DESTROYER.value, 280000.0)
         self.groundbase._assets = {'d1': destroyer}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -1021,7 +1021,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(max_r, 280000.0)
 
     def test_get_artillery_stats_ship_cruiser_included(self):
-        """Ship with category=Cruiser is included."""
+        """Ship with asset_type=Cruiser is included."""
         cruiser = self._make_ship(sat.CRUISER.value, 320000.0)
         self.groundbase._assets = {'c1': cruiser}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -1029,7 +1029,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(max_r, 320000.0)
 
     def test_get_artillery_stats_ship_frigate_included(self):
-        """Ship with category=Frigate is included."""
+        """Ship with asset_type=Frigate is included."""
         frigate = self._make_ship(sat.FRIGATE.value, 150000.0)
         self.groundbase._assets = {'f1': frigate}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
@@ -1037,7 +1037,7 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(max_r, 150000.0)
 
     def test_get_artillery_stats_ship_corvette_included(self):
-        """Ship with category=Corvette is included."""
+        """Ship with asset_type=Corvette is included."""
         corvette = self._make_ship(sat.CORVETTE.value, 100000.0)
         self.groundbase._assets = {'c1': corvette}
         has_art, max_r, med_r, ratio, qty = self.groundbase._get_artillery_stats()
