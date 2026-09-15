@@ -20,3 +20,6 @@ visualizer_*.png
 
 # Test_Tactical_Evaluation.py diagnostic output
 tactical_evaluation_results.csv
+
+# Runtime logs generated on each module execution
+logs/
