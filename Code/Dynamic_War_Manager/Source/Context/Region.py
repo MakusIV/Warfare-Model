@@ -690,6 +690,7 @@ class Region:
             defense_priority = self._calc_defense_priority(military_block, friendly_blocks_tuple) # tuple per cache
             
             # Combined priority based on attack weight
+            # Il significato della formula è il seguente: se la priorità di difendere un target nemico è più alta rispetto quella di attacco la priorità del blocco è quella di difendere invece di atttaccare
             overall_priority = (attack_priority * self._attack_weight + 
                               defense_priority * (1 - self._attack_weight))
             

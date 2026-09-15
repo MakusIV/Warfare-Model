@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-14T16:36:35.892Z
+  modified: 2026-09-15T16:39:02.130Z
 ---
 
 # Region/Military priority calc & combat power redesign
@@ -90,8 +90,7 @@ The gap is purely in the query layer: `Region.get_blocks_by_criteria(side, categ
 session — see [[project_session_2026_09_14_summary]].
 
 ## Next steps (not started)
-- Apply the `get_recon_reports` one-line semantic fix (v1 finding above) when a real caller needs it.
-- Fase 2: `EnemyTargetSnapshot`, `build_estimated_combat_power_table`, `update_military_priorities(side, use_recon=True)`. When built, apply the no-visibility-as-low-priority policy from [[feedback_no_visibility_low_priority]] (decided 2026-09-14, not yet implemented since Fase 2 doesn't exist).
-- Resolve the action-selection design question per [[feedback_combat_power_action_selection]] for ground/sea before touching `_calculate_priority`/`_representative_combat_power` again.
+- **2026-09-15: full Fase 2 implementation plan ready, see [[project_fase2_recon_combat_power_plan]] — read that file in full before touching this area.** It supersedes the bullet points below (`EnemyTargetSnapshot` turned out to already be functionally replaced by the existing `TargetProfile`/`get_target_report` pipeline — though that pipeline itself turned out to be UNUSABLE for combat-power estimation, too lossy via `Context.TARGET_CLASSIFICATION`; a new `Combat_Power_Estimation.py` module is planned instead). The `get_recon_reports` one-line fix and the action-selection question below are both folded into that plan's Fase 1/Fase 2. 7 open design questions block implementation start.
+- Also newly found while planning Fase 2 (2026-09-15), pre-existing, NOT fixed, unrelated to the above: `Context.get_target_classification` returns the first matching key in `TARGET_CLASSIFICATION`'s dict order, so `AAA` always resolves to `'Armored'`, never `'Air_Defense'` (both lists contain it); separately `tc.AIRCRAFT` collapses all nine `Air_Asset_Type` values into one bucket. Flag for a future separate fix, not in scope of Fase 2.
 - Consider whether `Vehicle`/`Ship` should also get the `air_combat_power()`-style single-aggregate treatment reconsidered — no, not needed, their per-action breakdown is real and wanted (Attack/Defense/Maintain/Retrait are genuine mutually-exclusive postures); this was Aircraft-specific.
-- Separate open thread (2026-09-14): [[project_vehicle_asset_type_category_conflict]] — ground Vehicle's `category` vs `asset_type` conflict, needs deeper analysis before fixing, do not implement without re-reading that memory.
+- ~~Separate open thread (2026-09-14): [[project_vehicle_asset_type_category_conflict]]~~ — RESOLVED & IMPLEMENTED 2026-09-15 for all three Mobile classes (Vehicle/Ship/Aircraft), see that memory.
