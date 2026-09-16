@@ -853,7 +853,7 @@ class TestRegionMetrics(unittest.TestCase):
 
         with patch.object(self.region, 'get_c2_efficiency', return_value=c2_value) as mock_c2:
             self.region.get_recon_reports("Red")
-            mock_c2.assert_called_once_with(side="Red")
+            mock_c2.assert_called_once_with(side="Blue")
             self.mil1.get_recognition_report.assert_called_once_with(c2_value)
             self.mil2.get_recognition_report.assert_called_once_with(c2_value)
 

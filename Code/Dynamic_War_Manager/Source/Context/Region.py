@@ -794,7 +794,9 @@ class Region:
             raise ValueError(f"Invalid side: {side!r}")
 
         military_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
-        region_c2_recon_efficiency = self.get_c2_efficiency(side=side)
+        # C2 usato per la ricognizione è quello dell'osservatore (il lato nemico rispetto a `side`),
+        # non quello del lato osservato — per side=='Neutral' degenera in auto-osservazione (vedi Q7).
+        region_c2_recon_efficiency = self.get_c2_efficiency(side=Utility.enemySide(side))
         recon_reports = []
 
         for block_item in military_blocks:
