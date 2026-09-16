@@ -1,11 +1,11 @@
 ---
 name: project-fase2-recon-combat-power-plan
-description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved 2026-09-16 by a second Opus/high-effort verification pass. Implementation started same day: Fase 1 (C2 observer-side fix) done. Read this before continuing Fase 2 work."
+description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved 2026-09-16. Fase 1 (C2 observer-side fix) AND Fase 2 (action-based combat power selection) both implemented and tested same day. Read this before continuing with Fase 3-bis onward."
 metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T11:14:28.553Z
+  modified: 2026-09-16T12:01:01.941Z
 ---
 
 # Fase 2 — piano di stima combat power fog-of-war — TUTTE LE DOMANDE RISOLTE, IMPLEMENTAZIONE IN CORSO
@@ -73,8 +73,10 @@ Risoluzione finale: la dimensione **resta** nel bucket di calibrazione (ruolo di
 
 ## Piano aggiornato — 6 fasi (era 5)
 
-- **Fase 1 — FATTA, 2026-09-16.** Fix C2 in `get_recon_reports`: `Region.py:797` ora usa `Utility.enemySide(side)` invece di `side` (con commento che spiega la degenerazione per Neutral, vedi Q7). Rotta l'unica asserzione prevista: `Test_Region.py:856` (`mock_c2.assert_called_once_with(side="Red")` → `side="Blue"`), corretta. **Suite completa da rieseguire per conferma** (prossimo passo immediato).
-- **Fase 2 — da fare, RAFFORZATA.** `_representative_combat_power(self, block, force, action=None)`. Scoperta nuova: `Tactical_Evaluation.evaluateCombatSuperiority` (`Tactical_Evaluation.py:377`, logica a righe 452-461) stabilisce già una convenzione nel progetto — ramo attacco: blocco proprio='Attack', bersaglio=`max('Defense','Maintain')` (non solo 'Defense' come nel piano v1); per `sea` si riduce a 'Defense' (niente 'Maintain' in `SEA_TASK`). Ramo difesa: entrambi 'Defense'. `force=='air'`: action ignorato (no Attack/Defense in AIR_TASK). Q3 chiude l'unica preoccupazione collaterale (infondata).
+- **Fase 1 — FATTA, 2026-09-16** (commit 67b91cae). Fix C2 in `get_recon_reports`: `Region.py:797` ora usa `Utility.enemySide(side)` invece di `side` (con commento che spiega la degenerazione per Neutral, vedi Q7). Rotta l'unica asserzione prevista: `Test_Region.py:856`, corretta. Suite completa: 2465 OK/5 skipped.
+- **Fase 2 — FATTA, 2026-09-16.** `_representative_combat_power(self, block, force, action=None)` (`Region.py:1096`): `force=='air'` ignora `action` (chiama `combat_power(force='air')`, prende un solo task); `action is None` → legacy (somma su tutti i task); altrimenti → `block.combat_power(force=force, action=action)` (float diretto, il contratto lo supporta già). `_calculate_priority` (`Region.py:1097`): `is_attack = block.side != target_block.side`; own_action = `None` se air, altrimenti `'Attack'` se `is_attack` altrimenti `'Defense'`. Per il bersaglio militare: se air o ramo difesa → azione singola (`None` per air, `'Defense'` altrimenti); se ramo attacco su ground/sea → `max('Defense','Maintain')` per ground (mirror di `Tactical_Evaluation.evaluateCombatSuperiority`, verificato riga per riga a `Tactical_Evaluation.py:452-461`), solo `'Defense'` per sea (niente `'Maintain'` in `SEA_TASK`). Q3 confermata infondata, nessun test di regressione aggiuntivo aggiunto (non richiesto).
+  **Contestualmente**: rimossa la riga duplicata `Ground_Vehicle_Asset_Type.AAA.value` da `tc.ARMORED` in `TARGET_CLASSIFICATION` (`Context.py:1452-1456`, su richiesta esplicita dell'utente) — AAA ora è classificato solo in `tc.AIR_DEFENSE`; motivazione dell'utente per la doppia associazione originale: un asset AAA (es. ZSU-23-4 Shilka) può colpire anche bersagli terrestri, ma si è scelto di non complicare la classificazione per questo.
+  **Test aggiunti**: `TestRepresentativeCombatPowerActionSelection` (4 test) e `TestCalculatePriorityActionRoles` (4 test) in `Test_Region.py`, più fix ai mock di 3 test esistenti (`TestCalculatePriorityTargetAffinity`, `TestCalcAirPriorityTargetAffinity`, `TestCalcSurfacePriorityUnaffectedByAffinity`) che usavano `combat_power.return_value` fisso (non rispettava il nuovo contratto action-based) — sostituiti con un side_effect condiviso `_make_combat_power_side_effect(value, task=None)` a livello di modulo in `Test_Region.py`. Suite completa: **2473 OK/5 skipped**.
 - **Fase 3-bis — NUOVA, prerequisito di Fase 3.** Dimensione fisica per-modello su Aircraft (vedi Scoperta 3 sopra). Popolamento dati contestuale al commit di codice (o fallback esplicito temporaneo).
 - **Fase 3 — da fare, con 2 modifiche.** Nuovo modulo `Context/Combat_Power_Estimation.py`. Sorgenti score per-modello e bucket key ora specificate esattamente (vedi Q1). Regola SAM/AAA/EWR generalizzata (vedi sopra). `min_samples=3`. Import lazy confermato con aspettativa corretta (+0.25s ground/+0.01s sea alla prima chiamata, non ad ogni chiamata).
 - **Fase 4 — da fare, invariata.** Campo `users` su Vehicle_Data/Ship_Data, popolamento dati rimandabile (fallback neutro, a differenza di Fase 3-bis).
@@ -82,6 +84,7 @@ Risoluzione finale: la dimensione **resta** nel bucket di calibrazione (ruolo di
 
 ## Prossimi passi
 
-1. Rieseguire la suite completa per confermare che Fase 1 non abbia rotto altro oltre a `Test_Region.py:856` (già corretto).
-2. Committare Fase 1.
-3. Procedere con Fase 2 (rappresentative combat power con selezione azione + convenzione max(Defense,Maintain) verificata su Tactical_Evaluation).
+1. Fase 3-bis (dimensione fisica per-modello su Aircraft) — prerequisito di Fase 3.
+2. Fase 3 (nuovo modulo `Combat_Power_Estimation.py`).
+3. Fase 4 (campo `users` schema+wiring).
+4. Fase 5 (use_recon + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0).

@@ -1070,24 +1070,28 @@ class Region:
         # weight selection
         return self._weight_priority_target[block_category][task].get(target_category, 0.0) # Uso .get per default 0.0
         
-    def _representative_combat_power(self, block: Military, force: Optional[str]) -> float:
-        """Combat power 'totale' di un blocco per una forza, usata dal rapporto di confronto in
-        _calculate_priority.
+    def _representative_combat_power(self, block: Military, force: Optional[str], action: Optional[str] = None) -> float:
+        """Combat power di un blocco per una forza (ed eventualmente un'azione specifica), usata dal
+        rapporto di confronto in _calculate_priority.
 
         Per 'air': Aircraft.set_combat_power replica LO STESSO valore aggregato su tutti i task di
         ACTION_TASKS['air'] (i task aria — CAP, Strike, Intercept, ... — non sono posture tattiche
-        mutuamente esclusive come Attack/Defense/Retrait, v. Context.AIR_COMBAT_EFFICACY), quindi sommare
-        il dict moltiplicherebbe il valore per 10: si prende un solo task.
-        Per 'ground'/'sea': resta una somma su tutti i task come ripiego provvisorio — l'utente ha chiesto
-        di usare specificamente il task 'Attack' qui (v. memoria di progetto
-        feedback_combat_power_action_selection), non ancora implementato.
+        mutuamente esclusive come Attack/Defense/Maintain/Retrait, v. Context.AIR_COMBAT_EFFICACY, che è
+        piatta), quindi `action` è ignorato per costruzione: si prende un solo task.
+        Per 'ground'/'sea': se `action` è specificato, ritorna la combat power per quel solo task
+        (v. memoria di progetto feedback_combat_power_action_selection). Se `action` è None, comportamento
+        legacy: somma su tutti i task (mantenuto per compatibilità con i chiamanti che non selezionano
+        un'azione specifica).
         """
         if not force:
             return 0.0
-        breakdown = block.combat_power(force=force)
         if force == 'air':
+            breakdown = block.combat_power(force=force)
             return next(iter(breakdown.values()), 0.0)
-        return sum(breakdown.values())
+        if action is None:
+            breakdown = block.combat_power(force=force)
+            return sum(breakdown.values())
+        return block.combat_power(force=force, action=action)
 
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     def _calculate_priority(
@@ -1112,7 +1116,14 @@ class Region:
         # force_type: se non passato esplicitamente (solo _calc_air_priority lo fa oggi), derivalo dalla
         # categoria militare del blocco.
         force_type = force_type or MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
-        combat_power = self._representative_combat_power(block, force_type)
+        # Selezione azione: lati diversi -> il blocco attacca (postura 'Attack'); stesso lato -> il
+        # blocco difende/protegge (postura 'Defense'). Per 'air' l'azione è ignorata per costruzione
+        # (v. _representative_combat_power). Il confronto sui side è generico (vale per bersagli
+        # militari, logistici e civili), coerente con il ramo attacco/difesa usato più sotto per i
+        # soli bersagli militari.
+        is_attack = block.side != target_block.side
+        own_action = None if force_type == 'air' else ('Attack' if is_attack else 'Defense')
+        combat_power = self._representative_combat_power(block, force_type, own_action)
         if not combat_power or combat_power <= 0:
             return 0.0
 
@@ -1124,12 +1135,27 @@ class Region:
 
         if target_block.is_military():
             target_force_type = MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
-            target_cp = self._representative_combat_power(target_block, target_force_type)
+            if target_force_type == 'air' or not is_attack:
+                # ramo difesa (bersaglio = alleato protetto): quanto regge da solo -> 'Defense'.
+                # 'air': azione ignorata per costruzione.
+                target_action = None if target_force_type == 'air' else 'Defense'
+                target_cp = self._representative_combat_power(target_block, target_force_type, target_action)
+            else:
+                # ramo attacco: il bersaglio nemico può opporre 'Defense' o rimanere in 'Maintain' —
+                # si usa il più alto dei due (convenzione già in uso in
+                # Tactical_Evaluation.evaluateCombatSuperiority per il ramo Attack). 'sea' non ha un
+                # task 'Maintain' (v. Context.SEA_TASK), quindi si riduce a 'Defense'.
+                target_defense_cp = self._representative_combat_power(target_block, target_force_type, 'Defense')
+                if target_force_type == 'ground':
+                    target_maintain_cp = self._representative_combat_power(target_block, target_force_type, 'Maintain')
+                    target_cp = max(target_defense_cp, target_maintain_cp)
+                else:
+                    target_cp = target_defense_cp
             #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
             #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
             if target_cp <= 0: # target senza combat power nota: evita ZeroDivisionError, satura al bound corrispondente
-                combat_power_ratio = 10.0 if block.side == target_block.side else 0.1
-            elif block.side == target_block.side: # defense
+                combat_power_ratio = 10.0 if not is_attack else 0.1
+            elif not is_attack: # defense
                 combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
             else: # attack
                 combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)

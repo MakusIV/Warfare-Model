@@ -1449,11 +1449,13 @@ TARGET_CLASSIFICATION = {
                                 Ground_Vehicle_Asset_Type.EWR.value
 
                             ], # Motorized, Infantry
-    tc.ARMORED.value:       [   Ground_Vehicle_Asset_Type.ARMORED.value, 
-                                Ground_Vehicle_Asset_Type.TANK.value, 
-                                Ground_Vehicle_Asset_Type.AAA.value, 
-                                Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value,                    
+    tc.ARMORED.value:       [   Ground_Vehicle_Asset_Type.ARMORED.value,
+                                Ground_Vehicle_Asset_Type.TANK.value,
+                                Ground_Vehicle_Asset_Type.ARTILLERY_SEMOVENT.value,
                             ], # Tank, Armored Vehicle
+                            # AAA (es. ZSU-23-4 Shilka) può colpire anche bersagli terrestri, ma per
+                            # evitare il doppio matching (get_target_classification ritorna il primo
+                            # match nell'ordine del dizionario) resta classificato solo in AIR_DEFENSE.
     tc.HARD.value:          [   lat.BRIDGE.value, lat.BUNKER.value, lat.HANGAR.value, lat.DEPOT.value ],
     tc.STRUCTURE.value:     [   lat.BUILDING.value, lat.OIL_TANK.value, 
                                 lat.RAILWAY_INTERCHANGE.value, 
