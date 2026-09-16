@@ -8,7 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-from typing import Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import get_membership_label
 import random
 import skfuzzy as fuzz
@@ -858,6 +858,78 @@ def calc_air_priority(
         target_affinity=target_affinity(block, target_block),
         recon_cp_snapshot=recon_cp_snapshot,
     )
+
+
+def calc_attack_priority(
+    military_block: Military,
+    enemy_items: Tuple[Tuple[float, Block], ...],
+    weight_priority_target: Dict,
+    route_provider: Callable[[str, str], Optional[Route]],
+    recon_cp_snapshot: Optional[Dict[str, float]] = None,
+) -> float:
+    """Calculates the attack priority of a military block (air, ground or sea) by evaluating its combat power,
+    the distance from the target, the combat power of the target or the priority assigned
+    in the case of logistical targets.
+
+    recon_cp_snapshot: None=ground-truth, {}=sweep senza osservati (v. calculate_priority)."""
+    priority = 0.0
+    block_category = military_block.get_military_category()
+    if block_category not in weight_priority_target:
+        logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default attack weight.")
+        return 0.0
+
+    for enemy_item in enemy_items:
+        target = enemy_item[1]
+        weight = select_weight(target_block=target, task="attack", block_category=block_category, weight_priority_target=weight_priority_target)
+
+        if military_block.is_Ground_Base() or military_block.is_Naval_Base():
+            route = route_provider(military_block.id, target.id)
+            calc_result = calc_surface_priority(block=military_block, target_item=enemy_item, attack_route=route, weight=weight, recon_cp_snapshot=recon_cp_snapshot)
+            if calc_result is not None:
+                priority += calc_result
+        elif military_block.is_Air_Base():
+            calc_result = calc_air_priority(block=military_block, target_item=enemy_item, weight=weight, recon_cp_snapshot=recon_cp_snapshot)
+            if calc_result is not None:
+                priority += calc_result
+
+    return priority
+
+
+def calc_defense_priority(
+    military_block: Military,
+    friendly_items: Tuple[Tuple[float, Block], ...],
+    weight_priority_target: Dict,
+    route_provider: Callable[[str, str], Optional[Route]],
+) -> float:
+    """Calculates the defense priority of a military block (air, ground or sea) by evaluating its combat power,
+    the distance from the target, the combat power of the target or the priority assigned
+    in the case of logistical targets.
+
+    Valuta sempre alleati a piena visibilità: nessun parametro recon_cp_snapshot."""
+    priority = 0.0
+    block_category = military_block.get_military_category()
+    if block_category not in weight_priority_target:
+        logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default defense weight.")
+        return 0.0
+
+    for friendly_item in friendly_items:
+        friendly = friendly_item[1]
+        if friendly.id == military_block.id:  # Evita di calcolare la priorità con se stesso
+            continue
+
+        weight = select_weight(target_block=friendly, task="defense", block_category=block_category, weight_priority_target=weight_priority_target)
+
+        if military_block.is_Ground_Base() or military_block.is_Naval_Base():
+            route = route_provider(military_block.id, friendly.id)
+            calc_result = calc_surface_priority(block=military_block, target_item=friendly_item, attack_route=route, weight=weight, recon_cp_snapshot=None)
+            if calc_result is not None:
+                priority += calc_result
+        elif military_block.is_Air_Base():
+            calc_result = calc_air_priority(block=military_block, target_item=friendly_item, weight=weight, recon_cp_snapshot=None)
+            if calc_result is not None:
+                priority += calc_result
+
+    return priority
 
     
 

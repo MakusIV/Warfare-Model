@@ -339,8 +339,6 @@ class TestRegion(unittest.TestCase):
             'calc_total_warehouse',
             'calc_total_production',
             'calc_production_values',
-            '_calc_attack_priority',
-            '_calc_defense_priority'
         ]
 
         # Create a tracker for calls
@@ -951,7 +949,7 @@ class TestUpdateMilitaryPrioritiesFase6Characterization(unittest.TestCase):
 
     A differenza degli altri test (che verificano una singola funzione isolata, spesso con
     combat_power/route mockati ad-hoc), questo esercita l'intera catena end-to-end così come la
-    percorre update_military_priorities: _calc_attack_priority -> select_weight +
+    percorre update_military_priorities: Tactical_Evaluation.calc_attack_priority -> select_weight +
     calc_surface_priority -> calculate_priority, con un valore atteso calcolato a mano dalla
     stessa formula documentata, per bloccare un errore di "cablaggio" fra le funzioni appena
     separate (parametro dimenticato, ordine sbagliato, ecc.) che un test unitario sulla singola

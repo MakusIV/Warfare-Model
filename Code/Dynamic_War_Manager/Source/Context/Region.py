@@ -665,6 +665,11 @@ class Region:
             logger.warning(f"update_military_priorities: side='Neutral' non è un lato belligerante, no-op (region {self.name}).")
             return
 
+        # Import lazy: Tactical_Evaluation tira dentro Aircraft_Data e skfuzzy (costoso, v. memoria
+        # di progetto project_region_tactical_refactor_plan) -- non deve gravare sull'import di
+        # Region.py per i chiamanti che non calcolano mai una priorità militare.
+        from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
+
         friendly_blocks = self.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value)
         enemy_blocks = self.get_blocks_by_criteria(side=Utility.enemySide(side))
 
@@ -672,7 +677,13 @@ class Region:
             if use_recon:
                 recon_reports = self.get_recon_reports(Utility.enemySide(side))
                 self._recon_cp_snapshot = Tactical_Analysis.build_recon_cp_snapshot(recon_reports)
-                self._invalidate_caches("priority")
+
+            # (priority, block) invece di BlockItem: quest'ultimo è un dataclass non hashable e,
+            # soprattutto, calc_surface_priority/calc_air_priority si aspettano già questa forma
+            # per target_item. Costruite una volta sola fuori dal loop (nessuna cache da preservare
+            # ora che calc_attack_priority/calc_defense_priority non sono più @lru_cache).
+            enemy_items = tuple((bi.priority, bi.block) for bi in enemy_blocks)
+            friendly_items = tuple((bi.priority, bi.block) for bi in friendly_blocks)
 
             for block_item in friendly_blocks:
                 military_block = block_item.block
@@ -680,13 +691,14 @@ class Region:
                 if not isinstance(military_block, Military):
                     continue
 
-                # I calcoli di priorità sono ora memorizzati nella cache
-                # Definisco le tuple prima di passarle come parametri perchè: ogni tuple(...) crea una nuova tupla → invalida la cache ogni volta.
-                # È importante riutilizzare una tupla generata una sola volta.
-                enemy_blocks_tuple = self._get_tuple_hashable_block_item(block_items=enemy_blocks)
-                friendly_blocks_tuple = self._get_tuple_hashable_block_item(block_items=friendly_blocks)
-                attack_priority = self._calc_attack_priority(military_block, enemy_blocks_tuple, use_recon) # tuple per cache
-                defense_priority = self._calc_defense_priority(military_block, friendly_blocks_tuple) # tuple per cache
+                recon_cp_snapshot = self._recon_cp_snapshot if use_recon else None
+                attack_priority = Tactical_Evaluation.calc_attack_priority(
+                    military_block, enemy_items, self._weight_priority_target, self.get_shortest_route,
+                    recon_cp_snapshot=recon_cp_snapshot,
+                )
+                defense_priority = Tactical_Evaluation.calc_defense_priority(
+                    military_block, friendly_items, self._weight_priority_target, self.get_shortest_route,
+                )
 
                 # Combined priority based on attack weight
                 # Il significato della formula è il seguente: se la priorità di difendere un target nemico è più alta rispetto quella di attacco la priorità del blocco è quella di difendere invece di atttaccare
@@ -701,7 +713,6 @@ class Region:
             if use_recon:
                 # Lo snapshot è valido solo dentro questo sweep (v. attributo in __init__).
                 self._recon_cp_snapshot = None
-                self._invalidate_caches("priority")
 
     def run_resource_management_cycle(self, side: str) -> None:
         """Run a resource management cycle for the region."""
@@ -832,100 +843,9 @@ class Region:
     # Valutare una funzione che costruice la matrice dei collegamenti tra blocchi, in modo da poterla utilizzare nei calcoli di priorità militare, in modo da evitare di dover iterare su tutte le rotte ogni volta.
 
     # HELPER METHODS
-    def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
-        # crea una tupla di coppie (priority, block) evitando di utilizzare la classe BlockItem non hashable in quanto dataclass
-        tuple_priority_and_block = ()
-        for block_item in block_items:
-            item = (block_item.priority, block_item.block)
-            tuple_priority_and_block += (item,)
-
-        return tuple_priority_and_block
-
     def _is_logistic_block(self, block: Block) -> bool:
         """Check if a block is a logistic block."""
         return isinstance(block, (Production, Storage, Transport, Urban))
-    
-    
-    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
-    def _calc_attack_priority(self, military_block: Military, enemy_blocks: Tuple[(float, Block), ...], use_recon: bool = False) -> float:
-
-        """Calculates the attack priority of a military block (air, ground or sea) by evaluating its combat power,
-        the distance from the target, the combat power of the target or the priority assigned
-        in the case of logistical targets."""
-
-        # Import lazy: Tactical_Evaluation tira dentro Aircraft_Data e skfuzzy (costoso, v. memoria
-        # di progetto project_region_tactical_refactor_plan) -- non deve gravare sull'import di
-        # Region.py per i chiamanti che non calcolano mai una priorità militare.
-        from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
-
-        priority = 0.0
-        # Assicurati che military_block.get_military_category() ritorni una chiave valida
-        block_category = military_block.get_military_category()
-        if block_category not in self._weight_priority_target:
-            logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default attack weight.")
-            return 0.0
-
-        # recon_cp_snapshot=None quando use_recon=False: self._recon_cp_snapshot è comunque già
-        # None in quel caso (v. update_military_priorities), ma esplicitarlo qui rende il confine
-        # con Tactical_Evaluation.calculate_priority (None=ground-truth, {}=sweep senza osservati)
-        # indipendente da quell'invariante.
-        recon_cp_snapshot = self._recon_cp_snapshot if use_recon else None
-
-        for enemy_item in enemy_blocks:
-            target = enemy_item[1]
-            weight = Tactical_Evaluation.select_weight(target_block=target, task="attack", block_category=block_category, weight_priority_target=self._weight_priority_target) # Seleziona il peso per il blocco target
-
-            # priority summatory
-            if military_block.is_Ground_Base() or military_block.is_Naval_Base():
-                route = self.get_shortest_route(military_block.id, target.id)
-                calc_result = Tactical_Evaluation.calc_surface_priority(block=military_block, target_item=enemy_item, attack_route=route, weight=weight, recon_cp_snapshot=recon_cp_snapshot)
-                if calc_result is not None: # Verifica se il risultato è valido
-                    priority += calc_result
-            elif military_block.is_Air_Base():
-                calc_result = Tactical_Evaluation.calc_air_priority(block=military_block, target_item=enemy_item, weight=weight, recon_cp_snapshot=recon_cp_snapshot)
-                if calc_result is not None: # Verifica se il risultato è valido
-                    priority += calc_result
-
-        return priority
-
-
-    @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
-    def _calc_defense_priority(self, military_block: Military, friendly_blocks: Tuple[(float, Block), ...]) -> float:
-
-        """Calculates the defense priority of a military block (air, ground or sea) by evaluating its combat power,
-        the distance from the target, the combat power of the target or the priority assigned
-        in the case of logistical targets."""
-
-        from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
-
-        priority = 0.0
-        block_category = military_block.get_military_category()
-        if block_category not in self._weight_priority_target:
-            logger.warning(f"Military block category '{block_category}' not found in weight_priority_target. Using default defense weight.")
-            return 0.0
-
-        for friendly_item in friendly_blocks:
-            friendly = friendly_item[1]
-            if friendly.id == military_block.id: # Evita di calcolare la priorità con se stesso
-                continue
-
-            # weight selection
-            weight = Tactical_Evaluation.select_weight(target_block=friendly, task="defense", block_category=block_category, weight_priority_target=self._weight_priority_target) # Seleziona il peso per il blocco target
-
-            # recon_cp_snapshot=None sempre: il ramo difesa valuta alleati, i cui dati sono per
-            # definizione a piena visibilità (ground-truth) -- non riceve mai use_recon come
-            # parametro proprio.
-            if military_block.is_Ground_Base() or military_block.is_Naval_Base():
-                route = self.get_shortest_route(military_block.id, friendly.id)
-                calc_result = Tactical_Evaluation.calc_surface_priority(block=military_block, target_item=friendly_item, attack_route=route, weight=weight, recon_cp_snapshot=None)
-                if calc_result is not None:
-                    priority += calc_result
-            elif military_block.is_Air_Base():
-                calc_result = Tactical_Evaluation.calc_air_priority(block=military_block, target_item=friendly_item, weight=weight, recon_cp_snapshot=None)
-                if calc_result is not None:
-                    priority += calc_result
-
-        return priority
 
     # CACHING METHODS (nota: la granularizzazione delle invalidazioni non serve in qaunto qualsisasi nmodifica di blocks o route, redo o blue, comporta la variazione di tutte le priority e conseguentemente di tutti i stategical center)
     def _invalidate_caches(self, cache_type: Optional[str] = None) -> None:
@@ -941,9 +861,8 @@ class Region:
             self.calc_total_warehouse.cache_clear()
             self.calc_total_production.cache_clear()
             self.calc_production_values.cache_clear()
-        if cache_type is None or cache_type == "priority":
-            self._calc_attack_priority.cache_clear()
-            self._calc_defense_priority.cache_clear()
+        # NB: nessuna cache "priority" -- calc_attack_priority/calc_defense_priority (Tactical_Evaluation)
+        # non usano @lru_cache (v. project_region_tactical_refactor_plan, Fase 7).
 
         logger.debug(f"Caches for Region {self.name} invalidated ({cache_type or 'all'}).")
 
