@@ -8,24 +8,22 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
-import sys
-import os
 from Code.Dynamic_War_Manager.Source.Utility.Utility import get_membership_label
 import random
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import numpy as np
+from numpy import clip
+from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, GROUND_ACTION, GROUND_COMBAT_EFFICACY
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
-
-print("\nPYTHONPATH during execution:")
-print("\n".join(sys.path))
-
-
 
 #from __future__ import annotations
 #from typing import TYPE_CHECKING
@@ -579,11 +577,73 @@ def evaluateGroundRouteDangerLevel(enemy_bases: list, route: Route, ground_speed
     danger_level_artillery_range = np.mean(danger["artillery_range"]) * max(danger["artillery_range"])
 
     return danger_level_air_attack, danger_level_ground_attack, danger_level_artillery_range
-                    
 
-def get_recongition_report(block: Block):
-    
-    pass
+
+# Bound per target_affinity: fattore moltiplicativo, non sostitutivo, applicato al ramo attacco di
+# calculate_priority (v. quella funzione) — resta vicino a 1.0 (neutro) invece di poter dominare il
+# resto del calcolo di priorità.
+_AFFINITY_MIN, _AFFINITY_MAX = 0.25, 2.0
+
+
+def target_affinity(block: Military, target_block: Block) -> float:
+    """Fattore moltiplicativo [_AFFINITY_MIN, _AFFINITY_MAX] che modula la priorità di attacco
+    in base a quanto bene i loadout disponibili della flotta aerea di block rendono contro la
+    composizione reale (ground truth, Tactical_Analysis.target_profile_from_block) di target_block,
+    rispetto alla potenza di combattimento generica (target-agnostica) della stessa flotta.
+
+    Restituisce 1.0 (neutro, nessun effetto su calculate_priority) se: target amico (ramo
+    difesa — l'affinità di targeting non ha senso quando non si sta scegliendo un'arma per
+    colpire il bersaglio), block non è una base aerea, il profilo del target è vuoto/
+    non classificabile, o la flotta non ha aeromobili operativi.
+
+    Nessuna cache: v. memoria di progetto project_region_tactical_refactor_plan sul perché le
+    funzioni tattiche estratte non usano più @lru_cache (un futuro pianificatore what-if ha
+    bisogno di valutazioni isolate, non di una cache condivisa fra scenari ipotetici).
+    """
+    if block.side == target_block.side:
+        return 1.0
+    if not block.is_Air_Base():
+        return 1.0
+
+    profile = Tactical_Analysis.target_profile_from_block(target_block)
+    if not profile:
+        return 1.0
+
+    target_distribution = Tactical_Analysis.profile_to_weapon_distribution(profile)
+    if not target_distribution:
+        return 1.0
+
+    aircraft_by_model = Tactical_Analysis.operative_aircraft_by_model(block)
+    if not aircraft_by_model:
+        return 1.0
+
+    weighted_target_score = 0.0
+    weighted_generic_score = 0.0
+
+    for model, aircraft_list in aircraft_by_model.items():
+        count = len(aircraft_list)
+        if count == 0:
+            continue
+
+        aircraft_data = Aircraft_Data._registry.get(model)
+        if aircraft_data is None:
+            continue
+
+        available_loadouts_by_task = {
+            task: block.get_available_loadouts(model, task=task) for task in Context.AIR_TASK
+        }
+        target_score, _ = aircraft_data.combat_aggregate_against_target(
+            target_distribution, available_loadouts_by_task=available_loadouts_by_task
+        )
+        generic_score, _ = aircraft_data.combat_aggregate()
+
+        weighted_target_score += target_score * count
+        weighted_generic_score += generic_score * count
+
+    if weighted_generic_score <= 0:
+        return 1.0
+
+    return clip(weighted_target_score / weighted_generic_score, _AFFINITY_MIN, _AFFINITY_MAX)
 
     
 

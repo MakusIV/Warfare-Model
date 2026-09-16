@@ -15,6 +15,7 @@ from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Combat_Power_Estimation
 from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
+from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     Ground_Vehicle_Asset_Type as gat,
     Air_Asset_Type as aat,
@@ -870,118 +871,6 @@ class TestRegionMetrics(unittest.TestCase):
             self.assertIsInstance(item, dict)
 
 
-class TestTargetAffinity(unittest.TestCase):
-    """Unit tests for Region._target_affinity()."""
-
-    def setUp(self):
-        self.region = Region(name="TA Region")
-        self.airbase = Military(
-            mil_category=Context.MILITARY_CATEGORY["Air_Base"][1], name="AB", side="Blue"
-        )
-        self.groundbase = Military(
-            mil_category=Context.MILITARY_CATEGORY["Ground_Base"][1], name="GB", side="Blue"
-        )
-        self.target = Block(
-            name="Target", description="", side="Red", category="Military",
-            sub_category="Base", functionality="Attack", value=5,
-        )
-        self.target._assets = {}
-
-    @staticmethod
-    def _mock_aircraft(model):
-        m = MagicMock()
-        m.__class__ = _Aircraft
-        m.model = model
-        m.asset_type = aat.FIGHTER.value
-        m.is_operative.return_value = True
-        return m
-
-    def _call(self, block, target_block):
-        # Bypassa la lru_cache per lavorare su stato fresco ad ogni test.
-        return self.region._target_affinity.__wrapped__(self.region, block, target_block)
-
-    def test_same_side_returns_neutral(self):
-        friendly = Block(
-            name="Friendly", description="", side="Blue", category="Military",
-            sub_category="Base", functionality="Attack", value=5,
-        )
-        self.assertEqual(self._call(self.airbase, friendly), 1.0)
-
-    def test_non_air_base_returns_neutral(self):
-        self.assertEqual(self._call(self.groundbase, self.target), 1.0)
-
-    def test_empty_target_profile_returns_neutral(self):
-        """target senza asset -> target_profile_from_block restituisce {} -> neutro."""
-        self.assertEqual(self._call(self.airbase, self.target), 1.0)
-
-    def test_no_operative_aircraft_returns_neutral(self):
-        self.airbase._assets = {}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}):
-            self.assertEqual(self._call(self.airbase, self.target), 1.0)
-
-    def test_weighted_generic_score_zero_returns_neutral(self):
-        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(0.0, {})), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.0, {})):
-            self.assertEqual(self._call(self.airbase, self.target), 1.0)
-
-    def test_ratio_computed_within_bounds(self):
-        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(2.0, {})), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(3.0, {})):
-            result = self._call(self.airbase, self.target)
-        self.assertAlmostEqual(result, 1.5)
-
-    def test_ratio_clipped_to_max(self):
-        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(1.0, {})), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(100.0, {})):
-            result = self._call(self.airbase, self.target)
-        self.assertEqual(result, 2.0)
-
-    def test_ratio_clipped_to_min(self):
-        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(10.0, {})), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.01, {})):
-            result = self._call(self.airbase, self.target)
-        self.assertEqual(result, 0.25)
-
-    def test_weighted_by_aircraft_count(self):
-        """Due modelli con conteggi diversi: la media è pesata per numero di velivoli, non per modello."""
-        self.airbase._assets = {
-            'a1': self._mock_aircraft('F-14A Tomcat'),
-            'a2': self._mock_aircraft('F-14A Tomcat'),
-            'a3': self._mock_aircraft('F-16CM Block 50'),
-        }
-
-        def fake_generic(self_ac):
-            return (1.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
-
-        def fake_target(self_ac, *args, **kwargs):
-            return (2.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
-
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', new=fake_generic), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', new=fake_target):
-            result = self._call(self.airbase, self.target)
-        # weighted_generic = 2*1.0 + 1*2.0 = 4.0 ; weighted_target = 2*2.0 + 1*2.0 = 6.0 -> 1.5
-        self.assertAlmostEqual(result, 1.5)
-
-    def test_cache_used_and_invalidated(self):
-        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
-        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
-             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(2.0, {})), \
-             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(3.0, {})):
-            self.region._target_affinity(self.airbase, self.target)
-        self.assertGreater(self.region._target_affinity.cache_info().currsize, 0)
-        self.region._invalidate_caches()
-        self.assertEqual(self.region._target_affinity.cache_info().currsize, 0)
-
-
 class TestCalculatePriorityTargetAffinity(unittest.TestCase):
     """Unit tests for the target_affinity parameter of Region._calculate_priority()."""
 
@@ -1087,11 +976,11 @@ class TestCalcAirPriorityTargetAffinity(unittest.TestCase):
         target.get_military_category.return_value = 'Ground_Base'
         target.combat_power.side_effect = _make_combat_power_side_effect(4.0, 'Defense')
 
-        with patch.object(Region, '_target_affinity', return_value=1.0) as mock_affinity:
+        with patch.object(Tactical_Evaluation, 'target_affinity', return_value=1.0) as mock_affinity:
             result_neutral = self.region._calc_air_priority.__wrapped__(self.region, block, target, weight=2.0)
             mock_affinity.assert_called_once_with(block, target)
 
-        with patch.object(Region, '_target_affinity', return_value=2.0):
+        with patch.object(Tactical_Evaluation, 'target_affinity', return_value=2.0):
             result_scaled = self.region._calc_air_priority.__wrapped__(self.region, block, target, weight=2.0)
 
         self.assertAlmostEqual(result_scaled, result_neutral * 2.0)
@@ -1123,7 +1012,7 @@ class TestCalcSurfacePriorityUnaffectedByAffinity(unittest.TestCase):
         target.get_military_category.return_value = 'Ground_Base'
         target.combat_power.side_effect = _make_combat_power_side_effect(4.0, 'Defense')
 
-        with patch.object(Region, '_target_affinity') as mock_affinity:
+        with patch.object(Tactical_Evaluation, 'target_affinity') as mock_affinity:
             result = self.region._calc_surface_priority.__wrapped__(
                 self.region, block, (0.0, target), None, 2.0
             )
@@ -1336,7 +1225,7 @@ class TestUpdateMilitaryPrioritiesUseRecon(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-#  DIAGNOSTIC TABLE — Region._target_affinity() across target-composition scenarios
+#  DIAGNOSTIC TABLE — Tactical_Evaluation.target_affinity() across target-composition scenarios
 # ─────────────────────────────────────────────────────────────────────────────
 # Analogo ai blocchi diagnostici di Aircraft_Data.py (#TEST, incondizionato) e
 # Vehicle_Data.py (STAMPA, disattivabile): NON è un test automatico (nessuna
@@ -1386,7 +1275,7 @@ def _diag_mock_attacking_aircraft(model):
 
 
 def print_target_affinity_scenarios():
-    """Stampa una tabella diagnostica di Region._target_affinity() su 4 scenari a
+    """Stampa una tabella diagnostica di Tactical_Evaluation.target_affinity() su 4 scenari a
     composizione del bersaglio diversa, a parità di flotta aerea attaccante.
 
     priorità finale = _calculate_priority() con target civile, value=5, weight=2, tti=2,
@@ -1438,14 +1327,14 @@ def print_target_affinity_scenarios():
         )
         target._assets = assets
 
-        affinity = region._target_affinity(airbase, target)
+        affinity = Tactical_Evaluation.target_affinity(airbase, target)
         priority = region._calculate_priority(
             block=airbase, target_block=target, weight=_WEIGHT,
             time_to_intercept=_TTI, range_ratio=1.0, target_affinity=affinity,
         )
         rows.append([name, f"{affinity:.3f}", f"{priority:.3f}"])
 
-    print("\n--- Region._target_affinity() diagnostic (base_priority senza affinità = 5.0) ---")
+    print("\n--- Tactical_Evaluation.target_affinity() diagnostic (base_priority senza affinità = 5.0) ---")
     print(tabulate(rows, headers=["Scenario (composizione target)", "target_affinity", "priorità finale"], tablefmt="grid"))
     print()
 

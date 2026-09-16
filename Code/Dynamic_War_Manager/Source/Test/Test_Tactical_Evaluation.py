@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import MagicMock, patch
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -8,8 +9,25 @@ import os
 # Aggiungi il percorso della directory principale del progetto
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MILITARY_VEHICLE_ASSET, GROUND_ACTION
+from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    Ground_Vehicle_Asset_Type as gat,
+    Air_Asset_Type as aat,
+)
+from Code.Dynamic_War_Manager.Source.Block.Block import Block
+from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
 # Importa il metodo da testare evaluateGroundTacticalAction
-from Code.Dynamic_War_Manager.Source.Logic.Tactical_Evaluation import evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority
+from Code.Dynamic_War_Manager.Source.Logic.Tactical_Evaluation import (
+    evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority,
+    target_affinity,
+)
+
+# Lightweight class stubs used only to set mock.__class__ for classification-loop dispatch,
+# mirroring Test_Region.py/Test_Military.py -- Vehicle/Ship/Aircraft cannot be imported directly
+# because they trigger a pre-existing circular import in the Aircraft->Aircraft_Weapon_Data chain.
+_Aircraft = type('Aircraft', (), {})
 
 print("\nPYTHONPATH during execution:")
 print("\n".join(sys.path))
@@ -564,6 +582,104 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
             evaluateCombatSuperiority("azione_non_valida", asset_fr, asset_en)
 
 # test_evaluateCriticality
+
+
+class TestTargetAffinity(unittest.TestCase):
+    """Unit tests for Tactical_Evaluation.target_affinity()."""
+
+    def setUp(self):
+        self.airbase = Military(
+            mil_category=Context.MILITARY_CATEGORY["Air_Base"][1], name="AB", side="Blue"
+        )
+        self.groundbase = Military(
+            mil_category=Context.MILITARY_CATEGORY["Ground_Base"][1], name="GB", side="Blue"
+        )
+        self.target = Block(
+            name="Target", description="", side="Red", category="Military",
+            sub_category="Base", functionality="Attack", value=5,
+        )
+        self.target._assets = {}
+
+    @staticmethod
+    def _mock_aircraft(model):
+        m = MagicMock()
+        m.__class__ = _Aircraft
+        m.model = model
+        m.asset_type = aat.FIGHTER.value
+        m.is_operative.return_value = True
+        return m
+
+    def test_same_side_returns_neutral(self):
+        friendly = Block(
+            name="Friendly", description="", side="Blue", category="Military",
+            sub_category="Base", functionality="Attack", value=5,
+        )
+        self.assertEqual(target_affinity(self.airbase, friendly), 1.0)
+
+    def test_non_air_base_returns_neutral(self):
+        self.assertEqual(target_affinity(self.groundbase, self.target), 1.0)
+
+    def test_empty_target_profile_returns_neutral(self):
+        """target senza asset -> target_profile_from_block restituisce {} -> neutro."""
+        self.assertEqual(target_affinity(self.airbase, self.target), 1.0)
+
+    def test_no_operative_aircraft_returns_neutral(self):
+        self.airbase._assets = {}
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}):
+            self.assertEqual(target_affinity(self.airbase, self.target), 1.0)
+
+    def test_weighted_generic_score_zero_returns_neutral(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(0.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.0, {})):
+            self.assertEqual(target_affinity(self.airbase, self.target), 1.0)
+
+    def test_ratio_computed_within_bounds(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(2.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(3.0, {})):
+            result = target_affinity(self.airbase, self.target)
+        self.assertAlmostEqual(result, 1.5)
+
+    def test_ratio_clipped_to_max(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(1.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(100.0, {})):
+            result = target_affinity(self.airbase, self.target)
+        self.assertEqual(result, 2.0)
+
+    def test_ratio_clipped_to_min(self):
+        self.airbase._assets = {'a1': self._mock_aircraft('F-14A Tomcat')}
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', return_value=(10.0, {})), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', return_value=(0.01, {})):
+            result = target_affinity(self.airbase, self.target)
+        self.assertEqual(result, 0.25)
+
+    def test_weighted_by_aircraft_count(self):
+        """Due modelli con conteggi diversi: la media è pesata per numero di velivoli, non per modello."""
+        self.airbase._assets = {
+            'a1': self._mock_aircraft('F-14A Tomcat'),
+            'a2': self._mock_aircraft('F-14A Tomcat'),
+            'a3': self._mock_aircraft('F-16CM Block 50'),
+        }
+
+        def fake_generic(self_ac):
+            return (1.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
+
+        def fake_target(self_ac, *args, **kwargs):
+            return (2.0, {}) if self_ac.model == 'F-14A Tomcat' else (2.0, {})
+
+        with patch.object(Tactical_Analysis, 'target_profile_from_block', return_value={'Armored': {'big': 1}}), \
+             patch.object(Aircraft_Data, 'combat_aggregate', new=fake_generic), \
+             patch.object(Aircraft_Data, 'combat_aggregate_against_target', new=fake_target):
+            result = target_affinity(self.airbase, self.target)
+        # weighted_generic = 2*1.0 + 1*2.0 = 4.0 ; weighted_target = 2*2.0 + 1*2.0 = 6.0 -> 1.5
+        self.assertAlmostEqual(result, 1.5)
+
 
 if __name__ == '__main__':
 

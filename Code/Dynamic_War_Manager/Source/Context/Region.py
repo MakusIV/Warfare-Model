@@ -16,7 +16,6 @@ from Code.Dynamic_War_Manager.Source.Block.Production import Production
 from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
 from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.DataType.Limes import Limes
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
@@ -57,11 +56,6 @@ class BlockCategory(Enum):
 # get_target_report (fog-of-war, built from a recon report) and target_profile_from_block
 # (ground truth, built directly from a block's real assets). {classification: {'big'|'med'|'small': count}}.
 TargetProfile = Dict[str, Dict[str, int]]
-
-# Bound per Region._target_affinity: fattore moltiplicativo, non sostitutivo, applicato al ramo
-# attacco di _calculate_priority (v. quel metodo) — resta vicino a 1.0 (neutro) invece di poter
-# dominare il resto del calcolo di priorità.
-_AFFINITY_MIN, _AFFINITY_MAX = 0.25, 2.0
 
 
 @dataclass
@@ -959,7 +953,7 @@ class Region:
 
         target_affinity: fattore moltiplicativo opzionale (default 1.0 = neutro, nessun effetto)
         che modula la priorità in base a quanto bene i loadout disponibili del blocco (se aereo)
-        rendono contro la composizione reale del target — v. _target_affinity, che restituisce
+        rendono contro la composizione reale del target — v. Tactical_Evaluation.target_affinity, che restituisce
         sempre 1.0 per il ramo difesa/blocchi non aerei, così _calc_surface_priority (che non lo
         passa mai) resta bit-identico.
 
@@ -1091,63 +1085,6 @@ class Region:
             use_recon=use_recon
         )
 
-    @lru_cache(maxsize=256)
-    def _target_affinity(self, block: Military, target_block: Block) -> float:
-        """Fattore moltiplicativo [_AFFINITY_MIN, _AFFINITY_MAX] che modula la priorità di attacco
-        in base a quanto bene i loadout disponibili della flotta aerea di block rendono contro la
-        composizione reale (ground truth, Tactical_Analysis.target_profile_from_block) di target_block, rispetto
-        alla potenza di combattimento generica (target-agnostica) della stessa flotta.
-
-        Restituisce 1.0 (neutro, nessun effetto su _calculate_priority) se: target amico (ramo
-        difesa — l'affinità di targeting non ha senso quando non si sta scegliendo un'arma per
-        colpire il bersaglio), block non è una base aerea, il profilo del target è vuoto/
-        non classificabile, o la flotta non ha aeromobili operativi.
-        """
-        if block.side == target_block.side:
-            return 1.0
-        if not block.is_Air_Base():
-            return 1.0
-
-        profile = Tactical_Analysis.target_profile_from_block(target_block)
-        if not profile:
-            return 1.0
-
-        target_distribution = Tactical_Analysis.profile_to_weapon_distribution(profile)
-        if not target_distribution:
-            return 1.0
-
-        aircraft_by_model = Tactical_Analysis.operative_aircraft_by_model(block)
-        if not aircraft_by_model:
-            return 1.0
-
-        weighted_target_score = 0.0
-        weighted_generic_score = 0.0
-
-        for model, aircraft_list in aircraft_by_model.items():
-            count = len(aircraft_list)
-            if count == 0:
-                continue
-
-            aircraft_data = Aircraft_Data._registry.get(model)
-            if aircraft_data is None:
-                continue
-
-            available_loadouts_by_task = {
-                task: block.get_available_loadouts(model, task=task) for task in Context.AIR_TASK
-            }
-            target_score, _ = aircraft_data.combat_aggregate_against_target(
-                target_distribution, available_loadouts_by_task=available_loadouts_by_task
-            )
-            generic_score, _ = aircraft_data.combat_aggregate()
-
-            weighted_target_score += target_score * count
-            weighted_generic_score += generic_score * count
-
-        if weighted_generic_score <= 0:
-            return 1.0
-
-        return clip(weighted_target_score / weighted_generic_score, _AFFINITY_MIN, _AFFINITY_MAX)
-
     # non necessario utilizzare la cache in quanto sono già stati decorati i metodi superiori _calc_attack_priority e _calc_defense_priority
     @lru_cache(maxsize=256) # Aggiunta cache per questo calcolo
     def _calc_air_priority(self, block: Military, target_block: Block, weight: float, use_recon: bool = False) -> float:
@@ -1169,6 +1106,11 @@ class Region:
         if not block.position or not target_block.position:
             return 0.0
 
+        # Import lazy: Tactical_Evaluation tira dentro Aircraft_Data e skfuzzy (costoso, v. memoria
+        # di progetto project_region_tactical_refactor_plan) -- non deve gravare sull'import di
+        # Region.py per i chiamanti che non calcolano mai una priorità aerea.
+        from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
+
         tti = block.time2attack(target=target_block.position)
         return self._calculate_priority(
             block=block,
@@ -1178,7 +1120,7 @@ class Region:
             range_ratio=1.0,
             target_priority=self.get_block_by_id(target_block.id).priority if self.get_block_by_id(target_block.id) else 0.0,
             force_type="air",
-            target_affinity=self._target_affinity(block, target_block),
+            target_affinity=Tactical_Evaluation.target_affinity(block, target_block),
             use_recon=use_recon
         )
 
@@ -1334,7 +1276,6 @@ class Region:
             self._calc_defense_priority.cache_clear()
             self._calc_surface_priority.cache_clear()
             self._calc_air_priority.cache_clear()
-            self._target_affinity.cache_clear()
 
         logger.debug(f"Caches for Region {self.name} invalidated ({cache_type or 'all'}).")
 
