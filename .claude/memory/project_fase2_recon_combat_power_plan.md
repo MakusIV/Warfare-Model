@@ -1,11 +1,11 @@
 ---
 name: project-fase2-recon-combat-power-plan
-description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved. Fase 1, 2, 3-bis (Aircraft real dimensions) AND 3 (new Combat_Power_Estimation.py module) all implemented and tested 2026-09-16 (2494 tests OK). Module not yet wired into Region -- that's Fase 5. Read this before continuing with Fase 4 onward."
+description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved. Fase 1,2,3-bis,3,4 all implemented and tested 2026-09-16 (2496 tests OK) -- includes real (researched) users field for all 64 Vehicle + 23 Ship models. Only Fase 5 remains: wiring Combat_Power_Estimation into Region via use_recon. Read this before continuing."
 metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T13:11:38.233Z
+  modified: 2026-09-16T13:38:49.610Z
 ---
 
 # Fase 2 — piano di stima combat power fog-of-war — TUTTE LE DOMANDE RISOLTE, IMPLEMENTAZIONE IN CORSO
@@ -116,7 +116,22 @@ Nuovo modulo `Code/Dynamic_War_Manager/Source/Context/Combat_Power_Estimation.py
 
 Suite completa: **2494 OK/5 skipped** (2476+18).
 
+## Fase 4 — FATTA, 2026-09-16, con dati reali (non rimandata come previsto nel piano originale)
+
+Su richiesta esplicita dell'utente, popolata con **ricerca reale** (non placeholder) per tutti i 64 modelli Vehicle e i 23 Ship — diversamente da quanto il piano v1 prevedeva ("popolamento dati rimandabile"). Lavoro diviso su 2 agenti paralleli (general-purpose, con Bash/Edit/WebSearch), uno per `Vehicle_Data.py` uno per `Ship_Data.py`, supervisione/integrazione fatta da me dopo.
+
+**Schema** (identico nei due file): `users: Optional[List[str]] = None` aggiunto come ultimo parametro keyword di `__init__` (non tocca l'ordine/le firme esistenti); `self.users = users or []` (mai `None`). Convenzione di formato: nomi paese liberi in inglese comune, stile già usato da `Aircraft_Data.py` (es. `"UK"` non `"Britain"`, `"South Korea"` non con underscore) — **deliberatamente NON allineato al vocabolario `Context.COALITIONS`** (che è solo una lista fissa di 19 nazioni per le 3 fazioni Blue/Red/Neutral del gioco); il campo `users` riflette la realtà storica/attuale.
+
+**Regola dell'utente per le navi grandi**: per Carrier/Cruiser/Amphibious_Assault_Ship, utilizzatore unico = paese in `'made'` (nessuna ricerca necessaria — sono piattaforme non esportate). Per Destroyer/Frigate/Corvette/Submarine, ricerca reale (spesso esportate/costruite su licenza).
+
+**Verifica integrazione**: `Combat_Power_Estimation.py` **non ha richiesto alcuna modifica** — il filtro `getattr(data, 'users', None)` in `_bucket_scores` era già scritto per attivarsi automaticamente non appena il campo esiste con dati reali. Verificato concretamente: `_bucket_scores('ground', None)` → 64 modelli; `_bucket_scores('ground', 'Blue')` → 31; `_bucket_scores('ground', 'Red')` → 38 (sovrapposizione attesa: alcuni mezzi cold-war esportati a entrambi i lati). Aggiunti 2 nuovi test a `Test_Combat_Power_Estimation.py` (`test_side_filter_uses_real_users_field`, `test_side_filter_never_excludes_a_model_with_no_users` — quest'ultimo verifica specificamente la regola inclusiva: un modello con `users` svuotato resta incluso anche se nessun suo utilizzatore è nella coalizione richiesta).
+
+**Casi a bassa confidenza segnalati dagli agenti** (giudizio accettato così com'è, nessuna correzione fatta — da rivedere solo se emergono problemi concreti):
+- Vehicle: ZBD-04A/PLZ-05 solo Cina (nessun export confermato, spesso confuso con PLZ-45 che invece è esportato); BTR-RD utenti oltre a URSS/Russia dedotti per analogia col BTR-D generico; 2S9 Nona utenti minori (Costa d'Avorio, Moldova) dedotti da liste generiche; T-90M e T-90-base entrambi con "India" (la distinzione T-90/T-90S/T-90M esportati in India non è netta nelle fonti pubbliche); T-72B3 con export limitati/meno consolidati; Sd.Kfz-251 basato su conoscenza storica generale, non verificato con ricerca mirata.
+- Ship: FF1135M (Krivak) assegnato solo Russia, **non** include l'India nonostante il Talwar-class indiano sia spesso associato alla "famiglia Krivak" — l'agente ha giudicato che il Talwar (Project 11356) deriva dal Krivak III, non dal Krivak II/1135M qui modellato, quindi progetti tecnicamente distinti; FSG1241 (Molniya/Tarantul) con lista ampia (Russia/India/Poland/Vietnam/Bulgaria/Yemen/Turkmenistan) basata sulla famiglia Tarantul in generale, la corrispondenza esatta col sotto-variante "1241.1MP" non è verificabile con certezza assoluta.
+
+Suite completa: **2496 OK/5 skipped** (2494+2).
+
 ## Prossimi passi
 
-1. Fase 4 (campo `users` schema+wiring su Vehicle_Data/Ship_Data — oggi `Combat_Power_Estimation._bucket_scores` già gestisce inclusivamente l'assenza di `users`, quindi Fase 4 aggiunge solo lo schema, nessun codice di stima da rivedere).
-2. Fase 5 (use_recon in Region + integrazione con `Combat_Power_Estimation` + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0 — questa è la fase che collega finalmente il modulo appena creato a `_calculate_priority`).
+1. Fase 5 (use_recon in Region + integrazione con `Combat_Power_Estimation` + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0 — questa è la fase che collega finalmente il modulo Fase 3 a `_calculate_priority`, l'ultima del piano).

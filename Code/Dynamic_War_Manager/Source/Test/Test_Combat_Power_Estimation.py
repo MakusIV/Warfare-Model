@@ -150,6 +150,42 @@ class TestRealRegistryCoherence(unittest.TestCase):
         self.assertIn(f16_score, fighter_scores)
         self.assertIn(f16_score, fb_scores)
 
+    def test_side_filter_uses_real_users_field(self):
+        """Fase 4 (2026-09-16): Vehicle_Data/Ship_Data now have a real, populated `users` field --
+        filtering _bucket_scores by side must actually narrow the population using real data, not
+        just accept the parameter without effect."""
+        no_filter = cpe._bucket_scores('ground', None)
+        blue = cpe._bucket_scores('ground', 'Blue')
+        red = cpe._bucket_scores('ground', 'Red')
+
+        def total_samples(buckets):
+            return sum(len(v) for v in buckets.values())
+
+        self.assertGreater(total_samples(no_filter), total_samples(blue))
+        self.assertGreater(total_samples(no_filter), total_samples(red))
+        self.assertGreater(total_samples(blue), 0)
+        self.assertGreater(total_samples(red), 0)
+
+    def test_side_filter_never_excludes_a_model_with_no_users(self):
+        """A model with an empty `users` must always be included regardless of `side` (inclusive
+        fallback, deliberate -- v. memoria Fase 4: 'modello senza users incluso in ogni bucket
+        per-lato'). Temporarily clears a real model's `users` (T-90M: Russia/India, neither in
+        'Blue') to prove it stays in the 'Blue' pool precisely because `users` is empty, not
+        because of a coincidental match."""
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data, VEHICLE
+
+        t90m = Vehicle_Data._registry['T-90M']
+        self.assertTrue(t90m.users)  # sanity: really has real users data, none in 'Blue'
+        self.assertFalse(any(u in Context.COALITIONS['Blue'] for u in t90m.users))
+
+        cpe._bucket_scores.cache_clear()
+        with patch.object(t90m, 'users', []):
+            buckets = cpe._bucket_scores('ground', 'Blue')
+        cpe._bucket_scores.cache_clear()
+
+        t90m_score = VEHICLE['T-90M']['combat score']['global_score']
+        self.assertIn(t90m_score, buckets.get(('Tank', 'big'), ()))
+
 
 class TestRealRegistryToleranceCoherence(unittest.TestCase):
     """Family C: real registry, explicit tolerance on relative error -- combat_power_from_score's
