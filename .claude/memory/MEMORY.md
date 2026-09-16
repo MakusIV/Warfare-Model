@@ -1,6 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [Region.py strategic/tactical refactor — 8-phase plan, IMPLEMENTATION IN PROGRESS 2026-09-16](project_region_tactical_refactor_plan.md) — extracting 16 tactical functions into new Tactical_Analysis.py (8 analysis fns) + Tactical_Evaluation.py (7 scoring fns) + new Context/Doctrine.py; all @lru_cache removed from moved functions (design decision, see memory for why); 4 user decisions recorded
 - [Fase 2 (fog-of-war combat power) — 6-phase plan COMPLETE 2026-09-16](project_fase2_recon_combat_power_plan.md) — C2 fix, action-based combat power, real Aircraft dimensions, Combat_Power_Estimation.py module, real researched `users` field (64 Vehicle + 23 Ship), AND use_recon wired end-to-end into Region.update_military_priorities, all done & tested (2516 OK); use_recon defaults False everywhere, not yet enabled by any production caller
 - [Session recap 2026-09-14](project_session_2026_09_14_summary.md) — producer-duplication refactor + get_target_report no-visibility fix shipped & pushed (commit 3fe680c4, 2465 tests OK); asset_type/category conflict and no-visibility-priority policy decided but not implemented, see linked memories
 - [Region/Military combat-power & priority-calc redesign — IN PROGRESS](project_priority_calc_combat_power_redesign.md) — 2026-09-11: Fase 0+1 done (full suite 2332 OK/5 skipped) — Vehicle/Ship/Aircraft combat power all working for real; mil_category priority-list split implemented 2026-09-14 (commit 3fe680c4); Fase 2 plan ready, see the dedicated memory above
