@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
+from typing import Optional, List, Dict
 from dataclasses import dataclass
 from functools import lru_cache
 from enum import Enum
@@ -21,7 +21,6 @@ from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from sympy import Point2D
-from numpy import clip
 
 
 
@@ -52,12 +51,6 @@ class BlockCategory(Enum):
     CIVILIAN = "Civilian"
 
 
-# Shape shared by both "target classification" producers in Logic.Tactical_Analysis:
-# get_target_report (fog-of-war, built from a recon report) and target_profile_from_block
-# (ground truth, built directly from a block's real assets). {classification: {'big'|'med'|'small': count}}.
-TargetProfile = Dict[str, Dict[str, int]]
-
-
 @dataclass
 class BlockItem:
     """Represents a block with its priority in the region"""
@@ -84,9 +77,14 @@ class RegionParams:
 class Region:
     """
     Optimized Region class for managing military operations.
-    
+
     This class manages blocks, routes, and strategic calculations for a region
-    in a military simulation system.
+    in a military simulation system. Instance-bound state and orchestration only:
+    the underlying strategic/tactical analysis and scoring logic (target-profile
+    building, combat-power estimation, priority scoring) lives in
+    Logic.Tactical_Analysis and Logic.Tactical_Evaluation, imported lazily where
+    used to keep Region's own import cost light for callers that never compute a
+    military priority.
     """
     
     def __init__(self, name: str, limes: Optional[List[Limes]] = None, 
