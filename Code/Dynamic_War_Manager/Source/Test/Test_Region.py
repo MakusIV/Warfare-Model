@@ -1202,23 +1202,32 @@ class TestTargetProfileFromBlock(unittest.TestCase):
         self.assertEqual(self._call(), {})
 
     def test_aircraft_dimension_mapping_small_med_big(self):
-        # Un asset per chiamata: FIGHTER e RECON collassano entrambi sulla stessa
-        # classificazione ('Aircraft'), quindi combinarli nello stesso block mischierebbe le
-        # dimensioni sotto un'unica chiave -- qui si isola solo il mapping dimensione/categoria.
-        for asset_type, expected_dimension in (
-            (aat.FIGHTER.value, 'small'),
-            (aat.RECON.value, 'med'),
-            (aat.TRANSPORT.value, 'big'),
+        # Fase 3-bis (2026-09-16): la dimensione viene ora dalle physical characteristics reali,
+        # non più derivata da asset_type/ruolo -- un asset per chiamata perché ogni caso usa lo
+        # stesso asset_type (FIGHTER) per dimostrare che è la fisica, non il ruolo, a decidere.
+        for physical, expected_dimension in (
+            ({'length': 15, 'width': 9, 'height': 5, 'weight': 7690}, 'small'),    # F-16-like
+            ({'length': 23, 'width': 14, 'height': 6, 'weight': 21820}, 'med'),    # MiG-31-like
+            ({'length': 53, 'width': 52, 'height': 17, 'weight': 128100}, 'big'),  # C-17A-like
         ):
-            with self.subTest(asset_type=asset_type):
-                aircraft = self._mock_asset(_Aircraft, asset_type, category=asset_type)
+            with self.subTest(expected_dimension=expected_dimension):
+                aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=aat.FIGHTER.value, physical=physical)
                 self.target_block._assets = {'a1': aircraft}
                 result = self._call()
-                classification = Context.get_target_classification(asset_type)
+                classification = Context.get_target_classification(aat.FIGHTER.value)
                 self.assertEqual(result, {classification: {expected_dimension: 1}})
 
     def test_aircraft_missing_asset_type_skipped(self):
-        aircraft = self._mock_asset(_Aircraft, None, category=aat.FIGHTER.value)
+        aircraft = self._mock_asset(
+            _Aircraft, None, category=aat.FIGHTER.value,
+            physical={'length': 15, 'width': 9, 'height': 5, 'weight': 7690},
+        )
+        self.target_block._assets = {'a1': aircraft}
+        self.assertEqual(self._call(), {})
+
+    def test_aircraft_missing_physical_characteristics_skipped(self):
+        aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=aat.FIGHTER.value)
+        aircraft.get_physical_characteristics.return_value = None
         self.target_block._assets = {'a1': aircraft}
         self.assertEqual(self._call(), {})
 

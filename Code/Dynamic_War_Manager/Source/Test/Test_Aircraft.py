@@ -138,6 +138,23 @@ class TestAircraft(unittest.TestCase):
         self.assertFalse(transport.isFighter)
         self.assertTrue(transport.isTransport)
 
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_physical_characteristics')
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
+    def test_get_physical_characteristics_returns_data(self, mock_get_combat_score, mock_get_pc):
+        """get_physical_characteristics (Fase 3-bis) delegates to Aircraft_Data's registry."""
+        mock_get_combat_score.return_value = 0.5
+        mock_get_pc.return_value = {'length': 15, 'width': 9, 'height': 5, 'weight': 7690}
+
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-16A Fighting Falcon")
+
+        self.assertEqual(aircraft.get_physical_characteristics(), {'length': 15, 'width': 9, 'height': 5, 'weight': 7690})
+        mock_get_pc.assert_called_once_with(model="F-16A Fighting Falcon")
+
+    def test_get_physical_characteristics_no_model_returns_none(self):
+        """get_physical_characteristics returns None when no model is set (mirror of Ship's equivalent test)."""
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER)
+        self.assertIsNone(aircraft.get_physical_characteristics())
+
 
 if __name__ == '__main__':
     unittest.main()

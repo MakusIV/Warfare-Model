@@ -727,20 +727,36 @@ class TestClassifyAssetDimension(unittest.TestCase):
         result = classify_asset_dimension(asset)
         self.assertIn(result, ('big', 'med', 'small', 'Unknown'))
 
-    def test_aircraft_fighter_asset_type_is_small(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER.value, category='Fighter')
+    def test_aircraft_dimension_from_physical_characteristics_small(self):
+        """Aircraft: dimension derived via get_dimension from its physical characteristics
+        (Fase 3-bis, 2026-09-16) -- non più da asset_type/ruolo. Un F-16-like: leggero, corto."""
+        asset = self._mock_asset(
+            _CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER.value,
+            physical={'length': 15, 'width': 9, 'height': 5, 'weight': 7690},
+        )
         self.assertEqual(classify_asset_dimension(asset), 'small')
 
-    def test_aircraft_fighter_bomber_asset_type_is_med(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER_BOMBER.value, category='Fighter_Bomber')
+    def test_aircraft_dimension_from_physical_characteristics_med(self):
+        """Un MiG-31-like: interccettore pesante, stesso ruolo 'Fighter' del caso 'small' sopra --
+        la vecchia classificazione per asset_type li avrebbe confusi, quella fisica li separa."""
+        asset = self._mock_asset(
+            _CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER.value,
+            physical={'length': 23, 'width': 14, 'height': 6, 'weight': 21820},
+        )
         self.assertEqual(classify_asset_dimension(asset), 'med')
 
-    def test_aircraft_bomber_asset_type_is_big(self):
-        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.BOMBER.value, category='Bomber')
+    def test_aircraft_dimension_from_physical_characteristics_big(self):
+        """Un C-17A-like: trasporto pesante."""
+        asset = self._mock_asset(
+            _CAD_Aircraft, asset_type=Air_Asset_Type.TRANSPORT.value,
+            physical={'length': 53, 'width': 52, 'height': 17, 'weight': 128100},
+        )
         self.assertEqual(classify_asset_dimension(asset), 'big')
 
-    def test_aircraft_missing_asset_type_returns_none(self):
-        asset = self._mock_asset(_CAD_Aircraft, category='Fighter')
+    def test_aircraft_missing_physical_characteristics_returns_none(self):
+        """Aircraft senza physical characteristics non può essere classificato (mirror del test
+        Vehicle equivalente sopra)."""
+        asset = self._mock_asset(_CAD_Aircraft, asset_type=Air_Asset_Type.FIGHTER.value)
         self.assertIsNone(classify_asset_dimension(asset))
 
     def test_unrecognized_class_returns_none(self):

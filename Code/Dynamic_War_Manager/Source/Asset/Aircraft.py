@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_data, get_aircraft_scores, get_aircraft_combat_score
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_data, get_aircraft_scores, get_aircraft_combat_score, get_aircraft_physical_characteristics
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_MILITARY_CRAFT_ASSET,
@@ -204,5 +204,20 @@ class Aircraft(Mobile) :
     @property
     def isHelicopter(self):
         return self.asset_type == "Helicopter"
-    
+
+    def get_physical_characteristics(self) -> Optional[Dict]:
+        """Returns the physical characteristics of the aircraft as defined in Aircraft_Data.
+
+        Mirrors Ship.get_physical_characteristics(). physical_characteristics is kept out of
+        Aircraft_Data.AIRCRAFT (the flat float-scores dict, see the #TEST print loop at the bottom
+        of Aircraft_Data.py that formats every value as a float) in its own
+        AIRCRAFT_PHYSICAL_CHARACTERISTICS dict instead, for the same reason
+        AIRCRAFT_TASK_BEST_SCORES was kept separate.
+        """
+        if self._model is None:
+            logger.warning("Model not defined: Unable to get physical characteristics")
+            return None
+
+        return get_aircraft_physical_characteristics(model=self._model)
+
 

@@ -131,6 +131,29 @@ VEHICLE_SIZE_CATEGORY = {
 }
 
 
+AIRCRAFT_SIZE_CATEGORY = {
+    # Velivoli: lunghezza fusoliera e peso a vuoto sono i criteri primari; width = apertura alare.
+    # Soglie tarate sui valori reali dei 65 modelli del registro (ricerca dimensioni 2026-09-16,
+    # v. Aircraft_Data.py physical_characteristics) -- sostituisce la vecchia classificazione
+    # derivata puramente da asset_type/ruolo (Fighter/Attacker/Helicopter -> small, ecc.), che
+    # non distingueva ad es. un F-16 (piccolo) da un MiG-31 (grande interccettore, stesso ruolo
+    # 'Fighter'). Controllo in ordine big -> med -> small (primo match vince).
+    #
+    # big:  peso ≥ 25000kg → bombardieri strategici (B-52H 83250, Tu-160 110000),
+    #                         AWACS/tanker su cellule da trasporto (E-3A 73480, KC-135 44663,
+    #                         Il-76MD 89000), trasporti pesanti (C-17A 128100, C-130 34400
+    #                         via clausola larghezza/altezza)
+    # med:  peso ≥  6000kg → caccia pesanti/interccettori (MiG-31 21820, Su-27 16380, F-14 18191),
+    #                         attacker (A-10 11321, Su-25 9500), AWACS imbarcati (E-2D 17265),
+    #                         trasporti tattici (An-26B 15020, Yak-40 9400)
+    # small: peso ≥   300kg → caccia leggeri (F-16 7690, Mirage 2000C 7500, MiG-21bis 5843),
+    #                          droni (MQ-1 512, MQ-9 2223)
+    'big':   {'length': 30, 'height': 8, 'width': 28, 'weight': 25000},
+    'med':   {'length': 16, 'height': 4, 'width': 11, 'weight': 6000},
+    'small': {'length': 6,  'height': 1, 'width': 6,  'weight': 300},
+}
+
+
 SHIP_SIZE_CATEGORY = {
     # Navi: lunghezza e peso sono i criteri primari.
     # Le soglie width/height riflettono i valori reali del dataset
@@ -216,29 +239,32 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
         (length >= min_length  OR  (width >= min_width AND height >= min_height))  AND  weight >= min_weight
 
     Args:
-        asset_type: 'Vehicle' o 'Ship'
+        asset_type: 'Vehicle', 'Ship' o 'Aircraft'
         length:     lunghezza massima in metri
-        width:      larghezza massima in metri
+        width:      larghezza massima in metri (apertura alare per Aircraft)
         height:     altezza massima in metri
-        weight:     peso in tonnellate
+        weight:     peso in tonnellate (in kg per Aircraft, v. AIRCRAFT_SIZE_CATEGORY)
 
     Returns:
         str: 'big', 'med', 'small' oppure 'Unknown' se nessuna categoria corrisponde.
     """
-    
-    if asset_type not in ['Vehicle', 'Ship', 'Structure']:
-        logger.error(f"Invalid asset type: {asset_type}. Expected 'Vehicle' or 'Ship'. Exit.")
-        raise ValueError(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship'.")
-    
+
+    if asset_type not in ['Vehicle', 'Ship', 'Aircraft', 'Structure']:
+        logger.error(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship', 'Aircraft' or 'Structure'. Exit.")
+        raise ValueError(f"Invalid asset type: {asset_type}. Expected 'Vehicle', 'Ship', 'Aircraft' or 'Structure'.")
+
     if length < 0 or width < 0 or height < 0 or weight < 0:
         logger.error(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative. Exit.")
         raise ValueError(f"Invalid dimensions: length={length}, width={width}, height={height}, weight={weight}. All values must be non-negative.")
 
     if asset_type == 'Vehicle':
-        SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY 
+        SIZE_CATEGORY = VEHICLE_SIZE_CATEGORY
 
-    elif asset_type == 'Ship': 
+    elif asset_type == 'Ship':
         SIZE_CATEGORY = SHIP_SIZE_CATEGORY
+
+    elif asset_type == 'Aircraft':
+        SIZE_CATEGORY = AIRCRAFT_SIZE_CATEGORY
 
     elif asset_type == 'Structure':
         if structure_type is None:
@@ -275,12 +301,11 @@ def get_dimension(asset_type: str, length: float, width: float, height: float, w
 def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] = None) -> Optional[str]:
     """Recon/target-profile dimension bucket ('big'/'med'/'small') for a single asset.
 
-    Vehicle/Ship/Structure: derived from physical characteristics via get_dimension (Structure
-    additionally needs its own category as structure_type). Aircraft: derived from its
-    Air_Asset_Type asset_type (Fighter/Helicopter/Attacker -> small, Fighter_Bomber/Recon -> med,
-    Bomber/Transport/Awacs/Heavy_Bomber -> big). Returns None if the asset's class isn't one of
-    these four, physical characteristics/asset_type are missing/unrecognized, or (when
-    valid_asset_types is given) asset.asset_type isn't a member of it.
+    Vehicle/Ship/Aircraft/Structure: derived from physical characteristics via get_dimension
+    (Structure additionally needs its own category as structure_type; Aircraft width = apertura
+    alare, weight in kg -- v. AIRCRAFT_SIZE_CATEGORY). Returns None if the asset's class isn't one
+    of these four, physical characteristics are missing, or (when valid_asset_types is given)
+    asset.asset_type isn't a member of it.
 
     Single source of truth for the classification rule shared by Block.get_recognition_report
     (fog-of-war, gated by per-report detection probability) and
@@ -292,7 +317,7 @@ def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] =
     asset_category = getattr(asset, 'category', None)
     dimension = None
 
-    if class_name in ('Vehicle', 'Ship', 'Structure'):
+    if class_name in ('Vehicle', 'Ship', 'Aircraft', 'Structure'):
         physical = asset.get_physical_characteristics()
         if not physical:
             return None
@@ -302,17 +327,6 @@ def classify_asset_dimension(asset, valid_asset_types: Optional[Iterable[str]] =
             physical['length'], physical['width'], physical['height'], physical['weight'],
             structure_type,
         )
-
-    elif class_name == 'Aircraft':
-        aircraft_asset_type = getattr(asset, 'asset_type', None)
-        if aircraft_asset_type is None:
-            return None
-        if aircraft_asset_type in (Air_Asset_Type.FIGHTER.value, Air_Asset_Type.HELICOPTER.value, Air_Asset_Type.ATTACKER.value):
-            dimension = 'small'
-        elif aircraft_asset_type in (Air_Asset_Type.FIGHTER_BOMBER.value, Air_Asset_Type.RECON.value):
-            dimension = 'med'
-        elif aircraft_asset_type in (Air_Asset_Type.BOMBER.value, Air_Asset_Type.TRANSPORT.value, Air_Asset_Type.AWACS.value, Air_Asset_Type.HEAVY_BOMBER.value):
-            dimension = 'big'
     else:
         return None
 

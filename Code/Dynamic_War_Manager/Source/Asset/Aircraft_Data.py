@@ -63,7 +63,10 @@ SYSTEM_WEIGHTS = {
 class Aircraft_Data:
     _registry = {}
         
-    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, length: int, width: int, height: int, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+        for _dim_name, _dim_value in (('length', length), ('width', width), ('height', height)):
+            if not isinstance(_dim_value, int) or _dim_value <= 0:
+                raise ValueError(f"{_dim_name} must be a positive int (metri), got: {_dim_value!r}")
         self.constructor = constructor
         self.users = users
         self.made = made
@@ -74,6 +77,10 @@ class Aircraft_Data:
         self.cost = cost
         self.roles = roles
         self.weight = weight
+        # physical_characteristics: length/width(apertura alare)/height in metri, weight in kg
+        # (mirror di Vehicle_Data/Ship_Data, ma weight resta un campo a sé -- v. get_weight/set_weight
+        # esistenti -- per non toccare i loro consumer; qui viene solo replicato nel dict).
+        self.physical_characteristics = {'length': length, 'width': width, 'height': height, 'weight': int(self.weight)}
         self.engine = engine
         self.radar = radar
         self.TVD = TVD
@@ -1096,7 +1103,7 @@ f16_data_example = {
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],    
-    "weight": 7690,
+    "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
         "model": "AN/APG-66",
@@ -1133,7 +1140,7 @@ f14a_data = {
     "users": ["USA", "Iran"], "start_service": 1974, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 38,
     "roles": ["CAP", "Intercept", "Escort"],    
-    "weight": 18191,
+    "weight": 18191, "length": 19, "width": 20, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     "engine": {"model": "TF30-P-414A", "capabilities": {"thrust": 19000, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 28, "mttr": 10}},
     "radar": {
         "model": "AN/AWG-9",
@@ -1168,7 +1175,7 @@ f14b_data = {
     "users": ["USA"], "start_service": 1991, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 43,
     "roles": ["CAP", "Intercept", "Escort", "Strike"],
-    "weight": 18951,
+    "weight": 18951, "length": 19, "width": 20, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-400", "capabilities": {"thrust": 24000, "fuel_efficiency": 0.72, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 7}},
     "radar": {
@@ -1204,7 +1211,7 @@ f15c_data = {
     "users": ["USA", "Israel", "Saudi Arabia", "Japan"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 28,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
-    "weight": 12973,
+    "weight": 12973, "length": 19, "width": 13, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-220", "capabilities": {"thrust": 21500, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 8}},
     "radar": {
@@ -1240,7 +1247,7 @@ f15e_data = {
     "users": ["USA", "Saudi Arabia", "Israel", "South Korea", "Singapore"], "start_service": 1989, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 31,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "weight": 14379,
+    "weight": 14379, "length": 19, "width": 13, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-229", "capabilities": {"thrust": 26000, "fuel_efficiency": 0.77, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 7}},
     "radar": {
@@ -1276,7 +1283,7 @@ fa18a_data = {
     "users": ["USA", "Australia", "Canada", "Spain", "Kuwait"], "start_service": 1983, "end_service": 2020,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 24,
     "roles": ["CAP", "Intercept", "Strike", "CAS", "Anti_Ship"],
-    "weight": 10455,
+    "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-400", "capabilities": {"thrust": 14500, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
     "radar": {
@@ -1312,7 +1319,7 @@ fa18c_data = {
     "users": ["USA", "Finland", "Switzerland", "Malaysia", "Kuwait"], "start_service": 1987, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 29,
     "roles": ["CAP", "Intercept", "Strike", "SEAD", "Anti_Ship"],
-    "weight": 10455,
+    "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 5}},
     "radar": {
@@ -1348,7 +1355,7 @@ fa18c_lot20_data = {
     "users": ["USA", "Switzerland"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 33,
     "roles": ["CAP", "Intercept", "Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
-    "weight": 10455,
+    "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 46, "mttr": 5}},
     "radar": {
@@ -1384,7 +1391,7 @@ f4e_data = {
     "users": ["USA", "Israel", "Turkey", "Greece", "Germany"], "start_service": 1961, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "CAS"],
-    "weight": 13757,
+    "weight": 13757, "length": 19, "width": 12, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J79-GE-17", "capabilities": {"thrust": 16200, "fuel_efficiency": 0.58, "type": "turbojet"}, "reliability": {"mtbf": 35, "mttr": 9}},
     "radar": {
@@ -1420,7 +1427,7 @@ f5e_data = {
     "users": ["USA", "Taiwan", "South Korea", "Iran", "Saudi Arabia", "Switzerland"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept"],
-    "weight": 4392,
+    "weight": 4392, "length": 15, "width": 8, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J85-GE-21", "capabilities": {"thrust": 4500, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
     "radar": {
@@ -1456,7 +1463,7 @@ f86e_data = {
     "users": ["USA", "UK", "Canada", "Australia", "Norway"], "start_service": 1950, "end_service": 1975,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
-    "weight": 4967,
+    "weight": 4967, "length": 11, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J47-GE-27", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 6}},
     "radar": {
@@ -1492,7 +1499,7 @@ f16a_data = {
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
-    "weight": 7690,
+    "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
@@ -1528,7 +1535,7 @@ f16a_mlu_data = {
     "users": ["Belgium", "Netherlands", "Denmark", "Norway", "Portugal"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 11,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
-    "weight": 7690,
+    "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-220E", "capabilities": {"thrust": 10900, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
@@ -1564,7 +1571,7 @@ f16c_bl52d_data = {
     "users": ["USA", "Turkey", "Greece", "Israel"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "weight": 8663,
+    "weight": 8663, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-100", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.78, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 5}},
     "radar": {
@@ -1600,7 +1607,7 @@ f16cm_bl50_data = {
     "users": ["USA", "Israel", "South Korea"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 20,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
-    "weight": 8663,
+    "weight": 8663, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-129", "capabilities": {"thrust": 13400, "fuel_efficiency": 0.80, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
@@ -1638,7 +1645,7 @@ a10a_data = {
     "users": ["USA"], "start_service": 1977, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 13,
     "roles": ["CAS"],
-    "weight": 11321,
+    "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100", "capabilities": {"thrust": 40200, "fuel_efficiency": 0.37, "type": "turbofan"}, "reliability": {"mtbf": 60, "mttr": 2.5}},
     "radar": {
@@ -1674,7 +1681,7 @@ a10c_data = {
     "users": ["USA"], "start_service": 2005, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 18,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "weight": 11321,
+    "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
     "radar": {
@@ -1710,7 +1717,7 @@ a10c2_data = {
     "users": ["USA"], "start_service": 2018, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 23,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "weight": 11321,
+    "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
     "radar": {
@@ -1746,7 +1753,7 @@ a20g_data = {
     "users": ["USA", "UK", "USSR"], "start_service": 1941, "end_service": 1954,
     "category": [Air_Asset_Type.ATTACKER], "cost": 1,
     "roles": ["CAS", "Strike"],
-    "weight": 7918,
+    "weight": 7918, "length": 15, "width": 19, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Wright R-2600-23", "capabilities": {"thrust": 1700, "fuel_efficiency": 0.30, "type": "piston"}, "reliability": {"mtbf": 40, "mttr": 6}},
     "radar": {
@@ -1782,7 +1789,7 @@ a4ec_data = {
     "users": ["USA", "Israel", "Australia", "Singapore"], "start_service": 1956, "end_service": 1998,
     "category": [Air_Asset_Type.ATTACKER], "cost": 5,
     "roles": ["CAS", "Strike", "Anti_Ship"],
-    "weight": 4469,
+    "weight": 4469, "length": 12, "width": 8, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Pratt & Whitney J52-P-8A", "capabilities": {"thrust": 37800, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
     "radar": {
@@ -1820,7 +1827,7 @@ f117_data = {
     "users": ["USA"], "start_service": 1983, "end_service": 2008,
     "category": [Air_Asset_Type.BOMBER], "cost": 122,
     "roles": ["Pinpoint_Strike"],
-    "weight": 13381,
+    "weight": 13381, "length": 20, "width": 13, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE F404-GE-F1D2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.40, "type": "turbofan"}, "reliability": {"mtbf": 50, "mttr": 3}},
     "radar": {
@@ -1856,7 +1863,7 @@ b1b_data = {
     "users": ["USA"], "start_service": 1986, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 283,
     "roles": ["Strike", "Pinpoint_Strike"],
-    "weight": 87090,
+    "weight": 87090, "length": 45, "width": 42, "height": 10,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE F101-GE-102", "capabilities": {"thrust": 137000, "fuel_efficiency": 0.35, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
@@ -1892,7 +1899,7 @@ b52h_data = {
     "users": ["USA"], "start_service": 1961, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 74,
     "roles": ["Strike"],
-    "weight": 83250,
+    "weight": 83250, "length": 49, "width": 56, "height": 12,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Pratt & Whitney TF33-P-3/103", "capabilities": {"thrust": 75600, "fuel_efficiency": 0.32, "type": "turbofan"}, "reliability": {"mtbf": 60, "mttr": 3}},
     "radar": {
@@ -1928,7 +1935,7 @@ s3b_data = {
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
     "category": [Air_Asset_Type.BOMBER], "cost": 27,
     "roles": ["Anti_Ship", "Recon"],
-    "weight": 12088,
+    "weight": 12088, "length": 16, "width": 21, "height": 7,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-2", "capabilities": {"thrust": 41300, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
@@ -1964,7 +1971,7 @@ s3b_tanker_data = {
     "users": ["USA"], "start_service": 1974, "end_service": 2009,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 27,
     "roles": [],
-    "weight": 12088,
+    "weight": 12088, "length": 16, "width": 21, "height": 7,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-2", "capabilities": {"thrust": 41300, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 3}},
     "radar": {
@@ -2002,7 +2009,7 @@ e2d_data = {
     "users": ["USA", "Japan", "France"], "start_service": 1964, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 232,
     "roles": [],
-    "weight": 17265,
+    "weight": 17265, "length": 18, "width": 25, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Allison T56-A-427", "capabilities": {"thrust": 4900, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 70, "mttr": 2}},
     "radar": {
@@ -2038,7 +2045,7 @@ e3a_data = {
     "users": ["USA", "NATO", "UK", "France", "Saudi Arabia"], "start_service": 1977, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 270,
     "roles": [],
-    "weight": 73480,
+    "weight": 73480, "length": 44, "width": 40, "height": 13,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Pratt & Whitney TF33-PW-100A", "capabilities": {"thrust": 93400, "fuel_efficiency": 0.33, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.5}},
     "radar": {
@@ -2074,7 +2081,7 @@ mq1a_data = {
     "users": ["USA", "Italy", "Morocco"], "start_service": 1995, "end_service": 2018,
     "category": [Air_Asset_Type.RECON], "cost": 4,
     "roles": ["Recon", "CAS"],
-    "weight": 512,
+    "weight": 512, "length": 8, "width": 15, "height": 2,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Rotax 914F", "capabilities": {"thrust": 75, "fuel_efficiency": 0.55, "type": "piston"}, "reliability": {"mtbf": 100, "mttr": 2}},
     "radar": {
@@ -2110,7 +2117,7 @@ mq9_data = {
     "users": ["USA", "UK", "Italy", "France", "Netherlands"], "start_service": 2007, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 32,
     "roles": ["Recon", "CAS", "Strike"],
-    "weight": 2223,
+    "weight": 2223, "length": 11, "width": 20, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Honeywell TPE331-10GD", "capabilities": {"thrust": 671, "fuel_efficiency": 0.52, "type": "turboprop"}, "reliability": {"mtbf": 110, "mttr": 2}},
     "radar": {
@@ -2148,7 +2155,7 @@ c130_data = {
     "users": ["USA", "UK", "many"], "start_service": 1956, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 30,
     "roles": [],
-    "weight": 34400,
+    "weight": 34400, "length": 29, "width": 40, "height": 11,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Allison T56-A-15", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
     "radar": {
@@ -2184,7 +2191,7 @@ c17a_data = {
     "users": ["USA", "UK", "Canada", "Australia"], "start_service": 1995, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 218,
     "roles": [],
-    "weight": 128100,
+    "weight": 128100, "length": 53, "width": 52, "height": 17,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Pratt & Whitney F117-PW-100", "capabilities": {"thrust": 185000, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2}},
     "radar": {
@@ -2220,7 +2227,7 @@ kc130_data = {
     "users": ["USA", "many"], "start_service": 1962, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 35,
     "roles": [],
-    "weight": 34686,
+    "weight": 34686, "length": 29, "width": 40, "height": 11,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Allison T56-A-16", "capabilities": {"thrust": 4591, "fuel_efficiency": 0.35, "type": "turboprop"}, "reliability": {"mtbf": 75, "mttr": 2}},
     "radar": {
@@ -2256,7 +2263,7 @@ kc135_data = {
     "users": ["USA", "France", "Turkey", "Singapore"], "start_service": 1957, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 52,
     "roles": [],
-    "weight": 44663,
+    "weight": 44663, "length": 42, "width": 40, "height": 13,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
     "radar": {
@@ -2292,7 +2299,7 @@ kc135_mprs_data = {
     "users": ["USA"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 55,
     "roles": [],
-    "weight": 44663,
+    "weight": 44663, "length": 42, "width": 40, "height": 13,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "CFM International CFM56-2B-1", "capabilities": {"thrust": 97900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 70, "mttr": 2.5}},
     "radar": {
@@ -2330,7 +2337,7 @@ asj37_data = {
     "users": ["Sweden"], "start_service": 1971, "end_service": 2005,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 10,
     "roles": ["Strike", "CAS", "Fighter_Sweep", "CAP"],
-    "weight": 11800,
+    "weight": 11800, "length": 16, "width": 11, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Volvo Flygmotor RM8B", "capabilities": {"thrust": 125000, "fuel_efficiency": 0.40, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
     "radar": {
@@ -2366,7 +2373,7 @@ m2000c_data = {
     "users": ["France", "India", "Egypt", "UAE", "Greece", "Qatar", "Taiwan", "Peru"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 23,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
-    "weight": 7500,
+    "weight": 7500, "length": 14, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "SNECMA M53-P2", "capabilities": {"thrust": 95100, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
     "radar": {
@@ -2404,7 +2411,7 @@ mig15_data = {
     "users": ["USSR", "China", "North Korea"], "start_service": 1949, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
-    "weight": 3635,
+    "weight": 3635, "length": 10, "width": 10, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov VK-1", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
     "radar": {
@@ -2440,7 +2447,7 @@ mig19p_data = {
     "users": ["USSR", "China"], "start_service": 1955, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
-    "weight": 5447,
+    "weight": 5447, "length": 13, "width": 9, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky RD-9B", "capabilities": {"thrust": 6400, "fuel_efficiency": 0.48, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
     "radar": {
@@ -2476,7 +2483,7 @@ mig21bis_data = {
     "users": ["USSR", "Russia", "India", "Finland", "Algeria", "Vietnam"], "start_service": 1959, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept", "Strike"],
-    "weight": 5843,
+    "weight": 5843, "length": 16, "width": 7, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-25-300", "capabilities": {"thrust": 9900, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 6}},
     "radar": {
@@ -2512,7 +2519,7 @@ mig23mld_data = {
     "users": ["USSR", "Russia", "Syria", "Libya", "Algeria"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Strike", "CAS"],
-    "weight": 10565,
+    "weight": 10565, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-35-300", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.55, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 7}},
     "radar": {
@@ -2548,7 +2555,7 @@ mig25pd_data = {
     "users": ["USSR", "Algeria", "Libya", "Iraq"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 8,
     "roles": ["Intercept", "CAP"],
-    "weight": 20000,
+    "weight": 20000, "length": 24, "width": 14, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-15BD-300", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 25, "mttr": 10}},
     "radar": {
@@ -2584,7 +2591,7 @@ mig25rb_data = {
     "users": ["USSR", "Russia"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 8,
     "roles": ["Recon"],
-    "weight": 20000,
+    "weight": 20000, "length": 24, "width": 14, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-15B-300", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 25, "mttr": 10}},
     "radar": {
@@ -2620,7 +2627,7 @@ mig27k_data = {
     "users": ["USSR", "Russia", "India"], "start_service": 1975, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS", "Pinpoint_Strike"],
-    "weight": 11908,
+    "weight": 11908, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-29B-300", "capabilities": {"thrust": 11500, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
@@ -2656,7 +2663,7 @@ mig29a_data = {
     "users": ["USSR", "Russia", "Germany", "Poland", "Romania", "Hungary"], "start_service": 1982, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 11,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
-    "weight": 10900,
+    "weight": 10900, "length": 17, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov RD-33", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 6}},
     "radar": {
@@ -2692,7 +2699,7 @@ mig29s_data = {
     "users": ["Russia", "Algeria"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 15,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Strike"],
-    "weight": 10900,
+    "weight": 10900, "length": 17, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov RD-33 Series 3", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.63, "type": "turbofan"}, "reliability": {"mtbf": 37, "mttr": 6}},
     "radar": {
@@ -2728,7 +2735,7 @@ mig31_data = {
     "users": ["USSR", "Russia"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 22,
     "roles": ["Intercept", "CAP"],
-    "weight": 21820,
+    "weight": 21820, "length": 23, "width": 14, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Soloviev D-30F6", "capabilities": {"thrust": 31000, "fuel_efficiency": 0.52, "type": "turbofan"}, "reliability": {"mtbf": 30, "mttr": 9}},
     "radar": {
@@ -2766,7 +2773,7 @@ su17m4_data = {
     "users": ["USSR", "Russia", "Syria", "Libya"], "start_service": 1970, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS"],
-    "weight": 10000,
+    "weight": 10000, "length": 19, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "AL-21F-3", "capabilities": {"thrust": 11200, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 7}},
     "radar": {
@@ -2802,7 +2809,7 @@ su24m_data = {
     "users": ["USSR", "Russia", "Ukraine", "Algeria", "Libya", "Syria"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.BOMBER], "cost": 24,
     "roles": ["Strike", "Pinpoint_Strike", "SEAD"],
-    "weight": 22300,
+    "weight": 22300, "length": 25, "width": 18, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-21F-3A", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
@@ -2838,7 +2845,7 @@ su24mr_data = {
     "users": ["USSR", "Russia", "Ukraine"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 25,
     "roles": ["Recon"],
-    "weight": 22300,
+    "weight": 22300, "length": 25, "width": 18, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-21F-3A", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
     "radar": {
@@ -2874,7 +2881,7 @@ su25_data = {
     "users": ["USSR", "Russia", "Ukraine", "Georgia", "Belarus", "many others"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 11,
     "roles": ["CAS", "Strike"],
-    "weight": 9500,
+    "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-95Sh", "capabilities": {"thrust": 9000, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 5}},
     "radar": {
@@ -2910,7 +2917,7 @@ su25t_data = {
     "users": ["USSR", "Russia"], "start_service": 1990, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 14,
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
-    "weight": 9500,
+    "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 42, "mttr": 5}},
     "radar": {
@@ -2946,7 +2953,7 @@ su25tm_data = {
     "users": ["Russia"], "start_service": 2008, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 17,
     "roles": ["CAS", "Strike", "Pinpoint_Strike", "SEAD"],
-    "weight": 9500,
+    "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 44, "mttr": 5}},
     "radar": {
@@ -2982,7 +2989,7 @@ su27_data = {
     "users": ["USSR", "Russia", "Ukraine", "Kazakhstan", "China"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 30,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
-    "weight": 16380,
+    "weight": 16380, "length": 22, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31F", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
     "radar": {
@@ -3018,7 +3025,7 @@ su30_data = {
     "users": ["Russia", "India", "China", "Malaysia", "Algeria"], "start_service": 1996, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 38,
     "roles": ["CAP", "Strike", "SEAD", "Anti_Ship", "Escort"],
-    "weight": 17700,
+    "weight": 17700, "length": 22, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31FP (TVC)", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 6}},
     "radar": {
@@ -3054,7 +3061,7 @@ su33_data = {
     "users": ["Russia"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 37,
     "roles": ["CAP", "Intercept", "Strike"],
-    "weight": 18400,
+    "weight": 18400, "length": 21, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31F3", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
     "radar": {
@@ -3090,7 +3097,7 @@ su34_data = {
     "users": ["Russia"], "start_service": 2014, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 36,
     "roles": ["Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
-    "weight": 22500,
+    "weight": 22500, "length": 23, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31FM1", "capabilities": {"thrust": 27000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
     "radar": {
@@ -3128,7 +3135,7 @@ tu22m_data = {
     "users": ["USSR", "Russia"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 45,
     "roles": ["Strike", "Anti_Ship"],
-    "weight": 58000,
+    "weight": 58000, "length": 43, "width": 34, "height": 11,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "NK-25", "capabilities": {"thrust": 50000, "fuel_efficiency": 0.55, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 12}},
     "radar": {
@@ -3164,7 +3171,7 @@ tu95ms_data = {
     "users": ["USSR", "Russia"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 36,
     "roles": ["Strike"],
-    "weight": 90000,
+    "weight": 90000, "length": 46, "width": 50, "height": 12,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "NK-12M", "capabilities": {"thrust": 51000, "fuel_efficiency": 0.55, "type": "turboprop"}, "reliability": {"mtbf": 40, "mttr": 14}},
     "radar": {
@@ -3200,7 +3207,7 @@ tu142_data = {
     "users": ["USSR", "Russia", "India"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.BOMBER], "cost": 30,
     "roles": ["Anti_Ship", "Recon"],
-    "weight": 90000,
+    "weight": 90000, "length": 53, "width": 50, "height": 13,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "NK-12MV", "capabilities": {"thrust": 51000, "fuel_efficiency": 0.55, "type": "turboprop"}, "reliability": {"mtbf": 38, "mttr": 14}},
     "radar": {
@@ -3236,7 +3243,7 @@ tu160_data = {
     "users": ["USSR", "Russia"], "start_service": 1987, "end_service": None,
     "category": [Air_Asset_Type.HEAVY_BOMBER], "cost": 250,
     "roles": ["Strike", "Pinpoint_Strike"],
-    "weight": 110000,
+    "weight": 110000, "length": 54, "width": 56, "height": 13,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "NK-32", "capabilities": {"thrust": 100000, "fuel_efficiency": 0.60, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 14}},
     "radar": {
@@ -3274,7 +3281,7 @@ a50_data = {
     "users": ["USSR", "Russia"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.AWACS], "cost": 330,
     "roles": [],
-    "weight": 75000,
+    "weight": 75000, "length": 47, "width": 51, "height": 15,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Soloviev D-30KP", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 10}},
     "radar": {
@@ -3310,7 +3317,7 @@ an26b_data = {
     "users": ["USSR", "Russia", "Ukraine", "Cuba", "Vietnam"], "start_service": 1970, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 2,
     "roles": [],
-    "weight": 15020,
+    "weight": 15020, "length": 24, "width": 29, "height": 9,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "AI-24VT", "capabilities": {"thrust": 4000, "fuel_efficiency": 0.58, "type": "turboprop"}, "reliability": {"mtbf": 55, "mttr": 5}},
     "radar": {
@@ -3346,7 +3353,7 @@ an30m_data = {
     "users": ["USSR", "Russia", "Ukraine"], "start_service": 1968, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 2,
     "roles": [],
-    "weight": 15590,
+    "weight": 15590, "length": 24, "width": 29, "height": 8,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "AI-24A", "capabilities": {"thrust": 4000, "fuel_efficiency": 0.56, "type": "turboprop"}, "reliability": {"mtbf": 52, "mttr": 5}},
     "radar": {
@@ -3382,7 +3389,7 @@ il76md_data = {
     "users": ["USSR", "Russia", "India", "China", "Algeria"], "start_service": 1974, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 30,
     "roles": [],
-    "weight": 89000,
+    "weight": 89000, "length": 47, "width": 51, "height": 14,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Soloviev D-30KP-2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 8}},
     "radar": {
@@ -3418,7 +3425,7 @@ il78m_data = {
     "users": ["Russia"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 35,
     "roles": [],
-    "weight": 89000,
+    "weight": 89000, "length": 47, "width": 51, "height": 14,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Soloviev D-30KP-2", "capabilities": {"thrust": 48000, "fuel_efficiency": 0.65, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 8}},
     "radar": {
@@ -3454,7 +3461,7 @@ yak40_data = {
     "users": ["USSR", "Russia", "Ukraine", "Cuba"], "start_service": 1968, "end_service": None,
     "category": [Air_Asset_Type.TRANSPORT], "cost": 1,
     "roles": [],
-    "weight": 9400,
+    "weight": 9400, "length": 20, "width": 25, "height": 7,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Ivchenko AI-25", "capabilities": {"thrust": 4500, "fuel_efficiency": 0.58, "type": "turbofan"}, "reliability": {"mtbf": 50, "mttr": 4}},
     "radar": {
@@ -3488,6 +3495,11 @@ yak40_data = {
 # SETUP DICTIONARY VALUE
 SCORES = ('Radar score', 'Radar score air', 'Speed score', 'avalaibility', 'manutenability score (mttr)', 'reliability score (mtbf)')
 AIRCRAFT = {}
+
+# physical_characteristics per modello, tenuto separato da AIRCRAFT (dict piatto di soli float score,
+# v. il loop #TEST in fondo al file che formatta ogni valore come float) per lo stesso motivo per cui
+# AIRCRAFT_TASK_BEST_SCORES è un dict a parte.
+AIRCRAFT_PHYSICAL_CHARACTERISTICS: Dict[str, Dict] = {}
 
 
 Aircraft_Data(**f16_data_example)
@@ -3576,6 +3588,7 @@ for aircraft in Aircraft_Data._registry.values():
     AIRCRAFT[model]['avalaibility'] = aircraft.get_normalized_avalaiability_score()
     AIRCRAFT[model]['manutenability score (mttr)'] = aircraft.get_normalized_maintenance_score()
     AIRCRAFT[model]['reliability score (mtbf)'] = aircraft.get_normalized_reliability_score()
+    AIRCRAFT_PHYSICAL_CHARACTERISTICS[model] = aircraft.physical_characteristics
 
 # AIRCRAFT_TASK_BEST_SCORES[model] = {task: best combat_score() over the loadouts available for that task}.
 # Kept separate from AIRCRAFT[model] (which is flat floats) rather than nesting a dict there, to avoid
@@ -3614,6 +3627,17 @@ _build_combat_aggregates()
 # STATIC METHODS (API)
 def get_aircraft_data(model: str):
     return AIRCRAFT[model]
+
+def get_aircraft_physical_characteristics(model: str) -> Dict:
+    """{'length','width','height','weight'} del modello (metri, metri, metri, kg). Usata da
+    Aircraft.get_physical_characteristics() e da Context.classify_asset_dimension.
+
+    Raises:
+        ValueError: se model non e' nel registro.
+    """
+    if model not in AIRCRAFT_PHYSICAL_CHARACTERISTICS:
+        raise ValueError(f"model unknow. model must be: {AIRCRAFT_PHYSICAL_CHARACTERISTICS.keys()}")
+    return AIRCRAFT_PHYSICAL_CHARACTERISTICS[model]
 
 def get_aircraft_scores(model: str, scores: Optional[List] = None):
 

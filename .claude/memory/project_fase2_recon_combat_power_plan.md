@@ -1,11 +1,11 @@
 ---
 name: project-fase2-recon-combat-power-plan
-description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved 2026-09-16. Fase 1 (C2 observer-side fix) AND Fase 2 (action-based combat power selection) both implemented and tested same day. Read this before continuing with Fase 3-bis onward."
+description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved 2026-09-16. Fase 1, 2 and 3-bis (Aircraft real physical dimensions) all implemented and tested same day (2476 tests OK). Read this before continuing with Fase 3 onward."
 metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T12:01:01.941Z
+  modified: 2026-09-16T13:02:41.809Z
 ---
 
 # Fase 2 — piano di stima combat power fog-of-war — TUTTE LE DOMANDE RISOLTE, IMPLEMENTAZIONE IN CORSO
@@ -82,9 +82,21 @@ Risoluzione finale: la dimensione **resta** nel bucket di calibrazione (ruolo di
 - **Fase 4 — da fare, invariata.** Campo `users` su Vehicle_Data/Ship_Data, popolamento dati rimandabile (fallback neutro, a differenza di Fase 3-bis).
 - **Fase 5 — da fare, con 3 aggiunte.** (1) fix obbligatorio `_invalidate_caches` per includere `_calc_surface_priority`/`_calc_air_priority`; (2) i 3 guard su 'Neutral' (Q7); (3) default `efficiency=1.0` quando ignota (Q2), con commento che documenta la scelta prudenziale.
 
+## Fase 3-bis — FATTA, 2026-09-16
+
+Su richiesta esplicita dell'utente, implementata con **dati reali** (non placeholder) per tutti i 66 modelli del registro Aircraft (65 model-key univoci: alcuni variant-name condividono lo stesso `model` string, es. `f16_data_example`/`f16a_data`). Dati reali (length/wingspan/height, ricerca web con fonti Wikipedia/GlobalSecurity/manufacturer, arrotondati a metri interi) raccolti da un agente di ricerca dedicato; alcune incertezze tra fonti segnalate e risolte (es. MiG-15bis height, MQ-1 wingspan — quest'ultima ancora con margine di incertezza tra fonti, da rivedere se emergono problemi).
+
+**Modifiche**:
+- `Aircraft_Data.py`: `__init__` ora richiede anche `length: int, width: int, height: int` (metri); costruisce `self.physical_characteristics = {'length','width','height','weight'}` internamente (weight resta un campo a sé per non toccare `get_weight`/`set_weight`, solo replicato nel dict). Validazione: length/width/height devono essere int positivi.
+- **Trovato un problema non previsto dal piano originale**: mettere `physical_characteristics` dentro `AIRCRAFT[model]` (come fa `Ship_Data` con `SHIP[model]`) avrebbe rotto il loop `#TEST` in fondo al file (`for name, score in data.items(): print(f"...{score:.2f}")`), che assume tutti i valori flat-float — esattamente il problema per cui `AIRCRAFT_TASK_BEST_SCORES` era già stato tenuto separato. Risolto allo stesso modo: nuovo dict globale `AIRCRAFT_PHYSICAL_CHARACTERISTICS: Dict[str, Dict]`, popolato nello stesso loop, con getter dedicato `get_aircraft_physical_characteristics(model)`.
+- `Aircraft.py`: nuovo metodo `get_physical_characteristics()`, mirror esatto di `Ship.py:199-207`, legge da `get_aircraft_physical_characteristics`.
+- `Context.py`: nuova `AIRCRAFT_SIZE_CATEGORY` (soglie tarate sul dataset reale, vedi sotto); `get_dimension` accetta `'Aircraft'`; `classify_asset_dimension` semplificato — il ramo Aircraft ora è unificato con Vehicle/Ship/Structure (stesso `get_physical_characteristics()` + `get_dimension`), il vecchio ramo asset_type-based è rimosso.
+- **Soglie finali** (length/height/width in metri, weight in kg — width=apertura alare per Aircraft): `big: {length:30, height:8, width:28, weight:25000}`, `med: {length:16, height:4, width:11, weight:6000}`, `small: {length:6, height:1, width:6, weight:300}`. Tarate simulando la classificazione sull'intero dataset reale prima di committare (non a caso): distribuzione finale **13 small / 37 med / 15 big**, nessun 'Unknown'. Verificato che risolve i casi patologici del piano: MiG-31 ora 'med' (non più 'small' come ogni Fighter), C-130 'big' (via clausola width/height anche se length=29<30), tutte le famiglie F-16 restano 'small', A-10/Su-25/Viggen 'med' (non 'small').
+- Test aggiornati: `Test_Context.py::TestClassifyAssetDimension` (i 3 vecchi test per-ruolo sostituiti con 3 nuovi per-fisica + 1 su physical_characteristics mancanti, stesso pattern di Vehicle), `Test_Region.py::TestTargetProfileFromBlock` (stesso trattamento + nuovo test `test_aircraft_missing_physical_characteristics_skipped`), `Test_Aircraft.py` (2 nuovi test per `get_physical_characteristics`). Suite completa: **2476 OK/5 skipped** (2473+3).
+- **Nota per il futuro**: i valori length/width/height sono stati inseriti come commento inline `# metri (apertura alare per width); ricerca 2026-09-16` su ciascuna delle 66 righe — utile per risalire alla fonte se un valore va rivisto.
+
 ## Prossimi passi
 
-1. Fase 3-bis (dimensione fisica per-modello su Aircraft) — prerequisito di Fase 3.
-2. Fase 3 (nuovo modulo `Combat_Power_Estimation.py`).
-3. Fase 4 (campo `users` schema+wiring).
-4. Fase 5 (use_recon + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0).
+1. Fase 3 (nuovo modulo `Combat_Power_Estimation.py`) — ora sbloccata, la dimensione Aircraft è reale, l'eccezione "salta il livello dimensione per l'air" del piano v1 va rimossa dalla catena di fallback.
+2. Fase 4 (campo `users` schema+wiring).
+3. Fase 5 (use_recon + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0).
