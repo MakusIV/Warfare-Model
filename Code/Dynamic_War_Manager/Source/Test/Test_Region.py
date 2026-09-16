@@ -13,6 +13,7 @@ from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
 from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
 from Code.Dynamic_War_Manager.Source.Block.Urban import Urban
 from Code.Dynamic_War_Manager.Source.Context import Context
+from Code.Dynamic_War_Manager.Source.Context import Combat_Power_Estimation
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     Ground_Vehicle_Asset_Type as gat,
     Air_Asset_Type as aat,
@@ -1790,6 +1791,251 @@ class TestCalculatePriorityActionRoles(unittest.TestCase):
         target = self._military('Red', 'Air_Base', value=3.0)
         self._call(block, target)
         target.combat_power.assert_called_once_with(force='air')
+
+
+class TestEstimatedTargetCombatPower(unittest.TestCase):
+    """Fase 5: Region._estimated_target_combat_power() -- wrapper per-report attorno a
+    Combat_Power_Estimation.estimate_combat_power_from_asset_summary."""
+
+    def setUp(self):
+        self.region = Region(name="ETCP Region")
+
+    def test_none_force_returns_zero_without_calling_estimator(self):
+        with patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary') as mock_est:
+            result = self.region._estimated_target_combat_power({'asset_summary': {'operative': {'Tank': {'big': 1}}}}, None, 'Attack')
+        self.assertEqual(result, 0.0)
+        mock_est.assert_not_called()
+
+    def test_missing_efficiency_defaults_to_one(self):
+        report = {'side': 'Red', 'efficiency': None, 'asset_summary': {'operative': {'Tank': {'big': 3}}}}
+        with patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', return_value=1.23) as mock_est:
+            self.region._estimated_target_combat_power(report, 'ground', 'Defense')
+        mock_est.assert_called_once_with({'Tank': {'big': 3}}, 'ground', 'Defense', side='Red', efficiency=1.0)
+
+    def test_present_efficiency_is_forwarded_unchanged(self):
+        report = {'side': 'Blue', 'efficiency': 0.6, 'asset_summary': {'operative': {'Tank': {'big': 3}}}}
+        with patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', return_value=1.0) as mock_est:
+            self.region._estimated_target_combat_power(report, 'ground', 'Defense')
+        mock_est.assert_called_once_with({'Tank': {'big': 3}}, 'ground', 'Defense', side='Blue', efficiency=0.6)
+
+    def test_missing_asset_summary_passes_empty_dict(self):
+        with patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', return_value=0.0) as mock_est:
+            self.region._estimated_target_combat_power({'side': 'Red', 'efficiency': None}, 'ground', 'Defense')
+        mock_est.assert_called_once_with({}, 'ground', 'Defense', side='Red', efficiency=1.0)
+
+
+class TestBuildReconCpSnapshot(unittest.TestCase):
+    """Fase 5: Region._build_recon_cp_snapshot() -- snapshot {block_id: cp} costruito una volta
+    per sweep da get_recon_reports."""
+
+    def setUp(self):
+        self.region = Region(name="Snapshot Region")
+
+    def test_neutral_side_returns_empty_without_calling_get_recon_reports(self):
+        with patch.object(self.region, 'get_recon_reports') as mock_grr:
+            result = self.region._build_recon_cp_snapshot('Neutral')
+        self.assertEqual(result, {})
+        mock_grr.assert_not_called()
+
+    def test_calls_get_recon_reports_exactly_once(self):
+        reports = [
+            {'block_id': 'b1', 'military_category': 'Ground_Base', 'side': 'Red', 'efficiency': None, 'asset_summary': {'operative': {}}},
+            {'block_id': 'b2', 'military_category': 'Ground_Base', 'side': 'Red', 'efficiency': None, 'asset_summary': {'operative': {}}},
+        ]
+        with patch.object(self.region, 'get_recon_reports', return_value=reports) as mock_grr:
+            self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(mock_grr.call_count, 1)
+        mock_grr.assert_called_once_with('Red')
+
+    def test_ground_report_uses_max_of_defense_and_maintain(self):
+        report = {'block_id': 'b1', 'military_category': 'Ground_Base', 'side': 'Red', 'efficiency': None,
+                   'asset_summary': {'operative': {'Tank': {'big': 5}}}}
+
+        def fake_estimate(operative, force, action, *, side=None, efficiency=1.0):
+            return {'Defense': 3.0, 'Maintain': 7.0}[action]
+
+        with patch.object(self.region, 'get_recon_reports', return_value=[report]), \
+             patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', side_effect=fake_estimate):
+            snapshot = self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(snapshot, {'b1': 7.0})
+
+    def test_sea_report_uses_only_defense_never_maintain(self):
+        report = {'block_id': 'b1', 'military_category': 'Naval_Base', 'side': 'Red', 'efficiency': None,
+                   'asset_summary': {'operative': {'Carrier': {'big': 1}}}}
+
+        def fake_estimate(operative, force, action, *, side=None, efficiency=1.0):
+            if action == 'Maintain':
+                raise AssertionError("'Maintain' must never be queried for sea")
+            return {'Defense': 5.0}[action]
+
+        with patch.object(self.region, 'get_recon_reports', return_value=[report]), \
+             patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', side_effect=fake_estimate):
+            snapshot = self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(snapshot, {'b1': 5.0})
+
+    def test_air_report_uses_single_action_none(self):
+        report = {'block_id': 'b1', 'military_category': 'Air_Base', 'side': 'Red', 'efficiency': None,
+                   'asset_summary': {'operative': {'Fighter': {'small': 4}}}}
+
+        with patch.object(self.region, 'get_recon_reports', return_value=[report]), \
+             patch.object(Combat_Power_Estimation, 'estimate_combat_power_from_asset_summary', return_value=9.0) as mock_est:
+            snapshot = self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(snapshot, {'b1': 9.0})
+        mock_est.assert_called_once_with({'Fighter': {'small': 4}}, 'air', None, side='Red', efficiency=1.0)
+
+    def test_report_missing_block_id_is_skipped(self):
+        report = {'military_category': 'Ground_Base', 'side': 'Red', 'efficiency': None, 'asset_summary': {'operative': {}}}
+        with patch.object(self.region, 'get_recon_reports', return_value=[report]):
+            snapshot = self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(snapshot, {})
+
+    def test_report_unrecognized_military_category_is_skipped(self):
+        report = {'block_id': 'b1', 'military_category': 'Not_A_Real_Category', 'side': 'Red', 'efficiency': None, 'asset_summary': {'operative': {}}}
+        with patch.object(self.region, 'get_recon_reports', return_value=[report]):
+            snapshot = self.region._build_recon_cp_snapshot('Red')
+        self.assertEqual(snapshot, {})
+
+
+class TestCalculatePriorityUseRecon(unittest.TestCase):
+    """Fase 5: Region._calculate_priority(use_recon=True) -- sostituzione del target_cp del ramo
+    attacco con lo snapshot di ricognizione."""
+
+    def setUp(self):
+        self.region = Region(name="CP UseRecon Region")
+
+    def _military_mock(self, side, category, cp_value=10.0, block_id='mock'):
+        m = MagicMock(spec=Military)
+        m.side = side
+        m.id = block_id
+        m.get_military_category.return_value = category
+        m.combat_power.side_effect = _make_combat_power_side_effect(cp_value)
+        m.value = 5
+        m.is_military.return_value = True
+        m.is_logistic.return_value = False
+        m.is_civilian.return_value = False
+        return m
+
+    def _call(self, block, target, use_recon):
+        return self.region._calculate_priority(
+            block=block, target_block=target, weight=1.0, time_to_intercept=5.0, range_ratio=1.0,
+            use_recon=use_recon,
+        )
+
+    def test_attack_branch_uses_snapshot_value_when_present(self):
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        target = self._military_mock('Red', 'Ground_Base', cp_value=4.0, block_id='enemy1')
+        self.region._recon_cp_snapshot = {'enemy1': 99.0}
+
+        with patch.object(self.region, '_representative_combat_power', wraps=self.region._representative_combat_power) as mock_rcp:
+            result_recon = self._call(block, target, use_recon=True)
+            # la combat power del bersaglio non deve mai passare da _representative_combat_power
+            # quando use_recon=True e il ramo è attacco: solo il blocco proprio la usa.
+            for call in mock_rcp.call_args_list:
+                self.assertIsNot(call.args[0] if call.args else call.kwargs.get('block'), target)
+
+        result_ground_truth = self._call(block, target, use_recon=False)
+        self.assertNotEqual(result_recon, result_ground_truth)
+
+    def test_attack_branch_snapshot_miss_yields_low_priority_ratio(self):
+        """Un bersaglio nemico assente dallo snapshot (non osservato in questo sweep) vale
+        target_cp=0.0 -- non "ground-truth di ripiego" -- che produce il ratio basso 0.1
+        (policy no-visibility, v. feedback_no_visibility_low_priority)."""
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        target = self._military_mock('Red', 'Ground_Base', cp_value=4.0, block_id='unseen_enemy')
+        self.region._recon_cp_snapshot = {}  # sweep completato, questo bersaglio non è stato osservato
+
+        result = self._call(block, target, use_recon=True)
+        expected = (target.value * 0.1 * 1.0 * 1.0 * 1.0) / 5.0
+        self.assertAlmostEqual(result, expected)
+
+    def test_defense_branch_ignores_snapshot_even_with_use_recon_true(self):
+        """Ramo difesa (stesso side): il bersaglio è un alleato, sempre ground-truth anche se
+        use_recon=True e lo snapshot conterrebbe un valore diverso per quell'id."""
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        ally = self._military_mock('Blue', 'Ground_Base', cp_value=4.0, block_id='ally1')
+        self.region._recon_cp_snapshot = {'ally1': 999.0}  # non deve mai essere consultato
+
+        result_recon = self._call(block, ally, use_recon=True)
+        result_no_recon = self._call(block, ally, use_recon=False)
+        self.assertAlmostEqual(result_recon, result_no_recon)
+
+    def test_use_recon_false_ignores_snapshot_even_if_present(self):
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        target = self._military_mock('Red', 'Ground_Base', cp_value=4.0, block_id='enemy1')
+        self.region._recon_cp_snapshot = {'enemy1': 99.0}
+
+        result = self._call(block, target, use_recon=False)
+        result_no_snapshot = self._call(block, target, use_recon=False)
+        self.assertAlmostEqual(result, result_no_snapshot)
+
+
+class TestUpdateMilitaryPrioritiesUseRecon(unittest.TestCase):
+    """Fase 5: Region.update_military_priorities(use_recon=True) -- guard Neutral, uno sweep di
+    ricognizione per chiamata, snapshot valido solo dentro lo sweep."""
+
+    def setUp(self):
+        self.region = Region(name="UMP UseRecon Region")
+
+    def test_neutral_side_is_noop(self):
+        with patch.object(self.region, 'get_blocks_by_criteria') as mock_gbc, \
+             patch.object(self.region, '_build_recon_cp_snapshot') as mock_snapshot:
+            self.region.update_military_priorities('Neutral', use_recon=True)
+        mock_gbc.assert_not_called()
+        mock_snapshot.assert_not_called()
+
+    def test_recon_sweep_called_once_regardless_of_friendly_block_count(self):
+        mil1 = MagicMock(spec=Military)
+        mil1.id = 'm1'
+        mil1.side = 'Blue'
+        mil1.category = 'Military'
+        mil1.get_military_category.return_value = 'Ground_Base'
+        mil1.combat_power.side_effect = _make_combat_power_side_effect(1.0)
+        mil1.is_Ground_Base.return_value = True
+        mil1.is_Naval_Base.return_value = False
+        mil1.is_Air_Base.return_value = False
+        mil1.position = None
+
+        mil2 = MagicMock(spec=Military)
+        mil2.id = 'm2'
+        mil2.side = 'Blue'
+        mil2.category = 'Military'
+        mil2.get_military_category.return_value = 'Ground_Base'
+        mil2.combat_power.side_effect = _make_combat_power_side_effect(1.0)
+        mil2.is_Ground_Base.return_value = True
+        mil2.is_Naval_Base.return_value = False
+        mil2.is_Air_Base.return_value = False
+        mil2.position = None
+
+        self.region._add_block_item(BlockItem(priority=0.0, block=mil1))
+        self.region._add_block_item(BlockItem(priority=0.0, block=mil2))
+
+        with patch.object(self.region, '_build_recon_cp_snapshot', return_value={}) as mock_snapshot:
+            self.region.update_military_priorities('Blue', use_recon=True)
+        mock_snapshot.assert_called_once_with('Red')
+
+    def test_snapshot_cleared_after_sweep_completes(self):
+        with patch.object(self.region, '_build_recon_cp_snapshot', return_value={'x': 1.0}):
+            self.region.update_military_priorities('Blue', use_recon=True)
+        self.assertIsNone(self.region._recon_cp_snapshot)
+
+    def test_snapshot_cleared_even_if_sweep_raises(self):
+        mil1 = MagicMock(spec=Military)
+        mil1.id = 'm1'
+        mil1.side = 'Blue'
+        mil1.category = 'Military'
+        mil1.get_military_category.side_effect = RuntimeError("boom")
+        self.region._add_block_item(BlockItem(priority=0.0, block=mil1))
+
+        with patch.object(self.region, '_build_recon_cp_snapshot', return_value={'x': 1.0}):
+            with self.assertRaises(RuntimeError):
+                self.region.update_military_priorities('Blue', use_recon=True)
+        self.assertIsNone(self.region._recon_cp_snapshot)
+
+    def test_use_recon_false_never_builds_snapshot(self):
+        with patch.object(self.region, '_build_recon_cp_snapshot') as mock_snapshot:
+            self.region.update_military_priorities('Blue', use_recon=False)
+        mock_snapshot.assert_not_called()
+        self.assertIsNone(self.region._recon_cp_snapshot)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

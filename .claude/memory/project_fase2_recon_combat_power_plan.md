@@ -1,11 +1,11 @@
 ---
 name: project-fase2-recon-combat-power-plan
-description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved. Fase 1,2,3-bis,3,4 all implemented and tested 2026-09-16 (2496 tests OK) -- includes real (researched) users field for all 64 Vehicle + 23 Ship models. Only Fase 5 remains: wiring Combat_Power_Estimation into Region via use_recon. Read this before continuing."
+description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan COMPLETE. All phases (1, 2, 3-bis, 3, 4, 5) implemented, tested and committed 2026-09-16 (2516 tests OK). Region.update_military_priorities(side, use_recon=True) is the public entry point for the whole fog-of-war chain. Not yet enabled by any production caller (default False everywhere). Read this if resuming/extending this feature."
 metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T13:38:49.610Z
+  modified: 2026-09-16T14:23:49.743Z
 ---
 
 # Fase 2 — piano di stima combat power fog-of-war — TUTTE LE DOMANDE RISOLTE, IMPLEMENTAZIONE IN CORSO
@@ -132,6 +132,35 @@ Su richiesta esplicita dell'utente, popolata con **ricerca reale** (non placehol
 
 Suite completa: **2496 OK/5 skipped** (2494+2).
 
-## Prossimi passi
+## Fase 5 — FATTA, 2026-09-16 — PIANO COMPLETO, TUTTE LE 6 FASI IMPLEMENTATE
 
-1. Fase 5 (use_recon in Region + integrazione con `Combat_Power_Estimation` + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0 — questa è la fase che collega finalmente il modulo Fase 3 a `_calculate_priority`, l'ultima del piano).
+`use_recon` propagato attraverso tutta la catena come da piano: `update_military_priorities(side, use_recon=False)` → `_calc_attack_priority(..., use_recon)` → `_calc_surface_priority`/`_calc_air_priority(..., use_recon)` → `_calculate_priority(..., use_recon)`. `_calc_defense_priority` NON riceve `use_recon` come parametro proprio — passa sempre `use_recon=False` esplicito a `_calc_surface_priority`/`_calc_air_priority` (il ramo difesa opera solo su alleati, sempre ground-truth).
+
+**Nuovi helper** in `Region.py`:
+- `_estimated_target_combat_power(self, report, force, action) -> float`: wrapper per-report attorno a `Combat_Power_Estimation.estimate_combat_power_from_asset_summary`, con `side=report['side']` (calibra la stima sui modelli plausibili per il lato del bersaglio osservato — usa i dati reali Fase 4) ed `efficiency=1.0` quando `report['efficiency'] is None` (Q2).
+- `_build_recon_cp_snapshot(self, observed_side) -> Dict[str, float]`: `{block_id: cp stimata}`, un solo `get_recon_reports` per chiamata (Q6). Guard Neutral: ritorna `{}` senza chiamare `get_recon_reports` se `observed_side=='Neutral'`. Selezione azione mirror del ramo attacco ground-truth: `max('Defense','Maintain')` per ground, solo `'Defense'` per sea, azione `None` per air.
+
+**Modifica chiave in `_calculate_priority`**: nel branch bersaglio militare, nuovo ramo `if use_recon and is_attack:` (prima degli altri due branch esistenti) che sostituisce `target_cp` con `(self._recon_cp_snapshot or {}).get(target_block.id, 0.0)` — vale per QUALSIASI force_type del bersaglio (incluso air), a differenza del ramo ground-truth dove air ricade nel branch "difesa" per via dell'azione singola. Un `block_id` assente dallo snapshot vale `0.0` (non "ground-truth di ripiego") — aggancia gratis la policy no-visibility→bassa priorità via il gate esistente. Il blocco proprio e il ramo difesa restano SEMPRE ground-truth, in ogni condizione.
+
+**Guard Neutral (Q7)**: aggiunto in `update_military_priorities` (se `side=='Neutral'`, log warning e `return` senza fare nulla, PRIMA di leggere friendly/enemy blocks) e in `_build_recon_cp_snapshot` (rete di sicurezza). Chiude il bug preesistente per cui un blocco Neutral avrebbe calcolato una "priorità di attacco" verso se stesso.
+
+**Fix obbligatorio `_invalidate_caches`**: aggiunti `self._calc_surface_priority.cache_clear()` e `self._calc_air_priority.cache_clear()` al branch `"priority"` (bug latente identificato in sessione precedente, indipendente da questa fase ma necessario perché Q6 sia vera nei fatti).
+
+**Meccanismo snapshot (Q4, opzione semplice confermata)**: `self._recon_cp_snapshot` inizializzato a `None` in `__init__`, costruito in un blocco `try/finally` dentro `update_military_priorities` — assegnato prima del ciclo su `friendly_blocks` se `use_recon`, invalidazione cache esplicita subito dopo la costruzione E di nuovo nel `finally` quando viene riportato a `None` a fine sweep (anche in caso di eccezione durante il ciclo, verificato con un test dedicato).
+
+**Import**: `Region.py` importa `Combat_Power_Estimation` a livello di modulo (nessun ciclo: `Combat_Power_Estimation` non importa nulla da `Region.py`, solo `Context` + import lazy di Vehicle/Ship/Aircraft_Data dentro le proprie funzioni).
+
+**Test**: 20 nuovi test in `Test_Region.py` (`TestEstimatedTargetCombatPower`, `TestBuildReconCpSnapshot`, `TestCalculatePriorityUseRecon`, `TestUpdateMilitaryPrioritiesUseRecon`) — coprono: guard Neutral (in entrambi i punti), get_recon_reports chiamata esattamente una volta per sweep indipendentemente dal numero di blocchi amici, selezione azione max(Defense,Maintain)/solo-Defense/azione-None per ground/sea/air nello snapshot, sostituzione del target_cp quando use_recon=True, target_cp=0.0 (ratio 0.1, bassa priorità) per un block_id assente dallo snapshot, il ramo difesa che ignora sempre lo snapshot anche con use_recon=True, e lo snapshot che torna `None` a fine sweep anche se il ciclo solleva un'eccezione.
+
+Suite completa: **2516 OK/5 skipped** (2496+20).
+
+## Piano completato — tutte le 6 fasi implementate, testate e committate (2026-09-16)
+
+Fase 1 (67b91cae) → Fase 2 (a528ed18) → Fase 3-bis (8df0b451) → Fase 3 (b431649a) → Fase 4 (19b0292e) → Fase 5 (commit da fare). `Region.update_military_priorities(side, use_recon=True)` è ora la superficie pubblica che attiva l'intera catena fog-of-war end-to-end. Nessun caller in produzione passa ancora `use_recon=True` esplicitamente (backward-compatible, default `False` ovunque) — attivarlo nel loop di simulazione reale (`run_resource_management_cycle` o dove viene invocato `update_military_priorities`) è una decisione applicativa separata, non parte di questo piano.
+
+## Possibili lavori futuri (non pianificati, emersi durante il lavoro — nessuna azione richiesta ora)
+
+- Popolamento dati fisici Aircraft più precisi dove segnalata incertezza tra fonti (MQ-1 wingspan, MiG-15bis height).
+- Bug preesistente TARGET_CLASSIFICATION: `Air_Asset_Type.TRANSPORT`/`SEA_MILITARY_CRAFT_ASSET` collidono (un C-130 si classifica come nave) — fuori scope, mai toccato da questo piano.
+- Bug preesistente `Ship.loadAssetDataFromContext`/`Aircraft.loadAssetDataFromContext` (flat dict + `.items()` mancante) — segnalato ma mai corretto, nessun impatto sul fog-of-war.
+- `_target_affinity` resta deliberatamente su ground-truth anche con `use_recon=True` (Q5) — se in futuro si vuole collegarla al recon, `_target_profile_from_report` esiste già come dead code pronto all'uso.
