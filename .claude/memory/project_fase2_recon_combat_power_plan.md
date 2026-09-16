@@ -1,11 +1,11 @@
 ---
 name: project-fase2-recon-combat-power-plan
-description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved 2026-09-16. Fase 1, 2 and 3-bis (Aircraft real physical dimensions) all implemented and tested same day (2476 tests OK). Read this before continuing with Fase 3 onward."
+description: "Fase 2 (fog-of-war combat-power estimation) — 6-phase plan, ALL 7 design questions resolved. Fase 1, 2, 3-bis (Aircraft real dimensions) AND 3 (new Combat_Power_Estimation.py module) all implemented and tested 2026-09-16 (2494 tests OK). Module not yet wired into Region -- that's Fase 5. Read this before continuing with Fase 4 onward."
 metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T13:02:41.809Z
+  modified: 2026-09-16T13:11:38.233Z
 ---
 
 # Fase 2 — piano di stima combat power fog-of-war — TUTTE LE DOMANDE RISOLTE, IMPLEMENTAZIONE IN CORSO
@@ -95,8 +95,28 @@ Su richiesta esplicita dell'utente, implementata con **dati reali** (non placeho
 - Test aggiornati: `Test_Context.py::TestClassifyAssetDimension` (i 3 vecchi test per-ruolo sostituiti con 3 nuovi per-fisica + 1 su physical_characteristics mancanti, stesso pattern di Vehicle), `Test_Region.py::TestTargetProfileFromBlock` (stesso trattamento + nuovo test `test_aircraft_missing_physical_characteristics_skipped`), `Test_Aircraft.py` (2 nuovi test per `get_physical_characteristics`). Suite completa: **2476 OK/5 skipped** (2473+3).
 - **Nota per il futuro**: i valori length/width/height sono stati inseriti come commento inline `# metri (apertura alare per width); ricerca 2026-09-16` su ciascuna delle 66 righe — utile per risalire alla fonte se un valore va rivisto.
 
+## Fase 3 — FATTA, 2026-09-16
+
+Nuovo modulo `Code/Dynamic_War_Manager/Source/Context/Combat_Power_Estimation.py`, standalone (Region.py non lo importa ancora — l'integrazione con `_calculate_priority`/`use_recon` è Fase 5, non ancora fatta).
+
+**API implementata** (firme esatte come da piano, con `min_samples` esposto anche su `estimate_combat_power_from_asset_summary`, non solo sulle prime due):
+- `estimated_model_score(asset_type, dimension, force, side=None, min_samples=3) -> float`
+- `build_estimated_combat_power_table(force, action, *, side=None, efficiency=1.0, min_samples=3) -> Dict[(asset_type, dimensione|None), float]` — diagnostica/test, non consumata internamente
+- `estimate_combat_power_from_asset_summary(operative, force, action, *, side=None, efficiency=1.0, min_samples=3) -> float` — il vero punto d'ingresso da Region
+
+**Dettagli implementativi verificati contro il codice reale durante l'implementazione** (alcuni non esplicitati nel piano):
+- Bucket key: `asset_type` = campo `category` del modello nel registro `*_Data` (confermato stringa piatta per Vehicle_Data/Ship_Data, es. `'Tank'`/`'Carrier'`; **lista** di `Air_Asset_Type` per Aircraft_Data — un modello contribuisce a ogni bucket elencato, verificato con l'F-16A che finisce sia in `Fighter` sia in `Fighter_Bomber`).
+- Score per-modello: `VEHICLE[m]['combat score']['global_score']`, `SHIP[m]['combat score']['global_score']`, `get_aircraft_combat_score(m)` — tutti confermati.
+- `_efficacy_table_for(force, action)`: per `'air'` ignora `action` e ritorna `Context.AIR_COMBAT_EFFICACY` direttamente (non indicizzata per azione, a differenza di GROUND/SEA_COMBAT_EFFICACY).
+- Esclusione SAM/AAA/EWR dalla mediana globale di fallback: implementata sia come **skip esplicito** in `estimate_combat_power_from_asset_summary` (`if asset_type not in efficacy_table: continue` — salta anche la ricerca dello score, non solo il suo uso, verificato con un test che asserisce `estimated_model_score` mai chiamata per SAM/AAA) sia come filtro `_has_any_efficacy(asset_type, force)` nel fallback di livello 3 di `estimated_model_score` (verificato che `GROUND_COMBAT_EFFICACY` esclude SAM/AAA/EWR in modo identico su tutte e 4 le azioni, quindi il controllo è azione-indipendente per il ground; per il mare `SEA_COMBAT_EFFICACY` include tutto, incluso `'Civilian'` con efficacia 0, quindi la regola non esclude nulla — coerente col piano).
+- Filtro `side`/`users`: **inclusivo** (modello senza `users` sempre incluso), non il pattern esistente in `Aircraft_Data.py` (`Air_Resources_Assigner`-style, che invece ESCLUDE un modello con `users` vuoto) — scelta deliberata per rispettare la specifica Fase 4 ("fallback obbligatorio: modello senza users incluso"), NON un mirror del codice esistente.
+- Import lazy verificato funzionante: `Vehicle_Data` non è in `sys.modules` finché non si chiama una funzione con `force='ground'` per la prima volta.
+
+**Test**: nuovo `Test_Combat_Power_Estimation.py`, 18 test nelle 3 famiglie del piano (A deterministica/mock, B coerenza-range-reale-e-ordinamento, C tolleranza-errore-relativo) + un test comportamentale che `Context.get_target_classification` non viene mai chiamata. Verificato manualmente anche l'output su dati reali (Tank/big mediana 0.457, Fighter/small 0.228 vs Fighter/med 0.294 — segnale preservato con le soglie reali di Fase 3-bis, diverso dal numero illustrativo 0.175/0.293 del piano v1 che usava un'euristica di classificazione diversa solo a scopo di stima preliminare).
+
+Suite completa: **2494 OK/5 skipped** (2476+18).
+
 ## Prossimi passi
 
-1. Fase 3 (nuovo modulo `Combat_Power_Estimation.py`) — ora sbloccata, la dimensione Aircraft è reale, l'eccezione "salta il livello dimensione per l'air" del piano v1 va rimossa dalla catena di fallback.
-2. Fase 4 (campo `users` schema+wiring).
-3. Fase 5 (use_recon + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0).
+1. Fase 4 (campo `users` schema+wiring su Vehicle_Data/Ship_Data — oggi `Combat_Power_Estimation._bucket_scores` già gestisce inclusivamente l'assenza di `users`, quindi Fase 4 aggiunge solo lo schema, nessun codice di stima da rivedere).
+2. Fase 5 (use_recon in Region + integrazione con `Combat_Power_Estimation` + fix `_invalidate_caches` + guard Neutral + default efficiency=1.0 — questa è la fase che collega finalmente il modulo appena creato a `_calculate_priority`).
