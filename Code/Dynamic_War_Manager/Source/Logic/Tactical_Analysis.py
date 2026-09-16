@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional
 
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Combat_Power_Estimation
+from Code.Dynamic_War_Manager.Source.Block.Block import Block, ASSET_TYPE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
@@ -176,6 +177,48 @@ def representative_combat_power(block: Military, force: Optional[str], action: O
         breakdown = block.combat_power(force=force)
         return sum(breakdown.values())
     return block.combat_power(force=force, action=action)
+
+
+def target_profile_from_block(target_block: Block) -> TargetProfile:
+    """Ground-truth (non-random) target classification profile built directly from target_block's
+    assets.
+
+    Deterministic counterpart of get_target_report: classifies target_block's real assets with
+    the same rule as Block.get_recognition_report (Context.classify_asset_dimension), with all
+    recon probability/randomness gating removed -- every operative asset is counted
+    unconditionally. Damaged/destroyed assets are ignored: only live threats matter for the
+    priority calculations this feeds.
+
+    Nessuna cache: v. memoria di progetto project_region_tactical_refactor_plan sul perché le
+    funzioni tattiche estratte non usano più @lru_cache (un futuro pianificatore what-if ha
+    bisogno di valutazioni isolate, non di una cache condivisa fra scenari ipotetici).
+    """
+    target_profile: TargetProfile = {}
+
+    for asset in target_block.assets.values():
+
+        if not asset.is_operative():
+            continue
+
+        asset_type = getattr(asset, 'asset_type', None)
+
+        asset_dimension = Context.classify_asset_dimension(asset, valid_asset_types=ASSET_TYPE)
+        if asset_dimension is None:
+            logger.warning(
+                f"Asset not classifiable for target profile (asset id: {getattr(asset, 'id', None)}, "
+                f"asset type: {asset_type}). Skipping."
+            )
+            continue
+
+        classification = Context.get_target_classification(asset_type)
+        if classification is None:
+            logger.warning(f"No target classification found for asset type: {asset_type}. Skipping.")
+            continue
+
+        class_counts = target_profile.setdefault(classification, {})
+        class_counts[asset_dimension] = class_counts.get(asset_dimension, 0) + 1
+
+    return target_profile
 
 
 def operative_aircraft_by_model(block: Military) -> Dict[str, List]:

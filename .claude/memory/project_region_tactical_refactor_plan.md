@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T17:17:23.703Z
+  modified: 2026-09-16T17:23:50.289Z
 ---
 
 # Region.py — refactoring strategico/tattico — piano verificato, implementazione in corso
@@ -112,6 +112,8 @@ Stima dimensionale: `Region.py` scende da 1678 a ~950-1000 righe.
 
   **Scoperta imprevista sui costi di import** (misurata in esecuzione, non nel piano originale): `Context.py` da solo costa **~0.67s** a import freddo (puro costo di esecuzione — costruzione di grandi dizionari letterali a livello di modulo — non di sotto-import pesanti, che si limitano a `enum`/`typing`/`Logger`). Il numero del piano ("Region 0.87s, di cui Aircraft_Data 0.76s, quindi ~0.11s per tutto il resto") era una misura fuorviante: `Aircraft_Data` importa esso stesso `Context.py`, quindi il suo costo isolato (0.76s) include già il costo di `Context` (0.67s) più solo ~0.09s di marginale proprio; quando `Region.py` importa `Context` PRIMA (riga 9) e `Aircraft_Data` DOPO, il secondo costa solo il marginale. **Conseguenza per la Fase 5**: spostare `_target_affinity` fuori da Region non porterà l'import di Region a ~0.15s come stimato nel piano — resterà comunque dominato dal costo (inevitabile, pagato da ogni modulo che importa `Context`) di ~0.67s. Il beneficio architetturale della Fase 5 (disaccoppiare `Aircraft_Data`+eventualmente `skfuzzy` da Region) resta valido, solo il numero specifico va corretto/non ripetuto come fatto.
 
+- **Fase 3 — FATTA**: `target_profile_from_block` spostata in `Tactical_Analysis.py`, `@lru_cache` rimossa, `target_block._assets` → `target_block.assets` (property pubblica). Rimosso anche `self._target_profile_from_block.cache_clear()` dal ramo "priority" di `_invalidate_caches` (non serve più). `ASSET_TYPE` rimosso dagli import di `Region.py` (non più usato lì). `_target_affinity` (che resta in Region fino a Fase 5) ora chiama `Tactical_Analysis.target_profile_from_block(...)`. **Scoperta**: `TestTargetAffinity` (10 test, testa `_target_affinity` che resta in Region) patchava `Region._target_profile_from_block` in 7 punti — aggiornati a `patch.object(Tactical_Analysis, 'target_profile_from_block', ...)`, non segnalato esplicitamente nel piano originale ma scoperto durante l'esecuzione della suite. `TestTargetProfileFromBlock` (11 test, uno soppresso: `test_lru_cache_used_and_invalidated`, non più applicabile senza cache) spostata in `Test_Tactical_Analysis.py`. Suite completa: **2520 OK/5 skipped**.
+
 ## Prossimi passi
 
-Fase 3 (`_target_profile_from_block`, con la correzione `_assets`→`assets`), Fase 4 (`_build_recon_cp_snapshot`, cambio firma), Fase 5 (`_target_affinity`, vedi nota sui costi di import sopra), Fase 6 (nucleo di scoring, con test di caratterizzazione numerica), Fase 7 (`_calc_attack_priority`/`_calc_defense_priority` + `update_military_priorities`), Fase 8 (pulizia finale). Suite verde ad ogni commit.
+Fase 4 (`_build_recon_cp_snapshot`, cambio firma — **attenzione**: quando si sposta, verificare se anche questa ha punti di patch in `TestTargetAffinity`-style in altre classi rimaste in Region, stesso pattern appena scoperto in Fase 3), Fase 5 (`_target_affinity`, vedi nota sui costi di import), Fase 6 (nucleo di scoring, con test di caratterizzazione numerica), Fase 7 (`_calc_attack_priority`/`_calc_defense_priority` + `update_military_priorities`), Fase 8 (pulizia finale). Suite verde ad ogni commit.

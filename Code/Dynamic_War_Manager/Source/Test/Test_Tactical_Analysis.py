@@ -2,10 +2,14 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis as ta
+from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Combat_Power_Estimation
-from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type as aat
+from Code.Dynamic_War_Manager.Source.Context.Context import (
+    Ground_Vehicle_Asset_Type as gat,
+    Air_Asset_Type as aat,
+)
 
 # Lightweight class stubs used only to set mock.__class__ for classification-loop dispatch,
 # mirroring Test_Region.py/Test_Military.py -- Vehicle/Ship/Aircraft cannot be imported directly
@@ -367,6 +371,134 @@ class TestTargetProfileFromReport(unittest.TestCase):
     def test_returns_none_when_get_target_report_returns_none(self):
         result = ta.target_profile_from_report({'asset_summary': {'operative': {}}})
         self.assertIsNone(result)
+
+
+class TestTargetProfileFromBlock(unittest.TestCase):
+    """Unit tests for Tactical_Analysis.target_profile_from_block()."""
+
+    def setUp(self):
+        self.target_block = Block(
+            name="Target Block", description="", side="Red",
+            category="Military", sub_category="Base", functionality="Attack", value=10,
+        )
+
+    @staticmethod
+    def _mock_asset(cls, asset_type, category=None, operative=True, physical=None):
+        m = MagicMock()
+        m.__class__ = cls
+        m.asset_type = asset_type
+        m.category = category
+        m.is_operative.return_value = operative
+        m.id = f"{asset_type}-mock"
+        if physical is not None:
+            m.get_physical_characteristics.return_value = physical
+        return m
+
+    def _call(self):
+        return ta.target_profile_from_block(self.target_block)
+
+    def test_empty_block_returns_empty_dict(self):
+        self.target_block._assets = {}
+        self.assertEqual(self._call(), {})
+
+    def test_mixed_armor_and_sam_block_ground_truth_counts(self):
+        tank = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        sam = self._mock_asset(
+            _Vehicle, gat.SAM_SMALL.value,
+            physical={'length': 5, 'width': 2.5, 'height': 2, 'weight': 18},
+        )
+        self.target_block._assets = {'v1': tank, 'v2': sam}
+        result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 1}, 'Air_Defense': {'small': 1}})
+
+    def test_damaged_and_destroyed_assets_excluded(self):
+        tank = self._mock_asset(
+            _Vehicle, gat.TANK.value, operative=False,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': tank}
+        self.assertEqual(self._call(), {})
+
+    def test_unclassifiable_asset_skipped(self):
+        asset = self._mock_asset(
+            _Vehicle, 'NotARealAssetType',
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_aircraft_dimension_mapping_small_med_big(self):
+        # Fase 3-bis (2026-09-16): la dimensione viene ora dalle physical characteristics reali,
+        # non più derivata da asset_type/ruolo -- un asset per chiamata perché ogni caso usa lo
+        # stesso asset_type (FIGHTER) per dimostrare che è la fisica, non il ruolo, a decidere.
+        for physical, expected_dimension in (
+            ({'length': 15, 'width': 9, 'height': 5, 'weight': 7690}, 'small'),    # F-16-like
+            ({'length': 23, 'width': 14, 'height': 6, 'weight': 21820}, 'med'),    # MiG-31-like
+            ({'length': 53, 'width': 52, 'height': 17, 'weight': 128100}, 'big'),  # C-17A-like
+        ):
+            with self.subTest(expected_dimension=expected_dimension):
+                aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=aat.FIGHTER.value, physical=physical)
+                self.target_block._assets = {'a1': aircraft}
+                result = self._call()
+                classification = Context.get_target_classification(aat.FIGHTER.value)
+                self.assertEqual(result, {classification: {expected_dimension: 1}})
+
+    def test_aircraft_missing_asset_type_skipped(self):
+        aircraft = self._mock_asset(
+            _Aircraft, None, category=aat.FIGHTER.value,
+            physical={'length': 15, 'width': 9, 'height': 5, 'weight': 7690},
+        )
+        self.target_block._assets = {'a1': aircraft}
+        self.assertEqual(self._call(), {})
+
+    def test_aircraft_missing_physical_characteristics_skipped(self):
+        aircraft = self._mock_asset(_Aircraft, aat.FIGHTER.value, category=aat.FIGHTER.value)
+        aircraft.get_physical_characteristics.return_value = None
+        self.target_block._assets = {'a1': aircraft}
+        self.assertEqual(self._call(), {})
+
+    def test_vehicle_missing_physical_characteristics_skipped(self):
+        asset = self._mock_asset(_Vehicle, gat.TANK.value, physical=None)
+        asset.get_physical_characteristics.return_value = None
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_asset_type_none_skipped(self):
+        asset = self._mock_asset(
+            _Vehicle, None,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': asset}
+        self.assertEqual(self._call(), {})
+
+    def test_two_assets_same_classification_and_dimension_accumulate(self):
+        tank1 = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        tank2 = self._mock_asset(
+            _Vehicle, gat.TANK.value,
+            physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+        )
+        self.target_block._assets = {'v1': tank1, 'v2': tank2}
+        result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 2}})
+
+    def test_no_randomness_calc_probability_never_invoked(self):
+        with patch(
+            'Code.Dynamic_War_Manager.Source.Utility.Utility.calcProbability',
+            side_effect=AssertionError("calcProbability must not be called by target_profile_from_block"),
+        ):
+            tank = self._mock_asset(
+                _Vehicle, gat.TANK.value,
+                physical={'length': 9, 'width': 3.5, 'height': 2.5, 'weight': 48},
+            )
+            self.target_block._assets = {'v1': tank}
+            result = self._call()
+        self.assertEqual(result, {'Armored': {'big': 1}})
 
 
 class TestOperativeAircraftByModel(unittest.TestCase):

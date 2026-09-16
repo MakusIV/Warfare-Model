@@ -10,7 +10,7 @@ from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, ASSET_TYPE
+from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
 from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
@@ -53,9 +53,9 @@ class BlockCategory(Enum):
     CIVILIAN = "Civilian"
 
 
-# Shape shared by both "target classification" producers: Region.get_target_report (fog-of-war,
-# built from a recon report) and Region._target_profile_from_block (ground truth, built directly
-# from a block's real assets). {classification: {'big'|'med'|'small': count}}.
+# Shape shared by both "target classification" producers in Logic.Tactical_Analysis:
+# get_target_report (fog-of-war, built from a recon report) and target_profile_from_block
+# (ground truth, built directly from a block's real assets). {classification: {'big'|'med'|'small': count}}.
 TargetProfile = Dict[str, Dict[str, int]]
 
 # Bound per Region._target_affinity: fattore moltiplicativo, non sostitutivo, applicato al ramo
@@ -878,43 +878,6 @@ class Region:
 
     # Valutare una funzione che costruice la matrice dei collegamenti tra blocchi, in modo da poterla utilizzare nei calcoli di priorità militare, in modo da evitare di dover iterare su tutte le rotte ogni volta.
 
-    @lru_cache(maxsize=256)
-    def _target_profile_from_block(self, target_block: Block) -> TargetProfile:
-        """Ground-truth (non-random) target classification profile built directly from target_block's assets.
-
-        Deterministic counterpart of get_target_report: classifies target_block's real assets with
-        the same rule as Block.get_recognition_report (Context.classify_asset_dimension), with all
-        recon probability/randomness gating removed -- every operative asset is counted
-        unconditionally. Damaged/destroyed assets are ignored: only live threats matter for the
-        priority calculations this feeds.
-        """
-        target_profile: TargetProfile = {}
-
-        for asset in target_block._assets.values():
-
-            if not asset.is_operative():
-                continue
-
-            asset_type = getattr(asset, 'asset_type', None)
-
-            asset_dimension = Context.classify_asset_dimension(asset, valid_asset_types=ASSET_TYPE)
-            if asset_dimension is None:
-                logger.warning(
-                    f"Asset not classifiable for target profile (asset id: {getattr(asset, 'id', None)}, "
-                    f"asset type: {asset_type}). Skipping."
-                )
-                continue
-
-            classification = Context.get_target_classification(asset_type)
-            if classification is None:
-                logger.warning(f"No target classification found for asset type: {asset_type}. Skipping.")
-                continue
-
-            class_counts = target_profile.setdefault(classification, {})
-            class_counts[asset_dimension] = class_counts.get(asset_dimension, 0) + 1
-
-        return target_profile
-
     # HELPER METHODS
     def _get_tuple_hashable_block_item(self, block_items: List[BlockItem]):
         # crea una tupla di coppie (priority, block) evitando di utilizzare la classe BlockItem non hashable in quanto dataclass
@@ -1173,7 +1136,7 @@ class Region:
     def _target_affinity(self, block: Military, target_block: Block) -> float:
         """Fattore moltiplicativo [_AFFINITY_MIN, _AFFINITY_MAX] che modula la priorità di attacco
         in base a quanto bene i loadout disponibili della flotta aerea di block rendono contro la
-        composizione reale (ground truth, _target_profile_from_block) di target_block, rispetto
+        composizione reale (ground truth, Tactical_Analysis.target_profile_from_block) di target_block, rispetto
         alla potenza di combattimento generica (target-agnostica) della stessa flotta.
 
         Restituisce 1.0 (neutro, nessun effetto su _calculate_priority) se: target amico (ramo
@@ -1186,7 +1149,7 @@ class Region:
         if not block.is_Air_Base():
             return 1.0
 
-        profile = self._target_profile_from_block(target_block)
+        profile = Tactical_Analysis.target_profile_from_block(target_block)
         if not profile:
             return 1.0
 
@@ -1412,7 +1375,6 @@ class Region:
             self._calc_defense_priority.cache_clear()
             self._calc_surface_priority.cache_clear()
             self._calc_air_priority.cache_clear()
-            self._target_profile_from_block.cache_clear()
             self._target_affinity.cache_clear()
 
         logger.debug(f"Caches for Region {self.name} invalidated ({cache_type or 'all'}).")
