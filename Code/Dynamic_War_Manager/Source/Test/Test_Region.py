@@ -367,30 +367,6 @@ class TestRegion(unittest.TestCase):
         for name in cached_methods:
             self.assertEqual(calls[name], 1, f"{name} cache not cleared")
     
-    def test_validate_weight_priority_target(self):
-        valid_weights = {
-            "Ground_Base": {
-                "attack": {"Ground_Base": 0.7, "Naval_Base": 0.0},
-                "defense": {"Ground_Base": 0.1, "Naval_Base": 0.1}
-            }
-        }
-        
-        # Test valid structure
-        self.region._validate_weight_priority_target(valid_weights)
-        
-        # Test invalid structures
-        with self.assertRaises(TypeError):
-            self.region._validate_weight_priority_target("invalid")
-        
-        with self.assertRaises(TypeError):
-            self.region._validate_weight_priority_target({"Ground_Base": "invalid"})
-
-        with self.assertRaises(ValueError):
-            invalid_weights = {"Ground_Base": {"attack": {"Ground_Base": 1.5}, "defense": {"Ground_Base": 0.1}}}
-            self.region._validate_weight_priority_target(invalid_weights)
-        
-        with self.assertRaises(ValueError):
-            self.region._validate_weight_priority_target({"Ground_Base": {"attack": {}, "defense": {}}})
         
         
 

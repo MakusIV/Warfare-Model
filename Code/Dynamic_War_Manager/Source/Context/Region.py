@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple
-from dataclasses import dataclass, field
-from collections import defaultdict
+from dataclasses import dataclass
 from functools import lru_cache
 from enum import Enum
 
@@ -9,8 +8,9 @@ from enum import Enum
 # Assuming these imports exist in your codebase
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Combat_Power_Estimation
+from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Utility import Utility
-from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, MIN_VALUE, ASSET_TYPE
+from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE, ASSET_TYPE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
 from Code.Dynamic_War_Manager.Source.Block.Storage import Storage
@@ -36,20 +36,6 @@ ACTION_TASKS = {
     "sea": Context.SEA_TASK
 }
 """
-DEFAULT_WEIGHT_PRIORITY_TARGET = {
-    "Ground_Base": {
-        "attack": {"Ground_Base": 0.7, "Naval_Base": 0.0, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0},
-        "defense": {"Ground_Base": 0.1, "Naval_Base": 0.1, "Air_Base": 0.1, "Logistic": 0.4, "Civilian": 0.3}
-    },
-    "Air_Base": {
-        "attack": {"Ground_Base": 0.3, "Naval_Base": 0.2, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0},
-        "defense": {"Ground_Base": 0.3, "Naval_Base": 0.1, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0}
-    },
-    "Naval_Base": {
-        "attack": {"Ground_Base": 0.0, "Naval_Base": 0.5, "Air_Base": 0.2, "Logistic": 0.3, "Civilian": 0.0},
-        "defense": {"Ground_Base": 0.1, "Naval_Base": 0.6, "Air_Base": 0.1, "Logistic": 0.2, "Civilian": 0.0}
-    }
-}
 
 # Logger setup
     # CRITICAL 	50
@@ -66,14 +52,6 @@ class BlockCategory(Enum):
     LOGISTIC = "Logistic"
     CIVILIAN = "Civilian"
 
-
-# Mappa military_category (Military.get_military_category()) -> force (Context.MILITARY_FORCES),
-# usata per invocare Military.combat_power(force, action) con il force corretto.
-MILITARY_CATEGORY_TO_FORCE = {
-    "Ground_Base": "ground",
-    "Naval_Base": "sea",
-    "Air_Base": "air",
-}
 
 # Shape shared by both "target classification" producers: Region.get_target_report (fog-of-war,
 # built from a recon report) and Region._target_profile_from_block (ground truth, built directly
@@ -136,7 +114,7 @@ class Region:
         self._description = description or ""        
         self._limes = limes or []
         self._attack_weight = DEFAULT_ATTACK_WEIGHT  # Copia per evitare modifiche involontarie        
-        self._weight_priority_target = DEFAULT_WEIGHT_PRIORITY_TARGET.copy()   # Copia per evitare modifiche involontarie
+        self._weight_priority_target = Doctrine.DEFAULT_WEIGHT_PRIORITY_TARGET.copy()   # Copia per evitare modifiche involontarie
         
         # Inizializza i blocchi con associazione corretta. 
         # Utilizziamo un dizionario per un accesso O(1) per ID.
@@ -199,7 +177,7 @@ class Region:
     
     @weight_priority_target.setter
     def weight_priority_target(self, value: Dict):
-        self._validate_weight_priority_target(value)
+        Doctrine.validate_weight_priority_target(value)
         self._weight_priority_target = value.copy()
         self._invalidate_caches()
     
@@ -886,7 +864,7 @@ class Region:
 
         for report in reports:
             block_id = report.get('block_id')
-            force = MILITARY_CATEGORY_TO_FORCE.get(report.get('military_category'))
+            force = Context.MILITARY_CATEGORY_TO_FORCE.get(report.get('military_category'))
             if not block_id or not force:
                 continue
 
@@ -1218,7 +1196,7 @@ class Region:
         """
         # force_type: se non passato esplicitamente (solo _calc_air_priority lo fa oggi), derivalo dalla
         # categoria militare del blocco.
-        force_type = force_type or MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
+        force_type = force_type or Context.MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
         # Selezione azione: lati diversi -> il blocco attacca (postura 'Attack'); stesso lato -> il
         # blocco difende/protegge (postura 'Defense'). Per 'air' l'azione è ignorata per costruzione
         # (v. _representative_combat_power). Il confronto sui side è generico (vale per bersagli
@@ -1237,7 +1215,7 @@ class Region:
         target_value = target_block.value or 1.0 # value from 1 to 10
 
         if target_block.is_military():
-            target_force_type = MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
+            target_force_type = Context.MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
             if use_recon and is_attack:
                 # Fog-of-war: il bersaglio è nemico e il chiamante ha chiesto la stima via
                 # ricognizione. Vale per qualunque force_type (anche 'air'), a differenza del
@@ -1641,34 +1619,6 @@ class Region:
     #     if not isinstance(value, str):
     #         raise TypeError(f"{param_name} must be a string")
     
-    def _validate_weight_priority_target(self, value: Dict) -> None:
-        """Validate weight priority target structure."""
-        if not isinstance(value, dict):
-            raise TypeError("Weight priority target must be a dictionary")
-        
-        # Add more specific validation based on expected structure
-        for category, weights in value.items():
-            if not isinstance(weights, dict):
-                raise TypeError(f"Weights for {category} must be a dictionary")
-            
-            if 'attack' not in weights or 'defense' not in weights:
-                raise ValueError(f"Category {category} must have 'attack' and 'defense' keys")
-            
-            # Ulteriore validazione dei sottodizionari attack/defense
-            for action_type in ['attack', 'defense']:
-                if not isinstance(weights[action_type], dict):
-                    raise TypeError(f"'{action_type}' weights for {category} must be a dictionary with values")
-            
-                if not weights[action_type]:
-                    raise ValueError(f"'{action_type}' weights for {category} cannot be empty")
-            
-                for target_cat, weight_val in weights[action_type].items():
-                    if not isinstance(target_cat, str):
-                        raise TypeError(f"Target category '{target_cat}' in {action_type} for {category} must be a string.")
-                    if not isinstance(weight_val, (int, float)) or not (0 <= weight_val <= 1):
-                        raise ValueError(f"Weight value '{weight_val}' for target")
-                    
-
     def __repr__(self) -> str:
         """String representation of the Region."""
         return (f"Region(name='{self._name}', description='{self._description}', "

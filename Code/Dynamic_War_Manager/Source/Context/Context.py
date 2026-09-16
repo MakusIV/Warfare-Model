@@ -454,8 +454,17 @@ MILITARY_CATEGORY = {
 
     'Air_Base': ('Airbase', 'Heliport'),
 
-    'Naval_Base': ('Port', 'Shipyard', 'Naval_Group'),     
-    
+    'Naval_Base': ('Port', 'Shipyard', 'Naval_Group'),
+
+}
+
+# Mappa military_category (Military.get_military_category(), chiavi di MILITARY_CATEGORY sopra) ->
+# force (MILITARY_FORCES), usata per invocare Military.combat_power(force, action) con il force
+# corretto -- v. Logic/Tactical_Analysis.py e Logic/Tactical_Evaluation.py.
+MILITARY_CATEGORY_TO_FORCE = {
+    "Ground_Base": "ground",
+    "Naval_Base": "sea",
+    "Air_Base": "air",
 }
 
 class Ground_Vehicle_Asset_Type(Enum):

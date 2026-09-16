@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T16:53:42.071Z
+  modified: 2026-09-16T17:04:51.200Z
 ---
 
 # Region.py — refactoring strategico/tattico — piano verificato, implementazione in corso
@@ -103,6 +103,11 @@ Stima dimensionale: `Region.py` scende da 1678 a ~950-1000 righe.
 - **Fase 7** — `_calc_attack_priority`/`_calc_defense_priority` + riscrittura `update_military_priorities` (route_provider, eliminazione `_get_tuple_hashable_block_item`, svuotamento ramo "priority" di `_invalidate_caches`).
 - **Fase 8** — pulizia finale Region.py (eliminazione docstring `""" superata """` morte, ricollocazione `_is_logistic_block`, riordino sezioni).
 
+## Stato di avanzamento
+
+- **Fase 0 — FATTA** (commit 1e4af9e1): `Strategical_Evaluation.py` reso importabile, codice-esempio morto rimosso, stub → `NotImplementedError`. Suite 2516 OK invariata.
+- **Fase 1 — FATTA**: `MILITARY_CATEGORY_TO_FORCE` spostato in `Context.py` (accanto a `MILITARY_CATEGORY`); nuovo `Context/Doctrine.py` con `DEFAULT_WEIGHT_PRIORITY_TARGET` + `validate_weight_priority_target` (funzione standalone, non più metodo `Region._validate_weight_priority_target` — il setter `weight_priority_target` ora chiama `Doctrine.validate_weight_priority_target(value)` direttamente); rimossi import morti (`MIN_VALUE`, `field`, `defaultdict`) da `Region.py`. Nuovo `Test_Doctrine.py` (7 test, il test esistente spostato + 2 nuovi: struttura mancante attack/defense, default valido). Suite completa: **2522 OK/5 skipped** (2516-1+7). Da committare nello stesso turno in cui questa memoria viene aggiornata.
+
 ## Prossimi passi
 
-Implementazione in corso, fase per fase, suite verde ad ogni commit (stesso pattern usato per il piano Fase 2 fog-of-war). Aggiornare questa memoria con lo stato di avanzamento (fase completata, commit hash) man mano.
+Fase 2 (le 6 funzioni di analisi completamente disaccoppiate → nuovo `Tactical_Analysis.py`), poi Fase 3 (`_target_profile_from_block`), Fase 4 (`_build_recon_cp_snapshot`), Fase 5 (`_target_affinity`), Fase 6 (nucleo di scoring, con test di caratterizzazione numerica), Fase 7 (`_calc_attack_priority`/`_calc_defense_priority` + `update_military_priorities`), Fase 8 (pulizia finale). Suite verde ad ogni commit.
