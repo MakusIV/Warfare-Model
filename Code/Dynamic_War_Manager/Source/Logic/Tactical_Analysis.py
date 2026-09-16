@@ -51,6 +51,45 @@ def estimate_target_combat_power(report: Dict, force: Optional[str], action: Opt
     )
 
 
+def build_recon_cp_snapshot(reports: List[Dict]) -> Dict[str, float]:
+    """{block_id: combat_power stimata} per una lista di report di ricognizione già recuperati dal
+    chiamante -- v. Region.update_military_priorities, che chiama Region.get_recon_reports UNA SOLA
+    VOLTA per sweep e passa il risultato qui, mai per singola coppia blocco/bersaglio, altrimenti lo
+    stesso blocco nemico riceverebbe stime diverse (get_recognition_report è stocastico) a seconda
+    di quale blocco amico lo valuta nello stesso ciclo. Chi osservare (incluso il guard su
+    side=='Neutral', che non ha senso a questo livello dato che qui non c'è più un side) è deciso
+    dal chiamante tramite quali `reports` passa, non da questa funzione.
+
+    Un block_id assente da questo dict non è stato osservato in questo sweep: il chiamante
+    (Tactical_Evaluation.calculate_priority) lo tratta come combat power 0.0, non come "ignoto ->
+    ground-truth" -- è così che la policy "non visto -> priorità bassa" si applica gratis via il
+    gate esistente.
+
+    La selezione dell'azione mirror-a la stessa logica ground-truth del ramo attacco nel calcolo di
+    priorità: max('Defense','Maintain') per ground, solo 'Defense' per sea (SEA_TASK non ha
+    'Maintain'), azione ignorata per air (AIR_COMBAT_EFFICACY è piatta).
+    """
+    snapshot: Dict[str, float] = {}
+
+    for report in reports:
+        block_id = report.get('block_id')
+        force = Context.MILITARY_CATEGORY_TO_FORCE.get(report.get('military_category'))
+        if not block_id or not force:
+            continue
+
+        if force == 'air':
+            snapshot[block_id] = estimate_target_combat_power(report, force, None)
+        else:
+            defense_cp = estimate_target_combat_power(report, force, 'Defense')
+            if force == 'ground':
+                maintain_cp = estimate_target_combat_power(report, force, 'Maintain')
+                snapshot[block_id] = max(defense_cp, maintain_cp)
+            else:
+                snapshot[block_id] = defense_cp
+
+    return snapshot
+
+
 def get_target_report(report: Dict) -> Optional[Dict]:
 
     """Classify a target based on reconnaissance report."""

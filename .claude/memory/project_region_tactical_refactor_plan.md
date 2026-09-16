@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 68a4bcf0-0d82-4d78-95f3-8034f1d81a8d
-  modified: 2026-09-16T17:23:50.289Z
+  modified: 2026-09-16T17:28:50.533Z
 ---
 
 # Region.py — refactoring strategico/tattico — piano verificato, implementazione in corso
@@ -114,6 +114,8 @@ Stima dimensionale: `Region.py` scende da 1678 a ~950-1000 righe.
 
 - **Fase 3 — FATTA**: `target_profile_from_block` spostata in `Tactical_Analysis.py`, `@lru_cache` rimossa, `target_block._assets` → `target_block.assets` (property pubblica). Rimosso anche `self._target_profile_from_block.cache_clear()` dal ramo "priority" di `_invalidate_caches` (non serve più). `ASSET_TYPE` rimosso dagli import di `Region.py` (non più usato lì). `_target_affinity` (che resta in Region fino a Fase 5) ora chiama `Tactical_Analysis.target_profile_from_block(...)`. **Scoperta**: `TestTargetAffinity` (10 test, testa `_target_affinity` che resta in Region) patchava `Region._target_profile_from_block` in 7 punti — aggiornati a `patch.object(Tactical_Analysis, 'target_profile_from_block', ...)`, non segnalato esplicitamente nel piano originale ma scoperto durante l'esecuzione della suite. `TestTargetProfileFromBlock` (11 test, uno soppresso: `test_lru_cache_used_and_invalidated`, non più applicabile senza cache) spostata in `Test_Tactical_Analysis.py`. Suite completa: **2520 OK/5 skipped**.
 
+- **Fase 4 — FATTA**: `build_recon_cp_snapshot` spostata in `Tactical_Analysis.py` con firma cambiata come da piano: `(reports: List[Dict]) -> Dict[str, float]` invece di `(observed_side: str)` — non chiama più `get_recon_reports` internamente, il chiamante lo fa e passa il risultato. Il guard `side=='Neutral'` è sparito del tutto dalla funzione (non da "spostare in Region", proprio eliminato: a questo livello non esiste più un concetto di side, e il guard primario in `update_military_priorities` è già sufficiente per costruzione — `Utility.enemySide(side)` non può mai valere 'Neutral' se `side` è già garantito Blue/Red da quel guard). `update_military_priorities` ora fa `recon_reports = self.get_recon_reports(...)` poi `Tactical_Analysis.build_recon_cp_snapshot(recon_reports)` in due righe separate. **Scoperta, stesso pattern di Fase 3**: `TestUpdateMilitaryPrioritiesUseRecon` (5 test, resta in Region) patchava `self.region._build_recon_cp_snapshot` in 5 punti — riscritti per patchare `self.region.get_recon_reports` (per verificare "una chiamata per sweep") e `Tactical_Analysis.build_recon_cp_snapshot` separatamente. `TestBuildReconCpSnapshot` (7 test) spostata in `Test_Tactical_Analysis.py` con firma adattata (i 2 test su side/Neutral non hanno più senso a questo livello, sostituiti con 2 nuovi: reports vuoti, report multipli). Suite completa: **2520 OK/5 skipped** (invariata, tests riorganizzati non persi).
+
 ## Prossimi passi
 
-Fase 4 (`_build_recon_cp_snapshot`, cambio firma — **attenzione**: quando si sposta, verificare se anche questa ha punti di patch in `TestTargetAffinity`-style in altre classi rimaste in Region, stesso pattern appena scoperto in Fase 3), Fase 5 (`_target_affinity`, vedi nota sui costi di import), Fase 6 (nucleo di scoring, con test di caratterizzazione numerica), Fase 7 (`_calc_attack_priority`/`_calc_defense_priority` + `update_military_priorities`), Fase 8 (pulizia finale). Suite verde ad ogni commit.
+Fase 5 (`_target_affinity`, vedi nota sui costi di import — **verificare per lo stesso pattern**: altri test in classi che restano in Region potrebbero patchare `Region._target_affinity` direttamente), Fase 6 (nucleo di scoring, con test di caratterizzazione numerica), Fase 7 (`_calc_attack_priority`/`_calc_defense_priority` + `update_military_priorities`), Fase 8 (pulizia finale). Suite verde ad ogni commit.

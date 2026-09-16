@@ -676,7 +676,8 @@ class Region:
 
         try:
             if use_recon:
-                self._recon_cp_snapshot = self._build_recon_cp_snapshot(Utility.enemySide(side))
+                recon_reports = self.get_recon_reports(Utility.enemySide(side))
+                self._recon_cp_snapshot = Tactical_Analysis.build_recon_cp_snapshot(recon_reports)
                 self._invalidate_caches("priority")
 
             for block_item in friendly_blocks:
@@ -817,48 +818,6 @@ class Region:
                 logger.warning(f"Invalid recon report for block {block.name}: {report!r}")
 
         return recon_reports
-
-    def _build_recon_cp_snapshot(self, observed_side: str) -> Dict[str, float]:
-        """{block_id: combat_power stimata} per ogni blocco militare del lato `observed_side`,
-        costruito UNA SOLA VOLTA per sweep (v. update_military_priorities) chiamando
-        get_recon_reports una sola volta -- mai per singola coppia blocco/bersaglio, altrimenti lo
-        stesso blocco nemico riceverebbe stime diverse (get_recognition_report è stocastico) a
-        seconda di quale blocco amico lo valuta nello stesso ciclo.
-
-        Un block_id assente da questo dict non è stato osservato in questo sweep: il chiamante
-        (_calculate_priority) lo tratta come combat power 0.0, non come "ignoto -> ground-truth" --
-        è così che la policy "non visto -> priorità bassa" si applica gratis via il gate esistente.
-
-        La selezione dell'azione mirror-a la stessa logica ground-truth del ramo attacco in
-        _calculate_priority: max('Defense','Maintain') per ground, solo 'Defense' per sea
-        (SEA_TASK non ha 'Maintain'), azione ignorata per air (AIR_COMBAT_EFFICACY è piatta).
-        """
-        if observed_side == 'Neutral':
-            # Guard: rete di sicurezza se il chiamante finisse comunque qui con un side che
-            # degenera in 'Neutral' (v. Utility.enemySide) -- Neutral non è mai un osservato di
-            # prima classe nel ciclo di priorità, niente snapshot invece di un'auto-osservazione.
-            return {}
-
-        reports = self.get_recon_reports(observed_side)
-        snapshot: Dict[str, float] = {}
-
-        for report in reports:
-            block_id = report.get('block_id')
-            force = Context.MILITARY_CATEGORY_TO_FORCE.get(report.get('military_category'))
-            if not block_id or not force:
-                continue
-
-            if force == 'air':
-                snapshot[block_id] = Tactical_Analysis.estimate_target_combat_power(report, force, None)
-            else:
-                defense_cp = Tactical_Analysis.estimate_target_combat_power(report, force, 'Defense')
-                if force == 'ground':
-                    maintain_cp = Tactical_Analysis.estimate_target_combat_power(report, force, 'Maintain')
-                    snapshot[block_id] = max(defense_cp, maintain_cp)
-                else:
-                    snapshot[block_id] = defense_cp
-
-        return snapshot
 
     def get_meteorological_reports(self, side: str) -> List[Dict]:
         """Get meteorological reports for all blocks of a side."""
