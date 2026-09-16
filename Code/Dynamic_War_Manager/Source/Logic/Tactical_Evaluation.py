@@ -8,6 +8,7 @@
 #from typing import Literal
 #VARIABLE = Literal["A", "B, "C"]
 
+from typing import Dict, Optional, Tuple
 from Code.Dynamic_War_Manager.Source.Utility.Utility import get_membership_label
 import random
 import skfuzzy as fuzz
@@ -644,6 +645,219 @@ def target_affinity(block: Military, target_block: Block) -> float:
         return 1.0
 
     return clip(weighted_target_score / weighted_generic_score, _AFFINITY_MIN, _AFFINITY_MAX)
+
+
+def select_weight(target_block: Block, task: str, block_category: str, weight_priority_target: Dict) -> float:
+    """Select the weight for a block based on its category.
+
+    weight_priority_target: dottrina del chiamante (v. Context/Doctrine.py per il default) --
+    weight_priority_target[block_category][task][target_category] -> peso [0,1].
+    """
+    if task not in weight_priority_target[block_category]:
+        logger.warning(f"Task '{task}' not found in weight_priority_target for block category '{block_category}'. Using default weight of 0.0.")
+        return 0.0
+
+    #setup target block category to select weight index
+    target_category = ""
+    if target_block.is_military():
+        target_category = target_block.get_military_category()
+    elif target_block.is_logistic():
+        target_category = Context.BLOCK_CATEGORY['Logistic']
+    elif target_block.is_civilian():
+        target_category = Context.BLOCK_CATEGORY['Civilian']
+    else:
+        logger.warning(f"The block {target_block.name!r} is not a military base, logistical or civil block; block weight will be set with Civilian value.")
+        target_category = Context.BLOCK_CATEGORY['Civilian']
+
+    # weight selection
+    return weight_priority_target[block_category][task].get(target_category, 0.0) # Uso .get per default 0.0
+
+
+def calculate_priority(
+    block: Military,
+    target_block: Block,
+    weight: float,
+    time_to_intercept: Optional[float],
+    range_ratio: float,
+    target_priority: Optional[float] = None,
+    force_type: Optional[str] = None,
+    target_affinity: float = 1.0,
+    recon_cp_snapshot: Optional[Dict[str, float]] = None,
+) -> float:
+    """Calculate generic priority for a military block towards a target. Considers combat power, time to intercept, range ratio, and weight.
+
+    target_affinity: fattore moltiplicativo opzionale (default 1.0 = neutro, nessun effetto)
+    che modula la priorità in base a quanto bene i loadout disponibili del blocco (se aereo)
+    rendono contro la composizione reale del target — v. target_affinity, che restituisce
+    sempre 1.0 per il ramo difesa/blocchi non aerei, così calc_surface_priority (che non lo
+    passa mai) resta bit-identico.
+
+    recon_cp_snapshot: se non None E si tratta del ramo attacco (bersaglio nemico), la combat
+    power del bersaglio viene letta da questo snapshot di ricognizione (v.
+    Tactical_Analysis.build_recon_cp_snapshot, costruito una volta per sweep dal chiamante)
+    invece che dal ground-truth. Un bersaglio assente dallo snapshot (non osservato in questo
+    ciclo) vale 0.0 -- non "ground-truth di ripiego" -- che attraverso il gate sotto produce la
+    policy "non visto -> priorità bassa" senza bisogno di logica dedicata. Il blocco proprio e il
+    ramo difesa (bersagli alleati) restano SEMPRE ground-truth, indipendentemente da
+    recon_cp_snapshot: None = ground-truth ovunque, {} = sweep di ricognizione eseguito ma nulla
+    osservato (non "nessuna ricognizione richiesta" -- quella distinzione non è più esprimibile
+    qui per costruzione, a differenza del vecchio parametro use_recon+snapshot separati).
+    """
+    # force_type: se non passato esplicitamente (solo calc_air_priority lo fa oggi), derivalo dalla
+    # categoria militare del blocco.
+    force_type = force_type or Context.MILITARY_CATEGORY_TO_FORCE.get(block.get_military_category())
+    # Selezione azione: lati diversi -> il blocco attacca (postura 'Attack'); stesso lato -> il
+    # blocco difende/protegge (postura 'Defense'). Per 'air' l'azione è ignorata per costruzione
+    # (v. Tactical_Analysis.representative_combat_power). Il confronto sui side è generico (vale
+    # per bersagli militari, logistici e civili), coerente con il ramo attacco/difesa usato più
+    # sotto per i soli bersagli militari.
+    is_attack = block.side != target_block.side
+    own_action = None if force_type == 'air' else ('Attack' if is_attack else 'Defense')
+    combat_power = Tactical_Analysis.representative_combat_power(block, force_type, own_action)
+    if not combat_power or combat_power <= 0:
+        return 0.0
+
+    time_to_intercept = time_to_intercept or float('inf')
+    if time_to_intercept < 1:
+        time_to_intercept = 1.0
+
+    target_value = target_block.value or 1.0 # value from 1 to 10
+
+    if target_block.is_military():
+        target_force_type = Context.MILITARY_CATEGORY_TO_FORCE.get(target_block.get_military_category())
+        if recon_cp_snapshot is not None and is_attack:
+            # Fog-of-war: il bersaglio è nemico e il chiamante ha passato uno snapshot di
+            # ricognizione. Vale per qualunque force_type (anche 'air'), a differenza del ramo
+            # ground-truth sotto dove 'air' è gestito nel ramo "difesa" per la sua azione singola
+            # -- qui la selezione azione è già stata risolta una volta per sweep in
+            # Tactical_Analysis.build_recon_cp_snapshot, non va rifatta qui.
+            target_cp = recon_cp_snapshot.get(target_block.id, 0.0)
+        elif target_force_type == 'air' or not is_attack:
+            # ramo difesa (bersaglio = alleato protetto): quanto regge da solo -> 'Defense'.
+            # 'air': azione ignorata per costruzione. Sempre ground-truth (alleato = dati noti).
+            target_action = None if target_force_type == 'air' else 'Defense'
+            target_cp = Tactical_Analysis.representative_combat_power(target_block, target_force_type, target_action)
+        else:
+            # ramo attacco: il bersaglio nemico può opporre 'Defense' o rimanere in 'Maintain' —
+            # si usa il più alto dei due (convenzione già in uso in evaluateCombatSuperiority per
+            # il ramo Attack). 'sea' non ha un task 'Maintain' (v. Context.SEA_TASK), quindi si
+            # riduce a 'Defense'.
+            target_defense_cp = Tactical_Analysis.representative_combat_power(target_block, target_force_type, 'Defense')
+            if target_force_type == 'ground':
+                target_maintain_cp = Tactical_Analysis.representative_combat_power(target_block, target_force_type, 'Maintain')
+                target_cp = max(target_defense_cp, target_maintain_cp)
+            else:
+                target_cp = target_defense_cp
+        #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
+        #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
+        if target_cp <= 0: # target senza combat power nota: evita ZeroDivisionError, satura al bound corrispondente
+            combat_power_ratio = 10.0 if not is_attack else 0.1
+        elif not is_attack: # defense
+            combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
+        else: # attack
+            combat_power_ratio = clip(target_cp / combat_power, 0.1, 10.0)
+        return (target_value * combat_power_ratio * range_ratio * weight * target_affinity) / time_to_intercept
+
+    elif target_block.is_logistic():
+        target_priority = target_priority or 0.0
+        return (target_priority * range_ratio * weight * target_affinity) / time_to_intercept
+
+    elif target_block.is_civilian():
+        return (target_value * range_ratio * weight * target_affinity) / time_to_intercept
+
+    return 0.0
+
+
+def calc_surface_priority(
+    block: Military,
+    target_item: Tuple[float, Block],
+    attack_route: Optional[Route],
+    weight: float,
+    recon_cp_snapshot: Optional[Dict[str, float]] = None,
+) -> float:
+    """Calculates the priority of a military block (ground or sea) by evaluating its combat power,
+    the distance from the target, the combat power of the target or the priority assigned
+    in the case of logistical targets.
+
+    Args:
+        block (Military): block to calculates priority
+        target_item (Tuple[float, Block]): (priorità, bersaglio) del blocco target
+        attack_route (Optional[Route]): intercept route to target_block
+        weight (float): assigned weight for calculates priority
+        recon_cp_snapshot: v. calculate_priority
+
+    Returns:
+        priority (float): priority value of the block, returns 0.0 if not applicable
+    """
+    target_block = target_item[1]
+
+    # Calcola tempo di intercetto
+    if attack_route:
+        tti = block.time2attack(route=attack_route)
+    elif target_block.position and block.position:
+        tti = block.time2attack(target=target_block.position)
+    else:
+        return 0.0
+
+    # Calcola ratio di range
+    if target_block.position:
+        range_info = block.artillery_in_range(target_block.position)
+    else:
+        range_info = {"target_within_med_range": False, "med_range_ratio": 1.0}
+
+    if not range_info["target_within_med_range"] and tti == float('inf'):
+        return 0.0
+
+    range_ratio = range_info["med_range_ratio"] if range_info["target_within_med_range"] else 1.0
+
+    return calculate_priority(
+        block=block,
+        target_block=target_block,
+        weight=weight,
+        time_to_intercept=tti,
+        range_ratio=range_ratio,
+        target_priority=target_item[0],
+        recon_cp_snapshot=recon_cp_snapshot,
+    )
+
+
+def calc_air_priority(
+    block: Military,
+    target_item: Tuple[float, Block],
+    weight: float,
+    recon_cp_snapshot: Optional[Dict[str, float]] = None,
+) -> float:
+    """Calculates the priority of an air military block by evaluating its combat power,
+    the distance from the target, the combat power of the target or the priority assigned
+    in the case of logistical targets.
+
+    Args:
+        block (Military): block to calculates priority
+        target_item (Tuple[float, Block]): (priorità, bersaglio) del blocco target -- stessa forma
+            di calc_surface_priority, cosi' la priorità nota del bersaglio (usata per i bersagli
+            logistici) non richiede più un lookup separato via Region.get_block_by_id
+        weight (float): assigned weight for calculates priority
+        recon_cp_snapshot: v. calculate_priority
+
+    Returns:
+        priority (float): priority value of the block, returns 0.0 if not applicable"""
+    target_block = target_item[1]
+
+    if not block.position or not target_block.position:
+        return 0.0
+
+    tti = block.time2attack(target=target_block.position)
+    return calculate_priority(
+        block=block,
+        target_block=target_block,
+        weight=weight,
+        time_to_intercept=tti,
+        range_ratio=1.0,
+        target_priority=target_item[0],
+        force_type="air",
+        target_affinity=target_affinity(block, target_block),
+        recon_cp_snapshot=recon_cp_snapshot,
+    )
 
     
 

@@ -6,6 +6,7 @@ from skfuzzy import control as ctrl
 import pandas as pd
 import sys
 import os
+from sympy import Point2D
 # Aggiungi il percorso della directory principale del progetto
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, VALUE, GROUND_MILITARY_VEHICLE_ASSET, GROUND_ACTION
@@ -18,11 +19,26 @@ from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
+from Code.Dynamic_War_Manager.Source.Logic import Tactical_Evaluation
 # Importa il metodo da testare evaluateGroundTacticalAction
 from Code.Dynamic_War_Manager.Source.Logic.Tactical_Evaluation import (
     evaluateGroundTacticalAction, calcRecoAccuracy, calcFightResult, evaluateCombatSuperiority,
-    target_affinity,
+    target_affinity, select_weight, calculate_priority, calc_surface_priority, calc_air_priority,
 )
+
+
+def _make_combat_power_side_effect(value, task=None):
+    """Mimics Military.combat_power's (force, action) contract: float if both `force` and
+    `action` given, Dict[task, float] if only `force` given. If `task` is given, only that
+    task carries `value` (every other task is 0.0) -- mirrors an asset whose combat power is
+    concentrated on a single posture."""
+    def _side_effect(force=None, action=None):
+        if force and action:
+            return value if task is None or action == task else 0.0
+        if force:
+            return {t: (value if task is None or t == task else 0.0) for t in Context.ACTION_TASKS[force]}
+        return {f: {t: value for t in Context.ACTION_TASKS[f]} for f in Context.MILITARY_FORCES}
+    return _side_effect
 
 # Lightweight class stubs used only to set mock.__class__ for classification-loop dispatch,
 # mirroring Test_Region.py/Test_Military.py -- Vehicle/Ship/Aircraft cannot be imported directly
@@ -679,6 +695,257 @@ class TestTargetAffinity(unittest.TestCase):
             result = target_affinity(self.airbase, self.target)
         # weighted_generic = 2*1.0 + 1*2.0 = 4.0 ; weighted_target = 2*2.0 + 1*2.0 = 6.0 -> 1.5
         self.assertAlmostEqual(result, 1.5)
+
+
+class TestCalculatePriorityTargetAffinity(unittest.TestCase):
+    """Unit tests for the target_affinity parameter of Tactical_Evaluation.calculate_priority()."""
+
+    @staticmethod
+    def _military_block(side, category, cp_task, cp_value):
+        m = MagicMock(spec=Military)
+        m.side = side
+        m.get_military_category.return_value = category
+        m.combat_power.side_effect = _make_combat_power_side_effect(cp_value, cp_task)
+        return m
+
+    @staticmethod
+    def _target(side, value, is_military=False, is_logistic=False, is_civilian=False,
+                category=None, cp_task=None, cp_value=None):
+        t = MagicMock(spec=Military)
+        t.side = side
+        t.value = value
+        t.is_military.return_value = is_military
+        t.is_logistic.return_value = is_logistic
+        t.is_civilian.return_value = is_civilian
+        if is_military:
+            t.get_military_category.return_value = category
+            t.combat_power.side_effect = _make_combat_power_side_effect(cp_value, cp_task)
+        return t
+
+    def test_default_target_affinity_is_neutral(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_military=True, category='Ground_Base',
+                               cp_task='Attack', cp_value=4.0)
+        result_default = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        result_explicit = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=1.0,
+        )
+        self.assertEqual(result_default, result_explicit)
+
+    def test_target_affinity_scales_military_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_military=True, category='Ground_Base',
+                               cp_task='Attack', cp_value=4.0)
+        base = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        scaled = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+    def test_target_affinity_scales_logistic_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_logistic=True)
+        base = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_priority=3.0,
+        )
+        scaled = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_priority=3.0, target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+    def test_target_affinity_scales_civilian_branch(self):
+        block = self._military_block('Blue', 'Air_Base', 'CAP', 10.0)
+        target = self._target('Red', 5, is_civilian=True)
+        base = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+        scaled = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            target_affinity=2.0,
+        )
+        self.assertAlmostEqual(scaled, base * 2.0)
+
+
+class TestCalcAirPriorityTargetAffinity(unittest.TestCase):
+    """Unit tests confirming Tactical_Evaluation.calc_air_priority() wires target_affinity through."""
+
+    def test_calc_air_priority_uses_target_affinity(self):
+        block = MagicMock(spec=Military)
+        block.position = Point2D(0, 0)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Air_Base'
+        block.combat_power.side_effect = _make_combat_power_side_effect(10.0, 'CAP')
+        block.time2attack.return_value = 5.0
+
+        target = MagicMock(spec=Military)
+        target.position = Point2D(10, 10)
+        target.side = 'Red'
+        target.id = 'target1'
+        target.value = 5
+        target.is_military.return_value = True
+        target.is_logistic.return_value = False
+        target.is_civilian.return_value = False
+        target.get_military_category.return_value = 'Ground_Base'
+        target.combat_power.side_effect = _make_combat_power_side_effect(4.0, 'Defense')
+
+        with patch.object(Tactical_Evaluation, 'target_affinity', return_value=1.0) as mock_affinity:
+            result_neutral = calc_air_priority(block, (0.0, target), weight=2.0)
+            mock_affinity.assert_called_once_with(block, target)
+
+        with patch.object(Tactical_Evaluation, 'target_affinity', return_value=2.0):
+            result_scaled = calc_air_priority(block, (0.0, target), weight=2.0)
+
+        self.assertAlmostEqual(result_scaled, result_neutral * 2.0)
+
+
+class TestCalcSurfacePriorityUnaffectedByAffinity(unittest.TestCase):
+    """Regression: Tactical_Evaluation.calc_surface_priority() must never consult target_affinity —
+    the design keeps the defense/surface branch bit-identical to before item 7."""
+
+    def test_calc_surface_priority_never_calls_target_affinity(self):
+        block = MagicMock(spec=Military)
+        block.position = Point2D(0, 0)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Ground_Base'
+        block.combat_power.side_effect = _make_combat_power_side_effect(10.0, 'Attack')
+        block.time2attack.return_value = 5.0
+        block.artillery_in_range.return_value = {'target_within_med_range': False, 'med_range_ratio': 1.0}
+
+        target = MagicMock(spec=Military)
+        target.position = Point2D(10, 10)
+        target.side = 'Red'
+        target.value = 5
+        target.is_military.return_value = True
+        target.is_logistic.return_value = False
+        target.is_civilian.return_value = False
+        target.get_military_category.return_value = 'Ground_Base'
+        target.combat_power.side_effect = _make_combat_power_side_effect(4.0, 'Defense')
+
+        with patch.object(Tactical_Evaluation, 'target_affinity') as mock_affinity:
+            result = calc_surface_priority(block, (0.0, target), None, 2.0)
+        mock_affinity.assert_not_called()
+        self.assertGreater(result, 0.0)
+
+
+class TestCalculatePriorityActionRoles(unittest.TestCase):
+    """Fase 2: Tactical_Evaluation.calculate_priority() seleziona Attack/Defense(+Maintain) per side."""
+
+    def _military(self, side, category, **combat_power_kwargs):
+        m = MagicMock(spec=Military)
+        m.side = side
+        m.get_military_category.return_value = category
+        m.combat_power.side_effect = _make_combat_power_side_effect(**combat_power_kwargs)
+        m.value = 5
+        m.is_military.return_value = True
+        m.is_logistic.return_value = False
+        m.is_civilian.return_value = False
+        return m
+
+    def _call(self, block, target):
+        return calculate_priority(
+            block=block, target_block=target, weight=1.0, time_to_intercept=5.0, range_ratio=1.0
+        )
+
+    def test_attack_branch_uses_own_attack_and_target_defense_maintain_max_for_ground(self):
+        """Ramo attacco (side diversi), ground vs ground: proprio='Attack', bersaglio=max(Defense,Maintain)."""
+        block = self._military('Blue', 'Ground_Base', value=10.0, task='Attack')
+        # Il bersaglio vale meno in Defense che in Maintain: deve vincere Maintain.
+        target = self._military('Red', 'Ground_Base', value=1.0)
+        target.combat_power.side_effect = lambda force=None, action=None: (
+            {'Defense': 2.0, 'Maintain': 6.0}.get(action, 0.0) if action else {}
+        )
+        self._call(block, target)
+        target.combat_power.assert_any_call(force='ground', action='Defense')
+        target.combat_power.assert_any_call(force='ground', action='Maintain')
+        block.combat_power.assert_called_with(force='ground', action='Attack')
+
+    def test_attack_branch_sea_uses_only_defense_no_maintain(self):
+        """Ramo attacco, sea vs sea: SEA_TASK non ha 'Maintain', il bersaglio usa solo 'Defense'."""
+        block = self._military('Blue', 'Naval_Base', value=10.0, task='Attack')
+        target = self._military('Red', 'Naval_Base', value=4.0, task='Defense')
+        self._call(block, target)
+        target.combat_power.assert_called_once_with(force='sea', action='Defense')
+
+    def test_defense_branch_uses_defense_for_both_sides(self):
+        """Ramo difesa (stesso side): sia il blocco proprio sia l'alleato protetto usano 'Defense'."""
+        block = self._military('Blue', 'Ground_Base', value=10.0, task='Defense')
+        target = self._military('Blue', 'Ground_Base', value=4.0, task='Defense')
+        self._call(block, target)
+        block.combat_power.assert_called_with(force='ground', action='Defense')
+        target.combat_power.assert_called_once_with(force='ground', action='Defense')
+
+    def test_air_target_ignores_action_in_attack_branch(self):
+        """Bersaglio 'air' nel ramo attacco: nessuna azione passata (AIR_COMBAT_EFFICACY piatta)."""
+        block = self._military('Blue', 'Ground_Base', value=10.0, task='Attack')
+        target = self._military('Red', 'Air_Base', value=3.0)
+        self._call(block, target)
+        target.combat_power.assert_called_once_with(force='air')
+
+
+class TestCalculatePriorityUseReconSnapshot(unittest.TestCase):
+    """Fase 5/6: Tactical_Evaluation.calculate_priority(recon_cp_snapshot=...) -- sostituzione del
+    target_cp del ramo attacco con lo snapshot di ricognizione."""
+
+    def _military_mock(self, side, category, cp_value=10.0, block_id='mock'):
+        m = MagicMock(spec=Military)
+        m.side = side
+        m.id = block_id
+        m.get_military_category.return_value = category
+        m.combat_power.side_effect = _make_combat_power_side_effect(cp_value)
+        m.value = 5
+        m.is_military.return_value = True
+        m.is_logistic.return_value = False
+        m.is_civilian.return_value = False
+        return m
+
+    def _call(self, block, target, recon_cp_snapshot=None):
+        return calculate_priority(
+            block=block, target_block=target, weight=1.0, time_to_intercept=5.0, range_ratio=1.0,
+            recon_cp_snapshot=recon_cp_snapshot,
+        )
+
+    def test_attack_branch_uses_snapshot_value_when_present(self):
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        target = self._military_mock('Red', 'Ground_Base', cp_value=4.0, block_id='enemy1')
+
+        with patch.object(Tactical_Analysis, 'representative_combat_power', wraps=Tactical_Analysis.representative_combat_power) as mock_rcp:
+            result_recon = self._call(block, target, recon_cp_snapshot={'enemy1': 99.0})
+            # la combat power del bersaglio non deve mai passare da representative_combat_power
+            # quando recon_cp_snapshot è dato e il ramo è attacco: solo il blocco proprio la usa.
+            for call in mock_rcp.call_args_list:
+                self.assertIsNot(call.args[0] if call.args else call.kwargs.get('block'), target)
+
+        result_ground_truth = self._call(block, target, recon_cp_snapshot=None)
+        self.assertNotEqual(result_recon, result_ground_truth)
+
+    def test_attack_branch_snapshot_miss_yields_low_priority_ratio(self):
+        """Un bersaglio nemico assente dallo snapshot (non osservato in questo sweep) vale
+        target_cp=0.0 -- non "ground-truth di ripiego" -- che produce il ratio basso 0.1
+        (policy no-visibility, v. feedback_no_visibility_low_priority)."""
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        target = self._military_mock('Red', 'Ground_Base', cp_value=4.0, block_id='unseen_enemy')
+
+        result = self._call(block, target, recon_cp_snapshot={})  # sweep completato, non osservato
+        expected = (target.value * 0.1 * 1.0 * 1.0 * 1.0) / 5.0
+        self.assertAlmostEqual(result, expected)
+
+    def test_defense_branch_ignores_snapshot_even_when_present(self):
+        """Ramo difesa (stesso side): il bersaglio è un alleato, sempre ground-truth anche se
+        viene passato un recon_cp_snapshot che conterrebbe un valore diverso per quell'id."""
+        block = self._military_mock('Blue', 'Ground_Base', cp_value=10.0)
+        ally = self._military_mock('Blue', 'Ground_Base', cp_value=4.0, block_id='ally1')
+
+        result_with_snapshot = self._call(block, ally, recon_cp_snapshot={'ally1': 999.0})  # mai consultato
+        result_no_snapshot = self._call(block, ally, recon_cp_snapshot=None)
+        self.assertAlmostEqual(result_with_snapshot, result_no_snapshot)
 
 
 if __name__ == '__main__':
