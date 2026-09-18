@@ -23,3 +23,12 @@ tactical_evaluation_results.csv
 
 # Runtime logs generated on each module execution
 logs/
+
+# documentazione_dcs: materiale di terze parti riscaricabile, escluso per non appesantire il repo.
+# Versionati: i documenti di analisi, i sorgenti .lua/.bat/.log analizzati, i .miz e la SAM guide.
+Analysis/Document/documentazione_dcs/*.pdf
+Analysis/Document/documentazione_dcs/caucasus-freq_gross.png
+Analysis/Document/documentazione_dcs/DCS_-_Overview_Vehicles/*.pptx
+Analysis/Document/documentazione_dcs/1975 Georgian War/DCE/Missions/Campaigns/1975 Georgian War/Images/
+# artefatti NTFS di Windows (alternate data stream) creati dalla copia dei file
+*:Zone.Identifier

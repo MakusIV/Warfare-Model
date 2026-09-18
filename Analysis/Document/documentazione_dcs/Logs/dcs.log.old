@@ -1,0 +1,35 @@
+=== Log opened UTC 2026-09-18 10:53:34
+2026-09-18 10:53:34.612 WARNING EDCORE (Main): hypervisor is active
+2026-09-18 10:53:36.061 INFO    EDCORE (Main): Platform Timer Resolution: 15.56ms
+2026-09-18 10:53:36.612 INFO    EDCORE (Main): Created boot pool: n:16
+2026-09-18 10:53:36.613 INFO    APP (Main): Command line: "I:\Gaming\DCS World\Eagle Dynamics\DCS World\bin/DCS.exe"
+2026-09-18 10:53:36.613 INFO    APP (Main): DCS/2.9.29.27468 (x86_64; MT; Windows NT 10.0.26200)
+2026-09-18 10:53:36.613 INFO    APP (Main): Application revision: 267468
+2026-09-18 10:53:36.613 INFO    APP (Main): Renderer revision: 26305
+2026-09-18 10:53:36.613 INFO    APP (Main): Terrain revision: 27885
+2026-09-18 10:53:36.613 INFO    APP (Main): Build number: 559
+2026-09-18 10:53:36.613 INFO    APP (Main): CPU cores: 8, threads: 16, System RAM: 65459 MB, Pagefile: 4096 MB
+2026-09-18 10:53:36.613 INFO    DCS (Main): CPU info:
+system  affinity mask: 1111111111111111
+process affinity mask: 1111111111111111
+CPU: AMD Ryzen 7 5800X3D 8-Core Processor            [1x L3 caches]
+CPU has uniform cache size 96 MB (per cache)
+all CPU cores have the same efficiency class 0
+CPU cores have different performance classes: [0-6]
+logical cores with performance class 6: {6, 7, 14, 15}
+logical cores with performance class 5: {0, 1}
+logical cores with performance class 4: {2, 3}
+logical cores with performance class 3: {4, 5}
+logical cores with performance class 2: {10, 11}
+logical cores with performance class 1: {8, 9}
+logical cores with performance class 0: {12, 13}
+common cores: {4, 5, 10, 11, 8, 9, 12, 13}
+render cores: {6, 7, 14, 15, 0, 1, 2, 3}
+IO cores: {}
+unavailable cores: {}
+pause10: 0.016586 us (std dev: 0.046187)
+pause10: 524 cycles (std dev: 1624.8)
+2026-09-18 10:53:36.932 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/edWebViewBrowser.dll
+2026-09-18 10:53:38.438 INFO    ASYNCNET (23012): Login success.
+2026-09-18 10:53:50.810 INFO    ASYNCNET (23012): Got auth data.
+=== Log closed.

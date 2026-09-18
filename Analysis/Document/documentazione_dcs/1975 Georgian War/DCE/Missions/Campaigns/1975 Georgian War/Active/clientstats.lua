@@ -1,0 +1,26 @@
+clientstats = {
+	['MarkusIV'] = {
+		['score_last'] = {
+			['kills_ship'] = 0,
+			['dead'] = 0,
+			['eject'] = 0,
+			['friendly_kills_ship'] = 0,
+			['kills_ground'] = 0,
+			['friendly_kills_ground'] = 0,
+			['friendly_kills_air'] = 1,
+			['crash'] = 0,
+			['kills_air'] = 0,
+			['mission'] = 1,
+		},
+		['kills_ship'] = 0,
+		['dead'] = 0,
+		['eject'] = 0,
+		['friendly_kills_ground'] = 0,
+		['kills_ground'] = 0,
+		['friendly_kills_ship'] = 0,
+		['friendly_kills_air'] = 1,
+		['crash'] = 0,
+		['kills_air'] = 2,
+		['mission'] = 2,
+	},
+}

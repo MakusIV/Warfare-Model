@@ -1,0 +1,24 @@
+nato_name,local_name,rwr_symbol,track_radar,track_harm,search_radar_1,search_harm_1,search_radar_2,search_harm_2,min_range_nmi,max_range_nmi,min_alt_ft,max_alt_ft,acquire_time_s,launcher_type,cm_type,sead_priority,point_defense,launch_warning,hdsm,site_layout,note
+SA-2 Guideline,S-75 Dvina,"2, FS, FF",Fan Song,126,Flat Face,122,,,3.8,21.6,328,65600,21,Single Rail Launcher,Chaff,Track Radar,no,yes,no,"6L + TR + C2 + SR",
+SA-3 Goa,S-125 Neva,"3, LB, FF",Low Blow,123,Flat Face,122,,,3.2,13.5,700,65600,11,Quad Rail Launcher,Chaff,Track Radar,no,yes,no,"4L + TR + SR + C2",
+SA-5 Gammon,S-200 Dubna,"5, TS",Square Pair,129,Tin Shield,130,,,0.8,215,82,131233,40,Single Rail Launcher,Chaff,Track Radar,no,yes,no,"3 batterie da 6L+TR + C2 + SR",
+SA-6 Gainful,2K12 Kub,6,Straight Flush,108,N/A,N/A,,,0.5,19.2,100,33000,21,Triple Rack TEL,Chaff,Track Radar,no,yes,no,"3L + STR","Straight Flush e' search+track integrato"
+SA-8 Gecko,9K33 Osa,8,Land Roll,117,N/A,N/A,,,0.8,7.5,50,21000,19,Wheeled Launcher,Chaff,Launcher,no,yes,no,nessuno,"Land Roll integrato nel lanciatore; colocato con siti statici o truppe"
+SA-9 Gaskin,9K31 Strela-1,N/A,N/A,N/A,N/A,N/A,,,0.4,2.5,100,12000,2.5,Wheeled Launcher,Flare,Launcher,no,yes,no,nessuno,"IR a corto raggio; nessun radar"
+SA-10B Grumble,S-300PS,"10, BB, CS",Flap Lid,110,Big Bird,104,Clam Shell,103,3,40,50,150000,3,Quad TEL,Chaff,Track Radar,yes,no(HDSM),si(HDSM),"12L + TR + 2SR + C2","HDSM: nessun launch warning"
+SA-10C Grumble-C,S-300PMU,"10, BB, CS",Flap Lid,110,Big Bird,104,Clam Shell,103,2.7,48.6,33,82020,3,Quad TEL,Chaff,Track Radar,yes,yes,si,"12L + TR + 2SR + C2",
+SA-11 Gadfly,9K37 Buk-M1,"11, SD",Fire Dome,115,Snow Drift,107,,,1.8,18.9,49,72100,21,Quad Rail Launcher,Chaff,Launcher,no,yes,no,"11L + SR (solo sito statico)","Snow Drift NON necessario: Fire Dome integrato nel TELAR"
+SA-12 Gladiator/Giant,S-300V,"12, HS, BD",Grill Pan,112,High Screen,106,Bill Board,105,3.24,54,82,82021,3,Quad TEL,Chaff,Track Radar,yes,no,si,"8L + TR + 2SR + C2","HDSM: nessun launch warning"
+SA-13 Gopher,9K35 Strela-10M3,"13, DE",Snapshot,118,Dog Ear,109,,,0.4,4.3,75,15000,2.5,Quad Launcher,Flare,Launcher,no,yes,no,nessuno,"Missile IR; radar solo per ricerca e telemetria"
+SA-15 Gauntlet,9K331 Tor,15,Scrum Half,119,N/A,N/A,,,0.8,6.5,60,26000,9,Tracked Launcher,Chaff,Launcher,yes,yes,no,nessuno,"Point defense; abbatte missili in arrivo"
+SA-17 Grizzly,9K317 Buk-M1-2,"11, SD",Fire Dome,115,Snow Drift,107,,,0.54,27,49,164042,21,Quad Rail Launcher,Chaff,Launcher,no,yes,si,"11L + SR (solo sito statico)","Snow Drift NON necessario"
+SA-19 Grison,2K22 Tunguska,19,Hot Shot,120,Hot Shot,120,,,0,4,0,16000,4,Tracked Launcher,Kinetic,Launcher,yes,yes,no,nessuno,"In DCS usa targeting ottico: non contrastabile con chaff/flare"
+SA-20A Gargoyle,S-300PMU-1,"10, BB, CS",Tomb Stone,110,Big Bird,104,Clam Shell,103,2.69,81,33,88582,3,Quad TEL,Chaff,Track Radar,yes,no,si,"12L + TR + 2SR + C2","HDSM: nessun launch warning"
+SA-20B Gargoyle,S-300PMU-2,"10, BB, CS",Grave Stone,110,Big Bird,104,Clam Shell,103,2.16,108,33,88582,3,Quad TEL,Chaff,Track Radar,yes,no,si,"12L + TR + 2SR + C2","HDSM: nessun launch warning"
+SA-23 Gladiator/Giant,S-300VM,"U, HS, BD",Grill Screen,N/A,High Screen,106,Bill Board,105,2.69,108,82,121391,3,Quad TEL,Chaff,Track Radar,yes,no,si,"8L + TR + 2SR + C2","Grill Screen senza codice HARM per limiti DCS"
+HQ-7,HQ-7,"7, HQ",HQ-7,127,HQ-7,128,,,0.27,6.47,98,16400,12,Wheeled Launcher,Flare,Launcher,no,yes,no,nessuno,
+MIM-23 Hawk,MIM-23 Hawk,"HK, HA",AN/MPQ46,204,AN/MPQ50,203,,,1,25.6,450,45000,12,Triple Rail Launcher,Chaff,Track Radar,no,yes,no,"6L + TR + C2 + SR",
+MIM-104 Patriot,MIM-104 Patriot,PT,AN/MPQ53,202,AN/MPQ65,202,,,1.6,64.8,82,79500,16,Quad Launcher,Chaff,Track Radar,yes,yes,no,"8L + STR + C2",
+NASAMS,NASAMS,NS,AN/MPQ64,209,AN/MPQ64,209,,,0.4,32.9,3,85300,4,Six Pack,Chaff,Track Radar,yes,yes,no,"3L + STR + C2","Valori per AIM-120C; AIM-120B inferiore"
+Rapier,Rapier,"RP, RT",Rapier,125,Blindfire,124,,,0.2,3.7,164,9800,2,Quad Fixed,Kinetic,Launcher,no,yes,no,"L + TR + OT + C2","Guida ottica e SACLOS radar"
+MIM-115 Roland ADS,MIM-115 Roland ADS,RO,Roland ADS,201,Roland EWR,205,,,0.5,3.4,30,19500,11,Tracked,Chaff,Launcher,no,yes,no,nessuno,

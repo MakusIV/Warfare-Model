@@ -1,0 +1,61 @@
+campaign = 
+{
+    ["picture_EN"] = "Map Conflict.png",
+    ["directory"] = "F:\\documenti\\eagleDynamics\\campaign\\DCE_Sviluppo\\DCE_GW_1975\\DCS_SavedGames_Path\\Mods\\tech\\DCE\\Missions\\Campaigns\\",
+    ["description"] = "After the effective political action of the Minister of the Interior, a group of Georgian nationalists led by the Army Corps General Baaka Kobakhidze, carried out a coup by supporting Georgian military forces and with the political and military support of some western countries coordinated by the USA. On 9 September 1975, Tbilisi government buildings were occupied by Georgian military forces, at the same time the airports of Tbilisi, Soganlug, Vaziani, Kutaisi, Batumi, Kobuleti, Senaki, Sukhumi and Gudauta were occupied by Western coalition and/or Georgian military forces (Georgian War Coalition). \
+The Georgian War Coalition occupy the whole area of North Ossetia up to Kurta. During this expansion phase, Georgian forces manage to appropriate an important quantity of Russian military equipment, including: Mig-19, Mig-21, Mig-27, SU-17, AN-26 as well as SAM systems of the SA-2, SA-3, SA-6, SA-8, SA-9 with AAA ZS",
+    ["name_EN"] = "1975 Georgian War",
+    ["pictureSuccess_EN"] = "Newspaper_Victory_blue.jpg",
+    ["description_EN"] = "After the effective political action of the Minister of the Interior, a group of Georgian nationalists led by the Army Corps General Baaka Kobakhidze, carried out a coup by supporting Georgian military forces and with the political and military support of some western countries coordinated by the USA. On 9 September 1975, Tbilisi government buildings were occupied by Georgian military forces, at the same time the airports of Tbilisi, Soganlug, Vaziani, Kutaisi, Batumi, Kobuleti, Senaki, Sukhumi and Gudauta were occupied by Western coalition and/or Georgian military forces (Georgian War Coalition). \
+The Georgian War Coalition occupy the whole area of North Ossetia up to Kurta. During this expansion phase, Georgian forces manage to appropriate an important quantity of Russian military equipment, including: Mig-19, Mig-21, Mig-27, SU-17, AN-26 as well as SAM systems of the SA-2, SA-3, SA-6, SA-8, SA-9 with AAA ZS",
+    ["startStage"] = 1,
+    ["necessaryUnits"] = 
+    {
+    }, -- end of ["necessaryUnits"]
+    ["pictureFailed"] = "Newspaper_Victory_red.jpg",
+    ["picture"] = "Map Conflict.png",
+    ["name"] = "1975 Georgian War",
+    ["pictureSuccess"] = "Newspaper_Victory_blue.jpg",
+    ["version"] = 1,
+    ["pictureFailed_EN"] = "Newspaper_Victory_red.jpg",
+    ["fullPath"] = "F:\\documenti\\eagleDynamics\\campaign\\DCE_Sviluppo\\DCE_GW_1975\\DCS_SavedGames_Path\\Mods\\tech\\DCE\\Missions\\Campaigns\\1975 Georgian War.cmp",
+    ["stages"] = 
+    {
+        [1] = 
+        {
+            ["name"] = "Stage 1",
+            ["missions"] = 
+            {
+                [1] = 
+                {
+                    ["interval"] = 
+                    {
+                        [1] = 0,
+                        [2] = 100,
+                    }, -- end of ["interval"]
+                    ["file"] = "1975 Georgian War_first.miz",
+                    ["description"] = "",
+                    ["fullpath"] = "F:\\documenti\\eagleDynamics\\campaign\\DCE_Sviluppo\\DCE_GW_1975\\DCS_SavedGames_Path\\Mods\\tech\\DCE\\Missions\\Campaigns\\1975 Georgian War_first.miz",
+                }, -- end of [1]
+            }, -- end of ["missions"]
+        }, -- end of [1]
+        [2] = 
+        {
+            ["name"] = "Stage 2",
+            ["missions"] = 
+            {
+                [1] = 
+                {
+                    ["interval"] = 
+                    {
+                        [1] = 0,
+                        [2] = 100,
+                    }, -- end of ["interval"]
+                    ["file"] = "1975 Georgian War_ongoing.miz",
+                    ["description"] = "",
+                    ["fullpath"] = "F:\\documenti\\eagleDynamics\\campaign\\DCE_Sviluppo\\DCE_GW_1975\\DCS_SavedGames_Path\\Mods\\tech\\DCE\\Missions\\Campaigns\\1975 Georgian War_ongoing.miz",
+                }, -- end of [1]
+            }, -- end of ["missions"]
+        }, -- end of [2]
+    }, -- end of ["stages"]
+} -- end of campaign

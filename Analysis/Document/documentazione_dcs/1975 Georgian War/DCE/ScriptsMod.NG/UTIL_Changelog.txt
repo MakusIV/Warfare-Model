@@ -1,0 +1,242 @@
+if not versionDCE then versionDCE = {} end
+versionDCE["UTIL_Changelog.lua"] = "20.46.102"
+
+
+==:20.46.102:==
+94 -fixed: some planes land at the beginning of the mission
+95 -fixed: bug Deck
+96 -fixed: bug trigger
+97 -fixed: bug spawnAir MP
+98 -fixed: bug Deck
+99 -fixed: taxiing schedules are wrong
+100 -fixed: bug Deck
+101 -fixed: bug Deck
+102 -added: SinglePlayer with dedicated server Full plane
+
+
+==:20.46.93:==
+-- M46 -Added- : SinglePlayer with dedicated server
+93 -added: SinglePlayer with dedicated server
+
+==:20.45.91:==
+-- M45 -Added- : compatible with 2.7.0 
+
+71 -fixed: in MP, all available tasks are not displayed if there are several squadrons of the same type of plane
+72 -fixed: in Mp, not enough AI wingers offered if only one plane is selected
+73 -added: compatible with 2.7.0
+74 -fixed: crew do not catapult the F14 and F18
+75 -fixed: the probability of bad weather is incorrect
+76 -fixed: too many clouds on a desert map
+77 -changed: order of spawn on the deck.
+78 -fixed: some planes do not taxi
+79 -fixed: in the MP form, proposes targets already destroyed
+80 -fixed: taxiing times are bad
+81 -fixed: the player cannot spawning on the sixpack even if there is space available
+82 -fixed: too much or too little aircraft on the deck.
+83 -added: Check and Help CampaignMaker
+85 -fixed: the player cannot spawning on the sixpack even if there is space available
+86 -added: manual despawn of the planes blocking the deck.
+87 -added: despawn aircraft landing on CVN and LHA (option conf_mod)
+88 -fixed: planes blocked because of the sixpack
+89 -added: version of scriptsmod in the mission file
+90 -fixed: planes don't take off
+91 -fixed: bug at mission generation, line 3819
+92 -fixed: in MP, the planes that spawn in flight appear at the beginning of the mission and land immediately
+
+==:20.44.70:==
+-- M44 -Added- : Template Active GroundGroup moving front
+
+==:20.43.42:==
+==:20.44.70:==
+-- M43 -Added- Assignment of C08 type parking lot numbers
+
+34 -Changed- fair task between squadrons
+35 -fixed- LHA & FARP, flight start if there is no more space on the ground
+36 -Changed- changes the display of "harrier" numbers: 810 is now displayed: 18
+37 -fixed- customTask helicopters are now taken into account
+38 -fixed- hour catapulting, if several CVNs are in the same group
+39 -Changed- speed too low until the waypoint "join".
+40 -Removed- Eagle modification on Ato_FlightPlan concerning helicopters and FARP
+41 -Changed- for static aircraft, look at the space available according to the minutes
+
+45 -fixed- CallTankRefuel + Help CAP, all coalition
+
+47 -fixed- the static planes disappear after 3mn.
+48 -fixed- speed too low for escort aircraft, following very slow aircraft (A-10)
+49 -Changed- Help CAP , all coalition
+
+53 -fixed- management of the offset flight or ground appearances
+54 -Changed- despawn Plane on BaseAirStart
+
+57 -fixed- fair task between squadrons
+58 -fixed- custom FrequenceRadio  Radio AWACS
+59 -Changed- possibility to use EWR in WEST language
+60 -fixed- number of static aircraft based on the remaining space
+61 -fixed- custom FrequenceRadio  (number expected, got string)
+62 -Changed- Custom Briefing ( Divert/CVN possible)
+63 -Added- for debugging adds the following info: mission name, script version, SavedGames path, campaign version
+64 -fixed- Custom Briefing (f: Divert/CVN possible)
+65 -fixed- F14 limited to 2 in MP
+66 -fixed- helicopter on helipad (Reinstatement of a previously deleted Eagle's modification ^^)
+67 -fixed- lack of frequency on the divert base blocks mission generation
+68 -fixed- helicopter on FARP, LHA and parking delay occupation
+69 -Added- assignment of parking with a simple numbering
+70 -fixed- E2 retreat doesn't work
+
+==:20.42.33:==
+-- M42 -Added- liveryModex
+	- displays a High res or CAG skin to the boss, also allows to display a skin especially to a plane number.
+
+	- Gives the CAG aircraft number to the player, only in singlePlayer.
+
+	- And gives priority to the most important aircraft numbers (ex 200) to the group leader.
+	
+	oob_air_init.lua :
+	liveryModex = {									--unit livery Modex  (optional)
+		[100] = "VF-101 Dark",
+		[110] = "VF-101 Grim Reapers Low Vis",
+		},
+
+
+28 -fixed- Inteceptor
+29 -fixed- Scratchpad 
+30 -fixed- altitude too high for helicopters
+31 -Added- Frequency FARP add in Mission file
+32 -Changed- Custom Briefing TACAN tanker only if necessary + display of take-off times only at the right platform (CVN FARP)
+33 -Added-weighting tasks between different squadrons
+
+==:20.41.27:==
+-- M41 -Added- Sratchpad : automatically writes to the Sratchpad file
+	writes automatically in the scratchpad mod file, (for the moment, only works if DCS is not launched)
+
+
+11 -Added- addition of Divert fields in the briefing
+12 -fixed- to avoid blocking the naval task force, creates 2 small bends instead of one big one.
+13 -Added- addition of VOR ILS etc. information in the Divert briefing
+
+15 -Added- TakeOff Pedro Helicopter
+16 -fixed- Scratchpad written in the Sratchpad file, if this modul is installed
+17 -fixed- Despawn Landing CVN + FARP, with new CVN
+18 -Added- ability to customize CVN frequencies in the Init/db_airbases file	
+	Init/db_airbases		ATC_frequency = "250.255",
+19 -Added- added the version of the campaign in the file camp_init
+
+21 -Changed- reinforces the form on user input errors 
+
+26 -Added- Parking limite little base, allows to place more aircraft than parking space
+27 -fixed- CVN Manual Freq, frequency update
+
+==:20.40.06(10):==
+-- M40 -Added- Pedro (plane guard) This helicopter takes off, then follows the CVN despite the turns
+
+Corrections:
+01 -fixed- less angular boat turning
+
+03 -Changed- priority to the player's frequencies
+04 -Added-  MenuRadio request manual TurnIntoWind, 
+	Init/conf_mod
+		Chapter: mission_ini
+		Add SC_CarrierIntoWind "auto" or "man":
+				SC_CarrierIntoWind = "auto",				-- (defaut: "auto")("man"), "auto": Original Mbot code: the CVN rotates according to the air operations. "man": the CVN runs only once via the commands in the radio menu F10 
+05 -fixed- radio frequency range F14 and F18
+06 -fixed- SuperCarrier : add altitude and speed to units spawn in flight
+07 -Changed- custom FrequenceRadio (i  3 frequency bands) rewriting of the automatic choice of frequency ranges
+08 -fixed- fix all pb FrequenceRadio
+09 -fixed- recovery interceptor
+
+==:20.39.33:==
+-- M39 -Added- Several types of aircraft for escort at the same time
+
+01 -fixed- vCruise by default 
+02 -fixed- deletes the camp.player table which mistakenly keeps the table in the Active folder.
+03 -Changed- change freq EWR + custom FrequenceRadio, automatically calculates the usable radio frequency range, we delete the radio table from camp_init
+04 -Changed- Multiplayer : number of flight group Client undefined ^^
+05 -Added-  VHF helicopter
+06 -fixed- Multiplayer : traitor plane (he turns around)
+07 -Added- saved game on another DD
+08 -Changed- Multiplayer : shield the form, debugging the multiplayer skip that was no longer offering a plane
+09 -Added- Multiplayer : choice by target and task
+10 -fixed- Multiplayer : replaces #mission.trig.func which doesn't start at 0 anymore, so impossible with #.
+11 -fixed- Multiplayer :Task table
+12 -Changed- cosmetique formulair + generator task 
+13 -fixed-  prunescript category tag/ helico MP
+14 -fixed- form MP
+15 -fixed- Multiplayer : In multiplayer, this allows you to control an aircraft already in flight in case of a crash.
+16 -Added- Check and Help CampaignMaker
+17 -fixed- FARPS
+18 -fixed- 3 choix assuré
+18 -Changed- different Type possible/task
+19 -fixed- frequence Min Gazelle vs A10
+20 -fixed- Spawn before Departure 
+21 -fixed- different Type possible/task ++
+22 -Added- Check and Help CampaignMaker: warns the CampaignMaker of a missing nation
+23 -Changed- robust form 
+24 -Changed- keeps half of the staff for the escort
+25 -Changed- prohibits an unescorted strike
+26 -Added- Multiplayer limit escort number, option in conf_mod : ["limit_escort"] = 8,
+27 -fixed- Gazelle
+28 -fixed- Multiplayer EscorteTot-max
+29 -Added- Check and Help CampaignMaker Check conf_mod
+30 -Changed- prohibits aircraft/helicopter ecort
+31 -Added- helps CampaignMaker to balance the game (type "Z" in firstmission.bat)
+32 -Added- escort mandatory or not
+	add in conf_mod.lua : 
+	campMod = {
+		StrikeOnlyWithEscorte = false, 		-- (default : true) strikes are possible with only one escort
+	}
+33 -Changed- helps CampaignMaker: checks only the right  theatre
+
+==:20.38.08:==
+-- M38 -Added- Check Name Target error
+
+==:20.37.23:==
+-- M37 -Added- Adding the supercarrier conf_mod :
+	CVN_CleanDeck
+	CVN_Vmax
+	CVN_windDeck
+	SC_FullPlaneOnDeck
+	SC_SpawnOn = {
+		["F-14B"] = "deck",
+		["E-2C"] = "catapult", 
+		["S-3B Tanker"] = "air"
+		
+	SC_UseTurnCarrier
+
+	F10 : Adding the F10 command : despawn plane (beta)
+
+-- M36 -Added- F10 command :  Help CAP
+-- M35 -Added- the scriptsmod folder will be named according to the scriptsmod version + simplification of the bat file, the path will now be managed in Init/path.bat
+-- M34 -Added- EWR frequencies will be assigned according to the frequencies in camp_ini
+	->radio custom: check frequency ranges and channel number before assigning it
+
+Divers:
+	Hide Windows Error Boxes
+	Adds a radio channel MP (briefing)
+	radio Su27
+	Adds a catapult schedule  (briefing)
+	
+==:20.33.03:==
+
+-- M33 -Added- Custom Briefing (onBoardNum) ajoute les numeros des avions du flight du joueur 
+-- M32 -Added- E-2C Automatic Retreat
+-- M31 -Added- Remove all static aircraft from the deck  : Important for MP !
+-- M30 -Added- Desactive TriggerStart : when desactivate Planned mission can be used without problems for attack planes but there can be lags
+-- M29 -Added- Menu F10 Refueling + RTB package + Info Bingo Wingman
+-- M27 -Added- MovedBullseye
+-- M26 -Added- destroys the last targets automatically, avoids a package for a single remaining target
+-- M25 -Added- added an option to get only daytime : If you don't want to fly night missions 
+-- M24 -Added- automatic configuration for MP (prunescript, static aircrafts on the deck, etc...)
+-- M23 -Added- Delete all USN Deckcrew mod units without editing base mission
+-- M22 -Added- limits unwanted detections : used to Intercept missions
+-- M20 -Added- add failures and change game options 
+-- M19 -Added- RepairGround ||  Targets objets can be repaired if purcentage of destruction is over 25 % by default
+-- M18 -Added- destroy Plane Landing CVN 
+-- M17 -Added- (Option F-14B), load loadout or confmod
+-- M16 -Added- SpawnAir B1b & B-52
+-- M14 -Added- versionning
+-- M13 -Added- Performance: increases the speed of mission generation, a little
+-- M12 -Added- Skill
+-- M11 -Added- Multiplayer, still in TEST, PVP possible, separate briefing, separate images
+-- M09 -Added- Prune Script
+-- M05 -Added- ajout picture Briefing + pictures Target
+-- M01 -Added- DataLink 

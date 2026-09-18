@@ -1,0 +1,1093 @@
+=== Log opened UTC 2026-09-18 10:58:48
+2026-09-18 10:58:48.112 WARNING EDCORE (Main): hypervisor is active
+2026-09-18 10:58:49.571 INFO    EDCORE (Main): Platform Timer Resolution: 15.71ms
+2026-09-18 10:58:50.085 INFO    EDCORE (Main): Created boot pool: n:16
+2026-09-18 10:58:50.085 INFO    APP (Main): Command line: "I:\Gaming\DCS World\Eagle Dynamics\DCS World\bin/DCS.exe" --restarted
+2026-09-18 10:58:50.085 INFO    APP (Main): DCS/2.9.29.27468 (x86_64; MT; Windows NT 10.0.26200)
+2026-09-18 10:58:50.085 INFO    APP (Main): Application revision: 267468
+2026-09-18 10:58:50.086 INFO    APP (Main): Renderer revision: 26305
+2026-09-18 10:58:50.086 INFO    APP (Main): Terrain revision: 27885
+2026-09-18 10:58:50.086 INFO    APP (Main): Build number: 559
+2026-09-18 10:58:50.086 INFO    APP (Main): CPU cores: 8, threads: 16, System RAM: 65459 MB, Pagefile: 4096 MB
+2026-09-18 10:58:50.086 INFO    DCS (Main): CPU info:
+system  affinity mask: 1111111111111111
+process affinity mask: 1111111111111111
+CPU: AMD Ryzen 7 5800X3D 8-Core Processor            [1x L3 caches]
+CPU has uniform cache size 96 MB (per cache)
+all CPU cores have the same efficiency class 0
+CPU cores have different performance classes: [0-6]
+logical cores with performance class 6: {6, 7, 14, 15}
+logical cores with performance class 5: {0, 1}
+logical cores with performance class 4: {2, 3}
+logical cores with performance class 3: {4, 5}
+logical cores with performance class 2: {10, 11}
+logical cores with performance class 1: {8, 9}
+logical cores with performance class 0: {12, 13}
+common cores: {4, 5, 10, 11, 8, 9, 12, 13}
+render cores: {6, 7, 14, 15, 0, 1, 2, 3}
+IO cores: {}
+unavailable cores: {}
+pause10: 0.015843 us (std dev: 0.017375)
+pause10: 485 cycles (std dev: 461.7)
+2026-09-18 10:58:50.673 INFO    ASYNCNET (21216): Login success.
+2026-09-18 10:58:52.257 INFO    ASYNCNET (21216): Got auth data.
+2026-09-18 10:58:52.268 INFO    APP (Main): Successfully got authorization data.
+2026-09-18 10:58:52.335 INFO    EDCORE (Main): (dDispatcher)enterToState_:0
+2026-09-18 10:58:52.335 INFO    Dispatcher (Main): 2026/9/18 12:58 V2404051500
+2026-09-18 10:58:52.335 INFO    ASYNCNET (Main): ProtocolVersion: 428
+2026-09-18 10:58:52.335 INFO    ASYNCNET (Main): Adding LAN search interface 0: 127.0.0.1 "IPv4 Loopback"
+2026-09-18 10:58:52.335 INFO    ASYNCNET (Main): Adding LAN search interface 0: 255.255.255.255 "IPv4 Broadcast"
+2026-09-18 10:58:52.337 INFO    ED_SOUND (Main): Using driver: wasapi
+2026-09-18 10:58:52.339 INFO    ED_SOUND (Main): Found 3 available audio device(s):
+2026-09-18 10:58:52.339 INFO    ED_SOUND (Main):   0: ID: "{0.0.0.00000000}.{3f009b62-ee03-47e7-95d2-17a72678d1b3}", Name: "U28E590 (NVIDIA High Definition Audio)"
+2026-09-18 10:58:52.339 INFO    ED_SOUND (Main):   1: ID: "{0.0.0.00000000}.{9723347d-9db1-453a-acd5-e0127b46d9cd}", Name: "Speakers (Realtek(R) Audio)"
+2026-09-18 10:58:52.339 INFO    ED_SOUND (Main):   2: ID: "{0.0.0.00000000}.{ad25559f-e3f6-4978-8e9f-3a80b5ae2bcd}", Name: "Realtek Digital Output (Realtek(R) Audio)"
+2026-09-18 10:58:52.449 INFO    SOUND (Main): Added sound path: Sounds
+2026-09-18 10:58:52.486 INFO    SOUNDER (Main): Loaded 229 packed sounders.
+2026-09-18 10:58:52.528 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/dx11backend.dll
+2026-09-18 10:58:52.540 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/dxgui_edge_render.dll
+2026-09-18 10:58:52.540 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/edterrain4.dll
+2026-09-18 10:58:52.552 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-direct_output.dll
+2026-09-18 10:58:52.565 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-dxgui.dll
+2026-09-18 10:58:52.578 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-dxguiWin.dll
+2026-09-18 10:58:52.590 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-ED_demosceneAPI.dll
+2026-09-18 10:58:52.601 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-guid.dll
+2026-09-18 10:58:52.613 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_axes_tune.dll
+2026-09-18 10:58:52.624 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_demoscene.dll
+2026-09-18 10:58:52.638 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_nodes_map.dll
+2026-09-18 10:58:52.649 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_overlay.dll
+2026-09-18 10:58:52.661 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_ruler.dll
+2026-09-18 10:58:52.673 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_user_container.dll
+2026-09-18 10:58:52.697 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_video_player.dll
+2026-09-18 10:58:52.710 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-gui_webview.dll
+2026-09-18 10:58:52.721 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-librs232.dll
+2026-09-18 10:58:52.732 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-magvar.dll
+2026-09-18 10:58:52.744 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-md5.dll
+2026-09-18 10:58:52.754 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-mime.dll
+2026-09-18 10:58:52.765 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-minizip.dll
+2026-09-18 10:58:52.783 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-MissionGenerator.dll
+2026-09-18 10:58:52.795 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-reg.dll
+2026-09-18 10:58:52.807 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-socket.dll
+2026-09-18 10:58:52.807 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-terrain.dll
+2026-09-18 10:58:52.820 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/lua-textutil.dll
+2026-09-18 10:58:52.821 INFO    Dispatcher (Main): InitLow
+2026-09-18 10:58:52.821 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/CockpitBase.dll
+2026-09-18 10:58:52.828 INFO    Dispatcher (Main): Loading installed modules...
+2026-09-18 10:58:54.011 INFO    SECURITYCONTROL (Main): Loaded .\Mods\tech\WWII Units\dcs_module.pak.crypt
+2026-09-18 10:59:00.179 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./CoreMods/aircraft/AJS37/entry.lua
+2026-09-18 10:59:00.499 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./CoreMods/aircraft/C130J/entry.lua
+2026-09-18 10:59:00.935 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./CoreMods/aircraft/F-4E/entry.lua
+2026-09-18 10:59:01.199 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./CoreMods/aircraft/Hawk/Hawk.lua
+2026-09-18 10:59:01.704 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./Mods/aircraft/F-4E/entry.lua
+2026-09-18 10:59:01.756 INFO    Scripting (Main): OBSOLETE mount_vfs_sound_path() used in ./Mods/aircraft/F14/entry.lua
+2026-09-18 10:59:02.391 INFO    Scripting (Main): PLUGINS START-------------------------------------------------
+2026-09-18 10:59:02.415 INFO    Scripting (Main): plugin: ColdWarAssetsPack unit replace BRDM-2
+2026-09-18 10:59:02.415 INFO    Scripting (Main): plugin: ColdWarAssetsPack unit replace Strela-1 9P31
+2026-09-18 10:59:02.419 INFO    Scripting (Main): plugin: Currenthill Assets Pack unit replace Mi-28N
+2026-09-18 10:59:02.419 INFO    Scripting (Main): plugin: Currenthill Assets Pack unit replace Tu-95MS
+2026-09-18 10:59:02.419 INFO    Scripting (Main): plugin: Currenthill Assets Pack unit replace T-90
+2026-09-18 10:59:02.420 INFO    Scripting (Main): plugin: Currenthill Assets Pack unit replace BMP-3
+2026-09-18 10:59:02.421 INFO    Scripting (Main): plugin: Currenthill Assets Pack unit replace ALBATROS
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_3_80mm_AA
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_88_75mm_AA
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_94_Truck
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_96_25mm_AA
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_94_25mm_AA_Truck
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_98_Ke_Ni
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_98_So_Da
+2026-09-18 10:59:02.431 INFO    Scripting (Main): plugin: World War II PTO Units by Magnitude 3 LLC unit replace Type_89_I_Go
+2026-09-18 10:59:02.629 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/Animals/Sounds
+2026-09-18 10:59:02.640 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/ColdWarAssetsPack/Sounds
+2026-09-18 10:59:02.640 INFO    SOUNDER (13332): Loaded 9 packed sounders.
+2026-09-18 10:59:02.730 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/Currenthill Assets Pack/Sounds
+2026-09-18 10:59:02.731 INFO    SOUNDER (13332): Loaded 56 packed sounders.
+2026-09-18 10:59:02.754 INFO    Scripting (Main): plugin: F-5E 2024 unit replace F-5E-3
+2026-09-18 10:59:02.851 INFO    Scripting (Main): plugin: SKIPPED './Mods/campaigns/AV-8B Sky Warrior': disabled by user
+2026-09-18 10:59:02.900 INFO    Scripting (Main): plugin: SKIPPED 'A-10A by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.900 INFO    Scripting (Main): plugin: SKIPPED 'A-10C Warthog by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.900 INFO    Scripting (Main): plugin: SKIPPED 'A-10C II Warthog by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.900 INFO    Scripting (Main): plugin: SKIPPED 'AH-64D BLK.II': disabled by user
+2026-09-18 10:59:02.900 INFO    Scripting (Main): plugin: SKIPPED 'C-101 Aviojet': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F-15C': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F-16C bl.50': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F-5E by Belsimtek': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F-5E FC': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F-86F FC': disabled by user
+2026-09-18 10:59:02.903 INFO    Scripting (Main): plugin: SKIPPED 'F/A-18C': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'Ka-50 Black Shark by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'Ka-50 Black Shark 3 by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'MB-339A/PAN by IndiaFoxtEcho': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'Mi-24P by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'Mi-8MTV2 Hip by Belsimtek': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'MiG-15bis FC': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'MiG-29 Fulcrum by Eagle Dynamics': disabled by user
+2026-09-18 10:59:02.906 INFO    Scripting (Main): plugin: SKIPPED 'Mirage F1 by Aerges': disabled by user
+2026-09-18 10:59:02.909 INFO    Scripting (Main): plugin: SKIPPED 'SA342 Gazelle by Polychop-Simulations': disabled by user
+2026-09-18 10:59:02.911 INFO    Scripting (Main): plugin: SKIPPED 'MarianaIslands': disabled by user
+2026-09-18 10:59:02.911 INFO    Scripting (Main): plugin: SKIPPED 'PersianGulf': disabled by user
+2026-09-18 10:59:02.926 INFO    Scripting (Main): PLUGINS DONE--------------------------------------------------
+2026-09-18 10:59:02.982 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/HeavyMetalCore/Sounds
+2026-09-18 10:59:02.983 INFO    SOUNDER (13332): Loaded 14 packed sounders.
+2026-09-18 10:59:03.167 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/Kuznecow/Sounds
+2026-09-18 10:59:03.167 INFO    SOUNDER (13332): Loaded 1 packed sounders.
+2026-09-18 10:59:03.191 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/M3 WWII PTO units/Sounds
+2026-09-18 10:59:03.191 INFO    SOUNDER (13332): Loaded 8 packed sounders.
+2026-09-18 10:59:03.269 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/SouthAtlanticAssets/Sounds
+2026-09-18 10:59:03.269 INFO    SOUNDER (13332): Loaded 15 packed sounders.
+2026-09-18 10:59:03.334 WARNING EDCORE (13332): Source coremods/tech/southatlanticassets/textures/vehicles is already mounted to the same mount /textures/.
+2026-09-18 10:59:03.345 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/TechWeaponPack/Sounds
+2026-09-18 10:59:03.346 INFO    SOUNDER (13332): Loaded 80 packed sounders.
+2026-09-18 10:59:04.030 INFO    APP (Main): options.graphics =
+{
+	['volumetricLights'] = 1;
+	['AA'] = 'DLAA';
+	['forestDetailsFactor'] = 0.8;
+	['rainDroplets'] = 0;
+	['LensEffects'] = 0;
+	['box_mouse_cursor'] = true;
+	['anisotropy'] = 3;
+	['water'] = 1;
+	['motionBlurAmount'] = 1;
+	['BlurFlatShadows'] = 1;
+	['outputGamma'] = 1.9;
+	['aspect'] = 1.7777777777778;
+	['lights'] = 2;
+	['LODmult'] = 1;
+	['MSAA'] = 1;
+	['messagesFontScale'] = 1;
+	['canopyReflections'] = 1;
+	['width'] = 1920;
+	['visibRange'] = 'High';
+	['DLSS_PerfQuality'] = 3;
+	['useDeferredShading'] = 1;
+	['clutterMaxDistance'] = 940;
+	['textures'] = 1;
+	['cockpitGI'] = 0;
+	['terrainTextures'] = 'max';
+	['height'] = 1080;
+	['multiMonitorSetup'] = '1camera';
+	['shadows'] = 3;
+	['defaultFOV'] = 78;
+	['shadowTree'] = false;
+	['chimneySmokeDensity'] = 7;
+	['secondaryShadows'] = 0;
+	['SSS'] = 1;
+	['fullScreen'] = true;
+	['preloadRadius'] = 101800;
+	['scaleGui'] = 1;
+	['Scaling'] = 0.66;
+	['DOF'] = 0;
+	['clouds'] = 1;
+	['sceneryDetailsFactor'] = 0.8;
+	['Upscaling'] = 'DLSS';
+	['Sharpening'] = 0.34;
+	['motionBlur'] = 0;
+	['ColorGradingLUT'] = 0;
+	['SSLR'] = 0;
+	['effects'] = 3;
+	['SSAO'] = 0;
+	['maxFPS'] = 90;
+	['sync'] = false;
+	['heatBlr'] = 0;
+	['forestDistanceFactor'] = 0.8;
+	['flatTerrainShadows'] = 0;
+	['civTraffic'] = 'low';
+	['ScreenshotExt'] = 'jpg';
+};
+2026-09-18 10:59:04.479 INFO    SOUND (13332): Added sound path: ./CoreMods/tech/USS_Nimitz/Sounds
+2026-09-18 10:59:04.479 INFO    SOUNDER (13332): Loaded 6 packed sounders.
+2026-09-18 10:59:05.005 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/AJS37/Sounds
+2026-09-18 10:59:05.155 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/AV8BNA/Sounds
+2026-09-18 10:59:05.247 INFO    SOUNDER (13332): Loaded 1 sounders.
+2026-09-18 10:59:05.249 WARNING EDCORE (13332): Source coremods/aircraft/av8bna/shapes is already mounted to the same mount /models/.
+2026-09-18 10:59:05.348 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/C-101/Sounds
+2026-09-18 10:59:05.561 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/C130J/Sounds
+2026-09-18 10:59:05.598 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/CH-47F/Sounds
+2026-09-18 10:59:05.618 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/ChinaAssetPack/Sounds
+2026-09-18 10:59:05.795 INFO    SOUNDER (13332): Loaded 16 sounders.
+2026-09-18 10:59:05.812 WARNING EDCORE (13332): Source coremods/aircraft/chinaassetpack/textures/vehicles/hq7 is already mounted to the same mount /textures/.
+2026-09-18 10:59:05.895 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/Christen Eagle II/Sounds
+2026-09-18 10:59:06.164 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/F-100D/Sounds
+2026-09-18 10:59:06.165 WARNING EDCORE (13332): Source coremods/aircraft/f-100d/shapes is already mounted to the same mount /models/.
+2026-09-18 10:59:06.541 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/F-15E/Sounds
+2026-09-18 10:59:07.362 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/F-4E/Sounds
+2026-09-18 10:59:08.271 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/F14/Sounds
+2026-09-18 10:59:08.433 INFO    SOUNDER (13332): Loaded 1 sounders.
+2026-09-18 10:59:09.256 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/F4U-1D/Sounds
+2026-09-18 10:59:10.198 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/I-16/Sounds
+2026-09-18 10:59:10.358 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/Ka-50/Sounds
+2026-09-18 10:59:10.532 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/La-7/Sounds
+2026-09-18 10:59:10.627 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/M-2000C/Sounds
+2026-09-18 10:59:10.896 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/MiG-21bis/Sounds
+2026-09-18 10:59:11.565 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/MiG-29-Fulcrum/Sounds
+2026-09-18 10:59:11.622 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/Mirage-F1/Sounds
+2026-09-18 10:59:13.003 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/OH-58D/Sounds
+2026-09-18 10:59:13.068 INFO    SOUND (13332): Added sound path: ./CoreMods/aircraft/SA342/Sounds
+2026-09-18 10:59:13.301 INFO    SOUND (13332): Added sound path: ./CoreMods/services/VoiceChat/Sounds
+2026-09-18 10:59:13.308 INFO    SOUND (13332): Added sound path: ./Mods/tech/CombinedArms/Sounds
+2026-09-18 10:59:13.353 INFO    SOUND (13332): Added sound path: ./Mods/tech/WWII Units/Sounds
+2026-09-18 10:59:13.356 INFO    SOUNDER (13332): Loaded 82 packed sounders.
+2026-09-18 10:59:13.842 WARNING EDCORE (13332): Source mods/tech/wwii units/textures/ju-88 is already mounted to the same mount /textures/.
+2026-09-18 10:59:14.111 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/Bf-109K-4/Sounds
+2026-09-18 10:59:14.116 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/Christen Eagle II/Sounds
+2026-09-18 10:59:14.483 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/F-4E/Sounds
+2026-09-18 10:59:15.242 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/F-5E 2024/Sounds
+2026-09-18 10:59:15.460 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/F-86/Sounds
+2026-09-18 10:59:15.664 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/F14/Sounds
+2026-09-18 10:59:15.727 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/F4U-1D/Sounds
+2026-09-18 10:59:15.786 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/FW-190A8/Sounds
+2026-09-18 10:59:15.803 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/FW-190D9/Sounds
+2026-09-18 10:59:15.808 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/I-16/Sounds
+2026-09-18 10:59:16.037 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/L-39C/Sounds
+2026-09-18 10:59:16.057 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/La-7/Sounds
+2026-09-18 10:59:16.064 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/MIG-21bis/Sounds
+2026-09-18 10:59:16.420 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/MiG-15bis/Sounds
+2026-09-18 10:59:16.428 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/MiG-19P/Sounds
+2026-09-18 10:59:16.658 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/MiG-29-Fulcrum/Sounds
+2026-09-18 10:59:16.676 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/MosquitoFBMkVI/Sounds
+2026-09-18 10:59:16.685 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/NS430/Sounds
+2026-09-18 10:59:16.703 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/P-47D-30/Sounds
+2026-09-18 10:59:16.716 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/SpitfireLFMkIX/Sounds
+2026-09-18 10:59:16.768 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/Uh-1H/Sounds
+2026-09-18 10:59:16.787 INFO    SOUND (13332): Added sound path: ./Mods/aircraft/Yak-52/Sounds
+2026-09-18 10:59:16.797 INFO    SOUND (13332): Added sound path: ./Mods/terrains/Nevada/Sounds
+2026-09-18 10:59:16.803 INFO    SOUND (13332): Added sound path: ./Mods/terrains/Normandy/Sounds
+2026-09-18 10:59:16.810 INFO    SOUND (13332): Added sound path: ./Mods/terrains/TheChannel/Sounds
+2026-09-18 10:59:17.235 INFO    Dispatcher (Main): Waiting for module resource mounts: 13.203s
+2026-09-18 10:59:17.236 INFO    VISUALIZER (Main): render thread initialization...
+2026-09-18 10:59:17.242 INFO    GRAPHICSVISTA (22072): renderer: 'dx11backend.dll'
+2026-09-18 10:59:17.996 INFO    DX11BACKEND (22072): DX11Renderer initialization (w:1920 h:1080 fullscrn:1 vsync:0 adapter:0 monitor:0 shaderErrors:1)
+2026-09-18 10:59:18.181 INFO    DX11BACKEND (22072): Driver Concurrent Creates - 1
+2026-09-18 10:59:18.182 INFO    DX11BACKEND (22072): Driver Command Lists - 1
+2026-09-18 10:59:18.191 INFO    DX11BACKEND (22072): NVIDIA API init OK
+2026-09-18 10:59:18.192 INFO    DX11BACKEND (22072): NVIDIA Display Driver Version 61692.r616_69
+2026-09-18 10:59:18.192 INFO    DX11BACKEND (22072): GPU count:1
+2026-09-18 10:59:18.256 INFO    DX11BACKEND (22072): commonPool: 48-128, cbPool: 4-14
+2026-09-18 10:59:18.256 INFO    DX11BACKEND (22072): samplerPool: 5-16
+2026-09-18 10:59:19.228 INFO    DX11BACKEND (22072): NVIDIA DLSS Minimum driver version was reported as : 470.0
+2026-09-18 10:59:19.229 INFO    METASHADER (22072): Init filesystem: I
+2026-09-18 10:59:19.247 INFO    DX11BACKEND (22072): DX11ShaderBinaries::loadCache bazar/shaders/fxo/fxo
+2026-09-18 10:59:22.582 INFO    DX11BACKEND (22072): DX11ShaderBinaries::loadCache done. Loaded 2626/2626.
+2026-09-18 10:59:22.593 INFO    DX11BACKEND (22072): DX11ShaderBinaries::loadCache c:/users/marco/saved games/dcs/fxo
+2026-09-18 10:59:22.597 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/e848b57b4e6512b61653266ae41f0abb.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=105;SIZE_X=105;SIZE_Y=65;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.601 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/965d8c2da3ba0be382e777c0a14f36ec.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=408;SIZE_X=345;SIZE_Y=408;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.604 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/92e43edcfae4cb7d83ac81466873cd4c.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=318;SIZE_X=298;SIZE_Y=318;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.609 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/41c232f25cfef03778479753f01519aa.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=105;SIZE_X=105;SIZE_Y=65;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.612 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/62baef921f44b50ea3e0cc87608cb2fd.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=128;SIZE_X=128;SIZE_Y=128;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.616 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8e3caf8ff54917f445e154e55cd73ee5.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=102;SIZE_X=86;SIZE_Y=102;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.620 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/04314492ddeea1d5fa35e03b759f9999.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=32;SIZE_X=32;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.624 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6243059c1bb50a6e711328fe9713142c.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=102;SIZE_X=86;SIZE_Y=102;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.628 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/5339c2c6072ffee80fce05fb02b31c2c.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=12;SIZE_X=10;SIZE_Y=12;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.633 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c825b55feaa61d2115af90500078e321.fxo(particlesystem2/steamcatapult.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.637 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7e002c57c027bb72f65d849420cce953.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=318;SIZE_X=298;SIZE_Y=318;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.641 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4d27860d8c58008c8572df0103d5cb38.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=14;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.645 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/5f8f00694d8fc2d51e914c2b41af56e5.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=420;SIZE_X=420;SIZE_Y=262;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.649 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c5c302ee0f7176619f5413d4fec4eb1f.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=204;SIZE_X=172;SIZE_Y=204;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.653 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/938408e905280590cde598ab61d3a7c7.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=636;SIZE_X=597;SIZE_Y=636;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.657 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/9c44a170326d1c3c3dbf5fd39bdb6d27.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=39;SIZE_X=37;SIZE_Y=39;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.660 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c3c6e74e4af5c7469718dedda531776d.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=64;SIZE_X=64;SIZE_Y=64;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.664 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/3c0014bdc9aaa4436671b9dcad216e69.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=12;SIZE_X=10;SIZE_Y=12;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.668 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/fade909f86d4a2b8c1c3508270f2d35f.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.672 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/e72ae71ab2f262de1a683909d9c8c610.fxo(particlesystem2/cloud.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.676 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/07cb531510e133364aa8e47c99838d09.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=25;SIZE_X=21;SIZE_Y=25;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.680 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/eedfd535c49239d9ba4a991c76227942.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=128;SIZE_X=128;SIZE_Y=128;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.685 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/0deb58e9d3ce610f5444caad59ced48c.fxo(animator/gpu_animated_model.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;NUM_NODES=33;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.689 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/deb2cbb4017b0c65ff33632f4650b594.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=10;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.692 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/2842127d373afdbfa9ce9cb086424fc2.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=159;SIZE_X=149;SIZE_Y=159;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.697 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/f0e3732399aca9dec724112cf605afa0.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=25;SIZE_X=21;SIZE_Y=25;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.700 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/51b10843938fae03ad78ccaf5c5135e6.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=12;SIZE_X=10;SIZE_Y=12;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.704 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/36e23078622b494231e7e774cc5de966.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=420;SIZE_X=420;SIZE_Y=262;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.708 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/e83f7cb9a7c7666a31682a6a3bdd881f.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=8;USE_DCS_DEFERRED=1;USE_TRANSFORM_MATRIX;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.712 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7a7f7af087810bd7cf9d56898149ef8d.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=10;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.716 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/dfdc36cc682d98b4911b12696157d17b.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=210;SIZE_X=210;SIZE_Y=131;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.720 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4fbbe668de3cacc5cf98a7cb04c15440.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=52;SIZE_X=52;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.724 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4e126e1c41f20182aa31734ef756c094.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=19;SIZE_X=18;SIZE_Y=19;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.727 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/08d069867dfa13898dd12119f2ecc630.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=13;SIZE_X=13;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.731 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/32ad91a7e5016e0f563e0a2131f86823.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=79;SIZE_X=74;SIZE_Y=79;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.736 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/15a772b407f59312ef5bdf8111e46766.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=4;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.740 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/a7c7e0640dce1deca4ac11835f251701.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=408;SIZE_X=345;SIZE_Y=408;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.744 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8bcde1bd422cfeef9595202e547ce7e0.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=40;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.749 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/05e26e03831eb356846a326331ac8a0a.fxo(particlesystem2/steamcatapultcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.753 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6c33ff9f445e84b454b1cbdde58adf66.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=14;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.756 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/f5aa598651c9cc285f0d66540d51cb1f.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=25;SIZE_X=21;SIZE_Y=25;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.760 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/481f189d60e3a3bacbee680ee992c980.fxo(particlesystem2/ffx.fx:ADDITIVE_GLOW;DIRECTX11=true;PARTICLES_IN_CLUSTER=3;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.764 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/129becfb9b30beae293a68382aaca594.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=8;SIZE_X=8;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.768 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/68da7c86c0e7371ea3c7c82b79a98ce2.fxo(particlesystem2/gpuexplosion.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.772 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/63152689dd47d110126d7bfa5bdbc1db.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=318;SIZE_X=298;SIZE_Y=318;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.775 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/17a73661c600ea9dbbb6b350ae3de418.fxo(animator/animation_compute.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;MAX_NODE_PATH=14;NUM_NODES=77;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.779 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/029ba1e81034511a832b537896884c72.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=102;SIZE_X=86;SIZE_Y=102;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.783 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1a75ed6b2836ebadafbea36fccfe18a3.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=8;SIZE_X=8;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.787 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/d22711efedafbe9759092f1eeb5827b5.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=32;SIZE_X=32;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.790 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/60c5e8252446ac043530e1d3a3d5db02.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=16;SIZE_X=16;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.794 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/5677527f801747f216e1e8c32b6cb3ff.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=20;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.798 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/9f39aa6bc67358c1e7395b2d59c7a731.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=39;SIZE_X=37;SIZE_Y=39;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.802 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/ce191ddf87e32891c7982343a2e88a5d.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.806 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/ada62b8dee65ab9446a38ab2d381a248.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=64;SIZE_X=64;SIZE_Y=64;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.810 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/520bb7cbdfe1247efd8f78f74db8cc26.fxo(animator/gpu_animated_model.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;NUM_NODES=23;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.814 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/863462655d9a305a98488b5d69c1b233.fxo(particlesystem2/cloudcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=3;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.818 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/fdd85513d00b297ffefee2ac28d0fdbe.fxo(animator/animation_compute.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;MAX_NODE_PATH=6;NUM_NODES=23;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.821 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/22ee75d29b90c6a899c80ad6570ae609.fxo(enlight/raycursor.fx:DIRECTX11=true;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.825 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/380d2498c5240cfa8c3070b114df8c0a.fxo(animator/gpu_animated_model.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;NUM_NODES=34;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.830 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8c06fc6b46e8f872d302943845aca84b.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=19;SIZE_X=18;SIZE_Y=19;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.833 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7f56740340cc223c43693ed1237db537.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=19;SIZE_X=18;SIZE_Y=19;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.837 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/025b1985b6fed7e20cbea9637f579079.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=51;SIZE_X=43;SIZE_Y=51;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.841 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/97a401829579ed7a519d92e148a8038d.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=256;SIZE_X=256;SIZE_Y=256;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.844 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/cd79e58d70111d6f27f7f2b9da2bbef4.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=204;SIZE_X=172;SIZE_Y=204;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.848 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/06a4602cb54566533015990326e6eee6.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=159;SIZE_X=149;SIZE_Y=159;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.852 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/17343347e9dfb173c08a1f532d0c8cda.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.856 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8105a17c5f9f30fd70b1961c092e6e44.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=3;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.860 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/63fbad40bba0caf86338fc089558aa79.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=26;SIZE_X=26;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.864 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/0f5a73828ff7258b5a5ebd61801d476b.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=79;SIZE_X=74;SIZE_Y=79;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.867 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/3c85ef42671bd0f9ffce303d12a8b523.fxo(enlight/separatetransparent.fx:DIRECTX11=true;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.871 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8efd93cb2861b4b29fa57a8bbbc8fe57.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=52;SIZE_X=52;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.875 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1a78a168e99eae4ea98db9c01f811196.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=79;SIZE_X=74;SIZE_Y=79;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.878 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c5fe9d8e037a1abc406a92b8550151e2.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=4;USE_DCS_DEFERRED=1;USE_TRANSFORM_MATRIX;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.882 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/d6a2d3b337039838b1bc7807a5848866.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=105;SIZE_X=105;SIZE_Y=65;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.886 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/12e85a1d94db46913d98fb686bf92869.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.890 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/928fb3faad0012990339f30710c55275.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=256;SIZE_X=256;SIZE_Y=256;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.894 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/9393b5d6ff68ac865cd63cdcdb40618a.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=8;SIZE_X=8;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.898 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/dcd3595a34f48dfb24a7c5e4ad8219be.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=16;SIZE_X=16;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.902 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/0ed24963f8156147b388f0986bc41fde.fxo(particlesystem2/steamcatapultcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=3;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.905 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/247f891d182646486db98d3bec7a9418.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=256;SIZE_X=256;SIZE_Y=256;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.909 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/d46f23cfc29a454e3239d37841f55b1d.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.914 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7b439622a575cec9a168dba1e2e34b83.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=51;SIZE_X=43;SIZE_Y=51;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.917 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7ede03a441ee51657872680a9764c045.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=7;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.921 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/073c0b23ada81791715e4afcb14a1132.fxo(particlesystem2/ffx.fx:ADDITIVE_GLOW;DIRECTX11=true;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.925 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/3c41f023bb38b9eca30a13fc305d62bf.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=13;SIZE_X=13;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.929 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/cb98cd762185b71055ec08d4b6d8f7b5.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=128;SIZE_X=128;SIZE_Y=128;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.933 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1a2183a59a3afbe56464970bd5c8e8c0.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=204;SIZE_X=172;SIZE_Y=204;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.937 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4c105f27f8a1998591bbf115821fec80.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=52;SIZE_X=52;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.941 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1d95b1ddf3920adb08de9db55553323f.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=210;SIZE_X=210;SIZE_Y=131;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.946 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/339b4fae88daa37497df7e057f73fe14.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=15;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.949 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/35e11d51d8d30d6fe1b26b71f21f15de.fxo(particlesystem2/groundpuff.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=1;PUFF_SOFT_PARTICLES;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.953 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/3c0ac55b8a3968f0350611372f54e111.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=420;SIZE_X=420;SIZE_Y=262;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.957 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6f77d3c9e2c779df669eeb84f0b28e67.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=318;SIZE_X=298;SIZE_Y=318;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.961 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c0976e3b33ecf33c2773a4e704e61c64.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=13;SIZE_X=13;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.965 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/9dc7df9a7ab93d16ba29c83d5a6566f1.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=16;SIZE_X=16;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.969 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/fe0b14e27621988ba051390c1364b13e.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=105;SIZE_X=105;SIZE_Y=65;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.973 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/73ef44d66ec87367d0c6fc3d3f99eb11.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=20;THREAD_Y=4;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.977 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/34df0813bc9e9d591b4e0dcef8bf6e25.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=32;SIZE_X=32;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.980 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/06b661813ab35bdb83d34152d37168a3.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=8;SIZE_X=8;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.985 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4d4577f2e16ecbd8dcab48d27227f3e5.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=16;USE_AXIS;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.989 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/98db485270ba684b29fc39b20a579cf8.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=102;SIZE_X=86;SIZE_Y=102;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.992 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8736a244bfbd216a697a91651c7b8daa.fxo(particlesystem2/hedgehogexplosioncomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=20;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:22.996 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/f381af27b0f4b2e59eebd3805be77fb2.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=204;SIZE_X=172;SIZE_Y=204;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.000 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/2327ddce4f2d42dd20e88d01f0a8b21e.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=159;SIZE_X=149;SIZE_Y=159;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.003 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/71485529d095ed420883ec51a8e3fab7.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.007 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c45401c12be95189b8968d1aa47e5a20.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=26;SIZE_X=26;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.011 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/9d16333b4d33bb9bad27c82c39f968b7.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=420;SIZE_X=420;SIZE_Y=262;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.015 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/cdc3971ba00069b381a19c299f1098a5.fxo(particlesystem2/overwingvapor.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.019 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6f8ce6981c43046fcd20cbbb15f41a7d.fxo(particlesystem2/groundpuff.fx:DIRECTX11=true;PARTICLES_IN_CLUSTER=2;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.023 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/76344174ae4bfa4e6e10b49f2d2fe1a6.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=128;SIZE_X=128;SIZE_Y=128;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.027 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/ac306032f77cdc2e8e7b40e640a7af98.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=6;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.031 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/66631e5334a61cd6f24d2a771288c5c7.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=408;SIZE_X=345;SIZE_Y=408;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.036 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c17f8dd8db6c8ff1970b76092f7e15d6.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=32;SIZE_X=32;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.040 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/e4127afae9688a35631a2a1ebcae7459.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=2;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.043 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8938a8ef5564f97629c2d9bca1cfcba6.fxo(animator/animation_compute.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;MAX_NODE_PATH=8;NUM_NODES=34;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.047 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/0f046ac74552319f0f1efc1e48e8cfde.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=636;SIZE_X=597;SIZE_Y=636;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.051 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/66862b909ecc782830a00d04ab393a37.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=51;SIZE_X=43;SIZE_Y=51;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.055 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/bd5448b49681472b614344dd69450dd0.fxo(particlesystem2/cloudcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.060 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/76395914d38c9347a4896c54611bdba7.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=10;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.064 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/2946c9a17adcfa44423eeec80fe89834.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=2;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.068 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/0e8d80adf8f3c6bfa5a46bfbbd2c009b.fxo(particlesystem2/hedgehogexplosioncomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=40;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.072 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6f51fa487d262b8e1621eb97f5073a43.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=39;SIZE_X=37;SIZE_Y=39;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.076 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/4de6fd65b36c9a7d01fdedf2a82d492d.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=408;SIZE_X=345;SIZE_Y=408;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.080 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/caf30bddbdaae31b17e792a07adb3ecb.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=20;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.085 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/6c71340bafc2450292c111ca1e870b5c.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=30;THREAD_Y=30;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.089 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c1fc2002248241828ff1ee8a8c23e1b7.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=20;THREAD_Y=2;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.093 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/2a61a3c9eafc935c651dae66eb07460e.fxo(materialfactory/materialbase.hlsl:DIRECTX11=true;ILS_MATERIAL=1;ILS_MATERIAL_CLAMP=1;NO_MANUAL_Z_FOR_HUD=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.098 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/43752aecd3a7bdc8975bf46fbc04d0f4.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=210;SIZE_X=210;SIZE_Y=131;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.102 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/a1d0890031eb6d5de1de74413d38da10.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=4;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.106 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/751ac6909ca4ae7a068f8c5336b21b35.fxo(animator/gpu_animated_model.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;NUM_NODES=77;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.110 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/953c01a3d71eb30d954776851564db95.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=16;SIZE_X=16;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.114 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1cafed0f28ecdb6ececc3498c5bee82f.fxo(particlesystem2/groundpuffcomp.fx:DIRECTX11=true;THREAD_X=25;THREAD_Y=5;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.118 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/22698a7492cbb71c5360cd4c9fcefc94.fxo(animator/animation_compute.fx:DIRECTX11=true;MAX_ANIMATIONS_STACK_SIZE=100;MAX_ARGUMENTS_SIZE=3;MAX_NODE_PATH=8;NUM_NODES=33;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.121 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/7a3fa6f76c807d9542a9bd7b22254774.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=256;SIZE_X=256;SIZE_Y=256;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.125 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/cf108baf804c6a60fa5aeb198d88dbad.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=25;SIZE_X=21;SIZE_Y=25;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.129 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/8a1e6dce7c7e6310cf023ed5e32f5326.fxo(particlesystem2/ffx.fx:ADDITIVE_GLOW;DIRECTX11=true;FFX_SOFT_PARTICLES;PARTICLES_IN_CLUSTER=1;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.133 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/cec2853327d7e6a78c95de3d3434210e.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=26;SIZE_X=26;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.137 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/04b95ef41130970bf9d4851b74db872d.fxo(particlesystem2/overwingvaporcomp.fx:DIRECTX11=true;THREAD_X=28;THREAD_Y=25;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.142 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/36f2c1fdf97609bf77144bfe411cd334.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=51;SIZE_X=43;SIZE_Y=51;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.145 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/093d85d748b381fe5c03b4d2a76a60b7.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=79;SIZE_X=74;SIZE_Y=79;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.149 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/de1660b3c809234f7bedfae11f5b154b.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=636;SIZE_X=597;SIZE_Y=636;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.153 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c3e3a25c86a95926c1f0ae72701d7148.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=19;SIZE_X=18;SIZE_Y=19;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.157 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/b3180d640276bcaefb5f3d9a952536cc.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=636;SIZE_X=597;SIZE_Y=636;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.160 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/30d343dc1c3fa4561d852864de9590a7.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=12;SIZE_X=10;SIZE_Y=12;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.164 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/2e3bb8ae025fef69544b52b19d537c82.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00333, 0.02382, 0.09719, 0.22598, 0.29937, 0.22598, 0.09719,;FILTER_KERNEL1= 0.02382, 0.00333;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=9;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=159;SIZE_X=149;SIZE_Y=159;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.167 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/1c7649f4b028b0982f3d20ed8c65fd27.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=210;SIZE_X=210;SIZE_Y=131;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.171 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/f4a5d419cf4aa197c6bf21e1fa46babf.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=64;SIZE_X=64;SIZE_Y=64;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.175 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/030935700657e856b876217b02768696.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=13;SIZE_X=13;SIZE_Y=8;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.178 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/c115f8880664f5af50c3c2a1542aef9c.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00166, 0.00478, 0.01192, 0.02583, 0.04863, 0.07956, 0.11308,;FILTER_KERNEL1= 0.13963, 0.14980, 0.13963, 0.11308, 0.07956, 0.04863, 0.02583,;FILTER_KERNEL2= 0.01192, 0.00478, 0.00166;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=17;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=26;SIZE_X=26;SIZE_Y=16;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.182 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/e6ccaa90fd15d54db9b3a4d6c46c6cf5.fxo(particlesystem2/ffxcomp.fx:DIRECTX11=true;THREAD_X=32;THREAD_Y=32;USE_AXIS;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.186 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/a94268ff3f82e5139298cbcc43643039.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00222, 0.00877, 0.02702, 0.06483, 0.12111, 0.17621, 0.19968,;FILTER_KERNEL1= 0.17621, 0.12111, 0.06483, 0.02702, 0.00877, 0.00222;FILTER_KERNEL2= ;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=13;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=52;SIZE_X=52;SIZE_Y=32;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.189 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/3482d977129319c01401ff65a707a230.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=39;SIZE_X=37;SIZE_Y=39;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.193 INFO    DX11BACKEND (22072): Precompiled effect /shaders_cache/f36ddfdf9abebbd04bb9c17524304717.fxo(deferred/blurcompute.fx:DIRECTX11=true;FILTER_KERNEL0= 0.00133, 0.00313, 0.00673, 0.01322, 0.02372, 0.03892, 0.05835,;FILTER_KERNEL1= 0.07995, 0.10012, 0.11460, 0.11987, 0.11460, 0.10012, 0.07995,;FILTER_KERNEL2= 0.05835, 0.03892, 0.02372, 0.01322, 0.00673, 0.00313, 0.00133;FILTER_KERNEL3= ;FILTER_KERNEL4= ;FILTER_SIZE=21;PIXELS_PER_THREAD_X=1;PIXELS_PER_THREAD_Y=1;SHARED_PIXELS_COUNT=64;SIZE_X=64;SIZE_Y=64;USE_DCS_DEFERRED=1;) was built with older app version (2.9.26.23303).
+2026-09-18 10:59:23.216 INFO    DX11BACKEND (22072): DX11ShaderBinaries::loadCache done. Loaded 0/153.
+2026-09-18 10:59:23.319 INFO    VISUALIZER (22072): SceneManager initialization
+2026-09-18 10:59:23.724 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/groundPuffComp.fx
+2026-09-18 10:59:26.972 WARNING LOG (20716): 3 duplicate message(s) skipped.
+2026-09-18 10:59:26.972 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/groundPuff.fx
+2026-09-18 10:59:27.069 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/groundPuffComp.fx
+2026-09-18 10:59:28.820 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:28.820 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffx.fx
+2026-09-18 10:59:28.947 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffxComp.fx
+2026-09-18 10:59:29.960 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:29.960 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffx.fx
+2026-09-18 10:59:30.046 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffxComp.fx
+2026-09-18 10:59:30.445 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:30.445 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/groundPuffComp.fx
+2026-09-18 10:59:33.332 WARNING LOG (20716): 3 duplicate message(s) skipped.
+2026-09-18 10:59:33.332 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffxComp.fx
+2026-09-18 10:59:34.101 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:34.101 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/GPUExplosion.fx
+2026-09-18 10:59:34.191 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/hedgehogExplosionComp.fx
+2026-09-18 10:59:34.955 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:34.955 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/groundPuff.fx
+2026-09-18 10:59:35.093 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/cloud.fx
+2026-09-18 10:59:35.178 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/cloudComp.fx
+2026-09-18 10:59:35.700 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:35.700 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffxComp.fx
+2026-09-18 10:59:35.974 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/steamCatapult.fx
+2026-09-18 10:59:36.079 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/steamCatapultComp.fx
+2026-09-18 10:59:36.461 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:36.461 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/overwingVapor.fx
+2026-09-18 10:59:36.575 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/overwingVaporComp.fx
+2026-09-18 10:59:37.485 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:37.485 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffx.fx
+2026-09-18 10:59:37.606 INFO    DX11BACKEND (22072): Compile shader: ParticleSystem2/ffxComp.fx
+2026-09-18 10:59:38.124 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 10:59:38.124 ERROR_ONCE DX11BACKEND (20148): texture 'KevinWakePattern812x1024.dds' not found. Asked from ''
+2026-09-18 10:59:38.199 INFO    VISUALIZER (22072): DCSScene initialized
+2026-09-18 10:59:38.233 INFO    DX11BACKEND (22072): Use DLSS preset 'C'
+2026-09-18 10:59:38.333 INFO    DX11BACKEND (22072): DLSS successfully initialized, 960x540 -> 1920x1080
+2026-09-18 10:59:38.334 INFO    DX11BACKEND (22072): Compile shader: enlight/separateTransparent.fx
+2026-09-18 10:59:38.366 ALERT   DX11BACKEND (22072): Error: Can't find precompiled shader for effect enlight/separatetransparent.fx:DIRECTX11=true;USE_DCS_DEFERRED=1;.
+Recompilation process will take some time, please wait
+(this situation should not occur on end user PC, if there is no manual shader editing)
+2026-09-18 10:59:38.393 INFO    DX11BACKEND (22072): Compile shader: deferred/blurCompute.fx
+2026-09-18 10:59:39.869 WARNING LOG (20716): 23 duplicate message(s) skipped.
+2026-09-18 10:59:39.869 ERROR_ONCE DX11BACKEND (22072): render target 'mainDepthBuffer' not found
+2026-09-18 10:59:39.946 ERROR_ONCE DX11BACKEND (22072): render target 'uiTargetColor' not found
+2026-09-18 10:59:39.946 ERROR_ONCE DX11BACKEND (22072): render target 'uiTargetDepth' not found
+2026-09-18 10:59:39.946 INFO    VISUALIZER (22072): DCSSceneRenderer initialized
+2026-09-18 10:59:39.947 INFO    VISUALIZER (22072): SceneManager: render pool size:6
+2026-09-18 10:59:39.996 INFO    VISUALIZER (Main): render thread is initialized
+2026-09-18 10:59:40.142 INFO    INPUT (Main): created [Keyboard]
+2026-09-18 10:59:40.143 INFO    INPUT (Main): created [VPC Panel #2] with full id [VPC Panel #2 {D5C51D10-C2F0-11f0-8003-444553540000}],SUPPLEMENTAL|UNKNOWN
+2026-09-18 10:59:40.199 INFO    INPUT (Main): created [Joystick (Razer Tartarus V2)] with full id [Joystick (Razer Tartarus V2) {58247100-0EFE-11ef-8005-444553540000}],1STPERSON|SIXDOF
+2026-09-18 10:59:40.201 INFO    INPUT (Main): created [Joystick - HOTAS Warthog] with full id [Joystick - HOTAS Warthog {8570A540-0EBB-11ef-8005-444553540000}],JOYSTICK|LIMITED
+2026-09-18 10:59:40.202 INFO    INPUT (Main): created [VPC Panel #2] with full id [VPC Panel #2 {D5C54420-C2F0-11f0-8004-444553540000}],SUPPLEMENTAL|UNKNOWN
+2026-09-18 10:59:40.205 INFO    INPUT (Main): created [VPC Control Panel 3] with full id [VPC Control Panel 3 {FA85D2F0-0438-11f1-8002-444553540000}],SUPPLEMENTAL|UNKNOWN
+2026-09-18 10:59:40.206 INFO    INPUT (Main): created [T-Pendular-Rudder] with full id [T-Pendular-Rudder {8570A540-0EBB-11ef-8009-444553540000}],JOYSTICK|LIMITED
+2026-09-18 10:59:40.209 INFO    INPUT (Main): created [VPC Control Panel 3] with full id [VPC Control Panel 3 {FA85D2F0-0438-11f1-8003-444553540000}],JOYSTICK|LIMITED
+2026-09-18 10:59:40.220 INFO    INPUT (Main): created [Throttle - HOTAS Warthog] with full id [Throttle - HOTAS Warthog {8570A540-0EBB-11ef-800B-444553540000}],JOYSTICK|STANDARD
+2026-09-18 10:59:40.260 INFO    ED_SOUND (Main): Opening default audio device.
+2026-09-18 10:59:40.263 INFO    ED_SOUND (Main): Speaker layout: auto
+2026-09-18 10:59:40.267 INFO    ED_SOUND (Main): Driver reports 2 channels with mask 0x3
+2026-09-18 10:59:40.267 INFO    ED_SOUND (Main): Using 2 channels at 48000 Hz
+2026-09-18 10:59:40.267 INFO    ED_SOUND (Main): Channel layout: Headphones/Stereo
+2026-09-18 10:59:40.324 INFO    ED_SOUND (Main): Opening default audio device.
+2026-09-18 10:59:40.326 INFO    ED_SOUND (Main): Speaker layout: forced_stereo
+2026-09-18 10:59:40.327 INFO    ED_SOUND (Main): Driver reports 2 channels with mask 0x3
+2026-09-18 10:59:40.327 INFO    ED_SOUND (Main): Using 2 channels at 48000 Hz
+2026-09-18 10:59:40.327 INFO    ED_SOUND (Main): Channel layout: Headphones/Stereo
+2026-09-18 10:59:40.376 INFO    APP (Main): gDescription: "NVIDIA GeForce RTX 3090" gVendorId: 4318 gDeviceId: 8708 gMemory: 24322 MB
+2026-09-18 10:59:40.496 ERROR   EDOBJECTS (Main): SAB-100 already declared in shapes.txt
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object HB_F4E_GBU15V1 with id=42 already declared in table BombTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 200 GAL  (EMPTY) with id=3095 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 275 GAL LEFT  (EMPTY) with id=3096 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 275 GAL RIGHT  (EMPTY) with id=3097 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 335 GAL LEFT  (EMPTY) with id=3098 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 335 GAL RIGHT  (EMPTY) with id=3099 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FUEL TANK 450 GAL  (EMPTY) with id=3100 already declared in table ContainerTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object FIM-92C STINGER with id=93 already declared in table MissileTable
+2026-09-18 10:59:40.497 ERROR   EDOBJECTS (Main): Object OH58D_FIM_92 with id=93 already declared in table MissileTable
+2026-09-18 10:59:42.631 ERROR   WORLDGENERAL (Main): Error: Unit [QF-4E]: Effect presets records are defined but empty.
+2026-09-18 10:59:42.635 ERROR   WORLDGENERAL (Main): Error: Unit [CH-47Fbl1]: Effect presets records are defined but empty.
+2026-09-18 10:59:42.647 ERROR   WORLDGENERAL (Main): Error: Unit [F-4E-45MC]: Effect presets records are defined but empty.
+2026-09-18 10:59:42.648 ERROR   WORLDGENERAL (Main): AJS37 AI by Heatblur Simulations: Unexpected fires_pos index  12
+2026-09-18 10:59:42.672 ERROR   WORLDGENERAL (Main): Error: Unit [OH58D]: Asymmetrical wing configuration found.
+2026-09-18 10:59:42.673 WARNING LOG (20716): 2 duplicate message(s) skipped.
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK83_MER_3x_AFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-54_SIDE_RIGHT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "OH58D_Violet_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{FAB-500-M54-TU}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative weight of payload "{HB_A6E_M117_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_M117_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_TALD_MER_4x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_1x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK106_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative weight of payload "{LAU-7_AIM-9M_Right}" (origin: "./CoreMods/aircraft/F-4E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative weight of payload "{HB_A6E_M117_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_M117_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.673 ERROR   wInfo (Main): negative drag of payload "{MAK79_BDU45B 3R}" (origin: "./CoreMods/aircraft/F14/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative weight of payload "{HB_F4E_M117_MER_5x}" (origin: "./CoreMods/aircraft/F-4E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "OH58D_Green_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{FAB-250-M54-TU}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative weight of payload "{HB_A6E_M117_MER_4x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_M117_MER_4x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-54_SIDE_LEFT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{OFAB-100-120-TU}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{MB339_MagicI}" (origin: "./CoreMods/aircraft/MB-339/Weapons/AirToAirMissiles.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK83_MER_2x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative weight of payload "{LAU-7_AIM-9M_Left}" (origin: "./CoreMods/aircraft/F-4E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_5x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK83_MER_3x_FWD}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{MB339_MagicII}" (origin: "./CoreMods/aircraft/MB-339/Weapons/AirToAirMissiles.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{FAB-500-M54}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK83_MER_2x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{BETAB-500M}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{BRU-42_3*GBU-38}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{IAB-500}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.674 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-38_SIDE_RIGHT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{BRU-42_2*GBU-38_LEFT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_GBU12_MER_2x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{FAB-500-TA}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_TALD_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{FAB-250-M54}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_TALD_MER_2x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK76_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-54_RIGHT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{ODAB-500PM}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45SE_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "OH58D_White_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "OH58D_Blue_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "OH58D_Red_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{RN-24}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{RN-28}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative weight of payload "{FAB-100-4}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{FAB-100-4}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_BDU45_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_GBU12_MER_2x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.675 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-54_LEFT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_2x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{BETAB-500S}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_5x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{MAK79_BDU45B 3L}" (origin: "./CoreMods/aircraft/F14/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{MAK79_BDU45B 4}" (origin: "./CoreMods/aircraft/F14/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative weight of payload "{5F1C54C0-0ABD-4868-A883-B52FF9FCB422}" (origin: "Scripts/Database/db_weapons_data.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{BRU-42_2*GBU-38_RIGHT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "OH58D_Yellow_Smoke_Grenade" (origin: "./CoreMods/aircraft/OH-58D/OH58D_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK81_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_3*GBU-38}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_TALD_MER_2x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{FAB-500-SL}" (origin: "./CoreMods/aircraft/MiG-21bis/Entry/Aw")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{CHAP_Kh555x6}" (origin: "./CoreMods/tech/Currenthill Assets Pack/Database/Weapons/CHAP_missiles.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82_MER_4x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{CHAP_HOT3}" (origin: "./CoreMods/tech/Currenthill Assets Pack/Database/Weapons/CHAP_missiles.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_6x}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative weight of payload "{6A367BB4-327F-4A04-8D9E-6D86BDC98E7E}" (origin: "Scripts/Database/db_weapons_data.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative weight of payload "{LAU-7_AIM-9L_Right}" (origin: "./CoreMods/aircraft/F-4E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative weight of payload "{LAU-7_AIM-9L_Left}" (origin: "./CoreMods/aircraft/F-4E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_4x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_5x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_2*GBU-38_SIDE_LEFT}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK82SE_MER_3x_LEFT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{BRU-70A_3*GBU-54}" (origin: "./CoreMods/aircraft/AV8BNA/WEAPONS/AV8BNA_Weapons.lua")
+2026-09-18 10:59:42.676 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_3x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
+2026-09-18 10:59:42.677 ERROR   wInfo (Main): negative weight of payload "{E1AAE713-5FC3-4CAA-9FF5-3FDCFB899E33}" (origin: "Scripts/Database/db_weapons_data.lua")
+2026-09-18 10:59:42.677 INFO    WEATHER (Main): set fog: visibility:1  thickness:300.0
+2026-09-18 10:59:42.679 INFO    DX11BACKEND (Main): DX11ShaderBinaries::loadCache mods/aircraft/f14/fxo
+2026-09-18 10:59:42.679 INFO    DX11BACKEND (Main): DX11ShaderBinaries::loadCache done. Loaded 0/0.
+2026-09-18 10:59:42.679 INFO    DX11BACKEND (Main): DX11ShaderBinaries::loadCache mods/aircraft/f-4e/fxo
+2026-09-18 10:59:42.679 INFO    DX11BACKEND (Main): DX11ShaderBinaries::loadCache done. Loaded 0/0.
+2026-09-18 10:59:42.682 INFO    WorldPlugIns (Main): Waiting for immediate load to finish...
+2026-09-18 10:59:42.704 ERROR   EDCORE (Main): Failed to load I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/tech/SouthAtlanticAssets/bin/SouthAtlantic.dll: (127) The specified procedure could not be found.
+2026-09-18 10:59:42.704 INFO    WorldPlugIns (Main): loading "South_Atlantic_Assets": 0.022
+2026-09-18 10:59:42.725 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/A-6E/bin/HeatblurCore_A-6E.dll
+2026-09-18 10:59:42.751 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/A-6E/bin/HeatblurComponents_A-6E.dll
+2026-09-18 10:59:42.776 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/A-6E/bin/HeatblurDCSBase_A-6E.dll
+2026-09-18 10:59:42.792 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/A-6E/bin/A-6E-AI.dll
+2026-09-18 10:59:42.793 INFO    WorldPlugIns (Main): loading "A-6E AI by Heatblur Simulations": 0.088
+2026-09-18 10:59:42.809 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/AV8BNA/bin/AV8B_AI.dll
+2026-09-18 10:59:42.810 INFO    WorldPlugIns (Main): loading "AV-8B N/A AI by RAZBAM Sims": 0.017
+2026-09-18 10:59:42.827 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/C-101/bin/C101Core.dll
+2026-09-18 10:59:42.827 INFO    WorldPlugIns (Main): loading "C-101 Aviojet by AvioDev": 0.017
+2026-09-18 10:59:42.848 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/C130J/bin/C130J_Sounder.dll
+2026-09-18 10:59:42.848 INFO    WorldPlugIns (Main): loading "C-130J AI": 0.020
+2026-09-18 10:59:42.868 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/ChinaAssetPack/bin/CAP_AI.dll
+2026-09-18 10:59:42.887 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/ChinaAssetPack/bin/JF-17_AI.dll
+2026-09-18 10:59:42.888 INFO    WorldPlugIns (Main): loading "China Asset Pack by Deka Ironwork Simulations and Eagle Dynamics": 0.039
+2026-09-18 10:59:42.905 INFO    CE2_AI (Main): Loading CE AI
+2026-09-18 10:59:42.905 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/Christen Eagle II/bin/CE2_AI.dll
+2026-09-18 10:59:42.906 INFO    WorldPlugIns (Main): loading "Christen Eagle II AI by Magnitude 3 LLC": 0.018
+2026-09-18 10:59:42.923 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-100D/bin/F100_AI.dll
+2026-09-18 10:59:42.924 INFO    WorldPlugIns (Main): loading "F-100D AI by GrinnelliDesigns": 0.018
+2026-09-18 10:59:42.942 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-15E/bin/F15E_AI.dll
+2026-09-18 10:59:42.942 INFO    WorldPlugIns (Main): loading "F-15E AI by RAZBAM": 0.018
+2026-09-18 10:59:42.962 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-4E/bin/HeatblurCore_F-4E.dll
+2026-09-18 10:59:42.988 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-4E/bin/HeatblurComponents_F-4E.dll
+2026-09-18 10:59:43.011 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-4E/bin/HeatblurDCSBase_F-4E.dll
+2026-09-18 10:59:43.028 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F-4E/bin/F-4E-AI.dll
+2026-09-18 10:59:43.029 INFO    WorldPlugIns (Main): loading "F-4E AI by Heatblur Simulations": 0.086
+2026-09-18 10:59:43.048 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F14/bin/HeatblurCore_F14.dll
+2026-09-18 10:59:43.074 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F14/bin/HeatblurComponents_F14.dll
+2026-09-18 10:59:43.096 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F14/bin/HeatblurDCSBase_F14.dll
+2026-09-18 10:59:43.113 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F14/bin/F14-AI.dll
+2026-09-18 10:59:43.114 INFO    WorldPlugIns (Main): loading "F-14B AI by Heatblur Simulations": 0.084
+2026-09-18 10:59:43.131 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/F4U-1D/bin/F4U_AI.dll
+2026-09-18 10:59:43.132 INFO    WorldPlugIns (Main): loading "F4U-1D AI by Magnitude 3 LLC": 0.018
+2026-09-18 10:59:43.149 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/M-2000C/bin/M2KC_AI.dll
+2026-09-18 10:59:43.150 INFO    WorldPlugIns (Main): loading "M-2000C AI by RAZBAM Sims": 0.017
+2026-09-18 10:59:43.167 INFO    MiG21_AI (Main): Loading Mig21 AI
+2026-09-18 10:59:43.167 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/MiG-21bis/bin/MiG21_AI.dll
+2026-09-18 10:59:43.167 INFO    WorldPlugIns (Main): loading "MiG-21Bis AI by Magnitude 3 LLC": 0.017
+2026-09-18 10:59:43.187 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/Mirage-F1/bin/MirageF1Core.dll
+2026-09-18 10:59:43.188 INFO    WorldPlugIns (Main): loading "Mirage F1 Assets by Aerges": 0.020
+2026-09-18 10:59:43.205 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/OH-58D/bin/OH58D_AI.dll
+2026-09-18 10:59:43.206 INFO    WorldPlugIns (Main): loading "OH58D AI by Polychop-Simulations": 0.018
+2026-09-18 10:59:43.223 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/aircraft/SA342/bin/SA342_ai.dll
+2026-09-18 10:59:43.224 INFO    WorldPlugIns (Main): loading "SA342 AI by Polychop-Simulations": 0.018
+2026-09-18 10:59:43.245 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/services/CaptoGlove/bin/edCaptoGlove.dll
+2026-09-18 10:59:43.246 INFO    WorldPlugIns (Main): loading "CaptoGloveSupport": 0.021
+2026-09-18 10:59:43.293 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/services/LeapMotion/bin/edLeapMotion.dll
+2026-09-18 10:59:43.294 INFO    WorldPlugIns (Main): loading "LeapMotionSupport": 0.047
+2026-09-18 10:59:43.332 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/services/SensoryxVRFree/bin/edSensoryxVRFree.dll
+2026-09-18 10:59:43.332 INFO    WorldPlugIns (Main): loading "SensoryxVRFreeSupport": 0.038
+2026-09-18 10:59:43.400 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/services/VoiceChat/bin/VoiceChat.dll
+2026-09-18 10:59:43.401 INFO    WorldPlugIns (Main): loading "VoiceChat": 0.068
+2026-09-18 10:59:43.510 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/CoreMods/services/jsAvionics/bin/jsAvionics.dll
+2026-09-18 10:59:43.510 INFO    WorldPlugIns (Main): loading "jsAvionics": 0.026
+2026-09-18 10:59:44.245 ERROR   ED_SOUND (16244): render time = 0.012279s exceeded allowed slice of 0.010000s
+2026-09-18 10:59:44.384 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/tech/CombinedArms/bin/GroundCockpitBase.dll
+2026-09-18 10:59:45.272 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/tech/CombinedArms/bin/CombinedArms.dll
+2026-09-18 10:59:45.273 INFO    WorldPlugIns (Main): loading "Combined Arms by Eagle Dynamics": 1.762
+2026-09-18 10:59:46.230 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/tech/Supercarrier/bin/edSupercarrier.dll
+2026-09-18 10:59:46.231 INFO    WorldPlugIns (Main): loading "Supercarrier": 0.957
+2026-09-18 10:59:47.052 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/F14/bin/RWR_F14.dll
+2026-09-18 10:59:47.889 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/F14/bin/F14-Nextgen.dll
+2026-09-18 10:59:48.804 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/F14/bin/F14-HeatblurCommon.dll
+2026-09-18 10:59:49.699 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/F14/bin/F14-FlightModel.dll
+2026-09-18 10:59:50.710 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/F14/bin/F14-Avionics.dll
+2026-09-18 10:59:50.710 INFO    WorldPlugIns (Main): loading "F-14B by Heatblur Simulations": 4.479
+2026-09-18 10:59:51.592 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/Mods/aircraft/NS430/bin/NS430.dll
+2026-09-18 10:59:51.592 INFO    WorldPlugIns (Main): loading "NS430": 0.881
+2026-09-18 10:59:51.598 INFO    EDCORE (Main): Loaded C:/Users/marco/Saved Games/DCS/Mods/services/DCS-SRS/bin/srs.dll
+2026-09-18 10:59:51.599 INFO    WorldPlugIns (Main): loading "DCS-SRS": 0.006
+2026-09-18 10:59:51.599 INFO    WorldPlugIns (Main): Immediate load done.
+2026-09-18 10:59:52.120 INFO    Dispatcher (Main): Waiting for module resource mounts: 0.000s
+2026-09-18 10:59:52.520 INFO    EDCORE (Main): (dDispatcher)enterToState_:1
+2026-09-18 10:59:58.286 INFO    UIBASERENDERER (Main): Cannot load font [I:\Gaming\DCS World\Eagle Dynamics\DCS World\dxgui\skins\fonts\]!
+2026-09-18 10:59:58.286 INFO    UIBASERENDERER (Main): Cannot create font [I:\Gaming\DCS World\Eagle Dynamics\DCS World\dxgui\skins\fonts\] size 0!
+2026-09-18 11:00:01.993 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\common.lua
+2026-09-18 11:00:01.999 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\multiplayerCoalitionBlocker.lua
+2026-09-18 11:00:02.006 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\multislot.lua
+2026-09-18 11:00:02.009 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\voicechat.lua
+2026-09-18 11:00:02.017 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\webGUI.lua
+2026-09-18 11:00:02.028 INFO    APP (Main): Loaded I:\Gaming\DCS World\Eagle Dynamics\DCS World\Scripts\Hooks\webRTCwebSocket.lua
+2026-09-18 11:00:02.826 INFO    LuaNET (Main): Loading - DCS-SRS GameGUI - Ciribob: 2.1.0.4
+2026-09-18 11:00:02.836 INFO    LuaNET (Main): Loaded - DCS-SRS GameGUI - Ciribob: 2.1.0.4
+2026-09-18 11:00:02.842 INFO    LuaNET (Main): Loading - DCS-SRS Overlay GameGUI - Ciribob: 2.1.0.4 
+2026-09-18 11:00:02.843 INFO    LuaNET (Main): Loaded - DCS-SRS Overlay GameGUI - Ciribob: 2.1.0.4 
+2026-09-18 11:00:02.843 INFO    APP (Main): Loaded C:\Users\marco\Saved Games\DCS\Scripts\Hooks\DCS-SRS-hook.lua
+2026-09-18 11:00:03.013 INFO    Dispatcher (Main): //=== END OF INIT ======================================//
+2026-09-18 11:00:03.013 INFO    EDCORE (Main): (dDispatcher)enterToState_:2
+2026-09-18 11:00:03.053 INFO    EDCORE (Main): (dDispatcher)enterToState_:3
+2026-09-18 11:00:03.087 INFO    EDCORE (Main): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/edWebViewBrowser.dll
+2026-09-18 11:00:23.432 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (SSTP)
+2026-09-18 11:00:24.456 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:24.456 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (IKEv2)
+2026-09-18 11:00:24.607 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:24.607 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (L2TP)
+2026-09-18 11:00:24.748 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:24.748 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (PPTP)
+2026-09-18 11:00:24.880 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:24.880 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (PPPOE)
+2026-09-18 11:00:25.010 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:25.010 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (IP)
+2026-09-18 11:00:25.141 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:25.141 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (IPv6)
+2026-09-18 11:00:25.271 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:25.271 INFO    APP (Main): Device plugged: [SWD] WAN Miniport (Network Monitor)
+2026-09-18 11:00:33.294 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:00:33.294 INFO    ED_SOUND (20536): Using SSSE3 for peak calc.
+2026-09-18 11:02:30.507 INFO    Dispatcher (Main): load terrain from ./Mods/terrains/Caucasus\terrain.cfg.lua
+2026-09-18 11:02:30.525 INFO    SECURITYCONTROL (Main): Loaded ./Mods/terrains/Caucasus\terrain.cfg.lua.pak.crypt
+2026-09-18 11:02:30.525 INFO    TERRAIN (Main): lSystem::load(./Mods/terrains/Caucasus\terrain.cfg.lua)
+2026-09-18 11:02:30.525 INFO    TERRAIN (Main): lSystem::openSession(./Mods/terrains/Caucasus\terrain.cfg.lua)
+2026-09-18 11:02:30.525 INFO    TERRAIN (Main): lSystem::exit()
+2026-09-18 11:02:30.525 INFO    TERRAIN (Main): lSystem::CleanScenes()
+2026-09-18 11:02:30.525 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 13
+2026-09-18 11:02:30.525 INFO    INTER (Main): ITerrainEntryPoint::close()
+2026-09-18 11:02:30.526 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:02:30.526 INFO    INTER (Main): ITerrainEntryPoint::openTerrain()
+2026-09-18 11:02:30.528 INFO    INTER (Main): ITerrainEntryPoint: call createITerrain()
+2026-09-18 11:02:30.528 INFO    EDTERRAIN4 (Main): Open terrain cfg "./Mods/terrains/Caucasus\terrain.cfg.lua"
+2026-09-18 11:02:30.531 INFO    EDTERRAIN4 (Main): TERRAIN_REVISION = 6889
+2026-09-18 11:02:30.531 INFO    EDTERRAIN4 (Main): Build date: 
+2026-09-18 11:02:30.531 INFO    EDTERRAIN4 (Main): Texture quality: "max"
+2026-09-18 11:02:30.531 INFO    EDTERRAIN4 (Main): Language: "en"
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=19.680016, 24.800762, -43.199993)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=-19.679996, 24.800762, -43.199993)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=-59.040010, 24.800762, -14.399994)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=-59.040011, 24.800762, 14.400005)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=-19.680000, 24.800762, 43.200005)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=19.680012, 24.800762, 43.200005)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=59.040025, 24.800762, 14.400005)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'ceh_ang_b' (sq=0.000000e+00) (xyz=59.040026, 24.800762, -14.399994)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'hotel_a' (sq=7.564423e-06) (xyz=-4.443190, 0.597240, 10.019501)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'school_a' (sq=1.642593e-08) (xyz=6.994224, 4.236901, 1.671592)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=3.123838, 4.327496, -2.127915)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=3.123837, 4.327496, 2.145863)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=-1.042828, 4.327496, -6.401694)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=1.040505, 4.327496, -6.401693)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=-3.126163, 4.327496, 2.145862)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=-3.126163, 4.327496, -2.127916)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=1.040503, 4.327496, 6.419640)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tr_budka_new' (sq=0.000000e+00) (xyz=-1.042830, 4.327496, 6.419640)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'uniwersam_a_new' (sq=3.081897e-06) (xyz=-13.705606, 8.235668, -2.060844)
+2026-09-18 11:02:30.568 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'uniwersam_a_new' (sq=7.611944e-06) (xyz=-13.708746, 8.232817, 2.179883)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airbase_airport_tbilisi_big' (sq=4.631429e-06) (xyz=-18.044575, 22.660065, -61.759819)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airbase_airport_tbilisi_big' (sq=7.271992e-07) (xyz=-16.787917, 22.810421, 57.034218)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=27.878689, 8.499997, -10.707115)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=19.292899, 8.499997, -2.121329)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=-19.292891, 8.499997, 27.878686)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=-27.878678, 8.499998, 19.292897)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=10.707110, 8.499997, -2.121327)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=0.000000e+00) (xyz=2.121320, 8.499998, -10.707111)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=4.628650e-06) (xyz=30.213438, 2.790612, -23.508533)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new' (sq=1.159289e-06) (xyz=30.210464, 2.790612, -7.105153)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_hangar_small' (sq=0.000000e+00) (xyz=-5.709213, -3.317785, -15.576451)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=6.750820e-07) (xyz=-7.613943, 7.277841, 1.481227)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=5.116231, 12.707878, 6.124228)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=3.992901, 12.597298, 5.965339)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=5.106196, 12.599205, 5.237995)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=4.763738, 12.598251, 5.082096)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=5.448654, 12.636065, 5.393893)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp' (sq=0.000000e+00) (xyz=5.106196, 12.707329, 5.237995)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'boat-1b' (sq=0.000000e+00) (xyz=0.255124, 1.405493, -0.452704)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'boat-1b' (sq=0.000000e+00) (xyz=0.974799, 1.266999, -0.942004)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -17.744604)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -13.916192)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -10.996424)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -7.403983)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -4.349680)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, -0.757238)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, 2.297066)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, 5.889507)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, 8.943810)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, 12.267182)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-7.493908, 0.141645, 15.725090)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=6.130935e-07) (xyz=7.500020, 0.141645, 17.744607)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, 14.185260)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, 10.592819)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, 7.673052)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, 4.080610)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, 1.026307)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, -2.566135)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, -5.620438)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, -9.212879)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, -12.267183)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=7.500020, 0.141645, -15.590555)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=5.306941, 0.141645, -20.000093)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=2.312498, 0.141645, -20.000093)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=4.035587, 0.141645, -20.000093)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-3.537906, 0.141645, -20.000093)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=-3.537905, 0.141645, 20.000097)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=2.312498, 0.141645, 20.000097)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=5.306941, 0.141645, 20.000097)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'f_home3_c' (sq=0.000000e+00) (xyz=4.035587, 0.141645, 20.000097)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'mig19-monument' (sq=0.000000e+00) (xyz=-3.773873, 6.767669, 4.694133)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'mig19-monument' (sq=0.000000e+00) (xyz=3.770340, 6.918002, 4.826016)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'mig19-monument' (sq=0.000000e+00) (xyz=-3.762786, 6.918003, 4.826016)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'mig19-monument' (sq=0.000000e+00) (xyz=3.774230, 6.767668, 4.694133)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=-5.738346, 0.000000, 5.770747)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=-5.762677, 0.000000, 5.746404)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=-5.770747, 3.973969, -5.738346)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=-5.746404, 3.973965, -5.762677)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=5.738346, 3.973969, -5.770747)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=5.762677, 3.973965, -5.746404)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=5.770746, 0.000000, 5.738347)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'par_anten7_l' (sq=0.000000e+00) (xyz=5.746404, 0.000000, 5.762678)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_b' (sq=0.000000e+00) (xyz=1.865910, 1.700000, 75.496307)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_b' (sq=0.000000e+00) (xyz=-1.865910, 1.700000, -69.911713)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=-7.951810, 1.270918, -14.678645)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=-7.951810, 1.270918, 14.443448)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=-7.951810, 1.270918, 14.678294)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=-8.951809, 1.270920, -14.488286)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=-8.951808, 0.847280, -14.488286)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=7.951810, 1.270918, -14.678645)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=7.951810, 1.270918, 14.443448)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=7.951810, 1.270918, 14.678294)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=8.951809, 1.270920, -14.488286)
+2026-09-18 11:02:30.587 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'vok_sim_c' (sq=0.000000e+00) (xyz=8.951808, 0.847280, -14.488286)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=2.384189e-06) (xyz=30.212013, 2.740270, -22.774262)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=2.883288e-06) (xyz=30.212016, 2.582145, -22.184131)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=2.402740e-06) (xyz=28.378682, 2.582145, -22.184131)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=7.996792e-07) (xyz=-7.249265, 2.898390, 30.212026)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=3.576276e-07) (xyz=-7.839395, 2.740265, 30.212027)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=1.239114e-05) (xyz=-114.791499, 7.363461, 11.845170)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'airport_babushara_new_crash' (sq=5.092136e-06) (xyz=-113.316063, 6.840351, 11.371226)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp_crash' (sq=7.630534e-07) (xyz=-2.281200, 14.310538, 6.860374)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'batumi_kdp_crash' (sq=7.630536e-07) (xyz=-2.797938, 14.310538, 5.968825)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'garage_a_crash' (sq=0.000000e+00) (xyz=-10.061975, 1.696121, -15.715268)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'garage_a_crash' (sq=0.000000e+00) (xyz=-9.222221, 2.484941, -15.648526)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'garage_a_crash' (sq=0.000000e+00) (xyz=-12.248419, 1.057744, 14.183513)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'garage_a_crash' (sq=0.000000e+00) (xyz=-13.119382, 1.756869, 13.892777)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=0.000000e+00) (xyz=-10.382706, 13.076068, -5.998585)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=0.000000e+00) (xyz=3.550477, 25.719932, 9.735236)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=1.795513e-06) (xyz=-8.965139, 26.624737, 5.179361)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=1.802424e-06) (xyz=8.979416, 26.624737, 5.179365)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=0.000000e+00) (xyz=3.206941, 28.739100, 8.791380)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gradir_crush' (sq=0.000000e+00) (xyz=-3.870823, 25.140288, -5.869917)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home16_twin_crush' (sq=3.881179e-07) (xyz=2.281361, 0.823538, 12.809234)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home16_twin_crush' (sq=0.000000e+00) (xyz=20.060312, 0.823538, -20.635106)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home16_twin_crush' (sq=3.849332e-07) (xyz=2.265471, 0.874712, 21.440470)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home16_twin_crush' (sq=0.000000e+00) (xyz=20.044423, 0.874712, -10.159812)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home1ug_crush' (sq=1.507641e-07) (xyz=-0.458285, 0.697940, -8.122790)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home1ug_crush' (sq=8.944863e-08) (xyz=1.958412, 0.732230, -7.868588)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home1ugr_crush' (sq=1.507641e-07) (xyz=7.777606, 0.697940, -0.359557)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home1ugr_crush' (sq=8.944863e-08) (xyz=7.523404, 0.732230, 2.057140)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'home52_st_crash' (sq=2.363315e-07) (xyz=9.902370, 4.265686, -39.480270)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'lokator_crash' (sq=1.355111e-05) (xyz=12.294858, 2.045360, 9.936700)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'lokator_crash' (sq=1.484206e-05) (xyz=12.346491, 1.373256, 10.040321)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'most(road)small-crush' (sq=0.000000e+00) (xyz=0.755923, -3.529291, -9.486899)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'most(road)small-crush' (sq=0.000000e+00) (xyz=0.297044, -4.790061, -8.136270)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'polyklinika_a_crush' (sq=0.000000e+00) (xyz=-2.181127, 0.062917, -12.834483)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'polyklinika_a_crush' (sq=0.000000e+00) (xyz=-8.694631, 0.302820, -14.073813)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'restoran1_crash' (sq=3.014118e-07) (xyz=-10.378951, 6.352591, -14.858738)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'restoran1_crash' (sq=0.000000e+00) (xyz=-10.479951, 7.269756, -14.858739)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'restoran1_crash' (sq=4.029761e-06) (xyz=-10.311618, 7.269756, -11.257864)
+2026-09-18 11:02:30.620 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 's1_crash' (sq=1.606771e-07) (xyz=0.423504, 0.662391, 1.372451)
+2026-09-18 11:02:30.645 WARNING LOG (20716): 1 duplicate message(s) skipped.
+2026-09-18 11:02:30.645 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tuapse_building2_crash' (sq=0.000000e+00) (xyz=-8.883338, 1.650052, 1.762125)
+2026-09-18 11:02:30.645 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'tuapse_building2_crash' (sq=0.000000e+00) (xyz=-8.883338, 1.650035, -1.370581)
+2026-09-18 11:02:30.651 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gaz_66_new' (sq=5.531112e-09) (xyz=-2.848471, 0.764464, 0.658997)
+2026-09-18 11:02:30.651 WARNING EDTERRAIN4 (Main): Removed degenerate triangle in collision 'gaz_66_new' (sq=5.531110e-09) (xyz=-3.048830, 0.764464, 0.658997)
+2026-09-18 11:02:30.778 INFO    EDCORE (Main): 0.232 s  terrain references
+2026-09-18 11:02:30.779 INFO    EDCORE (Main): 0.000 s  terrain models
+2026-09-18 11:02:30.780 INFO    EDCORE (Main): 0.000 s  terrain assets
+2026-09-18 11:02:30.856 INFO    EDCORE (Main): 0.070 s  terrain assets2
+2026-09-18 11:02:31.010 INFO    EDCORE (Main): 0.154 s  terrain landfile
+2026-09-18 11:02:31.020 INFO    EDCORE (Main): 0.008 s  terrain surfaceTile
+2026-09-18 11:02:31.020 INFO    EDTERRAIN4 (Main): switchTextures (season=1, minTexture=false)
+2026-09-18 11:02:31.851 INFO    EDCORE (Main): 0.831 s  terrain vfstextures
+2026-09-18 11:02:31.896 INFO    EDCORE (Main): 0.044 s  terrain scene
+2026-09-18 11:02:31.897 INFO    EDCORE (Main): 0.000 s  terrain roaddetails
+2026-09-18 11:02:31.897 INFO    EDCORE (Main): 0.000 s  terrain forest
+2026-09-18 11:02:32.552 INFO    EDCORE (Main): 0.652 s  terrain routes
+2026-09-18 11:02:32.558 INFO    EDCORE (Main): 0.005 s  terrain surfacedetails
+2026-09-18 11:02:32.559 INFO    EDCORE (Main): 0.000 s  terrain blocks
+2026-09-18 11:02:32.572 INFO    EDCORE (Main): 0.000 s  terrain references
+2026-09-18 11:02:32.719 INFO    EDCORE (Main): 0.157 s  terrain superficials
+2026-09-18 11:02:32.730 INFO    EDCORE (Main): 0.010 s  terrain lma
+2026-09-18 11:02:32.731 INFO    EDCORE (Main): 0.000 s  terrain vectordatasettings
+2026-09-18 11:02:33.327 INFO    EDCORE (Main): 0.596 s  terrain navgraph
+2026-09-18 11:02:33.337 INFO    EDCORE (Main): 0.009 s  terrain vti
+2026-09-18 11:02:33.510 INFO    EDTERRAIN4 (Main): terrain time: 2.965774 s
+2026-09-18 11:02:33.592 INFO    TERRAIN (Main): lSystem::InitScenes()
+2026-09-18 11:02:33.593 INFO    EDTERRAIN4 (Main): ITerrainContextImpl4::setTrafficDecimation(0)
+2026-09-18 11:02:33.594 INFO    EDTERRAIN4 (Main): ITerrainContextImpl4::setDate( day=13, month=9)
+2026-09-18 11:02:33.594 INFO    EDTERRAIN4 (Main): lTerraDispatchImpl::setDate( day=13, month=9)
+2026-09-18 11:02:33.594 INFO    EDTERRAIN4 (Main): switch to season = autumn
+2026-09-18 11:02:33.594 INFO    EDTERRAIN4 (Main): switchTextures (season=2, minTexture=false)
+2026-09-18 11:02:33.599 INFO    EDTERRAIN4 (11316): ITerrainContextImpl4::setTrafficDecimation(0)
+2026-09-18 11:02:33.681 WARNING LOG (20716): 3 duplicate message(s) skipped.
+2026-09-18 11:02:33.681 INFO    EDTERRAIN4 (11316): ITerrainContextImpl4::setDate( day=13, month=9)
+2026-09-18 11:02:33.681 WARNING LOG (20716): 3 duplicate message(s) skipped.
+2026-09-18 11:02:33.681 INFO    EDTERRAIN4 (Main): ITerrainContextImpl4::setTextureMode(full=1)
+2026-09-18 11:02:33.801 WARNING LOG (20716): 4 duplicate message(s) skipped.
+2026-09-18 11:02:33.801 INFO    DX11BACKEND (22072): Reloading textures ...
+2026-09-18 11:02:33.830 INFO    Dispatcher (Main): load terrain done
+2026-09-18 11:02:33.830 INFO    LUA-TERRAIN (Main): Init done
+2026-09-18 11:02:33.830 INFO    INTER (Main): ITerrainGraphicsEntryPoint::close()
+2026-09-18 11:02:33.830 INFO    INTER (Main): ITerrainGraphicsEntryPoint::createTerrainGraphics()
+2026-09-18 11:02:33.857 INFO    INTER (22072): ITerrainGraphicsEntryPoint: call CreateITerrainGraphics()
+2026-09-18 11:02:33.857 INFO    EDTERRAINGRAPHICS41 (22072): ITerrainGraphicsImpl4::openTerrain() START
+2026-09-18 11:02:33.857 INFO    EDTERRAINGRAPHICS41 (22072): loading terrain options: Config/terrain/terrainoptions41.lua
+2026-09-18 11:02:33.866 INFO    EDTERRAINGRAPHICS41 (22072): loading terrain shading options: ./Mods/terrains/Caucasus/shadingOptions/Caucasus.lua
+2026-09-18 11:02:33.875 INFO    METASHADER (22072): MetaShaderCache2: [82] from ./Mods/terrains/Caucasus/misc/metacache/base.lua
+2026-09-18 11:02:34.339 INFO    METASHADER (22072): loaded [82/82]
+2026-09-18 11:02:34.352 WARNING EDTERRAINGRAPHICS41 (22072): failed to open "surfaceDetailsHints" section in terrain config
+2026-09-18 11:02:34.353 ERROR_ONCE DX11BACKEND (20740): texture 'lightPalette.tif' not found. Asked from ''
+2026-09-18 11:02:46.407 INFO    EDCORE (22072): 12.032 s  Precompile metashaders
+2026-09-18 11:02:46.408 INFO    EDTERRAINGRAPHICS41 (22072): 0.000026s Loaded reference file "caucasus" buffers: 0
+2026-09-18 11:02:46.408 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.412 INFO    EDTERRAINGRAPHICS41 (22072): 0.000343s Loaded reference file "airfieldslights" buffers: 7
+2026-09-18 11:02:46.412 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.416 INFO    EDTERRAINGRAPHICS41 (22072): 0.000556s Loaded reference file "blockbuildings" buffers: 9
+2026-09-18 11:02:46.416 INFO    EDCORE (22072): 0.001 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.421 INFO    EDTERRAINGRAPHICS41 (22072): 0.001129s Loaded reference file "blocktrees" buffers: 0
+2026-09-18 11:02:46.421 INFO    EDCORE (22072): 0.001 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.427 INFO    EDTERRAINGRAPHICS41 (22072): 0.003614s Loaded reference file "caucasusafbbuildings_new" buffers: 30
+2026-09-18 11:02:46.427 INFO    EDCORE (22072): 0.004 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.428 INFO    EDTERRAINGRAPHICS41 (22072): 0.000120s Loaded reference file "caucasusbridges" buffers: 11
+2026-09-18 11:02:46.428 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.437 INFO    EDTERRAINGRAPHICS41 (22072): 0.005817s Loaded reference file "caucasusobjects" buffers: 0
+2026-09-18 11:02:46.437 INFO    EDCORE (22072): 0.006 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.439 INFO    EDTERRAINGRAPHICS41 (22072): 0.000830s Loaded reference file "communication" buffers: 7
+2026-09-18 11:02:46.439 INFO    EDCORE (22072): 0.001 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.442 INFO    EDTERRAINGRAPHICS41 (22072): 0.000026s Loaded reference file "crashmodels" buffers: 3
+2026-09-18 11:02:46.442 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.447 INFO    EDTERRAINGRAPHICS41 (22072): 0.000936s Loaded reference file "crashmodelsfromedm" buffers: 22
+2026-09-18 11:02:46.447 INFO    EDCORE (22072): 0.001 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.450 INFO    EDTERRAINGRAPHICS41 (22072): 0.000098s Loaded reference file "housedetails" buffers: 9
+2026-09-18 11:02:46.450 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.454 INFO    EDTERRAINGRAPHICS41 (22072): 0.000097s Loaded reference file "industrial" buffers: 8
+2026-09-18 11:02:46.454 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.458 INFO    EDTERRAINGRAPHICS41 (22072): materialParams[1]*1536
+2026-09-18 11:02:46.460 INFO    EDTERRAINGRAPHICS41 (22072): 0.002102s Loaded reference file "misc" buffers: 3
+2026-09-18 11:02:46.460 INFO    EDCORE (22072): 0.002 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.462 INFO    EDTERRAINGRAPHICS41 (22072): 0.000093s Loaded reference file "oilplatforms" buffers: 7
+2026-09-18 11:02:46.462 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.466 INFO    EDTERRAINGRAPHICS41 (22072): 0.000148s Loaded reference file "tuapserefinery" buffers: 6
+2026-09-18 11:02:46.466 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.470 INFO    EDTERRAINGRAPHICS41 (22072): 0.000118s Loaded reference file "vehicles" buffers: 12
+2026-09-18 11:02:46.470 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.474 INFO    EDTERRAINGRAPHICS41 (22072): 0.000055s Loaded reference file "vessels" buffers: 7
+2026-09-18 11:02:46.474 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.478 INFO    EDTERRAINGRAPHICS41 (22072): 0.000026s Loaded reference file "walls" buffers: 2
+2026-09-18 11:02:46.478 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.483 INFO    EDTERRAINGRAPHICS41 (22072): 0.001244s Loaded reference file "americanbeech" buffers: 0
+2026-09-18 11:02:46.483 INFO    EDCORE (22072): 0.001 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.486 INFO    EDTERRAINGRAPHICS41 (22072): 0.000042s Loaded reference file "caucasus_fir" buffers: 0
+2026-09-18 11:02:46.486 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.490 INFO    EDTERRAINGRAPHICS41 (22072): 0.000038s Loaded reference file "cypress_oak" buffers: 0
+2026-09-18 11:02:46.490 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.494 INFO    EDTERRAINGRAPHICS41 (22072): 0.000040s Loaded reference file "european_beech" buffers: 0
+2026-09-18 11:02:46.494 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.498 INFO    EDTERRAINGRAPHICS41 (22072): 0.000048s Loaded reference file "green_ash" buffers: 0
+2026-09-18 11:02:46.498 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.502 INFO    EDTERRAINGRAPHICS41 (22072): 0.000040s Loaded reference file "honey_mesquite" buffers: 0
+2026-09-18 11:02:46.502 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.506 INFO    EDTERRAINGRAPHICS41 (22072): 0.000040s Loaded reference file "italiancypress" buffers: 0
+2026-09-18 11:02:46.506 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.510 INFO    EDTERRAINGRAPHICS41 (22072): 0.000046s Loaded reference file "lombardypoplar" buffers: 0
+2026-09-18 11:02:46.510 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.514 INFO    EDTERRAINGRAPHICS41 (22072): 0.000039s Loaded reference file "mountain_maple" buffers: 0
+2026-09-18 11:02:46.514 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.518 INFO    EDTERRAINGRAPHICS41 (22072): 0.000040s Loaded reference file "norwayspruce" buffers: 0
+2026-09-18 11:02:46.518 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.522 INFO    EDTERRAINGRAPHICS41 (22072): 0.000029s Loaded reference file "shrub" buffers: 0
+2026-09-18 11:02:46.522 INFO    EDCORE (22072): 0.000 s  landscape4::lReferenceFile
+2026-09-18 11:02:46.522 INFO    EDTERRAINGRAPHICS41 (22072): InstanceManager2 is completing initialization... 
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072): InstanceManager2 complete initialization: 
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   objects:    1338
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   subObjects: 1090
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   objectLods: 5786
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   objectLodRenderItems: 353
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   MAX_LODS_IN_OBJECT:       10
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   MAX_SUBOBJECTS_IN_OBJECT: 74
+2026-09-18 11:02:46.527 INFO    EDTERRAINGRAPHICS41 (22072):   GEOMETRY BUFFERS: 143
+2026-09-18 11:02:46.530 INFO    EDCORE (22072): 0.000 s  landscape5::OceanFile
+2026-09-18 11:02:46.802 INFO    EDCORE (22072): 0.268 s  landscape5::GrassFile
+2026-09-18 11:02:46.803 INFO    EDCORE (22072): 0.000 s  landscape5::lModels5File
+2026-09-18 11:02:46.872 WARNING LOG (20716): 16 duplicate message(s) skipped.
+2026-09-18 11:02:46.872 INFO    EDTERRAINGRAPHICS41 (22072): remapper.deformers is not empty
+2026-09-18 11:02:46.924 INFO    EDTERRAINGRAPHICS41 (22072): materialParams[37382]*1536
+2026-09-18 11:02:46.926 INFO    EDCORE (22072): 0.055 s  landscape5::Surface5File
+2026-09-18 11:02:46.930 INFO    EDTERRAINGRAPHICS41 (22072): materialParams[1040]*1536
+2026-09-18 11:02:46.930 INFO    EDCORE (22072): 0.003 s  landscape5::SurfaceTile
+2026-09-18 11:02:46.933 INFO    EDCORE (22072): 0.002 s  landscape5::Scene5File
+2026-09-18 11:02:46.936 INFO    EDCORE (22072): 0.001 s  landscape4::lRoutesFile
+2026-09-18 11:02:46.939 INFO    EDCORE (22072): 0.000 s  landscape4::lSurfaceDetails2File
+2026-09-18 11:02:46.943 INFO    EDTERRAINGRAPHICS41 (22072): materialParams[1]*1536
+2026-09-18 11:02:46.943 INFO    EDCORE (22072): 0.000 s  landscape4::lSuperficialFile
+2026-09-18 11:02:46.949 INFO    EDCORE (22072): Loaded I:/Gaming/DCS World/Eagle Dynamics/DCS World/bin/dxgui_edge_render.dll
+2026-09-18 11:02:46.949 INFO    EDCORE (22072): 0.000 s  landscape4::lGeoNamesFile
+2026-09-18 11:02:46.954 INFO    EDCORE (22072): 0.001 s  landscape5::sup5File
+2026-09-18 11:02:46.958 INFO    EDCORE (22072): 0.000 s  landscape5::sup5File
+2026-09-18 11:02:46.961 INFO    EDCORE (22072): 0.000 s  landscape5::navGraph5File
+2026-09-18 11:02:46.961 INFO    EDTERRAINGRAPHICS41 (22072): ITerrainGraphicsImpl4::openTerrain() END 13.104082 s
+2026-09-18 11:03:31.841 INFO    DX11BACKEND (22072): Compile shader: deferred/blurCompute.fx
+2026-09-18 11:10:02.586 WARNING LOG (20716): 47 duplicate message(s) skipped.
+2026-09-18 11:10:02.586 ERROR_ONCE DX11BACKEND (22716): texture 'lns_vig_fus_t_n' not found. Asked from ''
+2026-09-18 11:10:02.599 ERROR_ONCE DX11BACKEND (22800): texture 'lns_vig_ext_fus_l_n' not found. Asked from ''
+2026-09-18 11:10:02.664 ERROR_ONCE DX11BACKEND (21544): texture 'lns_vig_ext_wing_l_s' not found. Asked from ''
+2026-09-18 11:10:02.681 ERROR_ONCE DX11BACKEND (6024): texture 'lns_vig_fuselage_t_s' not found. Asked from ''
+2026-09-18 11:10:02.707 ERROR_ONCE DX11BACKEND (20148): texture 'lns_vig_fuselage_l_s' not found. Asked from ''
+2026-09-18 11:10:27.736 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [0, 0]
+2026-09-18 11:10:28.514 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [1920, 1080]
+2026-09-18 11:10:30.171 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [0, 0]
+2026-09-18 11:10:32.311 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [1920, 1080]
+2026-09-18 11:10:35.641 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [0, 0]
+2026-09-18 11:10:36.419 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [1920, 1080]
+2026-09-18 11:10:39.863 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [0, 0]
+2026-09-18 11:10:40.506 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [1920, 1080]
+2026-09-18 11:10:42.201 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [0, 0]
+2026-09-18 11:10:43.144 INFO    DXGUI_WIN_ADAPTER (Main): resize main window to [1920, 1080]
+2026-09-18 11:11:26.841 WARNING SCENE (22072): Scene was removed with 2 alive objects
+2026-09-18 11:11:26.889 INFO    EDCORE (Main): (dDispatcher)enterToState_:5
+2026-09-18 11:11:26.894 INFO    APP (Main): application shutdown
+2026-09-18 11:11:26.901 INFO    WorldPlugIns (Main): Stopping preloader...
+2026-09-18 11:11:27.039 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 0
+2026-09-18 11:11:27.042 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 1
+2026-09-18 11:11:27.042 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 2
+2026-09-18 11:11:27.164 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 3
+2026-09-18 11:11:27.274 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 4
+2026-09-18 11:11:27.303 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 5
+2026-09-18 11:11:27.306 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 6
+2026-09-18 11:11:27.312 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 7
+2026-09-18 11:11:27.313 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 8
+2026-09-18 11:11:27.315 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 9
+2026-09-18 11:11:27.315 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 10
+2026-09-18 11:11:27.316 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 11
+2026-09-18 11:11:27.316 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 12
+2026-09-18 11:11:27.317 INFO    EDOBJECTS (Main): lTypeObjectManagerImpl::clear 13
+2026-09-18 11:11:27.349 WARNING SCENE (22072): Scene was removed with 515 alive objects
+2026-09-18 11:11:27.351 WARNING SCENE (22072): Scene was removed with 57 alive lights
+2026-09-18 11:11:27.366 INFO    WorldPlugIns (Main): Deinitializing plugins...
+2026-09-18 11:11:28.334 INFO    TERRAIN (Main): lSystem::exit()
+2026-09-18 11:11:28.344 INFO    TERRAIN (Main): lSystem::CleanScenes()
+2026-09-18 11:11:28.344 INFO    WORLDGENERAL (Main): TerrainUtility:: updated in parallel: 0, updated in the main thread: 0
+2026-09-18 11:11:28.374 INFO    INTER (22072): ITerrainGraphicsEntryPoint::close()
+2026-09-18 11:11:28.778 INFO    INTER (Main): ITerrainEntryPoint::close()
+2026-09-18 11:11:29.925 INFO    INTER (Main): ITerrainGraphicsEntryPoint::close()
+2026-09-18 11:11:29.925 INFO    INTER (Main): ITerrainEntryPoint::close()
+2026-09-18 11:11:29.939 WARNING SCENE (22072): Scene was removed with 5 alive objects
+2026-09-18 11:11:30.018 INFO    DX11BACKEND (22072): DX11Renderer::shutdown()
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): NVIDIA API exit OK
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): textures_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): textures_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): buffers_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): buffers_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): CB_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): CB_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): SB_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): SB_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): IB_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): IB_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): VB_count: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): VB_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): total_buffers_size: 0
+2026-09-18 11:11:32.415 INFO    DX11BACKEND (22072): total_size: 0
+2026-09-18 11:11:32.427 INFO    VISUALIZER (22072): render thread has stopped
+=== Log closed.

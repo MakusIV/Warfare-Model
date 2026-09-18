@@ -1,0 +1,398 @@
+module_config_init = {
+	['ATO_Generator'] = {
+		['blue'] = {
+			['UNIT_SERVICEABILITY'] = 0.8,
+			['MIN_PERCENTAGE_FOR_ESCORT'] = 0.75,
+			['FACTOR_FOR_REDUCTION_AIR_THREAT'] = 0.5,
+			['MULTIPLIER_TARGET_DISTANCE_FOR_EVALUTATION_UNIT_RANGE_LOADOUT'] = 2,
+			['WEIGHT_SCORE_FOR_AIRCRAFT_COST'] = {
+				['Fighter'] = 0.3,
+				['Refueler'] = 0.1,
+				['Helicopter'] = 0.2,
+				['Transporter'] = 0.1,
+				['AWACS'] = 0.1,
+				['Reco'] = 0.2,
+				['Attacker'] = 0.5,
+				['Bomber'] = 0.2,
+			},
+			['MAX_AIRCRAFT_FOR_STRIKE'] = 4,
+			['WEIGHT_SCORE_FOR_LOADOUT_COST'] = {
+				['Strike'] = 0.3,
+				['Anti-ship Strike'] = 0.1,
+				['Escort'] = 0.3,
+				['Reconnaissance'] = 0.1,
+				['SEAD'] = 0.1,
+				['Fighter Sweep'] = 0.2,
+				['CAP'] = 0.4,
+				['Intercept'] = 0.2,
+			},
+			['MIN_TOTAL_AIR_THREAT_FOR_ESCORT_SUPPORT'] = 0.5,
+			['MAX_AIRCRAFT_FOR_RECONNAISSANCE'] = 2,
+			['MAX_AIRCRAFT_FOR_INTERCEPT'] = 2,
+			['ESCORT_NUMBER_MULTIPLIER'] = 3,
+			['SCORE_INFLUENCE_ROUTE_THREAT'] = 1,
+			['MAX_AIRCRAFT_FOR_BOMBER'] = 1,
+			['MINIMUM_VALUE_OF_AIR_THREAT'] = 0.5,
+			['MAX_AIRCRAFT_FOR_CAP'] = 4,
+			['MINIMUM_REQUESTED_AIRCRAFT_FOR_STRIKE'] = 2,
+			['MAX_AIRCRAFT_FOR_SWEEP'] = 4,
+			['MAX_AIRCRAFT_FOR_ESCORT'] = 4,
+			['MAX_AIRCRAFT_FOR_OTHER'] = 1,
+			['MULTIPLIER_TARGET_DISTANCE_FOR_EVALUTATION_COMPUTING_ROUTE'] = 1.5,
+			['FACTOR_FOR_REDUCE_SCORE'] = 0.01,
+		},
+		['red'] = {
+			['UNIT_SERVICEABILITY'] = 0.8,
+			['MIN_PERCENTAGE_FOR_ESCORT'] = 0.75,
+			['FACTOR_FOR_REDUCTION_AIR_THREAT'] = 0.5,
+			['MULTIPLIER_TARGET_DISTANCE_FOR_EVALUTATION_UNIT_RANGE_LOADOUT'] = 2,
+			['WEIGHT_SCORE_FOR_AIRCRAFT_COST'] = {
+				['Fighter'] = 0.3,
+				['Refueler'] = 0.1,
+				['Helicopter'] = 0.2,
+				['Transporter'] = 0.1,
+				['AWACS'] = 0.1,
+				['Reco'] = 0.2,
+				['Attacker'] = 0.5,
+				['Bomber'] = 0.2,
+			},
+			['MAX_AIRCRAFT_FOR_STRIKE'] = 4,
+			['WEIGHT_SCORE_FOR_LOADOUT_COST'] = {
+				['Strike'] = 0.3,
+				['Anti-ship Strike'] = 0.1,
+				['Escort'] = 0.3,
+				['Reconnaissance'] = 0.1,
+				['SEAD'] = 0.1,
+				['Fighter Sweep'] = 0.2,
+				['CAP'] = 0.4,
+				['Intercept'] = 0.2,
+			},
+			['MIN_TOTAL_AIR_THREAT_FOR_ESCORT_SUPPORT'] = 0.5,
+			['MAX_AIRCRAFT_FOR_RECONNAISSANCE'] = 2,
+			['MAX_AIRCRAFT_FOR_INTERCEPT'] = 2,
+			['ESCORT_NUMBER_MULTIPLIER'] = 3,
+			['SCORE_INFLUENCE_ROUTE_THREAT'] = 1,
+			['MAX_AIRCRAFT_FOR_BOMBER'] = 1,
+			['MINIMUM_VALUE_OF_AIR_THREAT'] = 0.5,
+			['MAX_AIRCRAFT_FOR_CAP'] = 4,
+			['MINIMUM_REQUESTED_AIRCRAFT_FOR_STRIKE'] = 2,
+			['MAX_AIRCRAFT_FOR_SWEEP'] = 4,
+			['MAX_AIRCRAFT_FOR_ESCORT'] = 4,
+			['MAX_AIRCRAFT_FOR_OTHER'] = 1,
+			['MULTIPLIER_TARGET_DISTANCE_FOR_EVALUTATION_COMPUTING_ROUTE'] = 1.5,
+			['FACTOR_FOR_REDUCE_SCORE'] = 0.01,
+		},
+		['MIN_FOG_VISIBILITY'] = 5000,
+		['BOMBERS_RECO'] = {
+			[1] = 'S-3B',
+			[2] = 'F-117A',
+			[3] = 'B-1B',
+			[4] = 'B-52H',
+			[5] = 'Tu-22M3',
+			[6] = 'Tu-95MS',
+			[7] = 'Tu-142',
+			[8] = 'Tu-160',
+			[9] = 'MiG-25RBT',
+		},
+		['MIN_CLOUD_EIGHT_ABOVE_AIRBASE'] = 333,
+		['MIN_CLOUD_DENSITY'] = 0.8,
+	},
+	['ATO_ThreatEvaluation'] = {
+		['LARGE_AAA_SAM_FIXEDPOS_RILEVABILITY'] = 0.9,
+		['MIN_ASSET_FOR_COMPUTE_LEVEL_INTERCEPT'] = 3,
+		['LARGE_SHIP_RILEVABILITY'] = 0.95,
+		['SMALL_AAA_SAM_IR_VEHICLE_RILEVABILITY'] = 0.4,
+		['GROUND_THREAT_RILEVABILITY_BLUE_GROUND_CAPACITY'] = 1,
+		['GROUND_THREAT_RILEVABILITY_RED_AIR_CAPACITY'] = 1,
+		['GROUND_THREAT_RILEVABILITY_RED_GROUND_CAPACITY'] = 1,
+		['SMALL_AAA_SAM_RADAR_VEHICLE_RILEVABILITY'] = 0.5,
+		['MIN_ASSET_FOR_COMPUTE_LEVEL_CAP'] = 3,
+		['SMALL_SHIP_RILEVABILITY'] = 0.7,
+		['MEDIUM_AAA_SAM_FIXEDPOS_RILEVABILITY'] = 0.8,
+		['SMALL_AAA_SAM_FIXEDPOS_RILEVABILITY'] = 0.6,
+		['MEDIUM_AAA_SAM_IR_VEHICLE_RILEVABILITY'] = 0.6,
+		['LARGE_SAM_VEHICLE_RILEVABILITY'] = 0.8,
+		['MEDIUM_AAA_SAM_RADAR_VEHICLE_RILEVABILITY'] = 0.7,
+		['MAN_SAM_RILEVABILITY'] = 0.2,
+		['GROUND_THREAT_RILEVABILITY_BLUE_AIR_CAPACITY'] = 1,
+		['MEDIUM_SHIP_RILEVABILITY'] = 0.8,
+	},
+	['DC_LoadoutsAssignment'] = {
+		['CRUISE_PARAM'] = {
+			['blue'] = {
+				['bomber'] = {
+					['normal'] = {
+						['min_hCruise'] = 2000,
+						['min_vCruise_TAS'] = 111.11111111111,
+						['max_hCruise'] = 8999,
+						['max_vCruise_TAS'] = 166.66666666667,
+					},
+					['high'] = {
+						['min_hCruise'] = 9000,
+						['min_vCruise_TAS'] = 97.222222222222,
+						['max_hCruise'] = 12000,
+						['max_vCruise_TAS'] = 125,
+					},
+					['low'] = {
+						['min_hCruise'] = 100,
+						['min_vCruise_TAS'] = 125,
+						['max_hCruise'] = 1999,
+						['max_vCruise_TAS'] = 152.77777777778,
+					},
+					['supersonic'] = {
+						['min_hCruise'] = 200,
+						['min_vCruise_TAS'] = 416.66666666667,
+						['max_hCruise'] = 12000,
+						['max_vCruise_TAS'] = 555.55555555556,
+					},
+				},
+				['refueler'] = {
+					['normal'] = {
+						['min_hCruise'] = 7000,
+						['min_vCruise_TAS'] = 80.555555555556,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 91.666666666667,
+					},
+					['low'] = {
+						['min_hCruise'] = 2000,
+						['min_vCruise_TAS'] = 80.555555555556,
+						['max_hCruise'] = 6999,
+						['max_vCruise_TAS'] = 88.888888888889,
+					},
+				},
+				['transporter'] = {
+					['normal'] = {
+						['min_hCruise'] = 4500,
+						['min_vCruise_TAS'] = 102.77777777778,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 138.88888888889,
+					},
+				},
+				['recon'] = {
+					['normal'] = {
+						['min_hCruise'] = 4500,
+						['min_vCruise_TAS'] = 111.11111111111,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 194.44444444444,
+					},
+				},
+				['attacker'] = {
+					['normal'] = {
+						['min_hCruise'] = 1000,
+						['min_vCruise_TAS'] = 125,
+						['max_hCruise'] = 7000,
+						['max_vCruise_TAS'] = 250,
+					},
+					['low'] = {
+						['min_hCruise'] = 100,
+						['min_vCruise_TAS'] = 111.11111111111,
+						['max_hCruise'] = 999,
+						['max_vCruise_TAS'] = 138.88888888889,
+					},
+				},
+				['AWACS'] = {
+					['normal'] = {
+						['min_hCruise'] = 9000,
+						['min_vCruise_TAS'] = 102.77777777778,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 138.88888888889,
+					},
+				},
+			},
+			['red'] = {
+				['bomber'] = {
+					['normal'] = {
+						['min_hCruise'] = 2000,
+						['min_vCruise_TAS'] = 111.11111111111,
+						['max_hCruise'] = 8999,
+						['max_vCruise_TAS'] = 166.66666666667,
+					},
+					['high'] = {
+						['min_hCruise'] = 9000,
+						['min_vCruise_TAS'] = 105.55555555556,
+						['max_hCruise'] = 12000,
+						['max_vCruise_TAS'] = 130.55555555556,
+					},
+					['low'] = {
+						['min_hCruise'] = 100,
+						['min_vCruise_TAS'] = 102.77777777778,
+						['max_hCruise'] = 1999,
+						['max_vCruise_TAS'] = 125,
+					},
+					['supersonic'] = {
+						['min_hCruise'] = 200,
+						['min_vCruise_TAS'] = 416.66666666667,
+						['max_hCruise'] = 12000,
+						['max_vCruise_TAS'] = 555.55555555556,
+					},
+				},
+				['refueler'] = {
+					['normal'] = {
+						['min_hCruise'] = 7000,
+						['min_vCruise_TAS'] = 80.555555555556,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 91.666666666667,
+					},
+					['low'] = {
+						['min_hCruise'] = 2000,
+						['min_vCruise_TAS'] = 80.555555555556,
+						['max_hCruise'] = 6999,
+						['max_vCruise_TAS'] = 91.666666666667,
+					},
+				},
+				['transporter'] = {
+					['normal'] = {
+						['min_hCruise'] = 4500,
+						['min_vCruise_TAS'] = 102.77777777778,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 138.88888888889,
+					},
+				},
+				['recon'] = {
+					['normal'] = {
+						['min_hCruise'] = 4500,
+						['min_vCruise_TAS'] = 125,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 166.66666666667,
+					},
+				},
+				['attacker'] = {
+					['normal'] = {
+						['min_hCruise'] = 1000,
+						['min_vCruise_TAS'] = 125,
+						['max_hCruise'] = 7000,
+						['max_vCruise_TAS'] = 250,
+					},
+					['low'] = {
+						['min_hCruise'] = 100,
+						['min_vCruise_TAS'] = 111.11111111111,
+						['max_hCruise'] = 999,
+						['max_vCruise_TAS'] = 152.77777777778,
+					},
+				},
+				['AWACS'] = {
+					['normal'] = {
+						['min_hCruise'] = 9000,
+						['min_vCruise_TAS'] = 102.77777777778,
+						['max_hCruise'] = 10000,
+						['max_vCruise_TAS'] = 138.88888888889,
+					},
+				},
+			},
+		},
+		['PERCENTAGE_RANGE_FOR_STANDOFF_SETUP'] = {
+			['Rockets'] = 0.6,
+			['ASM'] = 0.7,
+		},
+		['ALTITUDE_ATTACK'] = {
+			['Rockets'] = {
+				['min'] = 50,
+				['max'] = 1000,
+			},
+			['ASM'] = {
+				['min'] = 200,
+				['max'] = 6000,
+			},
+		},
+		['ESCORT_DISTANCE_OVERRIDE'] = {
+			['escort_bomber'] = {
+				['min'] = 10000,
+				['max'] = 20000,
+			},
+			['escort_sead_bomber'] = {
+				['min'] = 20000,
+				['max'] = 30000,
+			},
+			['escort_attacker'] = {
+				['min'] = 7000,
+				['max'] = 12000,
+			},
+			['escort_sead_attacker'] = {
+				['min'] = 15000,
+				['max'] = 25000,
+			},
+		},
+		['MIN_EFFICIENCY_WEAPON_ATTRIBUTE'] = 0.01,
+		['ACTIVATE_STANDOFF_SETUP'] = true,
+		['ANGLE_OF_DESCENT_IN_GROUND_ATTACK'] = {
+			['Rockets'] = {
+				['min'] = 20,
+				['max'] = 40,
+				['med'] = 30,
+			},
+			['ASM'] = {
+				['min'] = 10,
+				['max'] = 35,
+				['med'] = 25,
+			},
+		},
+		['WEIGHT_MISSILE_A2A_MANOUVRABILITY'] = 0.2,
+		['WEIGHT_MISSILE_A2A_RELIABILITY'] = 0.3,
+		['FIREPOWER_FOR_AA_TARGETS'] = {
+			['blue'] = {
+				['CAP'] = {
+					['min'] = 2,
+					['max'] = 5,
+				},
+				['Fighter Sweep'] = {
+					['min'] = 4,
+					['max'] = 7,
+				},
+				['Escort'] = {
+					['min'] = 3,
+					['max'] = 5,
+				},
+				['Intercept'] = {
+					['min'] = 3,
+					['max'] = 6,
+				},
+			},
+			['red'] = {
+				['CAP'] = {
+					['min'] = 2,
+					['max'] = 5,
+				},
+				['Fighter Sweep'] = {
+					['min'] = 4,
+					['max'] = 7,
+				},
+				['Escort'] = {
+					['min'] = 3,
+					['max'] = 5,
+				},
+				['Intercept'] = {
+					['min'] = 3,
+					['max'] = 6,
+				},
+			},
+		},
+		['ESCORT_TIME_FOR_DISTANCE_OVERRIDE'] = {
+			['escort_bomber'] = 1500,
+			['escort_sead_bomber'] = 1200,
+			['escort_attacker'] = 600,
+			['escort_sead_attacker'] = 900,
+		},
+		['FIREPOWER_ROUNDED_COMPUTATION'] = 0.01,
+		['ESCORT_ALTITUDE_OVERRIDE'] = {
+			['escort_bomber'] = {
+				['min'] = 300,
+				['max'] = 1000,
+			},
+			['escort_sead_bomber'] = {
+				['min'] = 500,
+				['max'] = 1200,
+			},
+			['escort_attacker'] = {
+				['min'] = 200,
+				['max'] = 800,
+			},
+			['escort_sead_attacker'] = {
+				['min'] = 300,
+				['max'] = 800,
+			},
+		},
+		['FACTOR_FOR_CALCULATED_TARGET_FIREPOWER_MAX'] = 1.1,
+		['FIREPOWER_ROUNDED_ASSIGNEMENT'] = 0.1,
+		['MAX_EFFICIENCY_WEAPON_ATTRIBUTE'] = 999999999,
+	},
+}

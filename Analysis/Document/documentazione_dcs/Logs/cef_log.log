@@ -1,0 +1,538 @@
+[0722/205054.555:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0722/205254.655:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0722/205445.416:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0722/205445.419:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0909/152857.072:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0909/153057.171:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0909/154723.364:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0909/154723.371:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0910/173530.453:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0910/173624.797:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0912/111526.177:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0912/111534.264:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0912/181049.652:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0923/183535.164:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0923/183701.769:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/184927.936:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0925/184935.407:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185107.259:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185107.261:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185253.146:ERROR:ssl_client_socket_impl.cc(983)] handshake failed; returned -1, SSL error code 1, net_error -101
+[0925/185259.346:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185259.352:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185429.872:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185617.995:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0925/185617.997:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0928/154908.087:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0928/154919.742:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0928/155825.667:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0928/160025.759:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0928/160119.999:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1006/175934.476:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1006/175934.624:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1006/175934.624:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1006/175934.624:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1006/175934.624:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1006/175934.625:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1006/175934.708:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1006/180632.430:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1011/181420.507:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1011/181420.656:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1011/181420.656:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1011/181420.656:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1011/181420.656:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1011/181420.658:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1011/181420.747:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1011/181542.529:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1013/163024.401:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1013/163024.543:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1013/163024.544:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1013/163024.544:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1013/163024.544:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1013/163024.546:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1013/163024.627:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1013/163140.386:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1016/181639.940:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1016/181640.075:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1016/181640.075:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1016/181640.075:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1016/181640.075:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1016/181640.076:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1016/181640.162:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1016/181827.261:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1019/162625.041:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1019/162625.189:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1019/162625.189:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1019/162625.189:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1019/162625.189:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1019/162625.191:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1019/162625.267:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1019/162712.575:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1019/162712.577:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1019/162729.589:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1019/162729.589:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1019/162729.589:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1019/162729.589:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1019/162729.590:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1019/162729.664:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1019/162747.809:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1020/150232.319:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1020/150232.459:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1020/150232.459:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1020/150232.459:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1020/150232.459:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1020/150232.459:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1020/150232.543:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1020/150247.461:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1020/152651.331:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1020/152651.331:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1020/152651.331:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1020/152651.331:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1020/152651.332:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1020/152651.406:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1020/153729.233:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1021/173303.186:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1021/173303.325:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1021/173303.325:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1021/173303.325:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1021/173303.325:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1021/173303.326:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1021/173303.409:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1021/173312.528:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1025/180148.316:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1025/180148.456:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1025/180148.456:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1025/180148.456:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1025/180148.456:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1025/180148.457:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1025/180148.531:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1025/180200.705:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1027/160421.223:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1027/160421.373:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1027/160421.373:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1027/160421.373:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1027/160421.374:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1027/160421.375:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1027/160421.451:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1027/160432.407:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1027/160754.473:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1027/160754.473:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1027/160754.473:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1027/160754.473:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1027/160754.474:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1027/160754.563:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1027/160801.040:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1028/182554.473:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1028/182554.620:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/182554.620:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/182554.620:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1028/182554.620:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1028/182554.622:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1028/182554.705:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1028/182635.998:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1028/182658.133:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/182658.133:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/182658.133:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1028/182658.133:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1028/182658.134:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1028/182658.208:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1028/182727.590:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1028/183405.058:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/183405.058:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1028/183405.058:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1028/183405.058:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1028/183405.059:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1028/183405.147:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1028/183411.572:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1029/185746.846:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1029/185746.988:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1029/185746.988:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1029/185746.988:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1029/185746.988:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1029/185746.990:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1029/185747.070:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1029/185801.270:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1029/190354.078:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1029/190354.078:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1029/190354.078:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1029/190354.078:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1029/190354.079:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1029/190354.155:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1029/190358.618:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1103/190916.815:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1103/190916.977:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1103/190916.977:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1103/190916.977:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1103/190916.977:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1103/190916.980:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1103/190917.058:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1103/190929.781:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1108/161557.042:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1108/161557.186:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1108/161557.186:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1108/161557.186:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1108/161557.186:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1108/161557.188:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1108/161557.270:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1108/161613.504:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1109/124403.379:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1109/124403.521:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1109/124403.522:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1109/124403.522:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1109/124403.522:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1109/124403.523:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1109/124403.605:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1109/124455.185:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1110/161324.121:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1110/161324.267:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1110/161324.267:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1110/161324.267:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1110/161324.267:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1110/161324.269:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1110/161324.348:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1110/161641.237:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1111/182808.904:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1111/182809.042:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1111/182809.042:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1111/182809.042:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1111/182809.042:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1111/182809.043:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1111/182809.127:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1111/182933.264:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1113/142738.207:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1113/142738.355:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1113/142738.355:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1113/142738.355:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1113/142738.355:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1113/142738.357:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1113/142738.435:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1113/143511.385:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1113/171129.530:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1113/171129.530:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1113/171129.530:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1113/171129.530:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1113/171129.530:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1113/171129.605:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1113/171204.611:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1116/170219.631:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1116/170219.777:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/170219.778:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/170219.778:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1116/170219.778:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1116/170231.242:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/170231.242:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/170231.242:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1116/170231.242:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1116/170231.243:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1116/170231.317:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1116/171029.428:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1116/194448.937:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/194448.937:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/194448.937:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1116/194448.937:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1116/194448.938:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1116/194449.016:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1116/194513.993:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1116/213500.605:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/213500.605:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1116/213500.605:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1116/213500.605:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1116/213500.606:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1116/213500.680:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1116/220046.218:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1117/190724.197:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1117/190724.342:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1117/190724.342:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1117/190724.342:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1117/190724.342:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1117/190724.343:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1117/190724.426:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1117/190822.812:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1117/190838.511:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1117/190838.511:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1117/190838.511:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1117/190838.511:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1117/190838.512:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1117/190838.586:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1117/190914.414:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1118/190443.038:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1118/190443.184:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1118/190443.184:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1118/190443.184:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1118/190443.184:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1118/190443.185:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1118/190443.267:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1118/190456.379:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1122/182840.898:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1122/182841.059:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1122/182841.060:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1122/182841.060:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1122/182841.060:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1122/182841.061:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1122/182841.147:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1122/182857.555:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1124/204718.747:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1124/204718.898:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1124/204718.898:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1124/204718.898:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1124/204718.898:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1124/204718.899:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1124/204718.980:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1124/204740.143:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1125/182451.272:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1125/182451.273:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1125/182451.273:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1125/182451.273:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1125/182451.274:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1125/182451.364:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1125/182634.819:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1127/185240.655:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1127/185240.802:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1127/185240.802:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1127/185240.802:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1127/185240.802:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1127/185240.803:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1127/185240.889:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1127/185257.725:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1128/191635.054:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1128/191635.200:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1128/191635.200:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1128/191635.200:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1128/191635.200:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1128/191635.200:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1128/191635.284:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1128/191656.302:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1129/174237.377:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1129/174237.545:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1129/174237.545:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1129/174237.545:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1129/174237.545:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1129/174237.546:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1129/174237.622:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1129/174250.826:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1130/212559.922:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1130/212600.076:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1130/212600.076:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1130/212600.076:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1130/212600.076:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1130/212600.078:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1130/212600.160:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1130/212618.003:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1201/210616.507:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1201/210616.661:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1201/210616.661:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1201/210616.661:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1201/210616.661:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1201/210616.663:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1201/210616.741:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1201/210659.707:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1202/175657.765:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1202/175657.916:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1202/175657.916:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1202/175657.916:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1202/175657.917:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1202/175657.918:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1202/175657.997:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1202/175722.124:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1202/181837.317:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1202/181837.318:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1202/181837.318:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1202/181837.318:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1202/181837.318:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1202/181837.393:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1202/181843.417:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1204/175307.678:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1204/175307.763:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1204/175307.763:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1204/175307.763:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1204/175307.764:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1204/175307.765:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1204/175307.844:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1204/175428.937:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1204/181210.617:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1204/181210.617:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1204/181210.617:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1204/181210.617:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1204/181210.618:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1204/181210.704:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1204/181312.915:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1205/190843.565:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1205/190843.720:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1205/190843.721:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1205/190843.721:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1205/190843.721:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1205/190843.722:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1205/190843.795:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1205/190911.971:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1207/190721.887:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1207/190722.048:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1207/190722.049:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1207/190722.049:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1207/190722.049:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1207/190722.051:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1207/190722.138:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1207/190840.052:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1208/190011.799:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1208/190011.950:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1208/190011.950:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1208/190011.950:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1208/190011.950:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1208/190011.952:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1208/190012.029:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1208/190106.604:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1210/171904.191:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1210/171904.347:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171904.347:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171904.347:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1210/171904.347:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1210/171904.348:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1210/171904.426:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1210/171940.174:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1210/171955.356:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171955.356:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171955.356:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1210/171955.356:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1210/171955.357:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1210/171955.433:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171955.433:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/171955.433:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1210/171955.433:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1210/171955.434:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1210/171955.509:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1210/172107.237:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1210/192606.668:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/192606.668:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1210/192606.668:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1210/192606.668:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1210/192606.669:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1210/192606.759:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1210/192612.239:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1211/183849.418:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1211/183849.589:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1211/183849.590:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1211/183849.590:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1211/183849.590:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1211/183849.590:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1211/183849.672:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1211/184009.968:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1211/185411.804:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1211/185411.804:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1211/185411.804:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1211/185411.804:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1211/185411.805:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1211/185411.879:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1211/185455.967:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1212/190158.189:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1212/190158.336:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1212/190158.336:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1212/190158.336:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1212/190158.336:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1212/190158.337:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1212/190158.415:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1212/190238.673:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1215/212506.251:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1215/212506.399:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1215/212506.399:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1215/212506.399:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1215/212506.399:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1215/212506.400:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1215/212506.482:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1215/212604.769:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1216/170244.456:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1216/170244.609:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/170244.609:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/170244.609:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1216/170244.609:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1216/170244.610:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1216/170244.705:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1216/170254.112:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1216/172340.923:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1216/172341.078:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/172341.078:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/172341.078:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1216/172341.078:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1216/172341.079:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1216/172341.156:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1216/172353.883:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1216/173408.690:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/173408.690:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/173408.690:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1216/173408.690:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1216/173408.691:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1216/173408.765:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1216/173414.048:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1216/173829.807:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/173829.807:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1216/173829.807:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1216/173829.807:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1216/173829.808:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1216/173829.882:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1216/173836.397:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1217/171254.964:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1217/171255.120:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/171255.120:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/171255.120:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1217/171255.120:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1217/171255.122:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1217/171255.198:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1217/171345.979:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1217/172452.428:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/172452.428:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/172452.428:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1217/172452.428:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1217/172452.429:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1217/172452.519:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1217/172513.679:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1217/173339.471:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/173339.471:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1217/173339.471:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1217/173339.471:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1217/173339.472:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1217/173339.546:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1217/173350.109:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1218/181354.131:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1218/181354.295:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1218/181354.295:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1218/181354.295:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1218/181354.296:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1218/181354.297:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1218/181354.395:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1218/181403.568:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1221/211231.182:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1221/211231.327:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1221/211231.327:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1221/211231.327:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1221/211231.327:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1221/211231.330:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1221/211231.412:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1221/211557.659:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[1222/180929.813:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[1222/180929.981:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1222/180929.982:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[1222/180929.982:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[1222/180929.982:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[1222/180929.983:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[1222/180930.066:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[1222/180948.888:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0118/121839.199:ERROR:component_installer.cc(356)] Failed to read manifest or verify installation for Widevine Content Decryption Module (C:\Users\marco\AppData\Local\CEF\User Data\WidevineCdm\4.10.2710.0).: The system cannot find the path specified. (0x3)
+[0118/121839.365:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/121839.365:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/121839.365:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0118/121839.365:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[0118/121839.367:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0118/121839.460:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0118/121854.469:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0118/122734.930:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/122734.930:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/122734.930:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0118/122734.930:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[0118/122734.931:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0118/122735.025:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0118/122758.301:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
+[0118/125154.369:ERROR:angle_platform_impl.cc(43)] Display.cpp:997 (initialize): ANGLE Display::initialize error 0: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/125154.369:ERROR:gl_display.cc(508)] EGL Driver message (Critical) eglInitialize: Internal Vulkan error (-3): Initialization of an object could not be completed for implementation-specific reasons, in ..\..\third_party\angle\src\libANGLE\renderer\vulkan\RendererVk.cpp, initialize:1378.
+[0118/125154.369:ERROR:gl_display.cc(920)] eglInitialize SwANGLE failed with error EGL_NOT_INITIALIZED
+[0118/125154.369:ERROR:gl_initializer_win.cc(133)] GLDisplayEGL::Initialize failed.
+[0118/125154.370:ERROR:viz_main_impl.cc(186)] Exiting GPU process due to errors during initialization
+[0118/125154.460:ERROR:gpu_init.cc(521)] Passthrough is not supported, GL is disabled, ANGLE is 
+[0118/125230.894:ERROR:javascript_dialog_manager.cc(302)] Default dialog implementation requires a parent window handle; canceling the JS dialog
