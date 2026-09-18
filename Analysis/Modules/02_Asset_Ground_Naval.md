@@ -1,5 +1,7 @@
 # Asset — Terrestri e Navali
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/asset-ground-naval.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Questo sottosistema modella gli asset mobili terrestri (`Vehicle`) e navali (`Ship`) del Dynamic War Manager: veicoli da combattimento (carri, IFV/APC, artiglieria, contraerea/SAM) e unità navali (portaerei, incrociatori, cacciatorpediniere, fregate, sottomarini, ecc.). Per ciascuna famiglia esiste una tripletta di moduli con lo stesso schema architetturale:

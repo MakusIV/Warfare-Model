@@ -14,6 +14,28 @@
 
 ---
 
+## [2026-09-18] aggiornamento | Unificazione struttura di progetto + decisioni architetturali nel wiki
+
+**Motivazione**: `Analysis/Modules/00-11_*.md` (audit del 2026-08-16) era ormai stale di un mese di refactoring attivo; le decisioni architetturali vivevano solo in `.claude/memory/project_*.md`, non nel wiki. L'utente ha chiesto di unificare teoria + struttura di progetto + decisioni in un unico posto, con la regola che ogni evoluzione futura del progetto vada anche documentata qui (vedi `CLAUDE.md` §5 "SYNC EVOLUZIONE PROGETTO", aggiunto in questa stessa operazione).
+
+**Schema esteso**: aggiunte due nuove categorie di pagina a `CLAUDE.md` — `wiki/project/` (stato attuale di un sottosistema, verificato contro il codice reale) e `wiki/decisions/` (log ADR-style delle decisioni architetturali, distillato dalle memorie `project_*`/`feedback_*`).
+
+**12 pagine `wiki/project/` create** (una per sottosistema, verificate contro codice+test reali, non copiate dall'audit): [[asset-air]], [[asset-ground-naval]], [[asset-base]], [[context-foundation]], [[context-state]], [[block]], [[component]], [[logic-routing]], [[logic-decision]], [[datatype]], [[utility-manager]], [[testing-conventions]] (nuova, nessun equivalente nell'audit).
+
+**8 pagine `wiki/decisions/` create**: [[region-tactical-strategic-refactor]], [[combat-power-priority-redesign]], [[datatype-route-edge-waypoint]], [[air-priority-target-specific-loadout]], [[asset-type-vs-category]], [[c2-hierarchy-design]], [[campaign-temporal-model]] (superseded), [[module-audit-2026-08-16]] (superseded, storica).
+
+**Drift significativo scoperto rispetto all'audit del 2026-08-16** (ogni pagina `project/` lo documenta in dettaglio): diversi bug che l'audit segnalava come bloccanti sono ora risolti (import circolare Aircraft, `Military.get_military_category()`, `Edge`/`Waypoint` non istanziabili, `asea.FAST_ATTACK`, `Test_Air_Route_Manager` 26 errori→48/48 OK), mentre altri restano aperti e sono ora tracciati esplicitamente (`Ship`/`Aircraft.loadAssetDataFromContext` senza `.items()`, `Military._is_attack_asset()`→`is_helibase()` inesistente, `Production`/`Storage`/`Transport`/`Urban` stub, `Ground_Route_Manager` non produce ancora `DataType.Route`, `Coalition.py` non ancora eliminato nonostante l'approvazione).
+
+**Pagina esistente corretta**: `wiki/concepts/c2-planner.md` aggiornata — riferimenti obsoleti a `Manager.py` e `Military_Resources_Assigner.py` sostituiti con lo stato attuale e link a [[c2-hierarchy-design]].
+
+**`wiki/overview.md` e `wiki/index.md` aggiornati** per puntare alle nuove sezioni come fonte di verità corrente.
+
+**`Analysis/Modules/00-11_*.md` NON eliminati** (decisione utente): restano come istantanea storica, con banner in testa che rimanda alla pagina `wiki/project/` corrispondente.
+
+**Metodo**: 6 subagent paralleli hanno letto il codice sorgente reale ed eseguito le suite di test pertinenti (non solo letto testo), verificando ogni claim invece di copiare l'audit vecchio. Bug di frontmatter YAML introdotti da alcuni agenti (liste di wikilink malformate) e link a pagine inesistenti (titoli invece di nomi-file kebab-case) sono stati trovati e corretti in fase di consolidamento.
+
+---
+
 ## [2026-05-27] aggiornamento | Creazione stub ad alta priorità (13 pagine)
 
 **Entità create (7)**:

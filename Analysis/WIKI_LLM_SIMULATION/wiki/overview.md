@@ -3,7 +3,7 @@ title: "Panoramica — Modelli di Simulazione Bellica"
 type: overview
 tags: [campaign-model, combat-simulation, wargame, warfare-model]
 created: 2026-05-27
-updated: 2026-05-27
+updated: 2026-09-18
 sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]"]
 ---
 
@@ -30,17 +30,14 @@ Questa base di conoscenza copre la **modellazione e simulazione di conflitti mil
 Il progetto principale a cui questo wiki fa riferimento è situato in:
 `/home/marco/Sviluppo/Warfare-Model/`
 
-### Architettura Attuale
-- **Dynamic War Manager (DWM)**: motore centrale di gestione della campagna
-- **Persistence Layer**: gestione dati DCS (missioni, unità, waypoint)
-- **Resource Manager**: assegnazione e gestione risorse militari
-- **Componenti**: Aircraft, Ship, Vehicle, Ground Units con relative armi
+**Aggiornamento 2026-09-18**: la struttura del codice e le decisioni architetturali adottate NON vivono più qui (questa sezione era stale dal 2026-05-27 — citava ancora `Manager.py` come "orchestratore principale" e `Military_Resources_Assigner.py`, rinominato da tempo in `Air_Resources_Assigner.py`). Le due nuove sezioni del wiki sono ora la fonte di verità:
 
-### Classi/Moduli Chiave
-- `Manager.py` — orchestratore principale
-- `Resource_Manager.py` — gestione risorse
-- `Air_Resources_Assigner.py` — assegnazione risorse aeree
-- `Military_Resources_Assigner.py` — assegnazione risorse militari generali
+- **`wiki/project/`**: struttura attuale del codice, sottosistema per sottosistema, verificata contro il codice reale — [[asset-air]], [[asset-ground-naval]], [[asset-base]], [[context-foundation]], [[context-state]], [[block]], [[component]], [[logic-routing]], [[logic-decision]], [[datatype]], [[utility-manager]], [[testing-conventions]].
+- **`wiki/decisions/`**: log delle decisioni architetturali adottate, in stile ADR — [[region-tactical-strategic-refactor]], [[combat-power-priority-redesign]], [[datatype-route-edge-waypoint]], [[air-priority-target-specific-loadout]], [[asset-type-vs-category]], [[c2-hierarchy-design]], [[campaign-temporal-model]] (superata da quest'ultima), [[module-audit-2026-08-16]] (storica).
+
+`Analysis/Modules/00-11_*.md` resta come istantanea storica dell'audit del 2026-08-16, non aggiornata da allora — ogni pagina rimanda ora esplicitamente alla corrispondente pagina `wiki/project/`.
+
+**Sintesi architetturale corrente** (dettaglio nelle pagine sopra): DWM = pacchetti `Asset/`, `Block/`, `Component/`, `Context/`, `DataType/`, `Logic/` sotto `Code/Dynamic_War_Manager/Source/`; un nuovo pacchetto `Command/` (C2 a due livelli + `Theater_Session_Manager`) è **progettato ma non ancora costruito** (vedi [[c2-hierarchy-design]]).
 
 ### Domande di Ricerca Aperte
 *(Da aggiornare man mano che si ingeriscono fonti)*

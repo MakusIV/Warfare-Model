@@ -1,5 +1,7 @@
 # Sintesi — Audit dei moduli (2026-08-16)
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questa sintesi e i documenti `01-11_*.md` in questa cartella sono l'istantanea dell'audit del 2026-08-16, non aggiornata da allora. Lo stato attuale, verificato contro il codice reale, vive nelle pagine `Analysis/WIKI_LLM_SIMULATION/wiki/project/*.md` (una per sottosistema) e le decisioni architetturali adottate nel frattempo in `Analysis/WIKI_LLM_SIMULATION/wiki/decisions/*.md`. Punto di partenza consigliato: `Analysis/WIKI_LLM_SIMULATION/wiki/overview.md`. Questo file resta come riferimento storico dell'audit originale (vedi anche `wiki/decisions/module-audit-2026-08-16.md`).
+
 ## Come leggere questo documento
 
 Questo è il documento di sintesi prodotto dopo l'analisi approfondita di tutti gli 11 sottosistemi del Dynamic War Manager (documenti `01_...md`–`11_...md` in questa cartella). Non ripete il dettaglio — per quello vedi i singoli documenti — ma **riorganizza tutti i problemi trovati per leva d'intervento**: quali fix sbloccano di più con il minor rischio, quali richiedono una decisione di design dell'utente prima di poter essere affrontati, e quale roadmap complessiva ne consegue.

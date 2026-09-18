@@ -1,5 +1,7 @@
 # Asset — Aviazione
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/asset-air.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Il sottosistema Asset-Air modella i velivoli militari gestiti dal Dynamic War Manager: dati tecnici/prestazionali del velivolo (`Aircraft_Data`), i carichi bellici installabili e la loro valutazione contro un target (`Aircraft_Loadouts`), il catalogo delle armi aria-aria/aria-suolo con i relativi punteggi di efficacia (`Aircraft_Weapon_Data`), e la classe applicativa `Aircraft` (sottoclasse di `Mobile`) che rappresenta l'istanza di velivolo come `Asset` di un `Block`. Il modulo alimenta gli algoritmi di assegnazione missione (`Military_Resources_Assigner`, `Air_Resources_Assigner`) con punteggi normalizzati di combattimento, per task e per efficacia contro tipologia/dimensione di target.

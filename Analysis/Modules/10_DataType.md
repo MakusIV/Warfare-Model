@@ -1,5 +1,7 @@
 # DataType — Tipi Dato di Base
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/datatype.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Il package `DataType` (`Code/Dynamic_War_Manager/Source/DataType/`) raccoglie i tipi dato "primitivi" del progetto, trasversali a tutti gli altri sottosistemi: geometria (aree, volumi, cilindri, sfere), stato di salute degli oggetti (`State`), carico economico (`Payload`), eventi generici (`Event`), minacce (`Threat`) e struttura di rotta (`Waypoint`, `Edge`, `Route`, `Limes`). Sono classi "foglia" pensate per essere importate da `Asset/`, `Block/`, `Context/`, `Logic/`, senza dipendenze verso quei package (con l'eccezione di `Edge.py`, che importa `Asset` solo per un type hint — vedi sotto).

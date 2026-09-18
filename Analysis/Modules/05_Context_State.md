@@ -1,5 +1,7 @@
 # Context — Stato Operativo e Persistenza
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/context-state.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Il sottosistema `Context` (cartella `Code/Dynamic_War_Manager/Source/Context/`) rappresenta lo stato operativo dinamico della campagna: la classe `Region` modella un'area geografica con i suoi blocchi (`Block`) e le rotte (`Route`) che li collegano, e fornisce i calcoli strategici (priorità di attacco/difesa, centri di potenza di combattimento, efficienze aggregate) usati dal motore decisionale. `Campaign_State` e `Target_Status_History` sono due meccanismi di persistenza/storicizzazione complementari ma con scopi diversi: il primo salva lo **stato interno completo e mutabile** degli oggetti di gioco (per poterlo ripristinare), il secondo salva lo stato **come lo vedrebbe un ricognitore nemico** (report di riconoscimento, usato per analisi strategiche/tattiche post-missione). Il modulo include anche due file non collegati al resto del progetto (`Coalition.py`, orfano, e `Rinomina_Campaign_State.py`, riservato per riuso futuro) che sono documentati separatamente più sotto.

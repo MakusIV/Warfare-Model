@@ -33,10 +33,14 @@ WIKI_LLM_SIMULATION/
     ├── concepts/           ← Pagine di concetti e metodologie
     ├── sources/            ← Riepiloghi delle fonti RAW ingerite
     ├── analyses/           ← Analisi, confronti, query archiviate
+    ├── project/            ← Struttura ATTUALE del codice Warfare-Model, per sottosistema
+    ├── decisions/          ← Decisioni architetturali adottate nel progetto (log ADR-style)
     └── assets/             ← Immagini generate o estratte
 ```
 
 **Regola fondamentale**: Claude **legge** da `RAW/`, **scrive esclusivamente** in `wiki/`.
+
+**`project/` e `decisions/` sono un'eccezione al resto del wiki**: non derivano da fonti teoriche esterne (`RAW/`) ma dal codice sorgente del progetto (`Code/Dynamic_War_Manager/Source/`) e dalle memorie di progetto (`.claude/memory/project_*.md`, `feedback_*.md`). Sono le pagine "vive" che descrivono cosa il progetto *è oggi* e *perché* — a differenza di `entities/`/`concepts/`, che descrivono teoria esterna stabile. Il vecchio audit `Analysis/Modules/00-11_*.md` (2026-08-16) resta come istantanea storica non aggiornata; `wiki/project/` è la fonte di verità corrente per la struttura del codice.
 
 ---
 
@@ -159,6 +163,66 @@ Sintesi in 3-5 frasi dei punti chiave.
 Come questo documento si applica al progetto in corso.
 ```
 
+**`project/`** — Struttura attuale di un sottosistema del codice Warfare-Model
+```markdown
+---
+title: "Nome Sottosistema"
+type: project-module
+tags: [package-python, ...]
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+code_paths: [Code/Dynamic_War_Manager/Source/Package/]
+related_decisions: [[[decisione-1]], [[decisione-2]]]
+related: [[[Sottosistema Correlato]]]
+---
+
+## Scopo
+Cosa fa questo sottosistema e perché esiste.
+
+## File e classi principali
+| File | Righe | Contenuto |
+|---|---|---|
+
+## Stato attuale
+Cosa funziona, cosa è stub/incompleto, bug noti non ancora risolti.
+
+## Decisioni architetturali rilevanti
+- [[decisione-1]] — impatto su questo sottosistema
+
+## Note
+Dettagli minori, fix puntuali, convenzioni locali.
+```
+
+**`decisions/`** — Decisioni architetturali adottate (log ADR-style, una pagina per decisione o cluster di decisioni correlate)
+```markdown
+---
+title: "Nome della Decisione"
+type: decision
+tags: [...]
+created: YYYY-MM-DD          # data della decisione originale
+updated: YYYY-MM-DD
+status: proposed | accepted | superseded
+superseded_by: [[[altra-decisione]]]   # solo se status: superseded
+affects: [[[sottosistema-1]]]           # pagine project/ impattate
+related: []
+---
+
+## Contesto
+Qual era il problema o il conflitto architetturale che ha reso necessaria questa decisione.
+
+## Decisione
+Cosa è stato deciso, in modo concreto e verificabile nel codice.
+
+## Motivazione
+Perché questa soluzione e non le alternative scartate.
+
+## Conseguenze
+Cosa è cambiato nel codice, cosa resta da fare, cosa è esplicitamente rimandato.
+
+## Fonti
+- [[project_xxx]] (memoria di origine, se applicabile)
+```
+
 **`analyses/`** — Analisi, confronti, risposte a query complesse
 ```markdown
 ---
@@ -236,6 +300,18 @@ Quando nuove informazioni aggiornano una pagina:
 2. Integra le nuove informazioni senza cancellare quelle precedenti
 3. Se c'è contraddizione, segnalala in **Note** con riferimento alla fonte
 4. Aggiorna `wiki/log.md`
+
+### 5. SYNC EVOLUZIONE PROGETTO (`project/` e `decisions/`)
+
+**Regola permanente**: ogni evoluzione del progetto Warfare-Model deve riflettersi nel wiki, non solo nella memoria di sessione. Concretamente, quando nella stessa sessione:
+- si completa una fase/piano di refactoring o si chiude una decisione di design (es. una memoria `project_*` passa a "COMPLETE"/"DONE"/"RESOLVED", o l'utente conferma esplicitamente una scelta architetturale),
+- si crea, elimina o sposta un modulo di `Code/Dynamic_War_Manager/Source/`,
+
+allora, prima di chiudere la sessione:
+1. Aggiorna o crea la pagina `wiki/project/<sottosistema>.md` interessata, verificando lo stato **reale** del codice (non fidarsi di una pagina precedente non aggiornata).
+2. Se il cambiamento è una decisione architetturale (non solo un fix meccanico), crea o aggiorna la pagina `wiki/decisions/<nome-decisione>.md` corrispondente; se sostituisce una decisione precedente, marca quella vecchia `status: superseded` con `superseded_by`.
+3. Aggiorna `wiki/index.md` e `wiki/log.md` come per gli altri workflow.
+4. La memoria di progetto (`.claude/memory/project_*.md`) resta la fonte per il *processo* (cosa è stato fatto, quando, da chi, lezioni operative); il wiki resta la fonte per lo *stato attuale* e il *perché* architetturale — non duplicare, linkare (`[[project_xxx]]` dalla sezione **Fonti** di una pagina `decisions/`).
 
 ---
 

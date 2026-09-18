@@ -1,5 +1,7 @@
 # Component — Gestione Risorse
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/component.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 `Resource_Manager` è il componente che ogni `Block` possiede (relazione 1:1, istanziata direttamente in `Block.__init__`) per governare il ciclo economico locale del blocco: **produzione** delle risorse generate dagli `Asset` assegnati, **auto-consumo** delle risorse necessarie al proprio funzionamento, e **ridistribuzione** verso altri blocchi collegati come "client" secondo una logica di priorità strategica/tattica letta dalla `Region`.

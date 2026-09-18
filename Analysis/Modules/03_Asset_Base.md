@@ -1,5 +1,7 @@
 # Asset — Classi Base
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/asset-base.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Il sottosistema `Asset` fornisce la gerarchia di classi che rappresenta ogni singola unità/oggetto militare, logistico o civile gestito dal Dynamic War Manager: un'unità DCS (unit → group → country → coalition), un edificio, un mezzo, una nave, un velivolo. `Asset` è la classe radice comune (stato, risorse, payload, evento, associazione al `Block` di appartenenza); `Mobile` specializza `Asset` per gli oggetti che si muovono e combattono (ereditato da `Vehicle`, `Ship`, `Aircraft`); `Structure` dovrebbe specializzare `Asset` per gli oggetti fissi/infrastrutturali (ponti, hangar, depositi, ecc.), ma — come emerso dall'analisi — non è né funzionante né usata da alcuna sottoclasse concreta.

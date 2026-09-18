@@ -1,7 +1,7 @@
 # Wiki Index — Modelli di Simulazione Bellica
 
 > **Catalogo completo dei contenuti wiki.** Aggiornato da Claude ad ogni ingestione, query o modifica.
-> Ultimo aggiornamento: 2026-05-27
+> Ultimo aggiornamento: 2026-09-18
 
 ---
 
@@ -11,8 +11,10 @@
 |-----------|--------|-----------------|
 | Fonti (Sources) | 2 | 2026-05-27 |
 | Entità (Entities) | 14 | 2026-05-27 |
-| Concetti (Concepts) | 15 | 2026-05-27 |
+| Concetti (Concepts) | 15 | 2026-09-18 |
 | Analisi (Analyses) | 0 | — |
+| Struttura di progetto (Project) | 12 | 2026-09-18 |
+| Decisioni architetturali (Decisions) | 8 | 2026-09-18 |
 
 ---
 
@@ -127,6 +129,44 @@
 ## Analisi (Analyses)
 
 *Nessuna analisi ancora. Vengono create in risposta a query complesse.*
+
+---
+
+## Struttura di Progetto (`wiki/project/`)
+
+*Stato attuale del codice Warfare-Model, sottosistema per sottosistema — verificato contro il codice reale, non contro l'audit storico. Sostituisce `Analysis/Modules/00-11_*.md` (2026-08-16, ora solo istantanea storica) come fonte di verità corrente.*
+
+| Pagina | Sottosistema | Sostituisce |
+|--------|--------------|-------------|
+| [[asset-air]] | Asset — Aviazione | `Analysis/Modules/01_Asset_Air.md` |
+| [[asset-ground-naval]] | Asset — Terrestri e Navali | `Analysis/Modules/02_Asset_Ground_Naval.md` |
+| [[asset-base]] | Asset — Classi Base | `Analysis/Modules/03_Asset_Base.md` |
+| [[context-foundation]] | Context — Fondamenta e Dati Iniziali | `Analysis/Modules/04_Context_Foundation.md` |
+| [[context-state]] | Context — Stato Operativo e Persistenza | `Analysis/Modules/05_Context_State.md` |
+| [[block]] | Block — Unità Economico-Militari | `Analysis/Modules/06_Block.md` |
+| [[logic-routing]] | Logic — Pianificazione Rotte | `Analysis/Modules/07_Logic_Routing.md` |
+| [[logic-decision]] | Logic — Decisione Tattica e Strategica | `Analysis/Modules/08_Logic_Decision.md` |
+| [[component]] | Component — Gestione Risorse | `Analysis/Modules/09_Component.md` |
+| [[datatype]] | DataType — Tipi Dato di Base | `Analysis/Modules/10_DataType.md` |
+| [[utility-manager]] | Utility e Manager (nucleo/entry point) | `Analysis/Modules/11_Utility_Manager.md` |
+| [[testing-conventions]] | Convenzioni di testing | *(nuova, nessun equivalente nell'audit)* |
+
+---
+
+## Decisioni Architetturali (`wiki/decisions/`)
+
+*Log in stile ADR delle decisioni architetturali adottate nel progetto — contesto, decisione, motivazione, conseguenze. Distillato dalle memorie di progetto (`.claude/memory/project_*.md`), non le sostituisce (la memoria resta la fonte per il processo/quando/perché operativo).*
+
+| Pagina | Stato | Riguarda |
+|--------|-------|----------|
+| [[region-tactical-strategic-refactor]] | accepted | Estrazione tattica/strategica da `Region.py` in `Tactical_Analysis.py`/`Tactical_Evaluation.py`/`Doctrine.py` |
+| [[combat-power-priority-redesign]] | accepted | Combat power reale per Vehicle/Ship/Aircraft + fog-of-war/recon |
+| [[datatype-route-edge-waypoint]] | accepted | `Route`/`Edge`/`Waypoint`: `DataType` canonico per il lato terrestre |
+| [[air-priority-target-specific-loadout]] | accepted | Priorità aerea target-specific via miglior loadout disponibile |
+| [[asset-type-vs-category]] | accepted | `asset_type` vs `category` in Vehicle/Ship/Aircraft |
+| [[c2-hierarchy-design]] | accepted | Gerarchia C2 a due livelli, indirizzo strategico, modello sessioni, `Theater_Session_Manager` |
+| [[campaign-temporal-model]] | superseded → [[c2-hierarchy-design]] | Modello temporale sessioni DCS vs. sintetiche (framing originale) |
+| [[module-audit-2026-08-16]] | superseded → `wiki/project/*` | Audit dei moduli, origine di `Analysis/Modules/00-11_*.md` |
 
 ---
 

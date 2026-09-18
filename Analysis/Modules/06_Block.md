@@ -1,5 +1,7 @@
 # Block — Unità Economico-Militari
 
+> **⚠ SUPERATO (2026-09-18) — vedi il wiki.** Questo documento è l'istantanea dell'audit del 2026-08-16: non riflette un mese di refactoring successivo. Lo stato attuale, verificato contro il codice reale, vive in `Analysis/WIKI_LLM_SIMULATION/wiki/project/block.md`. Questo file resta come riferimento storico dell'audit originale.
+
 ## Scopo
 
 Il sottosistema `Block` rappresenta le unità territoriali/logistiche che compongono una `Region` nella campagna: basi militari, impianti produttivi, magazzini, nodi di trasporto e centri urbani. Ogni `Block` possiede un insieme di `Asset` (veicoli, navi, aerei, strutture), un `Resource_Manager` per la gestione economica, uno `State` per salute/successo, e produce report di ricognizione (`get_recognition_report`) usati dal resto del modello (in particolare da `Region`) per calcolare metriche aggregate (morale, efficienza C2, efficienza di ricognizione, ecc.).
