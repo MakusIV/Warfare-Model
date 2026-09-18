@@ -30,8 +30,8 @@ class CampaignState:
                 "time":    str,    # "HH:MM" or "HH:MM:SS"
                 "regions": {
                     region_name: {
-                        "attack_weight": float,
-                        "weight_priority_target": dict,
+                        "attack_weight": {"Blue": float, "Red": float},
+                        "weight_priority_target": {"Blue": dict, "Red": dict},
                         "routes": {
                             route_key: {
                                 "name": str | None,
@@ -314,7 +314,7 @@ class CampaignState:
         For each region / block / asset / route found in both the snapshot and
         the live graph the following mutable fields are overwritten:
 
-        * Region: attack_weight, weight_priority_target
+        * Region: attack_weight, weight_priority_target (per-side dicts: {"Blue": ..., "Red": ...})
         * BlockItem: priority
         * Block.state: health, success_ratio
         * Block.resource_manager: warehouse payload, actual_production payload
@@ -391,8 +391,8 @@ class CampaignState:
             routes_dict[route_key] = CampaignState._serialize_route(route)
 
         return {
-            "attack_weight": getattr(region, '_attack_weight', None),
-            "weight_priority_target": getattr(region, '_weight_priority_target', None),
+            "attack_weight": dict(getattr(region, '_attack_weight', {}) or {}),
+            "weight_priority_target": dict(getattr(region, '_weight_priority_target', {}) or {}),
             "routes": routes_dict,
             "blocks": blocks_dict,
         }
@@ -516,22 +516,27 @@ class CampaignState:
     # ------------------------------------------------------------------ #
 
     def _restore_region(self, region, region_snap: Dict) -> None:
-        if region_snap.get("attack_weight") is not None:
-            try:
-                region.attack_weight = float(region_snap["attack_weight"])
-            except Exception as exc:
-                logger.warning(
-                    "Could not restore attack_weight for region '%s': %s", region.name, exc
-                )
+        attack_weight_snap = region_snap.get("attack_weight")
+        if attack_weight_snap is not None:
+            for side, value in attack_weight_snap.items():
+                try:
+                    region.set_attack_weight(side, float(value))
+                except Exception as exc:
+                    logger.warning(
+                        "Could not restore attack_weight for region '%s' side '%s': %s",
+                        region.name, side, exc,
+                    )
 
-        if region_snap.get("weight_priority_target") is not None:
-            try:
-                region.weight_priority_target = region_snap["weight_priority_target"]
-            except Exception as exc:
-                logger.warning(
-                    "Could not restore weight_priority_target for region '%s': %s",
-                    region.name, exc,
-                )
+        weight_priority_target_snap = region_snap.get("weight_priority_target")
+        if weight_priority_target_snap is not None:
+            for side, value in weight_priority_target_snap.items():
+                try:
+                    region.set_weight_priority_target(side, value)
+                except Exception as exc:
+                    logger.warning(
+                        "Could not restore weight_priority_target for region '%s' side '%s': %s",
+                        region.name, side, exc,
+                    )
 
         for route_key, route_snap in region_snap.get("routes", {}).items():
             live_route = getattr(region, '_routes', {}).get(route_key)

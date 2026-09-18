@@ -105,8 +105,13 @@ class Region:
         self._name = name
         self._description = description or ""        
         self._limes = limes or []
-        self._attack_weight = DEFAULT_ATTACK_WEIGHT  # Copia per evitare modifiche involontarie        
-        self._weight_priority_target = Doctrine.DEFAULT_WEIGHT_PRIORITY_TARGET.copy()   # Copia per evitare modifiche involontarie
+        # Dottrina di targeting per-side: ogni belligerante ('Blue'/'Red') ha la propria, non sono
+        # condivise (v. project memory C2 a due livelli, TASK 1 fase A).
+        self._attack_weight: Dict[str, float] = {'Blue': DEFAULT_ATTACK_WEIGHT, 'Red': DEFAULT_ATTACK_WEIGHT}
+        self._weight_priority_target: Dict[str, Dict] = {
+            'Blue': Doctrine.DEFAULT_WEIGHT_PRIORITY_TARGET.copy(),
+            'Red': Doctrine.DEFAULT_WEIGHT_PRIORITY_TARGET.copy(),
+        }
         
         # Inizializza i blocchi con associazione corretta. 
         # Utilizziamo un dizionario per un accesso O(1) per ID.
@@ -150,29 +155,37 @@ class Region:
             raise TypeError(f"Description must be a string, got {type(value).__name__}")
         self._description = value
     
-    @property
-    def attack_weight(self) -> float:
-        return self._attack_weight
-    
-    @attack_weight.setter
-    def attack_weight(self, value: float):
+    # Dottrina di targeting per-side: attack_weight e weight_priority_target NON sono più property
+    # dirette (una property non può prendere un parametro `side`), ma coppie di metodi get/set per
+    # side. Ogni belligerante ('Blue'/'Red') ha la propria dottrina regionale.
+    def get_attack_weight(self, side: str) -> float:
+        self._validate_belligerent_side(side)
+        return self._attack_weight[side]
+
+    def set_attack_weight(self, side: str, value: float) -> None:
+        self._validate_belligerent_side(side)
         if not isinstance(value, (int, float)):
             raise TypeError(f"Attack weight must be a number, got {type(value).__name__}")
         if not 0 <= value <= 1:
             raise ValueError(f"Attack weight must be between 0 and 1, got {value}")
-        self._attack_weight = float(value)
+        self._attack_weight[side] = float(value)
         self._invalidate_caches()
-    
-    @property
-    def weight_priority_target(self) -> Dict:
-        return self._weight_priority_target.copy()
-    
-    @weight_priority_target.setter
-    def weight_priority_target(self, value: Dict):
+
+    def get_weight_priority_target(self, side: str) -> Dict:
+        self._validate_belligerent_side(side)
+        return self._weight_priority_target[side].copy()
+
+    def set_weight_priority_target(self, side: str, value: Dict) -> None:
+        self._validate_belligerent_side(side)
         Doctrine.validate_weight_priority_target(value)
-        self._weight_priority_target = value.copy()
+        self._weight_priority_target[side] = value.copy()
         self._invalidate_caches()
-    
+
+    @staticmethod
+    def _validate_belligerent_side(side: str) -> None:
+        if side not in ('Blue', 'Red'):
+            raise ValueError(f"Doctrine is per-belligerent-side only ('Blue'/'Red'), got {side!r}")
+
     @property
     def blocks(self) -> List[BlockItem]:
         # Restituisce una lista dei valori del dizionario
@@ -691,17 +704,17 @@ class Region:
 
                 recon_cp_snapshot = self._recon_cp_snapshot if use_recon else None
                 attack_priority = Tactical_Evaluation.calc_attack_priority(
-                    military_block, enemy_items, self._weight_priority_target, self.get_shortest_route,
+                    military_block, enemy_items, self._weight_priority_target[side], self.get_shortest_route,
                     recon_cp_snapshot=recon_cp_snapshot,
                 )
                 defense_priority = Tactical_Evaluation.calc_defense_priority(
-                    military_block, friendly_items, self._weight_priority_target, self.get_shortest_route,
+                    military_block, friendly_items, self._weight_priority_target[side], self.get_shortest_route,
                 )
 
                 # Combined priority based on attack weight
                 # Il significato della formula è il seguente: se la priorità di difendere un target nemico è più alta rispetto quella di attacco la priorità del blocco è quella di difendere invece di atttaccare
-                overall_priority = (attack_priority * self._attack_weight +
-                                  defense_priority * (1 - self._attack_weight))
+                overall_priority = (attack_priority * self._attack_weight[side] +
+                                  defense_priority * (1 - self._attack_weight[side]))
 
                 if block_item.priority != overall_priority: # Aggiorna solo se diverso
                     block_item.priority = overall_priority
