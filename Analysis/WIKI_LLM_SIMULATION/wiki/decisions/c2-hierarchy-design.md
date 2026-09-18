@@ -5,7 +5,7 @@ tags: [c2, command-control, session-model, architecture, command-package]
 created: 2026-09-17
 updated: 2026-09-18
 status: accepted
-affects: ["[[context-state]]", "[[logic-decision]]"]
+affects: ["[[context-state]]", "[[logic-decision]]", "[[command]]"]
 related: ["[[c2-planner]]", "[[tlc-model]]", "[[campaign-temporal-model]]"]
 ---
 
@@ -59,11 +59,15 @@ La separazione a due livelli (globale/regionale) rispecchia il pattern C² Plann
 ### TASK 1 — fix dottrina di targeting per-side — FATTO 2026-09-18
 `Region._attack_weight`/`_weight_priority_target` erano per-Region invece che per-side: due C2 avversari sulla stessa regione si sarebbero scavalcati la dottrina a vicenda. Fix: passati da scalare a `Dict[str, ...]` chiavato `'Blue'`/`'Red'`; le property dirette sostituite da `get_attack_weight(side)`/`set_attack_weight(side, value)`/`get_weight_priority_target(side)`/`set_weight_priority_target(side, value)` (una property non può prendere un parametro `side`) + guard `_validate_belligerent_side`. `Campaign_State` serialize/restore e i test aggiornati al nuovo formato, nessuno shim di retrocompatibilità (nessuno snapshot in produzione usa il vecchio formato). Suite completa: 2519 test OK (skipped=5). Merged in `main` (PR #187, commit `cb4e27e8`).
 
-### TASK 2 (Fase A) — RegionInfoReport / Meteo_Analysis / limes — NON INIZIATO
-Scope pianificato: property pubblica `Region.limes` (oggi solo privata); nuovo `Logic/Meteo_Analysis.py` (stub deterministico placeholder, esplicitamente non random, sagomato per combaciare con `mission_requirements['usability']` di `Air_Resources_Assigner`) agganciato al metodo oggi vuoto `Region.get_meteorological_reports`; nuovo package `Command/` con `Command_Types.py::RegionInfoReport` (dataclass); nuovo `Region.build_info_report(side) -> RegionInfoReport`. Punto di partenza a basso rischio: la lista `(*) INFO` di pag. 3 del PDF mappa quasi 1:1 su metodi `Region` già esistenti e testati.
+### TASK 2 (Fase A) — RegionInfoReport / Meteo_Analysis / limes — FATTO 2026-09-18
+Property pubblica `Region.limes` (sola lettura, copia difensiva). Nuovo `Logic/Meteo_Analysis.py`: placeholder deterministico `get_meteo_conditions(region_name, date, time) -> {'day', 'night', 'adverse_weather'}` (giorno/notte da una finestra oraria fissa, meteo avverso da una regola fissa mesi-invernali + parità nome/giorno — esplicitamente non `random`), shape identica a `mission_requirements['usability']` di `Air_Resources_Assigner`. Agganciato a `Region.get_meteorological_reports`, la cui firma è cresciuta `(side) -> (side, date, time)` (nessun chiamante esisteva, nessun problema di retrocompatibilità). Nuovo package `Command/` (`__init__.py` + `Command_Types.py::RegionInfoReport`, import di `Region.BlockItem` solo sotto `TYPE_CHECKING` per evitare il ciclo con `Region`, che importa `RegionInfoReport` a livello di modulo). Nuovo `Region.build_info_report(side, date, time) -> RegionInfoReport`, puro orchestratore che assembla tutti i campi `(*) INFO` di pag. 3 da metodi `Region` già esistenti e testati — nessun calcolo proprio.
 
-### Layout moduli proposto (non ancora costruito)
-Nuovo package `Command/` (stateful, distinto da `Logic/` stateless): `C2_Region_Manager.py`, `C2_Manager.py`, `Theater_Session_Manager.py`, `Session_Mission_Planner.py`, `Session.py`, `Command_Types.py`. Plus `Context/Theater.py`, `Logic/Strategical_Analysis.py` (fatti, omologo di `Tactical_Analysis.py`), `Logic/Meteo_Analysis.py`, `Logic/Session_Simulator.py`. `Strategical_Evaluation.py` (oggi tutto stub, vedi [[logic-decision]]) manterrà solo le vere funzioni di scoring; 4 dei suoi 11 stub (`evaluateTotalProduction/Transport/Storage`, `calcCombatPowerCentrum`) sono fatti e andranno spostati nel nuovo `Strategical_Analysis.py`. **Nessuno di questi file esiste ancora nel codice** (verificato: `Code/Dynamic_War_Manager/Source/Command/` non esiste).
+Suite completa: **2540 test OK (skipped=5)**, +21 rispetto a TASK 1 (`Test_Meteo_Analysis.py` 13, `Test_Command_Types.py` 2, `TestRegionLimes`/`TestRegionBuildInfoReport` in `Test_Region.py` 6).
+
+**Bug trovato, non corretto (fuori scope)**: `Payload.__eq__` (`DataType/Payload.py:127-133`) considera "diversi" due `Payload` entrambi a zero (il suo ciclo richiede un attributo *truthy* per contare come match, e zero è sempre falsy). `wiki/project/datatype.md` afferma erroneamente che gli operatori di confronto di `Payload` sono "completi" — da correggere in una prossima sessione, non qui.
+
+### Layout moduli proposto — parzialmente costruito
+Package `Command/` (stateful, distinto da `Logic/` stateless): **`Command_Types.py` esiste** (`RegionInfoReport`); `C2_Region_Manager.py`, `C2_Manager.py`, `Theater_Session_Manager.py`, `Session_Mission_Planner.py`, `Session.py` **non esistono ancora**. `Logic/Meteo_Analysis.py` **esiste** (v. sopra). `Context/Theater.py`, `Logic/Strategical_Analysis.py` (fatti, omologo di `Tactical_Analysis.py`), `Logic/Session_Simulator.py` **non esistono ancora**. `Strategical_Evaluation.py` (oggi tutto stub, vedi [[logic-decision]]) manterrà solo le vere funzioni di scoring; 4 dei suoi 11 stub (`evaluateTotalProduction/Transport/Storage`, `calcCombatPowerCentrum`) sono fatti e andranno spostati nel futuro `Strategical_Analysis.py`.
 
 ### Non ancora deciso
 - Meccanica esatta del loop di negoziazione quando il C2 globale modifica/rifiuta una proposta regionale.

@@ -13,7 +13,7 @@
 | Entità (Entities) | 14 | 2026-05-27 |
 | Concetti (Concepts) | 15 | 2026-09-18 |
 | Analisi (Analyses) | 0 | — |
-| Struttura di progetto (Project) | 12 | 2026-09-18 |
+| Struttura di progetto (Project) | 13 | 2026-09-18 |
 | Decisioni architetturali (Decisions) | 8 | 2026-09-18 |
 
 ---
@@ -150,6 +150,7 @@
 | [[datatype]] | DataType — Tipi Dato di Base | `Analysis/Modules/10_DataType.md` |
 | [[utility-manager]] | Utility e Manager (nucleo/entry point) | `Analysis/Modules/11_Utility_Manager.md` |
 | [[testing-conventions]] | Convenzioni di testing | *(nuova, nessun equivalente nell'audit)* |
+| [[command]] | Command (gerarchia C2, `RegionInfoReport`) | *(nuova, package nato 2026-09-18)* |
 
 ---
 

@@ -14,6 +14,18 @@
 
 ---
 
+## [2026-09-18] aggiornamento | TASK 2 (Fase A) implementato: RegionInfoReport / Meteo_Analysis / limes
+
+**Prima applicazione della regola "SYNC EVOLUZIONE PROGETTO"** aggiunta a `CLAUDE.md` nella stessa giornata: implementazione di codice, non solo documentazione, quindi wiki aggiornato nella stessa sessione invece di aspettare.
+
+**Codice consegnato** (v. [[c2-hierarchy-design]] per il dettaglio completo): property pubblica `Region.limes` (sola lettura); nuovo `Logic/Meteo_Analysis.py` (placeholder meteo deterministico, shape identica a `mission_requirements['usability']` di `Air_Resources_Assigner`); `Region.get_meteorological_reports` agganciato al nuovo modulo (firma cresciuta con `date`/`time`); nuovo package `Command/` con `Command_Types.py::RegionInfoReport`; nuovo `Region.build_info_report(side, date, time)` che lo assembla da metodi `Region` già testati. Suite completa: 2540 test OK (skipped=5), +21 rispetto a prima (2519).
+
+**Pagine wiki aggiornate**: [[c2-hierarchy-design]] (TASK 2 da "non iniziato" a "fatto"), [[context-state]] (rimossi i riferimenti a `limes`/`get_meteorological_reports` come stub), nuova [[command]] per il package appena nato.
+
+**Bug trovato e non corretto (fuori scope)**: `Payload.__eq__` considera "diversi" due `Payload` entrambi a zero — [[datatype]] afferma erroneamente che gli operatori di confronto di `Payload` sono "completi"; correzione della pagina rimandata a una prossima sessione dedicata.
+
+---
+
 ## [2026-09-18] aggiornamento | Unificazione struttura di progetto + decisioni architetturali nel wiki
 
 **Motivazione**: `Analysis/Modules/00-11_*.md` (audit del 2026-08-16) era ormai stale di un mese di refactoring attivo; le decisioni architetturali vivevano solo in `.claude/memory/project_*.md`, non nel wiki. L'utente ha chiesto di unificare teoria + struttura di progetto + decisioni in un unico posto, con la regola che ogni evoluzione futura del progetto vada anche documentata qui (vedi `CLAUDE.md` §5 "SYNC EVOLUZIONE PROGETTO", aggiunto in questa stessa operazione).

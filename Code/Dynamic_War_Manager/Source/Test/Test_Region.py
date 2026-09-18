@@ -2,10 +2,12 @@ import unittest
 from unittest.mock import MagicMock, patch
 from sympy import Point2D
 from typing import List, Dict, Optional, Tuple
+from datetime import date, time
 import inspect  # Aggiungi questo import
 
 # Import the classes to test
 from Code.Dynamic_War_Manager.Source.Context.Region import Region, BlockItem, BlockCategory
+from Code.Dynamic_War_Manager.Source.Command.Command_Types import RegionInfoReport
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Block.Production import Production
@@ -1121,6 +1123,72 @@ def print_target_affinity_scenarios():
 
 if STAMPA_TARGET_AFFINITY:
     print_target_affinity_scenarios()
+
+
+class TestRegionLimes(unittest.TestCase):
+    """v. project_c2_hierarchy_design.md (TASK 2 / Fase A): limes diventa una property pubblica."""
+
+    def test_limes_defaults_to_empty_list(self):
+        region = Region(name="Limes Region")
+        self.assertEqual(region.limes, [])
+
+    def test_limes_returns_constructor_value(self):
+        mock_limes = [MagicMock(spec=Limes), MagicMock(spec=Limes)]
+        region = Region(name="Limes Region", limes=mock_limes)
+        self.assertEqual(region.limes, mock_limes)
+
+    def test_limes_is_a_defensive_copy(self):
+        mock_limes = [MagicMock(spec=Limes)]
+        region = Region(name="Limes Region", limes=mock_limes)
+        region.limes.append(MagicMock(spec=Limes))
+        self.assertEqual(len(region.limes), 1)
+
+
+class TestRegionBuildInfoReport(unittest.TestCase):
+    """v. project_c2_hierarchy_design.md (TASK 2 / Fase A) e Command.Command_Types.RegionInfoReport.
+
+    build_info_report è puro orchestratore: nessuna logica propria, solo assemblaggio di metodi
+    Region già testati altrove. I test qui verificano l'assemblaggio, non ricalcolano i valori
+    attesi di ogni sotto-metodo (già coperti dalle rispettive suite dedicate).
+    """
+
+    def setUp(self):
+        self.region = Region(name="Info Report Region")
+        self.date = date(2026, 9, 18)
+        self.time = time(12, 0)
+
+    def test_invalid_side_raises_value_error(self):
+        with self.assertRaises(ValueError):
+            self.region.build_info_report(side="Purple", date=self.date, time=self.time)
+
+    def test_report_assembles_every_field_from_region_methods(self):
+        report = self.region.build_info_report(side="Blue", date=self.date, time=self.time)
+
+        self.assertIsInstance(report, RegionInfoReport)
+        self.assertEqual(report.region_name, "Info Report Region")
+        self.assertEqual(report.side, "Blue")
+        self.assertEqual(report.date, self.date)
+        self.assertEqual(report.time, self.time)
+        self.assertEqual(report.priority, self.region.get_priority_lists_by_mil_category(side="Blue"))
+        self.assertEqual(report.meteo, self.region.get_meteorological_reports(side="Blue", date=self.date, time=self.time))
+        self.assertEqual(report.block_state, self.region.get_recon_reports(side="Blue"))
+        self.assertEqual(report.routes, self.region.routes)
+        self.assertEqual(report.limes, self.region.limes)
+        self.assertEqual(report.logistic_center, self.region.calc_strategic_logistic_center(side="Blue"))
+        self.assertEqual(report.combat_power_center, self.region.calc_combat_power_center(side="Blue"))
+        # assertIs, non assertEqual: Payload.__eq__ ha un bug pre-esistente, non in scope qui,
+        # per cui due Payload entrambi a zero risultano "diversi" (ogni `getattr(other, attr)`
+        # è falsy, quindi il ciclo non trova mai un match -- v. Payload.py:127-133). Non
+        # documentato altrove: scoperto verificando questo test. calc_total_warehouse/
+        # calc_total_production sono @lru_cache: stesso `side`, stesso oggetto restituito, quindi
+        # l'identità resta comunque l'asserzione corretta a prescindere dal bug.
+        self.assertIs(report.warehouse, self.region.calc_total_warehouse(side="Blue"))
+        self.assertIs(report.production, self.region.calc_total_production(side="Blue"))
+        self.assertEqual(report.morale, self.region.get_region_morale(side="Blue"))
+
+    def test_report_reflects_actual_meteo_conditions(self):
+        night_report = self.region.build_info_report(side="Blue", date=self.date, time=time(2, 0))
+        self.assertEqual(night_report.meteo, [{'day': False, 'night': True, 'adverse_weather': False}])
 
 
 if __name__ == '__main__':

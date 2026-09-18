@@ -6,7 +6,7 @@ created: 2026-09-18
 updated: 2026-09-18
 code_paths: [Code/Dynamic_War_Manager/Source/Context/Region.py, Code/Dynamic_War_Manager/Source/Context/Campaign_State.py, Code/Dynamic_War_Manager/Source/Context/Target_Status_History.py, Code/Dynamic_War_Manager/Source/Context/Doctrine.py, Code/Dynamic_War_Manager/Source/Context/Combat_Power_Estimation.py, Code/Dynamic_War_Manager/Source/Context/Coalition.py, Code/Dynamic_War_Manager/Source/Context/Rinomina_Campaign_State.py]
 related_decisions: ["[[region-tactical-strategic-refactor]]", "[[c2-hierarchy-design]]", "[[combat-power-priority-redesign]]"]
-related: ["[[context-foundation]]", "[[logic-decision]]"]
+related: ["[[context-foundation]]", "[[logic-decision]]", "[[command]]"]
 ---
 
 ## Scopo
@@ -106,11 +106,17 @@ chiamanti che non calcolano mai una priorità militare).
   associato non esistono più nel codice attuale.
 - `get_recon_reports(side)` — C2 usato è quello dell'**osservatore** (`Utility.enemySide(side)`,
   fix della Fase 1 del piano fog-of-war — prima usava erroneamente il C2 del lato osservato).
-- `get_meteorological_reports(side)` — **ancora uno stub vuoto** (`pass`, ritorna sempre lista
-  vuota); TASK 2 del design C2 (Fase A) prevede di sostituirlo con un `Logic/Meteo_Analysis.py`
-  deterministico, non ancora costruito.
-- Nessun metodo pubblico `limes` (property) non esiste ancora — **TASK 2 del design C2 non è
-  iniziato**: `self._limes` resta privato, nessun accessor pubblico nel sorgente attuale.
+- `get_meteorological_reports(side, date, time)` — **implementato 2026-09-18** (TASK 2 / Fase A
+  del design C2, v. [[c2-hierarchy-design]]): firma cresciuta con `date`/`time` (nessun chiamante
+  esisteva, nessun problema di retrocompatibilità), delega a `Logic.Meteo_Analysis.get_meteo_conditions`
+  (placeholder deterministico, non `random`) e restituisce `[condizioni]` — una lista di un solo
+  elemento per simmetria con `get_recon_reports`, dato che il meteo non varia per blocco.
+- `limes` — **property pubblica, sola lettura, implementata 2026-09-18** (TASK 2): restituisce una
+  copia difensiva di `self._limes`. Nessun setter (nessun caso d'uso esistente per la mutazione
+  dopo la costruzione).
+- `build_info_report(side, date, time) -> RegionInfoReport` — **nuovo 2026-09-18** (TASK 2): puro
+  orchestratore che assembla lo snapshot "(*) INFO" di pag. 3 del PDF sorgente da questi stessi
+  metodi già testati. Dataclass `RegionInfoReport` e dettagli in [[command]].
 
 **`update_military_priorities(side, use_recon=False)` — il cuore del redesign fog-of-war
 (Fase 2 completa, v. [[combat-power-priority-redesign]]):**
@@ -272,9 +278,8 @@ diversi.
 ### Completezza
 
 - **Region.py**: completo per le operazioni core dopo il refactoring; l'analisi/scoring vive
-  fuori (v. sopra). Nessun placeholder residuo dal refactoring stesso, ma restano gli stub non
-  correlati (`get_meteorological_reports`, `limes` non pubblico — TASK 2 del design C2, non
-  iniziato).
+  fuori (v. sopra). TASK 2 del design C2 (`get_meteorological_reports`, `limes` pubblico,
+  `build_info_report`) è **completato** (2026-09-18, v. sopra e [[c2-hierarchy-design]]).
 - **Campaign_State.py**: completo per lo scopo dichiarato, aggiornato per la dottrina per-side.
 - **Target_Status_History.py**: completo per lo scopo dichiarato (nessun restore, per design).
 - **Doctrine.py / Combat_Power_Estimation.py**: completi per lo scopo per cui sono stati costruiti
@@ -358,10 +363,7 @@ riservato per un riuso futuro non ancora pianificato in dettaglio.
   esplicitamente rimandata a quando il pacchetto `Command/` (`Session.py`/
   `Session_Mission_Planner.py`) verrà costruito, non prima — non va eseguito un find-replace ora.
 - **`Coalition.py`** — cancellazione approvata dall'utente ma non ancora eseguita (v. sopra).
-- **TASK 2 del design C2 (Fase A)** — non iniziato: property pubblica `Region.limes`, nuovo
-  `Logic/Meteo_Analysis.py` (stub deterministico) da agganciare a `Region.get_meteorological_reports`
-  (oggi vuoto), nuovo `Command/Command_Types.py::RegionInfoReport` e
-  `Region.build_info_report(side)` che lo assembla dai metodi `Region` già testati.
+- **TASK 2 del design C2 (Fase A) — completato 2026-09-18** (v. sopra e [[c2-hierarchy-design]]).
 
 ## Decisioni architetturali rilevanti
 
@@ -370,11 +372,10 @@ riservato per un riuso futuro non ancora pianificato in dettaglio.
   nuovo `Context/Doctrine.py`, rimozione totale delle `@lru_cache` dalle funzioni spostate (per
   precondizionare un futuro pianificatore what-if).
 - [[c2-hierarchy-design]] — TASK 1 (dottrina di targeting per-side, `get_attack_weight(side)`/
-  `set_attack_weight(side, value)` ecc., aggiornamento `Campaign_State`) è la fonte diretta delle
-  modifiche più recenti a `Region.py`/`Campaign_State.py` documentate qui; TASK 2 (Fase A,
-  `RegionInfoReport`/`Meteo_Analysis`/`limes` pubblico) resta da fare; include anche la decisione
-  confermata-ma-non-implementata sul rename `mission_id`→`session_id` e la decisione approvata (ma
-  non eseguita) di cancellare `Coalition.py`.
+  `set_attack_weight(side, value)` ecc., aggiornamento `Campaign_State`) e TASK 2 (`limes`
+  pubblico, `get_meteorological_reports`, `build_info_report`/`RegionInfoReport` — v. [[command]])
+  sono entrambi **fatti**; include anche la decisione confermata-ma-non-implementata sul rename
+  `mission_id`→`session_id` e la decisione approvata (ma non eseguita) di cancellare `Coalition.py`.
 - [[combat-power-priority-redesign]] — Fase 2 (fog-of-war): C2 fix in `get_recon_reports`,
   `use_recon` end-to-end in `Region.update_military_priorities`, nuovo
   `Context/Combat_Power_Estimation.py`, campo `users` reale su Vehicle/Ship per il filtro

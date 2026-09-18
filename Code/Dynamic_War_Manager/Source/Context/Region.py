@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Optional, List, Dict
 from dataclasses import dataclass
+from datetime import date as _date, time as _time
 from functools import lru_cache
 from enum import Enum
 
@@ -9,6 +10,8 @@ from enum import Enum
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
+from Code.Dynamic_War_Manager.Source.Logic import Meteo_Analysis
+from Code.Dynamic_War_Manager.Source.Command.Command_Types import RegionInfoReport
 from Code.Dynamic_War_Manager.Source.Utility import Utility
 from Code.Dynamic_War_Manager.Source.Block.Block import Block, MAX_VALUE
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
@@ -194,7 +197,13 @@ class Region:
     @property
     def routes(self) -> Dict[str, Route]:
         return self._routes.copy()
-    
+
+    @property
+    def limes(self) -> List[Limes]:
+        """Confini della regione. Sola lettura -- nessun caso d'uso esistente per la mutazione
+        dopo la costruzione (v. project_c2_hierarchy_design.md, TASK 2 / Fase A)."""
+        return list(self._limes)
+
     # BLOCK MANAGEMENT
 
     def add_block(self, block: Block, priority: float = 0.0) -> None:        
@@ -835,18 +844,46 @@ class Region:
 
         return recon_reports
 
-    def get_meteorological_reports(self, side: str) -> List[Dict]:
-        """Get meteorological reports for all blocks of a side."""
+    def get_meteorological_reports(self, side: str, date: _date, time: _time) -> List[Dict]:
+        """Condizioni meteo correnti della regione (placeholder deterministico, v.
+        Logic.Meteo_Analysis) per `side`, in una lista per simmetria con i metodi "report" fratelli
+        (get_recon_reports) -- il meteo non varia da blocco a blocco, quindi la lista contiene un
+        solo elemento oggi, ma la forma resta estensibile se in futuro si aggiungeranno
+        microclimi per-blocco. `side` non altera il risultato (il meteo non dipende dal
+        belligerante) mentre resta nella firma per coerenza con le altre API di Region e per un
+        futuro fog-of-war sulle previsioni (oggi non implementato).
+        """
         if not Utility.check_side(side):
             raise ValueError(f"Invalid side: {side!r}")
 
-        region_c2_recon_efficiency = self.get_c2_efficiency(side=side)
-        meteorological_reports = []
+        conditions = Meteo_Analysis.get_meteo_conditions(region_name=self.name, date=date, time=time)
+        return [conditions]
 
-        # implementare il sistema di elaborazione del meteo (vedi quanto fatto da MBot)
-        pass
+    def build_info_report(self, side: str, date: _date, time: _time) -> RegionInfoReport:
+        """Assembla un RegionInfoReport per `side` a partire dai metodi pubblici già esistenti e
+        testati di Region -- v. Command.Command_Types.RegionInfoReport e
+        project_c2_hierarchy_design.md (TASK 2 / Fase A). Nessuna nuova logica di calcolo: questo
+        metodo è puro orchestratore.
+        """
+        if not Utility.check_side(side):
+            raise ValueError(f"Invalid side: {side!r}")
 
-        return meteorological_reports
+        return RegionInfoReport(
+            region_name=self.name,
+            side=side,
+            date=date,
+            time=time,
+            priority=self.get_priority_lists_by_mil_category(side=side),
+            meteo=self.get_meteorological_reports(side=side, date=date, time=time),
+            block_state=self.get_recon_reports(side=side),
+            routes=self.routes,
+            limes=self.limes,
+            logistic_center=self.calc_strategic_logistic_center(side=side),
+            combat_power_center=self.calc_combat_power_center(side=side),
+            warehouse=self.calc_total_warehouse(side=side),
+            production=self.calc_total_production(side=side),
+            morale=self.get_region_morale(side=side),
+        )
 
     # ************************************  END API *************************************
 
