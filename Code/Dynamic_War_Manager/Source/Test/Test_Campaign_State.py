@@ -242,8 +242,11 @@ class _BlockItemStub:
 class _RegionStub:
     def __init__(self, name: str, attack_weight: float = 0.5):
         self._name = name
-        self._attack_weight = attack_weight
-        self._weight_priority_target = {"Ground_Base": {"attack": {}, "defense": {}}}
+        self._attack_weight = {'Blue': attack_weight, 'Red': attack_weight}
+        self._weight_priority_target = {
+            'Blue': {"Ground_Base": {"attack": {}, "defense": {}}},
+            'Red': {"Ground_Base": {"attack": {}, "defense": {}}},
+        }
         self._blocks_items: list = []
         self._routes: dict = {}
 
@@ -255,21 +258,17 @@ class _RegionStub:
     def blocks(self):
         return self._blocks_items
 
-    @property
-    def attack_weight(self):
-        return self._attack_weight
+    def get_attack_weight(self, side):
+        return self._attack_weight[side]
 
-    @attack_weight.setter
-    def attack_weight(self, value):
-        self._attack_weight = float(value)
+    def set_attack_weight(self, side, value):
+        self._attack_weight[side] = float(value)
 
-    @property
-    def weight_priority_target(self):
-        return self._weight_priority_target
+    def get_weight_priority_target(self, side):
+        return self._weight_priority_target[side]
 
-    @weight_priority_target.setter
-    def weight_priority_target(self, value):
-        self._weight_priority_target = value
+    def set_weight_priority_target(self, side, value):
+        self._weight_priority_target[side] = value
 
     def add_block(self, block: _BlockStub, priority: float = 0.5):
         bi = _BlockItemStub(block, priority)
@@ -428,7 +427,7 @@ class TestCampaignStateWriteAPI(unittest.TestCase):
     def test_add_region_snapshot_stores_attack_weight(self):
         self.cs.add_region_snapshot(self.M, self.D, self.T, self.region)
         region_snap = self.cs.get_region_snapshot(self.M, "Donbas")
-        self.assertEqual(region_snap["attack_weight"], 0.5)
+        self.assertEqual(region_snap["attack_weight"], {'Blue': 0.5, 'Red': 0.5})
 
     def test_add_campaign_snapshot_stores_all_regions(self):
         r2 = _RegionStub("Crimea")
@@ -736,9 +735,10 @@ class TestCampaignStateRestoreAPI(unittest.TestCase):
         self.assertAlmostEqual(block_item.priority, 0.75)
 
     def test_restore_region_attack_weight(self):
-        self.region._attack_weight = 0.9
+        self.region._attack_weight['Blue'] = 0.9
+        self.region._attack_weight['Red'] = 0.9
         self.cs.restore(self.M, [self.region])
-        self.assertAlmostEqual(self.region._attack_weight, 0.5)
+        self.assertEqual(self.region._attack_weight, {'Blue': 0.5, 'Red': 0.5})
 
     def test_restore_missing_region_skips_gracefully(self):
         other_region = _RegionStub("NonExistent")
