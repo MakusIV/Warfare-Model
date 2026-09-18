@@ -1,6 +1,8 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [C2 hierarchy design (global+regional C2, session model, indirizzo strategico) — AGREED; TASK 1 (per-side doctrine) DONE & pushed, TASK 2 (Fase A) not started](project_c2_hierarchy_design.md) — from user's PDF; two-level C2 per side, interleaved player-driven DCS/virtual session execution (1-2h offset), targeting propose/approve protocol; branch `feature/c2-doctrine-per-side-fase-a` on origin has TASK 1 (2519 tests OK), pull it on any machine to resume with TASK 2 (RegionInfoReport/Meteo_Analysis/limes)
+- [Testing inside a git worktree gives false failures on this project](project_worktree_pythonpath_test_gotcha.md) — absolute imports + hardcoded PYTHONPATH make a worktree's tests silently run the main checkout's stale code; always test from the main checkout, not `.claude/worktrees/*`
 - [Region.py strategic/tactical refactor — 8-phase plan COMPLETE 2026-09-16](project_region_tactical_refactor_plan.md) — extracted 16 tactical functions into new Tactical_Analysis.py (8 analysis fns) + Tactical_Evaluation.py (7 scoring fns) + new Context/Doctrine.py; all @lru_cache removed from moved functions (design decision, see memory for why); Region.py 1678→910 lines; 2519 tests OK; next: build the still-stubbed strategic/tactical analyzer+evaluator+planner in Strategical_Evaluation.py
 - [Fase 2 (fog-of-war combat power) — 6-phase plan COMPLETE 2026-09-16](project_fase2_recon_combat_power_plan.md) — C2 fix, action-based combat power, real Aircraft dimensions, Combat_Power_Estimation.py module, real researched `users` field (64 Vehicle + 23 Ship), AND use_recon wired end-to-end into Region.update_military_priorities, all done & tested (2516 OK); use_recon defaults False everywhere, not yet enabled by any production caller
 - [Session recap 2026-09-14](project_session_2026_09_14_summary.md) — producer-duplication refactor + get_target_report no-visibility fix shipped & pushed (commit 3fe680c4, 2465 tests OK); asset_type/category conflict and no-visibility-priority policy decided but not implemented, see linked memories
@@ -15,8 +17,8 @@
 - [Session recap 2026-08-26](project_session_2026_08_26_summary.md) — ProArt P16 verified sync with VM: pulled LoggerClass cwd fix + git-sync hook (5a417765), full suite reconfirmed 2315 tests/OK (skipped=5)/0 errors. Verification-only session, no new work.
 - [Session recap 2026-08-21](project_session_2026_08_21_summary.md) — WIKI merge, Test_Air_Route_Manager fully fixed, Fase 2 (all 9 design decisions) closed, DataType.Route/Edge/Waypoint made to actually work end-to-end.
 
-## Campaign temporal model (core architecture, design in progress)
-- [DCS sessions vs. synthetic sessions — read before any turn/time-structure work](project_campaign_temporal_model_dcs_vs_synthetic.md) — event generation splits into real-time DCS game events (small asset subset, HW-limited) + synthetic-generator events (extrapolated to realistic campaign-scale asset count), combined with weights per time unit; turn structure for the synthetic side still undefined — next design topic
+## Campaign temporal model (core architecture — substantially resolved 2026-09-17, see Start here)
+- [DCS sessions vs. synthetic sessions — background/history, superseded by project_c2_hierarchy_design for current design](project_campaign_temporal_model_dcs_vs_synthetic.md) — original DCS-vs-synthetic framing + Blue/Red Igo-Ugo draft; the open turn-structure question is now answered, see the C2 hierarchy memory above
 
 ## Project & environment
 - [Key modules & paths](project_key_modules.md) — root/paths, Vehicle_Data/Ground_Weapon_Data overview, known bugs, PDF/test inventory

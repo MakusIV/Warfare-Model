@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9980c40e-9dcc-4a07-8d4b-87c43a9d4e36
-  modified: 2026-09-09T16:51:19.796Z
+  modified: 2026-09-17T16:52:25.625Z
 ---
 
 **Decision/framing (user, 2026-09-08):** the campaign's temporal model must distinguish two categories of event source, handled differently.
@@ -36,3 +36,6 @@ Found in an untracked file the user had already started, not created by the assi
 **Status of the Sabin PDF (checked 2026-09-09):** the full text was only ever fetched into that session's ephemeral WebFetch cache — never saved to disk. No copy exists anywhere in the repo (verified via grep); only the summary in [[reference_philip_sabin_simulating_war]] survives. Re-fetch from `https://paxsims.wordpress.com/wp-content/uploads/2021/01/modelling-time-in-wargames-sabin-4.20.pdf` and snapshot into `Analysis/WIKI_LLM_SIMULATION/RAW/web/` before doing serious design work against it again.
 
 **Next session should start here:** open `Analysis/Document/Appunti struttura turno evento simulato` and work through the Blue/Red proposal together — this is the concrete next step on the open design question, more specific than the general framing above.
+
+## 2026-09-17 — open question substantially resolved, see [[project_c2_hierarchy_design]]
+The user's PDF `Analysis/Document/Prospetto:Moduli.Analisi.e.Decisioni.pdf` plus follow-up clarification answers this memory's central open question: the synthetic-side turn unit **is the session** (not an abstract impulse/turn). Execution is **interleaved and player-driven** (virtual sessions run in the gaps before/after the player's real DCS sessions, triggered when the player exits/pauses), offset from DCS sessions by **1-2 hours** (not 1-20h as an earlier misreading had it), with the C2 analyze→plan→execute cycle running before and after *every* session. Full detail, including the still-open items (negotiation-loop mechanics, cross-side session merging), lives in [[project_c2_hierarchy_design]] — treat that memory as authoritative over this one for the temporal-model question going forward; this memory stays for the DCS-vs-synthetic framing and the Blue/Red Igo-Ugo draft, which remain relevant background.
