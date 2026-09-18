@@ -53,9 +53,19 @@ New `Command/` package (stateful, distinct from stateless `Logic/`): `C2_Region_
 
 **Known architecture conflict to fix before C2 implementation**: `Region._attack_weight`/`_weight_priority_target` (targeting doctrine) are currently per-Region, not per-side — two opposing C2s acting on the same region would clobber each other's doctrine. Must become side-keyed first.
 
-## Not yet decided
-- Exact negotiation-loop mechanics for the global C2 modifying/rejecting a regional proposal.
-- Where session-shared-but-side-owned missions get merged into one physical DCS/virtual session (a campaign-level arbiter above both sides' C2_Manager, per subagent's hypothesis — not confirmed by user yet).
-- `Campaign_State`'s `mission_id`-keyed persistence vs. the new session-as-turn-unit vocabulary — proposed additive fix (add session-level keying, don't rename) not yet confirmed.
+## `Campaign_State` persistence keying — CONFIRMED 2026-09-18
+`mission_id` (today's sole, top-level key in `Campaign_State._state`) is **renamed to `session_id`**. `mission_id` is repurposed one level down, to identify each individual mission (air/ground/sea) that a side's C2 defines *within* a given `session_id` — matching the "session contains missions" vocabulary from the session model above. This is a rename of the existing top-level key, not an additive field.
+- Not yet implemented: `Campaign_State.py` (and `Target_Status_History.py`, its only other production user of `mission_id`) still use `mission_id` as the sole/top-level key today — this rename is scoped to whenever `Command/Session.py`/`Session_Mission_Planner.py` are actually built, since that's the first code that will produce real per-mission data to nest under a session. Do not do a bare find-replace of the identifier now; the current single-level `mission_id` usage in `Campaign_State`/`Target_Status_History` is correct for what exists today (there's no mission concept yet, only the session-shaped snapshot itself) and should be migrated together with the `Command/` package build-out, not before.
+
+## Campaign-level session arbiter — proposed role (2026-09-18, needs user confirmation)
+Working name: `Campaign_Arbiter` (or `Theater_Session_Manager`, sitting in `Command/` alongside `Session.py`/`Session_Mission_Planner.py`, above both sides' `C2_Manager`). Proposed responsibilities, kept deliberately "dumb" (assembly/scheduling only — never doctrine or targeting, which stay inside each side's own C2 hierarchy):
+1. **Session assembly**: merges the missions each side's `C2_Manager` independently decides to run for a time slot into one physical `Session` object — a real DCS mission file (or virtual-session run) inherently contains both belligerents' assets/missions together, so something above both sides must own that merge.
+2. **Session type & timing**: decides whether the next session is DCS (human player slot present) or synthetic/virtual, and when it triggers — this is a campaign-level fact neither side's C2 can know unilaterally.
+3. **Symmetric C2-cycle trigger**: fires the "analyze → plan" C2 cycle for *both* sides before a session and the "analyze" cycle for both after it, in a fixed order — so neither side's C2 ends up calling or blocking on the other's.
+4. **Owns `session_id`**: the arbiter is the natural owner of the `Campaign_State` top-level key (see rename above), since it's the only component that sees the full, merged session.
+5. **Post-session state update**: after `Session_Simulator` executes a session, collects combat results/losses for both sides and writes them into `Campaign_State` in one pass, avoiding each side's C2 updating state independently and drifting inconsistently.
+6. **Future fog-of-war hook**: if per-side hidden info in shared sessions is ever implemented (explicitly deferred today), the arbiter is the natural single point to filter/redact the unified session data before handing each side its own view — it already holds the whole picture.
+
+Still open: exact negotiation-loop mechanics for the global C2 modifying/rejecting a regional proposal (unrelated to the arbiter, stays inside each side's own C2 hierarchy).
 
 **How to apply:** any future work building `Command/`, `Strategical_Evaluation.py`, `Session_Mission_Planner`, or revisiting the DCS/synthetic temporal model must start from this memory, not from the raw PDF or the superseded subagent draft. See also [[project_region_tactical_refactor_plan]] for the tactical-layer foundation this builds on.
