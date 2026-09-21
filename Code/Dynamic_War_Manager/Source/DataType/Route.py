@@ -7,7 +7,10 @@ from Code.Dynamic_War_Manager.Source.Context.Context import ROUTE_TYPE
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 # LOGGING
-logger = Logger(module_name=__name__, class_name='Route')
+# .logger: Logger e' un wrapper, il logging.Logger vero sta nel suo attributo .logger.
+# Senza, ogni logger.warning() qui solleverebbe AttributeError (come gia' accade in
+# altri moduli di DataType/ che dichiarano il wrapper ma non lo usano mai).
+logger = Logger(module_name=__name__, class_name='Route').logger
 
 
 class Route:
@@ -104,6 +107,75 @@ class Route:
                 return travel_time
             travel_time += v.calcTravelTime()
         return travel_time
+
+    def positionAtTime(self, t: float, speed: Optional[float] = None) -> Optional[Point3D]:
+        """Posizione lungo la rotta all'istante `t` secondi dalla partenza.
+
+        E' la funzione posizione(t) su cui poggia il calcolo dei contatti: senza di essa
+        non si puo' dire dove sia un asset a un dato istante, e quindi nemmeno quando due
+        forze contrapposte entrino nel reciproco raggio di rilevamento o ingaggio.
+
+        L'interpolazione e' lineare fra i due waypoint dell'arco percorso in quell'istante:
+        una rotta e' una spezzata, non una traiettoria dinamica, e il modello non pretende
+        di piu' (nessuna accelerazione, nessun raggio di virata).
+
+        Args:
+            t: secondi dalla partenza. `t = 0` restituisce il primo waypoint; un `t`
+               oltre la durata totale restituisce l'ultimo (l'asset e' arrivato).
+            speed: velocita' [m/s] che sovrascrive quella dei singoli archi, con la stessa
+                   semantica di `travelTime`/`calcTravelTime`.
+
+        Returns:
+            Il Point3D interpolato, oppure None se la rotta e' vuota o se la velocita' non
+            e' definita (arco con `calcTravelTime` infinito), nel qual caso la posizione
+            non e' calcolabile e restituire un punto qualsiasi sarebbe peggio.
+
+        Note:
+            L'ordine di percorrenza e' l'ordine di inserimento di `self._edges`, la stessa
+            assunzione gia' fatta da `travelTimeToEdge`.
+        """
+        if not isinstance(t, (int, float)) or isinstance(t, bool):
+            raise TypeError(f"t must be a number, got {t!r}")
+
+        if t < 0:
+            raise ValueError(f"t must be non-negative, got {t!r}")
+
+        if not self._edges:
+            logger.warning("positionAtTime: route has no edges")
+            return None
+
+        elapsed = 0.0
+        last_edge = None
+
+        for edge in self._edges.values():
+            travel_time = edge.calcTravelTime(speed)
+
+            if travel_time == float('inf'):
+                logger.warning(f"positionAtTime: undefined speed on edge {edge.name!r}, position not computable")
+                return None
+
+            if t <= elapsed + travel_time:
+                # arco in percorrenza: frazione coperta, 0 se l'arco ha durata nulla
+                fraction = 0.0 if travel_time == 0 else (t - elapsed) / travel_time
+                return self._interpolate(edge, fraction)
+
+            elapsed += travel_time
+            last_edge = edge
+
+        # t oltre la durata totale: l'asset e' a destinazione
+        return last_edge.wpB.point
+
+    @staticmethod
+    def _interpolate(edge: Edge, fraction: float) -> Point3D:
+        """Punto a `fraction` (0..1) fra wpA e wpB di un arco."""
+        a = edge.wpA.point
+        b = edge.wpB.point
+
+        return Point3D(
+            float(a.x) + (float(b.x) - float(a.x)) * fraction,
+            float(a.y) + (float(b.y) - float(a.y)) * fraction,
+            float(a.z) + (float(b.z) - float(a.z)) * fraction,
+        )
 
     def length(self) -> float:
         return sum(v.calcLength() for v in self._edges.values())

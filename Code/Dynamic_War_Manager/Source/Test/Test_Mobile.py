@@ -23,7 +23,8 @@ from unittest.mock import MagicMock, patch
 from sympy import Point3D
 
 # ── Real Mobile, Ship_Data and Ship_Weapon_Data (all import cleanly) ───────
-from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile                # noqa
+from Code.Dynamic_War_Manager.Source.Asset.Mobile import (                    # noqa
+    Mobile, default_speed_profile, SPEED_REGIME_KEYS, SPEED_PROFILE_KEYS)
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data          # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS  # noqa (real data)
 # Cylinder is intentionally NOT imported here: Mobile.py uses a different
@@ -34,6 +35,7 @@ _MOBILE_LOGGER = 'Code.Dynamic_War_Manager.Source.Asset.Mobile.logger'
 
 _VD_MODULE_NAME = 'Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data'
 _GWD_MODULE_NAME = 'Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data'
+_AD_MODULE_NAME = 'Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data'
 
 
 # ── Fake Vehicle_Data module ───────────────────────────────────────────────
@@ -50,9 +52,20 @@ _FAKE_GW: dict = {}
 _gwd_mod = types.ModuleType(_GWD_MODULE_NAME)
 _gwd_mod.GROUND_WEAPONS = _FAKE_GW
 
+# ── Fake Aircraft_Data module ──────────────────────────────────────────────
+# Serve a speed_profile_from_registry(), che interroga anche il registry aerei.
+# Falsificarlo evita di importare il modulo reale (lento e molto verboso) e rende
+# deterministico il dispatch fra i tre registry.
+class _FakeAircraftData:
+    _registry: dict = {}
+
+_ad_mod = types.ModuleType(_AD_MODULE_NAME)
+_ad_mod.Aircraft_Data = _FakeAircraftData
+
 _sys_modules_patcher = patch.dict(sys.modules, {
     _VD_MODULE_NAME: _vd_mod,
     _GWD_MODULE_NAME: _gwd_mod,
+    _AD_MODULE_NAME: _ad_mod,
 })
 
 
@@ -759,6 +772,337 @@ class TestCombatRangeShip(unittest.TestCase):
         )
         result = _MobileStub(position=_pos(), model='test-destroyer-type').combat_range()
         self.assertIsInstance(result, float)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Profilo di velocita' canonico (Fase 1 del motore di sessione)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class _SpeedStub(Mobile):
+    """Mobile costruito senza __init__, per esercitare i soli metodi di velocita'."""
+
+    def __init__(self, model=None, speed=None):   # noqa: D107  (bypassa Mobile.__init__)
+        self._model = model
+        self._speed = default_speed_profile() if speed is None else speed
+
+
+class _Record:
+    """Record di registry minimale: conta solo speed_data."""
+
+    def __init__(self, speed_data):
+        self.speed_data = speed_data
+
+
+def _clean_ship_speed_registry():
+    for key in [k for k in Ship_Data._registry if k.startswith('test-speed-')]:
+        del Ship_Data._registry[key]
+
+
+class TestSpeedSchema(unittest.TestCase):
+    """default_speed_profile() e _validate_speed()."""
+
+    def test_default_profile_has_canonical_keys(self):
+        self.assertEqual(set(default_speed_profile()), set(SPEED_REGIME_KEYS))
+
+    def test_default_profile_with_off_road(self):
+        profile = default_speed_profile(off_road=True)
+        self.assertEqual(set(profile["off_road"]), set(SPEED_REGIME_KEYS))
+
+    def test_default_profile_is_a_fresh_object(self):
+        """Regressione: il default era un dict mutabile nella firma di Mobile.__init__,
+        quindi condiviso da tutte le istanze — scriverci sopra contaminava ogni asset."""
+        first = default_speed_profile(off_road=True)
+        second = default_speed_profile(off_road=True)
+        first["nominal"] = 10.0
+        first["off_road"]["max"] = 5.0
+
+        self.assertIsNone(second["nominal"])
+        self.assertIsNone(second["off_road"]["max"])
+        self.assertIsNot(first["off_road"], second["off_road"])
+
+    def test_validate_accepts_full_profile(self):
+        profile = {"nominal": 10.0, "max": 20, "off_road": {"nominal": 5.0, "max": 5.0},
+                   "reference_altitude": 10000.0}
+        self.assertTrue(Mobile._validate_speed(profile)[0])
+
+    def test_validate_accepts_none_values(self):
+        self.assertTrue(Mobile._validate_speed({"nominal": None, "max": None})[0])
+
+    def test_validate_accepts_empty_dict(self):
+        self.assertTrue(Mobile._validate_speed({})[0])
+
+    def test_validate_rejects_non_dict(self):
+        ok, msg = Mobile._validate_speed(12.0)
+        self.assertFalse(ok)
+        self.assertIn("must be a dict", msg)
+
+    def test_validate_rejects_unknown_key(self):
+        ok, msg = Mobile._validate_speed({"cruise": 10.0})
+        self.assertFalse(ok)
+        self.assertIn("cruise", msg)
+
+    def test_validate_rejects_negative_speed(self):
+        self.assertFalse(Mobile._validate_speed({"nominal": -1.0})[0])
+
+    def test_validate_rejects_bool(self):
+        """bool e' sottoclasse di int: True non e' una velocita'."""
+        self.assertFalse(Mobile._validate_speed({"nominal": True})[0])
+
+    def test_validate_rejects_string(self):
+        self.assertFalse(Mobile._validate_speed({"max": "fast"})[0])
+
+    def test_validate_rejects_bad_off_road_type(self):
+        ok, msg = Mobile._validate_speed({"off_road": 10.0})
+        self.assertFalse(ok)
+        self.assertIn("off_road", msg)
+
+    def test_validate_rejects_bad_off_road_key(self):
+        self.assertFalse(Mobile._validate_speed({"off_road": {"flank": 3.0}})[0])
+
+    def test_validate_rejects_bad_off_road_value(self):
+        self.assertFalse(Mobile._validate_speed({"off_road": {"nominal": -2.0}})[0])
+
+    def test_validate_accepts_none_off_road(self):
+        self.assertTrue(Mobile._validate_speed({"off_road": None})[0])
+
+    def test_profile_keys_include_regime_keys(self):
+        self.assertTrue(set(SPEED_REGIME_KEYS).issubset(set(SPEED_PROFILE_KEYS)))
+
+
+class TestSpeedSetter(unittest.TestCase):
+    """Il setter di speed, che prima era inutilizzabile."""
+
+    def test_setter_assigns_valid_profile(self):
+        """Regressione: il setter chiamava self.checkParam(speed=...), ma Vehicle, Ship e
+        Aircraft sovrascrivono checkParam con firme che non accettano 'speed' — e
+        Mobile.checkParam era per giunta dichiarata senza self. Ogni assegnazione
+        sollevava TypeError."""
+        stub = _SpeedStub()
+        stub.speed = {"nominal": 12.5, "max": 16.5}
+
+        self.assertEqual(stub.speed["nominal"], 12.5)
+
+    def test_setter_rejects_invalid_profile(self):
+        stub = _SpeedStub()
+
+        with self.assertRaises(ValueError):
+            stub.speed = {"cruise": 12.5}
+
+    def test_checkparam_is_static_and_validates_speed(self):
+        self.assertTrue(Mobile.checkParam(speed={"nominal": 1.0})[0])
+        self.assertFalse(Mobile.checkParam(speed={"nope": 1.0})[0])
+
+    def test_checkparam_validates_fire_range(self):
+        self.assertTrue(Mobile.checkParam(fire_range=100.0)[0])
+        self.assertFalse(Mobile.checkParam(fire_range="far")[0])
+
+    def test_checkparam_accepts_no_argument(self):
+        self.assertTrue(Mobile.checkParam()[0])
+
+
+class TestSpeedProfileFromRegistry(unittest.TestCase):
+    """Il ponte registry -> profilo canonico, con le conversioni di unita'."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_speed_registry()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_speed_registry()
+
+    # ── veicoli: km/h e mph → m/s ────────────────────────────────────────────
+    def test_vehicle_metric_conversion(self):
+        _FakeVehicleData._registry['t90'] = _Record({
+            'sustained': {'metric': 'metric', 'speed': 45},
+            'max':       {'metric': 'metric', 'speed': 60},
+            'off_road':  {'metric': 'metric', 'speed': 45},
+        })
+        profile = _SpeedStub(model='t90').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['nominal'], 12.5)        # 45 km/h
+        self.assertAlmostEqual(profile['max'], 60 / 3.6)        # 60 km/h
+        self.assertAlmostEqual(profile['off_road']['nominal'], 12.5)
+
+    def test_vehicle_off_road_regimes_coincide(self):
+        """I dati hanno un solo regime fuoristrada: nominal e max off-road coincidono."""
+        _FakeVehicleData._registry['v'] = _Record({
+            'sustained': {'metric': 'metric', 'speed': 50},
+            'max':       {'metric': 'metric', 'speed': 60},
+            'off_road':  {'metric': 'metric', 'speed': 30},
+        })
+        profile = _SpeedStub(model='v').speed_profile_from_registry()
+
+        self.assertEqual(profile['off_road']['nominal'], profile['off_road']['max'])
+
+    def test_vehicle_imperial_conversion(self):
+        _FakeVehicleData._registry['v'] = _Record({
+            'sustained': {'metric': 'imperial', 'speed': 100},
+            'max':       {'metric': 'imperial', 'speed': 120},
+        })
+        profile = _SpeedStub(model='v').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['nominal'], 100 * 0.44704)
+
+    def test_vehicle_missing_regime_is_none(self):
+        _FakeVehicleData._registry['v'] = _Record({'sustained': {'metric': 'metric', 'speed': 40}})
+        profile = _SpeedStub(model='v').speed_profile_from_registry()
+
+        self.assertIsNone(profile['max'])
+        self.assertIsNone(profile['off_road']['nominal'])
+
+    def test_vehicle_unknown_metric_raises(self):
+        _FakeVehicleData._registry['v'] = _Record({'sustained': {'metric': 'furlongs', 'speed': 40}})
+
+        with self.assertRaises(ValueError):
+            _SpeedStub(model='v').speed_profile_from_registry()
+
+    # ── navi: nodi → m/s, e max = flank ──────────────────────────────────────
+    def test_ship_knots_conversion(self):
+        Ship_Data._registry['test-speed-cv'] = _Record({
+            'sustained': {'metric': 'nautical', 'speed': 28},
+            'max':       {'metric': 'nautical', 'speed': 30},
+            'flank':     {'metric': 'nautical', 'speed': 32},
+        })
+        profile = _SpeedStub(model='test-speed-cv').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['nominal'], 28 * 0.514444)
+
+    def test_ship_max_is_the_flank_regime(self):
+        """flank e' il regime di punta: ignorarlo sottostimerebbe la velocita' massima."""
+        Ship_Data._registry['test-speed-cv'] = _Record({
+            'sustained': {'metric': 'nautical', 'speed': 28},
+            'max':       {'metric': 'nautical', 'speed': 30},
+            'flank':     {'metric': 'nautical', 'speed': 32},
+        })
+        profile = _SpeedStub(model='test-speed-cv').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['max'], 32 * 0.514444)
+
+    def test_ship_without_flank_falls_back_to_max(self):
+        Ship_Data._registry['test-speed-s'] = _Record({
+            'sustained': {'metric': 'nautical', 'speed': 20},
+            'max':       {'metric': 'nautical', 'speed': 25},
+        })
+        profile = _SpeedStub(model='test-speed-s').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['max'], 25 * 0.514444)
+
+    def test_ship_has_no_off_road_branch(self):
+        Ship_Data._registry['test-speed-s'] = _Record({'sustained': {'metric': 'nautical', 'speed': 20}})
+        profile = _SpeedStub(model='test-speed-s').speed_profile_from_registry()
+
+        self.assertNotIn('off_road', profile)
+
+    # ── aerei: TAS/IAS, quota di riferimento ─────────────────────────────────
+    def test_aircraft_true_airspeed_conversion(self):
+        _FakeAircraftData._registry['f14'] = _Record({
+            'sustained': {'metric': 'metric', 'type_speed': 'true_airspeed',
+                          'airspeed': 1000, 'altitude': 10000},
+            'combat':    {'metric': 'metric', 'type_speed': 'true_airspeed',
+                          'airspeed': 2485, 'altitude': 15200},
+        })
+        profile = _SpeedStub(model='f14').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['nominal'], 1000 / 3.6)
+        self.assertAlmostEqual(profile['max'], 2485 / 3.6)
+
+    def test_aircraft_reference_altitude_is_the_sustained_one(self):
+        _FakeAircraftData._registry['f14'] = _Record({
+            'sustained': {'metric': 'metric', 'type_speed': 'true_airspeed',
+                          'airspeed': 1000, 'altitude': 10000},
+        })
+        profile = _SpeedStub(model='f14').speed_profile_from_registry()
+
+        self.assertEqual(profile['reference_altitude'], 10000.0)
+
+    def test_aircraft_max_is_the_highest_of_combat_and_emergency(self):
+        _FakeAircraftData._registry['a'] = _Record({
+            'sustained':  {'metric': 'metric', 'type_speed': 'true_airspeed',
+                           'airspeed': 900, 'altitude': 9000},
+            'combat':     {'metric': 'metric', 'type_speed': 'true_airspeed',
+                           'airspeed': 1800, 'altitude': 12000},
+            'emergency':  {'metric': 'metric', 'type_speed': 'true_airspeed',
+                           'airspeed': 2100, 'altitude': 12000},
+        })
+        profile = _SpeedStub(model='a').speed_profile_from_registry()
+
+        self.assertAlmostEqual(profile['max'], 2100 / 3.6)
+
+    def test_aircraft_indicated_airspeed_is_converted_to_true(self):
+        """IAS < TAS in quota: il profilo deve riportare la velocita' vera, piu' alta."""
+        _FakeAircraftData._registry['a'] = _Record({
+            'sustained': {'metric': 'metric', 'type_speed': 'indicated_airspeed',
+                          'airspeed': 800, 'altitude': 10000},
+        })
+        profile = _SpeedStub(model='a').speed_profile_from_registry()
+
+        self.assertGreater(profile['nominal'], 800 / 3.6)
+
+    def test_aircraft_invalid_type_speed_raises(self):
+        _FakeAircraftData._registry['a'] = _Record({
+            'sustained': {'metric': 'metric', 'type_speed': 'guessed',
+                          'airspeed': 800, 'altitude': 10000},
+        })
+
+        with self.assertRaises(ValueError):
+            _SpeedStub(model='a').speed_profile_from_registry()
+
+    # ── guardie ──────────────────────────────────────────────────────────────
+    def test_no_model_returns_none(self):
+        self.assertIsNone(_SpeedStub(model=None).speed_profile_from_registry())
+
+    def test_unknown_model_returns_none(self):
+        self.assertIsNone(_SpeedStub(model='nessuno').speed_profile_from_registry())
+
+    def test_record_without_speed_data_returns_none(self):
+        _FakeVehicleData._registry['v'] = _Record({})
+        self.assertIsNone(_SpeedStub(model='v').speed_profile_from_registry())
+
+
+class TestLoadSpeedFromRegistry(unittest.TestCase):
+    """load_speed_from_registry(): assegna il profilo, o lascia il default."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+
+    def test_loads_and_assigns(self):
+        _FakeVehicleData._registry['v'] = _Record({'sustained': {'metric': 'metric', 'speed': 36}})
+        stub = _SpeedStub(model='v')
+
+        self.assertTrue(stub.load_speed_from_registry())
+        self.assertAlmostEqual(stub.speed['nominal'], 10.0)
+
+    def test_unknown_model_keeps_default_and_returns_false(self):
+        """Un modello sconosciuto non deve impedire la costruzione dell'asset."""
+        stub = _SpeedStub(model='ignoto')
+
+        self.assertFalse(stub.load_speed_from_registry())
+        self.assertIsNone(stub.speed['nominal'])
+
+    def test_loaded_profile_passes_its_own_validator(self):
+        _FakeVehicleData._registry['v'] = _Record({
+            'sustained': {'metric': 'metric', 'speed': 45},
+            'max':       {'metric': 'metric', 'speed': 60},
+            'off_road':  {'metric': 'metric', 'speed': 30},
+        })
+        stub = _SpeedStub(model='v')
+        stub.load_speed_from_registry()
+
+        self.assertTrue(Mobile._validate_speed(stub.speed)[0])
 
 
 if __name__ == '__main__':

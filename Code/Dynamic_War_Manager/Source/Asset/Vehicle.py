@@ -1,4 +1,4 @@
-from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
+from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile, default_speed_profile
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import get_vehicle_data, get_vehicle_scores
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Utility import Utility
@@ -56,7 +56,11 @@ class Vehicle(Mobile) :
 
             self._model = model #key per richiamare i datti definiti nella classe Vehicle_Data
             # propriety
-            self._speed_off_road = {"nominal": None, "max": None}
+            # Profilo di velocita' canonico in m/s, col ramo 'off_road' proprio dei veicoli,
+            # popolato da Vehicle_Data.speed_data. Sostituisce _speed_off_road, attributo che
+            # restava a None e che nessuna riga del progetto leggeva.
+            self._speed = default_speed_profile(off_road=True)
+            self.load_speed_from_registry()
             
             #vehicle_scores = get_vehicle_scores(model=model)
             self._vehicle_scores = get_vehicle_scores(model=model) # load data from Vehicle_Data.py module

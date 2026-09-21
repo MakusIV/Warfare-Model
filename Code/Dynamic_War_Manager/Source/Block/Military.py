@@ -371,7 +371,10 @@ class Military(Block):
             target: Target position or object with position
             
         Returns:
-            Dictionary with time estimates in hours or None if unreachable
+            Dictionary with time estimates in SECONDS or None if unreachable.
+            (Le velocita' del profilo canonico sono in m/s e le posizioni in metri,
+            quindi distanza/velocita' e' in secondi: la docstring diceva "hours" ma
+            nessun calcolo qui converte in ore.)
         """
         distance = self._get_target_distance(target)
         if distance is None:
@@ -452,17 +455,31 @@ class Military(Block):
                     asset.isCruiser or asset.isFastAttackShip or asset.isSubmarine)
         return False
 
-    def _get_nominal_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
-        """Get nominal speed of asset based on type."""
+    @staticmethod
+    def _speed_regime(asset: Union[Vehicle, Aircraft, Ship], regime: str) -> float:
+        """Velocita' [m/s] di un regime dal profilo canonico dell'asset (v. Mobile.SPEED_SCHEMA).
+
+        I veicoli sono letti sul ramo 'off_road' perche' un'intercettazione terrestre non
+        avviene su strada. Un modello senza dati di velocita' ha il regime a None: qui
+        diventa 0.0, cosi' i chiamanti a valle possono confrontarlo con `> 0` senza
+        incappare in un TypeError su None.
+        """
+        speed = getattr(asset, 'speed', None) or {}
+
         if validate_class(asset, "Vehicle"):
-            return asset.speed.get("off_road", {}).get("nominal", 0)
-        return asset.speed.get("nominal", 0)
+            speed = speed.get("off_road") or {}
+
+        value = speed.get(regime)
+
+        return float(value) if value is not None else 0.0
+
+    def _get_nominal_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
+        """Get nominal speed of asset based on type. [m/s]"""
+        return self._speed_regime(asset, "nominal")
 
     def _get_max_speed(self, asset: Union[Vehicle, Aircraft, Ship]) -> float:
-        """Get maximum speed of asset based on type."""
-        if validate_class(asset, "Vehicle"):
-            return asset.speed.get("off_road", {}).get("max", 0)
-        return asset.speed.get("max", 0)
+        """Get maximum speed of asset based on type. [m/s]"""
+        return self._speed_regime(asset, "max")
     #endmilitary
 
     #Reconnaissance Methods

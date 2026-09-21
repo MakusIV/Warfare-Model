@@ -39,10 +39,10 @@ class Aircraft(Mobile) :
 
             self._model = model  # key per Aircraft_Data._registry / AIRCRAFT
 
-            # NOTA: self.speed è già inizializzato da Mobile.__init__ con lo stesso placeholder
-            # {"nominal": None, "max": None}. Riassegnarlo qui passerebbe per Mobile.speed.setter,
-            # che chiama self.checkParam(speed=...) — Aircraft.checkParam non accetta 'speed' e
-            # solleverebbe TypeError ad ogni istanziazione reale (bug analogo a quello in Ship.py).
+            # Profilo di velocita' canonico in m/s, popolato dal registry del modello.
+            # (Prima non era popolabile affatto: il setter passava per checkParam, che le
+            # sottoclassi sovrascrivono con firme senza 'speed' — v. Mobile.speed.setter.)
+            self.load_speed_from_registry()
 
             self.set_combat_power(ACTION_TASKS['air'])
 

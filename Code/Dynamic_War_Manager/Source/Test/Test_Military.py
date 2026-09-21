@@ -1070,5 +1070,65 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(qty, 0)
 
 
+class TestMilitarySpeedRegime(unittest.TestCase):
+    """_speed_regime(): lettura del profilo di velocita' canonico (Mobile.SPEED_SCHEMA).
+
+    I veicoli si leggono sul ramo 'off_road' perche' un'intercettazione terrestre non
+    avviene su strada. Un modello privo di dati ha il regime a None: qui deve diventare
+    0.0, altrimenti i confronti `> 0` fatti a valle (time_to_direct_line_attack)
+    solleverebbero TypeError su None.
+    """
+
+    def _asset(self, cls, speed):
+        asset = MagicMock()
+        asset.__class__ = cls
+        asset.speed = speed
+        return asset
+
+    def test_vehicle_reads_the_off_road_branch(self):
+        asset = self._asset(_Vehicle, {"nominal": 30.0, "max": 40.0,
+                                       "off_road": {"nominal": 12.5, "max": 15.0}})
+
+        self.assertEqual(Military._speed_regime(asset, "nominal"), 12.5)
+        self.assertEqual(Military._speed_regime(asset, "max"), 15.0)
+
+    def test_ship_and_aircraft_read_the_top_level(self):
+        for cls in (_Ship, _Aircraft):
+            asset = self._asset(cls, {"nominal": 14.4, "max": 16.5})
+
+            self.assertEqual(Military._speed_regime(asset, "nominal"), 14.4)
+            self.assertEqual(Military._speed_regime(asset, "max"), 16.5)
+
+    def test_none_regime_becomes_zero(self):
+        asset = self._asset(_Aircraft, {"nominal": None, "max": None})
+
+        self.assertEqual(Military._speed_regime(asset, "nominal"), 0.0)
+
+    def test_vehicle_without_off_road_branch_becomes_zero(self):
+        """Modello sconosciuto: il profilo resta il default di Mobile, senza 'off_road'."""
+        asset = self._asset(_Vehicle, {"nominal": None, "max": None})
+
+        self.assertEqual(Military._speed_regime(asset, "nominal"), 0.0)
+
+    def test_vehicle_with_none_off_road_becomes_zero(self):
+        asset = self._asset(_Vehicle, {"nominal": 30.0, "max": 40.0, "off_road": None})
+
+        self.assertEqual(Military._speed_regime(asset, "max"), 0.0)
+
+    def test_missing_speed_attribute_becomes_zero(self):
+        asset = MagicMock()
+        asset.__class__ = _Aircraft
+        asset.speed = None
+
+        self.assertEqual(Military._speed_regime(asset, "nominal"), 0.0)
+
+    def test_integer_speed_is_returned_as_float(self):
+        asset = self._asset(_Aircraft, {"nominal": 30, "max": 40})
+        value = Military._speed_regime(asset, "nominal")
+
+        self.assertIsInstance(value, float)
+        self.assertEqual(value, 30.0)
+
+
 if __name__ == "__main__":
     unittest.main()

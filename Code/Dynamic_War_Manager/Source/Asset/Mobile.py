@@ -28,6 +28,60 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     # NOTSET 	0
 logger = Logger(module_name = __name__, class_name = 'Mobile').logger
 
+
+# ── PROFILO DI VELOCITA' CANONICO ──────────────────────────────────────────────
+#
+# SPEED_SCHEMA — forma di `Mobile.speed`. Tutte le velocita' sono in METRI AL SECONDO:
+# il core fissa le proprie unita' e sono i registry (o l'adapter del simulatore) a
+# convertire. I dati sorgente NON sono omogenei — Vehicle_Data e' in km/h o mph,
+# Ship_Data in nodi, Aircraft_Data in km/h o mph e per giunta come IAS o TAS a una
+# quota di riferimento — e questa e' la ragione per cui la conversione sta qui e una
+# volta sola.
+#
+#   {
+#       "nominal":  float | None,   # regime sostenuto / di crociera  [m/s]
+#       "max":      float | None,   # regime massimo                  [m/s]
+#
+#       # solo Vehicle: regime fuoristrada, stessa forma
+#       "off_road": {"nominal": float | None, "max": float | None},
+#
+#       # solo Aircraft: quota [m] a cui le velocita' sopra sono valide. Le velocita'
+#       # aeronautiche dipendono dalla quota, quindi il dato senza la sua quota di
+#       # riferimento non e' interpretabile.
+#       "reference_altitude": float | None,
+#   }
+#
+SPEED_REGIME_KEYS = ("nominal", "max")
+SPEED_PROFILE_KEYS = ("nominal", "max", "off_road", "reference_altitude")
+
+
+def default_speed_profile(off_road: bool = False) -> Dict:
+    """Profilo di velocita' vuoto ma ben formato. Nuovo ad ogni chiamata."""
+    profile: Dict = {key: None for key in SPEED_REGIME_KEYS}
+
+    if off_road:
+        profile["off_road"] = {key: None for key in SPEED_REGIME_KEYS}
+
+    return profile
+
+
+def _speed_to_meters_per_second(value: float, metric: str) -> float:
+    """Converte una velocita' dall'unita' dichiarata dal registry a m/s.
+
+    metric: 'metric' -> km/h, 'imperial' -> mph, 'nautical' -> nodi.
+    """
+    if metric == 'metric':
+        return Utility.kmh_2_meters_per_second(value)
+
+    if metric == 'imperial':
+        return Utility.mph_2_meters_per_second(value)
+
+    if metric == 'nautical':
+        return Utility.knots_2_meters_per_second(value)
+
+    raise ValueError(f"metric must be 'metric', 'imperial' or 'nautical', got {metric!r}")
+
+
 # ASSET
 class Mobile(Asset) :    
 
@@ -47,7 +101,7 @@ class Mobile(Asset) :
                  crytical: Optional[bool] = False, 
                  repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, 
-                 speed: Optional[Dict] = {"nominal": None, "max": None}, 
+                 speed: Optional[Dict] = None, 
                  range: Optional[float] = None,                  
                  dcs_unit_data: Optional[dict] = None):   
             
@@ -56,7 +110,16 @@ class Mobile(Asset) :
      
 
             # propriety   
-            self._speed = speed
+            # speed: profilo cinematico canonico, SEMPRE in m/s (v. SPEED_SCHEMA).
+            # Il default era un dizionario mutabile condiviso fra tutte le istanze: ora
+            # se ne costruisce uno nuovo ad ogni costruzione.
+            if speed is None:
+                self._speed = default_speed_profile()
+            else:
+                ok, msg = Mobile._validate_speed(speed)
+                if not ok:
+                    raise ValueError(msg)
+                self._speed = speed
             self._range = range
             self._weapon = {}
             self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
@@ -96,13 +159,16 @@ class Mobile(Asset) :
 
     @speed.setter
     def speed(self, param):
+        # NB: si valida con _validate_speed e non con checkParam, perche' Vehicle, Ship e
+        # Aircraft sovrascrivono checkParam con firme che non accettano 'speed' (vedi
+        # Vehicle.checkParam(category, asset_type), Ship/Aircraft.checkParam(asset_type)):
+        # self.checkParam(speed=...) sollevava quindi TypeError ad ogni assegnazione.
+        ok, msg = Mobile._validate_speed(param)
 
-        check_result = self.checkParam(speed = param)
-        
-        if not check_result[0]:
-            raise Exception(check_result[1])    
+        if not ok:
+            raise ValueError(msg)
 
-        self._speed = param  
+        self._speed = param
         return True
     
     
@@ -204,6 +270,198 @@ class Mobile(Asset) :
             raise TypeError(f"Unexpected combat_power.keys, got {combat_power.keys()}")
         
         self._combat_power = combat_power
+
+    @staticmethod
+    def _validate_speed(profile) -> Tuple[bool, str]:
+        """Valida un profilo di velocita' contro SPEED_SCHEMA. Non usa lo stato dell'istanza."""
+        if not isinstance(profile, dict):
+            return (False, f"Bad Arg: speed must be a dict, got {type(profile).__name__}")
+
+        def _valid_value(value) -> bool:
+            if value is None:
+                return True
+            # bool e' sottoclasse di int: va rifiutato esplicitamente
+            return isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0
+
+        for key, value in profile.items():
+            if key not in SPEED_PROFILE_KEYS:
+                return (False, f"Unexpected speed key: {key!r}. Allowed keys: {list(SPEED_PROFILE_KEYS)}")
+
+            if key == "off_road":
+                if value is None:
+                    continue
+
+                if not isinstance(value, dict):
+                    return (False, f"Bad Arg: speed['off_road'] must be a dict, got {type(value).__name__}")
+
+                for sub_key, sub_value in value.items():
+                    if sub_key not in SPEED_REGIME_KEYS:
+                        return (False, f"Unexpected speed['off_road'] key: {sub_key!r}. Allowed keys: {list(SPEED_REGIME_KEYS)}")
+
+                    if not _valid_value(sub_value):
+                        return (False, f"Bad Arg: speed['off_road'][{sub_key!r}] must be a non-negative number or None, got {sub_value!r}")
+
+                continue
+
+            if not _valid_value(value):
+                return (False, f"Bad Arg: speed[{key!r}] must be a non-negative number or None, got {value!r}")
+
+        return (True, "OK")
+
+    def speed_profile_from_registry(self) -> Optional[Dict]:
+        """Costruisce il profilo di velocita' canonico (m/s) dai dati del registry del modello.
+
+        E' il ponte che mancava: i dati esistono da sempre in Vehicle_Data / Ship_Data /
+        Aircraft_Data, ma nessuna riga di codice li portava mai sull'istanza, quindi
+        `asset.speed` restava il placeholder a None e ogni calcolo cinematico a valle
+        (Military._get_nominal_speed, time_to_direct_line_attack, Route.travelTime)
+        lavorava su 0 o None.
+
+        Ritorna None — e non solleva — se il modello non e' noto o non ha speed_data:
+        stesso contratto di air_defense_volume() e combat_range().
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.warning("speed_profile_from_registry: _model not set")
+            return None
+
+        # Il dispatch e' sul registry che risponde, non su isinstance(record, ...): i tre
+        # registry hanno schemi di speed_data diversi ed e' l'appartenenza al registry a
+        # determinare quale leggere.
+        for registry, builder in ((_VehicleData._registry, self._vehicle_speed_profile),
+                                  (_ShipData._registry, self._ship_speed_profile),
+                                  (_AircraftData._registry, self._aircraft_speed_profile)):
+            data_record = registry.get(model)
+
+            if data_record is None:
+                continue
+
+            speed_data = getattr(data_record, 'speed_data', None)
+
+            if not speed_data:
+                logger.warning(f"speed_profile_from_registry: no speed_data for model {model!r}")
+                return None
+
+            return builder(speed_data)
+
+        logger.warning(f"speed_profile_from_registry: no registry entry for model {model!r}")
+        return None
+
+    @staticmethod
+    def _regime_speed(speed_data: Dict, regime: str) -> Optional[float]:
+        """Velocita' [m/s] di un regime di Vehicle_Data/Ship_Data ({'metric','speed',...})."""
+        data = speed_data.get(regime)
+
+        if not data:
+            return None
+
+        value = data.get('speed')
+
+        if value is None:
+            return None
+
+        return _speed_to_meters_per_second(float(value), data.get('metric'))
+
+    def _vehicle_speed_profile(self, speed_data: Dict) -> Dict:
+        """Vehicle_Data: regimi 'sustained' / 'max' / 'off_road', in km/h o mph.
+
+        Il fuoristrada ha un unico regime nei dati, quindi nominal e max off-road
+        coincidono: e' il dato a non distinguerli, non una semplificazione introdotta qui.
+        """
+        profile = default_speed_profile(off_road=True)
+        profile["nominal"] = self._regime_speed(speed_data, 'sustained')
+        profile["max"] = self._regime_speed(speed_data, 'max')
+
+        off_road = self._regime_speed(speed_data, 'off_road')
+        profile["off_road"]["nominal"] = off_road
+        profile["off_road"]["max"] = off_road
+
+        return profile
+
+    def _ship_speed_profile(self, speed_data: Dict) -> Dict:
+        """Ship_Data: regimi 'sustained' / 'max' / 'flank', tipicamente in nodi.
+
+        'max' canonico = il piu' alto fra 'max' e 'flank': flank e' il regime di punta
+        effettivo di una nave, e ignorarlo sottostimerebbe la velocita' massima reale.
+        """
+        profile = default_speed_profile()
+        profile["nominal"] = self._regime_speed(speed_data, 'sustained')
+
+        candidates = [value for value in (self._regime_speed(speed_data, 'max'),
+                                          self._regime_speed(speed_data, 'flank'))
+                      if value is not None]
+        profile["max"] = max(candidates) if candidates else None
+
+        return profile
+
+    def _aircraft_speed_profile(self, speed_data: Dict) -> Dict:
+        """Aircraft_Data: regimi 'sustained' / 'combat' / 'emergency'.
+
+        Ogni regime porta {'metric', 'type_speed', 'airspeed', 'altitude', ...}. Se la
+        velocita' e' indicata (IAS) va prima convertita in vera (TAS) alla sua quota —
+        Utility.true_air_speed restituisce sempre km/h — e solo dopo in m/s.
+
+        'max' canonico = il piu' alto fra 'combat' ed 'emergency'; 'reference_altitude'
+        e' la quota del regime sostenuto, senza la quale le velocita' aeronautiche non
+        sono interpretabili.
+        """
+        def _airspeed_ms(regime: str) -> Optional[float]:
+            data = speed_data.get(regime)
+
+            if not data:
+                return None
+
+            airspeed = data.get('airspeed')
+
+            if airspeed is None:
+                return None
+
+            metric = data.get('metric')
+            type_speed = data.get('type_speed')
+
+            if type_speed == 'indicated_airspeed':
+                # true_air_speed converte l'eventuale input imperiale e ritorna km/h
+                return Utility.kmh_2_meters_per_second(
+                    Utility.true_air_speed(float(airspeed), data.get('altitude') or 0, metric))
+
+            if type_speed == 'true_airspeed':
+                return _speed_to_meters_per_second(float(airspeed), metric)
+
+            raise ValueError(f"Invalid type_speed: {type_speed!r}. Expected 'indicated_airspeed' or 'true_airspeed'.")
+
+        profile = default_speed_profile()
+        profile["nominal"] = _airspeed_ms('sustained')
+
+        candidates = [value for value in (_airspeed_ms('combat'), _airspeed_ms('emergency'))
+                      if value is not None]
+        profile["max"] = max(candidates) if candidates else None
+
+        sustained = speed_data.get('sustained') or {}
+        altitude = sustained.get('altitude')
+        profile["reference_altitude"] = float(altitude) if altitude is not None else None
+
+        return profile
+
+    def load_speed_from_registry(self) -> bool:
+        """Popola `self.speed` dal registry del modello. True se il profilo e' stato caricato.
+
+        Chiamata dai costruttori di Vehicle/Ship/Aircraft dopo che `_model` e' stato
+        assegnato. Se il modello non e' noto il profilo resta quello di default (tutto
+        None) e si ritorna False, senza sollevare: un asset con un modello sconosciuto
+        deve restare costruibile, come per combat_range()/air_defense_volume().
+        """
+        profile = self.speed_profile_from_registry()
+
+        if profile is None:
+            return False
+
+        self._speed = profile
+        return True
 
     def air_defense_volume(self) -> Optional[Cylinder]:
         """Return the Cylinder representing the engagement envelope of this AD asset.
@@ -342,19 +600,24 @@ class Mobile(Asset) :
 
         return max_range
 
-    def checkParam(speed: float, fire_range: float) -> (bool, str): # type: ignore
-        """Return True if type compliance of the parameters is verified"""          
+    @staticmethod
+    def checkParam(speed: Optional[Dict] = None, fire_range: Optional[float] = None) -> Tuple[bool, str]:
+        """Return True if type compliance of the parameters is verified.
 
-        if speed and isinstance(speed, Dict):
-            for key in speed.keys():
-                if key not in ["cruise", "max"]:
-                    return(False, (f"Unexpected speed.key: {key}. speed.keys() correct value: [\"cruise\", \"max\"]"))
-                else:
-                    continue        
-        
-        if fire_range and not isinstance(fire_range, float):
-            return (False, "Bad Arg: fire_range must be a float")
-    
+        Era dichiarata senza `self` pur essendo un metodo di istanza: ogni chiamata
+        `self.checkParam(...)` legava `self` al primo parametro posizionale. E' ora
+        esplicitamente statica (non usa lo stato dell'istanza) e valida lo schema
+        canonico di `speed` (v. SPEED_SCHEMA), non piu' le chiavi obsolete
+        ["cruise", "max"] che nessun produttore di dati ha mai usato.
+        """
+        if speed is not None:
+            ok, msg = Mobile._validate_speed(speed)
+            if not ok:
+                return (False, msg)
+
+        if fire_range is not None and not isinstance(fire_range, (int, float)):
+            return (False, "Bad Arg: fire_range must be a number")
+
         return (True, "OK")
 
     def checkParamDCS(data: dict):

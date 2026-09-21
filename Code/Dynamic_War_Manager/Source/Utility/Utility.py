@@ -1022,6 +1022,38 @@ def mph_2_meters_per_second(mph: float) -> float:
 
     return mph * 0.44704  # 1 miglio orario = 0.44704 metri al secondo
 
+def kmh_2_meters_per_second(kmh: float) -> float:
+    """
+    Converti chilometri orari in metri al secondo.
+
+    :param kmh: Valore in chilometri orari.
+    :return: Valore convertito in metri al secondo.
+    """
+    if not isinstance(kmh, (int, float)):
+        raise TypeError(f"kmh must be a numeric value. got {kmh!r}")
+
+    if kmh < 0:
+        raise ValueError(f"kmh must be a positive value. got {kmh!r}")
+
+    return kmh / 3.6  # 1 km/h = 1/3.6 metri al secondo
+
+
+def knots_2_meters_per_second(knots: float) -> float:
+    """
+    Converti nodi in metri al secondo.
+
+    :param knots: Valore in nodi (miglia nautiche orarie).
+    :return: Valore convertito in metri al secondo.
+    """
+    if not isinstance(knots, (int, float)):
+        raise TypeError(f"knots must be a numeric value. got {knots!r}")
+
+    if knots < 0:
+        raise ValueError(f"knots must be a positive value. got {knots!r}")
+
+    return knots * 0.514444  # 1 nodo = 1852 m / 3600 s = 0.514444 metri al secondo
+
+
 def meters_per_second_2_mph(mps: float) -> float:
     """
     Converti metri al secondo in miglia orarie.
