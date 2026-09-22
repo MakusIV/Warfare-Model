@@ -9,12 +9,12 @@
 
 | Categoria | Pagine | Ultima modifica |
 |-----------|--------|-----------------|
-| Fonti (Sources) | 3 | 2026-09-22 |
-| Entità (Entities) | 14 | 2026-05-27 |
-| Concetti (Concepts) | 16 | 2026-09-22 |
-| Analisi (Analyses) | 1 | 2026-09-22 |
+| Fonti (Sources) | 4 | 2026-09-22 |
+| Entità (Entities) | 15 | 2026-09-22 |
+| Concetti (Concepts) | 17 | 2026-09-22 |
+| Analisi (Analyses) | 3 | 2026-09-22 |
 | Struttura di progetto (Project) | 13 | 2026-09-22 |
-| Decisioni architetturali (Decisions) | 12 | 2026-09-22 |
+| Decisioni architetturali (Decisions) | 14 | 2026-09-22 |
 
 ---
 
@@ -35,6 +35,7 @@
 | [[source-theater-level-campaign-model]] | The Theater-Level Campaign Model | Hillestad, Moore (RAND) | 1994 | campaign-model, TLC, SAGE, CADEM, joint |
 | [[source-simulation-techniques-past-conflicts]] | Simulation Techniques in the Modelling of Past Conflicts | Sabin (King's College London) | 2008 | wargame, historical, manual-simulation, anti-hindsight |
 | [[source-lanchester-scenari-ai]] | Modelli Lanchester e scenari applicati — sessione conversazionale con assistente AI (9 `.docx`) | assistente AI non identificato | 2026 | lanchester, attrition, scenario, **low-confidence** |
+| [[source-hughes-salvo-event-driven]] | Modello event-driven a salva di Hughes — sessione conversazionale con assistente AI (6 `.docx` + `edit.pdf`) | assistente AI non identificato | 2026 | hughes, salvo-combat-model, discrete-event, **medium-confidence** |
 
 ---
 
@@ -66,6 +67,7 @@
 | Pagina | Descrizione |
 |--------|-------------|
 | [[philip-sabin]] | Prof. Philip Sabin, King's College London — wargaming accademico e historical simulation |
+| [[wayne-hughes]] | Capt. Wayne P. Hughes, *Fleet Tactics* — autore del modello a salva (salvo combat model) |
 
 ### Tool e Software
 
@@ -91,7 +93,6 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 - `Dupuy Institute` / `KDB` — Kursk Database, test delle equazioni sulle sole *contact forces*
 - `Helmbold` — Lanchester con rapporto di forze, postura e soglie di ritirata
 - `Peterson` — modello logaritmico per l'attrito non da combattimento
-- `Hughes` — *Fleet Tactics*, salvo equations: **famiglia adottata dal progetto, wiki a zero fonti**
 - `STORM`, `JAAM` — attribuzione della fonte a Lanchester matriciale **non verificata e sospetta**
 
 ---
@@ -128,6 +129,7 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[comparative-dynamic-modelling]] | Metodo Sabin per risolvere controversie storiche tramite simulazione |
 | [[historical-conflict-simulation]] | Simulazione di conflitti storici — obiettivi, approcci, metodologia anti-hindsight |
 | [[lanchester-models]] | Famiglia Lanchester — leggi classiche, Bracken, eterogeneo, soglie Helmbold, SINDy; stato di validazione (negativo) |
+| [[salvo-combat-model]] | Modello a salva di Hughes — impulsi discreti, saturazione difensiva; risolutore scelto per la Fase 4 |
 
 ### Concetti referenziati (non ancora paginati)
 *Menzionati con wikilink ma privi di pagina dedicata — bassa priorità:*
@@ -142,6 +144,8 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | Pagina | Domanda | Esito |
 |--------|---------|-------|
 | [[lanchester-vs-motore-des]] | I 9 documenti Lanchester superano lo scetticismo già documentato, e cosa cambia nel motore di sessioni virtuali? | Negativo sulla matematica; utile su scenari di test, soglie di disingaggio, forma del fallback aggregato. **Zero impatto sullo strato 1** |
+| [[llm-locale-nel-motore-des]] | Un LLM locale (7-27B quantizzato su RTX 3090) può valutare le condizioni dei passi event-driven? | 4 letture valutate: **per evento 9,2 giorni/sessione** (vs 0,86 s in forma chiusa) e **per decisione dottrinale** respinte (budget + riproducibilità: Qwen2.5-7B ha il **17,6%** di risposte identiche a temp. 0); **debrief narrativo** e **uso offline** passano. Reperto collaterale: `closest_point_of_approach` costa **2.450×** il necessario |
+| [[hughes-salvo-vs-engagement-resolver]] | La fonte su Hughes supera lo scetticismo dovuto e cosa cambia in `Logic/Engagement_Resolver.py` (Fase 4)? | D1 solida, colma la lacuna; D2-D7 utili come catalogo di meccanismi, non come formule. **4 meccanismi adottabili** (saturazione difensiva, shock da salva, congelamento payload, anti-overkill), **1 precondizione nuova** (munizioni per asset), **1 punto architetturale** (re-scheduling dopo spostamento, tocca lo strato 1) |
 
 ---
 
@@ -185,6 +189,8 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
 | [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
 | [[soglie-disingaggio-e-attrito-aggregato]] | **proposed** | Soglie di disingaggio come esito di prima classe; forma-bersaglio del fallback aggregato; scenari S1-S11 di validazione (S6-S11 nuovi: navale, logistico, scala, fog-of-war, disingaggio, confine DCS/sintetico) — **richiede decisione dell'utente** |
+| [[llm-locale-ruolo-e-confini]] | **proposed** | Regola generale «niente componenti non riproducibili sulla traiettoria di stato»; LLM per evento e per decisione dottrinale a runtime respinti; debrief narrativo a valle e authoring offline ammessi con confini espliciti — **richiede decisione dell'utente** |
+| [[risolutore-ingaggio-salva-fase4]] | **proposed** | Termini del modello a salva di Hughes da adottare in `Logic/Engagement_Resolver.py`: saturazione difensiva per-salva, soglia di shock (estende P1), scorte munizioni per asset (precondizione nuova), congelamento payload all'istante di fuoco — **richiede decisione dell'utente** |
 
 ---
 
@@ -200,7 +206,7 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 
 ### Per componente militare
 - `#air` — [[tac-brawler]], [[tac-thunder]], [[sage-algorithm]]
-- `#naval` — (nessuna ancora — espandere)
+- `#naval` — [[salvo-combat-model]], [[wayne-hughes]]
 - `#ground` — [[janus-model]], [[cadem]], [[tacwar]]
 - `#joint` — [[tlc-model]], [[campaign-model]]
 

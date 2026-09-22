@@ -4,7 +4,7 @@ type: overview
 tags: [campaign-model, combat-simulation, wargame, warfare-model]
 created: 2026-05-27
 updated: 2026-09-22
-sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]", "[[source-lanchester-scenari-ai]]"]
+sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]", "[[source-lanchester-scenari-ai]]", "[[source-hughes-salvo-event-driven]]"]
 ---
 
 # Panoramica del Dominio
@@ -44,7 +44,14 @@ Il progetto principale a cui questo wiki fa riferimento è situato in:
 adapter dietro un contratto `SessionOrder`/`SessionOutcome`) e [[virtual-session-engine-des]] (il
 motore di esecuzione delle sessioni virtuali è un DES a coda eventi con scheduling analitico dei
 contatti, non un tick fisso). Le Fasi 1 (cinematica) e 2 (percezione/`ThreatAA`) di quest'ultima
-sono fatte e pushate sul branch `analysis/dce-dcs-persistence`, non ancora su `main`.
+sono fatte e pushate sul branch `analysis/dce-dcs-persistence`, non ancora su `main`; la Fase 3
+(`Logic/Contact_Scheduler.py`, scheduler analitico dei contatti) è completata sullo stesso branch.
+
+Tre proposte aperte in attesa di decisione dell'utente: [[soglie-disingaggio-e-attrito-aggregato]]
+(soglie di disingaggio, forma del fallback aggregato, scenari S1-S11), [[llm-locale-ruolo-e-confini]]
+(dove un LLM può e non può stare nel motore) e [[risolutore-ingaggio-salva-fase4]] (termini del
+modello a salva di Hughes da adottare in `Logic/Engagement_Resolver.py`: saturazione difensiva,
+soglia di shock, scorte munizioni per asset).
 
 ### Domande di Ricerca Aperte
 *(Da aggiornare man mano che si ingeriscono fonti)*
@@ -66,7 +73,7 @@ sono fatte e pushate sul branch `analysis/dce-dcs-persistence`, non ancora su `m
 | Historical Conflict Modelling | 1 | Media | Sabin: wargaming accademico, comparative dynamic modelling |
 | Wargame Design Theory | 1 | Buona | Anti-hindsight, 3 ruoli simulazione, dialettica Clausewitz |
 | Modelli Lanchester | 1 | Scarsa | [[lanchester-models]]: tassonomia delle varianti + stato di validazione (negativo). Fonte a **bassa affidabilità**, nessuna fonte primaria |
-| Equazioni a salva (Hughes) | 0 | Nessuna | **Lacuna critica**: è la famiglia adottata dallo strato 2 del motore, e il wiki non ha nulla |
+| Equazioni a salva (Hughes) | 1 | Media | [[salvo-combat-model]]: formulazione base verificata (D1); 6 estensioni non verificate con difetti accertati (D2-D7). È la famiglia adottata dallo strato 2 del motore. Manca ancora una fonte primaria (*Fleet Tactics* stesso) |
 | Agent-Based Models | 0 | Nessuna | Da acquisire fonti specifiche |
 
 ---
@@ -97,6 +104,32 @@ Dopo le prime due ingestioni emergono le seguenti tesi di sintesi:
    MR-SAM → SHORAD → AAA), un motore a eventi con geometria e percezione **deduce** lo stesso
    fenomeno dai dati fisici già disponibili.
 
+8. **La riproducibilità è una proprietà di *costruzione*, non di *configurazione*** (analisi
+   2026-09-22, v. [[llm-locale-nel-motore-des]]). Un PRNG seedato è riproducibile perché l'algoritmo
+   è intero, specificato e indipendente dall'hardware; uno stack di inferenza LLM non lo è nemmeno a
+   temperatura 0 — misurato, **17,6% di risposte byte-identiche fra seed su Qwen2.5-7B** — perché la
+   sua determinatezza emerge da kernel, ordine di riduzione in virgola mobile, dimensione del batch
+   e versione dei driver, che nessuno strato dichiara come contratto. Ne discende la regola generale
+   proposta in [[llm-locale-ruolo-e-confini]], che non nomina gli LLM e vale anche per servizi di
+   rete e modelli appresi: **nessun componente non riproducibile per costruzione sulla traiettoria
+   di stato di una sessione**. Corollario emerso nello stesso conto: il costo per evento è la
+   metrica che discrimina, e va misurato, non stimato a occhio — la stessa misura ha rivelato che
+   `closest_point_of_approach` spende il 99,9% del tempo a imballare in `sympy.Point3D` un risultato
+   calcolato in 21,6 µs.
+
+9. **Una fonte tecnicamente debole può comunque colmare una lacuna, se letta a due velocità**
+   (ingestione 2026-09-22, v. [[hughes-salvo-vs-engagement-resolver]]). Dei sette documenti di
+   [[source-hughes-salvo-event-driven]], solo il primo è verificabile e regge; gli altri sei sono
+   estensioni inventate da un assistente AI, senza citazioni, con almeno undici difetti aritmetici o
+   logici accertati (una violazione di causalità, doppi conteggi, un `random.random()` senza seed).
+   Eppure la fonte è comunque il primo passo utile a colmare la lacuna critica su Hughes: non per i
+   numeri, che si scartano in blocco come già fatto con Lanchester, ma per i **meccanismi** che
+   propone — saturazione difensiva per-salva, soglia di shock da salva, congelamento del payload
+   all'istante di fuoco, scorte di munizioni come precondizione mai considerata prima. È la stessa
+   disciplina "forma sì, numeri no" del punto 7, applicata questa volta a una fonte dove persino la
+   forma va vagliata pezzo per pezzo, perché la fonte stessa contiene un pezzo di forma sbagliata
+   (il ricalcolo retroattivo di una salva già in volo) accanto a pezzi corretti.
+
 ---
 
 ## Lacune da Colmare
@@ -105,9 +138,10 @@ Dopo le prime due ingestioni emergono le seguenti tesi di sintesi:
   [[source-lanchester-scenari-ai]], che dà una tassonomia ma **nessuna citazione verificabile**.
   Piste da chiudere: Bracken (calibrazione Ardenne/Kursk), Lawrence/Dupuy Institute (KDB e test
   falliti), Helmbold (soglie di ritirata)
-- **Hughes, *Fleet Tactics* — salvo equations**: è la famiglia che lo strato 2 del motore DES
-  adotterà (v. [[virtual-session-engine-des]]) e il wiki non ha **nessuna** fonte in merito. Priorità
-  più alta del punto precedente
+- **Hughes, *Fleet Tactics* — testo o fonte primaria originale**: la lacuna critica è **parzialmente
+  colmata** da [[source-hughes-salvo-event-driven]] (D1 verificato), ma resta senza fonte primaria
+  citabile — se si vorrà calibrare il modello con numeri reali serve il testo originale, non una
+  sessione conversazionale con un assistente AI
 - Letteratura su modelli ad agenti per conflitti (MANA, ISAAC, ecc.)
 - Standard NATO/militari per simulazione (DSEEP, HLA/RPR FOM)
 - Documentazione DCS sull'architettura di missione e hook disponibili

@@ -1,5 +1,119 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-22] ingestione | Modello event-driven a salva di Hughes (RAW/Event_Driven_Salva_Hughes/)
+
+Sette file (6 `.docx` + `edit.pdf`), ricostruiti come i turni consecutivi di **una sola
+conversazione** con un assistente AI (catena D1→D7 verificata nel testo: ogni documento propone i
+proseguimenti a cui il successivo risponde). Colma — solo in parte — la lacuna critica già
+registrata in [[lanchester-models]] § Note: *"Hughes, wiki a zero fonti"*.
+
+**Da leggere a due velocità**: D1 (*"Illustrami cos'è il modello event-driven a salva di
+Hughes…"*) è **solido** — attribuzione, anno ed equazioni base verificati contro la letteratura,
+l'unico documento del set con contenuto verificabile. D2-D7 sono **estensioni inventate
+dall'assistente**, senza alcuna citazione, con **undici difetti aritmetici o logici accertati**
+(violazione di causalità nel ricalcolo retroattivo di una salva già in volo; una somma sbagliata e
+tre notazioni temporali incompatibili nello stesso paragrafo; un fattore di tempismo applicato due
+volte; un modello che uccide più unità di quante ce ne siano; doppio conteggio nella formula di
+soppressione; un confronto "con SEAD/senza SEAD" confondato dal cambio di regolamento fra i due
+scenari; codice Python che non implementa il termine difensivo che dichiara di implementare;
+stocasticità annunciata e mai usata; parametri incoerenti fra documenti; tempo di volo balistico
+come moto rettilineo uniforme; citazioni-nomi-di-dominio senza titolo/autore/anno).
+
+**Pagine create**:
+- `wiki/sources/source-hughes-salvo-event-driven.md` — riepilogo completo, tabella dei 7 documenti,
+  11 lacune dettagliate, applicabilità al progetto
+- `wiki/entities/wayne-hughes.md` — autore, attribuzione verificata
+- `wiki/concepts/salvo-combat-model.md` — formulazione base del modello (impulsi discreti,
+  saturazione difensiva, staying power)
+- `wiki/analyses/hughes-salvo-vs-engagement-resolver.md` — valutazione componente per componente
+  contro `Logic/Engagement_Resolver.py` (Fase 4): **4 meccanismi adottabili** (saturazione
+  difensiva per-salva, soglia di shock, congelamento del payload all'istante di fuoco, targeting
+  anti-overkill), **1 precondizione nuova** (scorte munizioni per asset — verificato che il
+  progetto non ce l'ha in nessuna forma, gap già annotato in `Block/Military.py:720`), **1 punto
+  architetturale** (re-scheduling delle finestre di contatto dopo uno spostamento fisico a ingaggio
+  in corso — appartiene allo strato 1/`Contact_Scheduler`, non alla Fase 4)
+- `wiki/decisions/risolutore-ingaggio-salva-fase4.md` — **`status: proposed`**, mai `accepted`:
+  R1 (saturazione difensiva per-salva), R2 (soglia di shock, seconda soglia indipendente accanto a
+  P1 di [[soglie-disingaggio-e-attrito-aggregato]]), R3 (scorte munizioni per asset), R4
+  (congelamento payload adottabile subito + re-scheduling registrato ma non progettato). 4 punti
+  aperti da confermare con l'utente
+
+**Nessun coefficiente, latenza o tempo di volo della fonte è stato importato in nessuna pagina** —
+stessa disciplina già applicata a [[source-lanchester-scenari-ai]]: si prende la forma, mai i
+numeri, e ogni meccanismo è stato verificato contro il codice reale (`Damage_Model.py`,
+`Contact_Scheduler.py`, `Military.py`, `Ground_Weapon_Data.py`) prima di essere proposto.
+
+**Cosa non cambia**: architettura a 4 strati di [[virtual-session-engine-des]] invariata; il modello
+a salva di Hughes resta la scelta per lo strato 2, confermata non messa in discussione.
+
+---
+
+## [2026-09-22] analisi | Un LLM locale può valutare le condizioni dei passi event-driven?
+
+Proposta dell'utente: usare un LLM locale (Qwen2.5-7B o Qwen3 8-27B quantizzato, RTX 3090 24 GB)
+per «valutare le diverse condizioni che possono verificarsi durante i passi event-driven» delle
+sessioni virtuali. Formulazione volutamente aperta → **primo compito la disambiguazione** contro la
+pipeline reale a 7 fasi (Fase 3 completata, Fase 4 il prossimo passo), non la valutazione in
+astratto. Nessuna riga di codice toccata.
+
+**Quattro letture valutate una per una** (v. [[llm-locale-nel-motore-des]]):
+
+- **(a) per singolo evento** (Pk, esito di un colpo, CPA) — **respinta**. Conto: chiamata LLM 7B Q4
+  su 3090, caso ottimistico dal benchmark CUDA ufficiale di llama.cpp (pp512 5.560 t/s, tg128
+  162 t/s), prompt 1.000 + risposta 100 token = **0,80 s**. Costo misurato sul repo di ciò che
+  sostituirebbe: `resolve_hit` **0,859 µs**, nucleo analitico CPA **21,6 µs**. Rapporto **931.000×**
+  / 37.000×. Proiezione al limite superiore dichiarato (10⁶ colpi): **9,2 giorni per sessione**
+  contro 0,86 s in forma chiusa — **entro un fattore 8 dai 74 giorni** con cui la Strategia 1 a
+  tick è già stata respinta.
+- **(b) decisione qualitativa/dottrinale** (soglia P1, ROE, indirizzo C2) — **respinta, ma non per
+  aritmetica**: ~50 ingaggi × 0,80 s = 40 s, dentro il budget sul caso tipico (fallisce alla scala:
+  26,7 ore). Fallisce sulla **riproducibilità** (vincolo #1) e sul vincolo simulator-agnostic; e
+  chiederebbe all'LLM proprio ciò che [[soglie-disingaggio-e-attrito-aggregato]] § P1 vieta — la
+  soglia «non va inventata, è un parametro dottrinale dichiarato».
+- **(c) debrief narrativo a stato già risolto** — **passa**, con tre confini (mai sulla traiettoria
+  di stato, fuori dal core, testo salvato come artefatto versionato e non rigenerato al replay).
+  Priorità bassa: non risolve alcun punto aperto.
+- **(d) uso offline a tempo di progettazione** — **passa ed è l'unica utile subito**: fixture degli
+  scenari S1-S11, tabelle di `Context/Reaction_Profile.py`, enumerazione dei casi ROE/dottrina.
+  Condizione: si prende la *forma*, mai i *numeri* — stessa regola già applicata alle fonti esterne.
+
+**Vincolo #1 verificato, non dato per scontato.** Misura pubblicata (Larsen, arXiv:2512.12066,
+vLLM, decodifica greedy a temperatura 0,0, confronto fra seed): Llama 3.1 8B **73,4%** di risposte
+byte-identiche, **Qwen 2.5 7B solo 17,6%** — cioè proprio il modello proposto cambia più di quattro
+risposte su cinque. Il rimedio (kernel batch-invarianti di vLLM) esiste ma la documentazione di vLLM
+stessa non promette nulla **fra generazioni hardware, versioni di libreria o driver**, e non
+quantifica il costo prestazionale. Differenza qualitativa col PRNG registrata: la riproducibilità di
+un PRNG seedato è *per costruzione*, quella di un LLM è *emergente* da uno stack in virgola mobile
+che nessuno strato dichiara come contratto.
+
+**Paradosso del batching** (argomento strutturale, non implementativo): l'unico modo di avvicinare
+un LLM al throughput dell'opzione (a) è il batching (~1.035 t/s a 64 concorrenti su 27B/3090, vs
+127 a utente singolo) — ma la composizione del batch è **esattamente** ciò che rende l'inferenza non
+riproducibile. Le due proprietà sono in opposizione diretta.
+
+**Reperto collaterale, estraneo alla proposta ma da decidere**: misurando il termine di paragone è
+emerso che `Contact_Scheduler.closest_point_of_approach` costa **52,95 ms/chiamata**, di cui il
+**99,8%** (quota cumulativa `cProfile`) è la costruzione di due `sympy.Point3D` sul risultato (`nsimplify` → `mpmath.pslq` su
+coordinate float "brutte": **23 ms per punto**). La matematica vera costa **21,6 µs** → fattore
+**2.450×**. Contraddice il docstring del modulo stesso e la regola già scritta nel documento di
+architettura (§6: *«sympy è simbolico ed esatto, quindi lento: […] non per milioni di
+valutazioni»*). Impatto: allo scenario di stress **S8** (~2,5·10⁶ CPA) il motore costerebbe
+**36,8 ore per sessione** invece di **54 secondi** — cioè sfonderebbe il budget di «minuti» già
+adesso, senza alcun LLM, e S8 attribuirebbe la colpa al posto sbagliato.
+
+**Pagine create**:
+- `wiki/analyses/llm-locale-nel-motore-des.md` (analisi completa, con tutti i conti e le fonti)
+- `wiki/decisions/llm-locale-ruolo-e-confini.md` — **`status: proposed`**, mai `accepted`: R1
+  (regola generale «niente componenti non riproducibili sulla traiettoria di stato», formulata
+  senza nominare gli LLM perché copra anche servizi di rete e modelli appresi), R2 (esclusi (a) e
+  (b)), R3 (ammesso il debrief), R4 (ammesso e incoraggiato l'uso offline). 4 punti aperti da
+  confermare con l'utente.
+
+**Cosa non cambia**: architettura a 4 strati di [[virtual-session-engine-des]] invariata; la Fase 4
+`Engagement_Resolver` nasce interamente in forma chiusa come già deciso.
+
+---
+
 ## [2026-09-22] aggiornamento | Batteria di validazione Fase 7 estesa da S1-S5 a S1-S11
 
 Su richiesta esplicita dell'utente ("ulteriori scenari di test oltre S1-S5"). I 5 scenari
