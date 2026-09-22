@@ -120,6 +120,33 @@ class NavigationGraph:
         
         return None  # Nessun percorso trovato
 
+    def find_canonical_route(self, start, end, name=None, speed=None,
+                             weight_func=lambda edge: edge.danger_level):
+        """Come `find_optimal_path`, ma restituisce una `DataType.Route`.
+
+        E' la sola uscita pubblica supportata verso il resto del sistema: `Waypoint` ed
+        `Edge` di questo modulo sono stato di lavoro privato dell'algoritmo di ricerca
+        (v. la decisione registrata in `Logic/Route_Adapter.py`), e `find_optimal_path`
+        restituisce la sola sequenza di nodi, che non e' una rotta percorribile nel tempo.
+
+        Args:
+            start, end, weight_func: come `find_optimal_path`.
+            name: nome della rotta canonica.
+            speed: velocita' [m/s] dell'asset che percorre la rotta; se None si usa la
+                `max_speed` degli archi, che pero' e' un limite del terreno, non dell'asset.
+
+        Returns:
+            DataType.Route, oppure None se non esiste un percorso.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic import Route_Adapter
+
+        waypoints = self.find_optimal_path(start, end, weight_func)
+
+        if not waypoints:
+            return None
+
+        return Route_Adapter.ground_path_to_route(self, waypoints, name=name, speed=speed)
+
     def find_min_danger_path(self, start, end):# per aerei ed elicotteri
         return self.find_optimal_path(start, end, lambda e: e.danger_level)
     

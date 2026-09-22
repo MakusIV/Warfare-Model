@@ -6,8 +6,10 @@ from sympy import Point, Line, Point3D, Line3D, Line2D, symbols, solve, Eq, sqrt
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 # LOGGING --
- 
-logger = Logger(module_name = __name__, class_name = 'Edge')
+# .logger: Logger e' un wrapper, il logging.Logger vero sta nel suo attributo .logger.
+# Senza, ogni logger.debug()/warning() qui solleverebbe AttributeError (stesso difetto
+# gia' corretto in DataType/Route.py quando vi sono stati aggiunti i primi call site).
+logger = Logger(module_name = __name__, class_name = 'Edge').logger
 
 # ASSET
 class Edge:    
@@ -27,8 +29,8 @@ class Edge:
             self._path_type = path_type # 'onroad', 'offroad', 'air', "water"
             self._danger_level = danger_level
             self._speed = speed
-            self._line = Line3D(wpA.point, wpB.point)
-            self._line2d = Line2D(wpA.point2d, wpB.point2d)
+            self._line = self._buildLine(wpA.point, wpB.point, Line3D, "3D")
+            self._line2d = self._buildLine(wpA.point2d, wpB.point2d, Line2D, "2D")
             self._lenght = self.calcLength() # distance2D if path_type = [onroad, offroad, water] or distance 3D if path_type = air
             self._travel_time = self.calcTravelTime()
 
@@ -40,6 +42,27 @@ class Edge:
             
 
 
+
+    @staticmethod
+    def _buildLine(pA, pB, line_class, label: str):
+        """Costruisce la retta di supporto dell'arco, oppure None se l'arco e' degenere.
+
+        sympy rifiuta `Line*(P, P)` ("requires two unique Points"): l'arco e' degenere per
+        la 3D quando i due waypoint coincidono, e per la 2D anche quando l'arco e' una
+        salita/discesa verticale pura (stessa x,y, z diverse) — caso che un pianificatore
+        di rotta aereo produce normalmente quando scavalca una minaccia.
+
+        Prima questo sollevava un'eccezione in costruzione e rendeva l'arco non
+        rappresentabile: un dato degenere ma legittimo non e' un errore di programmazione,
+        quindi si registra None e si degrada (v. `minDistance`/`intersectPoint`), coerente
+        con la convenzione del progetto "niente eccezioni per dati, solo per argomenti
+        fuori dominio".
+        """
+        try:
+            return line_class(pA, pB)
+        except ValueError:
+            logger.debug(f"Edge: degenerate {label} segment ({pA} == {pB}), support line not built")
+            return None
 
     @staticmethod
     def checkParam(wpA: Waypoint = None, wpB: Waypoint = None, path_type: str = None, danger_level: float = None, speed: float = None, name: str = None) -> (bool, str): # type: ignore
@@ -168,11 +191,16 @@ class Edge:
 
     def minDistance(self, point: Point):# distance 3D
 
-        if isinstance(point, Point3D):
-            return self._line.distance(point)
-        else:
-            return self._line2d.distance(point)
-        
+        line = self._line if isinstance(point, Point3D) else self._line2d
+
+        if line is None:
+            # arco degenere: la retta di supporto non esiste, la distanza minima dall'arco
+            # e' la distanza dal punto in cui l'arco si riduce (v. _buildLine).
+            wp = self._wpA.point if isinstance(point, Point3D) else self._wpA.point2d
+            return wp.distance(point)
+
+        return line.distance(point)
+
 
     def intersectPoint(self, line: Line) -> Point: # poni z = 0 per calcolo 2D
         """
@@ -189,6 +217,10 @@ class Edge:
             Il punto di intersezione.
         """
         intersection = None
+
+        if self._line is None:
+            logger.debug(f"Edge {self._name!r}: degenerate segment, no intersection computable")
+            return None
 
         if self._path_type == "air" and isinstance(line, Line3D):
             intersection = self._line.intersection(line)

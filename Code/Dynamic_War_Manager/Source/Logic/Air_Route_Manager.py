@@ -851,6 +851,39 @@ class RoutePlanner:
 
    
 
+    def calcCanonicalRoute(self, *args, **kwargs):
+        """Come `calcRoute`, ma restituisce una `DataType.Route` invece della Route interna.
+
+        E' la sola uscita pubblica supportata verso il resto del sistema: `Waypoint`, `Edge`,
+        `Route`, `Path` e `PathCollection` di questo modulo sono stato di lavoro privato
+        dell'algoritmo di ricerca (v. la decisione registrata in `Logic/Route_Adapter.py`) e
+        non vanno consumati altrove. Il tipo canonico e' l'unico che porta `positionAtTime` e
+        `travelTimeToEdge`, cioe' cio' che serve al Contact_Scheduler (Fase 3).
+
+        Il parametro opzionale `canonical_speed` [m/s] sovrascrive la velocita' degli archi
+        (quella interna e' marcata "deprecated" nel modello del pianificatore); gli altri
+        argomenti sono quelli di `calcRoute`.
+
+        Import locale al metodo per non creare una dipendenza a tempo di import verso
+        Route_Adapter, che resta libero di non conoscere questo modulo.
+
+        Returns:
+            DataType.Route, oppure None se nessun percorso e' stato trovato.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic import Route_Adapter
+
+        canonical_speed = kwargs.pop('canonical_speed', None)
+        route = self.calcRoute(*args, **kwargs)
+
+        if route is None:
+            return None
+
+        return Route_Adapter.to_canonical_route(route,
+                                                name=getattr(route, 'name', None),
+                                                path_type='air',
+                                                route_type='air',
+                                                speed=canonical_speed)
+
     def excludeThreat(self, threats: list[ThreatAA], arg) -> bool:
         """Delete threats from the list of threats if match with the arg.
 
