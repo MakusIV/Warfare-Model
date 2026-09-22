@@ -442,17 +442,39 @@ raggio di rilevamento, lo Strato 1 non è scrivibile.
 4. **Budget di calcolo**: fino a **minuti** per sessione. Questo rende sostenibile il micro-passo
    opzionale e toglie ogni pressione sull'ottimizzazione prematura.
 
-### Aperte — da decidere prima della Fase 3
+### Erano aperte — CHIUSE il 2026-09-22 (le tre bloccanti per la Fase 3)
 
-- **Quale modello di Route vince.** Il motore consuma `DataType.Route`: serve un adattatore da
-  `Air_Route_Manager.Route`, oppure si riscrive il router perché produca il tipo canonico. Da
-  decidere anche il destino di `Ground_Route_Manager`, oggi funzionante ma completamente scollegato.
-- **Semantica della perdita per-asset.** "Destroyed" a `health ≤ 15` significa che un asset distrutto
-  conserva un residuo. Va deciso se il motore azzera, se esiste recupero, e come questo si concilia
-  con `repair_time`.
-- **Combat power di SAM/AAA/EWR.** O si aggiungono alle tabelle di efficacia, oppure il risolutore
-  d'ingaggio li tratta fuori dal combat power — probabilmente la scelta giusta: sono difesa d'area,
-  non massa di manovra, e il loro effetto è già geometrico (`air_defense_volume`).
+- **✅ Quale modello di Route vince → `DataType.Route/Edge/Waypoint`, confermato.** I modelli
+  interni a `Ground_Route_Manager` e `Air_Route_Manager` restano, ma come **stato di lavoro privato
+  dell'algoritmo di ricerca**, mai esposto; la conversione avviene in un solo punto, l'uscita
+  pubblica del path-finding (`Logic/Route_Adapter.py`, `RoutePlanner.calcCanonicalRoute`,
+  `NavigationGraph.find_canonical_route`). Fatto decisivo: **nessun consumatore di produzione** usa
+  oggi i due generatori, mentre tutto l'ecosistema consuma solo il tipo canonico. Rimosso il blocco
+  tecnico: `DataType.Edge` non era costruibile per una salita verticale pura (sympy rifiuta due
+  punti coincidenti in `Line2D`). Piano a 5 fasi, Fase 1 fatta.
+- **✅ Semantica della perdita per-asset → contratto fissato in `Logic/Damage_Model.py`.**
+  `accuracy` = P(colpo a segno), `destroy_capacity` = P(distruzione | colpo a segno): scomposizione
+  in Ph e Pk|h della Pk `accuracy × destroy_capacity` già usata nei registri d'arma, **senza
+  introdurre costanti di taratura nuove**. Tre esiti per colpo (KILL → salute 0; DAMAGE →
+  `−round(100 × dc)`, minimo 1; MISS), un colpo **può** uccidere direttamente, l'accumulo è
+  emergente (~1/dc colpi non letali). Nessuna estrazione casuale nel modulo: `resolve_hit` riceve il
+  `draw` dall'RNG di sessione, e l'ordine delle soglie fa parte del contratto. `DamageEvent` (frozen,
+  con `provenance`) è l'atomo del futuro `SessionOutcome`. La soglia `Destroyed ≤ 15` **non** viene
+  rivista: il residuo è il relitto, e la messa fuori combattimento avviene comunque già prima
+  (`isOperative()` è falso sotto il 50%, e `combat_power` somma solo gli operativi — "mission kill" e
+  "distruzione" sono quindi già entrambi nel modello). Scritta `Asset.apply_damage`.
+- **✅ Combat power di SAM/AAA/EWR → restano fuori, ed è la definizione, non un bug.** Le tabelle di
+  efficacia misurano fuoco e manovra terra-terra: includerli gonfierebbe la forza di superficie del
+  blocco che li possiede. Documentato come intenzionale in `Context/Context.py`. **Ma il problema
+  pratico esiste**: in `Tactical_Evaluation._calculate_priority` un bersaglio a combat power nulla
+  satura a `combat_power_ratio = 0.1`, cioè priorità minima — l'opposto della dottrina SEAD. La
+  soluzione è una **dimensione separata**, non una voce in più nella stessa tabella: nuova
+  `Military.air_defense_power()` in [0, 1], aggregazione `1 − Π(1 − danger_level_i)` sui `ThreatAA`
+  del blocco. Farla leggere alla priorità di targeting per un attaccante aereo è lavoro della Fase 4
+  e **richiede conferma dell'utente**, perché cambia numeri di campagna.
+
+### Ancora aperte (non bloccanti per la Fase 3)
+
 - **Sistema di riferimento.** Resta aperta la questione già sollevata in
   `ARCHITETTURA_CORE_AGNOSTICO.md` §8: piano cartesiano locale per teatro (con la proiezione
   nell'adapter) o coordinate geodetiche nel core.

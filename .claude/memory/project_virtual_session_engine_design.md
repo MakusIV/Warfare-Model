@@ -5,12 +5,10 @@ metadata:
   type: project
 ---
 
-**Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica) e FASE 2 (percezione) FATTE
-e committate sul branch `analysis/dce-dcs-persistence` (Fase 1: 3af377c5, Fase 2: 30a6ee55, da
-pushare). Prossima: FASE 3, `Logic/Contact_Scheduler.py` — ma prima vanno chiuse le 3 questioni
-aperte del §9 del documento (modello `Route` unico fra i tre incompatibili, semantica della perdita
-per-asset, se SAM/AAA/EWR entrino nelle tabelle di combat power), v. anche
-[[project_session_2026_09_21_summary]].**
+**Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione) e
+le 3 QUESTIONI APERTE del §9 sono CHIUSE, tutto sul branch `analysis/dce-dcs-persistence` (da
+pushare). Prossima: FASE 3, `Logic/Contact_Scheduler.py` — **sbloccata**, nessun blocco residuo.
+V. anche [[project_session_2026_09_21_summary]].**
 Documento: `Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md` (525 righe),
 a fianco della proposta sorgente dell'utente `Architettura_esecuzione_sessioni_virtuali.txt`.
 Entrambi committati (64e490b0).
@@ -165,6 +163,85 @@ Chiude le precondizioni 3 e 4. Nessun file di Fase 1 toccato.
   dati reali senza cambiare la forma. I dati sensore hanno incoerenze di sorgente (es. F-14A ha
   `tracking_range` 315 km > `acquisition_range` 185 km): non corrette qui.
 
+## LE 3 QUESTIONI APERTE DEL §9 — CHIUSE 2026-09-22 (suite 2685 -> 2753 test, OK, skipped=5)
+Erano le tre decisioni bloccanti per la Fase 3. Tutte e tre **decise**; per ognuna e' stata
+implementata la parte a basso rischio che rende la decisione operativa.
+
+### Q1 — Quale modello Route vince: **`DataType.Route/Edge/Waypoint`, confermato**
+Dettaglio completo + piano a 5 fasi in [[project_route_model_unification_plan]] (Fase 1 FATTA).
+In sintesi: i modelli interni a `Ground_`/`Air_Route_Manager` restano ma **come stato di lavoro
+privato** dell'algoritmo di ricerca, mai esposti; la conversione avviene in un solo punto,
+l'uscita pubblica del path-finding. Fatto decisivo che ha reso la decisione facile: **nessun
+consumatore di produzione** chiama oggi `RoutePlanner.calcRoute` o `find_optimal_path` (solo test
+e `Utility/visualizer.py`), mentre tutto l'ecosistema (Region/Military/Tactical_Evaluation/
+Command_Types) consuma solo il tipo canonico. Implementato: nuovo `Logic/Route_Adapter.py`
+(duck-typed, non importa i due Route Manager -> nessun ciclo), `RoutePlanner.calcCanonicalRoute`,
+`NavigationGraph.find_canonical_route`, `Test_Route_Adapter.py` (26 test).
+**Blocco tecnico rimosso**: `DataType/Edge` costruiva `Line3D`/`Line2D` nel `__init__` e sympy
+rifiuta due punti coincidenti, quindi una **salita verticale pura** — che il pianificatore aereo
+produce normalmente — rendeva l'arco non costruibile (limite annotato in Fase 1 e lasciato
+aperto). Ora `_buildLine` registra `None` + log, e `minDistance`/`intersectPoint` degradano.
+Corretto anche il logger di `DataType/Edge.py` (mancava `.logger`).
+
+### Q2 — Semantica della perdita per-asset: **contratto fissato + `apply_damage` scritta**
+Nuovo `Logic/Damage_Model.py` (il contratto e' documentato per esteso nel docstring del modulo,
+che e' la fonte di verita'; qui solo i punti da ricordare):
+- **`accuracy` = P(colpo a segno), `destroy_capacity` = P(distruzione | colpo a segno)**. Non e'
+  un'invenzione: e' la scomposizione in Ph e Pk|h della Pk `accuracy x destroy_capacity` gia'
+  usata come principio nei registri d'arma (v. [[project_ship_weapon_scoring]]). Entrambi i campi
+  esistono gia' in `Ground_/Ship_/Aircraft_Weapon_Data`, in [0,1], per tipo e taglia del
+  bersaglio. **Nessuna costante di taratura nuova.**
+- Tre esiti per colpo: `KILL` (p = acc x dc) -> salute a 0; `DAMAGE` (p = acc x (1-dc)) ->
+  `-round(100 x dc)` punti, minimo 1; `MISS` -> nulla. **Un colpo puo' uccidere direttamente**,
+  nessun pavimento artificiale. L'**accumulo e' emergente** (~1/dc colpi non letali), non un
+  parametro. L'unica convenzione dichiarata e' `MIN_EFFECTIVE_HIT_DAMAGE = 1`, senza il quale le
+  infrastrutture (dc ~ 0 nei registri) sarebbero indistruttibili per costruzione.
+- **Soglia `Destroyed` NON rivista: resta `health <= 15`.** Il residuo e' il relitto, ed e' cio'
+  che da' senso a `repair_time`. Scoperta che ha chiuso la questione: **la messa fuori
+  combattimento avviene gia' prima** — `State.isOperative()` e' falso sotto il 50% (`Critical`) e
+  `Military.combat_power` somma solo gli asset operativi. Quindi "mission kill" (<=50) e
+  "distruzione" (<=15) sono **gia' entrambi nel modello**, non c'e' nulla da aggiungere.
+- **Nessuna estrazione casuale nel modulo**: `resolve_hit(accuracy, destroy_capacity, draw)` riceve
+  il `draw` dal chiamante (RNG di sessione seedato, Fase 0). L'ordine delle soglie (KILL, DAMAGE,
+  MISS) **fa parte del contratto**: cambiarlo cambia l'esito a parita' di seed.
+- **`DamageEvent`** (dataclass frozen) e' l'atomo del futuro `SessionOutcome`: `time` in secondi
+  assoluti, `target_id`/`source_id`/`weapon` di dominio (mai id del simulatore), `outcome`,
+  `health_before/delta/after`, `destroyed`, **`provenance`** (`measured`/`derived`/`estimated`,
+  come richiesto da [[feedback_core_simulator_agnostic]]).
+- **`build_damage_event` (calcola, non muta) separata da `apply_damage_event` (muta)**: serve al
+  modello a salva di Hughes della Fase 4, che deve calcolare tutti gli esiti, ordinarli
+  deterministicamente e solo poi applicarli.
+- **`Asset.apply_damage(health_delta)`** (`Asset/Asset.py`): unico punto in cui la salute cala per
+  attrito; il setter `health` resta per inizializzazione e persistenza. Satura a 0, passa dal
+  setter di `State.health` che chiama `State.update()`. `TypeError`/`ValueError` solo per
+  argomenti fuori dominio (delta positivo = riparazione: non passa di qui, per scelta).
+- `Test_Damage_Model.py`, 37 test. **Non deciso qui**: penetrazione contro corazza (manca il campo
+  `penetration` nei record d'arma, §9) e riparazione/recupero (materia del ciclo di campagna).
+
+### Q3 — SAM/AAA/EWR nel combat power: **restano a 0, e' la definizione — ma serviva un numero**
+- **Il 3 e' confermato intenzionale** e ora **documentato come tale** in `Context/Context.py`
+  (commento sopra `GROUND_COMBAT_EFFICACY` + docstring di `combat_power_from_score`), non piu'
+  registrato come "bug noto". Motivo: quella tabella misura capacita' di fuoco e manovra
+  **terra-terra**, che un sito di difesa aerea non ha; aggiungercelo gonfierebbe la forza di
+  superficie del blocco che lo possiede, cioe' produrrebbe un numero falso in cambio di nulla.
+- **Ma il problema pratico esiste ed e' stato verificato nel codice**: in
+  `Tactical_Evaluation._calculate_priority` un bersaglio con combat power nulla finisce nel ramo
+  `if target_cp <= 0` e satura a `combat_power_ratio = 0.1`, **priorita' minima**. Cioe' oggi un C2
+  non vedrebbe MAI un sito SAM come bersaglio prioritario — l'opposto della dottrina SEAD.
+- **Soluzione decisa: dimensione separata, non voce in piu' nella stessa tabella.** La potenza
+  della difesa aerea e' gia' modellata — `air_defense_volume()` -> `build_threat_aa()` ->
+  `ThreatAA.danger_level` in [0,1] (Fase 2) — ma mancava un aggregato a livello di blocco.
+  Implementata **`Military.air_defense_power()` -> [0, 1]**, aggregazione `1 - prod(1 - d_i)`
+  ("almeno una difesa e' efficace"): saturante, monotona nel numero di siti, senza il tetto
+  artificiale di un massimo. **NON e' una combat power e non e' confrontabile con quella.**
+  +5 test in `Test_Military.py`. Nessuno la consuma ancora (come `detection_range` dopo la Fase 2).
+- **Opzione scartata**: proporre una tabella di efficacia SAM/AAA/EWR sulla scala 1-5 di
+  `GROUND_COMBAT_EFFICACY`. Sarebbe stata una scelta di **game balance inventata** (nessun dato la
+  sostiene) per rendere confrontabili due grandezze che non lo sono.
+- **Resta da fare in Fase 4 (SEAD), da confermare con l'utente**: far leggere
+  `air_defense_power` alla priorita' di targeting quando l'attaccante e' aereo. E' un cambio di
+  comportamento su numeri di campagna, non un'aggiunta: non fatto qui di proposito.
+
 ## Precondizioni bloccanti trovate nel codice (verificate riga per riga)
 1. **`Asset/Mobile.py:345`**: `checkParam` definita senza `self` → il setter `speed` (`:97-100`)
    solleva sempre `TypeError`. Default mutabile a `:50`. `_speed` mai popolato dai registry.
@@ -175,15 +252,18 @@ Chiude le precondizioni 3 e 4. Nessun file di Fase 1 toccato.
    `Military.detection_range`.
 4. ~~`ThreatAA` mai costruito da `Mobile.air_defense_volume()`~~ **RISOLTA in Fase 2**:
    `Air_Route_Manager.build_threat_aa` + `Military.air_defense_threats`.
-5. Nessuna `apply_damage`: solo `asset.health = int` (`Asset/Asset.py:207-210`); "Destroyed" già a
-   `health ≤ 15` (`DataType/State.py:178-198`).
+5. ~~Nessuna `apply_damage`~~ **RISOLTA 2026-09-22 (Q2)**: `Asset.apply_damage` +
+   `Logic/Damage_Model.py`. "Destroyed" resta a `health ≤ 15`, per scelta motivata.
 6. `random` non seedato a livello di modulo (`Tactical_Evaluation.py:360-361`, `Structure.py:128`,
    `Utility.py:320`, DB armi).
-7. **Tre modelli Route/Edge/Waypoint incompatibili**; `Air_Route_Manager` (l'unico generatore maturo)
-   non produce `DataType.Route`, che è l'unico tipo che l'ecosistema consuma.
+7. ~~**Tre modelli Route/Edge/Waypoint incompatibili**~~ **RISOLTA 2026-09-22 (Q1)**:
+   `DataType.Route` confermato unico modello, `Logic/Route_Adapter.py` e' la frontiera;
+   `calcCanonicalRoute`/`find_canonical_route` sono le uscite pubbliche.
 8. `DataType/Event.py:81-95` rotto (`self._type` mai assegnato), importato da 8 moduli, nessun test.
 9. `Tactical_Evaluation.py:532-579 evaluateGroundRouteDangerLevel` rotta su 3 punti (concetto giusto).
-10. **SAM/AAA/EWR hanno combat power ≡ 0** per costruzione (`Context/Context.py:502-507`).
+10. ~~**SAM/AAA/EWR hanno combat power ≡ 0**~~ **CHIARITA 2026-09-22 (Q3)**: non era una
+    precondizione ma una definizione, ora documentata; il numero mancante e'
+    `Military.air_defense_power()`, su una scala diversa.
 11. `DataType/Threat.py` e `DataType/Volume.py` sono codice morto.
 
 Fondamenta buone già pronte: `Cylinder.innerPoint`/`getIntersection` (404 righe di test),
@@ -195,7 +275,22 @@ Fondamenta buone già pronte: `Cylinder.innerPoint`/`getIntersection` (404 righe
 4 `Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py` → 5 danno per-asset →
 6 `Logic/Session_Simulator.py` → 7 validazione + **test di agnosticismo**.
 
+## PROSSIMO PASSO — FASE 3, `Logic/Contact_Scheduler.py` (sbloccata)
+Ha tutto: `DataType.Route.positionAtTime`/`travelTimeToEdge` (Fase 1) sul modello ormai unico
+(Q1), `Mobile/Military.detection_range` e `ThreatAA` (Fase 2), e sa che forma di dato produrre a
+valle (`DamageEvent`, Q2). Da fare: intersezione rotta↔cilindro -> intervalli temporali,
+CPA/TCPA `t* = -(Δr·Δv)/|Δv|²` fra mobili, potatura gerarchica a livello Block prima delle coppie
+di asset. Consumare **solo** `DataType.Route` (e' il test di non-regressione della decisione Q1).
+Collegare `Military.air_defense_threats()` alla pianificazione di rotta reale (oggi il
+`RoutePlanner` riceve minacce costruite a mano nei test) e' parte di questo lavoro.
+
+**Da confermare con l'utente prima/durante la Fase 4**: far leggere `Military.air_defense_power()`
+alla priorita' di targeting quando l'attaccante e' aereo (SEAD). E' un cambio di comportamento sui
+numeri di campagna, non un'aggiunta.
+
 **How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
 sorgente. Le Fasi 1 e 2 (correzioni a codice esistente, senza le quali lo Strato 1 non è scrivibile)
-sono **fatte**: si riparte dalla Fase 3, dopo aver chiuso le 3 questioni aperte. V. [[project_c2_hierarchy_design]] per `Command/` e
+sono **fatte** e le 3 questioni aperte sono **chiuse**: si riparte dalla Fase 3.
+V. [[project_route_model_unification_plan]] per le fasi 2-5 dell'unificazione del modello di rotta,
+[[project_c2_hierarchy_design]] per `Command/` e
 [[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.
