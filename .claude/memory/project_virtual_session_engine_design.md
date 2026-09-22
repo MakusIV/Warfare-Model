@@ -5,9 +5,10 @@ metadata:
   type: project
 ---
 
-**Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione) e
-le 3 QUESTIONI APERTE del §9 sono CHIUSE, tutto sul branch `analysis/dce-dcs-persistence` (da
-pushare). Prossima: FASE 3, `Logic/Contact_Scheduler.py` — **sbloccata**, nessun blocco residuo.
+**Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
+le 3 QUESTIONI APERTE del §9 e **FASE 3 (`Logic/Contact_Scheduler.py`)** sono CHIUSE, tutto sul
+branch `analysis/dce-dcs-persistence` (da pushare). Prossima: FASE 4,
+`Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py`.
 V. anche [[project_session_2026_09_21_summary]].**
 Documento: `Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md` (525 righe),
 a fianco della proposta sorgente dell'utente `Architettura_esecuzione_sessioni_virtuali.txt`.
@@ -242,6 +243,151 @@ che e' la fonte di verita'; qui solo i punti da ricordare):
   `air_defense_power` alla priorita' di targeting quando l'attaccante e' aereo. E' un cambio di
   comportamento su numeri di campagna, non un'aggiunta: non fatto qui di proposito.
 
+## FASE 3 — scheduler dei contatti: FATTA 2026-09-22 (suite 2762 -> 2858 test, OK, skipped=5)
+Nuovo `Logic/Contact_Scheduler.py` + nuovo `Test/Test_Contact_Scheduler.py` (96 test). **Nessun
+file esistente toccato**: e' codice nuovo che compone API gia' stabili (Fasi 1-2, Q1-Q3).
+E' lo strato 1 dell'architettura DES: calcola **quando**, mai **chi vince** (Fase 4).
+
+### Il tipo su cui poggia tutto: `Leg`
+La spezzata di una `DataType.Route` viene scomposta una volta sola in una lista di `Leg`
+(`t_start`, `t_end`, `p_start`, `p_end`, `edge_name`) in **tempo assoluto**, e da li' in poi il
+modulo non parla piu' di rotte. Tre ragioni, tutte pratiche:
+- **cercare contatti significa attraversare la rotta molte volte**: ricalcolare il prefisso dei
+  tempi a ogni arco (cioe' chiamare `Route.travelTimeToEdge` in un ciclo) sarebbe quadratico;
+- le posizioni sono **terne di float, non `Point3D`**: dentro ai cicli si fanno migliaia di
+  prodotti scalari e l'aritmetica esatta di sympy li renderebbe inutilmente costosi. I `Point3D`
+  ricompaiono solo sui risultati (`entry_point`, `point_a`, ...), dove il dominio li vuole;
+- un asset **fermo** (`static_legs`) e' un `Leg` con `p_start == p_end`: il resto del modulo non
+  ha bisogno di sapere che e' fermo, e il caso "rotta contro bersaglio fermo" — che in campagna
+  e' il piu' frequente: sito SAM, deposito, base — non richiede una rotta fittizia.
+`route_legs` replica esattamente l'accumulo di `Route.travelTimeToEdge`/`positionAtTime` (stesso
+ordine di percorrenza, stessa `Edge.calcTravelTime(speed)`); **un test di non-regressione
+verifica l'uguaglianza arco per arco**, cosi' i due non possono divergere in silenzio.
+
+### A — rotta contro volume di minaccia (`threat_windows`, `route_threat_windows`)
+Geometria **non riscritta**: si chiama `Cylinder.getIntersection(Segment3D, tolerance)` per ogni
+arco e si converte in frazioni d'arco -> istanti. `ThreatAA.edgeIntersect` fa la stessa cosa ma
+sul modello **interno** di `Air_Route_Manager` (stato di lavoro privato del path-finding), quindi
+non e' riusabile: qui si consuma solo `DataType.Route/Edge/Waypoint` — test di non-regressione
+della decisione Q1, e il modulo non importa nulla dai due Route Manager (neanche la costante di
+tolleranza, ridichiarata come `DEFAULT_INTERSECTION_TOLERANCE = 0.1`).
+**Tre casi che `getIntersection` da sola non chiude, chiusi qui** (e ognuno ha il suo test):
+1. **arco interamente dentro** il cilindro: nessuna superficie attraversata -> `(False, None)`,
+   indistinguibile da "nessuna intersezione". Si disambigua con `Cylinder.innerPoint` sui due
+   estremi;
+2. **arco con un estremo dentro**: `getIntersection` restituisce il segmento
+   intersezione-estremo; l'estremo interno da' comunque la frazione 0 o 1;
+3. **tangenza** (un solo punto, nessun estremo interno): `getIntersection` **solleva**
+   `ValueError("Intersezione anomala")`. E' un contatto di misura nulla, un dato legittimo e non
+   un errore di programmazione -> si cattura, si logga a debug, si scarta l'arco.
+Le finestre di archi **consecutivi vengono fuse**: entrare nel volume sull'arco i e uscirne
+sull'arco i+2 e' UNA esposizione, non tre. Passaggi separati restano separati.
+`ThreatWindow` porta `t_entry`/`t_exit`/`duration`, i punti di ingresso e uscita, `danger_level`
+e `threat_id` (che `ThreatAA` non ha: lo fornisce il chiamante, o si prende da `threat.name`).
+
+### B — CPA/TCPA (`closest_point_of_approach`, `range_intervals`, `contact_windows`)
+**La scoperta che ha dato forma a questa parte**: `t* = -(Δr·Δv)/|Δv|²` vale per moto relativo
+rettilineo uniforme, ma **una rotta e' una spezzata** — applicare la formula "alla rotta intera"
+da' un risultato semplicemente sbagliato appena la rotta ha piu' di un arco. Quindi il calcolo si
+fa su ogni sottointervallo delimitato dai waypoint **di entrambe** le rotte (`_breakpoints`),
+dove per costruzione le due velocita' sono costanti; dentro ognuno la soluzione e' esatta e il
+risultato globale e' il minimo dei minimi locali. Un test lo rende esplicito: B va da (0,1000) a
+(0,100) e torna a (0,1000) — gli estremi distano entrambi 1000 m, il vero CPA e' 100 m.
+- **Caso degenere `|Δv|² ≈ 0`** (fermi, o paralleli alla stessa velocita'): nessuna divisione per
+  zero, la distanza e' costante, `CPA.degenerate = True` e `time` e' convenzionalmente l'inizio
+  dell'intervallo. La soglia e' `VELOCITY_EPS = 1e-12`.
+- **Clamp all'esistenza di entrambi**: ogni calcolo avviene nella sovrapposizione dei due span
+  (`legs_span`). Nessuno dei due asset esiste prima della propria partenza o dopo il proprio
+  arrivo; se gli span non si sovrappongono il risultato e' `None`, non una distanza qualsiasi.
+- **Il CPA da solo non basta allo scheduler**: dice *quanto* si sono avvicinati, non *da quando a
+  quando* sono stati a tiro. Per quello serve l'equazione completa `|Δr + Δv s|² = R²`
+  (`range_intervals`), risolta sugli stessi sottointervalli e poi fusa. Il risultato puo'
+  contenere **piu' intervalli disgiunti**: due rotte che si incrociano piu' volte entrano e
+  escono dal raggio piu' volte (test dedicato, due passaggi).
+
+### `ContactWindow` — il contratto verso la Fase 4
+E' l'uscita principale del modulo, e la sua forma e' decisa da cosa serve all'`Engagement_Resolver`:
+- `[t_start, t_end]` usa la portata **maggiore** fra le due -> e' il primo contatto in assoluto;
+  `first_detector` ('a'/'b'/'both') dice chi lo ottiene;
+- `[t_mutual_start, t_mutual_end]` usa la portata **minore** -> da quando si vedono entrambi;
+  `None` se uno dei due non vede mai l'altro.
+**Perche' la distinzione e' esplicita e non un dettaglio**: e' esattamente cio' che decide *chi
+spara per primo*, la domanda a cui i modelli a rapporto di forze non sanno rispondere (v.
+l'avvertimento su Lanchester in testa a questo documento). Una coppia produce una **lista** di
+finestre, non una sola, e ogni finestra porta il proprio `t_cpa`/`distance_cpa` locale.
+Le portate si ricavano da `mutual_detection_ranges`, che interroga ognuno **sul dominio
+dell'altro** (`detection_mode_for`: Vehicle/Structure -> 'ground', Ship -> 'sea', Aircraft ->
+'air', mappa sul nome della classe come `Context.classify_asset_dimension`, per non importare i
+registry). Il `range_type` e' un parametro: con `'engagement_range'` la stessa funzione risponde
+a "quando sono a tiro" invece che "quando si vedono" — pensato per la Fase 4. Le portate sono
+anche **imponibili dal chiamante** (`range_a`/`range_b`): le degradazioni future (disturbo,
+meteo, silenzio radar) si applicheranno **fuori** da questo strato, che resta puramente
+geometrico.
+
+### C — potatura gerarchica (`block_pair_candidates`, `region_block_pairs`, `block_max_speed`, `block_reach`)
+Criterio: si scarta una coppia di blocchi **solo** quando il contatto e' geometricamente
+impossibile, cioe' quando
+`distanza(centroidi) > (v_max_A + v_max_B) * horizon + portata_A + portata_B + margin`.
+Tutto conservativo di proposito, perche' l'unico errore inaccettabile per un filtro e' scartare
+una coppia che si sarebbe incontrata:
+- `block_max_speed` legge anche il ramo **`off_road`** del profilo canonico (il movimento tattico
+  non avviene su strada; il solo regime stradale sottostimerebbe l'inviluppo);
+- `block_reach` prende il **massimo** fra `combat_range()[0]`, `detection_range(mode)[0]` su tutti
+  i modi e il raggio dei cilindri di `air_defense_threats()` — non la mediana e non la somma:
+  basta un singolo sensore o una singola arma a lunga gittata per rendere la coppia non
+  scartabile;
+- **un blocco senza posizione non viene MAI scartato**: l'assenza di dato non e' prova di
+  lontananza. E' [[feedback_no_visibility_low_priority]] applicata al contrario — li' l'ignoto non
+  alza la priorita', qui non autorizza a scartare;
+- le grandezze aggregate si calcolano **una volta per blocco**, non una per coppia: e' il motivo
+  per cui la potatura e' economica;
+- accetta indifferentemente `Block`/`Military` o `BlockItem` (`.block`), e **restituisce gli
+  oggetti originali** cosi' il chiamante conserva i propri riferimenti;
+- `skip_same_side=True` di default (i contatti si cercano fra forze contrapposte).
+`region_block_pairs(region, side_a, side_b, horizon, ...)` chiude il giro con
+`Region.get_blocks_by_criteria`.
+
+### Orchestrazione: `schedule_contacts`
+Mette insieme i tre meccanismi nell'ordine che li rende trattabili: prima C (potatura a livello
+blocco), poi B (CPA solo sulle coppie di asset superstiti). Un asset senza rotta in `routes` non
+viene ignorato: se ha una posizione, e' trattato come fermo per tutta la finestra. I `Leg` di ogni
+asset si calcolano **una volta sola** (cache su `id(asset)`), non una per coppia.
+**L'ordinamento del risultato — `(t_start, asset_a_id, asset_b_id)` — fa parte del contratto**, non
+e' un dettaglio estetico: e' cio' che rende la sessione riproducibile a parita' di seed (decisione
+dell'utente n. 2, "salvare il solo seed non basta"). Lo stesso vale per `route_threat_windows`,
+ordinato per `(t_entry, threat_id)`.
+
+### Convenzioni rispettate e cose deliberatamente NON fatte
+- **Nessuna sorgente di casualita'**: lo strato e' puramente geometrico e non ne ha avuto bisogno.
+  Se un giorno servisse, va passata dal chiamante come il `draw` di `Logic/Damage_Model.py`.
+- **Mai eccezioni per dati mancanti**: rotta vuota, arco a velocita' indefinita, asset senza
+  posizione, asset senza `detection_range`, minaccia senza cilindro -> lista vuota/`None` + log.
+  `ValueError` solo per argomenti fuori dominio (`horizon`/`margin`/`radius` negativi, intervallo
+  invertito).
+- **Import locali ai metodi** dove servono (`DETECTION_MODES` dentro `block_reach`).
+- **Nessun tick, nessun campionamento**: solo soluzioni in forma chiusa.
+- **NON e' stato collegato `Military.air_defense_threats()` alla pianificazione di rotta reale**
+  (il `RoutePlanner` continua a ricevere minacce costruite a mano nei test). Era elencato come
+  parte della Fase 3 ma e' un lavoro diverso — modificare il pianificatore, non lo scheduler — e
+  cambia il comportamento di rotte gia' in uso. `route_threat_windows` accetta gia'
+  direttamente l'uscita di `air_defense_threats()`, quindi il ponte e' pronto dal lato consumatore.
+
+### Punti aperti che la Fase 4 dovra' confermare
+1. **`ContactWindow` non porta `provenance`** (il campo che `DamageEvent` ha per
+   [[feedback_core_simulator_agnostic]]): qui e' sempre e solo `derived`, perche' le finestre
+   sono calcolate, mai misurate. Se un adapter DCS dovesse un giorno **riportare** contatti
+   osservati, il campo servirebbe e andrebbe aggiunto.
+2. **`ThreatWindow` non incrocia le latenze di `ThreatAA`** (`min_detection_time`,
+   `min_fire_time`): dice quando la rotta e' dentro il volume, non se il difensore fa in tempo a
+   reagire. E' deliberato — quello e' il risolutore d'ingaggio — ma va deciso in Fase 4 se il
+   confronto `duration vs (min_detection_time + min_fire_time)` vive li' o come helper qui.
+3. **Il modo di rilevamento e' per classe, non per stato**: un aereo a terra resta 'air'. Finche'
+   non esiste una nozione di "asset a terra" nel modello, non c'e' modo di fare meglio.
+4. **La quota conta davvero** (un cilindro di difesa aerea non copre chi lo scavalca) e questo si
+   propaga a `Edge`: una salita verticale pura resta un arco senza retta di supporto 2D (limite
+   gia' noto dalla Fase 1, degradato ma non risolto). `threat_windows` non ne soffre perche' non
+   usa `Edge.minDistance`/`intersectPoint`, ma un consumatore futuro potrebbe.
+
 ## Precondizioni bloccanti trovate nel codice (verificate riga per riga)
 1. **`Asset/Mobile.py:345`**: `checkParam` definita senza `self` → il setter `speed` (`:97-100`)
    solleva sempre `TypeError`. Default mutabile a `:50`. `_speed` mai popolato dai registry.
@@ -275,14 +421,18 @@ Fondamenta buone già pronte: `Cylinder.innerPoint`/`getIntersection` (404 righe
 4 `Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py` → 5 danno per-asset →
 6 `Logic/Session_Simulator.py` → 7 validazione + **test di agnosticismo**.
 
-## PROSSIMO PASSO — FASE 3, `Logic/Contact_Scheduler.py` (sbloccata)
-Ha tutto: `DataType.Route.positionAtTime`/`travelTimeToEdge` (Fase 1) sul modello ormai unico
-(Q1), `Mobile/Military.detection_range` e `ThreatAA` (Fase 2), e sa che forma di dato produrre a
-valle (`DamageEvent`, Q2). Da fare: intersezione rotta↔cilindro -> intervalli temporali,
-CPA/TCPA `t* = -(Δr·Δv)/|Δv|²` fra mobili, potatura gerarchica a livello Block prima delle coppie
-di asset. Consumare **solo** `DataType.Route` (e' il test di non-regressione della decisione Q1).
-Collegare `Military.air_defense_threats()` alla pianificazione di rotta reale (oggi il
-`RoutePlanner` riceve minacce costruite a mano nei test) e' parte di questo lavoro.
+## PROSSIMO PASSO — FASE 4, `Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py`
+Ha tutto: **quando** avviene il contatto (`Contact_Scheduler.ContactWindow`/`ThreatWindow`, Fase 3),
+chi vede per primo (`first_detector` e la distinzione unidirezionale/bidirezionale), quanto durano
+le latenze di reazione (`ThreatAA.min_detection_time`/`min_fire_time`, Fase 2), e che forma di dato
+produrre (`DamageEvent` + `resolve_hit(accuracy, destroy_capacity, draw)`, Q2).
+Da fare: Pd -> latenza di reazione (chi spara primo) -> ROE -> Pk, e **modello a salva di Hughes**
+per i molti-contro-molti (`build_damage_event` e' gia' separata da `apply_damage_event` proprio per
+questo: calcolare tutti gli esiti, ordinarli deterministicamente, applicarli solo dopo).
+**L'RNG di sessione seedato e' della Fase 0 e non esiste ancora**: il risolutore lo consuma, non lo
+crea. Da confermare con l'utente i 4 punti aperti in coda alla sezione Fase 3.
+**Resta fuori da entrambe le fasi e non e' fatto**: collegare `Military.air_defense_threats()` alla
+pianificazione di rotta reale (il `RoutePlanner` riceve ancora minacce costruite a mano nei test).
 
 ## I 3 punti lasciati aperti dopo Q1-Q3 — CHIUSI 2026-09-22
 
@@ -320,7 +470,8 @@ non aggiungono test).
 
 **How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
 sorgente. Le Fasi 1 e 2 (correzioni a codice esistente, senza le quali lo Strato 1 non è scrivibile)
-sono **fatte** e le 3 questioni aperte sono **chiuse**: si riparte dalla Fase 3.
+sono **fatte**, le 3 questioni aperte sono **chiuse** e la Fase 3 (`Logic/Contact_Scheduler.py`) è
+**scritta e testata**: si riparte dalla Fase 4.
 V. [[project_route_model_unification_plan]] per le fasi 2-5 dell'unificazione del modello di rotta,
 [[project_c2_hierarchy_design]] per `Command/` e
 [[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.
