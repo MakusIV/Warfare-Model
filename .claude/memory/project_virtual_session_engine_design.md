@@ -6,14 +6,14 @@ metadata:
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica) e FASE 2 (percezione) FATTE
-e committate sul branch `analysis/dce-dcs-persistence` (Fase 1: 3af377c5, Fase 2: dc17d3e9, da
+e committate sul branch `analysis/dce-dcs-persistence` (Fase 1: 3af377c5, Fase 2: 30a6ee55, da
 pushare). Prossima: FASE 3, `Logic/Contact_Scheduler.py` — ma prima vanno chiuse le 3 questioni
 aperte del §9 del documento (modello `Route` unico fra i tre incompatibili, semantica della perdita
 per-asset, se SAM/AAA/EWR entrino nelle tabelle di combat power), v. anche
 [[project_session_2026_09_21_summary]].**
 Documento: `Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md` (525 righe),
 a fianco della proposta sorgente dell'utente `Architettura_esecuzione_sessioni_virtuali.txt`.
-Entrambi ancora **non committati**. Nessun file di codice toccato.
+Entrambi committati (64e490b0).
 
 ## Verdetto sulle due strategie proposte dall'utente
 - **Strategia 1 (tick da 1 ms, slot per asset)**: non utilizzabile come motore primario.
@@ -88,7 +88,7 @@ Sblocca precondizioni 1 e 2. Committata (3af377c5).
 - **Limite trovato, non risolto**: `Edge` costruisce una `Line2D` dalle proiezioni dei waypoint,
   quindi una salita verticale pura (stessa x,y) non e' rappresentabile — sympy rifiuta.
 
-## FASE 2 — percezione: FATTA 2026-09-22 (suite 2608 -> 2685 test, OK, skipped=5), commit dc17d3e9
+## FASE 2 — percezione: FATTA 2026-09-22 (suite 2608 -> 2685 test, OK, skipped=5), commit 30a6ee55
 Chiude le precondizioni 3 e 4. Nessun file di Fase 1 toccato.
 - **`Mobile.detection_range(mode, sensor=None, range_type='acquisition_range')`**
   (`Asset/Mobile.py`, accanto a `combat_range`). I raggi radar/TVD esistevano per ogni modello nei
