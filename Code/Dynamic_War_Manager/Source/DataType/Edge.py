@@ -227,7 +227,10 @@ class Edge:
             self._line.intersect
 
         elif isinstance(line, Line2D):
-            intersection = self._line.intersection(line)
+            if self._line2d is None:
+                logger.debug(f"Edge {self._name!r}: degenerate 2D segment, no intersection computable")
+                return None
+            intersection = self._line2d.intersection(line)
 
         if intersection:
             return intersection[0]
