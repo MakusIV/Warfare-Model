@@ -209,6 +209,48 @@ class Asset:
         self._validate_param('health', value, int)
         self._state.health = value
 
+    def apply_damage(self, health_delta: int) -> Optional[int]:
+        """Applica una variazione di salute (<= 0) e aggiorna lo stato dell'asset.
+
+        E' l'unico punto in cui la salute cala per effetto del combattimento: il setter
+        `health` resta per l'inizializzazione e per la persistenza, questo metodo per
+        l'attrito. Non contiene alcuna estrazione casuale ne' alcuna nozione di arma —
+        quanto danno faccia un colpo lo decide `Logic/Damage_Model.py`, che e' anche l'unico
+        posto in cui il contratto e' documentato.
+
+        La salute e' saturata a 0 (mai negativa): un asset gia' distrutto che viene colpito
+        di nuovo non accumula un debito. La soglia `Destroyed` (health <= 15) e' applicata da
+        `State.update()`, chiamata automaticamente dal setter di `State.health`.
+
+        Args:
+            health_delta: punti di salute da togliere, <= 0.
+
+        Returns:
+            La salute risultante, oppure None se l'asset non ha uno stato leggibile (dato
+            mancante -> None + log, coerente con la convenzione del progetto).
+
+        Raises:
+            TypeError: health_delta non intero (errore di programmazione).
+            ValueError: health_delta positivo — la riparazione non passa di qui.
+        """
+        if isinstance(health_delta, bool) or not isinstance(health_delta, int):
+            raise TypeError(f"health_delta must be an int, got {type(health_delta).__name__}")
+
+        if health_delta > 0:
+            raise ValueError(f"health_delta must be <= 0 (damage only), got {health_delta}")
+
+        current = self._state.health if self._state else None
+
+        if current is None:
+            logger.warning(f"apply_damage: asset {self.id!r} has no state health, damage not applied")
+            return None
+
+        new_health = max(0, current + health_delta)
+        self._state.health = new_health
+        logger.debug(f"apply_damage: asset {self.id!r} health {current} -> {new_health}")
+
+        return new_health
+
     @property
     def crytical(self) -> Optional[bool]:
         return self._crytical
