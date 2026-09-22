@@ -536,6 +536,66 @@ class Military(Block):
                 cylinders.append(cyl)
         return cylinders
 
+    def air_defense_threats(self) -> List:
+        """Return the ThreatAA objects of all operative AD assets in this block.
+
+        Pendant di air_defense_volume() un livello piu' in alto: quello restituisce la sola
+        geometria (il Cylinder), questo la minaccia completa — geometria + velocita'
+        dell'intercettore + latenze di reazione + livello di pericolo — che e' cio' che
+        consuma la pianificazione di rotta (v. Logic/Air_Route_Manager.build_threat_aa,
+        dove vive la fabbrica e la motivazione delle stime).
+
+        L'import e' locale al metodo: Block non deve dipendere da Logic a tempo di import
+        (stessa precauzione usata per i registry in Mobile.combat_range/air_defense_volume).
+
+        Returns:
+            List[ThreatAA] — una minaccia per ogni asset AD operativo; vuota se nessuno.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import build_threat_aa
+
+        threats = []
+        for asset in self.assets.values():
+            if not (validate_class(asset, "Vehicle") or validate_class(asset, "Ship")):
+                continue
+            if not asset.is_operative():
+                continue
+            threat = build_threat_aa(asset)
+            if threat is not None:
+                threats.append(threat)
+        return threats
+
+    def detection_range(self, mode: str, sensor: Optional[str] = None) -> Optional[Tuple[float, float, float, int]]:
+        """Return detection-range statistics [m] of the block against `mode` targets.
+
+        Chiama Mobile.detection_range(mode, sensor) su ogni asset operativo che la espone
+        (v. la' per la semantica di mode/sensor e per la scelta di comporre radar e TVD con
+        il massimo). Stessa forma di ritorno di combat_range(): un blocco e' un insieme di
+        sensori eterogenei e il solo massimo non basta a descriverlo — il massimo dice fin
+        dove il blocco vede, la mediana quanto quella capacita' sia diffusa.
+
+        Returns:
+            Tuple (max_range, med_range, ratio, quantity) in metri, o None se nessun asset
+            operativo dichiara un raggio di rilevamento su quel modo.
+        """
+        ranges = []
+        for asset in self.assets.values():
+            if not asset.is_operative():
+                continue
+            if not hasattr(asset, 'detection_range'):
+                continue
+            r = asset.detection_range(mode, sensor)
+            if r is not None:
+                ranges.append(r)
+
+        if not ranges:
+            return None
+
+        max_range = float(max(ranges))
+        med_range = float(median(ranges))
+        ratio     = med_range / max_range if max_range > 0.0 else 0.0
+
+        return max_range, med_range, ratio, len(ranges)
+
     def combat_range(self) -> Optional[Tuple[float, float, float, int]]:
         """Return combat-range statistics across all operative assets in the block.
 

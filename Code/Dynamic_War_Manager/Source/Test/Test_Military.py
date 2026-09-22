@@ -485,6 +485,125 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(result, [])
 
     # ------------------------------------------------------------------ #
+    # air_defense_threats                                                 #
+    # ------------------------------------------------------------------ #
+
+    def test_air_defense_threats_empty_block(self):
+        self.groundbase._assets = {}
+        self.assertEqual(self.groundbase.air_defense_threats(), [])
+
+    def test_air_defense_threats_one_per_ad_asset(self):
+        threat = MagicMock()
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=threat) as factory:
+            result = self.groundbase.air_defense_threats()
+
+        self.assertEqual(result, [threat])
+        factory.assert_called_once_with(self.mock_vehicle)
+
+    def test_air_defense_threats_excludes_non_ad_asset(self):
+        """La fabbrica restituisce None per un asset senza armi AD → escluso."""
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=None):
+            self.assertEqual(self.groundbase.air_defense_threats(), [])
+
+    def test_air_defense_threats_excludes_non_operative(self):
+        self.groundbase._assets = {'v1': self.mock_vehicle_damaged}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=MagicMock()) as factory:
+            self.assertEqual(self.groundbase.air_defense_threats(), [])
+
+        factory.assert_not_called()
+
+    def test_air_defense_threats_excludes_aircraft(self):
+        """Stesso filtro di air_defense_volume: solo Vehicle e Ship."""
+        self.airbase._assets = {'a1': self.mock_aircraft}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=MagicMock()) as factory:
+            self.assertEqual(self.airbase.air_defense_threats(), [])
+
+        factory.assert_not_called()
+
+    def test_air_defense_threats_vehicle_and_ship(self):
+        t1, t2 = MagicMock(), MagicMock()
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   side_effect=[t1, t2]):
+            result = self.groundbase.air_defense_threats()
+
+        self.assertEqual(len(result), 2)
+
+    # ------------------------------------------------------------------ #
+    # detection_range                                                     #
+    # ------------------------------------------------------------------ #
+
+    def test_detection_range_no_assets_returns_none(self):
+        self.groundbase._assets = {}
+        self.assertIsNone(self.groundbase.detection_range('air'))
+
+    def test_detection_range_all_none_returns_none(self):
+        """Nessun asset dichiara un raggio su quel modo → None, non 0."""
+        self.mock_vehicle.detection_range.return_value = None
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+        self.assertIsNone(self.groundbase.detection_range('air'))
+
+    def test_detection_range_single_asset(self):
+        self.mock_vehicle.detection_range.return_value = 20_000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        max_r, med_r, ratio, qty = self.groundbase.detection_range('air')
+
+        self.assertAlmostEqual(max_r, 20_000.0)
+        self.assertAlmostEqual(med_r, 20_000.0)
+        self.assertAlmostEqual(ratio, 1.0)
+        self.assertEqual(qty, 1)
+
+    def test_detection_range_multiple_assets(self):
+        self.mock_vehicle.detection_range.return_value = 10_000.0
+        self.mock_ship.detection_range.return_value = 450_000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+
+        max_r, med_r, ratio, qty = self.groundbase.detection_range('air')
+
+        self.assertAlmostEqual(max_r, 450_000.0)
+        self.assertAlmostEqual(med_r, median([10_000.0, 450_000.0]))
+        self.assertAlmostEqual(ratio, med_r / max_r)
+        self.assertEqual(qty, 2)
+
+    def test_detection_range_excludes_non_operative(self):
+        self.mock_vehicle.detection_range.return_value = 10_000.0
+        self.mock_vehicle_damaged.detection_range.return_value = 99_000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle, 'v2': self.mock_vehicle_damaged}
+
+        max_r, _med, _ratio, qty = self.groundbase.detection_range('air')
+
+        self.assertAlmostEqual(max_r, 10_000.0)
+        self.assertEqual(qty, 1)
+
+    def test_detection_range_forwards_mode_and_sensor(self):
+        self.mock_vehicle.detection_range.return_value = 4_000.0
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        self.groundbase.detection_range('ground', sensor='TVD')
+
+        self.mock_vehicle.detection_range.assert_called_once_with('ground', 'TVD')
+
+    def test_detection_range_asset_without_method_skipped(self):
+        mock_no_dr = MagicMock(spec=['is_operative'])
+        mock_no_dr.__class__ = _Vehicle
+        mock_no_dr.is_operative.return_value = True
+
+        self.groundbase._assets = {'v1': mock_no_dr}
+        self.assertIsNone(self.groundbase.detection_range('air'))
+
+    # ------------------------------------------------------------------ #
     # artillery_in_range                                                  #
     # ------------------------------------------------------------------ #
 

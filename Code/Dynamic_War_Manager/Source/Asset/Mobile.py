@@ -55,6 +55,36 @@ SPEED_REGIME_KEYS = ("nominal", "max")
 SPEED_PROFILE_KEYS = ("nominal", "max", "off_road", "reference_altitude")
 
 
+# ── PERCEZIONE: SENSORI E RAGGI DI RILEVAMENTO ────────────────────────────────
+#
+# I tre registry (Vehicle_Data, Ship_Data, Aircraft_Data) descrivono i sensori con
+# un'unica forma, gia' letta da `_radar_eval`/`_TVD_eval`:
+#
+#   record.<sensore>['capabilities'][mode] = (
+#       bool_capacita',
+#       {'tracking_range': km, 'acquisition_range': km,
+#        'engagement_range': km, 'multi_target_capacity': int}
+#   )
+#
+# con `mode` in DETECTION_MODES. I raggi sono in CHILOMETRI in tutti e tre i registry;
+# `detection_range` li restituisce in METRI, come combat_range() e air_defense_volume(),
+# perche' il core lavora in metri e secondi.
+#
+# Casi normali (non errori) da attraversare senza sollevare:
+#   * `radar`/`TVD` == False o None  -> il mezzo non ha quel sensore (es. un carro);
+#   * `TVD` assente come attributo   -> Ship_Data non descrive sensori ottici;
+#   * capabilities[mode][0] == False -> sensore presente ma cieco su quella dimensione;
+#   * capabilities[mode][1] == {}    -> capacita' dichiarata senza dati (Ship_Data 'ground').
+DETECTION_MODES = tuple(ACTION_TASKS.keys())          # ('ground', 'air', 'sea')
+DETECTION_SENSORS = ("radar", "TVD")
+DETECTION_RANGE_TYPES = ("acquisition_range", "tracking_range", "engagement_range")
+
+# Il rilevamento e' l'acquisizione: il tracking e l'ingaggio sono stadi successivi e piu'
+# corti. Lo scheduler dei contatti (Fase 3) chiede "quando questo osservatore vede il
+# bersaglio", quindi il default e' l'acquisizione.
+DEFAULT_DETECTION_RANGE_TYPE = "acquisition_range"
+
+
 def default_speed_profile(off_road: bool = False) -> Dict:
     """Profilo di velocita' vuoto ma ben formato. Nuovo ad ogni chiamata."""
     profile: Dict = {key: None for key in SPEED_REGIME_KEYS}
@@ -599,6 +629,122 @@ class Mobile(Asset) :
             return None
 
         return max_range
+
+    @staticmethod
+    def _sensor_range_km(data_record, sensor: str, mode: str, range_type: str) -> Optional[float]:
+        """Raggio [km] di un singolo sensore del record di registry, o None se non c'e'.
+
+        Attraversa senza sollevare tutte le forme legittime dei dati (v. commento
+        DETECTION_* in testa al modulo): sensore assente, sensore == False/None,
+        capabilities mancanti, modo non coperto, dizionario di capacita' vuoto, valore
+        nullo o non numerico. None significa sempre "questo sensore non da' un raggio
+        utilizzabile su questo modo", non "errore".
+        """
+        sensor_data = getattr(data_record, sensor, None)
+
+        if not sensor_data or not isinstance(sensor_data, dict):
+            return None
+
+        capabilities = sensor_data.get('capabilities')
+
+        if not isinstance(capabilities, dict):
+            return None
+
+        capability = capabilities.get(mode)
+
+        # Forma attesa: (bool, dict). Qualunque altra cosa e' un dato malformato: si scarta.
+        if not isinstance(capability, (tuple, list)) or len(capability) < 2:
+            return None
+
+        if not capability[0] or not isinstance(capability[1], dict):
+            return None
+
+        value = capability[1].get(range_type)
+
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            return None
+
+        value = float(value)
+
+        return value if value > 0.0 else None
+
+    def detection_range(self, mode: str, sensor: Optional[str] = None,
+                        range_type: str = DEFAULT_DETECTION_RANGE_TYPE) -> Optional[float]:
+        """Raggio di rilevamento [metri] di questo asset contro bersagli di dimensione `mode`.
+
+        E' il ponte che mancava fra i dati sensore dei registry e lo scheduler dei contatti:
+        i raggi radar/TVD esistevano per ogni modello ma nessuna classe li esponeva, quindi
+        non era scrivibile nessun confronto rotta<->raggio analogo a quello che
+        air_defense_volume() rende possibile per i volumi di difesa aerea.
+
+        Params:
+            mode:       dimensione del bersaglio, in DETECTION_MODES ('ground'/'air'/'sea').
+            sensor:     None (default) = il migliore fra radar e TVD; oppure 'radar'/'TVD'
+                        per isolare un solo sensore.
+            range_type: 'acquisition_range' (default), 'tracking_range' o 'engagement_range'.
+
+        Composizione radar+TVD: il default e' il MASSIMO dei due, non la somma e non il
+        radar da solo. Motivo: la domanda dello scheduler e' "a che distanza questo
+        osservatore vede per la prima volta il bersaglio", e la risposta e' il sensore che
+        arriva piu' lontano fra quelli funzionanti; i due sensori non si sommano perche'
+        guardano lo stesso bersaglio. Restano separabili con `sensor` proprio perche' le
+        degradazioni future (disturbo elettronico sul radar, notte/meteo sull'ottico,
+        silenzio radar) colpiscono un sensore alla volta e non devono richiedere di
+        riscrivere questo metodo.
+
+        Returns:
+            float: raggio in metri (> 0), oppure None se il modello non e' noto, non ha
+            sensori, o non ha capacita' su quel modo. Come combat_range() e
+            air_defense_volume() non solleva mai per dati mancanti: un asset con modello
+            sconosciuto deve restare costruibile e interrogabile. Il chiamante decide la
+            propria politica di default (es. una portata visiva minima) su un None.
+
+        Raises:
+            ValueError: solo per argomenti fuori dominio (mode/sensor/range_type), che sono
+            errori di programmazione, non dati mancanti.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        if mode not in DETECTION_MODES:
+            raise ValueError(f"mode must be one of {DETECTION_MODES!r}, got {mode!r}")
+
+        if sensor is not None and sensor not in DETECTION_SENSORS:
+            raise ValueError(f"sensor must be None or one of {DETECTION_SENSORS!r}, got {sensor!r}")
+
+        if range_type not in DETECTION_RANGE_TYPES:
+            raise ValueError(f"range_type must be one of {DETECTION_RANGE_TYPES!r}, got {range_type!r}")
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.warning("detection_range: _model not set")
+            return None
+
+        # Stesso dispatch di speed_profile_from_registry(): sul registry che risponde, non
+        # su isinstance(record, ...).
+        data_record = (_VehicleData._registry.get(model)
+                       or _ShipData._registry.get(model)
+                       or _AircraftData._registry.get(model))
+
+        if data_record is None:
+            logger.warning(f"detection_range: no registry entry for model {model!r}")
+            return None
+
+        sensors = (sensor,) if sensor is not None else DETECTION_SENSORS
+
+        ranges_km = [value for value in (self._sensor_range_km(data_record, s, mode, range_type)
+                                         for s in sensors)
+                     if value is not None]
+
+        if not ranges_km:
+            # Nessun warning: un mezzo senza sensori (radar == False) e' un dato corretto.
+            logger.debug(f"detection_range: no {range_type} on mode {mode!r} for model {model!r} "
+                         f"(sensors: {sensors})")
+            return None
+
+        return max(ranges_km) * 1000.0  # km -> m
 
     @staticmethod
     def checkParam(speed: Optional[Dict] = None, fire_range: Optional[float] = None) -> Tuple[bool, str]:

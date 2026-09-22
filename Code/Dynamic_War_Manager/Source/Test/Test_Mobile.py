@@ -24,7 +24,8 @@ from sympy import Point3D
 
 # ── Real Mobile, Ship_Data and Ship_Weapon_Data (all import cleanly) ───────
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import (                    # noqa
-    Mobile, default_speed_profile, SPEED_REGIME_KEYS, SPEED_PROFILE_KEYS)
+    Mobile, default_speed_profile, SPEED_REGIME_KEYS, SPEED_PROFILE_KEYS,
+    DETECTION_MODES, DETECTION_SENSORS, DETECTION_RANGE_TYPES)
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data          # noqa
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS  # noqa (real data)
 # Cylinder is intentionally NOT imported here: Mobile.py uses a different
@@ -87,6 +88,10 @@ class _MobileStub:
     """Minimal object that carries Mobile methods as bound methods."""
     air_defense_volume = Mobile.air_defense_volume
     combat_range       = Mobile.combat_range
+    detection_range    = Mobile.detection_range
+    # _sensor_range_km e' una @staticmethod su Mobile: va ri-decorata qui, altrimenti
+    # assegnarla nel corpo della classe la trasformerebbe in un metodo d'istanza.
+    _sensor_range_km   = staticmethod(Mobile._sensor_range_km)
 
     def __init__(self, position=None, model=None):
         self._position = position
@@ -1103,6 +1108,232 @@ class TestLoadSpeedFromRegistry(unittest.TestCase):
         stub.load_speed_from_registry()
 
         self.assertTrue(Mobile._validate_speed(stub.speed)[0])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# detection_range() tests
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _caps(air=None, ground=None, sea=None):
+    """capabilities dict nella forma dei registry: {mode: (bool, {range_type: km})}."""
+    def _entry(value):
+        if value is None:
+            return (False, {'tracking_range': 0, 'acquisition_range': 0,
+                            'engagement_range': 0, 'multi_target_capacity': 0})
+        return value
+    return {'air': _entry(air), 'ground': _entry(ground), 'sea': _entry(sea)}
+
+
+def _sensor(air=None, ground=None, sea=None, model='sensor'):
+    return {'model': model, 'capabilities': _caps(air, ground, sea)}
+
+
+class _SensorRecord:
+    """Record di registry con i soli campi sensore letti da detection_range()."""
+    def __init__(self, radar=False, TVD=False):
+        self.radar = radar
+        self.TVD = TVD
+
+
+class TestDetectionRangeArgumentDomain(unittest.TestCase):
+    """Argomenti fuori dominio = errore di programmazione → ValueError, non None."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 50})))
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+
+    def test_bad_mode_raises(self):
+        with self.assertRaises(ValueError):
+            _MobileStub(model='v').detection_range('underwater')
+
+    def test_bad_sensor_raises(self):
+        with self.assertRaises(ValueError):
+            _MobileStub(model='v').detection_range('air', sensor='sonar')
+
+    def test_bad_range_type_raises(self):
+        with self.assertRaises(ValueError):
+            _MobileStub(model='v').detection_range('air', range_type='multi_target_capacity')
+
+    def test_valid_modes_are_the_registry_modes(self):
+        """DETECTION_MODES viene da ACTION_TASKS: e' la stessa lista dei registry."""
+        self.assertEqual(set(DETECTION_MODES), {'air', 'ground', 'sea'})
+
+
+class TestDetectionRangeNoneGuards(unittest.TestCase):
+    """Dati mancanti → None e mai eccezione: l'asset resta interrogabile."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        self._logger = MagicMock()
+        self._log = patch(_MOBILE_LOGGER, self._logger)
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+
+    def test_model_not_set(self):
+        self.assertIsNone(_MobileStub().detection_range('air'))
+        self._logger.warning.assert_called()
+
+    def test_unknown_model(self):
+        self.assertIsNone(_MobileStub(model='ignoto').detection_range('air'))
+        self._logger.warning.assert_called()
+
+    def test_no_sensors_at_all_is_not_a_warning(self):
+        """radar/TVD == False e' un dato corretto (un carro): debug, non warning."""
+        _FakeVehicleData._registry['tank'] = _SensorRecord(radar=False, TVD=False)
+
+        self.assertIsNone(_MobileStub(model='tank').detection_range('air'))
+        self._logger.warning.assert_not_called()
+
+    def test_sensor_none_instead_of_false(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(radar=None, TVD=None)
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_capability_flag_false(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(False, {'acquisition_range': 200})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_capability_dict_empty(self):
+        """Ship_Data usa (False, {}) / (True, {}) per i modi non coperti."""
+        _FakeVehicleData._registry['v'] = _SensorRecord(radar=_sensor(air=(True, {})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_zero_range_is_none(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 0})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_malformed_capability_is_discarded(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar={'model': 'x', 'capabilities': {'air': 'broken', 'ground': (), 'sea': None}})
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+        self.assertIsNone(_MobileStub(model='v').detection_range('ground'))
+        self.assertIsNone(_MobileStub(model='v').detection_range('sea'))
+
+    def test_missing_capabilities_key(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(radar={'model': 'x'})
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_boolean_range_value_is_not_a_number(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': True})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air'))
+
+    def test_requested_range_type_absent(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 100})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air', range_type='engagement_range'))
+
+
+class TestDetectionRangeValues(unittest.TestCase):
+    """Valori, unita' di misura e composizione radar+TVD."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+
+    def test_km_converted_to_metres(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 30})))
+        self.assertAlmostEqual(_MobileStub(model='v').detection_range('air'), 30_000.0)
+
+    def test_acquisition_is_the_default_range_type(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 30, 'tracking_range': 20,
+                                      'engagement_range': 10})))
+        stub = _MobileStub(model='v')
+        self.assertAlmostEqual(stub.detection_range('air'), 30_000.0)
+        self.assertAlmostEqual(stub.detection_range('air', range_type='tracking_range'), 20_000.0)
+        self.assertAlmostEqual(stub.detection_range('air', range_type='engagement_range'), 10_000.0)
+
+    def test_mode_selects_its_own_capability(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 100}),
+                          ground=(True, {'acquisition_range': 40})))
+        stub = _MobileStub(model='v')
+        self.assertAlmostEqual(stub.detection_range('air'), 100_000.0)
+        self.assertAlmostEqual(stub.detection_range('ground'), 40_000.0)
+        self.assertIsNone(stub.detection_range('sea'))
+
+    def test_radar_and_TVD_composed_with_max(self):
+        """Il default e' il sensore che arriva piu' lontano, non la somma."""
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 60})),
+            TVD=_sensor(air=(True, {'acquisition_range': 12})))
+        self.assertAlmostEqual(_MobileStub(model='v').detection_range('air'), 60_000.0)
+
+    def test_TVD_wins_when_longer(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 5})),
+            TVD=_sensor(air=(True, {'acquisition_range': 9})))
+        self.assertAlmostEqual(_MobileStub(model='v').detection_range('air'), 9_000.0)
+
+    def test_sensor_isolates_a_single_sensor(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 60})),
+            TVD=_sensor(air=(True, {'acquisition_range': 12})))
+        stub = _MobileStub(model='v')
+        self.assertAlmostEqual(stub.detection_range('air', sensor='radar'), 60_000.0)
+        self.assertAlmostEqual(stub.detection_range('air', sensor='TVD'), 12_000.0)
+
+    def test_isolated_sensor_absent_returns_none(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 60})))
+        self.assertIsNone(_MobileStub(model='v').detection_range('air', sensor='TVD'))
+
+    def test_TVD_only_asset(self):
+        _FakeVehicleData._registry['v'] = _SensorRecord(
+            radar=False, TVD=_sensor(ground=(True, {'acquisition_range': 4})))
+        self.assertAlmostEqual(_MobileStub(model='v').detection_range('ground'), 4_000.0)
+
+    def test_ship_registry_dispatch(self):
+        """Ship_Data non descrive il TVD: l'attributo manca e non deve rompere nulla."""
+        record = object.__new__(Ship_Data)
+        record.radar = _sensor(air=(True, {'acquisition_range': 450}),
+                               sea=(True, {'acquisition_range': 80}))
+        Ship_Data._registry['test-carrier-sensors'] = record
+
+        stub = _MobileStub(model='test-carrier-sensors')
+        self.assertFalse(hasattr(record, 'TVD'))
+        self.assertAlmostEqual(stub.detection_range('air'), 450_000.0)
+        self.assertAlmostEqual(stub.detection_range('sea'), 80_000.0)
+
+    def test_aircraft_registry_dispatch(self):
+        _FakeAircraftData._registry['a'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 65})),
+            TVD=_sensor(air=(True, {'acquisition_range': 130})))
+        self.assertAlmostEqual(_MobileStub(model='a').detection_range('air'), 130_000.0)
+
+    def test_vehicle_registry_wins_over_the_others_on_same_key(self):
+        """Stesso dispatch di speed_profile_from_registry: primo registry che risponde."""
+        _FakeVehicleData._registry['dup'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 10})))
+        _FakeAircraftData._registry['dup'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 999})))
+        self.assertAlmostEqual(_MobileStub(model='dup').detection_range('air'), 10_000.0)
 
 
 if __name__ == '__main__':

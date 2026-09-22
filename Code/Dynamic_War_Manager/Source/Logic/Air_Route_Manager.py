@@ -11,7 +11,11 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from functools import singledispatch
 from Code.Dynamic_War_Manager.Source.Utility.Utility import rotate_vector, get_direction_vector, getFormattedPoint
+from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
+from Code.Dynamic_War_Manager.Source.Context.Context import GROUND_WEAPON_TASK, Ground_Vehicle_Asset_Type
+
+logger = Logger(module_name = __name__, class_name = 'Air_Route_Manager').logger
 
 
 #NOTA: QUESTI PARAMETRI INFLUENZANO I RISULTATI DI RICERCA - CONSIGLIO: MANTENERE BASSO IL NUMERO DI RICORRENZE (MAX_RECURSION) E ALZARE IL NUMERO DI PATH (MAX_PATHS) PER OTTENERE UNA RICERCA VELOCE E CHE CONSIDERI I PERCORSI PIU' CORTI
@@ -113,8 +117,296 @@ class ThreatAA:
                 f"  interception_speed: {self.interception_speed:.2f}\n"
                 f"  min_fire_time: {self.min_fire_time:.2f}\n"
                 f"  min_detection_time: {self.min_detection_time:.2f}")
-        
-    
+
+
+# ── FABBRICA ThreatAA ─────────────────────────────────────────────────────────
+#
+# ThreatAA esisteva da sempre ma nessun codice di produzione lo costruiva: le rotte
+# aeree si pianificavano solo su minacce scritte a mano nei test. La fabbrica sta qui,
+# accanto alla classe che produce e ai suoi consumatori (RoutePlanner), e non come
+# metodo di Asset/Mobile, per una ragione di direzione delle dipendenze: ThreatAA e' un
+# tipo dello strato Logic (pianificazione di rotta), e Asset non deve dipendere da Logic.
+# La geometria — l'unica parte che dipende davvero dai dati dell'asset — resta dov'era:
+# Mobile.air_defense_volume() produce il Cylinder e questa fabbrica lo avvolge.
+#
+# Le tre grandezze non geometriche di ThreatAA si ricavano cosi':
+#
+#   interception_speed  dai dati d'arma reali (`speed` dei missili SAM, `muzzle_speed`
+#                       dei cannoni AA), stessa fonte che air_defense_volume() legge
+#                       per range/quote;
+#   min_detection_time  da `acquire_time_s` della tabella minacce SAM ricercata
+#                       (v. SAM_REACTION_TABLE) quando il modello vi compare;
+#   min_fire_time       PLACEHOLDER DETERMINISTICO: non esiste in nessuna fonte dati del
+#                       progetto (v. LAUNCH_SEQUENCE_TIME_S).
+#
+# Convenzione del progetto per i dati che mancano: stima di default dichiarata
+# esplicitamente tale, deterministica, mai `random` (v. Logic/Meteo_Analysis.py).
+
+# Velocita' d'intercettazione di ripiego [m/s] quando il modello ha armi AD senza dato di
+# velocita'. ThreatAA divide per interception_speed, quindi non puo' mai valere 0.
+# ~Mach 1.8: ordine di grandezza di un SAM a corto raggio, il caso piu' frequente.
+DEFAULT_INTERCEPTION_SPEED_MS = 600.0
+
+# Tabella minacce SAM ricercata, ingerita il 2026-09-18 in
+# Analysis/Document/documentazione_dcs/estratti/sam_threat_table.csv (23 sistemi reali).
+# Qui e' trascritta — non letta a runtime — per due motivi: il core non deve leggere file
+# di documentazione per funzionare, e la tabella e' una fonte di riferimento stabile, non
+# un dato di campagna. Chiave: il modello come compare nei registry del progetto
+# (Vehicle_Data._registry); `acquire_time` e `launcher` sono le colonne omonime del CSV.
+# I 14 sistemi della tabella senza corrispondenza nei registry sono deliberatamente
+# omessi: si aggiungono quando i rispettivi modelli entrano in Vehicle_Data.
+SAM_REACTION_TABLE = {
+    'S-300PS':          {'nato_name': 'SA-10B Grumble',      'acquire_time': 3.0,  'launcher': 'Quad TEL'},
+    '9K37-Buk':         {'nato_name': 'SA-11 Gadfly',        'acquire_time': 21.0, 'launcher': 'Quad Rail Launcher'},
+    '2K12-Kub':         {'nato_name': 'SA-6 Gainful',        'acquire_time': 21.0, 'launcher': 'Triple Rack TEL'},
+    '9A33-Osa':         {'nato_name': 'SA-8 Gecko',          'acquire_time': 19.0, 'launcher': 'Wheeled Launcher'},
+    '9K331-Tor':        {'nato_name': 'SA-15 Gauntlet',      'acquire_time': 9.0,  'launcher': 'Tracked Launcher'},
+    '9K35-Strela-10':   {'nato_name': 'SA-13 Gopher',        'acquire_time': 2.5,  'launcher': 'Quad Launcher'},
+    'Strela-1-9P31':    {'nato_name': 'SA-9 Gaskin',         'acquire_time': 2.5,  'launcher': 'Wheeled Launcher'},
+    '2K22-Tunguska':    {'nato_name': 'SA-19 Grison',        'acquire_time': 4.0,  'launcher': 'Tracked Launcher'},
+    'MIM-115-Roland':   {'nato_name': 'MIM-115 Roland ADS',  'acquire_time': 11.0, 'launcher': 'Tracked'},
+}
+
+# PLACEHOLDER DETERMINISTICO — sequenza di lancio [s]: dal comando di fuoco all'uscita del
+# missile dalla rampa. Il CSV non ha questa colonna e nessun registro d'arma del progetto
+# la contiene; la stima e' ordinata sul tipo di lanciatore, che il CSV invece dichiara
+# (colonna launcher_type): una rampa singola da brandeggiare e' piu' lenta di un TEL
+# verticale, che e' piu' lento di un lanciatore cingolato di difesa di punto, pensato
+# proprio per la reattivita'. Da sostituire con dati reali, senza cambiare la forma.
+LAUNCH_SEQUENCE_TIME_S = {
+    'Single Rail Launcher':  8.0,
+    'Quad Rail Launcher':    6.0,
+    'Triple Rack TEL':       5.0,
+    'Quad TEL':              4.0,
+    'Quad Launcher':         3.0,
+    'Wheeled Launcher':      3.0,
+    'Six Pack':              3.0,
+    'Tracked':               3.0,
+    'Tracked Launcher':      2.0,
+    'Quad Fixed':            2.0,
+}
+DEFAULT_LAUNCH_SEQUENCE_TIME_S = 5.0
+
+# Un cannone AA non ha sequenza di lancio: una volta puntato spara. Resta il solo
+# brandeggio, molto piu' rapido dell'erezione/lancio di un missile.
+GUN_LAUNCH_SEQUENCE_TIME_S = 1.0
+
+# PLACEHOLDER DETERMINISTICO — tempo di acquisizione [s] per i modelli che NON compaiono
+# nella tabella (MIM-72G-Chaparral, M6-Linebacker, tutte le AAA, tutti i SAM navali: il
+# CSV copre solo sistemi SAM terrestri). I valori sono presi dalla distribuzione della
+# tabella stessa, per classe: i SAM grandi con radar a scansione elettronica acquisiscono
+# in ~3 s (S-300), i medi in 12-21 s (Kub/Buk/Hawk), i piccoli in 2,5-19 s, e l'AAA con
+# puntamento ottico/radar semplice e' rapida ma a cortissimo raggio.
+# Le navi non hanno voce propria: la loro `category` e' un Sea_Asset_Type (Carrier,
+# Destroyer, ...), che non e' una classe di difesa aerea, quindi ricadono sul valore di
+# ripiego. Si aggiungeranno quando esistera' una fonte navale equivalente al CSV.
+DEFAULT_ACQUIRE_TIME_S = {
+    Ground_Vehicle_Asset_Type.SAM_BIG.value:    3.0,
+    Ground_Vehicle_Asset_Type.SAM_MEDIUM.value: 16.0,
+    Ground_Vehicle_Asset_Type.SAM_SMALL.value:  8.0,
+    Ground_Vehicle_Asset_Type.AAA.value:        4.0,
+}
+DEFAULT_ACQUIRE_TIME_FALLBACK_S = 10.0
+
+# ── danger_level ──────────────────────────────────────────────────────────────
+# `danger_level` non aveva scala canonica in nessun punto del codice: i consumatori
+# (Route.max/min/avg_danger_level, Ground_Route_Manager, Air_Route_Manager riga ~1090) lo
+# usano solo per confronti monotoni "piu' alto = piu' pericoloso". Qui si fissa la scala a
+# [0, 1] — la stessa di tutti gli altri punteggi normalizzati del progetto (efficiency,
+# combat power, score dei registry) — come combinazione lineare di tre fattori, ciascuno
+# saturato a 1:
+#   portata     quanto lontano la minaccia impegna, ed e' il fattore che pesa piu' di tutti
+#               perche' l'evitamento di rotta e' un problema geometrico: un raggio grande
+#               costringe a una deviazione grande;
+#   quota       fin dove arriva: una minaccia scavalcabile in quota e' meno pericolosa di
+#               una che copre tutto l'inviluppo di volo, a parita' di raggio;
+#   reattivita' (1 - latenza/riferimento): a parita' di geometria, il sistema che acquisisce
+#               e spara prima e' piu' pericoloso. Pesa meno perche' conta solo se si e' gia'
+#               dentro il volume, mentre gli altri due decidono se ci si entra.
+DANGER_LEVEL_REFERENCE_RADIUS_M = 100_000.0   # ~ S-300 (5V55R, 75 km) e oltre: cima della scala
+DANGER_LEVEL_REFERENCE_CEILING_M = 25_000.0   # quota massima d'impiego dell'aviazione tattica
+DANGER_LEVEL_REFERENCE_REACTION_S = 30.0      # latenza oltre la quale la reattivita' e' nulla
+DANGER_LEVEL_WEIGHTS = {'reach': 0.5, 'ceiling': 0.3, 'reaction': 0.2}
+
+
+def threat_danger_level(radius: float, max_altitude: float, reaction_time: float) -> float:
+    """Livello di pericolo di una minaccia AA in [0, 1]; monotono crescente.
+
+    Params:
+        radius:        raggio d'ingaggio [m]
+        max_altitude:  quota massima raggiunta dall'inviluppo [m]
+        reaction_time: latenza totale = min_detection_time + min_fire_time [s]
+
+    V. il commento DANGER_LEVEL_* sopra per la scelta dei pesi e dei riferimenti.
+    """
+    def _saturate(value: float) -> float:
+        return min(1.0, max(0.0, float(value)))
+
+    reach = _saturate(radius / DANGER_LEVEL_REFERENCE_RADIUS_M)
+    ceiling = _saturate(max_altitude / DANGER_LEVEL_REFERENCE_CEILING_M)
+    reaction = 1.0 - _saturate(reaction_time / DANGER_LEVEL_REFERENCE_REACTION_S)
+
+    return (DANGER_LEVEL_WEIGHTS['reach'] * reach
+            + DANGER_LEVEL_WEIGHTS['ceiling'] * ceiling
+            + DANGER_LEVEL_WEIGHTS['reaction'] * reaction)
+
+
+def _air_defense_weapons(asset) -> Optional[Dict]:
+    """Sintesi delle armi di difesa aerea del modello dell'asset, dai registri d'arma reali.
+
+    Selezione identica a Mobile.air_defense_volume() — stesso discriminante su quote e
+    task Anti_Air, stessi tipi d'arma per veicoli (AA_CANNONS/MISSILES) e navi
+    (MISSILES_SAM) — perche' le due funzioni devono descrivere lo stesso inviluppo.
+
+    Returns:
+        {'interception_speed': float|None, 'has_missiles': bool, 'has_guns': bool}
+        oppure None se il modello non e' noto o non ha armi AD.
+    """
+    from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+    from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+    from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+    from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+    model = getattr(asset, '_model', None)
+
+    if model is None:
+        logger.warning("_air_defense_weapons: _model not set")
+        return None
+
+    data_record = _VehicleData._registry.get(model) or _ShipData._registry.get(model)
+
+    if data_record is None:
+        logger.warning(f"_air_defense_weapons: no registry entry for model {model!r}")
+        return None
+
+    is_ship = isinstance(data_record, _ShipData)
+
+    speeds = []
+    has_missiles = False
+    has_guns = False
+
+    for weapon_type, weapon_list in (data_record.weapons or {}).items():
+        if is_ship:
+            if weapon_type != 'MISSILES_SAM':
+                continue
+            weapon_db = SHIP_WEAPONS.get('MISSILES_SAM', {})
+        else:
+            if weapon_type not in ('AA_CANNONS', 'MISSILES'):
+                continue
+            weapon_db = GROUND_WEAPONS.get(weapon_type, {})
+
+        for weapon_model, _qty in weapon_list:
+            wdata = weapon_db.get(weapon_model)
+
+            if ( wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata ) or ( 'task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'] ):
+                continue
+
+            if float(wdata.get('max_altitude', 0)) <= 0.0:
+                continue
+
+            if weapon_type == 'AA_CANNONS':
+                has_guns = True
+                speed = wdata.get('muzzle_speed')
+            else:
+                has_missiles = True
+                speed = wdata.get('speed')
+
+            if speed is not None and float(speed) > 0.0:
+                speeds.append(float(speed))
+
+    if not (has_missiles or has_guns):
+        logger.warning(f"_air_defense_weapons: no AD weapons for model {model!r}")
+        return None
+
+    # Massimo, non media: l'intercettore piu' veloce e' quello che l'intruso incontra per
+    # primo, quindi il caso peggiore per chi pianifica la rotta.
+    return {
+        'interception_speed': max(speeds) if speeds else None,
+        'has_missiles': has_missiles,
+        'has_guns': has_guns,
+    }
+
+
+def threat_reaction_times(asset, has_missiles: bool = True) -> Tuple[float, float]:
+    """Latenze di reazione (min_detection_time, min_fire_time) in secondi per un asset AD.
+
+    min_detection_time viene da `acquire_time_s` della tabella minacce SAM ricercata quando
+    il modello vi compare (v. SAM_REACTION_TABLE), altrimenti dalla stima di default per
+    classe (DEFAULT_ACQUIRE_TIME_S, placeholder dichiarato). min_fire_time e' sempre una
+    stima (LAUNCH_SEQUENCE_TIME_S): il dato non esiste in nessuna fonte del progetto.
+
+    `has_missiles=False` (asset con soli cannoni AA) porta min_fire_time al tempo di
+    brandeggio, non a una sequenza di lancio che non avviene.
+    """
+    model = getattr(asset, '_model', None)
+    entry = SAM_REACTION_TABLE.get(model)
+
+    if entry is not None:
+        detection_time = float(entry['acquire_time'])
+        fire_time = LAUNCH_SEQUENCE_TIME_S.get(entry['launcher'], DEFAULT_LAUNCH_SEQUENCE_TIME_S)
+    else:
+        category = getattr(asset, 'category', None)
+        detection_time = DEFAULT_ACQUIRE_TIME_S.get(category, DEFAULT_ACQUIRE_TIME_FALLBACK_S)
+        fire_time = DEFAULT_LAUNCH_SEQUENCE_TIME_S
+        logger.debug(f"threat_reaction_times: model {model!r} not in SAM_REACTION_TABLE, "
+                     f"using placeholder estimate for category {category!r}")
+
+    if not has_missiles:
+        fire_time = GUN_LAUNCH_SEQUENCE_TIME_S
+
+    return detection_time, fire_time
+
+
+def build_threat_aa(asset) -> Optional[ThreatAA]:
+    """Costruisce la ThreatAA di un singolo asset di difesa aerea reale (Vehicle o Ship).
+
+    E' il ponte fra i dati d'asset e la pianificazione di rotta: la geometria arriva da
+    Mobile.air_defense_volume(), le armi dai registri d'arma, le latenze dalla tabella
+    minacce SAM ricercata (v. il commento della fabbrica sopra per le motivazioni e per
+    cio' che e' stima dichiarata).
+
+    Returns:
+        ThreatAA, oppure None se l'asset non e' una minaccia AA costruibile — nessuna
+        posizione, modello sconosciuto, nessun'arma di difesa aerea. Non solleva mai per
+        dati mancanti, come le funzioni d'asset su cui si appoggia.
+    """
+    if not hasattr(asset, 'air_defense_volume'):
+        logger.debug(f"build_threat_aa: {asset!r} has no air_defense_volume()")
+        return None
+
+    cylinder = asset.air_defense_volume()
+
+    if cylinder is None:
+        # air_defense_volume() ha gia' loggato il perche' (posizione, modello o armi).
+        return None
+
+    weapons = _air_defense_weapons(asset)
+
+    if weapons is None:
+        return None
+
+    interception_speed = weapons['interception_speed']
+
+    if interception_speed is None:
+        logger.warning(f"build_threat_aa: no weapon speed for model "
+                       f"{getattr(asset, '_model', None)!r}, using "
+                       f"{DEFAULT_INTERCEPTION_SPEED_MS} m/s")
+        interception_speed = DEFAULT_INTERCEPTION_SPEED_MS
+
+    min_detection_time, min_fire_time = threat_reaction_times(
+        asset, has_missiles=weapons['has_missiles'])
+
+    danger_level = threat_danger_level(
+        radius=float(cylinder.radius),
+        max_altitude=float(cylinder.bottom_center.z) + float(cylinder.height),
+        reaction_time=min_detection_time + min_fire_time)
+
+    return ThreatAA(danger_level=danger_level,
+                    interception_speed=interception_speed,
+                    min_fire_time=min_fire_time,
+                    min_detection_time=min_detection_time,
+                    cylinder=cylinder)
+
 
 class Waypoint:
     """Rappresents a waypoint in 3D space."""
