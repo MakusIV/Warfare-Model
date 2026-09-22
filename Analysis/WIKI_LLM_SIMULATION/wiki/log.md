@@ -1,5 +1,32 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-22] aggiornamento | Chiusi i 3 punti aperti dopo Q1-Q3 (SEAD, MIN_EFFECTIVE_HIT_DAMAGE, Edge.calcLength) + bug intersectPoint
+
+**SEAD collegato** (commit `efb93cab`): `Tactical_Evaluation.calculate_priority` legge
+`Military.air_defense_power()` del bersaglio quando l'attaccante è aereo e il target ha combat
+power 0 — prima saturava sempre al floor 0.1, quindi un C2 aereo non avrebbe mai visto un sito
+SAM come bersaglio prioritario. Mappatura lineare `[0,1]→[0.1,10.0]`, stessa scala degli altri
+rami. Attaccanti ground/sea invariati. Trovato e corretto un fixture di test rotto dal nuovo call
+site (`TestCalculatePriorityTargetAffinity._target`, mock `spec=Military` senza
+`air_defense_power` configurato).
+
+**`MIN_EFFECTIVE_HIT_DAMAGE`**: confermata, nessuna modifica.
+
+**`Edge.calcLength()`**: il commento era il bug (dichiarava una distinzione 2D/3D per
+`path_type` mai implementata), corretto il commento, codice invariato — le posizioni asset
+hanno già quota reale anche a terra, la 3D è la scelta fisicamente corretta.
+
+**Bug trovato per strada, corretto separatamente** (commit `5a87ebb2`, prima di questi 3 punti):
+`Edge.intersectPoint(Line2D)` intersecava la retta 3D dell'edge invece della sua proiezione 2D
+— falso negativo silenzioso per ogni edge non a quota zero. Zero chiamanti in produzione oggi
+(dormiente), nuovo `Test_Edge.py` (prima nessuna copertura).
+
+**3 pagine `wiki/decisions/`/`wiki/project/` aggiornate**: [[virtual-session-engine-des]],
+[[route-model-unification]], [[block]] — le note "da confermare con l'utente" sostituite con
+l'esito reale.
+
+---
+
 > **Registro cronologico** in sola aggiunta di tutte le operazioni sul wiki.
 > Formato voci: `## [YYYY-MM-DD] tipo | Descrizione`
 >

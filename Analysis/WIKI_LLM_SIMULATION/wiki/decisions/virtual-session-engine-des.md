@@ -146,9 +146,21 @@ modelli `Route`/`Edge`/`Waypoint` incompatibili** (v. sotto), `DataType/Event.py
   misura fuoco/manovra terra-terra, non ciò che questi asset fanno). Il bisogno pratico di un
   numero (un C2 non vedrebbe mai un sito SAM come bersaglio prioritario) è risolto con una
   **dimensione separata**, non una tabella di efficacia inventata: `Military.air_defense_power()`
-  in [0,1], `1 − Π(1 − danger_level_i)` sui `ThreatAA` della Fase 2. **Collegare questa
-  dimensione alla priorità di targeting SEAD resta una decisione di game balance esplicitamente
-  non presa** — richiede conferma dell'utente prima della Fase 4.
+  in [0,1], `1 − Π(1 − danger_level_i)` sui `ThreatAA` della Fase 2.
+
+**3 punti lasciati aperti dopo Q1-Q3 — chiusi 2026-09-22** (commit `efb93cab`, `5a87ebb2`):
+1. **SEAD collegato**: `Tactical_Evaluation.calculate_priority` legge `air_defense_power()` del
+   bersaglio quando l'attaccante è aereo e il target ha combat power 0, mappando `[0,1]→[0.1,10.0]`
+   invece di saturare sempre al floor. Attaccanti ground/sea invariati.
+2. `Damage_Model.MIN_EFFECTIVE_HIT_DAMAGE = 1` confermata, nessuna modifica.
+3. `Edge.calcLength()` non distingue per `path_type`: **il commento era il bug**, corretto —
+   la distanza 3D è fisicamente corretta anche per il ground (le posizioni asset portano già
+   quota reale), il codice non è stato toccato per non alterare lunghezze/tempi già in uso.
+
+Bug collaterale trovato e corretto nello stesso giro (non uno dei 3 punti, emerso rileggendo
+`Route_Adapter.py`): `Edge.intersectPoint(Line2D)` usava `self._line` (3D) invece di
+`self._line2d`, producendo un'intersezione vuota silenziosa per ogni edge non a quota zero — v.
+commit `5a87ebb2`, nuovo `Test_Edge.py`.
 
 **Precondizioni bloccanti aggiuntive risolte da questo lavoro** (elenco delle 11 sopra): #5
 (`apply_damage`, ora esiste), #7 (Route/Edge/Waypoint, v. Q1), #10 (SAM/AAA/EWR, v. Q3).

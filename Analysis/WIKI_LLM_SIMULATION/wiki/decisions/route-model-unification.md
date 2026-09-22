@@ -73,10 +73,18 @@ produzione dipende oggi dai tipi locali.
    non-regressione della decisione.
 
 **Non deciso qui**: il sistema di riferimento (piano locale vs. coordinate geodetiche, v.
-[[core-simulator-agnostic]] §8); se `Edge.calcLength()` debba davvero distinguere per
-`path_type` (il commento nel codice lo dichiara, il codice calcola sempre la 3D — non toccato
-per non alterare numeri già in uso altrove, **richiede conferma esplicita dell'utente** su quale
-dei due sia il bug).
+[[core-simulator-agnostic]] §8).
+
+**`Edge.calcLength()` — chiuso 2026-09-22** (v. [[virtual-session-engine-des]]): il commento
+("2D per onroad/offroad/water, 3D per air") era il bug, non il codice — corretto il commento.
+`calcLength()` ha sempre calcolato la distanza 3D per ogni `path_type`; le posizioni asset
+portano già una quota reale anche a terra, quindi è la scelta fisicamente corretta. Il codice
+(e i numeri già in uso) non sono stati toccati.
+
+**`Edge.intersectPoint(Line2D)` — bug trovato e corretto nello stesso giro** (non parte del
+piano sopra, emerso rileggendo il fix): usava `self._line` (3D) invece di `self._line2d`,
+producendo un'intersezione vuota silenziosa per ogni edge non a quota zero. V. commit
+`5a87ebb2`, nuovo `Test_Edge.py` (prima nessuna copertura per questo metodo).
 
 ## Fonti
 
