@@ -88,6 +88,18 @@ tabellati a mano) resta un **fallback aggregato**, mai il risolutore primario. S
 comunque un livello aggregato, i coefficienti vanno stimati con un **ATCAL interno** (far girare
 offline il risolutore fine e ricavarne i coefficienti), non inventati a tavolino.
 
+**Riesaminato il 2026-09-22 contro una fonte nuova e confermato invariato.** L'ingestione di
+[[source-lanchester-scenari-ai]] (9 documenti su modelli Lanchester e scenari applicati) non porta
+alcuna evidenza che scalfisca questo avvertimento: nessun coefficiente con provenienza, nessuna
+equazione a salva, nessun contenuto che tocchi lo strato 1. Il fit Ardenne/Kursk che quella fonte
+presenta come "validazione" ($p \approx q \approx 0{,}5$ nella forma di Bracken) **concorda** con i
+9 test falliti citati qui — dice anch'esso che né la legge lineare né la quadratica tengono; la
+differenza è solo che chiama validazione un fit a posteriori con due parametri liberi su una sola
+battaglia. Valutazione completa in [[lanchester-vs-motore-des]]; tre raccomandazioni che ne
+discendono, **non ancora decise**, in [[soglie-disingaggio-e-attrito-aggregato]] (`status:
+proposed`) — di cui la sola rilevante per la Fase 4 è che l'`Engagement_Resolver` avrà bisogno di
+una **soglia di disingaggio**, perché altrimenti ogni ingaggio risolve fino all'annientamento.
+
 ## Motivazione
 
 La scelta discrimina fra le due proposte sulla base di numeri verificabili (costo computazionale

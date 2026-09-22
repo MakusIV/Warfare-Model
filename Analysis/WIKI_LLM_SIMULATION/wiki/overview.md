@@ -4,7 +4,7 @@ type: overview
 tags: [campaign-model, combat-simulation, wargame, warfare-model]
 created: 2026-05-27
 updated: 2026-09-22
-sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]"]
+sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]", "[[source-lanchester-scenari-ai]]"]
 ---
 
 # Panoramica del Dominio
@@ -65,6 +65,8 @@ sono fatte e pushate sul branch `analysis/dce-dcs-persistence`, non ancora su `m
 | Adaptive Resource Allocation | 1 | Buona | Algoritmo SAGE descritto |
 | Historical Conflict Modelling | 1 | Media | Sabin: wargaming accademico, comparative dynamic modelling |
 | Wargame Design Theory | 1 | Buona | Anti-hindsight, 3 ruoli simulazione, dialettica Clausewitz |
+| Modelli Lanchester | 1 | Scarsa | [[lanchester-models]]: tassonomia delle varianti + stato di validazione (negativo). Fonte a **bassa affidabilità**, nessuna fonte primaria |
+| Equazioni a salva (Hughes) | 0 | Nessuna | **Lacuna critica**: è la famiglia adottata dallo strato 2 del motore, e il wiki non ha nulla |
 | Agent-Based Models | 0 | Nessuna | Da acquisire fonti specifiche |
 
 ---
@@ -85,11 +87,27 @@ Dopo le prime due ingestioni emergono le seguenti tesi di sintesi:
 
 6. **Wargame manuale e campaign model computazionale sono complementari, non alternativi**: risolvono lo stesso problema (dialettica tra volontà opposte) con diversi trade-off di fedeltà, velocità e scopo. Il DWM si colloca nel quadrante computazionale-analitico, ma deve mantenere la dimensione di agency tramite le missioni DCS.
 
+7. **Nei modelli di attrito la matematica è la parte facile; la provenienza dei coefficienti è il
+   problema** (ingestione 2026-09-22, v. [[lanchester-vs-motore-des]]). La differenza fra un modello
+   Lanchester eterogeneo qualsiasi e [[cadem]] non è la forma delle equazioni — è identica — ma il
+   fatto che i coefficienti del secondo vengano da [[killer-victim-scoreboard]] generati da un
+   modello ad alta risoluzione. Ne segue la regola operativa del progetto: di una fonte di modelli
+   aggregati si può prendere la *forma*, mai i *numeri*. Corollario verificato sul campo: dove un
+   modello aggregato deve parametrizzare a mano (l'asimmetria stealth, la sequenza
+   MR-SAM → SHORAD → AAA), un motore a eventi con geometria e percezione **deduce** lo stesso
+   fenomeno dai dati fisici già disponibili.
+
 ---
 
 ## Lacune da Colmare
 
-- Fonti sui modelli Lanchester (classici e moderni)
+- **Fonti primarie** sui modelli Lanchester — la lacuna è **solo parzialmente colmata** da
+  [[source-lanchester-scenari-ai]], che dà una tassonomia ma **nessuna citazione verificabile**.
+  Piste da chiudere: Bracken (calibrazione Ardenne/Kursk), Lawrence/Dupuy Institute (KDB e test
+  falliti), Helmbold (soglie di ritirata)
+- **Hughes, *Fleet Tactics* — salvo equations**: è la famiglia che lo strato 2 del motore DES
+  adotterà (v. [[virtual-session-engine-des]]) e il wiki non ha **nessuna** fonte in merito. Priorità
+  più alta del punto precedente
 - Letteratura su modelli ad agenti per conflitti (MANA, ISAAC, ecc.)
 - Standard NATO/militari per simulazione (DSEEP, HLA/RPR FOM)
 - Documentazione DCS sull'architettura di missione e hook disponibili

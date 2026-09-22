@@ -9,12 +9,12 @@
 
 | Categoria | Pagine | Ultima modifica |
 |-----------|--------|-----------------|
-| Fonti (Sources) | 2 | 2026-05-27 |
+| Fonti (Sources) | 3 | 2026-09-22 |
 | Entità (Entities) | 14 | 2026-05-27 |
-| Concetti (Concepts) | 15 | 2026-09-18 |
-| Analisi (Analyses) | 0 | — |
+| Concetti (Concepts) | 16 | 2026-09-22 |
+| Analisi (Analyses) | 1 | 2026-09-22 |
 | Struttura di progetto (Project) | 13 | 2026-09-22 |
-| Decisioni architetturali (Decisions) | 11 | 2026-09-22 |
+| Decisioni architetturali (Decisions) | 12 | 2026-09-22 |
 
 ---
 
@@ -34,6 +34,7 @@
 |--------|--------|--------|------|----------------|
 | [[source-theater-level-campaign-model]] | The Theater-Level Campaign Model | Hillestad, Moore (RAND) | 1994 | campaign-model, TLC, SAGE, CADEM, joint |
 | [[source-simulation-techniques-past-conflicts]] | Simulation Techniques in the Modelling of Past Conflicts | Sabin (King's College London) | 2008 | wargame, historical, manual-simulation, anti-hindsight |
+| [[source-lanchester-scenari-ai]] | Modelli Lanchester e scenari applicati — sessione conversazionale con assistente AI (9 `.docx`) | assistente AI non identificato | 2026 | lanchester, attrition, scenario, **low-confidence** |
 
 ---
 
@@ -84,6 +85,15 @@
 - `[[simulating-war]]` — libro Sabin (2012) su design di simulazioni · 1 ref
 - `[[idahex]]` — modello griglia esagonale Idaho (menzionato TLC) · 1 ref
 
+*Nomi emersi da [[source-lanchester-scenari-ai]] — **piste bibliografiche da verificare**, la fonte
+non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una fonte primaria:*
+- `Jerome Bracken` — forma generalizzata $R^qG^p$, calibrazione Ardenne/Kursk
+- `Dupuy Institute` / `KDB` — Kursk Database, test delle equazioni sulle sole *contact forces*
+- `Helmbold` — Lanchester con rapporto di forze, postura e soglie di ritirata
+- `Peterson` — modello logaritmico per l'attrito non da combattimento
+- `Hughes` — *Fleet Tactics*, salvo equations: **famiglia adottata dal progetto, wiki a zero fonti**
+- `STORM`, `JAAM` — attribuzione della fonte a Lanchester matriciale **non verificata e sospetta**
+
 ---
 
 ## Concetti (Concepts)
@@ -117,6 +127,7 @@
 | [[wargaming]] | Gioco di guerra come strumento di analisi, formazione e ricerca storica |
 | [[comparative-dynamic-modelling]] | Metodo Sabin per risolvere controversie storiche tramite simulazione |
 | [[historical-conflict-simulation]] | Simulazione di conflitti storici — obiettivi, approcci, metodologia anti-hindsight |
+| [[lanchester-models]] | Famiglia Lanchester — leggi classiche, Bracken, eterogeneo, soglie Helmbold, SINDy; stato di validazione (negativo) |
 
 ### Concetti referenziati (non ancora paginati)
 *Menzionati con wikilink ma privi di pagina dedicata — bassa priorità:*
@@ -128,7 +139,9 @@
 
 ## Analisi (Analyses)
 
-*Nessuna analisi ancora. Vengono create in risposta a query complesse.*
+| Pagina | Domanda | Esito |
+|--------|---------|-------|
+| [[lanchester-vs-motore-des]] | I 9 documenti Lanchester superano lo scetticismo già documentato, e cosa cambia nel motore di sessioni virtuali? | Negativo sulla matematica; utile su scenari di test, soglie di disingaggio, forma del fallback aggregato. **Zero impatto sullo strato 1** |
 
 ---
 
@@ -171,6 +184,7 @@
 | [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; roadmap 7 fasi, Fase 1-2 fatte, 3 questioni pre-Fase 3 chiuse |
 | [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
 | [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
+| [[soglie-disingaggio-e-attrito-aggregato]] | **proposed** | Soglie di disingaggio come esito di prima classe; forma-bersaglio del fallback aggregato; scenari S1-S5 di validazione — **richiede decisione dell'utente** |
 
 ---
 

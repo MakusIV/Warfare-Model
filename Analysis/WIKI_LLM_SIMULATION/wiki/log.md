@@ -1,5 +1,56 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-22] ingestione | Modelli Lanchester e scenari applicati (9 `.docx`, `RAW/Lanchester/`)
+
+**Fonte**: 9 file `.docx` (+ uno `.zip` ridondante, ignorato). Letti integralmente. Verificato nel
+testo che **non sono 9 fonti indipendenti** ma i turni di **una sola sessione conversazionale** con
+un assistente AI: ogni documento si chiude con la domanda che titola il successivo, e `…CAS(1).docx`
+è la ri-emissione della sola tabella finale di `si introduci una missione SEAD preliminare.docx`
+(numeri identici). Da qui la scelta di **una sola pagina `sources/`**, con tabella per-documento.
+
+**Esito della valutazione**: **negativo sulla matematica, parzialmente positivo sulla struttura.**
+Il doc 04 è l'unico a carattere bibliografico (Bracken generalizzato, legge 1.5, KDB/Dupuy,
+eterogeneo vettoriale, Peterson, Helmbold, SINDy, fattore informativo $\mu$) ma con **citazioni che
+sono nomi di dominio nudi**, non verificabili. Gli altri otto sono esercizi numerici con
+coefficienti dichiarati «ipotizzati», risolti con **un singolo passo di Eulero a $\Delta t = 1$
+giorno**. **Nessuna equazione a salva (Hughes) in tutto il set**: nessuna sovrapposizione con lo
+strato 2 previsto.
+
+**Difetti specifici trovati** (dettaglio in [[lanchester-vs-motore-des]] § 3): attrito indipendente
+dalla numerosità della forza che lo subisce (doc 06: 8,5 velivoli persi su 20 presenti); output
+frazionario e aggregato, incompatibile col vincolo «perdite per singolo asset»; determinismo senza
+varianza; **il confronto SEAD/non-SEAD del doc 06 è un artefatto del cambio di ordine di risoluzione
+fra le due simulazioni**, non un effetto del SEAD — dimostrazione involontaria del vincolo #2 di
+[[virtual-session-engine-des]]; il doc 02 dichiara legge lineare/quadratica e poi calcola tutto a
+fuoco mirato; il doc 05 afferma «4-5 caccia abbattuti» dove i suoi stessi coefficienti danno 0,9.
+
+**Falso allarme risolto**: il doc 04 chiama «validazione» il fit Ardenne/Kursk che il progetto
+registra come «9 test falliti». **Non è una contraddizione** — entrambi dicono che le leggi
+classiche non tengono; il doc chiama validazione un fit a posteriori con due parametri liberi.
+L'avvertimento metodologico di [[virtual-session-engine-des]] **resta invariato** e non è stato
+toccato.
+
+**Verifica strato 1 vs strato 2**: confermata l'ipotesi, e più nettamente. Nei 9 documenti **non
+compare una sola coordinata, velocità, rotta, portata o tempo di contatto**: il contatto è assunto a
+$t=0$. Lo scheduler dei contatti (Fase 3, in lavorazione da un altro agente) **non è toccato**.
+Corollario registrato: la sequenza di fasi che i documenti cablano a mano
+(MR-SAM → SHORAD → AAA) è esattamente ciò che lo strato 1 produce dalla geometria — argomento *a
+favore* dell'architettura già scelta.
+
+**Pagine create (4)**:
+- `wiki/sources/source-lanchester-scenari-ai.md`
+- `wiki/concepts/lanchester-models.md` — colma la lacuna dichiarata in `overview.md` («Fonti sui
+  modelli Lanchester»), almeno come tassonomia
+- `wiki/analyses/lanchester-vs-motore-des.md` — **prima pagina `analyses/` del wiki**
+- `wiki/decisions/soglie-disingaggio-e-attrito-aggregato.md` — **`status: proposed`**, richiede
+  decisione dell'utente
+
+**Pagine aggiornate (3)**: `index.md`, `log.md`, `overview.md`.
+
+**Nessun file di codice toccato.** Analisi e ingestione soltanto.
+
+---
+
 ## [2026-09-22] aggiornamento | Chiusi i 3 punti aperti dopo Q1-Q3 (SEAD, MIN_EFFECTIVE_HIT_DAMAGE, Edge.calcLength) + bug intersectPoint
 
 **SEAD collegato** (commit `efb93cab`): `Tactical_Evaluation.calculate_priority` legge
