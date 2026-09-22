@@ -184,7 +184,7 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; roadmap 7 fasi, Fase 1-2 fatte, 3 questioni pre-Fase 3 chiuse |
 | [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
 | [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
-| [[soglie-disingaggio-e-attrito-aggregato]] | **proposed** | Soglie di disingaggio come esito di prima classe; forma-bersaglio del fallback aggregato; scenari S1-S5 di validazione — **richiede decisione dell'utente** |
+| [[soglie-disingaggio-e-attrito-aggregato]] | **proposed** | Soglie di disingaggio come esito di prima classe; forma-bersaglio del fallback aggregato; scenari S1-S11 di validazione (S6-S11 nuovi: navale, logistico, scala, fog-of-war, disingaggio, confine DCS/sintetico) — **richiede decisione dell'utente** |
 
 ---
 

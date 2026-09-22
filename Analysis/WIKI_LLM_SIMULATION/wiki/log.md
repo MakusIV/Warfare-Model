@@ -1,5 +1,28 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-22] aggiornamento | Batteria di validazione Fase 7 estesa da S1-S5 a S1-S11
+
+Su richiesta esplicita dell'utente ("ulteriori scenari di test oltre S1-S5"). I 5 scenari
+ereditati da [[source-lanchester-scenari-ai]] coprono solo terra/aria a due parti, ingaggio
+singolo, forze già in contatto — non toccano il dominio navale, i bersagli economici/logistici,
+la scala (10.000 asset), il fog-of-war, la soglia di disingaggio proposta in P1 (nessuna fonte
+la implementava), né il confine sessione-DCS/sessione-sintetica.
+
+**6 nuovi scenari definiti per questa sessione** (non derivati da alcuna fonte esterna) in
+[[soglie-disingaggio-e-attrito-aggregato]] § P3, ciascuno mirato a un meccanismo specifico del
+motore non esercitato da S1-S5: S6 gruppo navale vs difesa costiera, S7 interdizione di linea
+logistica (bersaglio `Production`/`Storage`/`Transport`, non `Military`), S8 fronte multiplo /
+stress di scala (verifica la potatura gerarchica del `Contact_Scheduler`), S9 targeting sotto
+fog-of-war parziale (`recon_cp_snapshot`), S10 regressione mirata sulla soglia di disingaggio
+(test di non-regressione di P1 stessa), S11 confine sessione DCS/sintetica (test end-to-end del
+contratto `SessionOrder`/`SessionOutcome`, l'unico esplicitamente richiesto dalla roadmap
+originale per la Fase 7).
+
+Aggiunto un quinto punto aperto: S6-S11 sono una proposta di partenza di questa sessione, non
+ancora confermata come batteria ufficiale.
+
+---
+
 ## [2026-09-22] ingestione | Modelli Lanchester e scenari applicati (9 `.docx`, `RAW/Lanchester/`)
 
 **Fonte**: 9 file `.docx` (+ uno `.zip` ridondante, ignorato). Letti integralmente. Verificato nel

@@ -82,14 +82,68 @@ Bersaglio proposto:
 Come metodo di stima, **SINDy** è un candidato da tenere presente perché ricava la forma funzionale
 oltre ai coefficienti (v. [[lanchester-models]] § SINDy) — ma è una nota, non parte della proposta.
 
-### P3 — Batteria di scenari di validazione (S1-S5)
+### P3 — Batteria di scenari di validazione (S1-S11)
 
-Le cinque strutture di scenario dei documenti (combined arms con CAS; SEAD preliminare che sottrae
-assetti alla missione principale; aereo asimmetrico stealth vs massa; SAM come terza componente;
-interdizione profonda contro difesa a 3 strati e bersaglio composito) sono adottate come **casi di
-test** per la Fase 7, **senza** i loro numeri: si prende la composizione delle forze e la domanda
-che lo scenario pone, non i coefficienti né gli esiti. Dettaglio in
+Le cinque strutture di scenario dei documenti (S1 combined arms con CAS; S2 SEAD preliminare che
+sottrae assetti alla missione principale; S3 aereo asimmetrico stealth vs massa; S4 SAM come terza
+componente; S5 interdizione profonda contro difesa a 3 strati e bersaglio composito) sono adottate
+come **casi di test** per la Fase 7, **senza** i loro numeri: si prende la composizione delle forze
+e la domanda che lo scenario pone, non i coefficienti né gli esiti. Dettaglio in
 [[lanchester-vs-motore-des]] § 2(c).
+
+**S1-S5 coprono solo il dominio terra/aria a due parti, ingaggio singolo, forze già in contatto.**
+Non toccano affatto: il dominio navale, i bersagli economici/logistici (il caso più comune di
+targeting non-militare nel progetto), la scala (il limite superiore dichiarato di 10.000 asset),
+il fog-of-war, la soglia di disingaggio proposta in P1 (nessuno scenario la esercita, perché nessun
+documento sorgente la implementava), e il confine sessione-DCS/sessione-sintetica che è il punto
+centrale di [[core-simulator-agnostic]]. **S6-S11 colmano queste lacune**, definiti per questo
+progetto (non derivati dai documenti Lanchester) proprio per esercitare i meccanismi che S1-S5 non
+toccano — ciascuno mirato a un componente specifico del motore, non a una situazione tattica
+generica:
+
+- **S6 — gruppo da battaglia navale contro difesa costiera.** Portaerei/incrociatore/cacciatorpediniere
+  in attacco contro un litorale con SAM costieri + batterie AAA + unità navali di superficie
+  leggere. Esercita `Ship.set_combat_power`/`air_defense_power` sul lato mare (mai testati insieme
+  in S1-S5, che sono tutti terra/aria), e la fusione delle finestre di contatto di
+  `Contact_Scheduler` quando le minacce sono sia a terra (costiere) sia in mare.
+- **S7 — interdizione di una linea logistica.** Attacco aereo contro blocchi `Production`/
+  `Storage`/`Transport` (non `Military`) lungo una rotta di rifornimento, con scorta di caccia a
+  protezione del convoglio. Esercita il ramo bersaglio-logistico di
+  `Tactical_Evaluation.calculate_priority` (quello che usa `target_priority` invece di
+  `combat_power_ratio`) e il calcolo di produzione/warehouse di `Region` — nessuno scenario S1-S5
+  ha un bersaglio non-militare.
+- **S8 — fronte multiplo, stress di scala.** Decine di blocchi su più regioni con ingaggi
+  simultanei, dimensionato per avvicinarsi (non raggiungere) il limite superiore dichiarato di
+  10.000 asset. Verifica che la potatura gerarchica a livello Block (meccanismo C di
+  `Contact_Scheduler`) scarti davvero la maggioranza delle coppie prima del calcolo CPA/TCPA per
+  singolo asset — è l'unico scenario pensato per misurare tempo di calcolo, non correttezza
+  tattica.
+- **S9 — targeting sotto fog-of-war parziale.** Stessa composizione di forze di S1, ma con
+  ricognizione incompleta (`recon_cp_snapshot` non vuoto ma parziale) invece di ground-truth.
+  Verifica che la policy "non visto → priorità bassa" (v. `feedback_no_visibility_low_priority`)
+  interagisca correttamente con `detection_range`/`Contact_Scheduler`: un bersaglio rilevato
+  geometricamente (nel raggio di un sensore) ma non ancora ricognito dal lato C2 deve restare a
+  priorità bassa finché lo snapshot non lo conferma — due nozioni di "visibilità" diverse
+  (geometrica vs. informativa) che oggi nessun test mette in tensione tra loro.
+- **S10 — regressione mirata sulla soglia di disingaggio.** Scenario minimo, costruito apposta
+  (non un caso tattico realistico): una forza subisce perdite fino a superare la soglia proposta in
+  P1 a metà di un ingaggio già in corso. Verifica che l'esito sia `DISENGAGED` (con la forza
+  superstite che rientra nello scheduler dei contatti su una nuova rotta) e non l'annientamento
+  implicito che il motore produce oggi in assenza di P1. Se P1 non viene accettata, questo scenario
+  va rimosso o riscritto per verificare esplicitamente che l'annientamento è il comportamento
+  voluto.
+- **S11 — confine sessione DCS/sessione sintetica.** Un ingaggio inizia dentro una sessione
+  sintetica (nessun giocatore) e la forza superstite deve comparire, con lo stato corretto
+  (perdite, munizioni, posizione), nella sessione DCS successiva. Non è un test di combattimento:
+  è il test end-to-end del contratto `SessionOrder`/`SessionOutcome` (v.
+  [[core-simulator-agnostic]]) e dell'unico vincolo esplicitamente citato per la Fase 7 nella
+  roadmap originale ("test di agnosticismo": cancellando l'adapter DCS la campagna deve continuare
+  a girare). Nessuno degli scenari S1-S9 tocca il confine fra i due tipi di sessione.
+
+**Tutti gli 11 scenari** condividono la stessa regola di P3 originale: si prende la composizione
+delle forze e la domanda che pongono, mai coefficienti o esiti numerici precalcolati — per S6-S11
+la domanda è "il meccanismo X del motore si comporta correttamente", non un risultato storico o
+di dominio da riprodurre.
 
 ## Motivazione
 
@@ -113,7 +167,9 @@ progetto stesso, il che ha valore indipendentemente dalla matematica con cui son
 - la soglia diventa un parametro dottrinale dichiarato, con impatto su `Context/Doctrine.py` e/o sul
   livello C2 di [[c2-hierarchy-design]];
 - nessun impatto immediato su `calcFightResult`, che resta com'è;
-- gli scenari S1-S5 entrano nel piano di validazione della Fase 7.
+- gli scenari S1-S11 (S1-S5 dai documenti, S6-S11 definiti per colmare le lacune di dominio/
+  meccanismo che S1-S5 non coprono, v. P3) entrano nel piano di validazione della Fase 7; S10 in
+  particolare è il test di non-regressione di questa stessa decisione.
 
 **Se respinta**: nulla cambia; [[lanchester-vs-motore-des]] resta come analisi archiviata e questa
 pagina va marcata `status: superseded` o rimossa.
@@ -128,8 +184,11 @@ per riga che nulla in questa fonte lo tocca.
 2. Il disingaggio è deciso per **forza** (tutta l'unità rompe il contatto) o per **singolo asset**,
    coerentemente con il vincolo «perdite per singolo asset»?
 3. `calcFightResult` va lasciato intatto fino a dopo la Fase 4 (raccomandato), o va toccato prima?
-4. Gli scenari S1-S5 entrano nella Fase 7, o servono anche come test di integrazione anticipati
+4. Gli scenari S1-S11 entrano nella Fase 7, o servono anche come test di integrazione anticipati
    della Fase 4?
+5. **S6-S11 sono definiti da questa sessione, non derivati da una fonte esterna**: vanno
+   confermati come batteria di validazione ufficiale della Fase 7, o sono solo una proposta di
+   partenza da rivedere quando la Fase 4/6 saranno più chiare?
 
 ## Fonti
 
