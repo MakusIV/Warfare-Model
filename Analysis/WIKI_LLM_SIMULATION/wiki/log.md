@@ -14,6 +14,90 @@
 
 ---
 
+## [2026-09-22] aggiornamento | Sync motore sessioni virtuali (DES): 2 nuove decisioni + 3 pagine project aggiornate
+
+**Applicazione della regola "SYNC EVOLUZIONE PROGETTO"**, su richiesta esplicita dell'utente
+("allinea i contenuti del wiki con le decisioni sul sistema di simulazione virtuale"), mentre due
+subagent lavoravano in parallelo su `analysis/dce-dcs-persistence` (Fase 2 appena chiusa, e le 3
+questioni aperte pre-Fase 3 in corso). Colma un buco reale: tutto il lavoro del 2026-09-18/21 su
+quel branch (mai mergiato in `main`) non era mai arrivato al wiki.
+
+**2 nuove pagine `wiki/decisions/`**:
+- [[virtual-session-engine-des]] — verdetto sulle due strategie proposte dall'utente (tick 1ms
+  scartato: 74 giorni di calcolo proiettati; probabilistica incompleta: non dice quando due forze
+  si incontrano), architettura DES a coda eventi scelta, roadmap a 7 fasi, stato Fase 1
+  (cinematica, `3af377c5`) e Fase 2 (percezione/`ThreatAA`, `30a6ee55`) — entrambe fatte e
+  pushate, non ancora su `main`.
+- [[core-simulator-agnostic]] — il vincolo architetturale dichiarato dall'utente il 2026-09-18
+  (core indifferente al simulatore, DCE come controesempio negativo analizzato in dettaglio),
+  contratto `SessionOrder`/`SessionOutcome`, ordine di lavoro imposto (contratto → resolver
+  sintetico → campagna senza simulatore → solo dopo l'adapter DCS).
+
+**3 pagine `wiki/project/` aggiornate** (non solo aggiunte — anche bug ormai risolti spostati
+dalla sezione "confermati" a "risolti"): [[asset-base]] (schema `SPEED_SCHEMA`/`Mobile.speed` in
+m/s, `detection_range`, e soprattutto il bug storico `Mobile.checkParam` senza `self` — confermato
+ancora presente il 2026-09-18 — ora marcato risolto dalla Fase 1), [[block]] (nuovi
+`Military.air_defense_threats()`/`detection_range()`), [[logic-routing]] (fabbrica
+`build_threat_aa()`, e nota esplicita che la triplicazione `Route`/`Edge`/`Waypoint` — già nota
+dal 2026-08-21 — è ora una precondizione bloccante per il `Contact_Scheduler`).
+
+**Pagina esistente annotata, non riscritta**: [[datatype-route-edge-waypoint]] — aggiunta una nota
+che segnala la rivalutazione in corso (sessione parallela al 2026-09-22) della scelta "Air resta
+separato da `DataType.Route`", senza presumerne l'esito.
+
+**Deliberatamente non fatto in questa sessione**: le 3 questioni aperte pre-Fase 3 (modello
+`Route` vincente, semantica della perdita per-asset, SAM/AAA/EWR nel combat power) sono in
+lavorazione in una sessione parallela sullo stesso branch — il wiki le registra come "in corso"
+in [[virtual-session-engine-des]] e [[logic-routing]], da aggiornare con l'esito reale a lavoro
+concluso, per non contraddire una decisione ancora da prendere.
+
+---
+
+## [2026-09-22] aggiornamento | Riconciliazione: le 3 questioni pre-Fase 3 sono state chiuse
+
+**Seguito diretto della voce precedente**: la sessione parallela ha completato le 3 decisioni
+mentre questa sessione scriveva il wiki. Riconciliazione fatta leggendo i 4 commit reali
+(`6c421579`/`f1f5b7d4`/`64538f16`/`27d53e56`) e le memorie che li accompagnano, non i placeholder
+"in corso" scritti prima.
+
+**1 nuova pagina `wiki/decisions/`**: [[route-model-unification]] — `DataType.Route` confermato
+unico modello di dominio anche per l'aria (non solo ground come deciso in agosto); le classi
+locali di `Air_`/`Ground_Route_Manager` restano come stato di lavoro privato della ricerca;
+nuovo `Logic/Route_Adapter.py` alla frontiera pubblica; piano a 5 fasi, Fase 1 fatta. Il blocco
+tecnico reale era un bug in `DataType/Edge.py` (segmenti degeneri non costruibili con sympy per
+una salita verticale pura), non una difficoltà architetturale.
+
+**[[datatype-route-edge-waypoint]] marcata `superseded`** (era `accepted` con nota provvisoria
+"in rivalutazione") → `superseded_by: [[route-model-unification]]`, come da convenzione ADR di
+questo wiki.
+
+**[[virtual-session-engine-des]] aggiornata** con l'esito reale delle 3 questioni: Q1 v. sopra;
+Q2 (perdita per-asset) → nuovo `Logic/Damage_Model.py` + `Asset.apply_damage()`, contratto
+Ph×Pk|h da `accuracy`/`destroy_capacity` già nei registri arma, soglia `Destroyed ≤ 15`
+confermata invariata; Q3 (SAM/AAA/EWR) → combat power 0 confermato intenzionale, nuova
+dimensione separata `Military.air_defense_power()` (non una tabella di efficacia inventata,
+scartata deliberatamente dal subagent che ha fatto il lavoro).
+
+**3 pagine `wiki/project/` aggiornate di conseguenza**: [[logic-routing]] (`Route_Adapter.py`,
+correzione della frase "Air resta deliberatamente sulle sue classi locali", ormai imprecisa),
+[[asset-base]] (`Asset.apply_damage`), [[block]] (`Military.air_defense_power`).
+
+**Verifica indipendente** (non solo lettura del report del subagent): suite riesguita per
+intero, **2753 test, 1 fallimento non riproducibile** (`testCalcFightResult`, isolato e
+rieseguito 8/8 volte in verde) — dovuto a `random.uniform` non seedato in
+`Tactical_Evaluation.calcFightResult`, file **non toccato** dai 4 commit in esame; non è una
+regressione, è il gap già tracciato in [[virtual-session-engine-des]] ("random non seedato a
+livello di modulo").
+
+**3 punti restano da confermare con l'utente prima della Fase 4** (segnalati esplicitamente dal
+subagent, non decisi unilateralmente): collegare `air_defense_power` alla priorità di targeting
+SEAD (cambio di game balance); la costante `MIN_EFFECTIVE_HIT_DAMAGE = 1` in `Damage_Model.py`
+(altrimenti le infrastrutture, `destroy_capacity ≈ 0`, sarebbero indistruttibili per
+costruzione); se il bug in `Edge.calcLength()` (non distingue per `path_type` nonostante il
+commento) sia il codice o il commento a dover cambiare.
+
+---
+
 ## [2026-09-18] aggiornamento | TASK 2 (Fase A) implementato: RegionInfoReport / Meteo_Analysis / limes
 
 **Prima applicazione della regola "SYNC EVOLUZIONE PROGETTO"** aggiunta a `CLAUDE.md` nella stessa giornata: implementazione di codice, non solo documentazione, quindi wiki aggiornato nella stessa sessione invece di aspettare.

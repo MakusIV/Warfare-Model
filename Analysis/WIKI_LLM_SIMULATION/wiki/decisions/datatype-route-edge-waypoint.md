@@ -4,7 +4,8 @@ type: decision
 tags: [architecture, dwm, datatype, routing, ground, military]
 created: 2026-09-18
 updated: 2026-09-18
-status: accepted
+status: superseded
+superseded_by: ["[[route-model-unification]]"]
 affects: ["[[datatype]]", "[[logic-routing]]"]
 related: []
 ---
@@ -40,6 +41,18 @@ Verificato end-to-end con costruzione di oggetti reali: `Waypoint → Edge → R
 Delle 9 decisioni del set "Fase 2" (design post-audit), questa pagina copre solo la #3. Sintesi dello stato di tutte le 9, per completezza del quadro decisionale di quella sessione: **7 risolte e attuate** (#1 `Structure.py` resta in roadmap; #2 `Production`/`Storage`/`Transport`/`Urban` da riscrivere seguendo `Military.py`; #3 questa pagina; #4 `Cylinder` confermato come modello di geometria delle minacce, `Threat`/`Sphere`/`Hemisphere`/`Volume` deprecati; #5 `Military.get_c2_efficiency()` unico metro di intelligence, `Region.get_region_intelligence_efficiency()` eliminato; #8 `Classi.py` eliminato; #9 `visualizer.py` mantenuto e riparato) e **2 esplicitamente rimandate** dall'utente (#6 `Manager.py` vs `Scenario_Manager.CommandControl`; #7 `Coalition.py`).
 
 **Gap ancora aperto, non affrontato da questa decisione**: `Ground_Route_Manager.py` non produce ancora oggetti `DataType.Route`/`Edge` — ha tuttora proprie classi locali `Waypoint`/`Edge`/`NavigationGraph` (verificato a HEAD: `Logic/Ground_Route_Manager.py` definisce ancora le proprie `Waypoint`/`Edge`/`NavigationGraph` con `find_optimal_path`/`find_min_danger_path`/ecc., nessun riferimento a `DataType.Route` o a `Region.add_route` nel file). Significa che, sebbene la catena `Waypoint→Edge→Route→Military` sia ora funzionalmente corretta in isolamento, **nulla nel codice la alimenta ancora in pratica** — descritto nella memoria di origine come lavoro di Fase 3, non iniziato. Confermato non iniziato anche a questa data (2026-09-18).
+
+## Superata 2026-09-22: v. [[route-model-unification]]
+
+Il motore DES per le sessioni virtuali (v. [[virtual-session-engine-des]]) ha reso la
+triplicazione `DataType`/`Air_Route_Manager`/`Ground_Route_Manager` una precondizione bloccante
+esplicita per la Fase 3 (`Contact_Scheduler`). La scelta "Air resta deliberatamente separato"
+fatta qui è stata **estesa, non ribaltata**: [[route-model-unification]] conferma
+`DataType.Route` come unico modello anche per l'aria, ma facendolo uscire solo alla frontiera
+del path-finding — le classi locali di `Air_Route_Manager.py` restano, come stato di lavoro
+privato dell'algoritmo di ricerca, non come rappresentazione del dominio. La sezione "Contesto"
+e "Decisione" sopra restano corrette come racconto storico di *perché* il ground fu risolto per
+primo; per lo stato attuale vale [[route-model-unification]].
 
 ## Fonti
 

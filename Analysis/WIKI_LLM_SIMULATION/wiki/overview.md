@@ -3,7 +3,7 @@ title: "Panoramica — Modelli di Simulazione Bellica"
 type: overview
 tags: [campaign-model, combat-simulation, wargame, warfare-model]
 created: 2026-05-27
-updated: 2026-09-18
+updated: 2026-09-22
 sources: ["[[source-theater-level-campaign-model]]", "[[source-simulation-techniques-past-conflicts]]"]
 ---
 
@@ -38,6 +38,13 @@ Il progetto principale a cui questo wiki fa riferimento è situato in:
 `Analysis/Modules/00-11_*.md` resta come istantanea storica dell'audit del 2026-08-16, non aggiornata da allora — ogni pagina rimanda ora esplicitamente alla corrispondente pagina `wiki/project/`.
 
 **Sintesi architetturale corrente** (dettaglio nelle pagine sopra): DWM = pacchetti `Asset/`, `Block/`, `Component/`, `Context/`, `DataType/`, `Logic/` sotto `Code/Dynamic_War_Manager/Source/`; un nuovo pacchetto `Command/` (C2 a due livelli + `Theater_Session_Manager`) è **progettato ma non ancora costruito** (vedi [[c2-hierarchy-design]]).
+
+**Aggiornamento 2026-09-22**: due decisioni architetturali aggiuntive guidano ora lo sviluppo —
+[[core-simulator-agnostic]] (il core deve restare indifferente al simulatore, DCS è solo un
+adapter dietro un contratto `SessionOrder`/`SessionOutcome`) e [[virtual-session-engine-des]] (il
+motore di esecuzione delle sessioni virtuali è un DES a coda eventi con scheduling analitico dei
+contatti, non un tick fisso). Le Fasi 1 (cinematica) e 2 (percezione/`ThreatAA`) di quest'ultima
+sono fatte e pushate sul branch `analysis/dce-dcs-persistence`, non ancora su `main`.
 
 ### Domande di Ricerca Aperte
 *(Da aggiornare man mano che si ingeriscono fonti)*

@@ -1,7 +1,7 @@
 # Wiki Index — Modelli di Simulazione Bellica
 
 > **Catalogo completo dei contenuti wiki.** Aggiornato da Claude ad ogni ingestione, query o modifica.
-> Ultimo aggiornamento: 2026-09-18
+> Ultimo aggiornamento: 2026-09-22
 
 ---
 
@@ -13,8 +13,8 @@
 | Entità (Entities) | 14 | 2026-05-27 |
 | Concetti (Concepts) | 15 | 2026-09-18 |
 | Analisi (Analyses) | 0 | — |
-| Struttura di progetto (Project) | 13 | 2026-09-18 |
-| Decisioni architetturali (Decisions) | 8 | 2026-09-18 |
+| Struttura di progetto (Project) | 13 | 2026-09-22 |
+| Decisioni architetturali (Decisions) | 11 | 2026-09-22 |
 
 ---
 
@@ -162,12 +162,15 @@
 |--------|-------|----------|
 | [[region-tactical-strategic-refactor]] | accepted | Estrazione tattica/strategica da `Region.py` in `Tactical_Analysis.py`/`Tactical_Evaluation.py`/`Doctrine.py` |
 | [[combat-power-priority-redesign]] | accepted | Combat power reale per Vehicle/Ship/Aircraft + fog-of-war/recon |
-| [[datatype-route-edge-waypoint]] | accepted | `Route`/`Edge`/`Waypoint`: `DataType` canonico per il lato terrestre |
+| [[datatype-route-edge-waypoint]] | superseded → [[route-model-unification]] | `Route`/`Edge`/`Waypoint`: `DataType` canonico per il lato terrestre (framing originale) |
 | [[air-priority-target-specific-loadout]] | accepted | Priorità aerea target-specific via miglior loadout disponibile |
 | [[asset-type-vs-category]] | accepted | `asset_type` vs `category` in Vehicle/Ship/Aircraft |
 | [[c2-hierarchy-design]] | accepted | Gerarchia C2 a due livelli, indirizzo strategico, modello sessioni, `Theater_Session_Manager` |
 | [[campaign-temporal-model]] | superseded → [[c2-hierarchy-design]] | Modello temporale sessioni DCS vs. sintetiche (framing originale) |
 | [[module-audit-2026-08-16]] | superseded → `wiki/project/*` | Audit dei moduli, origine di `Analysis/Modules/00-11_*.md` |
+| [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; roadmap 7 fasi, Fase 1-2 fatte, 3 questioni pre-Fase 3 chiuse |
+| [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
+| [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
 
 ---
 

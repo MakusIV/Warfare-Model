@@ -3,9 +3,9 @@ title: "Block"
 type: project-module
 tags: [package-python, block, military, combat-power, fog-of-war, dcs]
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-22
 code_paths: [Code/Dynamic_War_Manager/Source/Block/Block.py, Code/Dynamic_War_Manager/Source/Block/Military.py, Code/Dynamic_War_Manager/Source/Block/Production.py, Code/Dynamic_War_Manager/Source/Block/Storage.py, Code/Dynamic_War_Manager/Source/Block/Transport.py, Code/Dynamic_War_Manager/Source/Block/Urban.py]
-related_decisions: ["[[combat-power-priority-redesign]]", "[[region-tactical-strategic-refactor]]"]
+related_decisions: ["[[combat-power-priority-redesign]]", "[[region-tactical-strategic-refactor]]", "[[virtual-session-engine-des]]"]
 related: ["[[component]]", "[[context-foundation]]"]
 ---
 
@@ -132,6 +132,8 @@ Code/Dynamic_War_Manager/Source/Test -p "Test_Block.py"` → 91 test OK; stesso 
   memoria `project_asset_military_2026_05_22`).
 - **`combat_range() -> Optional[Tuple[max_range, med_range, ratio, quantity]]`**: itera gli asset
   operativi con metodo `combat_range`. Invariato, confermato valido.
+- **`air_defense_threats() -> List[ThreatAA]` e `detection_range(mode, sensor) -> Optional[Tuple[max, med, ratio, quantity]]` — nuovi 2026-09-22 (Fase 2 motore sessioni virtuali, v. [[virtual-session-engine-des]])**: pendant a livello Block dei corrispondenti metodi `Mobile`. `air_defense_threats()` chiama la fabbrica `Logic.Air_Route_Manager.build_threat_aa(asset)` (import locale al metodo, per non far dipendere `Block` da `Logic` a tempo di import) su ogni `Vehicle`/`Ship` operativo — un `ThreatAA` per asset AD, non solo la geometria come `air_defense_volume()`. `detection_range()` aggrega `Mobile.detection_range()` con la stessa forma statistica (max/mediana/rapporto/quantità) di `combat_range()`.
+- **`air_defense_power() -> float` — nuovo 2026-09-22 (Q3 delle "3 questioni aperte", v. [[virtual-session-engine-des]])**: in [0,1], `1 − Π(1 − danger_level_i)` sui `ThreatAA` di `air_defense_threats()` ("almeno una delle difese è efficace"). Non è una combat power e non è confrontabile con `combat_range()`/`combat_state()`: SAM/AAA/EWR restano a combat power 0 **per definizione** in `Context.GROUND_COMBAT_EFFICACY` (misura fuoco/manovra terra-terra, che questi asset non hanno) — questa è la dimensione separata che cattura la loro potenza reale. Nessun consumatore ancora: previsto per la priorità di targeting SEAD e il risolutore d'ingaggio aria-superficie (Fase 4), **collegarla resta una decisione di game balance non ancora presa, da confermare con l'utente**.
 - **`combat_state() -> Optional[float]`**: formula `(0.3 * operative_efficiency + 0.7 *
   c2_efficiency) * ratio_operative`. Invariato, confermato valido, coerente con la memoria
   2026-05-22.
@@ -256,6 +258,9 @@ Comando eseguito e confermato in questa sessione:
 - [[region-tactical-strategic-refactor]] — sposta la logica di calcolo priorità/estrazione target
   fuori da `Region.py` in `Logic.Tactical_Analysis`/`Tactical_Evaluation`; `Block`/`Military`
   restano il livello dati/report, non calcolano più direttamente priorità.
+- [[virtual-session-engine-des]] — `Military.air_defense_threats()`/`detection_range()` (Fase 2)
+  sono il livello Block del motore DES per le sessioni virtuali; nessun consumatore reale li
+  chiama ancora, verranno usati dal `Contact_Scheduler` (Fase 3).
 
 ## Note
 

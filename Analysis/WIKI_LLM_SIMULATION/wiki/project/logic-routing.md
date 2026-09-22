@@ -3,9 +3,9 @@ title: "Logic — Pianificazione Rotte"
 type: project-module
 tags: [package-python, air, ground, routing, dwm, implementation]
 created: 2026-09-18
-updated: 2026-09-18
-code_paths: [Code/Dynamic_War_Manager/Source/Logic/Air_Route_Manager.py, Code/Dynamic_War_Manager/Source/Logic/Ground_Route_Manager.py]
-related_decisions: ["[[datatype-route-edge-waypoint]]"]
+updated: 2026-09-22
+code_paths: [Code/Dynamic_War_Manager/Source/Logic/Air_Route_Manager.py, Code/Dynamic_War_Manager/Source/Logic/Ground_Route_Manager.py, Code/Dynamic_War_Manager/Source/Logic/Route_Adapter.py]
+related_decisions: ["[[datatype-route-edge-waypoint]]", "[[route-model-unification]]", "[[virtual-session-engine-des]]"]
 related: ["[[logic-decision]]"]
 ---
 
@@ -16,7 +16,7 @@ Il sottosistema calcola le rotte (aeree e terrestri) usate dal Dynamic War Manag
 - **`Air_Route_Manager.py`**: pianificazione di rotte aeree in ambiente 3D, con evitamento (o attraversamento controllato) di minacce contraeree modellate come volumi cilindrici (`ThreatAA`). Supporta strategie di elusione per cambio di quota (sopra/sotto la minaccia) o deviazione laterale, e attraversamento calcolato della minaccia quando il tempo di esposizione resta sotto una soglia di sicurezza.
 - **`Ground_Route_Manager.py`**: pianificazione di rotte terrestri (2D/3D semplificate) tramite un grafo pesato e ricerca del percorso ottimo con Dijkstra, con penalità di pendenza per i percorsi su strada.
 
-I due moduli non condividono classi: ciascuno definisce le proprie `Waypoint`/`Edge` locali, incompatibili tra loro e con la classe `Edge`/`Waypoint`/`Route` "ufficiale" di `DataType/` (v. [[datatype-route-edge-waypoint]] per la decisione che ha reso quest'ultima canonica solo per il lato ground — Air resta deliberatamente sulle sue classi locali).
+I due moduli non condividono classi internamente: ciascuno definisce le proprie `Waypoint`/`Edge` locali per l'algoritmo di ricerca, incompatibili tra loro. Dal 2026-09-22 (v. [[route-model-unification]]) `DataType.Route`/`Edge`/`Waypoint` è il modello di dominio unico anche per l'aria — le classi locali restano solo come stato di lavoro privato della ricerca, e un nuovo `Logic/Route_Adapter.py` converte alla frontiera pubblica (`RoutePlanner.calcCanonicalRoute`/`NavigationGraph.find_canonical_route`).
 
 ## File e classi principali
 
@@ -30,6 +30,7 @@ I due moduli non condividono classi: ciascuno definisce le proprie `Waypoint`/`E
 ### `Air_Route_Manager.py`
 
 - **`ThreatAA(danger_level, interception_speed, min_fire_time, min_detection_time, cylinder: Cylinder)`** — minaccia contraerea come cilindro 3D. `edgeIntersect`, `innerPoint`, `calcMaxLenghtCrossSegment` (risolve un'equazione quadratica per stimare la lunghezza massima di segmento attraversabile prima di una possibile intercettazione).
+- **Fabbrica `build_threat_aa(asset)` — nuova 2026-09-22 (Fase 2 motore sessioni virtuali, v. [[virtual-session-engine-des]])**: prima colmava un gap esplicito — nessun codice costruiva mai un `ThreatAA` da un asset AD reale. Compone `Mobile.air_defense_volume()` (geometria) con dati arma reali (`interception_speed` da `speed`/`muzzle_speed` dei registri arma, massimo fra le armi AD) e latenze di reazione (`threat_reaction_times`, da una tabella SAM reale trascritta `SAM_REACTION_TABLE`, con stime dichiarate per fallback) per produrre un `danger_level∈[0,1]` (`threat_danger_level`, combinazione pesata di portata/quota/reattività — scala mai definita altrove nel codebase, fissata qui). Usata da `Military.air_defense_threats()` (v. [[block]]). Nessun consumatore reale in `RoutePlanner` ancora (resta costruito a mano nei test) — collegarlo è lavoro di Fase 3.
 - **`Waypoint(name, point: Point3D, id)`** — punto 3D con proiezione 2D precalcolata; `__eq__`/`__hash__` basati sulle coordinate.
 - **`Edge(name, order_position, wpA, wpB, speed)`** — segmento di rotta; `length` calcolata a `__init__`; `danger` valorizzato solo quando l'edge attraversa una minaccia.
 - **`Route`** — contenitore ordinato di edge; `getWaypoints()` ricostruisce l'ordine seguendo i collegamenti.
@@ -66,11 +67,13 @@ Verificato eseguendo la suite reale il 2026-09-18 (non solo lettura di codice):
 
 - **Moduli isolati**: né `Air_Route_Manager.py` né `Ground_Route_Manager.py` sono importati da alcun altro modulo di `Source/`. Il calcolo delle rotte esiste ma non è agganciato al resto del motore di campagna dinamica.
 - **`Ground_Route_Manager.py` non produce `DataType.Route`**: come sopra, resta il gap più concreto per collegare questo modulo al resto del sistema (`Region.add_route` esiste e funziona, ma nessun produttore reale lo alimenta lato ground).
-- **Tre classi `Edge` e tre classi `Waypoint` distinte nel progetto**: `DataType/Edge.py`+`DataType/Waypoint.py` (ora funzionanti e canoniche per il ground "logico"), `Logic/Air_Route_Manager.py` (locali, canoniche per l'air), `Logic/Ground_Route_Manager.py` (locali, ancora in uso, mai migrate). Nessuna condivide un'interfaccia comune.
+- ~~**Tre classi `Edge` e tre classi `Waypoint` distinte nel progetto**~~ **Risolto in decisione, parzialmente in codice, 2026-09-22** (v. [[route-model-unification]], supersede [[datatype-route-edge-waypoint]]): `DataType.Route`/`Edge`/`Waypoint` è confermato l'unico modello di dominio, esteso esplicitamente anche all'aria. Le classi locali di `Air_`/`Ground_Route_Manager` restano, ma per decisione esplicita, come stato di lavoro privato dell'algoritmo di ricerca — mai più rappresentazione di dominio. Nuovo `Logic/Route_Adapter.py` (Fase 1 di un piano a 5 fasi) converte alla frontiera pubblica: `to_canonical_route()` per l'aria (duck-typed su `Path`/`Route` interna), `ground_path_to_route()` per il terreno. Nuove uscite pubbliche `RoutePlanner.calcCanonicalRoute()`/`NavigationGraph.find_canonical_route()`. Il blocco tecnico reale non era architetturale ma un bug: `DataType/Edge.py` costruiva `Line3D`/`Line2D` nel `__init__` e sympy rifiuta due punti coincidenti, quindi una salita verticale pura (comune quando il pianificatore aereo scavalca una minaccia) rendeva l'arco non costruibile — ora `_buildLine` degrada a `None` + log invece di sollevare. **Non ancora fatto** (Fasi 2-5 del piano): migrare `Utility/visualizer.py`, costruire un produttore per `NavigationGraph` (non esiste — nessun grafo di navigazione terrestre è mai costruito, è il gap più concreto lato ground), rendere private le classi interne, collegare `Contact_Scheduler`.
 - **`Ground_Route_Manager.Edge.__repr__`** referenzia `self.slope`, attributo mai impostato → `AttributeError` se mai invocato `repr()`/`print()` su un'istanza (non coperto da test).
 - **Costanti morte** in `Air_Route_Manager.py`: `MAX_EDGES` e `MIN_SECURE_LENGTH_EDGE`, definite ma mai referenziate nel corpo del file.
 - **Complessità di `RoutePlanner`**: `_handle_threat_crossing`/`_handle_threat_avoidance` sono fortemente ricorsive, con parametri lunghissimi duplicati identici in quasi ogni chiamata — candidato naturale per un oggetto di contesto/dataclass (`SearchContext`).
 
 ## Decisioni architetturali rilevanti
 
-- [[datatype-route-edge-waypoint]] — decisione che ha reso `DataType.Route`/`Edge`/`Waypoint` canonici per il lato ground (riparandone i bug di costruzione) mantenendo invariate le classi locali di `Air_Route_Manager.py`; la "Fase 3" di quella decisione (far produrre `DataType.Route` a `Ground_Route_Manager.py`) resta non iniziata, come documentato sopra.
+- [[datatype-route-edge-waypoint]] — decisione originaria (agosto 2026) che ha reso `DataType.Route`/`Edge`/`Waypoint` canonici per il lato ground, riparandone i bug di costruzione. **Superseded** da [[route-model-unification]] (v. sotto).
+- [[route-model-unification]] — 2026-09-22: `DataType.Route` confermato unico modello anche per l'aria; `Logic/Route_Adapter.py` (Fase 1 di 5) converte alla frontiera; le classi locali di questo file restano stato di lavoro privato della ricerca. Vedi §Stato attuale per il dettaglio tecnico del fix a `DataType/Edge.py` che ha sbloccato la migrazione.
+- [[virtual-session-engine-des]] — `build_threat_aa`/`Mobile.detection_range` (Fase 2) e la frontiera di conversione (parte del piano route-model-unification) sono entrambi pezzi del motore DES per le sessioni virtuali.

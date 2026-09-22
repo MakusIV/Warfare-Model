@@ -3,9 +3,9 @@ title: "Asset — Aviazione"
 type: project-module
 tags: [package-python, warfare-model, dwm, architecture, asset, air]
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-22
 code_paths: [Code/Dynamic_War_Manager/Source/Asset/Aircraft.py, Code/Dynamic_War_Manager/Source/Asset/Aircraft_Data.py, Code/Dynamic_War_Manager/Source/Asset/Aircraft_Loadouts.py, Code/Dynamic_War_Manager/Source/Asset/Aircraft_Weapon_Data.py]
-related_decisions: ["[[asset-type-vs-category]]", "[[combat-power-priority-redesign]]"]
+related_decisions: ["[[asset-type-vs-category]]", "[[combat-power-priority-redesign]]", "[[virtual-session-engine-des]]"]
 related: ["[[asset-base]]", "[[asset-ground-naval]]"]
 ---
 
@@ -67,6 +67,7 @@ Il campo `users` (per il filtro combat-power-estimation per-side, `[[combat-powe
 
 - [[asset-type-vs-category]] — `Aircraft.asset_type` = classe generale (`Air_Asset_Type`); `Aircraft` non ha una `category` granulare propria (a differenza di Vehicle). Nota: `Aircraft_Data.category` (il campo sul *modello* nel registro, non sull'istanza `Aircraft`) è invece una **lista** di `Air_Asset_Type` — un modello può comparire in più bucket (es. F-16A in `Fighter` e `Fighter_Bomber`); le proprietà booleane `isFighter`/`isBomber`/... su `Aircraft` leggono `self.asset_type` (singolo valore, dell'istanza), non `Aircraft_Data.category` (lista, del modello) — i due livelli non vanno confusi.
 - [[combat-power-priority-redesign]] — `air_combat_power()`/`combat_aggregate()`/campo `users` sono i pezzi Aircraft di questa redesign (Fase 2/3-bis/4 di `[[project_fase2_recon_combat_power_plan]]`); `Context/Combat_Power_Estimation.py` (fuori da questo sottosistema) li consuma per la stima fog-of-war.
+- [[virtual-session-engine-des]] — `Aircraft` eredita da `Mobile` (documentata in [[asset-base]]) lo schema `SPEED_SCHEMA` in m/s (con `reference_altitude`, campo specifico Aircraft) e `detection_range()`, entrambi costruiti per il motore DES delle sessioni virtuali.
 
 ## Note
 

@@ -3,9 +3,9 @@ title: "Asset — Terrestri e Navali"
 type: project-module
 tags: [package-python, warfare-model, dwm, architecture, asset, ground, naval]
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-22
 code_paths: [Code/Dynamic_War_Manager/Source/Asset/Vehicle.py, Code/Dynamic_War_Manager/Source/Asset/Vehicle_Data.py, Code/Dynamic_War_Manager/Source/Asset/Ship.py, Code/Dynamic_War_Manager/Source/Asset/Ship_Data.py, Code/Dynamic_War_Manager/Source/Asset/Ground_Weapon_Data.py, Code/Dynamic_War_Manager/Source/Asset/Ship_Weapon_Data.py]
-related_decisions: ["[[asset-type-vs-category]]", "[[combat-power-priority-redesign]]"]
+related_decisions: ["[[asset-type-vs-category]]", "[[combat-power-priority-redesign]]", "[[virtual-session-engine-des]]"]
 related: ["[[asset-base]]", "[[asset-air]]"]
 ---
 
@@ -63,6 +63,7 @@ I template di efficienza (`_EFF_ASM_ANTISHIP_SUBSONIC`, `_EFF_NAVAL_GUN_76/100/1
 
 - [[asset-type-vs-category]] — implementata pienamente per `Vehicle` (`asset_type` = `Ground_Vehicle_Asset_Type`, `category` = sotto-classe granulare da `GROUND_MILITARY_VEHICLE_ASSET`) e per `Ship` (`asset_type` = `Sea_Asset_Type`; `category` senza vocabolario granulare dedicato, di fatto libero). Il bug residuo `Ship.loadAssetDataFromContext`/`Aircraft.loadAssetDataFromContext` (flat dict + `.items()` mancante) è esplicitamente lasciato fuori scope da questa decisione, non un effetto collaterale della stessa.
 - [[combat-power-priority-redesign]] — `Vehicle.set_combat_power`/`Ship.set_combat_power` e il campo `users` (Vehicle: 64 modelli, Ship: 23 modelli, ricerca reale — vedi `[[project_fase2_recon_combat_power_plan]]` Fase 4) sono i pezzi ground/sea di questa redesign; consumati da `Context/Combat_Power_Estimation.py` per la stima fog-of-war (`asset_type` = bucket key, score per-modello = `VEHICLE[m]['combat score']['global_score']`/equivalente `SHIP`).
+- [[virtual-session-engine-des]] — `Vehicle`/`Ship` ereditano da `Mobile` (documentata in [[asset-base]]) lo schema `SPEED_SCHEMA` in m/s (con `off_road`, campo specifico Vehicle) e `detection_range()`; la fabbrica `ThreatAA` (v. [[logic-routing]]) consuma i loro dati arma AD via `Vehicle_Data`/`Ship_Data`.
 
 ## Note
 
