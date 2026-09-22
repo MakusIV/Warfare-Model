@@ -541,6 +541,52 @@ class TestMilitary(unittest.TestCase):
         self.assertEqual(len(result), 2)
 
     # ------------------------------------------------------------------ #
+    # air_defense_power                                                   #
+    # ------------------------------------------------------------------ #
+
+    def test_air_defense_power_no_ad_asset(self):
+        """La dimensione manca del tutto -> 0.0, come la combat power di un blocco vuoto."""
+        self.groundbase._assets = {}
+        self.assertEqual(self.groundbase.air_defense_power(), 0.0)
+
+    def test_air_defense_power_single_threat_is_its_danger_level(self):
+        threat = MagicMock()
+        threat.danger_level = 0.4
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=threat):
+            self.assertAlmostEqual(self.groundbase.air_defense_power(), 0.4)
+
+    def test_air_defense_power_combines_saturating(self):
+        """1 - prod(1 - d): due batterie difendono piu' di una, senza superare 1."""
+        t1, t2 = MagicMock(), MagicMock()
+        t1.danger_level, t2.danger_level = 0.5, 0.5
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   side_effect=[t1, t2]):
+            self.assertAlmostEqual(self.groundbase.air_defense_power(), 0.75)
+
+    def test_air_defense_power_is_bounded(self):
+        t1, t2 = MagicMock(), MagicMock()
+        t1.danger_level, t2.danger_level = 1.0, 0.9
+        self.groundbase._assets = {'v1': self.mock_vehicle, 's1': self.mock_ship}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   side_effect=[t1, t2]):
+            self.assertAlmostEqual(self.groundbase.air_defense_power(), 1.0)
+
+    def test_air_defense_power_ignores_missing_danger_level(self):
+        threat = MagicMock()
+        threat.danger_level = None
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=threat):
+            self.assertEqual(self.groundbase.air_defense_power(), 0.0)
+
+    # ------------------------------------------------------------------ #
     # detection_range                                                     #
     # ------------------------------------------------------------------ #
 

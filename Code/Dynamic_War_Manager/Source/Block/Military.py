@@ -564,6 +564,45 @@ class Military(Block):
                 threats.append(threat)
         return threats
 
+    def air_defense_power(self) -> float:
+        """Potenza di difesa aerea del blocco, in [0, 1].
+
+        E' la dimensione che manca alla combat power: SAM, AAA e EWR valgono 0 nelle tabelle
+        di efficacia (`Context.GROUND_COMBAT_EFFICACY`) **per definizione**, perche' quella
+        misura la capacita' di fuoco e manovra terra-terra, che loro non hanno. La loro
+        potenza esiste ma e' di natura diversa, e il progetto la modella gia': e' il
+        `danger_level` dei `ThreatAA` costruiti dai volumi di difesa aerea degli asset
+        (v. `air_defense_threats` e `Logic/Air_Route_Manager.build_threat_aa`).
+
+        Aggregazione: `1 - prod(1 - danger_level_i)`, cioe' "almeno una delle difese e'
+        efficace". Saturante in [0, 1] come i `danger_level` che la compongono, monotona nel
+        numero di siti (due batterie difendono meglio di una) e senza il tetto artificiale
+        che avrebbe un massimo. Si noti che NON e' una combat power e non e' confrontabile
+        con quella: e' un'altra grandezza, sulla sua scala.
+
+        Consumatori previsti (Fase 4): priorita' di targeting SEAD e risolutore d'ingaggio
+        aria-superficie. Oggi nessuno la consuma ancora, come detection_range dopo la Fase 2.
+
+        Returns:
+            float in [0, 1]; 0.0 se il blocco non ha asset di difesa aerea operativi.
+        """
+        threats = self.air_defense_threats()
+
+        if not threats:
+            return 0.0
+
+        survival = 1.0
+
+        for threat in threats:
+            danger = getattr(threat, 'danger_level', None)
+
+            if danger is None:
+                continue
+
+            survival *= (1.0 - min(max(float(danger), 0.0), 1.0))
+
+        return 1.0 - survival
+
     def detection_range(self, mode: str, sensor: Optional[str] = None) -> Optional[Tuple[float, float, float, int]]:
         """Return detection-range statistics [m] of the block against `mode` targets.
 

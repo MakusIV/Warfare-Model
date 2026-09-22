@@ -498,7 +498,23 @@ WEIGHT_FORCE_GROUND_ASSET = {
 # Fatto (?): è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
 # Fatto(?): Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
 # Max value = 5, min value = 1
-# NOTA: Probabilmente dovrebbe essore più specifiche: Rapid_Retrait, Tactical_Retrait, , Fire_Saturation (per artillery, Tank) 
+# NOTA: Probabilmente dovrebbe essore più specifiche: Rapid_Retrait, Tactical_Retrait, , Fire_Saturation (per artillery, Tank)
+#
+# ASSENZA INTENZIONALE DI SAM/AAA/EWR (decisione 2026-09-22, §9 di
+# Architettura_esecuzione_sessioni_virtuali_ANALISI.md). La tabella copre solo le 5 classi di
+# manovra: SAM, AAA e EWR NON ci sono e di conseguenza combat_power_from_score restituisce 0.0
+# per loro. **Non e' un bug noto, e' la definizione**: questa tabella misura la capacita' di
+# fuoco e manovra terra-terra, che un sito di difesa aerea non ha. Aggiungercelo gonfierebbe
+# la forza offensiva/difensiva di superficie del blocco che lo possiede, cioe' produrrebbe un
+# numero falso in cambio di nulla.
+# La "potenza" della difesa aerea esiste, ma e' una DIMENSIONE DIVERSA, gia' modellata altrove:
+# Mobile.air_defense_volume() -> Air_Route_Manager.build_threat_aa() -> ThreatAA.danger_level,
+# in [0, 1], aggregata a livello di blocco da Military.air_defense_power(). Chi deve valutare
+# un sito SAM (targeting SEAD, risolutore d'ingaggio aria-terra) legge QUELLA, non questa.
+# Conseguenza nota e accettata: in Tactical_Evaluation._calculate_priority un bersaglio con
+# combat power nulla satura a combat_power_ratio = 0.1 (priorita' minima). Rendere prioritari i
+# siti SAM per un attaccante aereo e' lavoro della Fase 4 (SEAD), e va fatto leggendo
+# air_defense_power, non falsificando questa tabella.
 GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
     GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
@@ -541,6 +557,11 @@ def combat_power_from_score(
 
     Returns:
         float: combat power dell'asset, 0.0 se category non è presente in efficacy_table.
+
+    Nota: il ritorno 0.0 per categoria assente è **intenzionale e definitorio**, non un
+    ripiego — è il modo in cui SAM/AAA/EWR restano fuori dalla combat power di superficie
+    (v. il commento sopra GROUND_COMBAT_EFFICACY per la motivazione e per dove vive invece
+    la loro potenza: Military.air_defense_power / ThreatAA.danger_level).
     """
     if category not in efficacy_table:
         return 0.0
