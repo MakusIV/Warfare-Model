@@ -751,7 +751,20 @@ def calculate_priority(
         #combat_power_ratio = max(0.1, min(target_cp / combat_power, 10.0))
         #in caso di attack, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più alta, mentre in caso di defense, una cb_pow del target superiore rispetto al blocco in esame comporta una priorità più bassa.
         if target_cp <= 0: # target senza combat power nota: evita ZeroDivisionError, satura al bound corrispondente
-            combat_power_ratio = 10.0 if not is_attack else 0.1
+            if not is_attack:
+                combat_power_ratio = 10.0
+            elif force_type == 'air':
+                # SEAD: un bersaglio a combat power 0 non e' per forza innocuo -- puo' essere un
+                # sito SAM/AAA/EWR, la cui potenza e' air_defense_power(), non la combat power
+                # (v. Context.GROUND_COMBAT_EFFICACY: 0 per definizione, non un bug). Senza
+                # questo, un attaccante aereo non vedrebbe mai un sito di difesa aerea come
+                # bersaglio prioritario. Stessa scala [0.1, 10.0] degli altri rami: nessuna
+                # minaccia AD reale resta al piano piu' basso, la saturazione piena dei ThreatAA
+                # del bersaglio (air_defense_power=1.0) al piano piu' alto.
+                get_air_defense_power = getattr(target_block, 'air_defense_power', None)
+                combat_power_ratio = 0.1 + get_air_defense_power() * 9.9 if get_air_defense_power else 0.1
+            else:
+                combat_power_ratio = 0.1
         elif not is_attack: # defense
             combat_power_ratio = clip(combat_power / target_cp, 0.1, 10.0)
         else: # attack

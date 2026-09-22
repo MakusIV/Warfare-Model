@@ -31,7 +31,17 @@ class Edge:
             self._speed = speed
             self._line = self._buildLine(wpA.point, wpB.point, Line3D, "3D")
             self._line2d = self._buildLine(wpA.point2d, wpB.point2d, Line2D, "2D")
-            self._lenght = self.calcLength() # distance2D if path_type = [onroad, offroad, water] or distance 3D if path_type = air
+            self._lenght = self.calcLength() # distanza euclidea 3D sempre (v. calcLength/Waypoint.distanceFrom),
+            # per qualunque path_type: il commento precedente ("2D per onroad/offroad/water, 3D
+            # per air") descriveva un comportamento mai implementato -- calcLength() chiama
+            # Waypoint.distanceFrom(Waypoint), che risolve sempre a Point3D.distance(), senza mai
+            # consultare self._path_type. Deciso di correggere il commento, non il codice: le
+            # posizioni degli asset (anche terrestri) portano gia' una quota reale (v.
+            # Asset._position = Point3D(x, y, unit_alt)), quindi la distanza 3D e' fisicamente
+            # sensata anche per il ground; introdurre ora una proiezione 2D per onroad/offroad/
+            # water cambierebbe silenziosamente lunghezze di rotta e tempi di percorrenza gia' in
+            # uso altrove (Route.length/travelTime, Military.time_to_ground_intercept), un
+            # cambio di comportamento che va deciso a parte, non incidentalmente qui.
             self._travel_time = self.calcTravelTime()
 
             # check input parameters

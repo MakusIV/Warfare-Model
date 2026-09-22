@@ -720,6 +720,10 @@ class TestCalculatePriorityTargetAffinity(unittest.TestCase):
         if is_military:
             t.get_military_category.return_value = category
             t.combat_power.side_effect = _make_combat_power_side_effect(cp_value, cp_task)
+            # Default 0.0: nessuna minaccia AD reale, coerente con il floor 0.1 di prima del
+            # ramo SEAD (v. TestCalculatePrioritySEAD) -- i test di questa classe non sono sul
+            # SEAD, non devono dipendere da un valore realistico qui.
+            t.air_defense_power.return_value = 0.0
         return t
 
     def test_default_target_affinity_is_neutral(self):
@@ -772,6 +776,100 @@ class TestCalculatePriorityTargetAffinity(unittest.TestCase):
             target_affinity=2.0,
         )
         self.assertAlmostEqual(scaled, base * 2.0)
+
+
+class TestCalculatePrioritySEAD(unittest.TestCase):
+    """Unit tests for the SEAD path of calculate_priority(): an air attacker against a target
+    with zero known combat power (SAM/AAA/EWR, by construction always 0 in GROUND_COMBAT_EFFICACY)
+    must read air_defense_power() instead of flooring at the generic 0.1 ratio."""
+
+    @staticmethod
+    def _air_block():
+        block = MagicMock(spec=Military)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Air_Base'
+        block.combat_power.side_effect = _make_combat_power_side_effect(10.0, 'CAP')
+        return block
+
+    @staticmethod
+    def _sam_target(air_defense_power):
+        target = MagicMock(spec=Military)
+        target.side = 'Red'
+        target.value = 5
+        target.is_military.return_value = True
+        target.get_military_category.return_value = 'Ground_Base'
+        # Nessuna arma nelle tabelle di efficacia ground-ground: combat power 0 per costruzione.
+        target.combat_power.side_effect = _make_combat_power_side_effect(0.0, 'Defense')
+        target.air_defense_power.return_value = air_defense_power
+        return target
+
+    def test_zero_air_defense_power_still_floors_at_0_1(self):
+        block = self._air_block()
+        target = self._sam_target(air_defense_power=0.0)
+        result = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            force_type='air',
+        )
+        # combat_power_ratio = 0.1 -> priority = target_value * 0.1 * range_ratio * weight / tti
+        self.assertAlmostEqual(result, 5 * 0.1 * 1.0 * 2.0 / 5.0)
+
+    def test_full_air_defense_power_reaches_max_ratio(self):
+        block = self._air_block()
+        target = self._sam_target(air_defense_power=1.0)
+        result = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            force_type='air',
+        )
+        # air_defense_power=1.0 -> combat_power_ratio = 0.1 + 1.0*9.9 = 10.0 (stesso tetto degli
+        # altri rami della funzione).
+        self.assertAlmostEqual(result, 5 * 10.0 * 1.0 * 2.0 / 5.0)
+
+    def test_partial_air_defense_power_scales_linearly(self):
+        block = self._air_block()
+        target = self._sam_target(air_defense_power=0.5)
+        result = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            force_type='air',
+        )
+        expected_ratio = 0.1 + 0.5 * 9.9
+        self.assertAlmostEqual(result, 5 * expected_ratio * 1.0 * 2.0 / 5.0)
+
+    def test_non_air_attacker_ignores_air_defense_power(self):
+        """Un attaccante ground/sea non fa SEAD: resta il floor 0.1 anche se il bersaglio
+        espone air_defense_power() -- non deve nemmeno essere chiamato."""
+        block = MagicMock(spec=Military)
+        block.side = 'Blue'
+        block.get_military_category.return_value = 'Ground_Base'
+        block.combat_power.side_effect = _make_combat_power_side_effect(10.0, 'Attack')
+
+        target = self._sam_target(air_defense_power=1.0)
+
+        result = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            force_type='ground',
+        )
+
+        target.air_defense_power.assert_not_called()
+        self.assertAlmostEqual(result, 5 * 0.1 * 1.0 * 2.0 / 5.0)
+
+    def test_target_without_air_defense_power_falls_back_to_floor(self):
+        """Un bersaglio che non espone air_defense_power() (mock senza spec, o classe che non
+        la implementa) non deve rompere la funzione -- stesso floor 0.1 di prima."""
+        block = self._air_block()
+        target = MagicMock(spec=Military)
+        target.side = 'Red'
+        target.value = 5
+        target.is_military.return_value = True
+        target.get_military_category.return_value = 'Ground_Base'
+        target.combat_power.side_effect = _make_combat_power_side_effect(0.0, 'Defense')
+        del target.air_defense_power  # spec=Military la avrebbe comunque: simula la sua assenza
+
+        result = calculate_priority(
+            block=block, target_block=target, weight=2.0, time_to_intercept=5.0, range_ratio=1.0,
+            force_type='air',
+        )
+
+        self.assertAlmostEqual(result, 5 * 0.1 * 1.0 * 2.0 / 5.0)
 
 
 class TestCalcAirPriorityTargetAffinity(unittest.TestCase):

@@ -284,9 +284,39 @@ di asset. Consumare **solo** `DataType.Route` (e' il test di non-regressione del
 Collegare `Military.air_defense_threats()` alla pianificazione di rotta reale (oggi il
 `RoutePlanner` riceve minacce costruite a mano nei test) e' parte di questo lavoro.
 
-**Da confermare con l'utente prima/durante la Fase 4**: far leggere `Military.air_defense_power()`
-alla priorita' di targeting quando l'attaccante e' aereo (SEAD). E' un cambio di comportamento sui
-numeri di campagna, non un'aggiunta.
+## I 3 punti lasciati aperti dopo Q1-Q3 — CHIUSI 2026-09-22
+
+1. **SEAD — `air_defense_power()` collegata alla priorita' di targeting: FATTO.**
+   `Tactical_Evaluation.calculate_priority`, ramo `target_cp <= 0`: prima saturava sempre a
+   `combat_power_ratio = 0.1` per un attaccante (SAM/AAA/EWR = 0 combat power per definizione,
+   Q3). Ora, solo quando `is_attack and force_type == 'air'`, legge
+   `target_block.air_defense_power()` (se il bersaglio la espone) e mappa `[0,1] -> [0.1, 10.0]`
+   linearmente (`0.1 + air_defense_power * 9.9`) — stessa scala degli altri rami della funzione.
+   Attaccanti ground/sea restano al floor 0.1 (SEAD e' un compito aereo). Bersaglio senza
+   `air_defense_power()` (duck-typing, `getattr(..., None)`) -> floor 0.1 invariato, nessuna
+   eccezione. 5 nuovi test in `Test_Tactical_Evaluation.py::TestCalculatePrioritySEAD`.
+   Effetto collaterale trovato e corretto: `TestCalculatePriorityTargetAffinity._target` (mock
+   `spec=Military`) non configurava `air_defense_power` -> un test esistente con attaccante aereo
+   e target a combat power 0 ora chiamava un `MagicMock` non configurato invece di un float,
+   rompendo l'aritmetica. Fix: default `air_defense_power.return_value = 0.0` nel fixture
+   (comportamento invariato per quel test, che non e' sul SEAD).
+2. **`MIN_EFFECTIVE_HIT_DAMAGE = 1` (`Logic/Damage_Model.py`): confermata, nessuna modifica.**
+   Resta la costante che garantisce che un colpo a segno abbia sempre un effetto minimo, anche
+   contro un bersaglio con `destroy_capacity` quasi nulla (le infrastrutture nei registri) —
+   altrimenti l'accumulo di danno sarebbe impossibile per costruzione contro quei bersagli.
+3. **`Edge.calcLength()` non distingue per `path_type` (`DataType/Edge.py`): il COMMENTO era il
+   bug, corretto — il codice resta invariato.** `calcLength()` chiama
+   `Waypoint.distanceFrom(Waypoint)`, che risolve sempre a `Point3D.distance()` (3D), mai
+   `self._path_type`. Le posizioni degli asset (anche terrestri) portano gia' una quota reale
+   (`Asset._position = Point3D(x, y, unit_alt)`, da `unit_alt` DCS), quindi la distanza 3D e'
+   fisicamente sensata anche per il ground — introdurre ora una proiezione 2D per
+   `onroad`/`offroad`/`water` avrebbe cambiato silenziosamente lunghezze di rotta e tempi di
+   percorrenza gia' in uso (`Route.length`/`travelTime`, `Military.time_to_ground_intercept`), un
+   cambio di comportamento a se stante, non un fix. Il commento sopra `self._lenght = ...` ora
+   descrive il comportamento reale.
+
+Suite dopo questi 3 fix: 2762 test OK (skipped=5), +5 da 2757 (i test SEAD; gli altri due punti
+non aggiungono test).
 
 **How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
 sorgente. Le Fasi 1 e 2 (correzioni a codice esistente, senza le quali lo Strato 1 non è scrivibile)
