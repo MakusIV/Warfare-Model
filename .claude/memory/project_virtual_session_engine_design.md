@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T20:49:22.873Z
+  modified: 2026-09-23T20:55:36.827Z
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
@@ -750,13 +750,16 @@ selezione arma dai registri per `fire_control` (Fase 4, mai fatta), fog-of-war r
 `detection_factor` (gap S9), il manualetto Markdown con diagrammi UML (v. sezione dedicata sotto,
 da fare a fine sviluppo — che e' ORA, quindi diventa rilevante se l'utente lo chiede).
 
-**How to apply**: il motore DES e' COMPLETO e verificato (3371 test). La sessione ha ancora TUTTO
-da committare (nessun commit fatto dopo Fase 6 `a968b549`): Fase 7 intera (S1-S18 + harness +
-determinismo/agnosticismo), il fix di 5 classi rotte (Transport/Storage/Urban/Production/
-Structure), la dottrina non-Military, il fix di `Block.set_asset`, la ricalibrazione
-dell'intercettazione in 3 tempi (interceptor_stock -> InterceptionEvent -> pool condiviso SAM), e
-il fix del regime carburante per gli intercettori. Se questa riga non e' stata aggiornata a
-"committato", il commit finale non e' ancora avvenuto: farlo prima di qualunque altro lavoro.
+**COMMITTATO**: `bf8f5cb0` su `analysis/dce-dcs-persistence`, dopo `a968b549` (Fase 6). Nessuno dei
+4 commit della sessione (Fase 4 `44bc6950`, Fase 5 `a60c258c`, Fase 6 `a968b549`, Fase 7 `bf8f5cb0`)
+e' stato pushato. **Il motore DES a 7 fasi e' COMPLETO, verificato, committato.**
+
+**How to apply**: qualunque lavoro futuro sul motore di sessione parte da questo documento. Le 7
+fasi sono tutte fatte. Prossimi passi possibili (nessuno obbligatorio): selezione arma dai registri
+per `fire_control` (rimandata dalla Fase 4), fog-of-war reale collegato a `detection_factor` (gap
+S9), push dei 4 commit se l'utente lo chiede, il manualetto Markdown con diagrammi UML (v. sezione
+dedicata sopra in questo file, "ATTIVITA' REGISTRATA PER LA FINE DELLO SVILUPPO" — quel momento e'
+ORA).
 
 ## ATTIVITA' REGISTRATA PER LA FINE DELLO SVILUPPO DEL MOTORE DES (richiesta utente 2026-09-23)
 

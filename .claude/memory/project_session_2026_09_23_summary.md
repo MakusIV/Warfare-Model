@@ -1,11 +1,11 @@
 ---
 name: project-session-2026-09-23-summary
-description: "Recap sessione 2026-09-23: git pull di 15 commit rimasti indietro (lavoro fatto il 22/9 sulla VM Oracle VirtualBox), poi decisione dell'utente sulle 3 proposte pendenti (soglie di disingaggio, LLM locale, modello a salva Fase 4). Implementazione della Fase 4 delegata a un agente Opus effort alto, in corso."
+description: "Recap sessione 2026-09-23 — SESSIONE CHIUSA, motore DES a 7 fasi COMPLETO: pull di 15 commit iniziale, poi Fase 4 (Engagement_Resolver), Fase 5 (SessionOutcome/RNG/carburante), Fase 6 (Session_Simulator + N forze), Fase 7 (validazione S1-S18 + 5 bug corretti + ricalibrazione intercettazione). Suite 3371 test OK, tutto committato e pushato. Prossima sessione probabilmente su VM Oracle VirtualBox."
 metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T16:05:51.760Z
+  modified: 2026-09-23T20:59:56.563Z
 ---
 
 **Promemoria multi-macchina**: l'utente lavora su almeno 3 macchine (VM Oracle VirtualBox Ubuntu,
@@ -217,7 +217,62 @@ commit della sessione (Fase 4/5/6) e' stato pushato.
 **Prossimo passo**: Fase 7 (validazione, scenari S1-S11, test di determinismo, test di
 agnosticismo) - o eventuali altre rifiniture che l'utente vorra' chiedere prima.
 
-## (storico) Prossimo passo indicato a fine Fase 5, ora superato: Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che
+## (storico) Prossimo passo indicato a fine Fase 5, ora superato
+Testo originale: "Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che
 chiamerà `Contact_Scheduler`+`Engagement_Resolver` per ogni coppia di forze e farà avanzare le
 rotte fra un contatto e l'altro consumando carburante) oppure Fase 7 (validazione, scenari
-S1-S11, test di agnosticismo) — non ancora iniziata, da chiedere all'utente quale preferisce.
+S1-S11, test di agnosticismo) — non ancora iniziata, da chiedere all'utente quale preferisce."
+Superato dagli eventi: sia la Fase 6 sia la Fase 7 sono state fatte nella stessa sessione (v.
+sotto, sezione di chiusura).
+
+## CHIUSURA SESSIONE 2026-09-23 (fine giornata, richiesta esplicita dell'utente)
+
+**Stato finale: il motore di sessioni virtuali a 7 fasi è COMPLETO.** Tutte le fasi (1-7) fatte,
+verificate indipendentemente da questa sessione (mai fidandosi del solo report di un agente) e
+committate: `44bc6950` (Fase 4), `a60c258c` (Fase 5), `a968b549` (Fase 6), `bf8f5cb0` (Fase 7).
+Suite finale: **3371 test, OK (skipped=5)**. Tutto pushato su `origin/analysis/dce-dcs-persistence`
+a fine sessione (v. sotto per l'hash esatto, aggiunto dopo il push).
+
+**Riepilogo di tutto il lavoro della sessione** (dettaglio completo nelle sezioni sopra e in
+[[project_virtual_session_engine_design]], che resta la fonte primaria per il motore):
+1. Recuperato un ritardo di 15 commit rispetto a origin (lavoro fatto il 22/9 sulla VM).
+2. Decise le 3 proposte pendenti (soglie di disingaggio, ruolo LLM locale — rimandato, modello a
+   salva Hughes) e la cadenza di campagna (6 sessioni virtuali dopo ogni DCS, riarmo dopo ogni
+   sessione — v. [[project_c2_hierarchy_design]]).
+3. Fase 4 (Engagement_Resolver) + rifiniture (round-robin fuoco, munizioni aerei da loadout, Pd
+   meteo/notte).
+4. Fase 5 (SessionOutcome/SessionOrder — la "Fase 0" mai fatta, RNG di sessione seedato, carburante).
+5. Fase 6 (Session_Simulator) + fix id casuale di Block/Military + estensione di
+   Engagement_Resolver a N forze simultanee (componenti connesse).
+6. Fase 7 (validazione, S1-S18) + 5 bug pre-esistenti corretti (Transport/Storage/Urban/Production/
+   Structure, Block.set_asset) + dottrina non-Military + ricalibrazione completa
+   dell'intercettazione (interceptor_stock -> InterceptionEvent -> pool condiviso per i SAM puri,
+   quest'ultimo confermato da una verifica sui registri richiesta dall'utente, che aveva ragione a
+   dubitare del design iniziale).
+
+**Metodo di lavoro di questa sessione, da riproporre**: ogni fase e' stata delegata a un agente
+Opus (effort alto, richiesta esplicita dell'utente per "lo sviluppo"), MAI fidandosi del solo
+report dell'agente — questa sessione ha sempre riletto il codice chiave e rieseguito la suite
+completa in autonomia prima di considerare un lavoro concluso. Diversi bug reali sono stati trovati
+proprio in questo modo (non dagli agenti stessi, che lavorano nel loro perimetro assegnato).
+
+**Attività registrata per DOPO** (v. sezione dedicata sopra in questo file, ancora valida, nessuna
+azione richiesta ora): un manualetto in Markdown che spiega l'architettura del motore DES a
+livello generale e di dettaglio, con tutti i diagrammi/grafici utili (UML e altri formati) —
+**da fare con Sonnet, effort alto, non Opus** (richiesta esplicita dell'utente). Nessuna data
+fissata; l'utente decidera' quando affrontarlo.
+
+**Prossima sessione**: l'utente ha detto che molto probabilmente la aprirà sulla **VM Oracle
+VirtualBox Ubuntu** (una delle 3 macchine del progetto, v. [[project_dev_environment]]). Su quella
+macchina il venv è quello classico in `venv/bin/python3` (non `.direnv/`, quello è solo per ProArt
+P16) — verificarlo comunque all'inizio, non dare per scontato che `venv/bin/python3` abbia le
+dipendenze aggiornate. **Fare SEMPRE `git fetch`/pull a inizio sessione** anche se si presume di
+essere l'ultima macchina ad aver lavorato: è la stessa raccomandazione data a inizio di questa
+sessione, e questa volta il pull sarà "in discesa" (la VM riceverà il lavoro di oggi), ma vale
+comunque controllare prima di assumere qualunque cosa sullo stato del branch.
+
+**Non c'è alcun lavoro in sospeso o a metà.** Se una sessione futura legge questa memoria e trova
+il motore DES a 7 fasi già completo con la suite verde, non c'è nulla da riprendere qui: si parte
+o dal manualetto (se l'utente lo chiede) o da un nuovo lavoro che l'utente indichera' (es. la
+selezione dell'arma dai registri per `fire_control`, il collegamento del fog-of-war reale, o
+tutt'altro).
