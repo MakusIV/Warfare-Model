@@ -1,5 +1,20 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-23] implementazione | Fase 6 del motore DES: Session_Simulator + ingaggi N-forze
+
+`Logic/Session_Simulator.py` (nuovo): orchestratore a coda eventi che mette in fila
+`Contact_Scheduler`→`Engagement_Resolver`→`Fuel_Model`→`Session_Types.assemble_session_outcome`
+per una sessione con più forze per lato. In corso d'opera, su richiesta dell'utente, due estensioni:
+fix del bug id casuale di `Block`/`Military` (nuovo parametro `id` opzionale, retrocompatibile) e
+generalizzazione di `Engagement_Resolver.resolve_engagement` a N forze simultanee (`extra_forces`,
+`contact_broken` diventato `broken_forces` per-forza) con `Session_Simulator` che raggruppa le
+forze per componenti connesse invece che per coppie — risolve un difetto reale (non solo
+un'approssimazione) sulle forze impegnate su più fronti sovrapposti nel tempo. Tre agenti Opus
+effort alto in sequenza nella stessa sessione. Verificato dalla sessione principale: suite
+rieseguita indipendentemente ad ogni passo, **3168 test OK (skipped=5)** finali (da 3115).
+Dettaglio in [[project_virtual_session_engine_design]], pagina [[virtual-session-engine-des]]
+aggiornata. Non ancora committato.
+
 ## [2026-09-23] implementazione | Fase 5 del motore DES: SessionOutcome, RNG di sessione, carburante
 
 `Command/Session_Types.py` (`SessionOrder`/`SessionOutcome`/`assemble_session_outcome`, chiude anche

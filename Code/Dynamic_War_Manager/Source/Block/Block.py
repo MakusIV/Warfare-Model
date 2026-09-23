@@ -72,7 +72,8 @@ class Block:
         sub_category: Optional[str] = None,
         functionality: Optional[str] = None,
         value: Optional[int] = None,
-        region: Optional[Union["Region", None]] = None
+        region: Optional[Union["Region", None]] = None,
+        id: Optional[str] = None
     ):
         """
         Initialize a new block.
@@ -87,13 +88,27 @@ class Block:
             value: Strategic value of the block
             region: Region the block belongs to
             resource_manager: Resource Manager of the block
+            id: id di dominio esplicito (es. da una campagna persistita o da un replay che deve
+                restare riproducibile). Se assente, generato come sempre da `setId` con un
+                suffisso casuale — comportamento invariato per chi non lo passa. Il motore di
+                sessioni virtuali (Fase 6, `Logic/Session_Simulator.py`) richiede id di forza
+                STABILI fra le esecuzioni: senza questo parametro, due `Military` costruite da
+                zero con lo stesso nome avrebbero id (quindi seed e ordine di risoluzione)
+                diversi ad ogni esecuzione.
 
         Raises:
-            ValueError: If parameters are invalid
+            ValueError: If parameters are invalid, or `id` is not a non-empty string
         """
         # Block properties
         self._name = name if name else setName('Unnamed')
-        self._id = setId(self._name, None)
+
+        if id is not None:
+            if not isinstance(id, str) or not id:
+                raise ValueError(f"id must be a non-empty string, got {id!r}")
+
+            self._id = id
+        else:
+            self._id = setId(self._name, None)
         self._description = description or ""
         self._side = side or "Neutral"
         self._category = category or ""

@@ -201,8 +201,26 @@ loadout assegnato con fattore 2× sul raggio d'azione dichiarato; navi nucleari 
 scelta corretta non di comodo). Suite 3027 → 3115. Nessun `apply_session_outcome`/scrittura
 `Campaign_State`: resta responsabilità del futuro `Theater_Session_Manager`.
 
-**Prossimo passo**: Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi) o Fase 7
-(validazione, scenari S1-S11, test di agnosticismo).
+**Fase 6 (orchestratore) — FATTA 2026-09-23**: `Logic/Session_Simulator.py`, `run_session(order,
+forces_a, forces_b, fire_control, ...)` mette in fila `Contact_Scheduler.schedule_contacts` →
+raggruppamento in **componenti connesse** di forze → `Engagement_Resolver.resolve_engagement` per
+componente → `apply_engagement_result` → `Fuel_Model` per il movimento →
+`Session_Types.assemble_session_outcome`. Due estensioni fatte in corso d'opera, su richiesta
+dell'utente:
+- **Bug id casuale corretto**: `Block.__init__`/`Military.__init__` accettano ora un parametro
+  opzionale `id` esplicito (passthrough retrocompatibile) — senza, due forze ricostruite da zero
+  con lo stesso nome avrebbero id (quindi seed e ordine di risoluzione) diversi ad ogni esecuzione.
+- **`Engagement_Resolver` esteso a N forze (2+)**: nuovo parametro `extra_forces`, il flag globale
+  `contact_broken` sostituito da `broken_forces: set` per-forza (una forza disingaggiata smette di
+  ingaggiare/essere ingaggiata, senza fermare il resto della run). Risolve un difetto reale, non
+  solo un'approssimazione: forze in contatto sovrapposto con più avversari ora sono risolte in
+  un'unica run con stato condiviso, invece che una coppia alla volta con l'ordine di coda che
+  decideva chi "arrivava prima" alle risorse della forza condivisa. Verificato dall'agente su 3000
+  scenari casuali a 2 forze: esito identico a prima della generalizzazione.
+
+Suite: 3115 → 3140 (Session_Simulator) → 3146 (fix id) → 3168 (N forze).
+
+**Prossimo passo**: Fase 7 (validazione, scenari S1-S11, test di agnosticismo).
 
 ## Fonti
 

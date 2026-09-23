@@ -112,6 +112,39 @@ class TestBlock(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.block.id = 123
 
+    def test_constructor_id_explicit(self):
+        """An explicit id at construction is used verbatim, not randomized."""
+        block = Block(name="Stable", id="stable_id_42")
+        self.assertEqual(block.id, "stable_id_42")
+
+    def test_constructor_id_stable_across_same_name(self):
+        """Two blocks with the same name get the SAME id when one is passed explicitly.
+
+        Without `id`, Utility.setId appends a random suffix: reconstructing a force from
+        scratch (tests, replay) with the same name never reproduces the same id, which
+        breaks the virtual-session-engine's seed/resolution-order reproducibility
+        (Logic/Session_Simulator.py). This is the regression test for that fix.
+        """
+        first = Block(name="Same", id="fixed_id")
+        second = Block(name="Same", id="fixed_id")
+        self.assertEqual(first.id, second.id)
+
+    def test_constructor_id_default_still_random(self):
+        """Without `id`, behavior is unchanged: two same-named blocks get different ids."""
+        first = Block(name="Same")
+        second = Block(name="Same")
+        self.assertNotEqual(first.id, second.id)
+
+    def test_constructor_id_empty_string_raises(self):
+        """An empty string id is rejected (ambiguous with 'not provided')."""
+        with self.assertRaises(ValueError):
+            Block(name="Test", id="")
+
+    def test_constructor_id_wrong_type_raises(self):
+        """A non-string id raises ValueError, not silently coerced or ignored."""
+        with self.assertRaises(ValueError):
+            Block(name="Test", id=123)
+
     # -----------------------------------------------------------------------
     # Property validation (setters)
     # -----------------------------------------------------------------------

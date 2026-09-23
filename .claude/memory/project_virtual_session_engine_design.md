@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T14:38:50.335Z
+  modified: 2026-09-23T16:05:10.006Z
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
@@ -578,14 +578,74 @@ warning, i delta restano applicabili in ordine — risolverlo e' compito dell'or
 Fase 6); nessun `apply_session_outcome` (l'applicazione "in un'unica passata" e' di
 `Theater_Session_Manager`, non ancora costruito).
 
+## ATTIVITA' REGISTRATA PER LA FINE DELLO SVILUPPO DEL MOTORE DES (richiesta utente 2026-09-23)
+
+**Non fare ora.** Al termine dello sviluppo del motore (dopo la Fase 7, quando l'intero motore DES
+e' fatto e validato), produrre un **manualetto in Markdown** che spiega l'architettura del motore
+sia a livello generale sia di dettaglio. Deve includere **tutti i diagrammi/grafici utili** (UML e
+altri formati) per chiarire architettura e funzionamento — non solo testo. Contenuto minimo atteso,
+da ricavare quando si scrive (non fissato ora): i 4 strati (contratto, scheduler contatti,
+risolutore d'ingaggio, applicazione stato), il flusso dati fra `Contact_Scheduler` →
+`Engagement_Resolver` → `Session_Types`/`Fuel_Model`, i diagrammi di sequenza degli eventi
+(coda heapq, tie-break), i diagrammi di classe dei tipi di dominio (`ContactWindow`,
+`EngagementResult`, `SessionOutcome`, ecc.), e il perche' delle scelte chiave (DES vs tick, salva di
+Hughes, RNG seedato). V. [[project_uml_generation]] per il workflow/tool UML gia' in uso nel
+progetto (PlantUML). Da posizionare probabilmente in `Analysis/WIKI_LLM_SIMULATION/wiki/project/`
+o come documento a se' in `Analysis/Document/`, da decidere quando si arriva a scriverlo.
+
+**Modello/effort per questo lavoro (richiesta utente 2026-09-23)**: Sonnet, effort **alto**
+(scelta fra alto/medio lasciata a chi esegue: alto perche' e' un deliverable one-shot con diagrammi
+che devono essere corretti, non solo testo di sintesi — a differenza dello sviluppo di codice, qui
+non serve Opus). Non usare un agente Opus per questo task, a differenza delle fasi di implementazione.
+
+## FASE 6 — orchestratore Session_Simulator + ingaggi N-forze: FATTA 2026-09-23 (suite 3115 -> 3168)
+
+Tre agenti Opus (effort alto) in sequenza nella stessa sessione:
+1. `Logic/Session_Simulator.py` (522 righe): `run_session(order, forces_a, forces_b, fire_control,
+   ...)` mette in fila `Contact_Scheduler.schedule_contacts` (trova tutti i contatti della
+   sessione fra insiemi di blocchi) -> raggruppamento -> `Engagement_Resolver.resolve_engagement`
+   -> `apply_engagement_result` (danno/munizioni agli asset reali, subito dopo ogni ingaggio) ->
+   `Fuel_Model.build/apply_fuel_event` per il movimento (regime 'max' se l'asset ha combattuto,
+   altrimenti 'nominal') -> `Session_Types.assemble_session_outcome`. Coda eventi heapq con due
+   tipi (ENGAGEMENT < MOVEMENT a parita' d'istante). Suite 3115 -> 3140.
+2. **Bug trovato e corretto**: `Block.__init__`/`Military.__init__` generavano sempre un id con
+   suffisso casuale (`Utility.setId`) — due forze ricostruite da zero con lo stesso nome (test,
+   replay) avrebbero id, quindi seed e ordine di risoluzione, diversi ad ogni esecuzione. Fix additivo
+   e retrocompatibile: entrambi i costruttori accettano ora `id: Optional[str] = None` (passthrough,
+   comportamento invariato se assente). Fatto e testato da questa sessione direttamente (non da un
+   agente): 6 test nuovi in `Test_Block.py`/`Test_Military.py`. Suite 3140 -> 3146. **In campagna
+   il caso comune non era a rischio**: `Campaign_State.restore` applica gli snapshot a oggetti
+   Block/Region gia' vivi in memoria, non li ricostruisce da zero.
+3. **`Engagement_Resolver` esteso a N forze (2+) simultanee**: problema reale trovato e confermato
+   dall'utente con un esempio concreto — una forza X in contatto SOVRAPPOSTO con A e con B veniva
+   risolta come due ingaggi separati in sequenza (prima tutto (X,A), poi (X,B) leggendo lo stato
+   di X gia' consumato dall'intero primo ingaggio, anche per la parte di tempo in cui X stava
+   davvero combattendo entrambi insieme): l'ordine di coda decideva chi "arrivava prima" alle
+   risorse di X, un artefatto d'implementazione non della fisica. Fix: nuovo parametro
+   `extra_forces` su `resolve_engagement` (retrocompatibile, default vuoto); il flag globale
+   `contact_broken: bool` sostituito da `broken_forces: set` **per-forza** (una forza che si
+   disingaggia smette di ingaggiare/essere ingaggiata — bersaglio DISINGAGGIATO ma vivo non e'
+   piu' raggiungibile — senza fermare le altre coppie della run). `Session_Simulator` raggruppa
+   le forze per **componenti connesse** (BFS deterministico per id) invece che per coppie: X/A/B
+   collegati da almeno una finestra ciascuno sono risolti con UNA chiamata, stato di X in una
+   timeline continua. **Verificato dall'agente stesso** con un confronto automatico fra la versione
+   nuova e HEAD su 3000 scenari casuali a 2 forze: esito identico in tutti i casi (garanzia di
+   non-regressione oltre alla suite). Verificato da questa sessione: letto il codice di
+   `broken_forces`/`_on_launch`, confermata la logica. Suite 3146 -> 3168.
+
+**Precondizione dichiarata nel modulo**: gli id di forza devono essere stabili fra le esecuzioni
+(v. punto 2) — chi costruisce forze da zero per test/replay deve passare `id=` esplicito.
+
+**Decisioni prese dall'utente durante la Fase 6**: accettato come limite dichiarato (non da
+correggere) che una forza disingaggiata resti disponibile per altri ingaggi nella stessa sessione
+(nessuna esclusione/ri-instradamento inventati) e che le salve in volo a fine sessione estendano
+`t_end` invece di essere troncate.
+
 **How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
-sorgente. Le Fasi 1-5 sono **fatte**: cinematica, percezione, scheduler dei contatti, risolutore
-d'ingaggio, contratto SessionOutcome/RNG di sessione/carburante. Prossimo passo: **Fase 6**
-(`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che fa avanzare le rotte fra un
-contatto e l'altro, consuma carburante via `Fuel_Model`, chiama `Contact_Scheduler`+
-`Engagement_Resolver` per ogni coppia di forze e produce un `SessionOutcome` reale con
-`Session_Types.assemble_session_outcome`) oppure **Fase 7** (validazione, scenari S1-S11, test di
-agnosticismo) se si preferisce prima validare cio' che c'e'.
+sorgente. Le Fasi 1-6 sono **fatte**: cinematica, percezione, scheduler dei contatti, risolutore
+d'ingaggio (ora a N forze), contratto SessionOutcome/RNG di sessione/carburante, orchestratore di
+sessione. Prossimo passo: **Fase 7** (validazione: scenari S1-S11, test di determinismo, **test di
+agnosticismo** — l'unico esplicitamente richiesto dal vincolo simulator-agnostic).
 V. [[project_route_model_unification_plan]] per le fasi 2-5 dell'unificazione del modello di rotta,
 [[project_c2_hierarchy_design]] per `Command/` (incluso il riarmo post-sessione confermato il
 2026-09-23) e [[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.

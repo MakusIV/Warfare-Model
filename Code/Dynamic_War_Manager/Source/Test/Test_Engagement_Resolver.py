@@ -908,6 +908,202 @@ class TestInputs(unittest.TestCase):
         self.assertEqual(result.detections, ())
 
 
+# ── INGAGGI A N FORZE ─────────────────────────────────────────────────────────
+
+_THREE_SIDES = {'Blue': {'erosion': 0.3, 'shock': 0.2}, 'Red': {'erosion': 0.3, 'shock': 0.2},
+                'Green': {'erosion': 0.3, 'shock': 0.2}}
+
+
+class TestMultiForceEngagement(unittest.TestCase):
+    """Tre forze in UNA run: la forza X in contatto con A e con B nello stesso intervallo.
+
+    E' il caso che ha motivato `extra_forces`: con due chiamate separate lo stato di X
+    sarebbe consumato da un fronte alla volta; in una run e' una sola timeline.
+    """
+
+    def test_extra_forces_default_is_the_two_force_engagement(self):
+        blue = _Force('blue', 'Blue', [_Asset(f'b{i}') for i in range(3)])
+        red = _Force('red', 'Red', [_Asset(f'r{i}') for i in range(3)])
+        windows = [_window(f'b{i}', f'r{j}', distance=800.0) for i in range(3) for j in range(3)]
+        spec = ER.ShotSpec(accuracy=0.6, destroy_capacity=0.5)
+        profiles = _profiles({'b0': (3.0, 2.0)}, default=(5.0, 2.0))
+        plain = ER.resolve_engagement(blue, red, windows, _always(spec), random.Random(7),
+                                      reaction_profile_for=profiles)
+        explicit = ER.resolve_engagement(blue, red, windows, _always(spec), random.Random(7),
+                                         extra_forces=(), reaction_profile_for=profiles)
+        self.assertEqual(plain, explicit)
+
+    def test_interceptor_stock_is_shared_across_fronts_in_time_order(self):
+        """X intercetta per entrambi i fronti con UNA scorta (3 colpi, 2 canali).
+
+        A lancia 2 colpi intercettabili a t = 3 e a t = 10, B lancia 2 colpi a t = 5.
+        Timeline congiunta: t=3 ne ferma 2 (scorta 1), t=5 — il colpo di B, nel mezzo
+        dell'ingaggio con A — ne ferma 1 (scorta 0), t=10 nessuno. Risolvendo prima (X,A)
+        per intero, la scorta sarebbe andata tutta ad A (t=3 e t=10) e B non sarebbe stato
+        intercettato affatto.
+        """
+        interceptor = _Asset('x1', ammunition=3)
+        x = _Force('X', 'Blue', [interceptor], interceptors=[(interceptor, 2)])
+        a = _Force('A', 'Red', [_Asset('a1')])
+        b = _Force('B', 'Green', [_Asset('b1')])
+        windows = [_window('x1', 'a1', t_end=12.0), _window('x1', 'b1', t_end=12.0)]
+
+        def fire(shooter, target):
+            if shooter.id == 'x1':
+                return None
+            cycle = 7.0 if shooter.id == 'a1' else 100.0
+            return _miss(rounds=2, interceptable=True, cycle_time=cycle)
+
+        result = ER.resolve_engagement(x, a, windows, fire, random.Random(0), extra_forces=[b],
+                                       thresholds=_THREE_SIDES,
+                                       reaction_profile_for=_profiles({'a1': (3.0, 1.0),
+                                                                       'b1': (5.0, 1.0)}))
+
+        self.assertEqual([(s.t_launch, s.shooter_id) for s in result.salvos],
+                         [(3.0, 'a1'), (5.0, 'b1'), (10.0, 'a1')])
+        self.assertEqual([(r.time, r.intercepted) for r in result.resolutions],
+                         [(3.0, 2), (5.0, 1), (10.0, 0)])
+        interceptions = [(e.time, e.rounds) for e in result.ammunition_events
+                         if e.purpose == ER.PURPOSE_INTERCEPTION]
+        self.assertEqual(interceptions, [(3.0, 2), (5.0, 1)])
+        self.assertEqual(result.ammunition_consumed()['x1'], 3)
+
+    def test_shooter_ammunition_is_consumed_by_both_fronts(self):
+        """Un tiratore di X con 2 colpi: uccide a1 (A distrutta), poi passa al fronte B e
+        spende l'ultimo colpo su b1; b2 resta intatto per mancanza di munizioni, non perche'
+        la run si sia fermata alla distruzione di A. (Il lato di B e' senza dottrina, quindi
+        B non si disingaggia: l'unico limite al fuoco di x1 e' la scorta.)"""
+        x = _Force('X', 'Blue', [_Asset('x1', ammunition=2)])
+        a = _Force('A', 'Red', [_Asset('a1')])
+        b = _Force('B', 'Green', [_Asset('b1'), _Asset('b2')])
+        windows = [_window('x1', 'a1'), _window('x1', 'b1', t_start=5.0),
+                   _window('x1', 'b2', t_start=5.0)]
+
+        def fire(shooter, target):
+            return _kill() if shooter.id == 'x1' else None
+
+        with patch(_ER_LOGGER):
+            result = ER.resolve_engagement(x, a, windows, fire, random.Random(0), extra_forces=[b],
+                                           thresholds={'Blue': _THREE_SIDES['Blue'],
+                                                       'Red': _THREE_SIDES['Red']},
+                                           reaction_profile_for=_profiles({}, default=(1.0, 1.0)))
+
+        self.assertEqual([(s.t_launch, s.target_id) for s in result.salvos],
+                         [(1.0, 'a1'), (6.0, 'b1')])
+        self.assertEqual(result.outcome_of('A').outcome, ER.DESTROYED)
+        self.assertEqual(result.outcome_of('B').lost, 1)
+        self.assertEqual(result.ammunition_consumed(), {'x1': 2})
+        self.assertEqual([o.force_id for o in result.forces], ['X', 'A', 'B'])
+
+    def _disengaging_x(self):
+        """X (2 asset) contro A e B; A e B hanno anche un fronte comune, indipendente da X.
+
+        - a1 (pronto a t=2) uccide x1 a t=2: shock 0.5, X si disingaggia a t=2.
+        - b1 (pronto a t=1, un colpo al secondo) spara su X a t=1 e a t=2 con tempo di volo
+          5: due salve in volo quando X rompe il contatto, che atterrano a t=6 e t=7.
+        - x2 e x1 (pronti a t=1.5) sparano a vuoto su A e B; il loro lancio successivo
+          (t=2.5) cade dopo il disingaggio e non parte.
+        - Il fronte A-B si apre a t=20 e prosegue fino a t=100 a colpi mancati.
+        """
+        x = _Force('X', 'Blue', [_Asset('x1'), _Asset('x2')])
+        a = _Force('A', 'Red', [_Asset('a1')])
+        b = _Force('B', 'Green', [_Asset('b1')])
+        windows = [_window('x1', 'a1', t_end=100.0), _window('x2', 'a1', t_end=100.0),
+                   _window('x1', 'b1', t_end=100.0), _window('x2', 'b1', t_end=100.0),
+                   _window('a1', 'b1', t_start=20.0, t_end=100.0)]
+
+        def fire(shooter, target):
+            if shooter.id == 'a1' and target.id.startswith('x'):
+                return _kill()
+            if shooter.id == 'b1' and target.id.startswith('x'):
+                return _miss(time_of_flight=5.0)
+            return _miss()
+
+        result = ER.resolve_engagement(x, a, windows, fire, random.Random(0), extra_forces=[b],
+                                       thresholds=_THREE_SIDES,
+                                       reaction_profile_for=_profiles({'a1': (2.0, 1.0),
+                                                                       'b1': (1.0, 1.0),
+                                                                       'x1': (1.5, 1.0),
+                                                                       'x2': (1.5, 1.0)}))
+        return result
+
+    def test_disengaged_force_is_reported(self):
+        outcome = self._disengaging_x().outcome_of('X')
+        self.assertEqual(outcome.outcome, ER.DISENGAGED)
+        self.assertEqual(outcome.time, 2.0)
+        self.assertEqual(outcome.lost, 1)
+
+    def test_no_new_launch_from_or_towards_the_disengaged_force(self):
+        result = self._disengaging_x()
+        x_assets = {'x1', 'x2'}
+
+        self.assertTrue(result.salvos)
+        for salvo in result.salvos:
+            if salvo.shooter_id in x_assets or salvo.target_id in x_assets:
+                self.assertLessEqual(salvo.t_launch, 2.0, salvo)
+
+    def test_salvos_in_flight_still_land_on_the_disengaged_force(self):
+        result = self._disengaging_x()
+        late = [s for s in result.salvos if s.target_force_id == 'X' and s.t_impact > 2.0]
+
+        self.assertEqual([(s.t_launch, s.t_impact) for s in late], [(1.0, 6.0), (2.0, 7.0)])
+        self.assertEqual([r.time for r in result.resolutions if r.force_id == 'X' and r.time > 2.0],
+                         [6.0, 7.0])
+
+    def test_independent_front_keeps_being_resolved(self):
+        """Il disingaggio di X non ferma il fronte A-B (niente flag globale di contatto rotto)."""
+        result = self._disengaging_x()
+        front = [s for s in result.salvos if {s.shooter_id, s.target_id} == {'a1', 'b1'}]
+
+        self.assertTrue(front)
+        self.assertTrue(all(s.t_launch >= 20.0 for s in front))
+        self.assertEqual({s.shooter_id for s in front}, {'a1', 'b1'})
+        self.assertGreater(max(s.t_launch for s in front), 90.0)
+        self.assertEqual(result.outcome_of('A').outcome, ER.HELD)
+        self.assertEqual(result.outcome_of('B').outcome, ER.HELD)
+
+    def test_multi_force_run_is_deterministic(self):
+        self.assertEqual(self._disengaging_x(), self._disengaging_x())
+
+    def test_repeated_force_raises(self):
+        x = _Force('X', 'Blue', [_Asset('x1')])
+        a = _Force('A', 'Red', [_Asset('a1')])
+        with self.assertRaises(ValueError):
+            ER.resolve_engagement(x, a, [], _always(_kill()), random.Random(0), extra_forces=[x])
+
+    def test_asset_shared_between_forces_raises(self):
+        shared = _Asset('s1')
+        x = _Force('X', 'Blue', [_Asset('x1')])
+        a = _Force('A', 'Red', [shared])
+        b = _Force('B', 'Green', [shared])
+        with self.assertRaises(ValueError):
+            ER.resolve_engagement(x, a, [], _always(_kill()), random.Random(0), extra_forces=[b],
+                                  thresholds=_THREE_SIDES)
+
+    def test_empty_extra_force_does_not_block_the_others(self):
+        """Con 3+ forze una forza senza asset impegnabili non rende l'ingaggio irrisolvibile."""
+        x = _Force('X', 'Blue', [_Asset('x1')])
+        a = _Force('A', 'Red', [_Asset('a1')])
+        empty = _Force('B', 'Green', [_Asset('b1', health=None)])
+        with patch(_ER_LOGGER):
+            result = ER.resolve_engagement(x, a, [_window('x1', 'a1')], _always(_miss()),
+                                           random.Random(0), extra_forces=[empty],
+                                           thresholds=_THREE_SIDES)
+
+        self.assertIsNotNone(result)
+        self.assertTrue(result.salvos)
+        self.assertEqual(result.outcome_of('B').committed, 0)
+        self.assertEqual(result.outcome_of('B').outcome, ER.HELD)
+
+    def test_fewer_than_two_usable_forces_returns_none(self):
+        x = _Force('X', 'Blue', [_Asset('x1')])
+        a = _Force('A', 'Red', [_Asset('a1', health=None)])
+        b = _Force('B', 'Green', [_Asset('b1', health=None)])
+        with patch(_ER_LOGGER):
+            self.assertIsNone(ER.resolve_engagement(x, a, [], _always(_kill()), random.Random(0),
+                                                    extra_forces=[b], thresholds=_THREE_SIDES))
+
+
 class TestShotSpec(unittest.TestCase):
 
     def test_valid(self):

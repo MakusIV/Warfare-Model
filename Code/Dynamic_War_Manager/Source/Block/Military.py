@@ -64,12 +64,13 @@ class Military(Block):
         sub_category: Optional[str] = None,
         functionality: Optional[str] = None,
         value: Optional[int] = None,
-        region: Optional["Region"] = None
-        
+        region: Optional["Region"] = None,
+        id: Optional[str] = None
+
     ) -> None:
         """
         Initialize a Military instance.
-        
+
         Args:
             mil_category: Military category (from Military_CATEGORY)
             name: Base name
@@ -80,6 +81,11 @@ class Military(Block):
             functionality: Base functionality
             value: Strategic value
             region: Associated region
+            id: id di dominio esplicito, stabile fra le esecuzioni (v. Block.__init__). Serve al
+                motore di sessioni virtuali (Session_Simulator/Session_Rng): l'id di forza e'
+                anche la chiave dell'RNG e dell'ordine di risoluzione degli ingaggi, quindi deve
+                restare lo stesso a ogni esecuzione per chi ricostruisce le forze da zero (test,
+                replay) invece di riusare le istanze gia' in memoria di una campagna in corso.
         """
         super().__init__(
             name=f"Military.{name}" if name else setName('Unnamed_Military'),
@@ -89,7 +95,8 @@ class Military(Block):
             sub_category=sub_category,
             functionality=functionality,
             value=value,
-            region=region
+            region=region,
+            id=id
         )
         
         self._mil_category = mil_category

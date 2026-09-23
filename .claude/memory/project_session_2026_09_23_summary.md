@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T13:04:53.524Z
+  modified: 2026-09-23T15:52:39.876Z
 ---
 
 **Promemoria multi-macchina**: l'utente lavora su almeno 3 macchine (VM Oracle VirtualBox Ubuntu,
@@ -161,5 +161,59 @@ dai registri, potrebbe sotto-contare i razzi effettivi in un pod); la Pd non dis
 radar/ottici nella degradazione meteo (limite dichiarato, `ContactWindow` non porta il tipo di
 sensore).
 
-**Prossimo passo**: Fase 5 (applicazione danno/consumi in un'unica passata, assemblaggio verso un
-futuro `SessionOutcome`) — non ancora iniziata.
+## Fase 5 — FATTA, verificata e COMMITTATA (stesso giorno, 2026-09-23)
+Utente ha chiesto scope completo (incluso carburante, che non aveva alcun lavoro pregresso).
+Secondo agente Opus (effort alto) ha consegnato: `Command/Session_Types.py`
+(`SessionOrder`/`SessionOutcome`/`assemble_session_outcome`, chiude la "Fase 0" mai fatta),
+`Utility/Session_Rng.py` (RNG seedato da `(session_id, mission_id, event_id, counter)`, SHA-256 non
+`hash()`), `Logic/Fuel_Model.py` + carburante su `Mobile`/`Aircraft`. Verificato da questa sessione
+allo stesso modo della Fase 4: letti per intero i 3 file nuovi, suite rieseguita indipendentemente
+— **3115 test OK (skipped=5)**, stesso numero dichiarato dall'agente.
+
+**3 decisioni presentate e confermate dall'utente** (tutte "raccomandato" accettate senza
+modifiche): carburante come frazione del carico pieno [0,1] non kg (Vehicle/Ship non hanno
+capacità serbatoio nei registri); fattore 2× sul raggio d'azione dichiarato dai loadout aerei;
+navi nucleari con carburante `None` (non modellato).
+
+**Commit**: `a60c258c` su `analysis/dce-dcs-persistence`, dopo `44bc6950` (Fase 4). Nessuno dei due
+pushato.
+
+## Fase 6 - Session_Simulator: FATTA da un terzo agente Opus, IN REVISIONE con estensione N-forze
+Terzo agente Opus (effort alto) ha consegnato Logic/Session_Simulator.py (522 righe):
+run_session(order, forces_a, forces_b, fire_control, ...) mette in fila
+Contact_Scheduler.schedule_contacts -> raggruppamento per coppia di forze ->
+Engagement_Resolver.resolve_engagement per coppia -> apply_engagement_result subito dopo
+ciascuna -> Fuel_Model per il movimento -> Session_Types.assemble_session_outcome. Verificato
+da questa sessione: suite rieseguita indipendentemente, 3140 test OK (skipped=5), letto per
+intero il file.
+
+**2 decisioni presentate e prese dall'utente**:
+1. **Bug Military.id casuale (Utility.setId) - FIX APPLICATO E TESTATO**: Block.__init__ e
+   Military.__init__ accettano ora un parametro opzionale id: Optional[str] = None
+   (passthrough retrocompatibile, comportamento invariato se assente). Chi ricostruisce forze da
+   zero per test/replay puo' ora passare un id stabile invece di ottenerne uno casuale ad ogni
+   esecuzione. 6 test nuovi (Test_Block.py +5, Test_Military.py +1). Suite: 3140 -> 3146 OK.
+2. **Ingaggi sovrapposti che condividono una forza, risolti in sequenza (non intrecciati)** -
+   spiegato con esempio concreto (forza X in contatto con A e B sovrapposti: chi viene risolto
+   per primo "vince" l'accesso alle risorse di X). **L'utente ha chiesto di risolverlo ora**, non
+   di accettarlo come limite. Le altre due ambiguita' collegate sono state confermate come
+   raccomandato: forza disingaggiata resta disponibile per ingaggi successivi nella stessa
+   sessione (nessuna esclusione/ri-instradamento inventati); salve in volo a fine sessione
+   estendono t_end invece di essere troncate.
+
+**Quarto agente Opus lanciato** per il punto 2: generalizza Engagement_Resolver.resolve_engagement
+per risolvere N forze (2+) in un'unica run - nuovo parametro extra_forces (retrocompatibile,
+default vuoto), contact_broken da flag globale a broken_forces: set per-forza (una forza
+disingaggiata smette di ingaggiare/essere ingaggiata, ma non ferma le altre coppie della run).
+Session_Simulator raggruppa le forze per componenti connesse (union-find sulle finestre di
+contatto) invece che per coppie, cosi' X/A/B collegati vengono risolti con UNA sola chiamata e lo
+stato di X evolve in una timeline continua invece che "prima tutto A, poi tutto B". V. quando
+torna per l'esito.
+
+**Prossimo passo dopo questo agente**: Fase 7 (validazione, scenari S1-S11, test di
+agnosticismo) - o eventuali altre rifiniture che l'utente vorra' chiedere prima.
+
+## (storico) Prossimo passo indicato a fine Fase 5, ora superato: Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che
+chiamerà `Contact_Scheduler`+`Engagement_Resolver` per ogni coppia di forze e farà avanzare le
+rotte fra un contatto e l'altro consumando carburante) oppure Fase 7 (validazione, scenari
+S1-S11, test di agnosticismo) — non ancora iniziata, da chiedere all'utente quale preferisce.

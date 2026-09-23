@@ -9,7 +9,7 @@ con sola geometria. Questo modulo consuma le sue `ContactWindow` e risponde a **
 finisce**: e' il primo punto del motore in cui entra la casualita', sempre e solo
 attraverso l'RNG di sessione passato dal chiamante.
 
-## La catena, per ogni ingaggio fra due forze
+## La catena, per ogni ingaggio (due o piu' forze, v. "Ingaggi a N forze")
 
 1. **Pd — chi rileva davvero.** La finestra di contatto dice che l'osservatore *potrebbe*
    vedere il bersaglio; se lo vede lo decide un'estrazione contro
@@ -36,6 +36,45 @@ attraverso l'RNG di sessione passato dal chiamante.
    erosione cumulata *oppure* shock della singola salva, qualunque scatti per primo. Se
    scatta, **tutta la forza** rompe il contatto: esito `DISENGAGED`, distinto da
    `DESTROYED` (nessun asset impegnato ancora operativo).
+
+## Ingaggi a N forze (2+)
+
+`resolve_engagement(force_a, force_b, ..., extra_forces=(...))` risolve in UNA run, con UNA
+coda eventi condivisa, tutte le forze `(force_a, force_b, *extra_forces)`, trattate in modo
+uniforme. Chi puo' combattere contro chi lo dicono solo le finestre di contatto passate
+(ogni finestra fra asset di due forze diverse genera le due direzioni di rilevamento); il
+lato (`side`) serve solo a leggere la dottrina, e piu' forze possono condividerlo.
+
+Perche' serve (caso che ha originato la generalizzazione, 2026-09-23): la forza X e' in
+contatto con A e con B in finestre sovrapposte. Risolvendo (X,A) e (X,B) con due chiamate
+separate, la prima veniva svolta fino in fondo e applicata, e la seconda leggeva uno stato
+di X gia' consumato anche per la parte di tempo in cui X combatteva su entrambi i fronti:
+l'ordine delle chiamate decideva chi "arrivava prima" a salute e scorte di X. In una sola
+run la salute e le scorte ombra di X evolvono in un'unica timeline, consumata da entrambi i
+fronti nell'ordine esatto degli eventi. Con `extra_forces=()` il comportamento e' identico
+a quello dell'ingaggio a due.
+
+Nulla nel resto della catena assume due forze: rilevamento (stesso `force_id` -> ignorata),
+saturazione e danno (chiavati sulla forza bersaglio), soglie (per lato), esito (per forza,
+nell'ordine di ingresso) erano gia' generali. L'unico punto che non lo era e' il contatto
+rotto, qui sotto.
+
+## Forze rotte: per-forza, non un flag globale
+
+Una forza che raggiunge DESTROYED o DISENGAGED entra in `broken_forces`. Da quel momento:
+- nessun suo tiratore riceve un NUOVO lancio, e i suoi lanci schedulati e non ancora
+  eseguiti sono annullati;
+- nessun tiratore di altre forze puo' piu' sceglierla come bersaglio (un bersaglio
+  disingaggiato e' vivo ma "andato via"); un lancio gia' schedulato contro di essa e'
+  annullato e il tiratore decide di nuovo, eventualmente contro un'altra forza;
+- le salve GIA' partite, da o verso di essa, arrivano comunque (payload congelato, R4).
+
+Fino all'introduzione delle N forze il contatto rotto era un flag unico della run: appena
+una delle due forze rompeva, ogni lancio si fermava. Con due forze le due formulazioni
+coincidono — se una forza e' rotta, l'altra non ha piu' bersagli ingaggiabili e smette di
+sparare per conseguenza naturale. Con N forze il flag globale sarebbe sbagliato: nello
+scenario X/A/B, il disingaggio di X non deve fermare il fronte A-B, se esiste. Il ciclo
+eventi finisce sempre e solo quando la coda si svuota.
 
 ## Vincoli di progetto rispettati
 
@@ -558,7 +597,7 @@ def _domain_id(obj) -> Optional[str]:
 # ── RISOLUTORE ────────────────────────────────────────────────────────────────
 
 class _EngagementRun:
-    """Stato e coda eventi di UN ingaggio. Uso interno: v. `resolve_engagement`."""
+    """Stato e coda eventi di UN ingaggio (2+ forze). Uso interno: v. `resolve_engagement`."""
 
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance):
@@ -584,7 +623,9 @@ class _EngagementRun:
         self.queue: List = []
         self.sequence = 0
         self.pending: Dict[str, _PendingGroup] = {}
-        self.contact_broken = False
+        # Forze che hanno rotto il contatto (DESTROYED o DISENGAGED): per-forza, non un
+        # flag globale della run (v. "Forze rotte" nel docstring del modulo).
+        self.broken_forces: set = set()
         self.t_start: Optional[float] = None
         self.t_end: Optional[float] = None
 
@@ -603,7 +644,7 @@ class _EngagementRun:
             force_id = _domain_id(force) or f'force_{index}'
 
             if force_id in self.force_states:
-                raise ValueError(f"the two forces must be distinct, both are {force_id!r}")
+                raise ValueError(f"the forces must be distinct, {force_id!r} appears more than once")
 
             assets = getattr(force, 'assets', None) or {}
             selected = None
@@ -624,7 +665,7 @@ class _EngagementRun:
                     continue
 
                 if asset_id in self.shadows:
-                    raise ValueError(f"asset {asset_id!r} appears in both forces")
+                    raise ValueError(f"asset {asset_id!r} appears in more than one force")
 
                 health = getattr(asset, 'health', None)
 
@@ -663,11 +704,19 @@ class _EngagementRun:
 
         empty = [force_id for force_id, state in self.force_states.items() if not state.committed]
 
-        if empty:
+        if not empty:
+            return True
+
+        if len(self.force_states) - len(empty) < 2:
             logger.warning(f"resolve_engagement: forces {empty} have no committed operative asset, "
                            f"engagement not resolvable")
             return False
 
+        # Solo con 3+ forze: una forza vuota non blocca le altre, che hanno ancora almeno
+        # un avversario possibile. Resta nell'esito (committed=0, HELD): nessuno la vede e
+        # nessuno la colpisce, perche' non ha asset nello stato ombra.
+        logger.warning(f"resolve_engagement: forces {empty} have no committed operative asset, "
+                       f"they take no part in the engagement")
         return True
 
     def _interceptors_of(self, force, force_id: str) -> List[Tuple[_Shadow, int]]:
@@ -857,10 +906,10 @@ class _EngagementRun:
         salva in volo arriva dove era diretta; non tiene memoria del passato remoto: una
         salva gia' risolta non conta piu' come copertura.
         """
-        if self.contact_broken:
-            return
-
         shooter = self.shadows[shooter_id]
+
+        if shooter.force_id in self.broken_forces:
+            return
 
         if not shooter.operative or (shooter.ammunition is not None and shooter.ammunition <= 0):
             return
@@ -874,7 +923,11 @@ class _EngagementRun:
                 if candidate.exhausted:
                     continue
 
-                if not self.shadows[candidate.target_id].operative:
+                target = self.shadows[candidate.target_id]
+
+                if not target.operative or target.force_id in self.broken_forces:
+                    # Fuori combattimento, oppure la sua forza ha rotto il contatto: un
+                    # bersaglio DISINGAGGIATO e' vivo ma non piu' raggiungibile.
                     candidate.exhausted = True
                     continue
 
@@ -928,10 +981,12 @@ class _EngagementRun:
         # la copertura passa a `in_flight`; se e' annullata, non copre piu' nulla.
         self.assigned.pop(shooter_id, None)
 
-        if self.contact_broken:
-            return
-
         shooter = self.shadows[shooter_id]
+
+        if shooter.force_id in self.broken_forces:
+            # La forza del lanciatore ha rotto il contatto: il lancio non ancora eseguito e'
+            # annullato, e il tiratore non ne schedula altri.
+            return
 
         if not shooter.operative:
             # Lanciatore fuori combattimento prima del lancio: la salva non parte.
@@ -941,8 +996,11 @@ class _EngagementRun:
         target = self.shadows[candidate.target_id]
         next_time = time + self._refire_interval(shooter_id, spec)
 
-        if not target.operative or time > candidate.t_end + TIME_EPS:
-            # Annullamento, non riscrittura (R4): la prossima decisione e' un nuovo evento.
+        if not target.operative or target.force_id in self.broken_forces \
+                or time > candidate.t_end + TIME_EPS:
+            # Bersaglio fuori combattimento, la sua forza ha rotto il contatto, o finestra
+            # chiusa. Annullamento, non riscrittura (R4): la prossima decisione e' un nuovo
+            # evento (con N forze il tiratore puo' passare a un bersaglio di un'altra forza).
             candidate.exhausted = True
             self._schedule_next(shooter_id, next_time)
             return
@@ -1097,7 +1155,7 @@ class _EngagementRun:
                 state.outcome = DESTROYED
                 state.time = time
                 state.triggers = (TRIGGER_ANNIHILATION,)
-            self.contact_broken = True
+            self.broken_forces.add(state.force_id)
             return
 
         if state.outcome is not None or state.thresholds is None:
@@ -1115,7 +1173,7 @@ class _EngagementRun:
             state.outcome = DISENGAGED
             state.time = time
             state.triggers = tuple(triggers)
-            self.contact_broken = True
+            self.broken_forces.add(state.force_id)
             logger.debug(f"force {state.force_id!r} disengages at t={time} ({triggers}): "
                          f"erosion={erosion:.3f}, shock={shock:.3f}")
 
@@ -1165,6 +1223,7 @@ class _EngagementRun:
 
 
 def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Callable, rng, *,
+                       extra_forces: Sequence = (),
                        legs: Optional[Mapping[str, Sequence]] = None,
                        committed: Optional[Mapping[str, Iterable[str]]] = None,
                        thresholds: Optional[Dict] = None,
@@ -1172,13 +1231,19 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        detection_factor: Optional[Callable] = None,
                        salvo_window: float = 0.0,
                        provenance: str = DM.DERIVED) -> Optional[EngagementResult]:
-    """Risolve un ingaggio fra due forze contrapposte. Non muta alcun asset.
+    """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
-        force_a/force_b: le due forze — `Military` o qualunque oggetto con `assets`
+        force_a/force_b: due delle forze — `Military` o qualunque oggetto con `assets`
             (dict di asset), `side`, `name`; se espongono `salvo_interceptors()` la loro
             difesa satura le salve in arrivo (R1).
-        contacts: le `ContactWindow` di `Contact_Scheduler` fra asset delle due forze. Le
+        extra_forces: altre forze della stessa run, oltre alle prime due (default nessuna:
+            ingaggio a due, comportamento invariato). Le forze della run sono
+            `(force_a, force_b, *extra_forces)`, tutte trattate allo stesso modo: nessuna
+            delle prime due ha un ruolo speciale, l'ordine decide solo l'ordine di
+            `EngagementResult.forces`. Chi combatte contro chi lo decidono le finestre in
+            `contacts`, non i lati (v. "Ingaggi a N forze" nel docstring del modulo).
+        contacts: le `ContactWindow` di `Contact_Scheduler` fra asset di forze diverse. Le
             finestre con asset non impegnati, o fra asset della stessa forza, sono ignorate.
             Con `range_type='engagement_range'` lo scheduler produce finestre "a tiro"
             invece che "a vista": la scelta e' del chiamante.
@@ -1203,13 +1268,14 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         provenance: provenienza dei DamageEvent prodotti (default DERIVED).
 
     Returns:
-        `EngagementResult`, oppure None (con un log) se una delle due forze non ha alcun
-        asset impegnabile.
+        `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
+        impegnabili — con due forze: se una delle due non ne ha. Con 3+ forze una forza
+        senza asset impegnabili compare nell'esito con committed=0 e HELD.
 
     Raises:
         TypeError: `rng` senza `.random()`, `fire_control` non chiamabile o che non
             restituisce una ShotSpec.
-        ValueError: `salvo_window` negativo, provenance sconosciuta, forze coincidenti o
+        ValueError: `salvo_window` negativo, provenance sconosciuta, forze ripetute o
             con asset in comune.
     """
     if not callable(getattr(rng, 'random', None)):
@@ -1224,9 +1290,11 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     if provenance not in DM.PROVENANCES:
         raise ValueError(f"provenance must be one of {DM.PROVENANCES}, got {provenance!r}")
 
-    run = _EngagementRun((force_a, force_b), contacts, fire_control, rng, legs, committed,
-                         thresholds, reaction_profile_for, detection_factor, salvo_window,
-                         provenance)
+    extra_forces = tuple(extra_forces) if extra_forces is not None else ()
+
+    run = _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, legs,
+                         committed, thresholds, reaction_profile_for, detection_factor,
+                         salvo_window, provenance)
 
     if not run.usable:
         return None

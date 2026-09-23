@@ -137,6 +137,21 @@ class TestMilitary(unittest.TestCase):
         with self.assertRaises(ValueError):
             Military(mil_category="Invalid Category")
 
+    def test_constructor_id_stable_for_session_engine(self):
+        """An explicit `id` at construction is used verbatim and is stable across rebuilds.
+
+        Regression test for the Fase 6 finding: Logic/Session_Simulator.py keys the session
+        RNG and the resolution order on force id, so two Military rebuilt from scratch with
+        the same name (a test fixture, or a future replay) must get the same id when one is
+        passed explicitly, not a fresh random suffix each time.
+        """
+        first = Military(mil_category=MILITARY_CATEGORY["Air_Base"][1], name="Alpha",
+                         id="force_alpha")
+        second = Military(mil_category=MILITARY_CATEGORY["Air_Base"][1], name="Alpha",
+                          id="force_alpha")
+        self.assertEqual(first.id, "force_alpha")
+        self.assertEqual(first.id, second.id)
+
     def test_mil_category_property(self):
         """Test military category property."""
         self.airbase.mil_category = MILITARY_CATEGORY["Ground_Base"][1]
