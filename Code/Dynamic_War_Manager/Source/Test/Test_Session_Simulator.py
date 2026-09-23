@@ -152,6 +152,34 @@ class _Base(unittest.TestCase):
         return outcome, blue, red
 
 
+class TestEngagedAssetsCountsInterceptions(unittest.TestCase):
+    """Regressione: un asset che ha SOLO intercettato deve contare come 'ha combattuto'.
+
+    `_engaged_assets` decide il regime di consumo carburante (COMBAT_REGIME vs CRUISE_REGIME,
+    v. `run_session`). Fino a questo fix leggeva `salvos`/`ammunition_events` ma non
+    `interception_events`: da quando le intercettazioni sono un tipo a se' (`InterceptionEvent`,
+    non piu' `AmmunitionEvent(purpose=PURPOSE_INTERCEPTION)`), un intercettore che non ha mai
+    sparato una salva propria e non e' mai stato bersaglio restava classificato 'nominal'
+    (crociera) invece di 'max' (combattimento) — nessun test se ne accorgeva.
+    """
+
+    def test_interceptor_only_asset_is_engaged(self):
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=1.0, forces=(),
+            interception_events=(
+                ER.InterceptionEvent(time=1.0, asset_id='sam1', interceptions=2,
+                                     force_id='red', salvo_ids=(0,)),
+            ),
+        )
+
+        self.assertIn('sam1', SS._engaged_assets(result))
+
+    def test_asset_with_no_activity_is_not_engaged(self):
+        result = ER.EngagementResult(t_start=0.0, t_end=1.0, forces=())
+
+        self.assertEqual(SS._engaged_assets(result), set())
+
+
 # ── SCENARIO END-TO-END ───────────────────────────────────────────────────────
 
 class TestEndToEnd(_Base):

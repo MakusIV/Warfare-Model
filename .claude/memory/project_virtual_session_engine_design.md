@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T16:05:10.006Z
+  modified: 2026-09-23T20:49:22.873Z
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
@@ -577,6 +577,186 @@ senza applicare il primo prima del secondo -> `health_before/after` non concaten
 warning, i delta restano applicabili in ordine — risolverlo e' compito dell'orchestratore di
 Fase 6); nessun `apply_session_outcome` (l'applicazione "in un'unica passata" e' di
 `Theater_Session_Manager`, non ancora costruito).
+
+## FASE 7 — validazione: IN CORSO (avviata 2026-09-23)
+
+**Battera scenari estesa da S1-S11 a S1-S18**, su richiesta dell'utente: ha chiesto di valutare
+le situazioni piu' significative considerando Block/asset/classificazione del progetto (non solo
+i documenti Lanchester). Verificata la classificazione REALE nel codice (`Context.py:451
+MILITARY_CATEGORY`: Ground_Base = Stronghold/Farp/Regiment/Battallion/Company/Brigade/Division/
+Command_&_Control_C2/C4, Air_Base = Airbase/Heliport, Naval_Base = Port/Shipyard/Naval_Group;
+`BLOCK_INFRASTRUCTURE_ASSET` per Transport/Production/Urban/Storage) — **nota**: "Plotone" e
+"Avamposto" menzionati dall'utente NON esistono come mil_category distinte nel registro attuale
+(Stronghold copre gia' il concetto di "caposaldo/avamposto fortificato"). 7 nuovi scenari proposti
+e TUTTI ACCETTATI dall'utente:
+- **S12 - Decapitazione C2**: colpo mirato a un nodo `Command_&_Control_C2`/`C4` isolato.
+- **S13 - Interdizione FARP**: bersaglio con asset eterogenei (elicotteri+edifici) in un Block.
+- **S14 - Bombardamento impianto Production**: `Power_Plant`/`Factory` come bersaglio economico
+  fisso, distinto dalla linea logistica mobile di S7.
+- **S16 - Installazione navale fissa**: `Port`/`Shipyard` come bersaglio primario (S6 testa la
+  difesa costiera, non il porto stesso).
+- **S18 - Rete Transport multi-nodo**: estende S7 da convoglio mobile a nodi fissi di rete
+  (ponte, interscambio, elettrico) lungo un percorso.
+- **S17 - Sweep di scala gerarchica**: uno scenario ripetuto a taglie diverse
+  (Company/Battalion/Regiment/Brigade/Division) per verificare coerenza al variare della scala.
+- **S15 - Prossimita' Urban (test contrattuale ROE)**: verifica solo che l'architettura non
+  impedisca a un `fire_control` esterno di gestire il collaterale — non un modello di danno
+  civile vero (il motore non ne ha uno, e' demandato al chiamante).
+
+**Split in 2 dispatch Opus per gestibilita'**: primo agente = harness di scenario condiviso + test
+di determinismo + test di agnosticismo (entrambi obbligatori dal roadmap) + scenari S1-S9; secondo
+agente (da lanciare dopo aver revisionato il primo, riusando il suo harness) = scenari S10-S18.
+**Nota importante data all'agente**: oggi non esiste alcun adapter DCS nel codice Python, quindi
+il "test di agnosticismo" non puo' essere un prima/dopo la rimozione — e' un test di CONTRATTO
+(struttura + esecuzione end-to-end con soli dati sintetici), spiegato per esteso nel briefing.
+
+**Prima meta' (S1-S9) FATTA e verificata**: harness `Test/Scenario_Fixtures.py` (funzioni
+`make_vehicle/make_aircraft/make_ship`, `make_force`, `Unit`/`build_force`, `straight_route`/
+`route_for`/`routes_for`, `make_fire_control` con tabella ruolo-vs-ruolo dichiarata come dati di
+test non tarati, `Scenario`/`run`), `Test/Test_Session_Validation.py` (19 test: determinismo
+verificato campo-per-campo+stato reale degli asset, non vacuo su seed diverso; agnosticismo come
+test di CONTRATTO — nessun adapter DCS esiste nel codice Python quindi non c'e' nulla da
+"rimuovere": verifica strutturale via `typing.get_type_hints` sui tipi di dominio + AST-check che
+i moduli del motore non importino nulla DCS + un run end-to-end con soli dati sintetici),
+`Test/Test_Session_Scenarios.py` (42 test, S1-S9). Suite 3168 -> 3229.
+
+**Bug trovati durante la Fase 7 (non corretti dall'agente, come da istruzioni)**, poi triagati con
+l'utente:
+- **`Block.set_asset` rifiuta Vehicle/Aircraft/Ship** (confrontava `__class__.__name__` con la
+  stringa esatta 'Asset') — **FIX APPLICATO DIRETTAMENTE da questa sessione** (non da un agente,
+  fix di una riga: `validate_class(asset, 'Asset')` invece del confronto esatto), test aggiunto,
+  suite 3229 -> 3230 OK.
+- **`Transport`/`Storage`/`Urban`/`Production` (Block) e `Structure` (Asset) hanno costruttori
+  rotti da sempre** (stub mai finito, copiato 4 volte per i Block, e per `Structure` un bug piu'
+  insidioso: `super().__init__()` con un argomento posizionale mancante che fa slittare
+  silenziosamente `position`/`volume`/`crytical`/ecc. di una posizione — mai esploso perche' la
+  riga dopo, `super.checkParam(...)` con `super` il tipo builtin non l'istanza, solleva
+  `AttributeError` prima che il danno si veda). Nessun rischio di regressione: nessuna di queste
+  5 classi e' mai stata istanziata con successo in produzione. **Agente Opus lanciato** per
+  riscrivere tutti e 5 i costruttori sul modello di `Military.__init__` (funzionante) e correggere
+  anche un bug collaterale di `Structure.loadAssetDataFromContext` (stessa famiglia gia' nota per
+  Ship/Aircraft: iterazione su dict senza `.items()`).
+- **Dottrina di disingaggio per blocchi non-Military**: S7 ha mostrato che un blocco logistico
+  bersaglio finisce `DISENGAGED` (assurdo per un deposito). **Decisione dell'utente**: solo le
+  forze `Military` vere possono disingaggiarsi; tutte le altre ottengono `thresholds=None`
+  incondizionatamente (gia' significa "combatte fino alla fine" nel codice esistente). Stesso
+  agente Opus lanciato per questo fix in `Engagement_Resolver._build_forces` (controllo con
+  `validate_class(force, 'Military')`, non un campo stringa `category`).
+
+**FATTO e verificato** (suite 3230 -> 3277 OK, rieseguita indipendentemente): `Transport`/
+`Storage`/`Urban`/`Production` riscritte sul modello di `Military.__init__` (keyword args, niente
+piu' `block`/`mil_category`/`acp`/`rcp`/`payload`/`checkParam` morti), con validazione opzionale
+di `sub_category` contro `Context.BLOCK_INFRASTRUCTURE_ASSET` via una nuova
+`Context.validate_infrastructure_sub_category(block_class, sub_category)` condivisa.
+`Asset/Structure.py` corretto (mapping keyword corretto verso `Asset.__init__`, `production=None`
+non esposto, `checkParam` riscritto — era rotto anche lui, leggeva la tabella sbagliata —
+`loadAssetDataFromContext` con `.items()`). **Dottrina non-Military**: nuovo
+`Engagement_Resolver._can_disengage(force)` — `True` per `Military` vera, `True` anche per
+oggetti duck-typed che non sono affatto un `Block` (preserva i ~100 test esistenti con stub),
+`False` per ogni `Block` reale non-Military. Letto il codice, verificato corretto.
+
+**Altri bug pre-esistenti trovati e NON corretti** (fuori perimetro, per una sessione futura):
+`Manager.py:38-41` costruisce blocchi con `region` posizionale (finirebbe in `name`) — probabile
+codice morto da verificare se ancora usato; `Structure.loadAssetDataFromContext` resta rotto oltre
+il fix `.items()` (`t2r` e' una tupla ma `repair_time` vuole un int); `Structure.getBlockInfo` usa
+`STRUCTURE_ASSET_CATEGORY` mai definito; `Structure.set_volume_from_physical_characteristics`
+chiama `Volume(length=, width=, height=)` con una firma che non corrisponde a quella reale;
+`Block.sub_category` setter non applica la nuova validazione (solo il costruttore la fa).
+
+**FASE 7 COMPLETA e verificata 2026-09-23** (suite finale: **3326 test, OK, skipped=5, 0
+fallimenti**) — e' l'ultima delle 7 fasi del motore DES. Percorso: un primo agente ha scritto
+`Test/Scenario_Fixtures.py` (harness) + `Test_Session_Validation.py` (determinismo + agnosticismo
+come test di CONTRATTO — nessun adapter DCS esiste nel codice Python, quindi non c'e' nulla da
+"rimuovere": verifica strutturale via `typing.get_type_hints` + AST-check anti-DCS + run end-to-end
+con soli dati sintetici) + `Test_Session_Scenarios.py` (S1-S9). Un secondo agente ha scritto
+`Test_Session_Scenarios_S10_S18.py` (S10-S18) ma e' stato interrotto da un rate-limit Opus a meta'
+— il lavoro pero' era gia' quasi tutto scritto su disco (1099 righe), sono rimasti solo 8
+fallimenti nelle asserzioni non ancora rifinite. Un terzo agente li ha diagnosticati e corretti
+tutti (dettaglio: 5 erano assunzioni sbagliate sui tempi/soglie del motore reale, 3 erano dovuti a
+un problema di plausibilita' nell'intercettazione, v. sotto) — nessun bug del motore corretto in
+questa fase, solo harness/asserzioni.
+
+**Finding importante emerso dalla Fase 7, NON un bug**: `Military.salvo_interception_capacity()`
+usava lo stesso contatore `Mobile.ammunition` sia per sparare offensivamente sia per intercettare —
+per un cannone antiaereo (es. ZSU-23-4, 2000 colpi nel registro) questo rende l'intercettazione di
+fatto illimitata (88 missili su 88 intercettati in un test). E' esattamente cio' che R1 della Fase 4
+dichiarava come "stima di partenza da ricalibrare", ma l'effetto pratico e' piu' estremo del voluto.
+**Decisione dell'utente**: separare ORA la scorta di intercettori da quella offensiva (non ridurre
+la Pk, non e' stato chiesto). Agente Opus lanciato: nuovo `Mobile.interceptor_stock` distinto da
+`ammunition`, popolato con regola diversa per missili (stesso conteggio gia' corretto) e cannoni
+(nuova costante dichiarata `ROUNDS_PER_GUN_INTERCEPT`, es. 50-100 colpi per tentativo, cosi' i 2000
+colpi dello ZSU diventano ~20-40 intercettazioni invece di 2000). Impatta anche i test S12-S14/S16
+della Fase 7 (scritti attorno al bug), da aggiornare nello stesso lavoro. V. quando torna per
+l'esito e i numeri concreti.
+
+**`interceptor_stock` FATTO e verificato** (suite 3326 -> 3352 OK): nuovo contatore `Mobile.
+interceptor_stock` distinto da `ammunition`, con `ROUNDS_PER_GUN_INTERCEPT = 100` (STIMA
+DICHIARATA, tra le 75-150 di un CIWS e le 150-200 di raffica dello Shilka) per i sistemi a cannone
+(Shilka 2000->20, Gepard 680->6, VADS 2100->21), conteggio diretto dei missili per i SAM (Buk 4->4,
+S-300 4->4, Osa/Tor/Strela-10 6-8->stesso), somma per il solo sistema misto nei registri
+(Tunguska: 8 missili + 1904//100 = 27). Route separati in Engagement_Resolver/apply_engagement_result.
+
+**2 rifiniture ulteriori chieste dall'utente, agente Opus lanciato**:
+1. **`InterceptionEvent` dedicato** (non piu' `AmmunitionEvent` con `purpose=PURPOSE_INTERCEPTION`)
+   — tocca `Engagement_Resolver.py` (nuovo tipo + `EngagementResult.interception_events`) e
+   `Command/Session_Types.py` (`SessionOutcome.interception_events` + `interceptions_consumed()`;
+   `ammunition_consumed()` torna a contare SOLO munizioni offensive).
+2. **Scorta condivisa per i SAM puri** (solo missile, zero cannone: Buk/S-300/Osa/Tor/Strela-10
+   ecc.) — `ammunition` e `interceptor_stock` diventano lo stesso pool fisico (sparare consuma
+   anche la capacita' di intercettare e viceversa); i sistemi a cannone puro e il misto Tunguska
+   restano con contatori indipendenti come appena implementato, invariati.
+
+**Verifica richiesta dall'utente e fatta 2026-09-23 — CONFERMA la decisione sopra**: l'utente ha
+dubitato che un Buk avesse davvero due pool di missili distinti. Controllato `Vehicle_Data.py` per
+Buk/S-300PS/9A33-Osa/9K331-Tor/9K35-Strela-10: **tutti** hanno `weapons = {'MISSILES':
+[(modello, quantita')]}`, un solo numero per veicolo, documentato nel codice sorgente come
+`#{'model': quantity}` — nessuna distinzione offensivo/difensivo nella fonte dati. Per un Buk i 4
+missili sono i 4 missili fisici sui binari del TELAR (coerente con la realta': nessuna scorta
+extra sul mezzo, le ricariche sono un'altra unita' di batteria non modellata). Conferma che
+`ammunition` e' gia' l'inventario fisico totale, non una sotto-allocazione per un ruolo: la scorta
+condivisa per i SAM puri non e' solo una scelta di design ragionevole ma la lettura corretta della
+fonte dati.
+
+**Nota dell'utente sui dati (2026-09-23, per lavoro futuro sui registri, nessuna azione ora)**:
+Buk-M1 e M2 montano 4 missili (coerente col dato attuale in `Vehicle_Data.py`, `'9K37-Buk'` = 4,
+nessuna correzione necessaria), la variante Buk-M3 ne monta 6 ma non esiste ancora come voce
+separata nel registro (c'e' solo `9K37-Buk` generico, verificato: nessun'altra voce Buk). Se in
+futuro si aggiunge una voce Buk-M3, va con 6 missili, non 4.
+
+**`InterceptionEvent` + scorta condivisa SAM: FATTO e verificato** (suite 3352 -> 3369 OK). Nuovo
+tipo `InterceptionEvent` (campi: time, asset_id=l'intercettore, interceptions, force_id,
+salvo_ids) sostituisce `AmmunitionEvent(purpose=PURPOSE_INTERCEPTION)`; `purpose`/`PURPOSE_SALVO`/
+`PURPOSE_INTERCEPTION` rimossi da `AmmunitionEvent` (ora solo munizioni offensive).
+`SessionOutcome.interception_events` + `interceptions_consumed()` nuovo, `ammunition_consumed()`
+ora conta solo munizioni offensive (comportamento cambiato, documentato). Scorta condivisa per i
+SAM puri (Strela-1, Chaparral, Osa, Strela-10, Roland, Tor, Kub, Buk, S-300PS, CVN-70/75,
+CV-59) confermata da una verifica sui registri (v. sopra): un asset con missili AD e zero cannoni
+AD e la cui `ammunition` coincide esattamente con quei missili condivide `ammunition`/
+`interceptor_stock` come UN pool fisico (nuovo flag `Mobile.interceptor_shares_ammunition`).
+Restano indipendenti: sistemi a cannone puro (Shilka, VADS, Gepard, ZSU-57-2), il misto Tunguska,
+e — scelta conservativa dell'agente, non ancora discussa con l'utente — ogni nave con SAM (perche'
+le navi non hanno mai `AA_CANNONS`, quindi il solo criterio "niente cannone" le farebbe tutte
+condividere, includendo erroneamente cannoni navali/missili antinave nel pool: serve la terza
+condizione "ammunition == solo missili AD" per escluderle) e l'M6-Linebacker (Stinger + cannone
+25mm non-AD). **Fix mio diretto**: `Session_Simulator._engaged_assets` non contava piu' le
+intercettazioni (ora tipo separato) ai fini del regime carburante — asset che intercetta soltanto
+finiva a consumo 'nominal' invece di 'max'. Corretto con un test di regressione dedicato
+(`TestEngagedAssetsCountsInterceptions`). Suite finale: **3371 test OK (skipped=5)**.
+
+**FASE 7 CONCLUSA — motore DES COMPLETO (7/7 fasi).** Wiki aggiornata
+([[project_route_model_unification_plan]] non serve piu' toccarla per questo). **Prossimo passo
+per l'utente**: nessuno obbligatorio. Possibili seguiti gia' annotati altrove in questo file:
+selezione arma dai registri per `fire_control` (Fase 4, mai fatta), fog-of-war reale collegato a
+`detection_factor` (gap S9), il manualetto Markdown con diagrammi UML (v. sezione dedicata sotto,
+da fare a fine sviluppo — che e' ORA, quindi diventa rilevante se l'utente lo chiede).
+
+**How to apply**: il motore DES e' COMPLETO e verificato (3371 test). La sessione ha ancora TUTTO
+da committare (nessun commit fatto dopo Fase 6 `a968b549`): Fase 7 intera (S1-S18 + harness +
+determinismo/agnosticismo), il fix di 5 classi rotte (Transport/Storage/Urban/Production/
+Structure), la dottrina non-Military, il fix di `Block.set_asset`, la ricalibrazione
+dell'intercettazione in 3 tempi (interceptor_stock -> InterceptionEvent -> pool condiviso SAM), e
+il fix del regime carburante per gli intercettori. Se questa riga non e' stata aggiornata a
+"committato", il commit finale non e' ancora avvenuto: farlo prima di qualunque altro lavoro.
 
 ## ATTIVITA' REGISTRATA PER LA FINE DELLO SVILUPPO DEL MOTORE DES (richiesta utente 2026-09-23)
 

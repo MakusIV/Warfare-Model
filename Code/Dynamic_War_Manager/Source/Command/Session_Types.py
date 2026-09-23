@@ -13,8 +13,8 @@ sintetico del core oggi, un adapter DCS domani. Quindi:
     secondi assoluti dall'inizio sessione, metri;
   * provenienza dichiarata per dato: gli eventi atomici la portano gia' (`DamageEvent`,
     `FuelEvent`: `measured`/`derived`/`estimated`, costanti di `Logic/Damage_Model`);
-  * i tipi atomici NON sono duplicati: `ForceOutcome`/`AmmunitionEvent`/`EngagementResult`
-    vengono da `Logic/Engagement_Resolver`, `DamageEvent` da `Logic/Damage_Model`,
+  * i tipi atomici NON sono duplicati: `ForceOutcome`/`AmmunitionEvent`/
+    `InterceptionEvent`/`EngagementResult` vengono da `Logic/Engagement_Resolver`, `DamageEvent` da `Logic/Damage_Model`,
     `FuelEvent` da `Logic/Fuel_Model`. Questo modulo definisce solo i contenitori.
 
 ## Cosa NON c'e' (di proposito)
@@ -45,6 +45,7 @@ from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import (
     AmmunitionEvent,
     EngagementResult,
     ForceOutcome,
+    InterceptionEvent,
 )
 from Code.Dynamic_War_Manager.Source.Logic.Fuel_Model import FuelEvent
 from Code.Dynamic_War_Manager.Source.Utility import Session_Rng
@@ -182,8 +183,10 @@ class SessionOutcome:
             `ForceOutcome` e' relativo al SUO ingaggio (committed/lost/erosion si riferiscono
             agli asset impegnati li'): fonderli fra ingaggi diversi richiederebbe di
             reinventare quella semantica. Una forza impegnata in due ingaggi compare due volte.
-        damage_events/ammunition_events/fuel_events: gli eventi atomici, in ordine di tempo
-            (v. `assemble_session_outcome` per il criterio esatto).
+        damage_events/ammunition_events/interception_events/fuel_events: gli eventi
+            atomici, in ordine di tempo (v. `assemble_session_outcome` per il criterio
+            esatto). `ammunition_events` sono le sole salve offensive, `interception_events`
+            le intercettazioni (tipi distinti dal 2026-09-23).
     """
     session_id: str
     t_start: Optional[float]
@@ -192,6 +195,7 @@ class SessionOutcome:
     damage_events: Tuple[DamageEvent, ...] = ()
     ammunition_events: Tuple[AmmunitionEvent, ...] = ()
     fuel_events: Tuple[FuelEvent, ...] = ()
+    interception_events: Tuple[InterceptionEvent, ...] = ()
 
     def __post_init__(self):
         _check_domain_id('session_id', self.session_id)
@@ -207,11 +211,27 @@ class SessionOutcome:
         return tuple(outcome for outcome in self.force_outcomes if outcome.force_id == force_id)
 
     def ammunition_consumed(self) -> Dict[str, int]:
-        """Colpi consumati per asset nell'intera sessione (salve + intercettazioni)."""
+        """Colpi sparati OFFENSIVAMENTE per asset nell'intera sessione (solo salve).
+
+        Cambio di comportamento del 2026-09-23: fino ad allora sommava anche le
+        intercettazioni, registrate come AmmunitionEvent. Ora sono `InterceptionEvent` e
+        si leggono con `interceptions_consumed()`. Per un SAM puro
+        (Mobile.interceptor_shares_ammunition) il calo totale della scorta fisica e' la
+        somma dei due conteggi.
+        """
         consumed: Dict[str, int] = {}
 
         for event in self.ammunition_events:
             consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.rounds
+
+        return consumed
+
+    def interceptions_consumed(self) -> Dict[str, int]:
+        """Intercettazioni effettuate per asset nell'intera sessione (`interception_events`)."""
+        consumed: Dict[str, int] = {}
+
+        for event in self.interception_events:
+            consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.interceptions
 
         return consumed
 
@@ -303,11 +323,12 @@ def assemble_session_outcome(session_id: str,
     by_time = lambda event: event.time  # noqa: E731 — sorted() e' stabile
     damage = tuple(sorted((e for r in results for e in r.damage_events), key=by_time))
     ammunition = tuple(sorted((e for r in results for e in r.ammunition_events), key=by_time))
+    interceptions = tuple(sorted((e for r in results for e in r.interception_events), key=by_time))
     fuel = tuple(sorted(fuel, key=by_time))
 
     starts = [r.t_start for r in results if r.t_start is not None]
     ends = [r.t_end for r in results if r.t_end is not None]
-    event_times = [e.time for e in damage + ammunition + fuel]
+    event_times = [e.time for e in damage + ammunition + interceptions + fuel]
     low, high = _event_time_bounds(starts + ends + event_times)
 
     if t_start is not None and low is not None and low < t_start - TIME_EPS:
@@ -322,6 +343,7 @@ def assemble_session_outcome(session_id: str,
                           engagement_outcomes=tuple(r.forces for r in results),
                           damage_events=damage,
                           ammunition_events=ammunition,
+                          interception_events=interceptions,
                           fuel_events=fuel)
 
 

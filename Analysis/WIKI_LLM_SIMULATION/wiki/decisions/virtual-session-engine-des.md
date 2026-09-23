@@ -220,7 +220,38 @@ dell'utente:
 
 Suite: 3115 → 3140 (Session_Simulator) → 3146 (fix id) → 3168 (N forze).
 
-**Prossimo passo**: Fase 7 (validazione, scenari S1-S11, test di agnosticismo).
+**Fase 7 (validazione) — FATTA e COMPLETA 2026-09-23. È l'ultima delle 7 fasi: il motore DES è
+concluso.** Harness `Test/Scenario_Fixtures.py`, `Test/Test_Session_Validation.py` (determinismo +
+agnosticismo come test di contratto — nessun adapter DCS esiste nel codice Python, quindi non c'è
+nulla da "rimuovere": verifica strutturale via `typing.get_type_hints` + AST-check anti-DCS + run
+end-to-end con soli dati sintetici), `Test/Test_Session_Scenarios.py` (S1-S9),
+`Test/Test_Session_Scenarios_S10_S18.py` (S10-S18 — batteria estesa da 11 a 18 scenari su richiesta
+dell'utente, i 7 nuovi legati alla classificazione reale di Block/mil_category del progetto: C2,
+FARP, impianto Production, installazione navale fissa, prossimità Urban, scala gerarchica, rete
+Transport multi-nodo). Suite finale: **3371 test, OK (skipped=5)**.
+
+**Durante la Fase 7, 5 bug pre-esistenti trovati e corretti** (mai istanziate con successo in
+produzione, zero rischio di regressione): costruttori rotti da sempre di `Transport`/`Storage`/
+`Urban`/`Production`/`Structure`, e `Block.set_asset` che rifiutava ogni sottoclasse di `Asset`
+(confrontava il nome classe esatto invece di `isinstance`). Aggiunta anche la regola "i blocchi
+non-Military non si disingaggiano mai" in `Engagement_Resolver._can_disengage`.
+
+**Finding di plausibilità dalla Fase 7, poi ricalibrato**: la saturazione difensiva (R1, Fase 4)
+usava lo stesso contatore munizioni sia per sparare sia per intercettare, rendendo l'intercettazione
+di fatto illimitata per i cannoni (Shilka: 2000 colpi trattati come 2000 intercettazioni). Corretto
+in 2 passate: (1) `Mobile.interceptor_stock` distinto da `ammunition`, con `ROUNDS_PER_GUN_INTERCEPT
+= 100` per i cannoni (STIMA DICHIARATA) e conteggio diretto dei missili per i SAM; (2) per i SAM
+**puri** (solo missile, nessun cannone: Buk, S-300, Osa, Tor, Strela-10 — verificato nei registri
+che `ammunition` è già l'inventario fisico totale del veicolo, non una sotto-allocazione: un Buk ha
+4 missili in tutto, non 4+4), `ammunition`/`interceptor_stock` condividono lo stesso pool fisico
+invece di raddoppiarlo. Nuovo tipo `InterceptionEvent` (non più `AmmunitionEvent` con `purpose`)
+in `Engagement_Resolver.py`/`Session_Types.py`.
+
+**Prossimo passo**: nessuno obbligatorio — il motore DES a 7 fasi è completo. Possibili seguiti:
+selezione arma dai registri per `fire_control` (rimandata dalla Fase 4), collegamento fog-of-war
+reale (`Region`/`recon_cp_snapshot`) a `detection_factor` (gap documentato in S9), il manualetto
+Markdown con diagrammi UML richiesto dall'utente per fine sviluppo (v.
+[[project_virtual_session_engine_design]]).
 
 ## Fonti
 

@@ -28,7 +28,11 @@ def _damage(time, target, delta=-10, before=100):
 
 
 def _ammo(time, asset, rounds=1):
-    return ER.AmmunitionEvent(time=time, asset_id=asset, rounds=rounds, purpose=ER.PURPOSE_SALVO)
+    return ER.AmmunitionEvent(time=time, asset_id=asset, rounds=rounds)
+
+
+def _intercept(time, asset, interceptions=1, force='red'):
+    return ER.InterceptionEvent(time=time, asset_id=asset, interceptions=interceptions, force_id=force)
 
 
 def _fuel(time, asset, amount=0.1):
@@ -36,9 +40,10 @@ def _fuel(time, asset, amount=0.1):
                      amount=amount, fuel_before=1.0, fuel_after=1.0 - amount, exhausted=False)
 
 
-def _result(t_start, t_end, forces, damage=(), ammo=()):
+def _result(t_start, t_end, forces, damage=(), ammo=(), intercepts=()):
     return ER.EngagementResult(t_start=t_start, t_end=t_end, forces=tuple(forces),
-                               damage_events=tuple(damage), ammunition_events=tuple(ammo))
+                               damage_events=tuple(damage), ammunition_events=tuple(ammo),
+                               interception_events=tuple(intercepts))
 
 
 class _Base(unittest.TestCase):
@@ -122,9 +127,11 @@ class TestAssembleSessionOutcome(_Base):
 
     def test_aggregates_several_engagements(self):
         e1 = _result(100.0, 200.0, [_force('blue'), _force('red', 'Red')],
-                     damage=[_damage(150.0, 'r1')], ammo=[_ammo(140.0, 'b1', 2)])
+                     damage=[_damage(150.0, 'r1')], ammo=[_ammo(140.0, 'b1', 2)],
+                     intercepts=[_intercept(180.0, 'r2', 2)])
         e2 = _result(50.0, 300.0, [_force('blue'), _force('green', 'Red')],
-                     damage=[_damage(60.0, 'g1'), _damage(250.0, 'b2')], ammo=[_ammo(55.0, 'g1', 3)])
+                     damage=[_damage(60.0, 'g1'), _damage(250.0, 'b2')], ammo=[_ammo(55.0, 'g1', 3)],
+                     intercepts=[_intercept(70.0, 'b2', 1, 'blue')])
         outcome = ST.assemble_session_outcome('S1', [e1, e2], fuel_events=[_fuel(400.0, 'b1')])
 
         self.assertEqual(len(outcome.engagement_outcomes), 2)
@@ -134,7 +141,10 @@ class TestAssembleSessionOutcome(_Base):
 
         self.assertEqual([e.time for e in outcome.damage_events], [60.0, 150.0, 250.0])
         self.assertEqual([e.time for e in outcome.ammunition_events], [55.0, 140.0])
+        # ammunition_consumed() conta solo le salve; le intercettazioni a parte (2026-09-23).
         self.assertEqual(outcome.ammunition_consumed(), {'b1': 2, 'g1': 3})
+        self.assertEqual([e.time for e in outcome.interception_events], [70.0, 180.0])
+        self.assertEqual(outcome.interceptions_consumed(), {'r2': 2, 'b2': 1})
         self.assertAlmostEqual(outcome.fuel_consumed()['b1'], 0.1)
 
         # Intervallo ricavato: min/max su ingaggi ed eventi (il carburante a 400 s incluso).
@@ -158,6 +168,19 @@ class TestAssembleSessionOutcome(_Base):
     def test_none_results_are_skipped(self):
         outcome = ST.assemble_session_outcome('S1', [None, _result(0.0, 1.0, [_force('blue')]), None])
         self.assertEqual(len(outcome.engagement_outcomes), 1)
+
+    def test_interceptions_count_in_the_interval_and_sort_stably(self):
+        e1 = _result(0.0, 10.0, [_force('red', 'Red')],
+                     intercepts=[_intercept(10.0, 'r1', 1), _intercept(10.0, 'r2', 2)])
+        e2 = _result(0.0, 5.0, [_force('red', 'Red')], intercepts=[_intercept(5.0, 'r3', 1)])
+        outcome = ST.assemble_session_outcome('S1', [e1, e2])
+
+        self.assertEqual([e.asset_id for e in outcome.interception_events], ['r3', 'r1', 'r2'])
+        self.assertEqual(outcome.ammunition_consumed(), {})
+
+        late = _result(0.0, 1.0, [_force('red', 'Red')], intercepts=[_intercept(30.0, 'r1')])
+        with self.assertRaises(ValueError):
+            ST.assemble_session_outcome('S1', [late], t_end=20.0)
 
     def test_events_outside_declared_interval_raise(self):
         results = [_result(10.0, 20.0, [_force('blue')], damage=[_damage(15.0, 'r1')])]
@@ -205,6 +228,7 @@ class TestSessionOutcomeContract(_Base):
     def test_reuses_the_atomic_types(self):
         self.assertIs(ST.ForceOutcome, ER.ForceOutcome)
         self.assertIs(ST.AmmunitionEvent, ER.AmmunitionEvent)
+        self.assertIs(ST.InterceptionEvent, ER.InterceptionEvent)
         self.assertIs(ST.DamageEvent, DM.DamageEvent)
 
     def test_direct_construction_validates_interval(self):

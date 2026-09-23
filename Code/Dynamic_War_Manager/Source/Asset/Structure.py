@@ -6,7 +6,8 @@ from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Payload import Payload
 from Code.Dynamic_War_Manager.Source.DataType.Volume import Volume
-from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_ASSET_CATEGORY, BLOCK_INFRASTRUCTURE_ASSET, Logistic_Asset_Type as la
+from Code.Dynamic_War_Manager.Source.Context.Context import BLOCK_INFRASTRUCTURE_ASSET, Logistic_Asset_Type as la
+from Code.Dynamic_War_Manager.Source.Utility.Utility import setName
 from typing import Literal, List, Dict, Union, Optional, Tuple
 from sympy import Point, Line, Point3D, Line3D, symbols, solve, Eq, sqrt, And
 
@@ -41,19 +42,60 @@ class Structure(Asset) :
                  crytical: Optional[bool] = False, 
                  repair_time: Optional[int] = 0, 
                  role: Optional[str] = None, 
-                 dcs_unit_data: Optional[dict] = None):   
-            
-            super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data) 
-    
-            # propriety             
-            self.physical_characteristics = physical_characteristics if physical_characteristics else self.get_physical_characteristics() # se non viene fornito, prova a caricarlo dal Context
-            
-            # Association    
-            
-            
-            # check input parameters
-            if not super.checkParam( name, description, category, functionality, value, acp, rcp, payload, position, volume, crytical, repair_time ):    
-                raise Exception("Invalid parameters! Object not istantiate.")
+                 dcs_unit_data: Optional[dict] = None):
+        """Asset statico (edificio, ponte, deposito, pista...) di un blocco infrastrutturale.
+
+        Args (solo quelli non ovvi):
+            block: blocco proprietario (Transport/Production/Urban/Storage/Military): il suo
+                   `block_class` e `category` di questo asset individuano la tabella degli
+                   asset_type ammessi in Context.BLOCK_INFRASTRUCTURE_ASSET.
+            category: categoria infrastrutturale (es. 'Road', 'Railway', 'Farm').
+            asset_type: tipo di struttura (es. 'Bridge', 'Station'); validato se fornito.
+            acp: risorse assegnate -> Asset.resources_assigned (stesso concetto, nome storico).
+            rcp: risorse autoconsumate -> Asset.resources_to_self_consume (idem).
+
+        Gli argomenti vanno ad Asset.__init__ per NOME: la vecchia chiamata posizionale ne
+        passava 17 contro i 18 di Asset.__init__ (mancava `production`), e ogni valore da
+        `position` in poi slittava silenziosamente sul parametro successivo (position ->
+        production, volume -> position, ...). `production` resta None (Payload nullo di
+        default in Asset): una struttura statica non produce beni, la produzione e' modellata
+        dal blocco Production.
+
+        Raises:
+            ValueError: asset_type non ammesso per block_class/category (v. checkParam).
+        """
+        super().__init__(
+            block=block,
+            name=name if name else setName('Unnamed_Structure'),  # Asset.__init__ non assegna _name se name e' None
+            description=description,
+            category=category,
+            asset_type=asset_type,
+            functionality=functionality,
+            cost=cost,
+            value=value,
+            resources_assigned=acp,
+            resources_to_self_consume=rcp,
+            payload=payload,
+            production=None,
+            position=position,
+            volume=volume,
+            crytical=crytical,
+            repair_time=repair_time,
+            role=role,
+            dcs_unit_data=dcs_unit_data
+        )
+
+        # propriety
+        # Nessuna tabella di caratteristiche fisiche per le strutture esiste ancora nel
+        # Context: se non fornite restano None (set_volume_from_physical_characteristics lo
+        # gestisce con un warning). Il vecchio fallback self.get_physical_characteristics()
+        # leggeva l'attributo stesso prima che esistesse (AttributeError).
+        self.physical_characteristics = physical_characteristics
+
+        # check input parameters: checkParam solleva gia' ValueError su un asset_type non
+        # ammesso; asset_type assente e' un dato mancante, non un errore (come in Asset).
+        if asset_type is not None:
+            self.checkParam(asset_type)
 
     # methods
 
@@ -67,7 +109,7 @@ class Structure(Asset) :
         
         asset_data = BLOCK_INFRASTRUCTURE_ASSET
 
-        for k, v in asset_data[self.block.block_class][self.category]:     # block_class = Transport, category = AircraftB,        
+        for k, v in asset_data[self.block.block_class][self.category].items():     # block_class = Transport, category = AircraftB,        
                 
             if self.asset_type == k:
                 self.cost = v["cost"]
@@ -81,21 +123,37 @@ class Structure(Asset) :
 
     # use case methods
     def checkParam(self, asset_type: str = None) -> (bool, str): # type: ignore
-        """Return True if type compliance of the parameters is verified"""          
-       
-        if asset_type and (isinstance(asset_type, str)):        
+        """Verifica che `asset_type` sia ammesso per il blocco proprietario e la categoria.
 
-            asset_t = BLOCK_ASSET_CATEGORY[self.block.block_class][self.category].keys() 
+        Tabella: Context.BLOCK_INFRASTRUCTURE_ASSET[block.block_class][category] (la stessa
+        letta da loadAssetDataFromContext). Prima leggeva BLOCK_ASSET_CATEGORY[block_class],
+        le cui chiavi di primo livello sono i gruppi ('Block_Infrastructure_Asset', ...), non
+        le classi di blocco: KeyError per qualunque blocco reale.
 
-            if asset_type in asset_t:
-                return (True, "OK")
-                
-            else:
-                raise ValueError(f"Structure asset_type not valid. Structure asset_type must be any value from: {asset_t!r}")            
-                    
-        return (False, f"Bad Arg: Structure asset_type must be any string {asset_type}")                                       
+        Returns:
+            (True, "OK") se ammesso; (False, motivo) se asset_type non e' una stringa o se
+            blocco/categoria mancano o non sono in tabella (dato mancante: non validabile,
+            registrato a log).
 
+        Raises:
+            ValueError: asset_type non presente fra quelli della categoria.
+        """
+        if not asset_type or not isinstance(asset_type, str):
+            return (False, f"Bad Arg: Structure asset_type must be a non-empty string, got {asset_type!r}")
 
+        block_class = getattr(self.block, 'block_class', None)
+        asset_t = BLOCK_INFRASTRUCTURE_ASSET.get(block_class, {}).get(self.category)
+
+        if asset_t is None:
+            message = (f"Structure asset_type {asset_type!r} not validated: no infrastructure table for "
+                       f"block_class {block_class!r}, category {self.category!r}")
+            logger.warning(message)
+            return (False, message)
+
+        if asset_type in asset_t:
+            return (True, "OK")
+
+        raise ValueError(f"Structure asset_type not valid. Structure asset_type must be any value from: {list(asset_t.keys())!r}")
 
     # serve?
     def getBlockInfo(self, request: str, asset_Number_Accuracy: float, asset_Efficiency_Accuracy: float):    

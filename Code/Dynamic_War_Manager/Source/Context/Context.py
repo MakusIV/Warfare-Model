@@ -1714,6 +1714,35 @@ def get_block_infrastructure_components(block_class: str, asset_category: str) -
     return block_asset_components
 
 
+def validate_infrastructure_sub_category(block_class: str, sub_category: Optional[str]) -> None:
+    """Verifica che `sub_category` sia una sotto-categoria ammessa per il blocco infrastrutturale
+    `block_class` (le chiavi di BLOCK_INFRASTRUCTURE_ASSET[block_class], es. 'Road'/'Railway'
+    per Transport, 'Farm'/'Factory' per Production).
+
+    E' l'analogo di Military._validate_mil_category per i blocchi non militari (Transport,
+    Storage, Urban, Production): la sotto-categoria e' la chiave con cui Structure risolve i
+    propri asset_type (BLOCK_INFRASTRUCTURE_ASSET[block_class][category]), quindi un valore
+    fuori tabella produrrebbe un blocco i cui componenti non sono mai validabili.
+
+    None (o stringa vuota) e' ammesso: la sotto-categoria resta un dato facoltativo, come in
+    Block.__init__ — la validazione scatta solo sui valori effettivamente forniti.
+
+    Raises:
+        ValueError: se `block_class` non e' in BLOCK_INFRASTRUCTURE_ASSET o `sub_category` non
+                    e' fra le sue sotto-categorie.
+    """
+    if not sub_category:
+        return
+
+    if block_class not in BLOCK_INFRASTRUCTURE_ASSET:
+        raise ValueError(f"unknown infrastructure block class: {block_class!r}")
+
+    allowed = list(BLOCK_INFRASTRUCTURE_ASSET[block_class].keys())
+
+    if sub_category not in allowed:
+        raise ValueError(f"{block_class} sub_category must be one of: {allowed!r}, got {sub_category!r}")
+
+
 
 # DEPRECATED (prima vedi di sostituire BLOCK_ASSET_CATEGORY)
 

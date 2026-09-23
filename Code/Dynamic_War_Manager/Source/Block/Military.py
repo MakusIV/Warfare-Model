@@ -621,8 +621,9 @@ class Military(Block):
         E' la base di salvo_interception_capacity() (v. la' per la motivazione e per lo
         statuto della stima). Esposta separatamente perche' il risolutore d'ingaggio
         (Logic/Engagement_Resolver) deve sapere non solo QUANTI colpi il blocco intercetta
-        in una salva ma anche CHI li intercetta: ogni intercettazione e' un colpo sparato
-        e consuma la scorta di quell'asset (R3), e il risolutore lavora su uno stato ombra
+        in una salva ma anche CHI li intercetta: ogni intercettazione consuma la scorta di
+        intercettori di quell'asset (Mobile.interceptor_stock, distinta dalle munizioni
+        offensive — ricalibrazione 2026-09-23), e il risolutore lavora su uno stato ombra
         che evolve durante l'ingaggio, quindi ricalcola la capacita' salva per salva
         partendo da questo elenco.
 
@@ -687,8 +688,15 @@ class Military(Block):
             radar di scoperta il registro puo' dichiarare la capacita' di tracciamento, che
             li sovrastima. Senza dato radar (sistemi a puntamento ottico, MANPADS) vale
             DEFAULT_INTERCEPTION_CHANNELS = 1;
-          * scorta_i = munizioni residue (Mobile.ammunition): non si intercetta con
-            intercettori che non si hanno; None (non modellata) non limita.
+          * scorta_i = intercettori residui (Mobile.interceptor_stock): non si intercetta
+            con intercettori che non si hanno; None (non modellata) non limita. E' un
+            contatore DISTINTO dalle munizioni offensive (Mobile.ammunition): fino alla
+            ricalibrazione del 2026-09-23 si leggeva `ammunition`, che per i cannoni AA e'
+            un conteggio di colpi (Shilka: 2000) e dava migliaia di intercettazioni per
+            asset. V. Mobile.ROUNDS_PER_GUN_INTERCEPT per la regola missili/cannoni. Per
+            un SAM puro (Mobile.interceptor_shares_ammunition) `interceptor_stock` e' una
+            vista di `ammunition`: i missili lanciati in salve offensive riducono anche la
+            capacita' di intercettazione (pool fisico unico, v. "SCORTA CONDIVISA").
         Ogni canale intercetta UN colpo per salva: equivale ad assumere Pk
         dell'intercettore = 1 per canale, ipotesi ottimistica per la difesa e primo
         candidato alla ricalibrazione.
@@ -699,7 +707,7 @@ class Military(Block):
         capacity = 0
 
         for asset, channels in self.salvo_interceptors():
-            stock = getattr(asset, 'ammunition', None)
+            stock = getattr(asset, 'interceptor_stock', None)
 
             if isinstance(stock, int) and not isinstance(stock, bool):
                 capacity += min(channels, max(stock, 0))

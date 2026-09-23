@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T15:52:39.876Z
+  modified: 2026-09-23T16:05:51.760Z
 ---
 
 **Promemoria multi-macchina**: l'utente lavora su almeno 3 macchine (VM Oracle VirtualBox Ubuntu,
@@ -210,7 +210,11 @@ contatto) invece che per coppie, cosi' X/A/B collegati vengono risolti con UNA s
 stato di X evolve in una timeline continua invece che "prima tutto A, poi tutto B". V. quando
 torna per l'esito.
 
-**Prossimo passo dopo questo agente**: Fase 7 (validazione, scenari S1-S11, test di
+**Fase 6 completa: verificata (letto il codice, suite rieseguita, confermato il confronto a 3000
+scenari fatto dall'agente) e COMMITTATA**: `a968b549`, dopo `a60c258c` (Fase 5). Nessuno dei tre
+commit della sessione (Fase 4/5/6) e' stato pushato.
+
+**Prossimo passo**: Fase 7 (validazione, scenari S1-S11, test di determinismo, test di
 agnosticismo) - o eventuali altre rifiniture che l'utente vorra' chiedere prima.
 
 ## (storico) Prossimo passo indicato a fine Fase 5, ora superato: Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che

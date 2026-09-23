@@ -42,6 +42,8 @@ class Ship(Mobile) :
             self.load_speed_from_registry()
             # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
             self.load_ammunition_from_registry()
+            # Scorta di intercettori, distinta dalle munizioni (v. Mobile.ROUNDS_PER_GUN_INTERCEPT).
+            self.load_interceptor_stock_from_registry()
             # Carburante dal registro (autonomia `range` in nm, v. Mobile.FUEL_FULL).
             self.load_fuel_from_registry()
 

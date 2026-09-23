@@ -9,7 +9,7 @@ il test di simmetria fra i lati che R2 chiede esplicitamente), congelamento del 
 Strategia di setup
 ------------------
 * Asset e forze sono stub con la sola superficie che il risolutore legge (`id`, `health`,
-  `ammunition`; `name`, `side`, `assets`, `salvo_interceptors`). Il risolutore lavora su
+  `ammunition`, `interceptor_stock`; `name`, `side`, `assets`, `salvo_interceptors`). Il risolutore lavora su
   uno stato ombra e non chiama altro sugli asset: usare stub rende ogni scenario
   calcolabile a mano. Una classe finale (TestIntegrationWithRealObjects) ripete il giro
   con `Military` e `Mobile` REALI, per verificare che la superficie sia davvero quella.
@@ -45,10 +45,15 @@ _ER_LOGGER = 'Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver.logger'
 # ── STUB E COSTRUTTORI DI COMODO ──────────────────────────────────────────────
 
 class _Asset:
-    def __init__(self, asset_id, health=100, ammunition=None):
+    def __init__(self, asset_id, health=100, ammunition=None, interceptor_stock=None, shares=False):
         self.id = asset_id
         self.health = health
         self.ammunition = ammunition
+        # Scorta di intercettori, distinta dalle munizioni (ricalibrazione 2026-09-23),
+        # salvo per un SAM puro (shares=True): allora il risolutore usa `ammunition` come
+        # pool unico e ignora `interceptor_stock` (v. Mobile.interceptor_shares_ammunition).
+        self.interceptor_stock = interceptor_stock
+        self.interceptor_shares_ammunition = shares
 
 
 class _Force:
@@ -270,10 +275,11 @@ class TestInitiative(unittest.TestCase):
 class TestSalvoSaturation(unittest.TestCase):
     """I primi N colpi intercettabili sono fermati; il surplus raggiunge integralmente il danno."""
 
-    def _scenario(self, spec, channels=3, interceptor_ammo=None, shooters=('b1',),
-                  latencies=None, salvo_window=0.0):
+    def _scenario(self, spec, channels=3, interceptor_stock=None, interceptor_ammo=None,
+                  shooters=('b1',), latencies=None, salvo_window=0.0, shares=False):
         blue = _Force('blue', 'Blue', [_Asset(s) for s in shooters])
-        interceptor = _Asset('r2', ammunition=interceptor_ammo)
+        interceptor = _Asset('r2', ammunition=interceptor_ammo, interceptor_stock=interceptor_stock,
+                             shares=shares)
         red = _Force('red', 'Red', [_Asset('r1'), interceptor], interceptors=[(interceptor, channels)])
         # La finestra chiude prima del secondo lancio (re-fire 1 s): una salva per tiratore.
         windows = [_window(s, 'r1', t_end=2.9, range_b=None) for s in shooters]
@@ -312,17 +318,94 @@ class TestSalvoSaturation(unittest.TestCase):
         self.assertEqual(result.resolutions[0].intercepted, 0)
         self.assertEqual(len(result.damage_events), 5)
 
-    def test_interceptions_consume_the_interceptor_ammunition(self):
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_ammo=10)
-        interceptions = [e for e in result.ammunition_events if e.purpose == ER.PURPOSE_INTERCEPTION]
+    def test_interceptions_consume_the_interceptor_stock(self):
+        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10)
 
-        self.assertEqual([(e.asset_id, e.rounds) for e in interceptions], [('r2', 3)])
+        self.assertEqual([(e.asset_id, e.interceptions) for e in result.interception_events], [('r2', 3)])
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
 
-    def test_capacity_is_capped_by_interceptor_ammunition(self):
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_ammo=1)
+    def test_interception_event_references_the_defended_force_and_salvos(self):
+        """Tracciabilita': force_id e salvo_ids rimandano alla SalvoResolution intercettata."""
+        result = self._scenario(_miss(rounds=2, interceptable=True), shooters=('b1', 'b2'),
+                                interceptor_stock=10)
+        event, = result.interception_events
+        resolution, = result.resolutions
+
+        self.assertIsInstance(event, ER.InterceptionEvent)
+        self.assertEqual((event.time, event.force_id, event.salvo_ids),
+                         (resolution.time, resolution.force_id, resolution.salvo_ids))
+        self.assertEqual(event.salvo_ids, (0, 1))
+
+    def test_capacity_is_capped_by_interceptor_stock(self):
+        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=1)
 
         self.assertEqual(result.resolutions[0].capacity, 1)
         self.assertEqual(len(result.damage_events), 4)
+
+    def test_capacity_ignores_the_offensive_ammunition(self):
+        """Ricalibrazione 2026-09-23: 2000 colpi di cannone non sono 2000 intercettazioni.
+
+        Il caso che l'ha originata: un cannone AA con `ammunition` = 2000 intercettava
+        qualunque salva. Ora la capacita' e' limitata da interceptor_stock soltanto, e
+        munizioni offensive a zero non la azzerano.
+        """
+        rich = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=1,
+                              interceptor_ammo=2000)
+        self.assertEqual(rich.resolutions[0].capacity, 1)
+        self.assertEqual(len(rich.damage_events), 4)
+
+        dry = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10,
+                             interceptor_ammo=0)
+        self.assertEqual(dry.resolutions[0].capacity, 3)
+
+    def test_interception_and_salvo_events_have_distinct_types(self):
+        """Il tiratore produce solo AmmunitionEvent (salva), il difensore solo InterceptionEvent."""
+        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10,
+                                interceptor_ammo=4)
+
+        self.assertEqual([(type(e), e.asset_id, e.rounds) for e in result.ammunition_events],
+                         [(ER.AmmunitionEvent, 'b1', 5)])
+        self.assertEqual([(type(e), e.asset_id, e.interceptions) for e in result.interception_events],
+                         [(ER.InterceptionEvent, 'r2', 3)])
+        # ammunition_consumed() conta le sole salve offensive (cambio del 2026-09-23).
+        self.assertEqual(result.ammunition_consumed(), {'b1': 5})
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
+
+    def test_pure_sam_interceptions_draw_on_its_missiles(self):
+        """SAM puro: le intercettazioni consumano lo stesso pool delle munizioni offensive."""
+        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=None,
+                                interceptor_ammo=2, channels=3, shares=True)
+
+        self.assertEqual(result.resolutions[0].capacity, 2)
+        self.assertEqual(result.interceptions_consumed(), {'r2': 2})
+
+    def _sam_duel(self, shares):
+        """r2 (4 missili, 3 canali) spara 3 missili su b1 a t=1; b1 risponde con 5 colpi
+        intercettabili a t=2. Con pool unico a r2 resta 1 missile per intercettare."""
+        b1 = _Asset('b1')
+        r2 = _Asset('r2', ammunition=4, interceptor_stock=None if shares else 4, shares=shares)
+        blue = _Force('blue', 'Blue', [b1])
+        red = _Force('red', 'Red', [r2], interceptors=[(r2, 3)])
+        specs = {'r2': _miss(rounds=3, cycle_time=100.0),
+                 'b1': _miss(rounds=5, interceptable=True, cycle_time=100.0)}
+        return ER.resolve_engagement(blue, red, [_window('b1', 'r2', t_end=2.9)],
+                                     lambda shooter, target: specs[shooter.id], random.Random(0),
+                                     reaction_profile_for=_profiles({'r2': (1.0, 1.0), 'b1': (2.0, 1.0)}))
+
+    def test_pure_sam_offensive_fire_reduces_its_interception_capacity(self):
+        shared = self._sam_duel(shares=True)
+        red_resolution = [r for r in shared.resolutions if r.force_id == 'red']
+
+        self.assertEqual(shared.ammunition_consumed(), {'r2': 3, 'b1': 5})
+        self.assertEqual([(r.capacity, r.intercepted) for r in red_resolution], [(1, 1)])
+        self.assertEqual(shared.interceptions_consumed(), {'r2': 1})
+
+    def test_independent_counters_keep_the_full_capacity(self):
+        """Stesso duello senza pool unico (es. sistema misto/cannone): capacita' piena."""
+        independent = self._sam_duel(shares=False)
+        red_resolution = [r for r in independent.resolutions if r.force_id == 'red']
+
+        self.assertEqual([(r.capacity, r.intercepted) for r in red_resolution], [(3, 3)])
 
     def test_simultaneous_salvos_share_the_capacity(self):
         """Due salve da 2 colpi nello stesso istante contro capacita' 3: ne passa 1."""
@@ -508,6 +591,84 @@ class TestDisengagementSymmetry(unittest.TestCase):
     def test_default_doctrine_is_symmetric(self):
         self.assertEqual(Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Blue'],
                          Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Red'])
+
+
+class TestNonMilitaryNeverDisengages(unittest.TestCase):
+    """Solo una `Military` puo' disingaggiarsi: un Block non militare (deposito, trasporto)
+    riceve thresholds=None qualunque sia la dottrina del suo lato.
+
+    Stesso scenario di TestDisengagementErosion (1 tiratore contro 10 bersagli, una
+    uccisione per salva): per una forza combattente l'erosione scatta alla 3a perdita
+    (DISENGAGED, lost=3). Qui il bersaglio e' un `Block` REALE non militare che contiene
+    gli stessi 10 asset stub.
+    """
+
+    def _scenario(self, depot, shooter_ammunition=None):
+        attackers, stub_defenders, windows = _one_shooter_vs_ten()
+        depot._assets = dict(stub_defenders.assets)
+
+        if shooter_ammunition is not None:
+            for asset in attackers.assets.values():
+                asset.ammunition = shooter_ammunition
+
+        return attackers, depot, windows
+
+    def _resolve(self, attackers, depot, windows, thresholds=None):
+        return ER.resolve_engagement(attackers, depot, windows, _always(_kill()), random.Random(0),
+                                     reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                     thresholds=thresholds)
+
+    def test_logistic_block_fights_to_destruction_instead_of_disengaging(self):
+        attackers, depot, windows = self._scenario(
+            Block(name='Depot', side='Red', category='Logistic', id='depot'))
+        outcome = self._resolve(attackers, depot, windows).outcome_of('depot')
+
+        self.assertEqual(outcome.outcome, ER.DESTROYED)
+        self.assertEqual(outcome.lost, 10)
+
+    def test_non_military_block_past_erosion_threshold_is_held(self):
+        """4 colpi soli: erosione 0.4 oltre la soglia di 0.3, ma il deposito resta HELD."""
+        attackers, depot, windows = self._scenario(
+            Block(name='Depot', side='Red', category='Logistic', id='depot'), shooter_ammunition=4)
+        outcome = self._resolve(attackers, depot, windows).outcome_of('depot')
+
+        self.assertEqual(outcome.outcome, ER.HELD)
+        self.assertEqual(outcome.lost, 4)
+        self.assertGreater(outcome.erosion, Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Red']['erosion'])
+        self.assertEqual(outcome.triggers, ())
+
+    def test_explicit_side_doctrine_is_ignored_for_non_military_blocks(self):
+        from Code.Dynamic_War_Manager.Source.Block.Transport import Transport
+
+        attackers, depot, windows = self._scenario(
+            Transport(name='Railhead', side='Red', category='Logistic', sub_category='Railway',
+                      id='depot'))
+        doctrine = {'Blue': {'erosion': 0.3, 'shock': 0.2}, 'Red': {'erosion': 0.3, 'shock': 0.2}}
+        outcome = self._resolve(attackers, depot, windows, thresholds=doctrine).outcome_of('depot')
+
+        self.assertEqual(outcome.outcome, ER.DESTROYED)
+
+    def test_no_missing_doctrine_warning_for_non_military_blocks(self):
+        attackers, depot, windows = self._scenario(
+            Block(name='Depot', side='Red', category='Logistic', id='depot'))
+
+        with patch(_ER_LOGGER) as mock_logger:
+            self._resolve(attackers, depot, windows)
+
+        for call in mock_logger.warning.call_args_list:
+            self.assertNotIn('no disengagement doctrine', str(call))
+
+    def test_military_force_still_disengages(self):
+        """Controprova con una Military reale nello stesso scenario: la regola non tocca le
+        forze militari."""
+        military = Military(mil_category=MILITARY_CATEGORY["Ground_Base"][1], name='Depot',
+                            side='Red', id='depot')
+        military.salvo_interceptors = lambda: []
+        attackers, military, windows = self._scenario(military)
+        outcome = self._resolve(attackers, military, windows).outcome_of('depot')
+
+        self.assertEqual(outcome.outcome, ER.DISENGAGED)
+        self.assertEqual(outcome.lost, 3)
 
 
 # ── R4: CONGELAMENTO DEL PAYLOAD ──────────────────────────────────────────────
@@ -942,7 +1103,7 @@ class TestMultiForceEngagement(unittest.TestCase):
         per intero, la scorta sarebbe andata tutta ad A (t=3 e t=10) e B non sarebbe stato
         intercettato affatto.
         """
-        interceptor = _Asset('x1', ammunition=3)
+        interceptor = _Asset('x1', interceptor_stock=3)
         x = _Force('X', 'Blue', [interceptor], interceptors=[(interceptor, 2)])
         a = _Force('A', 'Red', [_Asset('a1')])
         b = _Force('B', 'Green', [_Asset('b1')])
@@ -963,10 +1124,10 @@ class TestMultiForceEngagement(unittest.TestCase):
                          [(3.0, 'a1'), (5.0, 'b1'), (10.0, 'a1')])
         self.assertEqual([(r.time, r.intercepted) for r in result.resolutions],
                          [(3.0, 2), (5.0, 1), (10.0, 0)])
-        interceptions = [(e.time, e.rounds) for e in result.ammunition_events
-                         if e.purpose == ER.PURPOSE_INTERCEPTION]
+        interceptions = [(e.time, e.interceptions) for e in result.interception_events]
         self.assertEqual(interceptions, [(3.0, 2), (5.0, 1)])
-        self.assertEqual(result.ammunition_consumed()['x1'], 3)
+        self.assertEqual(result.interceptions_consumed(), {'x1': 3})
+        self.assertNotIn('x1', result.ammunition_consumed())
 
     def test_shooter_ammunition_is_consumed_by_both_fronts(self):
         """Un tiratore di X con 2 colpi: uccide a1 (A distrutta), poi passa al fronte B e
@@ -1187,6 +1348,33 @@ class TestIntegrationWithRealObjects(unittest.TestCase):
 
         for asset_id, consumed in result.ammunition_consumed().items():
             self.assertEqual(self.blue.assets[asset_id].ammunition, 10 - consumed)
+
+    def test_apply_routes_each_event_to_its_own_stock(self):
+        """AmmunitionEvent -> consume_ammunition, InterceptionEvent -> consume_interceptor_stock."""
+        asset = self.red.assets['red-0']
+        asset.interceptor_stock = 20
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=1.0, forces=(),
+            ammunition_events=(ER.AmmunitionEvent(time=0.5, asset_id='red-0', rounds=3),),
+            interception_events=(ER.InterceptionEvent(time=1.0, asset_id='red-0', interceptions=2),))
+
+        summary = ER.apply_engagement_result(result, self.red)
+
+        self.assertEqual((asset.ammunition, asset.interceptor_stock), (10 - 3, 20 - 2))
+        self.assertEqual((summary['ammunition_events'], summary['interception_events']), (1, 1))
+
+    def test_apply_on_a_pure_sam_draws_both_events_from_one_pool(self):
+        """SAM puro reale (Mobile con scorta condivisa): salva e intercettazione scalano ammunition."""
+        asset = self.red.assets['red-0']
+        asset._interceptor_shares_ammunition = True   # come dopo load_interceptor_stock_from_registry
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=1.0, forces=(),
+            ammunition_events=(ER.AmmunitionEvent(time=0.5, asset_id='red-0', rounds=3),),
+            interception_events=(ER.InterceptionEvent(time=1.0, asset_id='red-0', interceptions=2),))
+
+        ER.apply_engagement_result(result, self.red)
+
+        self.assertEqual((asset.ammunition, asset.interceptor_stock), (10 - 3 - 2, 10 - 3 - 2))
 
     def test_applied_state_matches_the_reported_outcome(self):
         result = self._resolve()

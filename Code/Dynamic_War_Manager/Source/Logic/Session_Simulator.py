@@ -430,6 +430,9 @@ def _engaged_assets(result: ER.EngagementResult) -> set:
     for event in result.ammunition_events:
         engaged.add(event.asset_id)
 
+    for event in result.interception_events:
+        engaged.add(event.asset_id)
+
     return engaged
 
 

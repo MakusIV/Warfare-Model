@@ -607,12 +607,14 @@ class TestMilitary(unittest.TestCase):
 
     _BUILD_THREAT = 'Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa'
 
-    def _ad_asset(self, cls, asset_id, channels=None, ammunition=None, operative=True):
+    def _ad_asset(self, cls, asset_id, channels=None, interceptor_stock=None, ammunition=None,
+                  operative=True):
         asset = MagicMock()
         asset.__class__ = cls
         asset.id = asset_id
         asset.is_operative.return_value = operative
         asset.engagement_channels.return_value = channels
+        asset.interceptor_stock = interceptor_stock
         asset.ammunition = ammunition
         return asset
 
@@ -632,16 +634,29 @@ class TestMilitary(unittest.TestCase):
 
         a.engagement_channels.assert_called_with('air')
 
-    def test_salvo_capacity_is_capped_by_ammunition(self):
+    def test_salvo_capacity_is_capped_by_interceptor_stock(self):
         """Non si intercetta con intercettori che non si hanno (R3)."""
-        a = self._ad_asset(_Vehicle, 'v1', channels=4, ammunition=1)
+        a = self._ad_asset(_Vehicle, 'v1', channels=4, interceptor_stock=1)
         self.groundbase._assets = {'v1': a}
 
         with patch(self._BUILD_THREAT, return_value=MagicMock()):
             self.assertEqual(self.groundbase.salvo_interception_capacity(), 1)
 
-    def test_salvo_capacity_zero_ammunition_gives_nothing(self):
-        a = self._ad_asset(_Vehicle, 'v1', channels=4, ammunition=0)
+    def test_salvo_capacity_ignores_offensive_ammunition(self):
+        """Ricalibrazione 2026-09-23: la scorta di intercettazione non e' `ammunition`.
+
+        Munizioni offensive abbondanti non aumentano la capacita', munizioni finite non la
+        azzerano: conta solo interceptor_stock.
+        """
+        rich = self._ad_asset(_Vehicle, 'v1', channels=4, interceptor_stock=1, ammunition=2000)
+        empty = self._ad_asset(_Vehicle, 'v2', channels=3, interceptor_stock=None, ammunition=0)
+        self.groundbase._assets = {'v1': rich, 'v2': empty}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), 1 + 3)
+
+    def test_salvo_capacity_zero_interceptor_stock_gives_nothing(self):
+        a = self._ad_asset(_Vehicle, 'v1', channels=4, interceptor_stock=0)
         self.groundbase._assets = {'v1': a}
 
         with patch(self._BUILD_THREAT, return_value=MagicMock()):

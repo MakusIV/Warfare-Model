@@ -122,6 +122,89 @@ DEFAULT_DETECTION_RANGE_TYPE = "acquisition_range"
 UNIT_COUNTED_WEAPON_TYPES = ('MACHINE_GUNS', 'CIWS')
 
 
+# ── SCORTA DI INTERCETTORI (ricalibrazione Fase 4, 2026-09-23) ────────────────
+#
+# DECISIONE (utente, 2026-09-23, dopo la validazione di Fase 7). La capacita' di
+# intercettazione di un blocco (Military.salvo_interception_capacity, R1) leggeva la
+# scorta da `ammunition`, e ogni intercettazione ne consumava 1 unita'. Ma `ammunition` e'
+# un conteggio di COLPI: per uno ZSU-23-4-Shilka vale 2000 (colpi da 23 mm), e un colpo di
+# cannone non e' un'intercettazione — in un test reale un solo Shilka ha fermato 88 missili
+# su 88. Qui nasce quindi un secondo contatore, `interceptor_stock`:
+#
+#   * `interceptor_stock` = numero di INTERCETTAZIONI ancora possibili, consumato
+#     intercettando (Engagement_Resolver, InterceptionEvent);
+#   * `ammunition` resta il contatore del fuoco offensivo (salve, AmmunitionEvent);
+#   * stessa disciplina delle munizioni: consumo deterministico, None = non modellata,
+#     nessun rifornimento (materia del ciclo di campagna);
+#   * i due contatori sono DISTINTI, salvo il caso dei SAM puri (v. "SCORTA CONDIVISA"
+#     qui sotto), in cui sono per costruzione lo stesso pool fisico.
+#
+# Valore iniziale, dalle SOLE armi di difesa aerea del modello — stessa selezione di
+# Mobile.air_defense_volume() e di Air_Route_Manager._air_defense_weapons() (veicoli:
+# AA_CANNONS e MISSILES con task Anti_Air e dati di quota; navi: MISSILES_SAM), cosi' che
+# "chi intercetta" e "con quale scorta" descrivano lo stesso armamento:
+#
+#   * missili (MISSILES, MISSILES_SAM): 1 missile = 1 intercettazione, la quantita' del
+#     registro e' gia' un conteggio di missili (Buk 4, Osa 6, Arleigh Burke 74+16);
+#   * cannoni (AA_CANNONS): colpi // ROUNDS_PER_GUN_INTERCEPT (Shilka 2000 -> 20);
+#   * sistemi misti missile+cannone (2K22-Tunguska: 8 missili 9M311 + 1904 colpi 2A38M):
+#     le due componenti si SOMMANO nello stesso contatore (8 + 19 = 27). Un contatore unico
+#     non distingue quale componente sia esaurita per prima; e' la semplificazione scelta
+#     perche' il resto del risolutore (canali, Pk=1 per canale) non distingue comunque
+#     missile e cannone.
+#
+# Esclusi: CIWS navali (in UNIT_COUNTED_WEAPON_TYPES il registro dichiara il numero di
+# impianti, non i colpi — nessun dato di scorta; e comunque non sono nella selezione AD di
+# air_defense_volume), cannoni navali GUNS, AUTO_CANNONS dei veicoli (non sono armi AD
+# nella selezione esistente), missili anticarro/antinave.
+#
+# None = scorta NON MODELLATA (nessun vincolo): modello ignoto o nessuna arma AD nel
+# registro — stessa semantica di `ammunition`. Un asset con sole armi AD a cannone e meno
+# di ROUNDS_PER_GUN_INTERCEPT colpi ha invece scorta 0: modellata, ed esaurita.
+#
+# ROUNDS_PER_GUN_INTERCEPT — STIMA DICHIARATA, da ricalibrare con il processo ATCAL
+# interno. Un cannone AA non intercetta con un colpo ma con una raffica prolungata sul
+# bersaglio in avvicinamento: un Phalanx (3000-4500 colpi/min) impegna un missile con
+# raffiche da 1-2 s, cioe' ~75-150 colpi; la raffica lunga dottrinale dello Shilka e' di
+# ~150-200 colpi complessivi sui quattro tubi. 100 colpi per tentativo sta nel mezzo, ed e'
+# volutamente dalla parte prudente per la difesa, dato che la Pk dell'intercettazione e'
+# gia' assunta = 1 per canale (Military.salvo_interception_capacity). Valore unico per
+# tutti i calibri: il registro non da' una cadenza per arma utilizzabile qui.
+ROUNDS_PER_GUN_INTERCEPT = 100
+
+# Tipi d'arma che contano per la scorta di intercettori (v. commento sopra). Le stesse
+# selezioni di air_defense_volume(); la ripartizione missile/cannone decide la regola.
+INTERCEPTOR_WEAPON_TYPES_VEHICLE = ('AA_CANNONS', 'MISSILES')
+INTERCEPTOR_WEAPON_TYPES_SHIP = ('MISSILES_SAM',)
+INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS',)
+
+# ── SCORTA CONDIVISA DEI SAM PURI (decisione utente, 2026-09-23) ──────────────
+#
+# Con due contatori sempre indipendenti un Buk (4 missili 9M38) aveva `ammunition=4` E
+# `interceptor_stock=4`: 8 "lanci" impliciti da 4 missili fisici. Ma un missile e' lo
+# STESSO oggetto sia che venga lanciato contro un aereo (salva offensiva) sia contro un
+# missile in arrivo (intercettazione): il pool fisico e' uno solo. Per un cannone invece
+# "un colpo" e "un'intercettazione" (una raffica di ~ROUNDS_PER_GUN_INTERCEPT colpi) sono
+# grandezze diverse, e un contatore unico non avrebbe unita' di misura coerente.
+#
+# Regola: l'asset e' un SAM PURO — e allora `interceptor_stock` NON ha stato proprio ma e'
+# una vista di `ammunition` (stesso valore, stesso decremento, in entrambe le direzioni) —
+# se e solo se, nel registro del modello:
+#   1. ha armi AD a missile (tipi INTERCEPTOR_WEAPON_TYPES_* esclusi
+#      INTERCEPTOR_GUN_WEAPON_TYPES, con la selezione di air_defense_volume());
+#   2. NON ha alcuna arma AD a cannone (INTERCEPTOR_GUN_WEAPON_TYPES): esclude i sistemi
+#      misti (2K22-Tunguska), che restano a contatori indipendenti per decisione gia' presa;
+#   3. la scorta offensiva (`ammunition_from_registry()`) coincide con i soli missili AD,
+#      cioe' l'asset non ha ALTRE armi contate a colpi. Condizione conservativa aggiunta
+#      rispetto a "zero cannoni AD": senza di essa un M6-Linebacker (4 Stinger + 900 colpi
+#      M242, AUTO_CANNONS non AD) o una nave con SAM + cannoni/antinave (Arleigh Burke:
+#      90 SAM + 600 colpi da 5" + Harpoon/Tomahawk) avrebbe un `interceptor_stock` pari a
+#      tutte le munizioni di bordo. Quei modelli restano a contatori indipendenti come
+#      prima; una scorta condivisa PER ARMA e' fuori dal modello aggregato attuale.
+#      (Armi contate a unita' — MACHINE_GUNS, CIWS — non entrano in `ammunition`, quindi
+#      non impediscono la condivisione: le portaerei con Sea Sparrow + Phalanx sono SAM puri.)
+# Sistemi a cannone puro (Shilka, Gepard, ...) e misti: invariati.
+
 # ── CARBURANTE (motore di sessioni virtuali, Fase 5) ──────────────────────────
 #
 # Prima di questa sezione il progetto non aveva alcun contatore di carburante: il solo
@@ -250,6 +333,13 @@ class Mobile(Asset) :
             # UNIT_COUNTED_WEAPON_TYPES). Popolata da load_ammunition_from_registry(),
             # chiamata dai costruttori di Vehicle/Ship/Aircraft dopo aver assegnato _model.
             self._ammunition: Optional[int] = None
+            # Scorta di intercettori [intercettazioni possibili]; None = non modellata (v.
+            # commento ROUNDS_PER_GUN_INTERCEPT). Distinta da _ammunition, tranne per i SAM
+            # puri (v. "SCORTA CONDIVISA"), dove _interceptor_shares_ammunition e' True e
+            # interceptor_stock e' una vista di ammunition (_interceptor_stock resta None).
+            # Popolate da load_interceptor_stock_from_registry() (costruttori Vehicle/Ship).
+            self._interceptor_stock: Optional[int] = None
+            self._interceptor_shares_ammunition: bool = False
             # Carburante [frazione del carico pieno, 0..1]; None = non modellato (v. commento
             # FUEL_FULL). Popolato da load_fuel_from_registry(), come le munizioni.
             self._fuel: Optional[float] = None
@@ -734,7 +824,249 @@ class Mobile(Asset) :
         self._ammunition = stock
         return True
 
-    # ── carburante ────────────────────────────────────────────────────────────
+    # ── scorta di intercettori ────────────────────────────────────────────────
+
+    @property
+    def interceptor_shares_ammunition(self) -> bool:
+        """True se la scorta di intercettori e' lo STESSO pool di `ammunition` (SAM puro).
+
+        Deciso da load_interceptor_stock_from_registry() con la regola del commento
+        "SCORTA CONDIVISA" in testa al modulo. Sola lettura: e' una proprieta' del modello
+        (del suo armamento a registro), non uno stato che evolve.
+        """
+        return bool(getattr(self, '_interceptor_shares_ammunition', False))
+
+    @property
+    def interceptor_stock(self) -> Optional[int]:
+        """Intercettazioni ancora possibili, o None se non modellata.
+
+        Contatore distinto da `ammunition` (v. il commento ROUNDS_PER_GUN_INTERCEPT in testa
+        al modulo per la semantica e la regola di inizializzazione), tranne per un SAM puro
+        (`interceptor_shares_ammunition`), per cui e' `ammunition` stessa: un missile e'
+        uno solo, che lo si lanci per attaccare o per intercettare.
+        """
+        if self.interceptor_shares_ammunition:
+            return self.ammunition
+
+        return getattr(self, '_interceptor_stock', None)
+
+    @interceptor_stock.setter
+    def interceptor_stock(self, value: Optional[int]) -> None:
+        """Imposta la scorta (inizializzazione, persistenza). None = non modellata.
+
+        Non e' un canale di rifornimento: il rifornimento e' fuori scope (materia del
+        ciclo di campagna). Il consumo passa esclusivamente da consume_interceptor_stock().
+        Per un SAM puro scrive `ammunition` (pool unico): impostare una delle due viste
+        imposta anche l'altra, nessuno stato duplicato da tenere allineato.
+        """
+        if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
+            raise TypeError(f"interceptor_stock must be an int or None, got {type(value).__name__}")
+
+        if value is not None and value < 0:
+            raise ValueError(f"interceptor_stock must be non-negative, got {value}")
+
+        if self.interceptor_shares_ammunition:
+            self.ammunition = value
+            return
+
+        self._interceptor_stock = value
+
+    def has_interceptor_stock(self) -> bool:
+        """True se l'asset puo' ancora intercettare per scorta: > 0 o non modellata.
+
+        Per un SAM puro coincide con has_ammunition() (stesso pool).
+        """
+        stock = self.interceptor_stock
+        return stock is None or stock > 0
+
+    def consume_interceptor_stock(self, amount: int) -> int:
+        """Consuma `amount` intercettazioni dalla scorta. Ritorna quante effettivamente consumate.
+
+        Stessa disciplina di consume_ammunition(): deterministico; se la scorta e'
+        inferiore alla richiesta si consuma il residuo (mai sotto zero); se non e'
+        modellata (None) si ritorna `amount`. Per un SAM puro delega a
+        consume_ammunition() — ogni intercettazione e' un missile lanciato, e cala il pool
+        unico; altrimenti non tocca mai `ammunition`.
+
+        Raises:
+            TypeError: `amount` non intero (errore di programmazione).
+            ValueError: `amount` negativo — il rifornimento non passa di qui.
+        """
+        if isinstance(amount, bool) or not isinstance(amount, int):
+            raise TypeError(f"amount must be an int, got {type(amount).__name__}")
+
+        if amount < 0:
+            raise ValueError(f"amount must be non-negative (no resupply here), got {amount}")
+
+        if self.interceptor_shares_ammunition:
+            return self.consume_ammunition(amount)
+
+        stock = self.interceptor_stock
+
+        if stock is None:
+            return amount
+
+        consumed = min(amount, stock)
+        self._interceptor_stock = stock - consumed
+
+        if consumed < amount:
+            logger.debug(f"consume_interceptor_stock: asset {getattr(self, 'id', None)!r} requested "
+                         f"{amount} interceptions, only {consumed} available")
+
+        return consumed
+
+    def _interceptor_registry_breakdown(self) -> Optional[Tuple[int, int, bool]]:
+        """Armi AD del modello scomposte in (missili, colpi di cannone, ha_cannoni_AD).
+
+        Base comune di interceptor_stock_from_registry() e
+        interceptor_shares_ammunition_from_registry(): una sola selezione delle armi AD
+        (quella di air_defense_volume()), cosi' che la scorta e la regola di condivisione
+        non possano divergere. `ha_cannoni_AD` distingue "nessun cannone AD" da "cannone AD
+        con 0 colpi a registro" (quest'ultimo non e' un SAM puro).
+
+        Returns:
+            La terna, oppure None — senza sollevare — se il modello non e' noto, se il
+            registro non descrive armi (Aircraft_Data) o se nessuna arma e' di difesa aerea.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.debug("interceptor_stock_from_registry: _model not set")
+            return None
+
+        data_record = _VehicleData._registry.get(model) or _ShipData._registry.get(model)
+
+        if data_record is None:
+            logger.debug(f"interceptor_stock_from_registry: no vehicle/ship registry entry for model {model!r}")
+            return None
+
+        weapons = getattr(data_record, 'weapons', None)
+
+        if not isinstance(weapons, dict) or not weapons:
+            logger.debug(f"interceptor_stock_from_registry: model {model!r} declares no weapons")
+            return None
+
+        is_ship = isinstance(data_record, _ShipData)
+        allowed = INTERCEPTOR_WEAPON_TYPES_SHIP if is_ship else INTERCEPTOR_WEAPON_TYPES_VEHICLE
+
+        missiles = 0
+        gun_rounds = 0
+        has_gun = False
+        counted = False
+
+        for weapon_type, weapon_list in weapons.items():
+            if weapon_type not in allowed:
+                continue
+
+            weapon_db = (SHIP_WEAPONS if is_ship else GROUND_WEAPONS).get(weapon_type, {})
+
+            for item in weapon_list or []:
+                if not isinstance(item, (tuple, list)) or len(item) < 2:
+                    continue
+
+                weapon_model, quantity = item[0], item[1]
+
+                if isinstance(quantity, bool) or not isinstance(quantity, (int, float)) or quantity < 0:
+                    continue
+
+                wdata = weapon_db.get(weapon_model)
+
+                # Stesso filtro di air_defense_volume(): dati di quota e task Anti_Air.
+                if (wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata
+                        or ('task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'])):
+                    continue
+
+                if float(wdata.get('max_altitude', 0)) <= 0.0:
+                    continue
+
+                if weapon_type in INTERCEPTOR_GUN_WEAPON_TYPES:
+                    gun_rounds += int(quantity)
+                    has_gun = True
+                else:
+                    missiles += int(quantity)
+
+                counted = True
+
+        if not counted:
+            logger.debug(f"interceptor_stock_from_registry: model {model!r} has no air-defence "
+                         f"weapons, interceptor stock not modelled")
+            return None
+
+        return missiles, gun_rounds, has_gun
+
+    def interceptor_stock_from_registry(self) -> Optional[int]:
+        """Scorta iniziale di intercettori dal registro del modello, o None se non ricavabile.
+
+        Considera le sole armi di difesa aerea, con la selezione di air_defense_volume():
+        ogni missile AD vale 1 intercettazione, i colpi dei cannoni AD valgono
+        `colpi // ROUNDS_PER_GUN_INTERCEPT`; le due componenti si sommano (sistemi misti).
+        Per un SAM puro il valore coincide con ammunition_from_registry() (v. "SCORTA
+        CONDIVISA"): e' la scorta iniziale del pool unico.
+
+        Returns:
+            int >= 0, oppure None — senza sollevare — se il modello non e' noto, se il
+            registro non descrive armi (Aircraft_Data) o se nessuna arma e' di difesa aerea.
+        """
+        breakdown = self._interceptor_registry_breakdown()
+
+        if breakdown is None:
+            return None
+
+        missiles, gun_rounds, _ = breakdown
+        return missiles + gun_rounds // ROUNDS_PER_GUN_INTERCEPT
+
+    def interceptor_shares_ammunition_from_registry(self) -> bool:
+        """True se il modello e' un SAM puro, a scorta condivisa con `ammunition`.
+
+        Regola del commento "SCORTA CONDIVISA" in testa al modulo: missili AD presenti,
+        nessun cannone AD, e scorta offensiva a registro fatta dei soli missili AD. Un dato
+        mancante (modello ignoto, nessuna arma AD, munizioni non ricavabili) da' False: il
+        caso conservativo, contatori indipendenti come prima della decisione.
+        """
+        breakdown = self._interceptor_registry_breakdown()
+
+        if breakdown is None:
+            return False
+
+        missiles, _, has_gun = breakdown
+
+        if has_gun or missiles <= 0:
+            return False
+
+        return self.ammunition_from_registry() == missiles
+
+    def load_interceptor_stock_from_registry(self) -> bool:
+        """Popola la scorta di intercettori dal registro del modello. True se caricata.
+
+        Chiamata dai costruttori di Vehicle/Ship dopo che `_model` e' stato assegnato,
+        stessa disciplina di load_ammunition_from_registry(): se il dato non c'e' la scorta
+        resta None (non modellata) e l'asset resta costruibile.
+
+        Per un SAM puro non popola un contatore proprio: marca l'asset come a scorta
+        condivisa (`interceptor_shares_ammunition`) e da quel momento `interceptor_stock`
+        legge e consuma `ammunition` — caricata da load_ammunition_from_registry(), che
+        per questi modelli produce lo stesso valore.
+        """
+        if self.interceptor_shares_ammunition_from_registry():
+            self._interceptor_shares_ammunition = True
+            self._interceptor_stock = None
+            return True
+
+        stock = self.interceptor_stock_from_registry()
+
+        if stock is None:
+            return False
+
+        self._interceptor_shares_ammunition = False
+        self._interceptor_stock = stock
+        return True
+
+    # ── carburante────────────────────────────────────────────────────────────
 
     @property
     def fuel(self) -> Optional[float]:

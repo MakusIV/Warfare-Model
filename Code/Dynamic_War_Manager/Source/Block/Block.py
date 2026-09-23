@@ -377,7 +377,7 @@ class Block:
         """Add or update asset"""
         if not isinstance(key, str):
             raise TypeError("key must be a string")
-        if not hasattr(asset, '__class__') or asset.__class__.__name__ != 'Asset':
+        if not validate_class(asset, 'Asset'):
             raise TypeError("value must be an Asset object")
         self._assets[key] = asset
         asset.block = self  # Set back-reference

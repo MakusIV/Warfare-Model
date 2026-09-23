@@ -185,7 +185,7 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[c2-hierarchy-design]] | accepted | Gerarchia C2 a due livelli, indirizzo strategico, modello sessioni, `Theater_Session_Manager` |
 | [[campaign-temporal-model]] | superseded → [[c2-hierarchy-design]] | Modello temporale sessioni DCS vs. sintetiche (framing originale) |
 | [[module-audit-2026-08-16]] | superseded → `wiki/project/*` | Audit dei moduli, origine di `Analysis/Modules/00-11_*.md` |
-| [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; roadmap 7 fasi, Fase 1-2 fatte, 3 questioni pre-Fase 3 chiuse |
+| [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; **tutte e 7 le fasi FATTE, motore completo** (Contact_Scheduler, Engagement_Resolver a N forze, Session_Types/Session_Rng/Fuel_Model, Session_Simulator, validazione S1-S18) |
 | [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
 | [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
 | [[soglie-disingaggio-e-attrito-aggregato]] | accepted | Soglie di disingaggio (P1, dottrina di lato, per forza) come esito di prima classe `DISENGAGED`; S1-S11 confermati batteria ufficiale di Fase 7; P2 (forma-bersaglio del fallback aggregato) resta nota, nessuna azione |

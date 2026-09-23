@@ -27,7 +27,15 @@ attraverso l'RNG di sessione passato dal chiamante.
 4. **Salva e saturazione (Hughes, R1).** I colpi che arrivano su una forza nello stesso
    evento-salva sono prima confrontati con la capacita' di intercettazione del bersaglio
    (`Military.salvo_interceptors`): i primi N intercettabili sono fermati e non
-   raggiungono mai il modello di danno, il surplus lo raggiunge integralmente.
+   raggiungono mai il modello di danno, il surplus lo raggiunge integralmente. Ogni
+   intercettazione consuma la scorta di INTERCETTORI dell'asset che intercetta
+   (`Mobile.interceptor_stock`) ed e' registrata come `InterceptionEvent`, un tipo
+   distinto dall'`AmmunitionEvent` delle salve offensive (`Mobile.ammunition`): due
+   contatori distinti, v. Mobile.ROUNDS_PER_GUN_INTERCEPT (ricalibrazione 2026-09-23 —
+   prima si leggeva `ammunition`, e un cannone AA con 2000 colpi poteva intercettare 2000
+   colpi in arrivo). Eccezione dichiarata: per un SAM puro
+   (`Mobile.interceptor_shares_ammunition`) i due contatori sono lo stesso pool di
+   missili, e lo stato ombra lo rispetta (v. `_Shadow`).
 5. **Danno per singolo colpo.** Ogni colpo superstite passa da
    `Damage_Model.build_damage_event` (che chiama `resolve_hit`), con un `draw` estratto
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
@@ -36,6 +44,18 @@ attraverso l'RNG di sessione passato dal chiamante.
    erosione cumulata *oppure* shock della singola salva, qualunque scatti per primo. Se
    scatta, **tutta la forza** rompe il contatto: esito `DISENGAGED`, distinto da
    `DESTROYED` (nessun asset impegnato ancora operativo).
+
+   **Solo le forze militari possono disingaggiarsi** (decisione di progetto 2026-09-23).
+   Un `Block` che non e' una `Military` (Transport, Storage, Urban, Production, o un
+   `Block` generico con `category` 'Logistic'/'Civilian') e' un deposito, una linea di
+   trasporto, un'area abitata: non puo' fisicamente rompere il contatto e ripiegare. Riceve
+   quindi `thresholds=None` incondizionatamente — la stessa rappresentazione di "combatte
+   fino alla fine" gia' usata per un lato senza dottrina — qualunque cosa dica la tabella
+   dottrinale per il suo lato, e senza il warning di dottrina mancante (non manca nulla).
+   Esiti possibili: `HELD` finche' ha asset operativi, `DESTROYED` se li perde tutti.
+   Il controllo e' sulla gerarchia di classe (`validate_class`), non su un campo testuale
+   come `category`. Un oggetto che non e' affatto un `Block` (stub duck-typed nei test,
+   adapter futuri) resta trattato come una forza combattente: legge la dottrina di lato.
 
 ## Ingaggi a N forze (2+)
 
@@ -89,8 +109,8 @@ eventi finisce sempre e solo quando la coda si svuota.
   forza che si disingaggia e' solo *segnalata* nell'esito; il nuovo instradamento e il
   ricalcolo delle finestre di contatto spettano a un livello superiore (C2/campagna).
 - **Il risolutore non muta gli asset.** Lavora su uno stato ombra (salute, scorte) che
-  evolve durante l'ingaggio e restituisce gli eventi (`DamageEvent`, `AmmunitionEvent`)
-  in un `EngagementResult` immutabile. Applicarli e' un passo separato ed esplicito
+  evolve durante l'ingaggio e restituisce gli eventi (`DamageEvent`, `AmmunitionEvent`,
+  `InterceptionEvent`) in un `EngagementResult` immutabile. Applicarli e' un passo separato ed esplicito
   (`apply_engagement_result`): e' la separazione calcolo/applicazione gia' scelta da
   `Damage_Model` (build vs apply) e l'"applicazione in un'unica passata" dello strato 3.
 - **RNG sempre iniettato**: un oggetto con `.random()` in [0, 1) — tipicamente
@@ -131,6 +151,7 @@ from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCa
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS, range_intervals
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
 
 # LOGGING --
 logger = Logger(module_name=__name__, class_name='Engagement_Resolver').logger
@@ -180,10 +201,6 @@ FORCE_OUTCOMES = (HELD, DISENGAGED, DESTROYED)
 TRIGGER_EROSION = Doctrine.DISENGAGEMENT_EROSION
 TRIGGER_SHOCK = Doctrine.DISENGAGEMENT_SHOCK
 TRIGGER_ANNIHILATION = 'annihilation'
-
-# Motivo di consumo delle munizioni.
-PURPOSE_SALVO = 'salvo'
-PURPOSE_INTERCEPTION = 'interception'
 
 # Tipi di evento, nell'ordine di risoluzione a parita' di istante (v. docstring).
 _LAUNCH = 0
@@ -310,11 +327,48 @@ class SalvoResolution:
 
 @dataclass(frozen=True)
 class AmmunitionEvent:
-    """Consumo esplicito di munizioni (R3): `rounds` colpi di `asset_id` all'istante `time`."""
+    """Consumo esplicito di munizioni OFFENSIVE (R3): `rounds` colpi sparati da `asset_id`
+    in una salva lanciata all'istante `time`. Si applica con `Mobile.consume_ammunition`.
+
+    Solo fuoco offensivo: le intercettazioni hanno il proprio tipo, `InterceptionEvent`
+    (2026-09-23). Fino ad allora entrambe passavano di qui, distinte da un campo `purpose`
+    ('salvo'/'interception'); con due tipi il campo avrebbe avuto un solo valore lecito,
+    ed e' stato rimosso insieme alle costanti PURPOSE_*: il tipo dell'evento E' il suo
+    scopo, e un consumatore non puo' piu' sommare per errore colpi e intercettazioni.
+    """
     time: float
     asset_id: str
     rounds: int
-    purpose: str
+
+
+@dataclass(frozen=True)
+class InterceptionEvent:
+    """Intercettazioni effettuate (R1/R3): `asset_id` ha fermato `interceptions` colpi in
+    arrivo sulla forza `force_id` all'istante `time`. Si applica con
+    `Mobile.consume_interceptor_stock`.
+
+    `asset_id` e' l'INTERCETTORE (chi consuma la scorta), non chi ha sparato la salva
+    intercettata. L'unita' e' l'intercettazione, non il colpo: per un cannone AA una
+    intercettazione costa ~ROUNDS_PER_GUN_INTERCEPT colpi, gia' conteggiati nella scorta
+    (v. Mobile.ROUNDS_PER_GUN_INTERCEPT) — per questo il campo non si chiama `rounds`.
+    Per un SAM puro un'intercettazione e' un missile del pool condiviso con le munizioni
+    (Mobile.interceptor_shares_ammunition): l'evento resta comunque un'intercettazione, e'
+    l'asset a sapere da quale contatore scalarla.
+
+    Tracciabilita': `force_id` e `salvo_ids` identificano l'evento-salva intercettato — la
+    `SalvoResolution` con lo stesso `time` e `force_id`. Si referenziano tutte le salve
+    del gruppo e non "quale" di esse perche' il modello non assegna intercettori a salve:
+    la saturazione (R1) confronta la capacita' TOTALE con i colpi intercettabili
+    dell'evento, e i colpi fermati sono i primi intercettabili nell'ordine (impatto, salva),
+    indipendentemente da chi li ferma. `salvo_ids` sono progressivi del SINGOLO ingaggio
+    (`Salvo.salvo_id`): hanno senso solo accanto all'`EngagementResult` che li ha prodotti,
+    non in un `SessionOutcome` che aggrega piu' ingaggi (li' vale `force_id`, id di dominio).
+    """
+    time: float
+    asset_id: str
+    interceptions: int
+    force_id: Optional[str] = None
+    salvo_ids: Tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -345,7 +399,8 @@ class EngagementResult:
     """Esito completo di un ingaggio. Immutabile: si sostituisce, non si riscrive.
 
     Contiene tutto cio' che serve ad applicare l'esito (`damage_events`,
-    `ammunition_events`) e a spiegarlo (`detections`, `salvos`, `resolutions`).
+    `ammunition_events` per le salve, `interception_events` per le intercettazioni) e a
+    spiegarlo (`detections`, `salvos`, `resolutions`).
     """
     t_start: Optional[float]
     t_end: Optional[float]
@@ -355,6 +410,7 @@ class EngagementResult:
     resolutions: Tuple[SalvoResolution, ...] = ()
     damage_events: Tuple[DM.DamageEvent, ...] = ()
     ammunition_events: Tuple[AmmunitionEvent, ...] = ()
+    interception_events: Tuple[InterceptionEvent, ...] = ()
 
     def outcome_of(self, force_id: str) -> Optional[ForceOutcome]:
         """L'esito della forza `force_id`, None se non partecipa."""
@@ -365,11 +421,26 @@ class EngagementResult:
         return None
 
     def ammunition_consumed(self) -> Dict[str, int]:
-        """Colpi consumati per asset (salve + intercettazioni)."""
+        """Colpi sparati OFFENSIVAMENTE per asset (solo salve, `ammunition_events`).
+
+        Cambio di comportamento del 2026-09-23: prima sommava anche le intercettazioni.
+        Ora non piu' — per quelle v. `interceptions_consumed()`. Per un SAM puro il pool
+        fisico e' uno solo, ma i due conteggi restano separati per scopo: il calo totale
+        della sua `ammunition` e' la somma dei due.
+        """
         consumed: Dict[str, int] = {}
 
         for event in self.ammunition_events:
             consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.rounds
+
+        return consumed
+
+    def interceptions_consumed(self) -> Dict[str, int]:
+        """Intercettazioni effettuate per asset (`interception_events`)."""
+        consumed: Dict[str, int] = {}
+
+        for event in self.interception_events:
+            consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.interceptions
 
         return consumed
 
@@ -536,15 +607,35 @@ class _Shadow:
 
     Espone `id` e `health` perche' `Damage_Model.build_damage_event` la tratti come un
     asset (duck typing): cosi' il contratto del danno resta uno solo.
-    """
-    __slots__ = ('id', 'asset', 'force_id', 'health', 'ammunition')
 
-    def __init__(self, asset_id: str, asset, force_id: str, health: int, ammunition: Optional[int]):
+    Scorte: munizioni offensive (salve) e intercettori (saturazione) sono due contatori
+    distinti, tranne con `shared_pool` (SAM puro, `Mobile.interceptor_shares_ammunition`):
+    allora `interceptor_stock` e' una vista di `ammunition`, come sull'asset reale. Senza
+    questa vista lo stato ombra concederebbe a un Buk 4 salve E 4 intercettazioni, e
+    `apply_engagement_result` troverebbe poi il pool reale esaurito a meta'.
+    """
+    __slots__ = ('id', 'asset', 'force_id', 'health', 'ammunition', '_interceptor_stock', 'shared_pool')
+
+    def __init__(self, asset_id: str, asset, force_id: str, health: int, ammunition: Optional[int],
+                 interceptor_stock: Optional[int] = None, shared_pool: bool = False):
         self.id = asset_id
         self.asset = asset
         self.force_id = force_id
         self.health = health
         self.ammunition = ammunition
+        self.shared_pool = shared_pool
+        self._interceptor_stock = None if shared_pool else interceptor_stock
+
+    @property
+    def interceptor_stock(self) -> Optional[int]:
+        return self.ammunition if self.shared_pool else self._interceptor_stock
+
+    @interceptor_stock.setter
+    def interceptor_stock(self, value: Optional[int]) -> None:
+        if self.shared_pool:
+            self.ammunition = value
+        else:
+            self._interceptor_stock = value
 
     @property
     def operative(self) -> bool:
@@ -594,6 +685,20 @@ def _domain_id(obj) -> Optional[str]:
     return None
 
 
+def _can_disengage(force) -> bool:
+    """True se la forza ha diritto a una politica di disingaggio (v. docstring del modulo, §6).
+
+    Una `Military` si'; un `Block` non militare (deposito, trasporto, area urbana) no: non
+    puo' rompere il contatto, combatte/subisce fino alla fine. Un oggetto che non e' un
+    `Block` (stub duck-typed, adapter) e' trattato come forza combattente, come prima di
+    questa regola: il risolutore non impone la gerarchia di classe ai suoi input.
+    """
+    if validate_class(force, 'Military'):
+        return True
+
+    return not validate_class(force, 'Block')
+
+
 # ── RISOLUTORE ────────────────────────────────────────────────────────────────
 
 class _EngagementRun:
@@ -634,6 +739,7 @@ class _EngagementRun:
         self.resolutions: List[SalvoResolution] = []
         self.damage_events: List[DM.DamageEvent] = []
         self.ammunition_events: List[AmmunitionEvent] = []
+        self.interception_events: List[InterceptionEvent] = []
 
         self.usable = self._build_forces(forces, committed, thresholds)
 
@@ -686,15 +792,32 @@ class _EngagementRun:
                 if isinstance(ammunition, bool) or not isinstance(ammunition, int):
                     ammunition = None
 
-                self.shadows[asset_id] = _Shadow(asset_id, asset, force_id, health, ammunition)
+                interceptor_stock = getattr(asset, 'interceptor_stock', None)
+
+                if isinstance(interceptor_stock, bool) or not isinstance(interceptor_stock, int):
+                    interceptor_stock = None
+
+                # SAM puro: pool unico (v. _Shadow). Solo un True esplicito lo attiva, cosi'
+                # uno stub duck-typed senza l'attributo resta a contatori distinti.
+                shared_pool = getattr(asset, 'interceptor_shares_ammunition', False) is True
+
+                self.shadows[asset_id] = _Shadow(asset_id, asset, force_id, health, ammunition,
+                                                 interceptor_stock, shared_pool)
                 committed_ids.append(asset_id)
 
             side = getattr(force, 'side', None)
-            side_thresholds = Doctrine.get_disengagement_thresholds(side, thresholds)
 
-            if side_thresholds is None:
-                logger.warning(f"resolve_engagement: no disengagement doctrine for side {side!r} "
-                               f"(force {force_id!r}): it will fight until annihilation")
+            if not _can_disengage(force):
+                # Blocco non militare (deposito, linea di trasporto, area urbana): non puo'
+                # rompere il contatto per definizione, nessuna dottrina da consultare e
+                # nessun warning (non e' una dottrina mancante).
+                side_thresholds = None
+            else:
+                side_thresholds = Doctrine.get_disengagement_thresholds(side, thresholds)
+
+                if side_thresholds is None:
+                    logger.warning(f"resolve_engagement: no disengagement doctrine for side {side!r} "
+                                   f"(force {force_id!r}): it will fight until annihilation")
 
             state = _ForceState(force_id=force_id, side=side, committed=tuple(committed_ids),
                                 thresholds=side_thresholds)
@@ -1006,15 +1129,18 @@ class _EngagementRun:
             return
 
         if shooter.ammunition is not None and shooter.ammunition < rounds:
-            # Scorta erosa dopo lo scheduling (intercettazioni): stesso trattamento.
+            # Scorta erosa dopo lo scheduling: stesso trattamento. Succede con un SAM puro
+            # (pool unico), le cui intercettazioni fra scheduling e lancio consumano gli
+            # stessi missili; per gli altri asset le intercettazioni consumano
+            # interceptor_stock, e il controllo resta come difesa dell'invariante "la
+            # scorta non va mai sotto zero".
             self._schedule_next(shooter_id, next_time)
             return
 
         if shooter.ammunition is not None:
             shooter.ammunition -= rounds
 
-        self.ammunition_events.append(AmmunitionEvent(time=time, asset_id=shooter_id,
-                                                      rounds=rounds, purpose=PURPOSE_SALVO))
+        self.ammunition_events.append(AmmunitionEvent(time=time, asset_id=shooter_id, rounds=rounds))
 
         salvo = Salvo(salvo_id=len(self.salvos), t_launch=time,
                       t_impact=time + float(spec.time_of_flight), shooter_id=shooter_id,
@@ -1046,7 +1172,8 @@ class _EngagementRun:
             if not shadow.operative:
                 continue
 
-            capacity += channels if shadow.ammunition is None else min(channels, shadow.ammunition)
+            stock = shadow.interceptor_stock
+            capacity += channels if stock is None else min(channels, stock)
 
         return capacity
 
@@ -1069,9 +1196,12 @@ class _EngagementRun:
         capacity = self._capacity(state)
         intercepted = min(interceptable, capacity)
 
-        # Ogni intercettazione e' un colpo sparato dal difensore (R3): consumo esplicito,
+        # Ogni intercettazione consuma la scorta di INTERCETTORI del difensore (R3,
+        # ricalibrazione 2026-09-23) — per un SAM puro lo stesso pool delle munizioni (v.
+        # _Shadow) — ed e' un InterceptionEvent, mai un AmmunitionEvent: consumo esplicito,
         # asset in ordine di id.
         remaining = intercepted
+        salvo_ids = tuple(s.salvo_id for s in ordered)
 
         for shadow, channels in state.interceptors:
             if remaining <= 0:
@@ -1080,17 +1210,19 @@ class _EngagementRun:
             if not shadow.operative:
                 continue
 
-            available = channels if shadow.ammunition is None else min(channels, shadow.ammunition)
+            stock = shadow.interceptor_stock
+            available = channels if stock is None else min(channels, stock)
             used = min(available, remaining)
 
             if used <= 0:
                 continue
 
-            if shadow.ammunition is not None:
-                shadow.ammunition -= used
+            if stock is not None:
+                shadow.interceptor_stock = stock - used
 
-            self.ammunition_events.append(AmmunitionEvent(time=time, asset_id=shadow.id,
-                                                          rounds=used, purpose=PURPOSE_INTERCEPTION))
+            self.interception_events.append(InterceptionEvent(time=time, asset_id=shadow.id,
+                                                              interceptions=used, force_id=force_id,
+                                                              salvo_ids=salvo_ids))
             remaining -= used
 
         # I colpi fermati sono i primi intercettabili nell'ordine (impatto, salva).
@@ -1128,7 +1260,7 @@ class _EngagementRun:
         erosion = (len(committed) - len(after)) / len(committed)
 
         self.resolutions.append(SalvoResolution(time=time, force_id=force_id,
-                                                salvo_ids=tuple(s.salvo_id for s in ordered),
+                                                salvo_ids=salvo_ids,
                                                 rounds=rounds, interceptable_rounds=interceptable,
                                                 capacity=capacity, intercepted=intercepted,
                                                 wasted=wasted, losses=losses, shock=shock,
@@ -1219,7 +1351,8 @@ class _EngagementRun:
                                 salvos=tuple(self.salvos),
                                 resolutions=tuple(self.resolutions),
                                 damage_events=tuple(self.damage_events),
-                                ammunition_events=tuple(self.ammunition_events))
+                                ammunition_events=tuple(self.ammunition_events),
+                                interception_events=tuple(self.interception_events))
 
 
 def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Callable, rng, *,
@@ -1303,16 +1436,20 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
 
 
 def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]:
-    """Applica un esito agli asset reali: danni (Damage_Model) e consumi di munizioni.
+    """Applica un esito agli asset reali: danni (Damage_Model) e consumi di scorte.
 
     E' il passo separato che il risolutore non fa da se': cosi' un esito puo' essere
     ispezionato, confrontato fra repliche o scartato senza aver toccato la campagna.
     I DamageEvent si applicano nell'ordine in cui sono stati prodotti (i loro delta sono
-    coerenti con quell'ordine); le munizioni con `consume_ammunition`.
+    coerenti con quell'ordine); i consumi per tipo d'evento: gli `AmmunitionEvent` (salve)
+    con `consume_ammunition`, gli `InterceptionEvent` con `consume_interceptor_stock` (due
+    scorte distinte, v. Mobile.ROUNDS_PER_GUN_INTERCEPT; per un SAM puro
+    `consume_interceptor_stock` scala da se' il pool condiviso).
 
     Returns:
-        {'damage_events': applicati, 'ammunition_events': applicati, 'missing_assets': non
-        trovati} — un asset non trovato e' registrato e saltato, non e' un errore.
+        {'damage_events': applicati, 'ammunition_events': applicati,
+        'interception_events': applicati, 'missing_assets': non trovati} — un asset non
+        trovato e' registrato e saltato, non e' un errore.
     """
     if not isinstance(result, EngagementResult):
         raise TypeError(f"result must be an EngagementResult, got {type(result).__name__}")
@@ -1326,7 +1463,7 @@ def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]
             if asset_id is not None:
                 assets[asset_id] = asset
 
-    summary = {'damage_events': 0, 'ammunition_events': 0, 'missing_assets': 0}
+    summary = {'damage_events': 0, 'ammunition_events': 0, 'interception_events': 0, 'missing_assets': 0}
 
     for event in result.damage_events:
         asset = assets.get(event.target_id)
@@ -1353,5 +1490,20 @@ def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]
             consume(event.rounds)
 
         summary['ammunition_events'] += 1
+
+    for event in result.interception_events:
+        asset = assets.get(event.asset_id)
+
+        if asset is None:
+            logger.warning(f"apply_engagement_result: interceptor {event.asset_id!r} not found")
+            summary['missing_assets'] += 1
+            continue
+
+        consume = getattr(asset, 'consume_interceptor_stock', None)
+
+        if callable(consume):
+            consume(event.interceptions)
+
+        summary['interception_events'] += 1
 
     return summary

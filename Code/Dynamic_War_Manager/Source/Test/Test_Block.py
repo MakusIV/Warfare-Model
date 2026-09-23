@@ -321,6 +321,19 @@ class TestBlock(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.block.set_asset("key", "not_an_asset")
 
+    def test_set_asset_accepts_asset_subclass(self):
+        """set_asset accepts Vehicle/Ship/Aircraft, not just the exact Asset class.
+
+        Regression test: the check used to compare `asset.__class__.__name__` against
+        the literal string 'Asset', which rejected every subclass (Vehicle, Ship,
+        Aircraft, Structure) — the only kinds of asset a real Military block ever holds.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
+
+        vehicle = Vehicle(block=self.block, model="T-72B")
+        self.block.set_asset("vehicle1", vehicle)
+        self.assertIs(self.block.get_asset("vehicle1"), vehicle)
+
     def test_get_asset_missing_key(self):
         """get_asset returns None for an unknown key."""
         self.assertIsNone(self.block.get_asset("nonexistent"))

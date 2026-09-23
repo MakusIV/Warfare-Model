@@ -1,5 +1,21 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-23] implementazione | Fase 7 del motore DES: validazione — MOTORE COMPLETO (7/7 fasi)
+
+Scenari S1-S18 (batteria estesa da 11 a 18 su richiesta dell'utente, con 7 nuovi scenari legati
+alla classificazione reale Block/mil_category del progetto), harness `Test/Scenario_Fixtures.py`,
+test di determinismo e agnosticismo (`Test/Test_Session_Validation.py` — agnosticismo come test di
+contratto, nessun adapter DCS esiste ancora nel codice Python). Durante la scrittura dei test sono
+stati trovati e corretti 5 bug pre-esistenti mai innescati in produzione (costruttori rotti di
+`Transport`/`Storage`/`Urban`/`Production`/`Structure`, `Block.set_asset` che rifiutava le
+sottoclassi di `Asset`), aggiunta la regola "i blocchi non-Military non si disingaggiano mai", e
+ricalibrata la saturazione difensiva della Fase 4 (nuovo `Mobile.interceptor_stock` distinto dalle
+munizioni offensive, pool condiviso per i SAM puri dopo verifica sui registri, nuovo tipo
+`InterceptionEvent`). Sei agenti Opus effort alto in sequenza nella stessa sessione. Verificato
+dalla sessione principale ad ogni passo: suite finale **3371 test OK (skipped=5)**. Dettaglio in
+[[project_virtual_session_engine_design]], pagina [[virtual-session-engine-des]] aggiornata.
+**Il motore di sessioni virtuali a 7 fasi è completo.**
+
 ## [2026-09-23] implementazione | Fase 6 del motore DES: Session_Simulator + ingaggi N-forze
 
 `Logic/Session_Simulator.py` (nuovo): orchestratore a coda eventi che mette in fila
