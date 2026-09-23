@@ -85,6 +85,43 @@ DETECTION_RANGE_TYPES = ("acquisition_range", "tracking_range", "engagement_rang
 DEFAULT_DETECTION_RANGE_TYPE = "acquisition_range"
 
 
+# ── SCORTA DI MUNIZIONI (motore di sessioni virtuali, Fase 4) ─────────────────
+#
+# DECISIONE (2026-09-23, wiki decisions/risolutore-ingaggio-salva-fase4 R3). Prima di
+# questa, il progetto non aveva in nessuna forma una scorta che si esaurisce: `ammo_type`
+# e `AMMO_PARAM` dei registri d'arma sono parametri statici di punteggio. Qui nasce UN
+# contatore AGGREGATO PER ASSET (non per arma installata, non per tipo di munizione):
+#
+#   * consumo esplicito e deterministico — N colpi sparati = N in meno, nessuna
+#     estrazione casuale; la sola varianza del combattimento resta in
+#     Logic/Damage_Model.resolve_hit;
+#   * a zero l'asset non spara piu' ma resta un bersaglio valido: la salute non c'entra
+#     (coerente con Asset.apply_damage, che non tocca le munizioni);
+#   * il rifornimento e' FUORI SCOPE (materia del ciclo di campagna): qui non esiste
+#     alcun metodo che aumenti la scorta, salvo il setter per inizializzazione/persistenza.
+#
+# Sede: Mobile e non Asset, perche' e' il livello che possiede le armi (combat_range,
+# air_defense_volume leggono qui i registri d'arma); una Structure non spara.
+#
+# Valore iniziale: il registro del modello. In Vehicle_Data e Ship_Data la forma e'
+#     record.weapons = {weapon_type: [(weapon_model, quantita'), ...]}
+# e per quasi tutti i tipi la quantita' e' il numero di colpi/missili imbarcati (lo
+# conferma l'uso che ne fanno Vehicle_Data._weapon_eval e Ship_Data.AMMO_LOAD_REFERENCE:
+# "42" colpi del 2A46M di un T-72, "6" missili 9M33 di un Osa). Fanno eccezione i tipi in
+# UNIT_COUNTED_WEAPON_TYPES, dove la quantita' e' il NUMERO DI ARMI installate (cosi' li
+# commentano gli stessi registri), non una scorta: vengono esclusi dalla somma, perche'
+# sommare "1 mitragliatrice" a "42 colpi" non ha senso.
+# Aircraft_Data non ha un campo `weapons` (l'armamento di un aereo e' il loadout, non il
+# modello): per gli aerei la scorta e' derivata dal loadout ASSEGNATO
+# (Aircraft.assigned_loadout / Aircraft.ammunition_from_registry, decisione 2026-09-23) e
+# resta None ("non modellata") finche' nessun loadout e' assegnato.
+#
+# None = scorta NON MODELLATA: nessun vincolo di consumo (stessa semantica di
+# Military.weapons_availability, dove None salta il filtro invece di forzarlo a zero). E'
+# l'opzione reversibile: un asset senza dato non viene reso inerme per mancanza di dato.
+UNIT_COUNTED_WEAPON_TYPES = ('MACHINE_GUNS', 'CIWS')
+
+
 def default_speed_profile(off_road: bool = False) -> Dict:
     """Profilo di velocita' vuoto ma ben formato. Nuovo ad ogni chiamata."""
     profile: Dict = {key: None for key in SPEED_REGIME_KEYS}
@@ -152,6 +189,10 @@ class Mobile(Asset) :
                 self._speed = speed
             self._range = range
             self._weapon = {}
+            # Scorta di munizioni aggregata [colpi]; None = non modellata (v. commento
+            # UNIT_COUNTED_WEAPON_TYPES). Popolata da load_ammunition_from_registry(),
+            # chiamata dai costruttori di Vehicle/Ship/Aircraft dopo aver assegnato _model.
+            self._ammunition: Optional[int] = None
             self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}
             """
@@ -493,6 +534,146 @@ class Mobile(Asset) :
         self._speed = profile
         return True
 
+    # ── munizioni ─────────────────────────────────────────────────────────────
+
+    @property
+    def ammunition(self) -> Optional[int]:
+        """Scorta di munizioni aggregata [colpi], o None se non modellata.
+
+        V. il commento UNIT_COUNTED_WEAPON_TYPES in testa al modulo per la semantica.
+        """
+        return getattr(self, '_ammunition', None)
+
+    @ammunition.setter
+    def ammunition(self, value: Optional[int]) -> None:
+        """Imposta la scorta (inizializzazione, persistenza). None = non modellata.
+
+        Non e' un canale di rifornimento: il rifornimento e' fuori scope (materia del
+        ciclo di campagna). Il consumo passa esclusivamente da consume_ammunition().
+        """
+        if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
+            raise TypeError(f"ammunition must be an int or None, got {type(value).__name__}")
+
+        if value is not None and value < 0:
+            raise ValueError(f"ammunition must be non-negative, got {value}")
+
+        self._ammunition = value
+
+    def has_ammunition(self) -> bool:
+        """True se l'asset puo' ancora sparare per munizioni: scorta > 0 o non modellata."""
+        stock = self.ammunition
+        return stock is None or stock > 0
+
+    def consume_ammunition(self, rounds: int) -> int:
+        """Consuma `rounds` colpi dalla scorta. Ritorna i colpi effettivamente consumati.
+
+        Deterministico: nessuna estrazione casuale. Se la scorta e' inferiore alla richiesta
+        si consuma il residuo (la scorta non va mai sotto zero) e il valore di ritorno lo
+        dice al chiamante; se la scorta non e' modellata (None) non c'e' nulla da
+        decrementare e si ritorna `rounds` — la richiesta e' soddisfatta per definizione.
+
+        Raises:
+            TypeError: `rounds` non intero (errore di programmazione).
+            ValueError: `rounds` negativo — il rifornimento non passa di qui.
+        """
+        if isinstance(rounds, bool) or not isinstance(rounds, int):
+            raise TypeError(f"rounds must be an int, got {type(rounds).__name__}")
+
+        if rounds < 0:
+            raise ValueError(f"rounds must be non-negative (no resupply here), got {rounds}")
+
+        stock = self.ammunition
+
+        if stock is None:
+            return rounds
+
+        consumed = min(rounds, stock)
+        self._ammunition = stock - consumed
+
+        if consumed < rounds:
+            logger.debug(f"consume_ammunition: asset {getattr(self, 'id', None)!r} requested "
+                         f"{rounds} rounds, only {consumed} available")
+
+        return consumed
+
+    def ammunition_from_registry(self) -> Optional[int]:
+        """Scorta iniziale [colpi] dal registro del modello, o None se non ricavabile.
+
+        Somma le quantita' di `record.weapons` escludendo i tipi in
+        UNIT_COUNTED_WEAPON_TYPES (dove la quantita' e' il numero di armi, non di colpi).
+
+        Returns:
+            int >= 0, oppure None — senza sollevare, come speed_profile_from_registry() —
+            se il modello non e' noto, se il registro non descrive armi (Aircraft_Data),
+            o se descrive solo armi contate a unita' (nessun dato di scorta).
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.debug("ammunition_from_registry: _model not set")
+            return None
+
+        data_record = (_VehicleData._registry.get(model)
+                       or _ShipData._registry.get(model)
+                       or _AircraftData._registry.get(model))
+
+        if data_record is None:
+            logger.debug(f"ammunition_from_registry: no registry entry for model {model!r}")
+            return None
+
+        weapons = getattr(data_record, 'weapons', None)
+
+        if not isinstance(weapons, dict) or not weapons:
+            # Aircraft_Data: l'armamento e' il loadout, non il modello. Dato mancante.
+            logger.debug(f"ammunition_from_registry: model {model!r} declares no weapons, "
+                         f"ammunition not modelled")
+            return None
+
+        total = 0
+        counted = False
+
+        for weapon_type, weapon_list in weapons.items():
+            if weapon_type in UNIT_COUNTED_WEAPON_TYPES:
+                continue
+
+            for item in weapon_list or []:
+                if not isinstance(item, (tuple, list)) or len(item) < 2:
+                    continue
+
+                quantity = item[1]
+
+                if isinstance(quantity, bool) or not isinstance(quantity, (int, float)) or quantity < 0:
+                    continue
+
+                total += int(quantity)
+                counted = True
+
+        if not counted:
+            logger.debug(f"ammunition_from_registry: model {model!r} has only unit-counted "
+                         f"weapons {tuple(weapons)}, ammunition not modelled")
+            return None
+
+        return total
+
+    def load_ammunition_from_registry(self) -> bool:
+        """Popola la scorta dal registro del modello. True se caricata.
+
+        Chiamata dai costruttori di Vehicle/Ship/Aircraft dopo che `_model` e' stato
+        assegnato, stessa disciplina di load_speed_from_registry(): se il dato non c'e' la
+        scorta resta None (non modellata) e l'asset resta costruibile.
+        """
+        stock = self.ammunition_from_registry()
+
+        if stock is None:
+            return False
+
+        self._ammunition = stock
+        return True
+
     def air_defense_volume(self) -> Optional[Cylinder]:
         """Return the Cylinder representing the engagement envelope of this AD asset.
 
@@ -745,6 +926,50 @@ class Mobile(Asset) :
             return None
 
         return max(ranges_km) * 1000.0  # km -> m
+
+    def engagement_channels(self, mode: str = 'air') -> Optional[int]:
+        """Numero di bersagli di dimensione `mode` che il radar dell'asset gestisce insieme.
+
+        Legge `multi_target_capacity` dalla stessa struttura sensori di detection_range()
+        (record.radar['capabilities'][mode][1]); e' il dato reale piu' vicino, fra quelli
+        disponibili nei registri, al numero di CANALI DI FUOCO di un sistema di difesa
+        aerea — cioe' a quanti colpi in arrivo puo' impegnare nello stesso istante. Lo
+        consuma Military.salvo_interceptors() (saturazione difensiva per salva, R1).
+        Attenzione: per alcuni radar di scoperta il registro dichiara la capacita' di
+        TRACCIAMENTO, che sovrastima i canali di fuoco; e' annotato la' come stima.
+
+        Returns:
+            int > 0, oppure None se il modello non e' noto, non ha radar o il radar non
+            dichiara la capacita' su quel modo. Mai un'eccezione per dati mancanti.
+
+        Raises:
+            ValueError: `mode` fuori da DETECTION_MODES.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        if mode not in DETECTION_MODES:
+            raise ValueError(f"mode must be one of {DETECTION_MODES!r}, got {mode!r}")
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            return None
+
+        data_record = (_VehicleData._registry.get(model)
+                       or _ShipData._registry.get(model)
+                       or _AircraftData._registry.get(model))
+
+        if data_record is None:
+            return None
+
+        # _sensor_range_km legge una chiave numerica > 0 del dizionario di capacita': il
+        # nome parla di raggi ma il parsing (forme legittime dei dati, None su assenza) e'
+        # esattamente quello che serve anche qui, e duplicarlo sarebbe peggio.
+        value = self._sensor_range_km(data_record, 'radar', mode, 'multi_target_capacity')
+
+        return int(value) if value is not None and int(value) > 0 else None
 
     @staticmethod
     def checkParam(speed: Optional[Dict] = None, fire_range: Optional[float] = None) -> Tuple[bool, str]:

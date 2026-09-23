@@ -1,5 +1,49 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-23] implementazione | Fase 4 del motore DES: Engagement_Resolver.py
+
+`Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py` (nuovi), estesi `Context/Doctrine.py`
+(soglie di disingaggio), `Block/Military.py` (`salvo_interceptors`/`salvo_interception_capacity`),
+`Asset/Mobile.py` (munizioni per asset). Implementato da un agente Opus effort alto su richiesta
+dell'utente, con le 3 decisioni accettate in questa stessa sessione (v. voce sotto) come vincoli.
+Verificato dalla sessione principale: suite completa rieseguita indipendentemente, **3002 test OK
+(skipped=5)**, +144 sulla baseline Fase 3 (2858). Dettaglio in
+[[project_virtual_session_engine_design]] (memoria), pagine [[soglie-disingaggio-e-attrito-aggregato]]
+e [[risolutore-ingaggio-salva-fase4]] aggiornate con nota di implementazione completata. **11 punti
+aperti di calibrazione** lasciati con l'opzione conservativa (selezione arma, ripartizione fuoco,
+finestra di salvo, munizioni aerei, degradazione Pd meteo/notte — lista completa in memoria), non
+ancora sottoposti all'utente. Nessun commit ancora eseguito.
+
+## [2026-09-23] aggiornamento | Cadenza sessioni virtuali (6) e riarmo post-sessione confermati
+
+Rilettura OCR (fast + docling, concordi) di `Analysis/Document/Prospetto:Moduli.Analisi.e.Decisioni.pdf`
+pag. 3, poi confermata dall'utente: dopo una sessione DCS il motore esegue **6 sessioni virtuali**
+(il PDF mostra anche "3 sessioni DCS" sulla stessa pagina, rapporto 3:6 nel disegno originale, ma
+solo il 6 è stato re-confermato come vincolante). L'utente ha inoltre precisato che **dopo ogni
+sessione** (non solo le virtuali) la campagna deve aggiornare stato — perdite, consumi — **e
+riarmare gli asset** prima di poter pianificare/eseguire la sessione successiva. Aggiornata
+[[c2-hierarchy-design]] (modello sessioni + punto 5 di `Theater_Session_Manager`) e
+[[project_c2_hierarchy_design]] (memoria). Collega il rifornimento munizioni della Fase 4
+([[risolutore-ingaggio-salva-fase4]] R3, che lo rimanda esplicitamente "al ciclo di campagna") a
+questo punto esatto del ciclo C2 — nessun codice ancora coinvolto (`Theater_Session_Manager.py`
+non esiste ancora).
+
+## [2026-09-23] decisione | Le 3 proposte pendenti su Fase 4: risposta dell'utente
+
+L'utente ha risposto alle tre proposte lasciate `status: proposed` a fine sessione 2026-09-22:
+
+- **[[soglie-disingaggio-e-attrito-aggregato]] → accepted**: P1 (soglia di disingaggio) e P3
+  (batteria S1-S11) accettate; P2 resta nota d'orientamento. Soglia in `Context/Doctrine.py`,
+  granularità per forza intera, `calcFightResult` intatto fino a dopo la Fase 4, S1-S11 solo Fase 7.
+- **[[llm-locale-ruolo-e-confini]] → resta proposed, rimandata**: "per il momento non consideriamo
+  LLM nel motore" — non un rifiuto, nessuna delle opzioni R1-R4 formalizzata.
+- **[[risolutore-ingaggio-salva-fase4]] → accepted**: R1-R4 accettate integralmente. Capacità di
+  intercettazione in funzione dedicata; soglia di shock stessa sede/granularità di P1; munizioni
+  per asset con rifornimento fuori scope; congelamento payload subito, re-scheduling rimandato.
+
+Prossimo passo: implementazione di `Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py`
+(Fase 4 del motore DES), con le scelte sopra come vincoli di design.
+
 ## [2026-09-22] ingestione | Modello event-driven a salva di Hughes (RAW/Event_Driven_Salva_Hughes/)
 
 Sette file (6 `.docx` + `edit.pdf`), ricostruiti come i turni consecutivi di **una sola

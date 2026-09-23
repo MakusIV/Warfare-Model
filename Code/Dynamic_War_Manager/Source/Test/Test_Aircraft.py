@@ -156,5 +156,125 @@ class TestAircraft(unittest.TestCase):
         self.assertIsNone(aircraft.get_physical_characteristics())
 
 
+class TestAircraftLoadoutAmmunition(unittest.TestCase):
+    """Scorta di un aereo derivata dal loadout ASSEGNATO (decisione utente 2026-09-23).
+
+    Dati reali di Aircraft_Loadouts (F-14A Tomcat):
+      * "Phoenix Fleet Defense": 4 AIM-54A + 2 AIM-9L + 2 AIM-7M (8) + 675 colpi = 683;
+      * "Sparrow CAP/Escort": 4 AIM-7M + 2 AIM-9L (6) + 2 serbatoi 267gal (esclusi) + 675 = 681;
+      * un loadout con pod LANTIRN in `devices` (escluso).
+    """
+
+    MODEL = "F-14A Tomcat"
+
+    def setUp(self):
+        self.mock_block = MagicMock(spec=Block)
+        self.mock_block.block_class = "Military"
+        self._patches = [patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score',
+                               return_value=0.5),
+                         patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.logger'),
+                         patch('Code.Dynamic_War_Manager.Source.Asset.Asset.logger')]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+
+    def _aircraft(self, model=MODEL):
+        return Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model=model)
+
+    def test_without_loadout_ammunition_is_not_modelled(self):
+        aircraft = self._aircraft()
+        self.assertIsNone(aircraft.assigned_loadout)
+        self.assertIsNone(aircraft.ammunition)
+        self.assertIsNone(aircraft.ammunition_from_registry())
+
+    def test_missiles_and_gun_rounds_are_summed(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.ammunition_from_registry(), 8 + 675)
+        self.assertEqual(aircraft.ammunition, 8 + 675)
+
+    def test_fuel_tanks_on_pylons_are_excluded(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Sparrow CAP/Escort"
+        self.assertEqual(aircraft.ammunition, 6 + 675)
+
+    def test_devices_are_excluded(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
+
+        model, name, loadout = next((m, n, l) for m, loadouts in AIRCRAFT_LOADOUTS.items()
+                                    for n, l in loadouts.items() if l['stores']['devices'])
+        stores = loadout['stores']
+        expected = sum(q for w, q, *_ in stores['pylons'].values() if get_weapon(w) is not None)
+        expected += stores['gun_rounds']
+
+        aircraft = self._aircraft(model=model)
+        aircraft.assigned_loadout = name
+        self.assertEqual(aircraft.ammunition, expected)
+
+    def test_unknown_loadout_raises(self):
+        aircraft = self._aircraft()
+        with self.assertRaises(ValueError):
+            aircraft.assigned_loadout = "Nonexistent loadout"
+        with self.assertRaises(TypeError):
+            aircraft.assigned_loadout = 3
+        self.assertIsNone(aircraft.assigned_loadout)
+
+    def test_model_without_loadouts_raises(self):
+        aircraft = self._aircraft(model=None)
+        with self.assertRaises(ValueError):
+            aircraft.assigned_loadout = "Phoenix Fleet Defense"
+
+    def test_reassignment_rearms_and_none_unmodels(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        aircraft.consume_ammunition(100)
+        self.assertEqual(aircraft.ammunition, 583)
+
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.ammunition, 683)
+
+        aircraft.assigned_loadout = None
+        self.assertIsNone(aircraft.ammunition)
+
+    def test_loadout_stock_flows_into_the_engagement_resolver(self):
+        """Lo stato ombra di resolve_engagement legge la scorta derivata dal loadout."""
+        import random
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+        from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import ContactWindow
+        from Code.Dynamic_War_Manager.Source.Context.Reaction_Profile import ReactionProfile
+
+        class _Target:
+            id = 'r1'
+            health = 100
+
+        class _Force:
+            def __init__(self, name, side, assets):
+                self.name, self.side = name, side
+                self.assets = {a.id: a for a in assets}
+
+        aircraft = self._aircraft()
+        aircraft.id = 'b1'
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+
+        window = ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=50.0, distance_cpa=0.0,
+                               range_a=1000.0, range_b=None)
+        profile = ReactionProfile(detection=1.0, evaluation=1.0, command=0.0, actuation=0.0)
+        run = ER._EngagementRun((_Force('blue', 'Blue', [aircraft]), _Force('red', 'Red', [_Target()])),
+                                [window], lambda s, t: None, random.Random(0), None, None, None,
+                                lambda asset: profile, None, 0.0, ER.DM.DERIVED)
+
+        self.assertEqual(run.shadows['b1'].ammunition, 683)
+
+        spec = ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, rounds=700)
+        result = ER.resolve_engagement(_Force('blue', 'Blue', [aircraft]), _Force('red', 'Red', [_Target()]),
+                                       [window], lambda s, t: spec, random.Random(0),
+                                       reaction_profile_for=lambda asset: profile)
+        self.assertEqual(result.salvos[0].rounds, 683)
+
+
 if __name__ == '__main__':
     unittest.main()

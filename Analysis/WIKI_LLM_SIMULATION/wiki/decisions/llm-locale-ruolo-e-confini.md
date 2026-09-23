@@ -13,6 +13,11 @@ related: ["[[llm-locale-nel-motore-des]]", "[[virtual-session-engine-des]]", "[[
 > riga di codice è stata scritta o modificata. La decisione spetta all'utente; finché non è
 > accettata, il comportamento vigente resta quello di [[virtual-session-engine-des]] (nessun LLM da
 > nessuna parte nel motore).
+>
+> **Aggiornamento 2026-09-23**: l'utente ha **rimandato** la decisione — "per il momento non
+> consideriamo LLM nel motore". Non è un rifiuto (la pagina non va marcata `superseded`): nessuna
+> delle quattro opzioni (R1-R4) è stata formalizzata, R3 non entra nel backlog. Si riprende se/quando
+> la domanda si ripresenterà.
 
 ## Contesto
 

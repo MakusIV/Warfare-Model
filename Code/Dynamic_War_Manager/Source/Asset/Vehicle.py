@@ -61,6 +61,8 @@ class Vehicle(Mobile) :
             # restava a None e che nessuna riga del progetto leggeva.
             self._speed = default_speed_profile(off_road=True)
             self.load_speed_from_registry()
+            # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
+            self.load_ammunition_from_registry()
             
             #vehicle_scores = get_vehicle_scores(model=model)
             self._vehicle_scores = get_vehicle_scores(model=model) # load data from Vehicle_Data.py module

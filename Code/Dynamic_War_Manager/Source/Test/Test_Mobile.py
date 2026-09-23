@@ -1336,6 +1336,190 @@ class TestDetectionRangeValues(unittest.TestCase):
         self.assertAlmostEqual(_MobileStub(model='dup').detection_range('air'), 10_000.0)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scorta di munizioni (Fase 4, R3) e canali di fuoco (R1)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class _AmmoStub:
+    """Porta i metodi reali di Mobile su munizioni e canali, senza costruire un Mobile."""
+    ammunition = Mobile.ammunition
+    has_ammunition = Mobile.has_ammunition
+    consume_ammunition = Mobile.consume_ammunition
+    ammunition_from_registry = Mobile.ammunition_from_registry
+    load_ammunition_from_registry = Mobile.load_ammunition_from_registry
+    engagement_channels = Mobile.engagement_channels
+    _sensor_range_km = staticmethod(Mobile._sensor_range_km)
+
+    def __init__(self, model=None, ammunition=None):
+        self.id = 'stub'
+        self._model = model
+        self._ammunition = ammunition
+
+
+class _WeaponsRecord:
+    """Record di registry con il solo campo `weapons` (forma di Vehicle_Data)."""
+    def __init__(self, weapons):
+        self.weapons = weapons
+
+
+class TestAmmunitionCounter(unittest.TestCase):
+    """Contatore aggregato per asset: consumo esplicito, deterministico, mai sotto zero."""
+
+    def setUp(self):
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+
+    def test_consume_decrements_exactly(self):
+        stub = _AmmoStub(ammunition=10)
+        self.assertEqual(stub.consume_ammunition(3), 3)
+        self.assertEqual(stub.ammunition, 7)
+
+    def test_consume_never_goes_below_zero_and_reports_it(self):
+        stub = _AmmoStub(ammunition=2)
+        self.assertEqual(stub.consume_ammunition(5), 2)
+        self.assertEqual(stub.ammunition, 0)
+
+    def test_empty_stock_cannot_fire(self):
+        self.assertFalse(_AmmoStub(ammunition=0).has_ammunition())
+        self.assertTrue(_AmmoStub(ammunition=1).has_ammunition())
+
+    def test_unmodelled_stock_does_not_limit(self):
+        """None = non modellata: stessa semantica di Military.weapons_availability."""
+        stub = _AmmoStub(ammunition=None)
+        self.assertTrue(stub.has_ammunition())
+        self.assertEqual(stub.consume_ammunition(50), 50)
+        self.assertIsNone(stub.ammunition)
+
+    def test_consume_is_not_a_resupply_channel(self):
+        with self.assertRaises(ValueError):
+            _AmmoStub(ammunition=5).consume_ammunition(-1)
+
+    def test_consume_requires_an_int(self):
+        with self.assertRaises(TypeError):
+            _AmmoStub(ammunition=5).consume_ammunition(1.0)
+        with self.assertRaises(TypeError):
+            _AmmoStub(ammunition=5).consume_ammunition(True)
+
+    def test_setter_validates(self):
+        stub = _AmmoStub()
+        stub.ammunition = 4
+        self.assertEqual(stub.ammunition, 4)
+        stub.ammunition = None
+        self.assertIsNone(stub.ammunition)
+        with self.assertRaises(ValueError):
+            stub.ammunition = -1
+        with self.assertRaises(TypeError):
+            stub.ammunition = 2.5
+
+    def test_real_mobile_starts_unmodelled(self):
+        from Code.Dynamic_War_Manager.Source.Block.Block import Block
+
+        mobile = Mobile(block=MagicMock(spec=Block), name='m')
+        self.assertIsNone(mobile.ammunition)
+        self.assertTrue(mobile.has_ammunition())
+
+
+class TestAmmunitionFromRegistry(unittest.TestCase):
+    """Scorta iniziale dal registro: somma dei colpi, esclusi i tipi contati a unita'."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+
+    def test_vehicle_rounds_are_summed_machine_guns_excluded(self):
+        """T-72: 42 colpi 2A46M + 6 missili 9K119M; le mitragliatrici sono un numero di armi."""
+        _FakeVehicleData._registry['t72'] = _WeaponsRecord({
+            'CANNONS': [('2A46M', 42)],
+            'MISSILES': [('9K119M', 6)],
+            'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
+        })
+        self.assertEqual(_AmmoStub(model='t72').ammunition_from_registry(), 48)
+
+    def test_ship_ciws_is_excluded(self):
+        Ship_Data._registry['test-ammo-ship'] = _ship_record({
+            'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
+            'CIWS': [('Mk-15-Phalanx', 3)],
+        })
+        self.assertEqual(_AmmoStub(model='test-ammo-ship').ammunition_from_registry(), 40)
+
+    def test_only_unit_counted_weapons_means_not_modelled(self):
+        _FakeVehicleData._registry['truck'] = _WeaponsRecord({'MACHINE_GUNS': [('PKT-7.62', 1)]})
+        self.assertIsNone(_AmmoStub(model='truck').ammunition_from_registry())
+
+    def test_aircraft_registry_has_no_weapons(self):
+        """L'armamento di un aereo e' il loadout, non il modello: non modellata."""
+        _FakeAircraftData._registry['f16'] = _Record({})
+        self.assertIsNone(_AmmoStub(model='f16').ammunition_from_registry())
+
+    def test_unknown_model_is_none(self):
+        self.assertIsNone(_AmmoStub(model='ignoto').ammunition_from_registry())
+        self.assertIsNone(_AmmoStub(model=None).ammunition_from_registry())
+
+    def test_malformed_items_are_skipped(self):
+        _FakeVehicleData._registry['odd'] = _WeaponsRecord({
+            'CANNONS': [('2A46M', 30), ('broken',), ('neg', -5)],
+        })
+        self.assertEqual(_AmmoStub(model='odd').ammunition_from_registry(), 30)
+
+    def test_load_assigns_or_leaves_default(self):
+        _FakeVehicleData._registry['osa'] = _WeaponsRecord({'MISSILES': [('9M33-SAM', 6)]})
+        stub = _AmmoStub(model='osa')
+        self.assertTrue(stub.load_ammunition_from_registry())
+        self.assertEqual(stub.ammunition, 6)
+
+        unknown = _AmmoStub(model='ignoto')
+        self.assertFalse(unknown.load_ammunition_from_registry())
+        self.assertIsNone(unknown.ammunition)
+
+
+class TestEngagementChannels(unittest.TestCase):
+    """multi_target_capacity del radar: base dei canali di intercettazione di Military (R1)."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+
+    def test_reads_multi_target_capacity(self):
+        _FakeVehicleData._registry['osa'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 30, 'multi_target_capacity': 2})))
+        self.assertEqual(_AmmoStub(model='osa').engagement_channels('air'), 2)
+
+    def test_no_radar_is_none(self):
+        _FakeVehicleData._registry['strela'] = _SensorRecord(radar=False)
+        self.assertIsNone(_AmmoStub(model='strela').engagement_channels('air'))
+
+    def test_blind_mode_is_none(self):
+        _FakeVehicleData._registry['osa'] = _SensorRecord(
+            radar=_sensor(air=(True, {'acquisition_range': 30, 'multi_target_capacity': 2})))
+        self.assertIsNone(_AmmoStub(model='osa').engagement_channels('ground'))
+
+    def test_unknown_model_is_none(self):
+        self.assertIsNone(_AmmoStub(model='ignoto').engagement_channels('air'))
+
+    def test_bad_mode_raises(self):
+        with self.assertRaises(ValueError):
+            _AmmoStub(model='osa').engagement_channels('space')
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()

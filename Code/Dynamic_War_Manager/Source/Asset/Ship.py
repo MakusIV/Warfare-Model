@@ -40,6 +40,8 @@ class Ship(Mobile) :
             # (Prima non era popolabile affatto: il setter passava per checkParam, che le
             # sottoclassi sovrascrivono con firme senza 'speed' — v. Mobile.speed.setter.)
             self.load_speed_from_registry()
+            # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
+            self.load_ammunition_from_registry()
 
             self._ship_scores = get_ship_scores(model=model)  # load data from Ship_Data.py module
 

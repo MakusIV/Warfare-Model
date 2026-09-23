@@ -587,6 +587,92 @@ class TestMilitary(unittest.TestCase):
             self.assertEqual(self.groundbase.air_defense_power(), 0.0)
 
     # ------------------------------------------------------------------ #
+    # salvo_interceptors / salvo_interception_capacity (Fase 4, R1)       #
+    # ------------------------------------------------------------------ #
+
+    _BUILD_THREAT = 'Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa'
+
+    def _ad_asset(self, cls, asset_id, channels=None, ammunition=None, operative=True):
+        asset = MagicMock()
+        asset.__class__ = cls
+        asset.id = asset_id
+        asset.is_operative.return_value = operative
+        asset.engagement_channels.return_value = channels
+        asset.ammunition = ammunition
+        return asset
+
+    def test_salvo_capacity_no_ad_asset_is_zero(self):
+        self.groundbase._assets = {}
+        self.assertEqual(self.groundbase.salvo_interception_capacity(), 0)
+        self.assertEqual(self.groundbase.salvo_interceptors(), [])
+
+    def test_salvo_capacity_sums_fire_channels(self):
+        """capacita' = somma dei canali radar ('air') degli asset AD operativi."""
+        a = self._ad_asset(_Vehicle, 'v1', channels=2)
+        b = self._ad_asset(_Ship, 's1', channels=4)
+        self.groundbase._assets = {'v1': a, 's1': b}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), 6)
+
+        a.engagement_channels.assert_called_with('air')
+
+    def test_salvo_capacity_is_capped_by_ammunition(self):
+        """Non si intercetta con intercettori che non si hanno (R3)."""
+        a = self._ad_asset(_Vehicle, 'v1', channels=4, ammunition=1)
+        self.groundbase._assets = {'v1': a}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), 1)
+
+    def test_salvo_capacity_zero_ammunition_gives_nothing(self):
+        a = self._ad_asset(_Vehicle, 'v1', channels=4, ammunition=0)
+        self.groundbase._assets = {'v1': a}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), 0)
+
+    def test_salvo_capacity_without_radar_data_uses_the_default_channel(self):
+        from Code.Dynamic_War_Manager.Source.Block.Military import DEFAULT_INTERCEPTION_CHANNELS
+
+        a = self._ad_asset(_Vehicle, 'v1', channels=None)
+        self.groundbase._assets = {'v1': a}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), DEFAULT_INTERCEPTION_CHANNELS)
+
+    def test_salvo_interceptors_are_the_air_defense_population(self):
+        """Stessa selezione di air_defense_threats: senza ThreatAA non si intercetta."""
+        ad = self._ad_asset(_Vehicle, 'v1', channels=2)
+        not_ad = self._ad_asset(_Vehicle, 'v2', channels=2)
+        down = self._ad_asset(_Vehicle, 'v3', channels=2, operative=False)
+        aircraft = self._ad_asset(_Aircraft, 'a1', channels=2)
+        self.groundbase._assets = {'v1': ad, 'v2': not_ad, 'v3': down, 'a1': aircraft}
+
+        with patch(self._BUILD_THREAT, side_effect=lambda asset: MagicMock() if asset is ad else None):
+            self.assertEqual(self.groundbase.salvo_interceptors(), [(ad, 2)])
+
+    def test_salvo_interceptors_are_sorted_by_id(self):
+        """L'ordine di consumo delle scorte fa parte del contratto di riproducibilita'."""
+        b = self._ad_asset(_Vehicle, 'b', channels=1)
+        a = self._ad_asset(_Vehicle, 'a', channels=1)
+        self.groundbase._assets = {'b': b, 'a': a}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual([asset.id for asset, _ in self.groundbase.salvo_interceptors()], ['a', 'b'])
+
+    def test_salvo_capacity_is_independent_from_air_defense_power(self):
+        """Due grandezze separate apposta (R1): un livello in [0,1] e un conteggio di colpi."""
+        threat = MagicMock()
+        threat.danger_level = 0.9
+        a = self._ad_asset(_Vehicle, 'v1', channels=7)
+        self.groundbase._assets = {'v1': a}
+
+        with patch(self._BUILD_THREAT, return_value=threat):
+            self.assertAlmostEqual(self.groundbase.air_defense_power(), 0.9)
+            self.assertEqual(self.groundbase.salvo_interception_capacity(), 7)
+
+    # ------------------------------------------------------------------ #
     # detection_range                                                     #
     # ------------------------------------------------------------------ #
 

@@ -3,18 +3,25 @@ title: "Termini del modello a salva da adottare in Logic/Engagement_Resolver.py 
 type: decision
 tags: [architecture, dwm, salvo-combat-model, combat-resolution, discrete-event, naval, ground, air]
 created: 2026-09-22
-updated: 2026-09-22
-status: proposed
+updated: 2026-09-23
+status: accepted
 affects: ["[[logic-decision]]", "[[asset-base]]", "[[block]]"]
 related: ["[[hughes-salvo-vs-engagement-resolver]]", "[[salvo-combat-model]]", "[[virtual-session-engine-des]]", "[[soglie-disingaggio-e-attrito-aggregato]]", "[[core-simulator-agnostic]]"]
 ---
 
-> **`status: proposed`** — questa pagina è una **raccomandazione**, non una decisione presa. Nessuna
-> riga di codice è stata scritta o modificata. La decisione spetta all'utente; finché non è
-> accettata, `Logic/Engagement_Resolver.py` non è ancora scritto e il comportamento di riferimento
-> resta quello descritto in [[virtual-session-engine-des]] (Pk = accuracy × destroy_capacity per
-> singolo colpo, nessun termine di saturazione, nessuna soglia di disingaggio, munizioni infinite
-> per costruzione).
+> **`status: accepted`** (2026-09-23) — **R1-R4 accettate integralmente**. Risposte ai punti aperti:
+> R1 vive in una **nuova funzione dedicata** (non riuso di `air_defense_power()`); R2 usa la stessa
+> sede (dottrina di lato) e la stessa granularità (per forza intera) di P1 in
+> [[soglie-disingaggio-e-attrito-aggregato]]; R3 (munizioni) è **per asset** (non per arma/tipo), e
+> il **rifornimento è materia del ciclo di campagna**, fuori dallo scope Fase 4/5; R4 prima parte
+> (congelamento payload) adottata subito, seconda parte (re-scheduling finestre di contatto)
+> rimandata a quando un consumatore reale (probabile ordine di ritirata C2) la renderà necessaria.
+> **Implementazione COMPLETATA 2026-09-23** in `Logic/Engagement_Resolver.py` +
+> `Context/Reaction_Profile.py` + `Block/Military.salvo_interceptors`/`salvo_interception_capacity`
+> + `Asset/Mobile` (munizioni). Suite completa: 3002 test OK (skipped=5), +144 sulla baseline
+> Fase 3. V. [[virtual-session-engine-des]] per il dettaglio e gli 11 punti aperti di calibrazione
+> lasciati con l'opzione piu' conservativa (selezione arma, ripartizione del fuoco fra tiratori
+> convergenti, finestra di salvo_window, munizioni aerei, degradazione Pd da meteo/notte).
 
 ## Contesto
 
@@ -141,17 +148,15 @@ a colpo-singolo puro, senza saturazione né munizioni, come già previsto in
 (v. [[hughes-salvo-vs-engagement-resolver]] § 7); la progettazione dettagliata del contatore
 munizioni (R3, granularità e persistenza); l'implementazione del re-scheduling (R4, seconda parte).
 
-## Punti aperti da confermare con l'utente
+## Punti aperti — RISOLTI dall'utente 2026-09-23
 
-1. **R1** — dove vive il numero di capacità di intercettazione: una nuova funzione su `Military`
-   accanto ad `air_defense_power()`, o un riuso diretto di quest'ultima con una scala diversa?
-2. **R2** — la soglia di shock è per **forza** o per **singolo asset**, stessa domanda già aperta
-   per P1 in [[soglie-disingaggio-e-attrito-aggregato]] — le due risposte devono essere coerenti?
-3. **R3** — granularità del contatore munizioni (per asset, per arma installata, per tipo di
-   munizione) e se il rifornimento è materia della Fase 4/5 o del ciclo di campagna più ampio?
-4. **R4** — il re-scheduling delle finestre di contatto va progettato ora, anticipando il bisogno,
-   o si rimanda al momento in cui un consumatore reale (probabile: ordine di ritirata C2) lo rende
-   necessario?
+1. ~~R1: dove vive la capacità di intercettazione~~ → **nuova funzione dedicata** su `Military`,
+   non riuso di `air_defense_power()`.
+2. ~~R2: per forza o per singolo asset~~ → **per forza intera**, coerente con P1.
+3. ~~R3: granularità e rifornimento munizioni~~ → **per asset**; rifornimento **fuori scope**
+   Fase 4/5, materia del ciclo di campagna.
+4. ~~R4: re-scheduling ora o rimandato~~ → **rimandato** (default raccomandato, adottato senza
+   obiezioni) al primo consumatore reale.
 
 ## Fonti
 

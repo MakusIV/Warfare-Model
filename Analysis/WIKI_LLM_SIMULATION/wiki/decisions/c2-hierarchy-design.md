@@ -3,7 +3,7 @@ title: "Gerarchia C2 a due livelli, indirizzo strategico e modello sessioni"
 type: decision
 tags: [c2, command-control, session-model, architecture, command-package]
 created: 2026-09-17
-updated: 2026-09-18
+updated: 2026-09-23
 status: accepted
 affects: ["[[context-state]]", "[[logic-decision]]", "[[command]]"]
 related: ["[[c2-planner]]", "[[tlc-model]]", "[[campaign-temporal-model]]"]
@@ -25,9 +25,11 @@ Per-regione, per-dominio (aria/terra/mare), orientamento verso **Attacco / Mante
 
 ### Modello sessioni (DCS vs. sintetiche) — sostituisce [[campaign-temporal-model]]
 - Discriminante DCS/virtuale: presenza/assenza di slot giocatore umano (binario, operativo — non il conteggio asset).
-- Le sessioni virtuali portano molte più missioni/asset di quelle DCS, per limiti computazionali del motore DCS (non un rapporto fisso di sessioni).
+- Le sessioni virtuali portano molte più missioni/asset di quelle DCS, per limiti computazionali del motore DCS.
+- **Cadenza CONFERMATA 2026-09-23** (rilettura dello stesso PDF pag. 3, OCR doppio — fast e docling, concordi — poi confermata dall'utente): dopo una sessione DCS il motore esegue **6 sessioni virtuali** prima della sessione DCS successiva (il diagramma originale mostra anche "3 sessioni DCS" sulla stessa pagina, quindi un rapporto 3:6 nel disegno originale, ma solo il numero **6** è stato ri-confermato come vincolante finora).
 - Scarto temporale tra sessioni DCS e virtuali: **1-2 ore** (correzione — una prima lettura del PDF aveva erroneamente inteso "1-20h").
-- Esecuzione **interlacciata e guidata dal giocatore**, non un calendario precompilato: dopo che il giocatore finisce una missione DCS ed esce, il modulo campagna principale gira, chiede se terminare anticipatamente altre missioni previste per quel game-day, poi verifica se sono dovute sessioni sintetiche/virtuali e le esegue. Dopo ogni sessione virtuale lo stato viene aggiornato prima di procedere. Questo sostituisce l'idea di un calendario fisso `Session_Mission_Planner.build_session_calendar()` con uno scheduler event-driven agganciato ai confini reali delle sessioni di gioco.
+- Esecuzione **interlacciata e guidata dal giocatore**, non un calendario precompilato: dopo che il giocatore finisce una missione DCS ed esce, il modulo campagna principale gira, chiede se terminare anticipatamente altre missioni previste per quel game-day, poi verifica se sono dovute sessioni sintetiche/virtuali e le esegue. Questo sostituisce l'idea di un calendario fisso `Session_Mission_Planner.build_session_calendar()` con uno scheduler event-driven agganciato ai confini reali delle sessioni di gioco.
+- **Dopo OGNI sessione (DCS o virtuale) la campagna aggiorna il proprio stato — perdite, consumi, e riarmo degli asset — prima che la sessione successiva possa essere pianificata ed eseguita** (parole dell'utente, 2026-09-23; v. punto 5 di `Theater_Session_Manager` sotto). Non solo dopo le virtuali: vale per il ciclo intero.
 - Il ciclo C2 gira **prima e dopo ogni singola sessione**, non una volta per unità di tempo di campagna.
 - Le sessioni sono **condivise tra i due side** (una sessione contiene le missioni di entrambi i belligeranti, come nel gioco DCS reale). Un eventuale fog-of-war a livello di dati di sessione è esplicitamente rimandato a una versione futura.
 
@@ -37,7 +39,7 @@ Componente in `Command/`, sopra entrambi i `C2_Manager` di side, deliberatamente
 2. **Tipo e timing della sessione**: decide se la prossima è DCS o sintetica, e quando scatta — fatto di livello campagna che nessun side può conoscere da solo.
 3. **Trigger simmetrico del ciclo C2**: fa scattare "analizza→pianifica" per entrambi i side prima della sessione e "analizza" per entrambi dopo, in ordine fisso.
 4. **Proprietario di `session_id`** (vedi rename sotto): unico componente che vede la sessione unificata.
-5. **Aggiornamento stato post-sessione**: raccoglie risultati/perdite di entrambi i side dopo l'esecuzione (`Session_Simulator`) e scrive su `Campaign_State` in un solo passaggio.
+5. **Aggiornamento stato post-sessione — RAFFINATO 2026-09-23**: raccoglie risultati/perdite di entrambi i side dopo l'esecuzione (`Session_Simulator`), **riarma gli asset** (rifornimento munizioni — il contatore introdotto dalla Fase 4 del motore DES, v. [[risolutore-ingaggio-salva-fase4]] R3, rimanda esplicitamente il rifornimento "al ciclo di campagna": è questo il punto) e scrive tutto su `Campaign_State` in un solo passaggio, **prima** che la sessione successiva possa essere pianificata/eseguita. Vale dopo ogni sessione, DCS o virtuale.
 6. **Futuro hook fog-of-war**: punto naturale per filtrare/oscurare la sessione unificata se in futuro si implementa l'occultamento delle info nemiche (oggi deferred).
 
 ### Persistenza `Campaign_State`: rename `mission_id` → `session_id` (CONFERMATO 2026-09-18)

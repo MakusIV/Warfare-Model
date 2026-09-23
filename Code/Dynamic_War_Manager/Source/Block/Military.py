@@ -45,6 +45,11 @@ SEA_ASSET_TYPE = [ v.value for v in sat ]
 STATE_CATEGORY = [ v.value for v in StateCategory ]
 ASSET_TYPE = GROUND_ASSET_TYPE + AIR_ASSET_TYPE + SEA_ASSET_TYPE
 
+# Canali di fuoco di un asset di difesa aerea che non dichiara `multi_target_capacity`
+# (puntamento ottico, MANPADS, AAA senza radar di tiro): impegna un bersaglio alla volta.
+# Stima dichiarata, v. Military.salvo_interception_capacity.
+DEFAULT_INTERCEPTION_CHANNELS = 1
+
 
 class Military(Block):
     """Military class representing specialized combat Block with combat capabilities."""
@@ -602,6 +607,99 @@ class Military(Block):
             survival *= (1.0 - min(max(float(danger), 0.0), 1.0))
 
         return 1.0 - survival
+
+    def salvo_interceptors(self) -> List[Tuple["Asset", int]]:
+        """Asset del blocco che possono intercettare colpi in arrivo, con i canali di ciascuno.
+
+        E' la base di salvo_interception_capacity() (v. la' per la motivazione e per lo
+        statuto della stima). Esposta separatamente perche' il risolutore d'ingaggio
+        (Logic/Engagement_Resolver) deve sapere non solo QUANTI colpi il blocco intercetta
+        in una salva ma anche CHI li intercetta: ogni intercettazione e' un colpo sparato
+        e consuma la scorta di quell'asset (R3), e il risolutore lavora su uno stato ombra
+        che evolve durante l'ingaggio, quindi ricalcola la capacita' salva per salva
+        partendo da questo elenco.
+
+        Selezione: gli stessi asset di air_defense_threats() — Vehicle o Ship operativi per
+        cui esiste una ThreatAA — cosi' che "chi pesa nella difesa aerea" (air_defense_power)
+        e "chi intercetta" siano per costruzione lo stesso insieme.
+
+        Returns:
+            Lista di (asset, canali) ordinata per id dell'asset (l'ordine di consumo delle
+            scorte fa parte del contratto di riproducibilita'); vuota se nessun asset AD.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import build_threat_aa
+
+        interceptors = []
+
+        for asset in self.assets.values():
+            if not (validate_class(asset, "Vehicle") or validate_class(asset, "Ship")):
+                continue
+            if not asset.is_operative():
+                continue
+            if build_threat_aa(asset) is None:
+                continue
+
+            channels = None
+            engagement_channels = getattr(asset, 'engagement_channels', None)
+
+            if callable(engagement_channels):
+                channels = engagement_channels('air')
+
+            if not isinstance(channels, int) or isinstance(channels, bool) or channels <= 0:
+                channels = DEFAULT_INTERCEPTION_CHANNELS
+
+            interceptors.append((asset, channels))
+
+        interceptors.sort(key=lambda item: str(getattr(item[0], 'id', '')))
+
+        return interceptors
+
+    def salvo_interception_capacity(self) -> int:
+        """Colpi in arrivo che il blocco puo' intercettare in UNA salva (saturazione, R1).
+
+        DECISIONE (2026-09-23, wiki decisions/risolutore-ingaggio-salva-fase4 R1). E' il
+        termine difensivo del modello a salva di Hughes (y, z: "missili intercettati per
+        salva"): i primi N colpi di una salva contro questo blocco vengono intercettati e
+        non raggiungono mai Logic/Damage_Model.resolve_hit; il surplus oltre N la raggiunge
+        integralmente. NON e' una probabilita' per colpo ma un contatore che si esaurisce
+        dentro l'evento-salva, ed e' una proprieta' del BERSAGLIO — distinta
+        dall'accuracy/destroy_capacity dell'arma che spara.
+
+        E' tenuta volutamente separata da air_defense_power(): quella e' un livello di
+        pericolo in [0, 1] per la pianificazione e il targeting, questa e' un conteggio di
+        colpi per l'esito. Stessa popolazione di asset, grandezze diverse.
+
+        FORMULA — STIMA DI PARTENZA DICHIARATA, da ricalibrare con il processo ATCAL
+        interno (mai con i numeri della fonte Hughes, che non ne fornisce di utilizzabili):
+
+            capacita' = sum_i min(canali_i, scorta_i)
+
+        sugli asset di salvo_interceptors(), dove
+          * canali_i = `multi_target_capacity` del radar sul modo 'air' (Mobile.
+            engagement_channels) — il dato reale piu' vicino ai canali di fuoco; per un
+            radar di scoperta il registro puo' dichiarare la capacita' di tracciamento, che
+            li sovrastima. Senza dato radar (sistemi a puntamento ottico, MANPADS) vale
+            DEFAULT_INTERCEPTION_CHANNELS = 1;
+          * scorta_i = munizioni residue (Mobile.ammunition): non si intercetta con
+            intercettori che non si hanno; None (non modellata) non limita.
+        Ogni canale intercetta UN colpo per salva: equivale ad assumere Pk
+        dell'intercettore = 1 per canale, ipotesi ottimistica per la difesa e primo
+        candidato alla ricalibrazione.
+
+        Returns:
+            int >= 0; 0 se il blocco non ha asset di difesa aerea operativi.
+        """
+        capacity = 0
+
+        for asset, channels in self.salvo_interceptors():
+            stock = getattr(asset, 'ammunition', None)
+
+            if isinstance(stock, int) and not isinstance(stock, bool):
+                capacity += min(channels, max(stock, 0))
+            else:
+                capacity += channels
+
+        return capacity
 
     def detection_range(self, mode: str, sensor: Optional[str] = None) -> Optional[Tuple[float, float, float, int]]:
         """Return detection-range statistics [m] of the block against `mode` targets.

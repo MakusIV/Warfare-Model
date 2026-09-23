@@ -3,15 +3,22 @@ title: "Soglie di disingaggio e forma del fallback aggregato"
 type: decision
 tags: [architecture, dwm, combat-resolution, discrete-event, lanchester, attrition]
 created: 2026-09-22
-updated: 2026-09-22
-status: proposed
+updated: 2026-09-23
+status: accepted
 affects: ["[[logic-decision]]", "[[block]]"]
 related: ["[[virtual-session-engine-des]]", "[[lanchester-models]]", "[[lanchester-vs-motore-des]]", "[[cadem]]"]
 ---
 
-> **`status: proposed`** — questa pagina è una **raccomandazione**, non una decisione presa. Nessuna
-> riga di codice è stata scritta o modificata. La decisione spetta all'utente; finché non è
-> accettata, il comportamento vigente resta quello descritto in [[virtual-session-engine-des]].
+> **`status: accepted`** (2026-09-23) — **P1 e P3 accettate dall'utente**; P2 resta una nota di
+> orientamento, senza azione richiesta. Risposte ai punti aperti: la soglia (sia erosione P1 sia
+> shock, v. [[risolutore-ingaggio-salva-fase4]] R2) vive in `Context/Doctrine.py` come parametro
+> dottrinale di lato; il disingaggio è deciso **per forza intera**, non per singolo asset;
+> `calcFightResult` resta intatto fino a dopo la Fase 4; gli scenari S1-S11 (S6-S11 inclusi,
+> confermati come batteria ufficiale) entrano **solo nella Fase 7**, nessun test anticipato in
+> Fase 4. **Implementazione COMPLETATA 2026-09-23**:
+> `Context/Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS` (erosion 0.30, shock 0.20, stessi valori per
+> i 3 lati, dichiarati come stima di partenza non validata) + `Logic/Engagement_Resolver._check_doctrine`,
+> esito `DISENGAGED` per forza intera distinto da `DESTROYED`. V. [[virtual-session-engine-des]].
 
 ## Contesto
 
@@ -177,18 +184,14 @@ pagina va marcata `status: superseded` o rimossa.
 **Esplicitamente fuori perimetro**: lo strato 1 (scheduler dei contatti, Fase 3) — verificato riga
 per riga che nulla in questa fonte lo tocca.
 
-## Punti aperti da confermare con l'utente
+## Punti aperti — RISOLTI dall'utente 2026-09-23
 
-1. Dove vive la soglia di disingaggio: dottrina di lato, direttiva C2 per-sessione, o profilo
-   d'asset?
-2. Il disingaggio è deciso per **forza** (tutta l'unità rompe il contatto) o per **singolo asset**,
-   coerentemente con il vincolo «perdite per singolo asset»?
-3. `calcFightResult` va lasciato intatto fino a dopo la Fase 4 (raccomandato), o va toccato prima?
-4. Gli scenari S1-S11 entrano nella Fase 7, o servono anche come test di integrazione anticipati
-   della Fase 4?
-5. **S6-S11 sono definiti da questa sessione, non derivati da una fonte esterna**: vanno
-   confermati come batteria di validazione ufficiale della Fase 7, o sono solo una proposta di
-   partenza da rivedere quando la Fase 4/6 saranno più chiare?
+1. ~~Dove vive la soglia di disingaggio~~ → **dottrina di lato** (`Context/Doctrine.py`).
+2. ~~Per forza o per singolo asset~~ → **per forza intera**.
+3. ~~`calcFightResult` toccato prima o dopo la Fase 4~~ → **lasciato intatto** fino a dopo la Fase 4
+   (default raccomandato, adottato senza obiezioni).
+4. ~~S1-S11 in Fase 7 o anche test anticipati di Fase 4~~ → **solo Fase 7**.
+5. ~~S6-S11 batteria ufficiale o proposta di partenza~~ → **confermati come batteria ufficiale**.
 
 ## Fonti
 

@@ -1,7 +1,7 @@
 # Wiki Index — Modelli di Simulazione Bellica
 
 > **Catalogo completo dei contenuti wiki.** Aggiornato da Claude ad ogni ingestione, query o modifica.
-> Ultimo aggiornamento: 2026-09-22
+> Ultimo aggiornamento: 2026-09-23
 
 ---
 
@@ -188,9 +188,9 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[virtual-session-engine-des]] | accepted | Motore DES a coda eventi per le sessioni virtuali; roadmap 7 fasi, Fase 1-2 fatte, 3 questioni pre-Fase 3 chiuse |
 | [[core-simulator-agnostic]] | accepted | Vincolo: core Python indifferente al simulatore, DCS solo adapter |
 | [[route-model-unification]] | accepted | `DataType.Route` confermato unico modello anche per l'aria; piano a 5 fasi, Fase 1 fatta |
-| [[soglie-disingaggio-e-attrito-aggregato]] | **proposed** | Soglie di disingaggio come esito di prima classe; forma-bersaglio del fallback aggregato; scenari S1-S11 di validazione (S6-S11 nuovi: navale, logistico, scala, fog-of-war, disingaggio, confine DCS/sintetico) — **richiede decisione dell'utente** |
-| [[llm-locale-ruolo-e-confini]] | **proposed** | Regola generale «niente componenti non riproducibili sulla traiettoria di stato»; LLM per evento e per decisione dottrinale a runtime respinti; debrief narrativo a valle e authoring offline ammessi con confini espliciti — **richiede decisione dell'utente** |
-| [[risolutore-ingaggio-salva-fase4]] | **proposed** | Termini del modello a salva di Hughes da adottare in `Logic/Engagement_Resolver.py`: saturazione difensiva per-salva, soglia di shock (estende P1), scorte munizioni per asset (precondizione nuova), congelamento payload all'istante di fuoco — **richiede decisione dell'utente** |
+| [[soglie-disingaggio-e-attrito-aggregato]] | accepted | Soglie di disingaggio (P1, dottrina di lato, per forza) come esito di prima classe `DISENGAGED`; S1-S11 confermati batteria ufficiale di Fase 7; P2 (forma-bersaglio del fallback aggregato) resta nota, nessuna azione |
+| [[llm-locale-ruolo-e-confini]] | proposed (rimandata 2026-09-23) | Regola generale «niente componenti non riproducibili sulla traiettoria di stato»; utente ha rimandato la decisione, nessun LLM nel motore per ora |
+| [[risolutore-ingaggio-salva-fase4]] | accepted | Termini del modello a salva di Hughes adottati in `Logic/Engagement_Resolver.py`: saturazione difensiva per-salva (funzione dedicata), soglia di shock (dottrina, per forza), munizioni per asset (rifornimento fuori scope), congelamento payload all'istante di fuoco |
 
 ---
 

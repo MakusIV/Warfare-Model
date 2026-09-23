@@ -2,7 +2,10 @@
 name: project-virtual-session-engine-design
 description: "Analisi delle due strategie proposte per il motore di esecuzione delle sessioni virtuali (tick a 1 ms vs risoluzione probabilistica) e architettura decisa: DES a coda eventi con scheduling analitico dei contatti. Documento in Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md, 2026-09-21."
 metadata:
+  node_type: memory
   type: project
+  originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
+  modified: 2026-09-23T11:29:27.648Z
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
@@ -468,10 +471,74 @@ pianificazione di rotta reale (il `RoutePlanner` riceve ancora minacce costruite
 Suite dopo questi 3 fix: 2762 test OK (skipped=5), +5 da 2757 (i test SEAD; gli altri due punti
 non aggiungono test).
 
+## FASE 4 — risolutore d'ingaggio: FATTA 2026-09-23 (suite 2858 -> 3002 test, OK)
+
+Implementata da un agente Opus (effort alto, richiesta esplicita dell'utente) con le 3 decisioni
+dell'utente del 2026-09-23 come vincoli di design (v. [[project_session_2026_09_23_summary]] per il
+riassunto delle decisioni; qui solo l'implementazione). Verificata da questa sessione: suite
+completa rieseguita indipendentemente, stesso risultato; letto per intero `Engagement_Resolver.py`
+e le sezioni nuove di `Doctrine.py`/`Military.py` — qualita' alta, coerente con le decisioni.
+
+**File nuovi**: `Logic/Engagement_Resolver.py` (1115 righe: `resolve_engagement()` +
+`apply_engagement_result()`, coda eventi heapq con tipi LANCIO<IMPATTO<RISOLUZIONE e tie-break
+deterministico, stato ombra `_Shadow` che non muta gli asset reali finche' non si applica il
+risultato), `Context/Reaction_Profile.py` (311 righe: RIV/VAL/COM/ATT per tipo di sistema, valori
+dal documento di architettura §4.2 — Osa 26s, S-300PS 28s, Tor 6.5s, pilota 1.5s, equipaggio carro
+31s — profilo di ripiego 31s per classi sconosciute/navi).
+
+**File estesi**: `Context/Doctrine.py` (+123 righe: `DEFAULT_DISENGAGEMENT_THRESHOLDS` erosion 0.30/
+shock 0.20 uguali per i 3 lati, `validate_disengagement_thresholds` con vincolo `shock <= erosion`,
+`get_disengagement_thresholds`), `Block/Military.py` (+98: `salvo_interceptors()` +
+`salvo_interception_capacity()`, R1, deliberatamente separata da `air_defense_power()`),
+`Asset/Mobile.py` (+224: `ammunition`/`has_ammunition`/`consume_ammunition`/
+`ammunition_from_registry`/`load_ammunition_from_registry`, R3 — contatore per asset, non per arma;
+somma `record.weapons` dai registri escludendo `UNIT_COUNTED_WEAPON_TYPES = ('MACHINE_GUNS', 'CIWS')`
+dove la quantita' e' n. di armi non di colpi; aerei restano a `None` = non modellata, nessun dato nei
+registri), una riga ciascuno in `Vehicle.py`/`Ship.py`/`Aircraft.py` (`load_ammunition_from_registry()`
+nel costruttore). Nuovi `Test_Engagement_Resolver.py` (75) e `Test_Reaction_Profile.py` (29), estesi
+`Test_Doctrine.py`/`Test_Military.py`/`Test_Mobile.py`.
+
+**Le 3 decisioni del 21/09→23/09 tutte rispettate**: P1 (soglia dottrina di lato, per forza
+intera) + R2 (soglia di shock, stessa sede/granularita') → `_check_doctrine`, esito `DISENGAGED`
+distinto da `DESTROYED`; R1 (saturazione) → `salvo_interception_capacity`, funzione dedicata non
+riuso di `air_defense_power`; R3 (munizioni per asset, rifornimento fuori scope) → `Mobile.ammunition`
+senza alcun metodo di ricarica; R4 (congelamento payload) → una salva lanciata (`Salvo`, frozen) non
+viene mai riscritta, solo annullata prima del lancio se il bersaglio o il lanciatore sono gia' fuori
+combattimento.
+
+**Interprete**: su questa macchina `venv/bin/python3` e' un Python 3.14 senza dipendenze (skfuzzy/
+sympy/matplotlib mancanti) — la suite va eseguita con `.direnv/python-3.12/bin/python3`, non con
+`venv/bin/python3` come dicono le vecchie note per altre macchine. Verificare l'interprete giusto a
+inizio sessione su ogni macchina diversa, non fidarsi della prima nota trovata in memoria.
+
+**11 punti aperti lasciati con l'opzione piu' conservativa dall'agente, NON ancora decisi
+dall'utente** (nessuno blocca l'uso del risolutore, ma condizionano la Fase 5/6 e la calibrazione):
+1. Selezione arma/Pk dai registri: non fatta, iniettata via `fire_control(shooter, target)`.
+2. Ripartizione del fuoco: piu' tiratori possono convergere sullo stesso bersaglio (nessun
+   round-robin/coordinamento).
+3. `salvo_window` di default 0 (solo impatti simultanei condividono la saturazione) — parametro
+   di taratura, non deciso.
+4. Ordine dei colpi intercettati: i primi intercettabili in ordine (impatto, salva), non
+   proporzionale ne' round-robin.
+5. Denominatore di erosione/shock: organico impegnato all'inizio, non forza superstite (scelta
+   per coerenza fra le due soglie, non ridiscussa esplicitamente con l'utente).
+6. Munizioni aerei: illimitate di default (`None`), non derivate dal loadout assegnato.
+7. `ShotSpec.interceptable`: decisa dal chiamante (`fire_control`), nessuna euristica di default.
+8. Degradazione Pd da meteo/notte: aggancio presente (`detection_factor`), non collegato a
+   `Logic/Meteo_Analysis`.
+9. Interpretazione di R4 sul rilancio "shoot-look-shoot": un lancio gia' schedulato ma non ancora
+   partito viene annullato (non riscritto) se il bersaglio muore prima del lancio.
+10. La variante di P1 "soglia anche come conteggio minimo di una categoria critica" non
+    implementata: solo le due soglie in frazione.
+11. Possibile conflitto futuro su `Doctrine.py` con `feature/c2-doctrine-per-side-fase-a` (che in
+    questo clone non esiste ancora fuso) — da controllare al momento del merge.
+
 **How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
-sorgente. Le Fasi 1 e 2 (correzioni a codice esistente, senza le quali lo Strato 1 non è scrivibile)
-sono **fatte**, le 3 questioni aperte sono **chiuse** e la Fase 3 (`Logic/Contact_Scheduler.py`) è
-**scritta e testata**: si riparte dalla Fase 4.
+sorgente. Le Fasi 1-4 sono **fatte**: cinematica, percezione, scheduler dei contatti, risolutore
+d'ingaggio. Prossimo passo: **Fase 5** (applicazione danno per-asset e consumi in un'unica passata,
+assemblaggio `SessionOutcome` — gran parte gia' esiste in `Damage_Model`/`apply_engagement_result`,
+manca l'orchestratore) oppure chiudere prima alcuni dei punti aperti sopra se l'utente vuole
+calibrare/decidere quelli prima di proseguire.
 V. [[project_route_model_unification_plan]] per le fasi 2-5 dell'unificazione del modello di rotta,
-[[project_c2_hierarchy_design]] per `Command/` e
-[[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.
+[[project_c2_hierarchy_design]] per `Command/` (incluso il riarmo post-sessione confermato il
+2026-09-23) e [[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.

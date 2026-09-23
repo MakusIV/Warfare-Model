@@ -38,11 +38,16 @@ class Aircraft(Mobile) :
             super().__init__(block, name, description, category, asset_type, functionality, cost, value, acp, rcp, payload, position, volume, crytical, repair_time, role, dcs_unit_data)
 
             self._model = model  # key per Aircraft_Data._registry / AIRCRAFT
+            # Loadout assegnato a questo velivolo (chiave di AIRCRAFT_LOADOUTS[model]); None
+            # finche' chi assembla la missione/sessione non lo imposta. V. assigned_loadout.
+            self._assigned_loadout: Optional[str] = None
 
             # Profilo di velocita' canonico in m/s, popolato dal registry del modello.
             # (Prima non era popolabile affatto: il setter passava per checkParam, che le
             # sottoclassi sovrascrivono con firme senza 'speed' — v. Mobile.speed.setter.)
             self.load_speed_from_registry()
+            # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
+            self.load_ammunition_from_registry()
 
             self.set_combat_power(ACTION_TASKS['air'])
 
@@ -121,6 +126,111 @@ class Aircraft(Mobile) :
         return (False, f"Bad Arg: Aircraft Asset_type must be any string{asset_type}")                                       
 
 
+
+    # ── loadout assegnato e munizioni (motore di sessioni virtuali, Fase 4) ──────
+    #
+    # DECISIONE (utente, 2026-09-23): la scorta di un aereo si ricava dal loadout ASSEGNATO,
+    # non dal modello (Aircraft_Data non ha un campo `weapons`). Prima di questa non esisteva
+    # alcuno stato "loadout di questo volo" su un'istanza: Air_Resources_Assigner sceglie
+    # loadout per nome/modello in pianificazione ma non muta mai un Aircraft, e nessun altro
+    # modulo (Command_Types, Air_Route_Manager) lo associa a un'istanza. Lo stato vive quindi
+    # qui, come attributo settabile; chi lo imposta e' chi assembla la missione/sessione.
+
+    @property
+    def assigned_loadout(self) -> Optional[str]:
+        """Nome del loadout assegnato (chiave di AIRCRAFT_LOADOUTS[model]), o None."""
+        return getattr(self, '_assigned_loadout', None)
+
+    @assigned_loadout.setter
+    def assigned_loadout(self, loadout: Optional[str]) -> None:
+        """Assegna (o toglie, con None) il loadout e RIARMA l'aereo di conseguenza.
+
+        Assegnare un loadout equivale ad armare il velivolo per la missione: la scorta
+        viene ricalcolata da quel loadout (load_ammunition_from_registry) e l'eventuale
+        consumo precedente viene sovrascritto. E' quindi un'operazione del ciclo di
+        campagna/assemblaggio missione, non un canale di rifornimento durante l'ingaggio
+        (il risolutore non la chiama mai). Con None la scorta torna None (non modellata):
+        senza loadout non c'e' dato su cui basarla.
+
+        Raises:
+            TypeError: `loadout` non e' una stringa ne' None.
+            ValueError: il modello non ha loadout noti, o `loadout` non e' fra i suoi.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+
+        if loadout is not None:
+            if not isinstance(loadout, str):
+                raise TypeError(f"assigned_loadout must be a str or None, got {type(loadout).__name__}")
+
+            known = AIRCRAFT_LOADOUTS.get(self._model)
+
+            if not known:
+                raise ValueError(f"no loadouts known for aircraft model {self._model!r}")
+
+            if loadout not in known:
+                raise ValueError(f"loadout {loadout!r} not defined for model {self._model!r}; "
+                                 f"known: {sorted(known)}")
+
+        self._assigned_loadout = loadout
+
+        if not self.load_ammunition_from_registry():
+            self._ammunition = None
+
+    def ammunition_from_registry(self) -> Optional[int]:
+        """Scorta [colpi] dal loadout assegnato, o None se nessun loadout e' assegnato.
+
+        Somma, dal loadout `AIRCRAFT_LOADOUTS[model][assigned_loadout]['stores']`:
+          * per ogni pylon `[weapon_name, quantita', ...]` la quantita', SOLO se
+            `weapon_name` e' un'arma di AIR_WEAPONS (get_weapon non None): serbatoi
+            (`370gal_tank`, `PTB-1500`, ...) e pod di rifornimento stanno anch'essi nei
+            pylon e vanno esclusi; ogni unita' e' un colpo usabile una volta, come la
+            quantita' dei registri di Vehicle/Ship;
+          * `gun_rounds` (colpi del cannone), se intero positivo.
+        `stores['devices']` (pod di puntamento, sensori) non contiene armi: non e' letto.
+
+        Stesso contatore AGGREGATO di Mobile (v. UNIT_COUNTED_WEAPON_TYPES): missili e colpi
+        del cannone si sommano in un solo numero, come fanno gia' i 42 colpi del 2A46M e i
+        6 missili di un T-72. Senza loadout assegnato delega a Mobile, che per un aereo
+        restituisce None (non modellata): comportamento invariato.
+        """
+        loadout_name = self.assigned_loadout
+
+        if loadout_name is None:
+            return super().ammunition_from_registry()
+
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
+
+        loadout = AIRCRAFT_LOADOUTS.get(self._model, {}).get(loadout_name)
+
+        if not isinstance(loadout, dict):
+            logger.debug(f"ammunition_from_registry: loadout {loadout_name!r} not found for "
+                         f"model {self._model!r}, ammunition not modelled")
+            return None
+
+        stores = loadout.get('stores') or {}
+        total = 0
+
+        for item in (stores.get('pylons') or {}).values():
+            if not isinstance(item, (list, tuple)) or len(item) < 2:
+                continue
+
+            weapon_name, quantity = item[0], item[1]
+
+            if not isinstance(weapon_name, str) or get_weapon(weapon_name) is None:
+                continue  # serbatoio, pod, voce non-arma
+
+            if isinstance(quantity, bool) or not isinstance(quantity, int) or quantity < 0:
+                continue
+
+            total += quantity
+
+        gun_rounds = stores.get('gun_rounds')
+
+        if isinstance(gun_rounds, int) and not isinstance(gun_rounds, bool) and gun_rounds > 0:
+            total += gun_rounds
+
+        return total
 
     def air_combat_power(self) -> float:
         """Combat power aggregata dell'aereo, indipendente dal task aereo (v. set_combat_power).
