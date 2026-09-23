@@ -1520,6 +1520,224 @@ class TestEngagementChannels(unittest.TestCase):
             _AmmoStub(model='osa').engagement_channels('space')
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Carburante (Fase 5): contatore in frazione del carico pieno, consumo per distanza
+# ─────────────────────────────────────────────────────────────────────────────
+
+class _FuelStub:
+    """Porta i metodi reali di Mobile sul carburante, senza costruire un Mobile."""
+    fuel = Mobile.fuel
+    has_fuel = Mobile.has_fuel
+    consume_fuel = Mobile.consume_fuel
+    fuel_autonomy = Mobile.fuel_autonomy
+    fuel_for_distance = Mobile.fuel_for_distance
+    fuel_range_remaining = Mobile.fuel_range_remaining
+    fuel_from_registry = Mobile.fuel_from_registry
+    load_fuel_from_registry = Mobile.load_fuel_from_registry
+
+    def __init__(self, model=None, fuel=None):
+        self.id = 'stub'
+        self._model = model
+        self._fuel = fuel
+
+
+class _RangeRecord:
+    """Record di registry con i soli campi letti da fuel_autonomy (forma di Vehicle_Data)."""
+    def __init__(self, range, engine_type='diesel'):
+        self.range = range
+        self.engine = {'model': 'x', 'capabilities': {'thrust': 1, 'fuel_efficiency': 0.5,
+                                                      'type': engine_type}}
+
+
+def _ship_range_record(range_nm, engine_type='gas_turbine') -> Ship_Data:
+    obj = object.__new__(Ship_Data)
+    obj.range = range_nm
+    obj.engine = {'model': 'x', 'capabilities': {'thrust': 1, 'fuel_efficiency': 0.5,
+                                                 'type': engine_type}}
+    return obj
+
+
+class TestFuelCounter(unittest.TestCase):
+    """Stessa disciplina delle munizioni: consumo esplicito, mai sotto zero, None = illimitato."""
+
+    def setUp(self):
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+
+    def test_consume_decrements_exactly(self):
+        stub = _FuelStub(fuel=1.0)
+        self.assertAlmostEqual(stub.consume_fuel(0.25), 0.25)
+        self.assertAlmostEqual(stub.fuel, 0.75)
+
+    def test_consume_never_goes_below_zero_and_reports_it(self):
+        stub = _FuelStub(fuel=0.2)
+        self.assertAlmostEqual(stub.consume_fuel(0.5), 0.2)
+        self.assertEqual(stub.fuel, 0.0)
+        self.assertFalse(stub.has_fuel())
+
+    def test_float_residue_is_zeroed(self):
+        """0.1 + 0.2 != 0.3 in virgola mobile: il residuo infinitesimo non deve far muovere l'asset."""
+        stub = _FuelStub(fuel=0.3)
+        stub.consume_fuel(0.1)
+        stub.consume_fuel(0.2)
+        self.assertEqual(stub.fuel, 0.0)
+        self.assertFalse(stub.has_fuel())
+
+    def test_empty_tank_is_still_a_valid_asset(self):
+        """A secco l'asset non si muove, ma non e' distrutto: la salute non c'entra."""
+        stub = _FuelStub(fuel=0.0)
+        self.assertFalse(stub.has_fuel())
+        self.assertEqual(stub.consume_fuel(0.1), 0.0)
+
+    def test_unmodelled_fuel_does_not_limit(self):
+        stub = _FuelStub(fuel=None)
+        self.assertTrue(stub.has_fuel())
+        self.assertEqual(stub.consume_fuel(5.0), 5.0)
+        self.assertIsNone(stub.fuel)
+
+    def test_consume_is_not_a_refuelling_channel(self):
+        with self.assertRaises(ValueError):
+            _FuelStub(fuel=0.5).consume_fuel(-0.1)
+        with self.assertRaises(TypeError):
+            _FuelStub(fuel=0.5).consume_fuel(True)
+        with self.assertRaises(TypeError):
+            _FuelStub(fuel=0.5).consume_fuel('0.1')
+
+    def test_setter_validates(self):
+        stub = _FuelStub()
+        stub.fuel = 0.5
+        self.assertEqual(stub.fuel, 0.5)
+        stub.fuel = 1
+        self.assertIsInstance(stub.fuel, float)
+        stub.fuel = None
+        self.assertIsNone(stub.fuel)
+        with self.assertRaises(ValueError):
+            stub.fuel = -0.1
+        with self.assertRaises(ValueError):
+            stub.fuel = 1.5
+        with self.assertRaises(TypeError):
+            stub.fuel = True
+
+    def test_real_mobile_starts_unmodelled(self):
+        from Code.Dynamic_War_Manager.Source.Block.Block import Block
+
+        mobile = Mobile(block=MagicMock(spec=Block), name='m')
+        self.assertIsNone(mobile.fuel)
+        self.assertTrue(mobile.has_fuel())
+
+
+class TestFuelAutonomyFromRegistry(unittest.TestCase):
+    """Autonomia dal registro: `range` in km (veicoli) o nm (navi), None per aerei e nucleari."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+        _FakeAircraftData._registry.clear()
+        _clean_ship_registry()
+
+    def test_vehicle_range_km_to_metres(self):
+        _FakeVehicleData._registry['t90'] = _RangeRecord(550)
+        self.assertEqual(_FuelStub(model='t90').fuel_autonomy(), 550_000.0)
+        # Unica autonomia nel registro: stesso valore per entrambi i regimi (limite dichiarato).
+        self.assertEqual(_FuelStub(model='t90').fuel_autonomy('max'), 550_000.0)
+
+    def test_ship_range_nm_to_metres(self):
+        Ship_Data._registry['test-fuel-ship'] = _ship_range_record(4_400)
+        self.assertAlmostEqual(_FuelStub(model='test-fuel-ship').fuel_autonomy(), 4_400 * 1852.0)
+
+    def test_nuclear_ship_is_not_modelled(self):
+        Ship_Data._registry['test-fuel-cvn'] = _ship_range_record(20_000, engine_type='nuclear')
+        stub = _FuelStub(model='test-fuel-cvn')
+        self.assertIsNone(stub.fuel_autonomy())
+        self.assertFalse(stub.load_fuel_from_registry())
+        self.assertIsNone(stub.fuel)
+
+    def test_aircraft_registry_depends_on_loadout(self):
+        _FakeAircraftData._registry['f16'] = _Record({})
+        self.assertIsNone(_FuelStub(model='f16').fuel_autonomy())
+
+    def test_missing_or_bad_range_is_none(self):
+        for key, value in (('none', None), ('zero', 0), ('neg', -5), ('bool', True), ('str', '500')):
+            _FakeVehicleData._registry[key] = _RangeRecord(value)
+            self.assertIsNone(_FuelStub(model=key).fuel_autonomy(), key)
+
+    def test_unknown_model_is_none(self):
+        self.assertIsNone(_FuelStub(model='ignoto').fuel_autonomy())
+        self.assertIsNone(_FuelStub(model=None).fuel_autonomy())
+
+    def test_bad_regime_raises(self):
+        with self.assertRaises(ValueError):
+            _FuelStub(model='t90').fuel_autonomy('afterburner')
+
+    def test_load_sets_full_or_leaves_default(self):
+        _FakeVehicleData._registry['t90'] = _RangeRecord(550)
+        stub = _FuelStub(model='t90')
+        self.assertEqual(stub.fuel_from_registry(), 1.0)
+        self.assertTrue(stub.load_fuel_from_registry())
+        self.assertEqual(stub.fuel, 1.0)
+
+        unknown = _FuelStub(model='ignoto')
+        self.assertFalse(unknown.load_fuel_from_registry())
+        self.assertIsNone(unknown.fuel)
+
+
+class TestFuelForDistance(unittest.TestCase):
+    """consumo = distanza / autonomia: numeri semplici calcolabili a mano."""
+
+    def setUp(self):
+        _FakeVehicleData._registry.clear()
+        _FakeVehicleData._registry['t90'] = _RangeRecord(500)   # 500 km
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+        _FakeVehicleData._registry.clear()
+
+    def test_known_distance_known_consumption(self):
+        stub = _FuelStub(model='t90', fuel=1.0)
+        self.assertAlmostEqual(stub.fuel_for_distance(125_000.0), 0.25)
+        self.assertAlmostEqual(stub.fuel_for_distance(0.0), 0.0)
+
+    def test_requirement_can_exceed_a_full_tank(self):
+        """E' il fabbisogno, non il consumo possibile: il limite lo applica consume_fuel."""
+        self.assertAlmostEqual(_FuelStub(model='t90').fuel_for_distance(750_000.0), 1.5)
+
+    def test_consume_for_a_leg(self):
+        stub = _FuelStub(model='t90', fuel=1.0)
+        stub.consume_fuel(stub.fuel_for_distance(100_000.0))
+        self.assertAlmostEqual(stub.fuel, 0.8)
+        self.assertAlmostEqual(stub.fuel_range_remaining(), 400_000.0)
+
+    def test_full_autonomy_empties_the_tank(self):
+        stub = _FuelStub(model='t90', fuel=1.0)
+        stub.consume_fuel(stub.fuel_for_distance(500_000.0))
+        self.assertEqual(stub.fuel, 0.0)
+        self.assertFalse(stub.has_fuel())
+        self.assertEqual(stub.fuel_range_remaining(), 0.0)
+
+    def test_unmodelled_is_none(self):
+        self.assertIsNone(_FuelStub(model='ignoto').fuel_for_distance(1_000.0))
+        self.assertIsNone(_FuelStub(model='ignoto', fuel=None).fuel_range_remaining())
+        self.assertIsNone(_FuelStub(model='t90', fuel=None).fuel_range_remaining())
+
+    def test_bad_distance_raises(self):
+        with self.assertRaises(ValueError):
+            _FuelStub(model='t90').fuel_for_distance(-1.0)
+        with self.assertRaises(TypeError):
+            _FuelStub(model='t90').fuel_for_distance(None)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()

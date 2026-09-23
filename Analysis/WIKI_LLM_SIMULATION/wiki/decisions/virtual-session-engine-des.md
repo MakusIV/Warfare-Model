@@ -3,7 +3,7 @@ title: "Motore sessioni virtuali: architettura DES a coda eventi"
 type: decision
 tags: [architecture, dwm, simulation, discrete-event, combat-resolution, routing]
 created: 2026-09-21
-updated: 2026-09-22
+updated: 2026-09-23
 status: accepted
 affects: ["[[logic-routing]]", "[[asset-air]]", "[[asset-ground-naval]]", "[[block]]", "[[command]]"]
 related: ["[[core-simulator-agnostic]]", "[[c2-hierarchy-design]]", "[[event-driven-simulation]]", "[[route-model-unification]]"]
@@ -177,9 +177,36 @@ commit `5a87ebb2`, nuovo `Test_Edge.py`.
 **Precondizioni bloccanti aggiuntive risolte da questo lavoro** (elenco delle 11 sopra): #5
 (`apply_damage`, ora esiste), #7 (Route/Edge/Waypoint, v. Q1), #10 (SAM/AAA/EWR, v. Q3).
 
+**Fase 3 (scheduler dei contatti) — FATTA 2026-09-22** (commit `42cc67f1`): `Logic/Contact_Scheduler.py`,
+96 test nuovi. Suite 2753 → 2858.
+
+**Fase 4 (risolutore d'ingaggio) — FATTA e COMMITTATA 2026-09-23** (commit `44bc6950`, non pushato):
+`Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py`. Decisioni di design accettate lo
+stesso giorno: soglie di disingaggio (P1) in dottrina di lato per forza intera, saturazione
+difensiva per-salva (R1) come funzione dedicata separata da `air_defense_power()`, munizioni per
+asset (R3) senza rifornimento nel motore, congelamento del payload (R4). Rifiniture successive:
+ripartizione del fuoco round-robin, munizioni aerei dal loadout assegnato
+(`Aircraft.assigned_loadout`), degradazione della Pd da meteo/notte collegata a `Meteo_Analysis`.
+Suite 2858 → 3027. Vedi [[soglie-disingaggio-e-attrito-aggregato]] e
+[[risolutore-ingaggio-salva-fase4]] per il dettaglio delle decisioni; [[llm-locale-ruolo-e-confini]]
+resta rimandata (nessun LLM nel motore).
+
+**Fase 5 (contratto SessionOutcome, RNG di sessione, carburante) — FATTA 2026-09-23**, da
+committare: `Command/Session_Types.py` (`SessionOrder`/`SessionOutcome`/`assemble_session_outcome`
+— chiude anche la "Fase 0" mai fatta finora), `Utility/Session_Rng.py` (seed = SHA-256 su chiave
+canonica `(session_id, mission_id, event_id, counter)`, mai `hash()` di Python), `Logic/Fuel_Model.py`
++ carburante su `Mobile`/`Aircraft` (unità: **frazione del carico pieno [0,1]**, non kg — Vehicle/Ship
+non hanno una capacità di serbatoio nei registri, solo l'autonomia in km/nm; per gli aerei dal
+loadout assegnato con fattore 2× sul raggio d'azione dichiarato; navi nucleari non modellate,
+scelta corretta non di comodo). Suite 3027 → 3115. Nessun `apply_session_outcome`/scrittura
+`Campaign_State`: resta responsabilità del futuro `Theater_Session_Manager`.
+
+**Prossimo passo**: Fase 6 (`Logic/Session_Simulator.py`, l'orchestratore a coda eventi) o Fase 7
+(validazione, scenari S1-S11, test di agnosticismo).
+
 ## Fonti
 
-- [[project_virtual_session_engine_design]] (memoria di origine, dettaglio completo Fase 1-2)
+- [[project_virtual_session_engine_design]] (memoria di origine, dettaglio completo Fase 1-5)
 - [[project_session_2026_09_21_summary]] (recap sessione, stato git)
 - `Analysis/Document/Architettura_esecuzione_sessioni_virtuali_ANALISI.md` (analisi completa, 525
   righe, bibliografia con URL)

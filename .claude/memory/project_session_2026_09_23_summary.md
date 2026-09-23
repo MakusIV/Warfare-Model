@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T12:54:05.416Z
+  modified: 2026-09-23T13:04:53.524Z
 ---
 
 **Promemoria multi-macchina**: l'utente lavora su almeno 3 macchine (VM Oracle VirtualBox Ubuntu,
@@ -136,6 +136,30 @@ memoria non e' stata ancora aggiornata con un esito, il lavoro e' probabilmente 
 la sessione si e' interrotta prima di verificarlo — controllare `git status`/`git diff` su
 `Engagement_Resolver.py`, `Mobile.py`, `Aircraft.py` prima di rilanciare da zero.
 
-**Commit**: l'utente ha chiesto UN commit unico per tutto (Fase 4 + queste 3 rifiniture + wiki +
-memoria) — non fare il commit finche' anche questo secondo agente non ha finito e non e' stato
-verificato.
+**Commit fatto**: `44bc6950` su `analysis/dce-dcs-persistence`, un commit unico come richiesto
+(Fase 4 + le 3 rifiniture + wiki + memoria), **non pushato**. Suite finale verificata due volte
+indipendentemente da questa sessione (non solo dai report degli agenti): **3027 test, OK
+(skipped=5)**, con `.direnv/python-3.12/bin/python3` (non `venv/bin/python3`, Python 3.14 senza
+dipendenze su questa macchina).
+
+**Rifiniture consegnate dal secondo agente**: round-robin per la ripartizione del fuoco fra
+tiratori convergenti (`Engagement_Resolver._engaged_shooters`/`_schedule_next`, greedy locale,
+mai fa aspettare un tiratore pronto); `Aircraft.assigned_loadout` (nuovo, non esisteva alcun
+concetto di "loadout di questo volo" su un'istanza) + `ammunition_from_registry()` override che
+somma pylon (esclusi serbatoi/pod) + gun_rounds; degradazione della Pd da meteo/notte
+(`weather_detection_factor`/`meteo_detection_factor` in `Engagement_Resolver.py`, NIGHT=0.7,
+ADVERSE_WEATHER=0.8, dichiarati come stime, si moltiplicano).
+
+**4 note dell'agente, verificate e accettate senza ulteriore azione** (nessuna blocca nulla):
+assegnare un loadout "riarma" l'aereo sovrascrivendo consumi precedenti — deviazione dichiarata
+dalla regola "il setter delle munizioni serve solo a inizializzazione/persistenza" di `Mobile`,
+ma coerente con la decisione di riarmo-a-inizio-sessione gia' registrata in
+[[project_c2_hierarchy_design]]; il contatore aggregato mescola munizioni cannone e missili (675
+colpi cannone + 8 missili in un solo numero) — stesso limite gia' presente per i veicoli
+terrestri (cannone + ATGM), non nuovo; i pod di razzi contano "1" per pylon (quantita' letterale
+dai registri, potrebbe sotto-contare i razzi effettivi in un pod); la Pd non distingue sensori
+radar/ottici nella degradazione meteo (limite dichiarato, `ContactWindow` non porta il tipo di
+sensore).
+
+**Prossimo passo**: Fase 5 (applicazione danno/consumi in un'unica passata, assemblaggio verso un
+futuro `SessionOutcome`) — non ancora iniziata.

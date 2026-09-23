@@ -122,6 +122,63 @@ DEFAULT_DETECTION_RANGE_TYPE = "acquisition_range"
 UNIT_COUNTED_WEAPON_TYPES = ('MACHINE_GUNS', 'CIWS')
 
 
+# ── CARBURANTE (motore di sessioni virtuali, Fase 5) ──────────────────────────
+#
+# Prima di questa sezione il progetto non aveva alcun contatore di carburante: il solo
+# `engine.capabilities.fuel_efficiency` dei registri e' un PUNTEGGIO adimensionale di
+# selezione dell'asset (0.3-0.8 per i velivoli, 1.0 per le navi nucleari; il docstring di
+# Aircraft_Data lo chiama "km/l", ma i valori non lo sono), non un consumo fisico. Qui nasce
+# un contatore AGGREGATO PER ASSET con la stessa disciplina delle munizioni:
+#
+#   * consumo esplicito e deterministico, proporzionale alla distanza percorsa — nessuna
+#     estrazione casuale;
+#   * a zero l'asset non si muove piu' ma resta un asset valido: la salute non c'entra;
+#   * il rifornimento e' FUORI SCOPE (ciclo di campagna): nessun metodo aumenta il
+#     carburante, salvo il setter per inizializzazione/persistenza e il riarmo implicito
+#     quando a un aereo viene (ri)assegnato un loadout, come per le munizioni.
+#
+# UNITA': FRAZIONE DEL CARICO PIENO, in [0, 1] (FUEL_FULL = 1.0), per TUTTI gli asset.
+# Scelta motivata dai dati, non di comodo:
+#   1. Vehicle_Data e Ship_Data non dichiarano una capacita' del serbatoio. Dichiarano pero'
+#      l'AUTONOMIA (`range`: km per i veicoli, miglia nautiche per le navi), che e' proprio
+#      il dato che serve: col pieno si percorrono `range` metri. Il consumo per metro e'
+#      quindi 1/autonomia, senza alcuna costante inventata.
+#   2. Per gli aerei i raggi dei loadout (`cruise/attack.range['fuel_100%']`) valgono per
+#      il carico COMPLETO — interno PIU' serbatoi esterni se imbarcati (commento di testa di
+#      Aircraft_Loadouts) — mentre `fuel_internal_max` e' il solo carburante interno. Un
+#      contatore in kg inizializzato a `fuel_internal_max` e consumato col raggio del
+#      loadout sovrastimerebbe l'autonomia di chi porta serbatoi. La frazione del carico
+#      pieno e' coerente con il dato di autonomia per costruzione; la massa resta
+#      ricavabile con Aircraft.fuel_capacity_kg() (frazione x capacita').
+#   3. Una sola unita' per tutti gli asset rende sommabili/confrontabili i FuelEvent del
+#      SessionOutcome, come il contatore aggregato delle munizioni.
+#
+# Regimi: gli stessi di SPEED_REGIME_KEYS ('nominal', 'max'). Per gli aerei 'nominal' legge
+# il profilo `cruise` del loadout e 'max' il profilo `attack`; per veicoli e navi il registro
+# ha un'unica autonomia, usata per entrambi (limite dichiarato: sottostima il consumo al
+# regime massimo — e' il dato a non distinguere, non una semplificazione introdotta qui).
+#
+# None = carburante NON MODELLATO: nessun vincolo di movimento (stessa semantica delle
+# munizioni). Casi: modello ignoto, autonomia mancante, aereo senza loadout assegnato,
+# propulsione nucleare (v. NUCLEAR_ENGINE_TYPES).
+FUEL_FULL = 1.0
+FUEL_REGIMES = SPEED_REGIME_KEYS
+DEFAULT_FUEL_REGIME = "nominal"
+
+# Residui sotto questa soglia sono zero: evita che l'aritmetica in virgola mobile lasci un
+# asset "quasi vuoto" (1e-17) che has_fuel() considererebbe ancora in grado di muoversi.
+FUEL_EPS = 1e-12
+
+# Miglio nautico internazionale [m]: e' la definizione, non una stima (Ship_Data.range e' in nm).
+NAUTICAL_MILE_M = 1852.0
+
+# Propulsione nucleare: l'autonomia di Ship_Data per questi tipi e' "convenzionalmente
+# 20 000 nm" (commento del registro stesso), cioe' un segnaposto per "praticamente
+# illimitata", non un dato. Trattarla come carburante non modellato (None) e' piu' onesto
+# che far esaurire una portaerei nucleare dopo 37 000 km.
+NUCLEAR_ENGINE_TYPES = ('nuclear',)
+
+
 def default_speed_profile(off_road: bool = False) -> Dict:
     """Profilo di velocita' vuoto ma ben formato. Nuovo ad ogni chiamata."""
     profile: Dict = {key: None for key in SPEED_REGIME_KEYS}
@@ -193,6 +250,9 @@ class Mobile(Asset) :
             # UNIT_COUNTED_WEAPON_TYPES). Popolata da load_ammunition_from_registry(),
             # chiamata dai costruttori di Vehicle/Ship/Aircraft dopo aver assegnato _model.
             self._ammunition: Optional[int] = None
+            # Carburante [frazione del carico pieno, 0..1]; None = non modellato (v. commento
+            # FUEL_FULL). Popolato da load_fuel_from_registry(), come le munizioni.
+            self._fuel: Optional[float] = None
             self._combat_power = {force: {task: 0.0 for task in ACTION_TASKS[force]} 
                 for force in MILITARY_FORCES}
             """
@@ -672,6 +732,213 @@ class Mobile(Asset) :
             return False
 
         self._ammunition = stock
+        return True
+
+    # ── carburante ────────────────────────────────────────────────────────────
+
+    @property
+    def fuel(self) -> Optional[float]:
+        """Carburante [frazione del carico pieno, 0..1], o None se non modellato.
+
+        V. il commento FUEL_FULL in testa al modulo per unita' e semantica.
+        """
+        return getattr(self, '_fuel', None)
+
+    @fuel.setter
+    def fuel(self, value: Optional[float]) -> None:
+        """Imposta il carburante (inizializzazione, persistenza). None = non modellato.
+
+        Non e' un canale di rifornimento: il rifornimento e' fuori scope (materia del
+        ciclo di campagna). Il consumo passa esclusivamente da consume_fuel().
+
+        Raises:
+            TypeError: valore non numerico (bool incluso).
+            ValueError: valore fuori [0, FUEL_FULL].
+        """
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))):
+            raise TypeError(f"fuel must be a number or None, got {type(value).__name__}")
+
+        if value is not None and not 0.0 <= value <= FUEL_FULL:
+            raise ValueError(f"fuel must be in [0, {FUEL_FULL}], got {value}")
+
+        self._fuel = float(value) if value is not None else None
+
+    def has_fuel(self) -> bool:
+        """True se l'asset puo' ancora muoversi per carburante: > 0 o non modellato."""
+        fuel = self.fuel
+        return fuel is None or fuel > 0.0
+
+    def consume_fuel(self, amount: float) -> float:
+        """Consuma `amount` (frazione del carico pieno). Ritorna la quantita' effettivamente consumata.
+
+        Stessa disciplina di consume_ammunition(): deterministico; se il carburante non basta
+        si consuma il residuo (mai sotto zero) e il valore di ritorno lo dice al chiamante;
+        se non e' modellato (None) si ritorna `amount` — richiesta soddisfatta per
+        definizione. Un residuo inferiore a FUEL_EPS e' azzerato.
+
+        Raises:
+            TypeError: `amount` non numerico (errore di programmazione).
+            ValueError: `amount` negativo — il rifornimento non passa di qui.
+        """
+        if isinstance(amount, bool) or not isinstance(amount, (int, float)):
+            raise TypeError(f"amount must be a number, got {type(amount).__name__}")
+
+        if amount < 0:
+            raise ValueError(f"amount must be non-negative (no refuelling here), got {amount}")
+
+        amount = float(amount)
+        fuel = self.fuel
+
+        if fuel is None:
+            return amount
+
+        consumed = min(amount, fuel)
+        remaining = fuel - consumed
+
+        if remaining < FUEL_EPS:
+            consumed, remaining = fuel, 0.0
+
+        self._fuel = remaining
+
+        if consumed < amount - FUEL_EPS:
+            logger.debug(f"consume_fuel: asset {getattr(self, 'id', None)!r} requested {amount:.6f}, "
+                         f"only {consumed:.6f} available")
+
+        return consumed
+
+    def fuel_autonomy(self, regime: str = DEFAULT_FUEL_REGIME) -> Optional[float]:
+        """Distanza [m] percorribile col carico pieno al regime dato, o None se non ricavabile.
+
+        Dal registro del modello (dispatch sul registry che risponde, come
+        speed_profile_from_registry(), perche' le unita' di `range` differiscono):
+          * Vehicle_Data: `range` in km -> m. Unico valore per entrambi i regimi.
+          * Ship_Data: `range` in miglia nautiche -> m (NAUTICAL_MILE_M). Unico valore per
+            entrambi i regimi. None per la propulsione nucleare (NUCLEAR_ENGINE_TYPES).
+          * Aircraft_Data: None — l'autonomia di un aereo dipende dal loadout, non dal
+            modello (Aircraft.fuel_autonomy la ricava dal loadout assegnato).
+
+        Mai un'eccezione per dati mancanti: None + log, come combat_range().
+
+        Raises:
+            ValueError: `regime` fuori da FUEL_REGIMES (errore di programmazione).
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        if regime not in FUEL_REGIMES:
+            raise ValueError(f"regime must be one of {FUEL_REGIMES!r}, got {regime!r}")
+
+        model = getattr(self, '_model', None)
+
+        if model is None:
+            logger.debug("fuel_autonomy: _model not set")
+            return None
+
+        for registry, unit_m in ((_VehicleData._registry, 1000.0),
+                                 (_ShipData._registry, NAUTICAL_MILE_M),
+                                 (_AircraftData._registry, None)):
+            data_record = registry.get(model)
+
+            if data_record is None:
+                continue
+
+            if unit_m is None:
+                logger.debug(f"fuel_autonomy: model {model!r} is an aircraft, autonomy depends "
+                             f"on the assigned loadout")
+                return None
+
+            engine = getattr(data_record, 'engine', None)
+            capabilities = engine.get('capabilities') if isinstance(engine, dict) else None
+            engine_type = capabilities.get('type') if isinstance(capabilities, dict) else None
+
+            if engine_type in NUCLEAR_ENGINE_TYPES:
+                logger.debug(f"fuel_autonomy: model {model!r} has {engine_type} propulsion, "
+                             f"fuel not modelled")
+                return None
+
+            autonomy = getattr(data_record, 'range', None)
+
+            if isinstance(autonomy, bool) or not isinstance(autonomy, (int, float)) or autonomy <= 0:
+                logger.debug(f"fuel_autonomy: model {model!r} declares no usable range ({autonomy!r})")
+                return None
+
+            return float(autonomy) * unit_m
+
+        logger.debug(f"fuel_autonomy: no registry entry for model {model!r}")
+        return None
+
+    def fuel_for_distance(self, distance: float, regime: str = DEFAULT_FUEL_REGIME) -> Optional[float]:
+        """Carburante [frazione del carico pieno] necessario a percorrere `distance` metri.
+
+            consumo = distance / fuel_autonomy(regime)
+
+        Lineare nella distanza: a velocita' di regime costante e' la lettura diretta del
+        dato di autonomia del registro, senza costanti nuove. Il risultato puo' superare
+        FUEL_FULL (tratta piu' lunga dell'autonomia): e' il FABBISOGNO, non quanto si puo'
+        consumare — il limite lo applica consume_fuel().
+
+        Returns:
+            float >= 0, oppure None se l'autonomia non e' ricavabile (carburante non
+            modellato per questo asset).
+
+        Raises:
+            TypeError/ValueError: `distance` non numerica o negativa; `regime` sconosciuto.
+        """
+        if isinstance(distance, bool) or not isinstance(distance, (int, float)):
+            raise TypeError(f"distance must be a number, got {type(distance).__name__}")
+
+        if distance < 0:
+            raise ValueError(f"distance must be non-negative, got {distance}")
+
+        autonomy = self.fuel_autonomy(regime)
+
+        if autonomy is None:
+            return None
+
+        return float(distance) / autonomy
+
+    def fuel_range_remaining(self, regime: str = DEFAULT_FUEL_REGIME) -> Optional[float]:
+        """Distanza [m] ancora percorribile col carburante residuo, o None se non modellato.
+
+        E' il dato con cui un orchestratore sa dove l'asset si ferma lungo la rotta:
+        `fuel x fuel_autonomy(regime)`. None se il carburante o l'autonomia non sono
+        modellati (nessun vincolo).
+        """
+        fuel = self.fuel
+
+        if fuel is None:
+            return None
+
+        autonomy = self.fuel_autonomy(regime)
+
+        if autonomy is None:
+            return None
+
+        return fuel * autonomy
+
+    def fuel_from_registry(self) -> Optional[float]:
+        """Carburante iniziale: FUEL_FULL se l'autonomia e' ricavabile dal registro, altrimenti None.
+
+        Nell'unita' scelta (frazione del carico pieno) il valore iniziale e' sempre il pieno:
+        cio' che il registro decide e' SE il carburante e' modellato, cioe' se esiste
+        un'autonomia su cui misurare il consumo.
+        """
+        return FUEL_FULL if self.fuel_autonomy(DEFAULT_FUEL_REGIME) is not None else None
+
+    def load_fuel_from_registry(self) -> bool:
+        """Popola il carburante dal registro del modello. True se caricato.
+
+        Chiamata dai costruttori di Vehicle/Ship/Aircraft dopo che `_model` e' stato
+        assegnato, stessa disciplina di load_ammunition_from_registry(): se il dato non c'e'
+        il carburante resta None (non modellato) e l'asset resta costruibile.
+        """
+        fuel = self.fuel_from_registry()
+
+        if fuel is None:
+            return False
+
+        self._fuel = fuel
         return True
 
     def air_defense_volume(self) -> Optional[Cylinder]:

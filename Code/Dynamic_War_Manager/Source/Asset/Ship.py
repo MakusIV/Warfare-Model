@@ -42,6 +42,8 @@ class Ship(Mobile) :
             self.load_speed_from_registry()
             # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
             self.load_ammunition_from_registry()
+            # Carburante dal registro (autonomia `range` in nm, v. Mobile.FUEL_FULL).
+            self.load_fuel_from_registry()
 
             self._ship_scores = get_ship_scores(model=model)  # load data from Ship_Data.py module
 

@@ -552,6 +552,21 @@ class TestVehicle(unittest.TestCase):
         with self.assertRaises(TypeError):
             vehicle.set_combat_power(actions=["Attack", "invalid_action"])
 
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Vehicle.get_vehicle_scores')
+    def test_fuel_loaded_from_registry_range(self, mock_get_vehicle_scores):
+        """Fase 5: pieno all'avvio, autonomia = Vehicle_Data.range (T-90M: 550 km)."""
+        mock_get_vehicle_scores.return_value = self.mock_vehicle_scores
+
+        vehicle = Vehicle(block=self.mock_block, name="t90", model="T-90M",
+                          asset_type=Ground_Vehicle_Asset_Type.TANK.value)
+        self.assertEqual(vehicle.fuel, 1.0)
+        self.assertEqual(vehicle.fuel_autonomy(), 550_000.0)
+        self.assertAlmostEqual(vehicle.fuel_for_distance(55_000.0), 0.1)
+
+        vehicle.consume_fuel(vehicle.fuel_for_distance(550_000.0))
+        self.assertFalse(vehicle.has_fuel())
+        self.assertEqual(vehicle.health, 100)  # a secco, ma integro
+
 
 if __name__ == '__main__':
     unittest.main()

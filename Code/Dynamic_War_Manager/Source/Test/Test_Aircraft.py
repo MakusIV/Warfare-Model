@@ -276,5 +276,129 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         self.assertEqual(result.salvos[0].rounds, 683)
 
 
+class TestAircraftLoadoutFuel(unittest.TestCase):
+    """Carburante di un aereo dal loadout ASSEGNATO (Fase 5), stessa regola delle munizioni.
+
+    Dati reali di Aircraft_Loadouts (F-14A Tomcat):
+      * "Phoenix Fleet Defense": raggio cruise 850 km, attack 650 km, nessun serbatoio,
+        fuel_internal_max 7348 kg;
+      * "Sparrow CAP/Escort": raggio cruise 1135 km, attack 860 km, 2 serbatoi 267gal da 900 kg.
+    Autonomia = AIRCRAFT_RADIUS_TO_DISTANCE_FACTOR (2) x raggio.
+    """
+
+    MODEL = "F-14A Tomcat"
+
+    def setUp(self):
+        self.mock_block = MagicMock(spec=Block)
+        self.mock_block.block_class = "Military"
+        self._patches = [patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score',
+                               return_value=0.5),
+                         patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.logger'),
+                         patch('Code.Dynamic_War_Manager.Source.Asset.Mobile.logger'),
+                         patch('Code.Dynamic_War_Manager.Source.Asset.Asset.logger')]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+
+    def _aircraft(self, model=MODEL):
+        return Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model=model)
+
+    def test_without_loadout_fuel_is_not_modelled(self):
+        aircraft = self._aircraft()
+        self.assertIsNone(aircraft.fuel)
+        self.assertIsNone(aircraft.fuel_autonomy())
+        self.assertIsNone(aircraft.fuel_capacity_kg())
+        self.assertIsNone(aircraft.fuel_for_distance(1000.0))
+
+    def test_assignment_fills_the_tank(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.fuel, 1.0)
+
+    def test_autonomy_is_twice_the_radius_per_regime(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft import AIRCRAFT_RADIUS_TO_DISTANCE_FACTOR
+
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Sparrow CAP/Escort"
+        self.assertEqual(AIRCRAFT_RADIUS_TO_DISTANCE_FACTOR, 2.0)
+        self.assertAlmostEqual(aircraft.fuel_autonomy('nominal'), 2 * 1135 * 1000.0)
+        self.assertAlmostEqual(aircraft.fuel_autonomy('max'), 2 * 860 * 1000.0)
+
+    def test_known_leg_known_consumption(self):
+        """850 km di raggio cruise -> 1700 km col pieno: 425 km consumano un quarto."""
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertAlmostEqual(aircraft.fuel_for_distance(425_000.0), 0.25)
+        # Al regime di attacco (raggio 650 km) la stessa tratta costa di piu'.
+        self.assertAlmostEqual(aircraft.fuel_for_distance(425_000.0, 'max'), 425 / 1300)
+
+        aircraft.consume_fuel(aircraft.fuel_for_distance(425_000.0))
+        self.assertAlmostEqual(aircraft.fuel, 0.75)
+        self.assertAlmostEqual(aircraft.fuel_range_remaining(), 0.75 * 1_700_000.0)
+
+    def test_capacity_includes_drop_tanks(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.fuel_capacity_kg(), 7348.0)
+
+        aircraft.assigned_loadout = "Sparrow CAP/Escort"
+        self.assertEqual(aircraft.fuel_capacity_kg(), 7348.0 + 2 * 900.0)
+
+    def test_refuelling_pods_are_not_own_fuel(self):
+        """Il terzo campo dei pod di rifornimento e' carburante cedibile, non autonomia propria."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+
+        model, name, loadout = next(
+            (m, n, l) for m, loadouts in AIRCRAFT_LOADOUTS.items() for n, l in loadouts.items()
+            if any(isinstance(item[0], str) and 'refueling' in item[0] or item[0] == 'hose_drogue_pod'
+                   for item in l['stores']['pylons'].values()))
+        aircraft = self._aircraft(model=model)
+        aircraft.assigned_loadout = name
+        self.assertEqual(aircraft.fuel_capacity_kg(), float(loadout['stores']['fuel_internal_max']))
+
+    def test_reassignment_refuels_and_none_unmodels(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        aircraft.consume_fuel(0.4)
+        self.assertAlmostEqual(aircraft.fuel, 0.6)
+
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.fuel, 1.0)
+
+        aircraft.assigned_loadout = None
+        self.assertIsNone(aircraft.fuel)
+
+    def test_every_loadout_yields_a_usable_autonomy(self):
+        """Sui dati reali: ogni loadout con raggio fuel_100% da' un'autonomia positiva."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+
+        checked = 0
+
+        for model, loadouts in list(AIRCRAFT_LOADOUTS.items())[:10]:
+            aircraft = self._aircraft(model=model)
+
+            for name, loadout in loadouts.items():
+                radius = loadout.get('cruise', {}).get('range', {}).get('fuel_100%')
+
+                if not radius:
+                    continue
+
+                aircraft.assigned_loadout = name
+                self.assertAlmostEqual(aircraft.fuel_autonomy(), 2 * radius * 1000.0)
+                self.assertEqual(aircraft.fuel, 1.0)
+                checked += 1
+
+        self.assertGreater(checked, 0)
+
+    def test_bad_regime_raises(self):
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        with self.assertRaises(ValueError):
+            aircraft.fuel_autonomy('afterburner')
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -161,6 +161,28 @@ class TestShip(unittest.TestCase):
             ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER)
             self.assertIsNone(ship.get_physical_characteristics())
 
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Ship.get_ship_scores')
+    def test_fuel_loaded_from_registry_range_in_nautical_miles(self, mock_get_ship_scores):
+        """Fase 5: autonomia = Ship_Data.range [nm] x 1852 m; propulsione convenzionale."""
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data
+
+        mock_get_ship_scores.return_value = self.mock_ship_scores
+        model, record = next((m, r) for m, r in Ship_Data._registry.items()
+                             if r.engine['capabilities']['type'] != 'nuclear' and r.range)
+
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.DESTROYER, model=model)
+        self.assertEqual(ship.fuel, 1.0)
+        self.assertAlmostEqual(ship.fuel_autonomy(), record.range * 1852.0)
+
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Ship.get_ship_scores')
+    def test_nuclear_ship_fuel_is_not_modelled(self, mock_get_ship_scores):
+        mock_get_ship_scores.return_value = self.mock_ship_scores
+
+        ship = Ship(block=self.mock_block, asset_type=Sea_Asset_Type.CARRIER, model="CVN-70 Carl Vinson")
+        self.assertIsNone(ship.fuel)
+        self.assertTrue(ship.has_fuel())
+        self.assertIsNone(ship.fuel_for_distance(1_000_000.0))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 4f24ae57-a1fd-4207-aa69-d0ba0c8c5df1
-  modified: 2026-09-23T11:29:27.648Z
+  modified: 2026-09-23T14:38:50.335Z
 ---
 
 **Stato 2026-09-22: analisi COMPLETATA e documentata. FASE 1 (cinematica), FASE 2 (percezione),
@@ -539,6 +539,53 @@ d'ingaggio. Prossimo passo: **Fase 5** (applicazione danno per-asset e consumi i
 assemblaggio `SessionOutcome` — gran parte gia' esiste in `Damage_Model`/`apply_engagement_result`,
 manca l'orchestratore) oppure chiudere prima alcuni dei punti aperti sopra se l'utente vuole
 calibrare/decidere quelli prima di proseguire.
+## FASE 5 — SessionOutcome, RNG di sessione, carburante: FATTA 2026-09-23 (suite 3027 -> 3115 test, OK)
+
+Implementata da un secondo agente Opus (effort alto) nella stessa sessione della Fase 4. Verificata
+da questa sessione allo stesso modo: suite riegeguita indipendentemente, stesso numero; letti per
+intero `Utility/Session_Rng.py`, `Command/Session_Types.py`, `Logic/Fuel_Model.py` — qualita' alta.
+
+**File nuovi**: `Command/Session_Types.py` (338 righe: `SessionOrder`/`SessionOutcome`, la "Fase 0"
+mai fatta finora, chiusa qui insieme alla 5; `assemble_session_outcome` funzione pura che aggrega
+piu' `EngagementResult` in un solo esito, ordinamento stabile per tempo, non scrive `Campaign_State`
+ne' applica agli asset — quello resta di `Theater_Session_Manager`, non costruito), `Utility/Session_Rng.py`
+(113 righe: `session_seed`/`session_rng`, seed = SHA-256 su JSON canonico `[schema, session_id,
+mission_id, event_id, counter]` troncato a 64 bit — MAI `hash()` di Python, instabile fra processi;
+verificata l'indipendenza fra counter con correlazione di Pearson e χ²), `Logic/Fuel_Model.py`
+(165 righe: `FuelEvent` + `build_fuel_event`/`apply_fuel_event`, stessa separazione calcolo/
+applicazione di `Damage_Model`).
+
+**File estesi**: `Asset/Mobile.py` (carburante: `fuel`/`has_fuel`/`consume_fuel`/`fuel_autonomy`/
+`fuel_for_distance`/`fuel_range_remaining`/`fuel_from_registry`/`load_fuel_from_registry`),
+`Asset/Aircraft.py` (`fuel_autonomy` dal loadout assegnato, `fuel_capacity_kg()`; assegnare un
+loadout fa il pieno, coerente con la decisione di riarmo gia' presa), `Vehicle.py`/`Ship.py`
+(`load_fuel_from_registry()` nel costruttore).
+
+**Decisione di design non nel briefing originale, verificata e confermata dall'utente**: il
+carburante e' misurato come **frazione del carico pieno [0,1]**, non kg — Vehicle_Data/Ship_Data
+non hanno una capacita' di serbatoio (solo l'autonomia in km/nm), solo gli aerei hanno
+`fuel_internal_max`; con un'unica unita' per tutti gli asset i `FuelEvent` restano sommabili.
+Consumo = distanza/autonomia per terra/mare; per gli aerei dal range del loadout assegnato con
+**fattore 2x dichiarato** (il range e' un raggio d'azione andata+ritorno) — confermato dall'utente.
+Navi a propulsione nucleare: carburante `None` (non modellato, il reattore non si esaurisce in una
+sessione di ore) — confermato dall'utente. `fuel_efficiency` dei registri NON e' usato: e' un
+punteggio adimensionale di selezione asset, non un tasso di consumo (il docstring di Aircraft_Data
+che lo chiama "km/l" e' impreciso).
+
+**Ambiguita' lasciate aperte, non bloccanti**: due ingaggi della stessa sessione sullo stesso asset
+senza applicare il primo prima del secondo -> `health_before/after` non concatenabili (solo un
+warning, i delta restano applicabili in ordine — risolverlo e' compito dell'orchestratore di
+Fase 6); nessun `apply_session_outcome` (l'applicazione "in un'unica passata" e' di
+`Theater_Session_Manager`, non ancora costruito).
+
+**How to apply:** qualunque lavoro sul motore di sessione parte da questo documento, non dal `.txt`
+sorgente. Le Fasi 1-5 sono **fatte**: cinematica, percezione, scheduler dei contatti, risolutore
+d'ingaggio, contratto SessionOutcome/RNG di sessione/carburante. Prossimo passo: **Fase 6**
+(`Logic/Session_Simulator.py`, l'orchestratore a coda eventi che fa avanzare le rotte fra un
+contatto e l'altro, consuma carburante via `Fuel_Model`, chiama `Contact_Scheduler`+
+`Engagement_Resolver` per ogni coppia di forze e produce un `SessionOutcome` reale con
+`Session_Types.assemble_session_outcome`) oppure **Fase 7** (validazione, scenari S1-S11, test di
+agnosticismo) se si preferisce prima validare cio' che c'e'.
 V. [[project_route_model_unification_plan]] per le fasi 2-5 dell'unificazione del modello di rotta,
 [[project_c2_hierarchy_design]] per `Command/` (incluso il riarmo post-sessione confermato il
 2026-09-23) e [[feedback_core_simulator_agnostic]] per il vincolo che questo motore serve.

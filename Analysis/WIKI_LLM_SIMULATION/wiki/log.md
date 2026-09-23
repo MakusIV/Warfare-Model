@@ -1,5 +1,17 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-23] implementazione | Fase 5 del motore DES: SessionOutcome, RNG di sessione, carburante
+
+`Command/Session_Types.py` (`SessionOrder`/`SessionOutcome`/`assemble_session_outcome`, chiude anche
+la "Fase 0" del contratto di dominio mai fatta), `Utility/Session_Rng.py` (seed SHA-256 su chiave
+canonica, mai `hash()` di Python), `Logic/Fuel_Model.py` + carburante su `Mobile`/`Aircraft`
+(frazione del carico pieno, non kg — confermato dall'utente; fattore 2× sul raggio aerei —
+confermato; navi nucleari non modellate — confermato). Implementato da un secondo agente Opus
+effort alto nella stessa sessione della Fase 4. Verificato dalla sessione principale: suite
+rieseguita indipendentemente, **3115 test OK (skipped=5)**, +88 sulla Fase 4. Dettaglio in
+[[project_virtual_session_engine_design]] (memoria), pagina [[virtual-session-engine-des]]
+aggiornata con lo stato Fase 3-5. Non ancora committato.
+
 ## [2026-09-23] implementazione | Fase 4 del motore DES: Engagement_Resolver.py
 
 `Logic/Engagement_Resolver.py` + `Context/Reaction_Profile.py` (nuovi), estesi `Context/Doctrine.py`
