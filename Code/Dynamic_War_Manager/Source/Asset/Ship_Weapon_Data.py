@@ -119,6 +119,23 @@ _EFF_SAM_SHORAD = {
     "ship":        {"big": {"accuracy": 0.05, "destroy_capacity": 0.03},
                     "med": {"accuracy": 0.04, "destroy_capacity": 0.04},
                     "small": {"accuracy": 0.03, "destroy_capacity": 0.05}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. radar, testate 15-39 kg (Sea Sparrow, SA-N-4, SA-N-9, HHQ-7).
+    "Aircraft":    {"big": {"accuracy": 0.70, "destroy_capacity": 0.60},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.70, "destroy_capacity": 0.42},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.63},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.70}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.80, "destroy_capacity": 0.60},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.60, "destroy_capacity": 0.80},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.60, "destroy_capacity": 0.55},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 0.80}},
 }
 
 # ── SAM a medio raggio (RIM-162-ESSM, RIM-66-SM-1, HHQ-16, URK-5-Rastrub) ───
@@ -156,6 +173,23 @@ _EFF_SAM_MERAD = {
     "ship":        {"big": {"accuracy": 0.08, "destroy_capacity": 0.05},
                     "med": {"accuracy": 0.06, "destroy_capacity": 0.06},
                     "small": {"accuracy": 0.05, "destroy_capacity": 0.08}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. testate 39-62 kg (ESSM, SM-1, HHQ-16).
+    "Aircraft":    {"big": {"accuracy": 0.75, "destroy_capacity": 0.80},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.75, "destroy_capacity": 0.68},
+                    "med": {"accuracy": 0.60, "destroy_capacity": 0.85},
+                    "small": {"accuracy": 0.50, "destroy_capacity": 0.85}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.85, "destroy_capacity": 0.80},
+                    "med": {"accuracy": 0.75, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.65, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.55, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.55, "destroy_capacity": 0.80},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.90}},
 }
 
 # ── SAM a lungo raggio (RIM-66-SM-2, RIM-156-SM-2ER, S-300F, HHQ-9) ─────────
@@ -193,6 +227,23 @@ _EFF_SAM_LORAD = {
     "ship":        {"big": {"accuracy": 0.12, "destroy_capacity": 0.08},
                     "med": {"accuracy": 0.10, "destroy_capacity": 0.10},
                     "small": {"accuracy": 0.08, "destroy_capacity": 0.12}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. testate 62-180 kg (SM-2, SM-2ER, S-300F, HHQ-9).
+    "Aircraft":    {"big": {"accuracy": 0.80, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.80, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.55, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.90}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.85, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.70, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.50, "destroy_capacity": 1.00},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.50, "destroy_capacity": 0.90},
+                    "med": {"accuracy": 0.45, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.40, "destroy_capacity": 0.95}},
 }
 
 # ── ASM anti-nave subsonico (RGM-84-Harpoon, YJ-83) ──────────────────────────
@@ -473,6 +524,23 @@ _EFF_NAVAL_GUN_76MM = {
     "ship":        {"big": {"accuracy": 0.55, "destroy_capacity": 0.20},
                     "med": {"accuracy": 0.60, "destroy_capacity": 0.25},
                     "small": {"accuracy": 0.65, "destroy_capacity": 0.30}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. doppio impiego, spoletta di prossimita'; Attacker = riga Armored del template.
+    "Aircraft":    {"big": {"accuracy": 0.35, "destroy_capacity": 0.75},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.35, "destroy_capacity": 0.40},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.52},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 0.65}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.45, "destroy_capacity": 0.75},
+                    "med": {"accuracy": 0.35, "destroy_capacity": 0.90},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.40, "destroy_capacity": 0.95},
+                    "med": {"accuracy": 0.35, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.40, "destroy_capacity": 0.60},
+                    "med": {"accuracy": 0.35, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.30, "destroy_capacity": 0.80}},
 }
 
 # ── Cannone navale 100 mm (AK-100, Type-79A) ──────────────────────────────────
@@ -511,6 +579,23 @@ _EFF_NAVAL_GUN_100MM = {
     "ship":        {"big": {"accuracy": 0.60, "destroy_capacity": 0.28},
                     "med": {"accuracy": 0.65, "destroy_capacity": 0.33},
                     "small": {"accuracy": 0.70, "destroy_capacity": 0.38}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. doppio impiego, cadenza bassa; Attacker = riga Armored del template.
+    "Aircraft":    {"big": {"accuracy": 0.25, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.25, "destroy_capacity": 0.45},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.58},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 0.72}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.35, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.30, "destroy_capacity": 1.00},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.30, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.80},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 0.85}},
 }
 
 # ── Cannone navale 127 mm / 5-in (Mk-45) ──────────────────────────────────────
@@ -549,6 +634,23 @@ _EFF_NAVAL_GUN_127MM = {
     "ship":        {"big": {"accuracy": 0.65, "destroy_capacity": 0.35},
                     "med": {"accuracy": 0.70, "destroy_capacity": 0.40},
                     "small": {"accuracy": 0.72, "destroy_capacity": 0.45}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. doppio impiego, cadenza bassa; Attacker = riga Armored del template.
+    "Aircraft":    {"big": {"accuracy": 0.25, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.25, "destroy_capacity": 0.50},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.62},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 0.75}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.35, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.30, "destroy_capacity": 1.00},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.30, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.80},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 0.85}},
 }
 
 # ── Cannone navale 130 mm (AK-130) ────────────────────────────────────────────
@@ -587,6 +689,23 @@ _EFF_NAVAL_GUN_130MM = {
     "ship":        {"big": {"accuracy": 0.68, "destroy_capacity": 0.40},
                     "med": {"accuracy": 0.72, "destroy_capacity": 0.45},
                     "small": {"accuracy": 0.75, "destroy_capacity": 0.50}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. doppio impiego, cadenza bassa; Attacker = riga Armored del template.
+    "Aircraft":    {"big": {"accuracy": 0.25, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.25, "destroy_capacity": 0.52},
+                    "med": {"accuracy": 0.15, "destroy_capacity": 0.65},
+                    "small": {"accuracy": 0.10, "destroy_capacity": 0.78}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.35, "destroy_capacity": 0.85},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.95},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter":  {"big": {"accuracy": 0.30, "destroy_capacity": 1.00},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 1.00},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.30, "destroy_capacity": 0.70},
+                    "med": {"accuracy": 0.25, "destroy_capacity": 0.80},
+                    "small": {"accuracy": 0.20, "destroy_capacity": 0.85}},
 }
 
 # ── CIWS (Mk-15-Phalanx, AK-630, Type-730) ───────────────────────────────────
@@ -629,6 +748,23 @@ _EFF_CIWS = {
     "ship":        {"big": {"accuracy": 0.15, "destroy_capacity": 0.02},
                     "med": {"accuracy": 0.10, "destroy_capacity": 0.03},
                     "small": {"accuracy": 0.08, "destroy_capacity": 0.04}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. per raffica, 1.5-4 km; Attacker k~0.25 come il cannone AA terrestre (la riga Armored del CIWS darebbe k~0.12, incoerente a parita' di calibro).
+    "Aircraft":    {"big": {"accuracy": 0.65, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.50},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.70}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.65, "destroy_capacity": 0.06},
+                    "med": {"accuracy": 0.50, "destroy_capacity": 0.13},
+                    "small": {"accuracy": 0.45, "destroy_capacity": 0.18}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.75, "destroy_capacity": 0.25},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 0.50},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 0.70}},
+    "Helicopter":  {"big": {"accuracy": 0.70, "destroy_capacity": 0.50},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 0.70},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 0.85}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.70, "destroy_capacity": 0.15},
+                    "med": {"accuracy": 0.65, "destroy_capacity": 0.25},
+                    "small": {"accuracy": 0.60, "destroy_capacity": 0.35}},
 }
 
 

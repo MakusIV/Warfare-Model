@@ -1634,6 +1634,128 @@ def get_weapon_target_class(target_type: str) -> str:
     return WEAPON_TARGET_CLASS_MAP[target_type]
 
 
+# ── CLASSI DI BERSAGLIO AEREO PER L'EFFICACIA D'ARMA (B1, 2026-09-24) ─────────
+#
+# Raffinamento della classe 'Aircraft' usato SOLO per leggere le righe aeree dei template di
+# efficacia (Ground_Weapon_Data/Ship_Weapon_Data: SAM, cannoni AA, CIWS, cannoni navali,
+# autocannoni, HMG) dalla fire control del motore di sessioni (Logic/Fire_Control.py).
+# NON sono valori di Target_Class_Name e NON entrano in TARGET_CLASSIFICATION /
+# WEAPON_TARGET_CLASS_MAP: il livello di pianificazione (Tactical_Analysis, profili
+# bersaglio, Air_Resources_Assigner, tabelle AAM di Aircraft_Weapon_Data) continua a vedere
+# un'unica classe 'Aircraft'. Per questo la chiave 'Aircraft' dei template e' anche il
+# fallback di ogni sottoclasse assente (v. proposta in
+# Analysis/Document/Proposta_Efficacia_Antiaerea.md, approvata dall'utente 2026-09-24).
+#
+# La classe e' una proprieta' della CELLULA (resistenza al fuoco, manovrabilita'), non del
+# ruolo di missione: va derivata dalla lista di categorie del modello (Aircraft_Data.category)
+# piu' due campi opzionali del registro, `ground_fire_armored` e `air_target_class`.
+AIR_TARGET_CLASS_AIRCRAFT = tc.AIRCRAFT.value              # Fighter, Fighter_Bomber (+ fallback)
+AIR_TARGET_CLASS_ATTACKER = 'Aircraft_Attacker'            # attacker CAS corazzato (A-10, Su-25)
+AIR_TARGET_CLASS_HEAVY = 'Aircraft_Heavy'                  # Bomber, Heavy_Bomber, Awacs, Transport, Recon
+AIR_TARGET_CLASS_HELICOPTER = 'Helicopter'
+AIR_TARGET_CLASS_HELICOPTER_ATTACK = 'Helicopter_Attack'   # elicottero corazzato (Mi-24, AH-64)
+
+AIR_TARGET_CLASSES = (AIR_TARGET_CLASS_AIRCRAFT, AIR_TARGET_CLASS_ATTACKER, AIR_TARGET_CLASS_HEAVY,
+                      AIR_TARGET_CLASS_HELICOPTER, AIR_TARGET_CLASS_HELICOPTER_ATTACK)
+
+# Classe per ruolo SENZA il flag `ground_fire_armored` (ATTACKER e HELICOPTER cambiano
+# classe solo con il flag: un A-4E o un A-20G, attacker di ruolo ma senza corazzatura CAS,
+# restano 'Aircraft' — decisione utente 2026-09-24).
+AIR_TARGET_CLASS_BY_ASSET_TYPE: Dict[str, str] = {
+    Air_Asset_Type.FIGHTER.value:        AIR_TARGET_CLASS_AIRCRAFT,
+    Air_Asset_Type.FIGHTER_BOMBER.value: AIR_TARGET_CLASS_AIRCRAFT,
+    Air_Asset_Type.ATTACKER.value:       AIR_TARGET_CLASS_AIRCRAFT,
+    Air_Asset_Type.BOMBER.value:         AIR_TARGET_CLASS_HEAVY,
+    Air_Asset_Type.HEAVY_BOMBER.value:   AIR_TARGET_CLASS_HEAVY,
+    Air_Asset_Type.AWACS.value:          AIR_TARGET_CLASS_HEAVY,
+    Air_Asset_Type.RECON.value:          AIR_TARGET_CLASS_HEAVY,
+    Air_Asset_Type.TRANSPORT.value:      AIR_TARGET_CLASS_HEAVY,
+    Air_Asset_Type.HELICOPTER.value:     AIR_TARGET_CLASS_HELICOPTER,
+}
+
+# Classe per ruolo CON il flag `ground_fire_armored`.
+AIR_TARGET_CLASS_BY_ASSET_TYPE_ARMORED: Dict[str, str] = {
+    **AIR_TARGET_CLASS_BY_ASSET_TYPE,
+    Air_Asset_Type.ATTACKER.value:   AIR_TARGET_CLASS_ATTACKER,
+    Air_Asset_Type.HELICOPTER.value: AIR_TARGET_CLASS_HELICOPTER_ATTACK,
+}
+
+# Precedenza con categorie multiple ad ala fissa: vince la classe con la Pk attesa piu' bassa
+# (la piu' resistente o la meno colpibile). Un modello che ha fra i suoi ruoli quello di
+# caccia e' manovrabile come un caccia, quindi 'Aircraft' batte 'Aircraft_Heavy'.
+AIR_TARGET_CLASS_PRECEDENCE = (AIR_TARGET_CLASS_ATTACKER, AIR_TARGET_CLASS_AIRCRAFT, AIR_TARGET_CLASS_HEAVY)
+
+
+def get_air_target_class(categories, armored: bool = False, override: Optional[str] = None) -> str:
+
+    """ Classe di bersaglio aereo (chiave dei template di efficacia) di un velivolo in volo.
+
+    Regole, in ordine:
+      1. `override` (campo `air_target_class` del registro, eccezione per modello): se non
+         None vince su tutto, dopo la validazione contro AIR_TARGET_CLASSES.
+      2. Se fra le categorie c'e' HELICOPTER: 'Helicopter', o 'Helicopter_Attack' con
+         `armored` (un elicottero da trasporto etichettato [HELICOPTER, TRANSPORT] resta un
+         elicottero, non un 'Aircraft_Heavy').
+      3. Altrimenti ogni categoria e' mappata con AIR_TARGET_CLASS_BY_ASSET_TYPE(_ARMORED) e
+         vince la prima classe in AIR_TARGET_CLASS_PRECEDENCE.
+      4. Nessuna categoria: AIR_TARGET_CLASS_AIRCRAFT (fallback).
+
+    Args:
+        categories: una categoria o un iterabile di categorie; ognuna e' un Air_Asset_Type o
+            il suo `.value` (es. Aircraft_Data.category = [FIGHTER, FIGHTER_BOMBER], oppure
+            Aircraft.asset_type = 'Fighter'). None o vuoto -> fallback.
+        armored (bool): campo `ground_fire_armored` del registro (corazzatura progettata contro
+            il fuoco da terra).
+        override (Optional[str]): campo `air_target_class` del registro.
+    Returns:
+        str: uno dei valori di AIR_TARGET_CLASSES.
+    Raises:
+        ValueError: `override` fuori da AIR_TARGET_CLASSES o categoria non valida (typo/bug).
+        TypeError: `armored` non booleano.
+    """
+
+    if not isinstance(armored, bool):
+        raise TypeError(f"get_air_target_class: armored must be bool, got {type(armored).__name__}")
+
+    if override is not None:
+        if override not in AIR_TARGET_CLASSES:
+            raise ValueError(f"get_air_target_class: override non valido: {override!r}. "
+                             f"Valori consentiti: {list(AIR_TARGET_CLASSES)}")
+        return override
+
+    if categories is None:
+        return AIR_TARGET_CLASS_AIRCRAFT
+
+    if isinstance(categories, (str, Air_Asset_Type)):
+        categories = [categories]
+
+    values = []
+
+    for category in categories:
+        value = category.value if isinstance(category, Air_Asset_Type) else category
+
+        if value not in AIR_TARGET_CLASS_BY_ASSET_TYPE:
+            raise ValueError(f"get_air_target_class: categoria non valida: {category!r}. "
+                             f"Valori consentiti: {sorted(AIR_TARGET_CLASS_BY_ASSET_TYPE)}")
+        values.append(value)
+
+    if not values:
+        return AIR_TARGET_CLASS_AIRCRAFT
+
+    table = AIR_TARGET_CLASS_BY_ASSET_TYPE_ARMORED if armored else AIR_TARGET_CLASS_BY_ASSET_TYPE
+
+    if Air_Asset_Type.HELICOPTER.value in values:
+        return table[Air_Asset_Type.HELICOPTER.value]
+
+    classes = {table[value] for value in values}
+
+    for air_class in AIR_TARGET_CLASS_PRECEDENCE:
+        if air_class in classes:
+            return air_class
+
+    return AIR_TARGET_CLASS_AIRCRAFT
+
+
 # LOADOUT_DOCTRINE: tabella sparsa di override di dottrina/politica di impiego per (side, model).
 # La stragrande maggioranza delle coppie (model, side) non ha alcuna voce: l'assenza è il caso
 # normale e significa "nessuna restrizione di dottrina", NON un errore (a differenza di

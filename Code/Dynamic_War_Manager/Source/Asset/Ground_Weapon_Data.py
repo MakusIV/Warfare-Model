@@ -292,6 +292,23 @@ _EFF_AUTOCANNON = {
     "ship":           {"big": {"accuracy": 0.6,  "destroy_capacity": 0.02},
                        "med": {"accuracy": 0.5,  "destroy_capacity": 0.04},
                        "small": {"accuracy": 0.35, "destroy_capacity": 0.06}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. IFV 20-30 mm senza direzione del tiro AA; Attacker = dc del cannone AA di pari calibro.
+    "Aircraft":       {"big": {"accuracy": 0.10, "destroy_capacity": 0.20},
+                       "med": {"accuracy": 0.05, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 0.65}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.10, "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.05, "destroy_capacity": 0.10},
+                       "small": {"accuracy": 0.03, "destroy_capacity": 0.15}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.15, "destroy_capacity": 0.20},
+                       "med": {"accuracy": 0.10, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.08, "destroy_capacity": 0.65}},
+    "Helicopter":     {"big": {"accuracy": 0.35, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.30, "destroy_capacity": 0.65},
+                       "small": {"accuracy": 0.25, "destroy_capacity": 0.80}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.35, "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.30, "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.25, "destroy_capacity": 0.35}},
 }
 
 _EFF_AA_CANNON = {
@@ -328,6 +345,23 @@ _EFF_AA_CANNON = {
     "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.01},
                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.02},
                        "small": {"accuracy": 0.3,  "destroy_capacity": 0.03}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. 20-35 mm, per raffica; Attacker = riga Armored del template.
+    "Aircraft":       {"big": {"accuracy": 0.45, "destroy_capacity": 0.20},
+                       "med": {"accuracy": 0.30, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.25, "destroy_capacity": 0.65}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.45, "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.30, "destroy_capacity": 0.10},
+                       "small": {"accuracy": 0.25, "destroy_capacity": 0.15}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.60, "destroy_capacity": 0.20},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.45},
+                       "small": {"accuracy": 0.40, "destroy_capacity": 0.65}},
+    "Helicopter":     {"big": {"accuracy": 0.65, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.65},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.80}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.65, "destroy_capacity": 0.15},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.25},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.35}},
 }
 
 _EFF_AA_CANNON_57MM = {
@@ -364,6 +398,23 @@ _EFF_AA_CANNON_57MM = {
     "ship":           {"big": {"accuracy": 0.5,  "destroy_capacity": 0.03},
                        "med": {"accuracy": 0.4,  "destroy_capacity": 0.05},
                        "small": {"accuracy": 0.3,  "destroy_capacity": 0.08}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. 57 mm, per raffica; Attacker = riga Armored del template.
+    "Aircraft":       {"big": {"accuracy": 0.40, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.25, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.20, "destroy_capacity": 0.90}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.40, "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.25, "destroy_capacity": 0.30},
+                       "small": {"accuracy": 0.20, "destroy_capacity": 0.35}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.55, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.40, "destroy_capacity": 0.75},
+                       "small": {"accuracy": 0.35, "destroy_capacity": 0.90}},
+    "Helicopter":     {"big": {"accuracy": 0.50, "destroy_capacity": 0.75},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.90},
+                       "small": {"accuracy": 0.40, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.50, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.55},
+                       "small": {"accuracy": 0.40, "destroy_capacity": 0.65}},
 }
 
 _EFF_ATGM_LASER = {
@@ -474,7 +525,8 @@ _EFF_ATGM_OLD = {
                        "small": {"accuracy": 0.2,  "destroy_capacity": 0.4}},
 }
 
-# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
+# Righe terrestri inutili: i SAM non saranno mai utilizzati contro questi bersagli.
+# Le righe utili sono quelle dei bersagli aerei in volo (B1), in fondo al template.
 _EFF_SAM_SHORAD = {
     "Soft":           {"big": {"accuracy": 0.15, "destroy_capacity": 0.2},
                        "med": {"accuracy": 0.1,  "destroy_capacity": 0.25},
@@ -509,9 +561,27 @@ _EFF_SAM_SHORAD = {
     "ship":           {"big": {"accuracy": 0.05, "destroy_capacity": 0.02},
                        "med": {"accuracy": 0.03, "destroy_capacity": 0.03},
                        "small": {"accuracy": 0.02, "destroy_capacity": 0.05}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. IR, testate 3-11 kg (Stinger, 9M31, 9M37, MIM-72).
+    "Aircraft":       {"big": {"accuracy": 0.55, "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.55},
+                       "small": {"accuracy": 0.35, "destroy_capacity": 0.80}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.55, "destroy_capacity": 0.13},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.28},
+                       "small": {"accuracy": 0.35, "destroy_capacity": 0.40}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.70, "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.55},
+                       "small": {"accuracy": 0.50, "destroy_capacity": 0.80}},
+    "Helicopter":     {"big": {"accuracy": 0.65, "destroy_capacity": 0.45},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.70},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.85}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.65, "destroy_capacity": 0.25},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.40},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.50}},
 }
 
-# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
+# Righe terrestri inutili: i SAM non saranno mai utilizzati contro questi bersagli.
+# Le righe utili sono quelle dei bersagli aerei in volo (B1), in fondo al template.
 _EFF_SAM_MERAD = {
     "Soft":           {"big": {"accuracy": 0.08, "destroy_capacity": 0.15},
                        "med": {"accuracy": 0.05, "destroy_capacity": 0.2},
@@ -546,9 +616,27 @@ _EFF_SAM_MERAD = {
     "ship":           {"big": {"accuracy": 0.03, "destroy_capacity": 0.01},
                        "med": {"accuracy": 0.02, "destroy_capacity": 0.02},
                        "small": {"accuracy": 0.01, "destroy_capacity": 0.03}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. radar/comando, testate 6.5-59 kg (Osa, Tor, Roland, 9M311, Kub).
+    "Aircraft":       {"big": {"accuracy": 0.70, "destroy_capacity": 0.55},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.85},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.95}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.70, "destroy_capacity": 0.40},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.60},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.65}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.85, "destroy_capacity": 0.55},
+                       "med": {"accuracy": 0.75, "destroy_capacity": 0.85},
+                       "small": {"accuracy": 0.65, "destroy_capacity": 0.95}},
+    "Helicopter":     {"big": {"accuracy": 0.65, "destroy_capacity": 0.75},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.90},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.65, "destroy_capacity": 0.50},
+                       "med": {"accuracy": 0.60, "destroy_capacity": 0.65},
+                       "small": {"accuracy": 0.55, "destroy_capacity": 0.75}},
 }
 
-# Inutile in quanto i SAM non saranno mai utilizzati contro questi bersagli
+# Righe terrestri inutili: i SAM non saranno mai utilizzati contro questi bersagli.
+# Le righe utili sono quelle dei bersagli aerei in volo (B1), in fondo al template.
 _EFF_SAM_LORAD = {
     "Soft":           {"big": {"accuracy": 0.03, "destroy_capacity": 0.1},
                        "med": {"accuracy": 0.02, "destroy_capacity": 0.15},
@@ -583,6 +671,23 @@ _EFF_SAM_LORAD = {
     "ship":           {"big": {"accuracy": 0.01, "destroy_capacity": 0.005},
                        "med": {"accuracy": 0.01, "destroy_capacity": 0.01},
                        "small": {"accuracy": 0.01, "destroy_capacity": 0.02}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. SARH, testate 70-133 kg (Buk, S-300).
+    "Aircraft":       {"big": {"accuracy": 0.80, "destroy_capacity": 0.90},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 1.00},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 1.00}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.80, "destroy_capacity": 0.80},
+                       "med": {"accuracy": 0.55, "destroy_capacity": 0.90},
+                       "small": {"accuracy": 0.45, "destroy_capacity": 0.90}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.85, "destroy_capacity": 0.90},
+                       "med": {"accuracy": 0.70, "destroy_capacity": 1.00},
+                       "small": {"accuracy": 0.60, "destroy_capacity": 1.00}},
+    "Helicopter":     {"big": {"accuracy": 0.50, "destroy_capacity": 1.00},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 1.00},
+                       "small": {"accuracy": 0.40, "destroy_capacity": 1.00}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.50, "destroy_capacity": 0.90},
+                       "med": {"accuracy": 0.45, "destroy_capacity": 0.95},
+                       "small": {"accuracy": 0.40, "destroy_capacity": 0.95}},
 }
 
 _EFF_TUBE_ARTILLERY = {
@@ -727,6 +832,23 @@ _EFF_HMG = {
     "ship":           {"big": {"accuracy": 0.3,  "destroy_capacity": 0.005},
                        "med": {"accuracy": 0.25, "destroy_capacity": 0.008},
                        "small": {"accuracy": 0.2,  "destroy_capacity": 0.01}},
+    # ── Bersagli aerei in volo (B1, 2026-09-24): STIME NON TARATE, v.
+    # Analysis/Document/Proposta_Efficacia_Antiaerea.md. 12.7/14.5 mm, per raffica; Attacker = riga Armored del template.
+    "Aircraft":       {"big": {"accuracy": 0.08, "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.04, "destroy_capacity": 0.10},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.20}},
+    "Aircraft_Attacker": {"big": {"accuracy": 0.08, "destroy_capacity": 0.02},
+                       "med": {"accuracy": 0.04, "destroy_capacity": 0.04},
+                       "small": {"accuracy": 0.02, "destroy_capacity": 0.06}},
+    "Aircraft_Heavy": {"big": {"accuracy": 0.12, "destroy_capacity": 0.05},
+                       "med": {"accuracy": 0.08, "destroy_capacity": 0.10},
+                       "small": {"accuracy": 0.06, "destroy_capacity": 0.20}},
+    "Helicopter":     {"big": {"accuracy": 0.30, "destroy_capacity": 0.20},
+                       "med": {"accuracy": 0.25, "destroy_capacity": 0.35},
+                       "small": {"accuracy": 0.20, "destroy_capacity": 0.50}},
+    "Helicopter_Attack": {"big": {"accuracy": 0.30, "destroy_capacity": 0.03},
+                       "med": {"accuracy": 0.25, "destroy_capacity": 0.05},
+                       "small": {"accuracy": 0.20, "destroy_capacity": 0.08}},
 }
 
 _EFF_MMG = {
@@ -2852,6 +2974,7 @@ GROUND_WEAPONS = {
             'range': {'direct': 2000, 'indirect': 0 }, # m
             'task': [GROUND_WEAPON_TASK['Infantry_Support']],
             'perc_efficiency_variability': 0.15,
+            # Righe dei bersagli aerei (B1) ereditate da _EFF_HMG: nessun override per il 14.5 mm.
             'efficiency': {**_EFF_HMG,
                 "Armored": {"big": {"accuracy": 0.6, "destroy_capacity": 0.04},
                             "med": {"accuracy": 0.55, "destroy_capacity": 0.06},

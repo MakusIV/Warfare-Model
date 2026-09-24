@@ -18,7 +18,7 @@ NO:
 from functools import lru_cache
 from math import log1p
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple, Iterable
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS, AIR_TARGET_CLASSES, AIR_TARGET_CLASS_AIRCRAFT
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, get_loadout, loadout_target_effectiveness_by_distribuition, get_weapon_efficiency, loadout_year_compatibility, get_aircrafts_quantity
@@ -63,7 +63,7 @@ SYSTEM_WEIGHTS = {
 class Aircraft_Data:
     _registry = {}
         
-    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, length: int, width: int, height: int, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict):
+    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, length: int, width: int, height: int, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ground_fire_armored: bool = False, air_target_class: Optional[str] = None):
         for _dim_name, _dim_value in (('length', length), ('width', width), ('height', height)):
             if not isinstance(_dim_value, int) or _dim_value <= 0:
                 raise ValueError(f"{_dim_name} must be a positive int (metri), got: {_dim_value!r}")
@@ -88,6 +88,21 @@ class Aircraft_Data:
         self.avionics = avionics
         self.hydraulic = hydraulic
         self.speed_data = speed_data
+        # Classe di bersaglio aereo per l'efficacia delle armi antiaeree (B1, 2026-09-24; v.
+        # Context.get_air_target_class). Entrambi i campi sono OPZIONALI nei dict del registro:
+        #   ground_fire_armored: True solo per le cellule progettate per resistere al fuoco da
+        #       terra (A-10, Su-25). Con ruolo ATTACKER -> 'Aircraft_Attacker'; un attacker di
+        #       ruolo senza flag (A-4E, A-20G) resta 'Aircraft'.
+        #   air_target_class: eccezione PER MODELLO alla regola ruolo -> classe, quando il ruolo
+        #       del registro non descrive la cellula (Su-24M/Su-24MR, MiG-25RB: 'Aircraft').
+        #       Un campo esplicito di override, invece di cambiare `category`, perche' la
+        #       category guida anche l'assegnazione delle missioni e la combat power.
+        if not isinstance(ground_fire_armored, bool):
+            raise TypeError(f"ground_fire_armored must be bool, got: {ground_fire_armored!r}")
+        if air_target_class is not None and air_target_class not in AIR_TARGET_CLASSES:
+            raise ValueError(f"air_target_class must be None or one of {list(AIR_TARGET_CLASSES)}, got: {air_target_class!r}")
+        self.ground_fire_armored = ground_fire_armored
+        self.air_target_class = air_target_class
         Aircraft_Data._registry[self.model] = self
 
     # --- Getter e Setter ---
@@ -1644,6 +1659,7 @@ a10a_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10A Thunderbolt II",
     "users": ["USA"], "start_service": 1977, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 13,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS"],
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -1680,6 +1696,7 @@ a10c_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10C Thunderbolt II",
     "users": ["USA"], "start_service": 2005, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 18,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -1716,6 +1733,7 @@ a10c2_data = {
     "constructor": "Fairchild Republic", "made": "USA", "model": "A-10C II Thunderbolt II",
     "users": ["USA"], "start_service": 2018, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 23,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2590,6 +2608,7 @@ mig25rb_data = {
     "constructor": "Mikoyan", "made": "USSR", "model": "MiG-25RB",
     "users": ["USSR", "Russia"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 8,
+    "air_target_class": AIR_TARGET_CLASS_AIRCRAFT,  # eccezione per modello (decisione utente 2026-09-24): vola e manovra come un caccia/cacciabombardiere, non come un Aircraft_Heavy
     "roles": ["Recon"],
     "weight": 20000, "length": 24, "width": 14, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2808,6 +2827,7 @@ su24m_data = {
     "constructor": "Sukhoi", "made": "USSR", "model": "Su-24M",
     "users": ["USSR", "Russia", "Ukraine", "Algeria", "Libya", "Syria"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.BOMBER], "cost": 24,
+    "air_target_class": AIR_TARGET_CLASS_AIRCRAFT,  # eccezione per modello (decisione utente 2026-09-24): vola e manovra come un caccia/cacciabombardiere, non come un Aircraft_Heavy
     "roles": ["Strike", "Pinpoint_Strike", "SEAD"],
     "weight": 22300, "length": 25, "width": 18, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2844,6 +2864,7 @@ su24mr_data = {
     "constructor": "Sukhoi", "made": "USSR", "model": "Su-24MR",
     "users": ["USSR", "Russia", "Ukraine"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.RECON], "cost": 25,
+    "air_target_class": AIR_TARGET_CLASS_AIRCRAFT,  # eccezione per modello (decisione utente 2026-09-24): vola e manovra come un caccia/cacciabombardiere, non come un Aircraft_Heavy
     "roles": ["Recon"],
     "weight": 22300, "length": 25, "width": 18, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2880,6 +2901,7 @@ su25_data = {
     "constructor": "Sukhoi", "made": "USSR", "model": "Su-25",
     "users": ["USSR", "Russia", "Ukraine", "Georgia", "Belarus", "many others"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 11,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike"],
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2916,6 +2938,7 @@ su25t_data = {
     "constructor": "Sukhoi", "made": "USSR", "model": "Su-25T",
     "users": ["USSR", "Russia"], "start_service": 1990, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 14,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
@@ -2952,6 +2975,7 @@ su25tm_data = {
     "constructor": "Sukhoi", "made": "Russia", "model": "Su-25TM",
     "users": ["Russia"], "start_service": 2008, "end_service": None,
     "category": [Air_Asset_Type.ATTACKER], "cost": 17,
+    "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike", "SEAD"],
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     

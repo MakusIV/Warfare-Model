@@ -1210,5 +1210,88 @@ class TestLoadoutDoctrine(unittest.TestCase):
         self.assertIsNone(get_doctrine_loadouts('F-4E Phantom II', side=None))
 
 
+
+# ---------------------------------------------------------------------------
+# TestGetAirTargetClass (B1, 2026-09-24)
+# ---------------------------------------------------------------------------
+
+class TestGetAirTargetClass(unittest.TestCase):
+    """get_air_target_class(): classe di bersaglio aereo per le righe aeree dei template
+    d'efficacia; non tocca Target_Class_Name/TARGET_CLASSIFICATION/WEAPON_TARGET_CLASS_MAP."""
+
+    def setUp(self):
+        from Code.Dynamic_War_Manager.Source.Context import Context as C
+        self.C = C
+        self.aat = Air_Asset_Type
+
+    def test_constants(self):
+        C = self.C
+        self.assertEqual(C.AIR_TARGET_CLASS_AIRCRAFT, 'Aircraft')
+        self.assertEqual(C.AIR_TARGET_CLASSES, ('Aircraft', 'Aircraft_Attacker', 'Aircraft_Heavy',
+                                                'Helicopter', 'Helicopter_Attack'))
+        self.assertEqual(set(C.AIR_TARGET_CLASS_BY_ASSET_TYPE), {e.value for e in Air_Asset_Type})
+
+    def test_new_classes_do_not_touch_existing_maps(self):
+        """Le sottoclassi non sono Target_Class_Name e non entrano nelle mappe esistenti."""
+        values = {e.value for e in Target_Class_Name}
+        for cls in self.C.AIR_TARGET_CLASSES[1:]:
+            self.assertNotIn(cls, values)
+            self.assertNotIn(cls, WEAPON_TARGET_CLASS_MAP)
+            self.assertNotIn(cls, self.C.TARGET_CLASSIFICATION)
+        self.assertEqual(self.C.get_target_classification(self.aat.ATTACKER.value), 'Aircraft')
+
+    def test_single_roles_without_flag(self):
+        g = self.C.get_air_target_class
+        aat = self.aat
+        self.assertEqual(g([aat.FIGHTER]), 'Aircraft')
+        self.assertEqual(g([aat.FIGHTER_BOMBER]), 'Aircraft')
+        self.assertEqual(g([aat.ATTACKER]), 'Aircraft')        # attacker senza corazzatura CAS
+        for role in (aat.BOMBER, aat.HEAVY_BOMBER, aat.AWACS, aat.RECON, aat.TRANSPORT):
+            self.assertEqual(g([role]), 'Aircraft_Heavy', role)
+        self.assertEqual(g([aat.HELICOPTER]), 'Helicopter')
+
+    def test_armored_flag(self):
+        g = self.C.get_air_target_class
+        self.assertEqual(g([self.aat.ATTACKER], armored=True), 'Aircraft_Attacker')
+        self.assertEqual(g([self.aat.HELICOPTER], armored=True), 'Helicopter_Attack')
+        # il flag non cambia i ruoli che non sono ATTACKER/HELICOPTER
+        self.assertEqual(g([self.aat.FIGHTER], armored=True), 'Aircraft')
+        self.assertEqual(g([self.aat.BOMBER], armored=True), 'Aircraft_Heavy')
+
+    def test_precedence_with_multiple_categories(self):
+        g = self.C.get_air_target_class
+        aat = self.aat
+        self.assertEqual(g([aat.FIGHTER, aat.FIGHTER_BOMBER]), 'Aircraft')
+        self.assertEqual(g([aat.BOMBER, aat.FIGHTER]), 'Aircraft')           # Aircraft batte Heavy
+        self.assertEqual(g([aat.FIGHTER, aat.ATTACKER], armored=True), 'Aircraft_Attacker')
+        self.assertEqual(g([aat.TRANSPORT, aat.HELICOPTER]), 'Helicopter')   # elicottero da trasporto
+        self.assertEqual(g([aat.TRANSPORT, aat.HELICOPTER], armored=True), 'Helicopter_Attack')
+
+    def test_string_values_and_single_value(self):
+        g = self.C.get_air_target_class
+        self.assertEqual(g('Fighter'), 'Aircraft')
+        self.assertEqual(g(['Heavy_Bomber']), 'Aircraft_Heavy')
+        self.assertEqual(g(self.aat.AWACS), 'Aircraft_Heavy')
+
+    def test_fallback(self):
+        g = self.C.get_air_target_class
+        self.assertEqual(g(None), 'Aircraft')
+        self.assertEqual(g([]), 'Aircraft')
+
+    def test_override_wins(self):
+        g = self.C.get_air_target_class
+        self.assertEqual(g([self.aat.BOMBER], override='Aircraft'), 'Aircraft')
+        self.assertEqual(g([self.aat.FIGHTER], armored=True, override='Aircraft_Heavy'), 'Aircraft_Heavy')
+
+    def test_invalid_inputs(self):
+        g = self.C.get_air_target_class
+        with self.assertRaises(ValueError):
+            g(['NotARole'])
+        with self.assertRaises(ValueError):
+            g([self.aat.FIGHTER], override='Tank')
+        with self.assertRaises(TypeError):
+            g([self.aat.ATTACKER], armored='yes')
+
+
 if __name__ == '__main__':
     unittest.main()
