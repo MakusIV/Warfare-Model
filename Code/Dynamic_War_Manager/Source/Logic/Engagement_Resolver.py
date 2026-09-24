@@ -57,6 +57,32 @@ attraverso l'RNG di sessione passato dal chiamante.
    come `category`. Un oggetto che non e' affatto un `Block` (stub duck-typed nei test,
    adapter futuri) resta trattato come una forza combattente: legge la dottrina di lato.
 
+## Controllo di portata (2026-09-24, decisione utente)
+
+Prima di questa data il tiro partiva al primo istante utile dopo rilevamento + latenza,
+qualunque fosse la distanza: una fire control che restituiva un'arma da 20 km faceva
+sparare un aereo rilevato a 60 km. Ora `ShotSpec.max_range` [m] (opzionale) vincola il
+LANCIO: la salva parte solo quando la distanza 3D tiratore-bersaglio e' <= max_range.
+
+* **Ingresso in portata piu' tardi nella finestra**: il candidato e' rimandato
+  (`_Candidate.not_before`) all'istante di ingresso, calcolato analiticamente in
+  `engagement_intervals` (sfera di raggio max_range, `Contact_Scheduler.range_intervals`;
+  funzione isolata e sostituibile, primo caso dei futuri volumi d'ingaggio) sui tratti delle rotte (gli stessi
+  che gia' danno l'istante di rilevamento; `Session_Simulator` li passa sempre, statici per
+  gli asset fermi). La scelta del bersaglio si ripete: un tiratore pronto spara intanto a
+  un altro bersaglio gia' in portata, se ce n'e' uno.
+* **Mai in portata nella finestra**: il candidato e' esaurito, come per un None della fire
+  control ma solo per quella coppia/finestra.
+* **Senza tratti di rotta** (chiamata diretta a `resolve_engagement` senza `legs`): la
+  distanza nel tempo non e' ricostruibile dalla sola `ContactWindow`, che porta solo il
+  massimo avvicinamento. Ripiego dichiarato: `distance_cpa > max_range` -> mai in portata;
+  altrimenti il tiro non parte prima di `t_cpa`. Il contratto di `ContactWindow` non e'
+  stato allargato: il percorso di sessione ha sempre i tratti ed e' esatto.
+* **R4**: la portata e' valutata allo scheduling; il payload resta congelato al lancio, che
+  avviene all'istante di ingresso gia' calcolato. Il controllo non estrae numeri casuali:
+  l'ordine delle estrazioni RNG e' invariato, e con `max_range=None` il percorso di codice
+  e' identico a quello precedente.
+
 ## Ingaggi a N forze (2+)
 
 `resolve_engagement(force_a, force_b, ..., extra_forces=(...))` risolve in UNA run, con UNA
@@ -128,9 +154,13 @@ eventi finisce sempre e solo quando la coda si svuota.
 
 ## Cosa NON fa (ancora)
 
-- Non seleziona l'arma dai registri: `fire_control` e' iniettata. La selezione da
-  `Ground_Weapon_Data`/`Ship_Weapon_Data`/loadout aerei e la modulazione della Pk con la
-  posizione nell'inviluppo sono il passo successivo.
+- Non seleziona l'arma dai registri: `fire_control` e' iniettata. Una fire control che
+  la seleziona dai registri esiste (`Logic/Fire_Control.make_registry_fire_control`, B2
+  2026-09-24); la modulazione della Pk con la posizione nell'inviluppo resta da fare.
+- La portata dell'arma e' un vincolo solo se la `ShotSpec` la dichiara (`max_range`, v.
+  "Controllo di portata"); il resto dell'inviluppo (quota) e' materia della fire control.
+  Una salva gia' lanciata arriva comunque (R4), anche se il bersaglio esce di portata
+  durante il volo.
 - Non applica il meteo da se': la degradazione di Pd resta un fattore iniettato
   (`detection_factor`, 1.0 di default). Il collegamento con `Meteo_Analysis` e' una
   fabbrica di quel fattore (`meteo_detection_factor`/`weather_detection_factor_fn`), che
@@ -226,6 +256,9 @@ class ShotSpec:
             carro. La decide chi conosce l'arma (il chiamante), non il risolutore.
         cycle_time: intervallo fra due salve del tiratore; None = `refire_interval` del
             suo profilo di reazione.
+        max_range: portata massima dell'arma [m], distanza tiratore-bersaglio (3D) oltre la
+            quale la salva non parte (v. "Controllo di portata"); None = nessun vincolo di
+            portata, comportamento precedente al 2026-09-24.
     """
     accuracy: float
     destroy_capacity: float
@@ -234,6 +267,7 @@ class ShotSpec:
     time_of_flight: float = 0.0
     interceptable: bool = False
     cycle_time: Optional[float] = None
+    max_range: Optional[float] = None
 
     def __post_init__(self):
         for name in ('accuracy', 'destroy_capacity'):
@@ -256,6 +290,11 @@ class ShotSpec:
                                             or not isinstance(self.cycle_time, (int, float))
                                             or self.cycle_time <= 0):
             raise ValueError(f"cycle_time must be None or a positive number, got {self.cycle_time!r}")
+
+        if self.max_range is not None and (isinstance(self.max_range, bool)
+                                           or not isinstance(self.max_range, (int, float))
+                                           or self.max_range <= 0):
+            raise ValueError(f"max_range must be None or a positive number, got {self.max_range!r}")
 
 
 @dataclass(frozen=True)
@@ -648,11 +687,19 @@ class _Shadow:
 
 @dataclass
 class _Candidate:
-    """Un bersaglio rilevato da un tiratore, ingaggiabile in [t_ready, t_end]."""
+    """Un bersaglio rilevato da un tiratore, ingaggiabile in [t_ready, t_end].
+
+    `t_cpa`/`distance_cpa` vengono dalla finestra di contatto (ripiego del controllo di
+    portata senza tratti di rotta); `not_before` e' l'istante di ingresso nella portata
+    dell'arma quando il tiro e' stato rimandato (v. "Controllo di portata").
+    """
     t_ready: float
     target_id: str
     t_end: float
     exhausted: bool = False
+    t_cpa: Optional[float] = None
+    distance_cpa: Optional[float] = None
+    not_before: Optional[float] = None
 
 
 @dataclass
@@ -699,6 +746,49 @@ def _can_disengage(force) -> bool:
     return not validate_class(force, 'Block')
 
 
+# ── PORTATA D'ARMA: INTERVALLI DI PERMANENZA (controllo di portata, 2026-09-24) ──
+#
+# Il calcolo "da quando a quando il bersaglio e' entro la portata" e' isolato qui, fuori
+# dalla schedulazione, perche' e' il primo caso particolare dei futuri VOLUMI di
+# rilevamento/ingaggio (decisione utente 2026-09-24: interfaccia "volume" che restituisce
+# gli intervalli di permanenza su un tratto a moto relativo rettilineo uniforme, con
+# primitive sfera/cilindro/fascia di quota/cono/orizzonte radar e combinatori di
+# intervalli). Oggi c'e' solo la SFERA di raggio max_range centrata sul tiratore. Il
+# risolutore la usa tramite l'attributo `_EngagementRun.engagement_intervals`, che un
+# volume diverso potra' sostituire senza toccare `_range_entry` ne' `_schedule_next`.
+
+IntervalList = List[Tuple[float, float]]
+
+
+def engagement_intervals(legs_shooter: Sequence, legs_target: Sequence, max_range: float) -> IntervalList:
+    """Intervalli [t_in, t_out] in cui il bersaglio e' nella SFERA di raggio `max_range` [m]
+    centrata sul tiratore (distanza 3D), dai tratti di rotta di entrambi.
+
+    E' `Contact_Scheduler.range_intervals` (soluzione esatta di |dr + dv s| <= R su ogni
+    sottointervallo a velocita' relativa costante), la stessa geometria del rilevamento.
+    """
+    return range_intervals(legs_shooter, legs_target, max_range)
+
+
+def engagement_intervals_without_legs(t_cpa: Optional[float], distance_cpa: Optional[float],
+                                      t_end: float, max_range: float) -> IntervalList:
+    """Ripiego senza tratti di rotta: la sola `ContactWindow` non ricostruisce la distanza
+    nel tempo, l'unico dato certo e' il massimo avvicinamento (dichiarato).
+
+    * `distance_cpa` ignota -> nessun vincolo: [(-inf, +inf)];
+    * `distance_cpa > max_range` -> mai in portata: [];
+    * altrimenti [(t_cpa, t_end)]: prima del CPA il tiro aspetta il CPA; dopo il CPA la
+      distanza non e' verificabile e il tiro e' ammesso fino alla fine della finestra.
+    """
+    if distance_cpa is None:
+        return [(float('-inf'), float('inf'))]
+
+    if distance_cpa > max_range:
+        return []
+
+    return [(float('-inf') if t_cpa is None else float(t_cpa), float(t_end))]
+
+
 # ── RISOLUTORE ────────────────────────────────────────────────────────────────
 
 class _EngagementRun:
@@ -724,6 +814,10 @@ class _EngagementRun:
         # ancora eseguito di ogni tiratore, e salve lanciate non ancora risolte.
         self.assigned: Dict[str, str] = {}
         self.in_flight: Dict[int, Salvo] = {}
+        # Geometria "bersaglio entro la portata" (sostituibile, v. engagement_intervals) e
+        # intervalli gia' calcolati per (tiratore, bersaglio, max_range): v. _range_entry.
+        self.engagement_intervals = engagement_intervals
+        self.range_cache: Dict[Tuple[str, str, float], List[Tuple[float, float]]] = {}
 
         self.queue: List = []
         self.sequence = 0
@@ -915,7 +1009,8 @@ class _EngagementRun:
 
             if t_ready <= window.t_end + TIME_EPS:
                 self.candidates.setdefault(observer.id, []).append(
-                    _Candidate(t_ready=t_ready, target_id=target.id, t_end=window.t_end))
+                    _Candidate(t_ready=t_ready, target_id=target.id, t_end=window.t_end,
+                               t_cpa=float(window.t_cpa), distance_cpa=distance))
 
         self.detections.append(Detection(observer_id=observer.id, target_id=target.id,
                                          sensor_range=float(own_range), distance_cpa=distance,
@@ -1056,6 +1151,9 @@ class _EngagementRun:
 
                 t_fire = max(candidate.t_ready, t_earliest)
 
+                if candidate.not_before is not None:
+                    t_fire = max(t_fire, candidate.not_before)
+
                 if t_fire > candidate.t_end + TIME_EPS:
                     candidate.exhausted = True
                     continue
@@ -1090,10 +1188,61 @@ class _EngagementRun:
             if not isinstance(spec, ShotSpec):
                 raise TypeError(f"fire_control must return a ShotSpec or None, got {type(spec).__name__}")
 
+            if spec.max_range is not None:
+                # Controllo di portata (v. docstring del modulo): il tiro parte solo col
+                # bersaglio entro max_range. Mai in portata nella finestra -> come un None,
+                # ma solo per questa coppia/finestra. Ingresso piu' tardi -> il candidato
+                # viene rimandato a quell'istante e la scelta si ripete: nel frattempo il
+                # tiratore puo' ingaggiare un altro bersaglio gia' in portata.
+                t_in_range = self._range_entry(shooter_id, candidates[index], spec.max_range, t_fire)
+
+                if t_in_range is None:
+                    candidates[index].exhausted = True
+                    continue
+
+                if t_in_range > t_fire + TIME_EPS:
+                    candidates[index].not_before = t_in_range
+                    continue
+
             rounds = spec.rounds if shooter.ammunition is None else min(spec.rounds, shooter.ammunition)
             self.assigned[shooter_id] = target_id
             self._push(t_fire, _LAUNCH, shooter_id, (index, spec, rounds))
             return
+
+    def _range_entry(self, shooter_id: str, candidate: _Candidate, max_range: float,
+                     t_from: float) -> Optional[float]:
+        """Primo istante in [t_from, candidate.t_end] con il bersaglio entro la portata, o None.
+
+        Solo SCELTA dell'istante: il "da quando a quando il bersaglio e' a portata" e'
+        delegato a `self.engagement_intervals` (con i tratti di rotta) o a
+        `engagement_intervals_without_legs` (senza), memoizzato per (tiratore, bersaglio,
+        portata). Sostituire la geometria (volumi d'ingaggio non sferici) non tocca questa
+        logica ne' la schedulazione.
+        """
+        key = (shooter_id, candidate.target_id, float(max_range))
+
+        if key not in self.range_cache:
+            legs_shooter = self.legs.get(shooter_id)
+            legs_target = self.legs.get(candidate.target_id)
+
+            if legs_shooter and legs_target:
+                intervals = self.engagement_intervals(legs_shooter, legs_target, float(max_range))
+            else:
+                intervals = engagement_intervals_without_legs(candidate.t_cpa, candidate.distance_cpa,
+                                                              candidate.t_end, float(max_range))
+
+            self.range_cache[key] = list(intervals)
+
+        t_until = candidate.t_end + TIME_EPS
+
+        for start, end in self.range_cache[key]:
+            if end < t_from - TIME_EPS:
+                continue
+
+            entry = max(start, t_from)
+            return entry if entry <= t_until else None
+
+        return None
 
     def _refire_interval(self, shooter_id: str, spec: ShotSpec) -> float:
         return spec.cycle_time if spec.cycle_time is not None else self._profile(shooter_id).refire_interval

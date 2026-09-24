@@ -1285,6 +1285,140 @@ class TestShotSpec(unittest.TestCase):
             ER.ShotSpec(accuracy='0.5', destroy_capacity=0.5)
 
 
+# ── CONTROLLO DI PORTATA (ShotSpec.max_range, 2026-09-24) ────────────────────
+
+class TestWeaponRange(unittest.TestCase):
+    """Il lancio parte solo col bersaglio entro max_range; None = comportamento precedente.
+
+    Geometria di riferimento: b1 fermo nell'origine; r1 si avvicina lungo x da 10 km a
+    100 m/s nella finestra [0, 100] s, quindi dist(t) = 10000 - 100 t. Rilevamento di b1
+    certo a t = 0 (estrazione 0.0 -> raggio = portata del sensore, 20 km), latenza 2 s,
+    quindi il primo istante utile senza vincolo di portata e' t = 2. r1 non ha sensori.
+    """
+
+    LEGS = {'b1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+            'r1': [Leg(0.0, 100.0, (10_000.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+
+    def _run(self, spec, legs=LEGS, window=None, targets=('r1',), extra_legs=None):
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [_Asset(t) for t in targets])
+        windows = window or [ContactWindow('b1', t, t_start=0.0, t_end=100.0, t_cpa=100.0, distance_cpa=0.0,
+                                           range_a=20_000.0, range_b=None) for t in targets]
+        all_legs = dict(legs or {}, **(extra_legs or {})) if legs is not None else None
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, _always(spec), _ScriptedRng([0.0] * 10),
+                                         legs=all_legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
+
+    def test_launch_deferred_to_range_entry(self):
+        """max_range 3 km: dist = 3000 a t = 70 s."""
+        result = self._run(_kill(max_range=3_000.0))
+        self.assertEqual(len(result.salvos), 1)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 70.0, places=6)
+
+    def test_already_in_range_fires_at_first_opportunity(self):
+        result = self._run(_kill(max_range=15_000.0))
+        self.assertAlmostEqual(result.salvos[0].t_launch, 2.0)
+
+    def test_never_in_range_no_fire(self):
+        legs = dict(self.LEGS, r1=[Leg(0.0, 100.0, (10_000.0, 0.0, 0.0), (5_000.0, 0.0, 0.0))])
+        result = self._run(_kill(max_range=3_000.0), legs=legs)
+        self.assertEqual(result.salvos, ())
+        self.assertEqual(result.outcome_of('red').outcome, ER.HELD)
+
+    def test_range_is_3d(self):
+        """Bersaglio fermo a 2 km in pianta ma a 3 km di quota: slant range 3606 m."""
+        legs = dict(self.LEGS, r1=[Leg(0.0, 100.0, (2_000.0, 0.0, 3_000.0), (2_000.0, 0.0, 3_000.0))])
+        self.assertEqual(self._run(_kill(max_range=3_500.0), legs=legs).salvos, ())
+        self.assertEqual(len(self._run(_kill(max_range=3_700.0), legs=legs).salvos), 1)
+
+    def test_none_is_identical_to_before(self):
+        """max_range None e una portata che copre tutta la finestra: stessi eventi."""
+        baseline = self._run(_kill())
+        huge = self._run(_kill(max_range=1e9))
+        self.assertEqual(baseline.salvos[0].t_launch, 2.0)
+        self.assertEqual([(s.t_launch, s.shooter_id, s.target_id) for s in baseline.salvos],
+                         [(s.t_launch, s.shooter_id, s.target_id) for s in huge.salvos])
+        self.assertEqual(baseline.damage_events, huge.damage_events)
+        self.assertEqual(baseline.detections, huge.detections)
+
+    def test_rng_draw_order_unchanged(self):
+        """Il controllo non estrae numeri casuali: stesse chiamate all'RNG con e senza portata."""
+        counts = []
+        for spec in (_kill(), _kill(max_range=3_000.0)):
+            rng = _ScriptedRng([0.0] * 10)
+            with patch(_ER_LOGGER):
+                ER.resolve_engagement(_Force('blue', 'Blue', [_Asset('b1')]), _Force('red', 'Red', [_Asset('r1')]),
+                                      [ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=100.0,
+                                                     distance_cpa=0.0, range_a=20_000.0, range_b=None)],
+                                      _always(spec), rng, legs=self.LEGS,
+                                      reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
+            counts.append(rng.calls)
+        self.assertEqual(counts[0], counts[1])
+
+    def test_ready_shooter_engages_another_target_already_in_range(self):
+        """r1 (id minore) entra in portata a t = 70; r2, fermo a 1 km, e' in portata subito."""
+        extra = {'r2': [Leg(0.0, 100.0, (1_000.0, 0.0, 0.0), (1_000.0, 0.0, 0.0))]}
+        # Colpi che mancano sempre: r2 resta vivo e la forza rossa non si disingaggia, cosi'
+        # a t = 70 entrambi sono ingaggiabili e il criterio (id minore) torna su r1.
+        result = self._run(_miss(max_range=3_000.0), targets=('r1', 'r2'), extra_legs=extra)
+        launches = [(round(s.t_launch, 6), s.target_id) for s in result.salvos]
+        self.assertEqual(launches[0], (2.0, 'r2'))
+        self.assertIn((70.0, 'r1'), launches)
+
+    def test_leaving_range_stops_refire(self):
+        """r1 passa a 1 km e si allontana: dopo l'uscita dalla portata niente piu' salve."""
+        legs = {'b1': self.LEGS['b1'],
+                'r1': [Leg(0.0, 100.0, (-5_000.0, 1_000.0, 0.0), (5_000.0, 1_000.0, 0.0))]}
+        result = self._run(_miss(max_range=2_000.0), legs=legs)
+        # dist <= 2000 per |x| <= 1732: t in [32.68, 67.32]
+        self.assertTrue(result.salvos)
+        for salvo in result.salvos:
+            self.assertGreaterEqual(salvo.t_launch, 32.67)
+            self.assertLessEqual(salvo.t_launch, 67.33)
+
+    def test_without_legs_fallback(self):
+        """Senza tratti: d_cpa > max_range -> mai; altrimenti non prima di t_cpa."""
+        far = [ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=40.0, distance_cpa=5_000.0,
+                             range_a=20_000.0, range_b=None)]
+        self.assertEqual(self._run(_kill(max_range=3_000.0), legs=None, window=far).salvos, ())
+        near = [ContactWindow('b1', 'r1', t_start=0.0, t_end=100.0, t_cpa=40.0, distance_cpa=1_000.0,
+                              range_a=20_000.0, range_b=None)]
+        result = self._run(_kill(max_range=3_000.0), legs=None, window=near)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 40.0)
+        result = self._run(_kill(), legs=None, window=near)
+        self.assertAlmostEqual(result.salvos[0].t_launch, 2.0)
+
+    def test_geometry_is_isolated_and_replaceable(self):
+        """Il 'da quando a quando e' a portata' viene da `engagement_intervals`: sostituendola
+        (futuri volumi d'ingaggio) cambia l'istante di tiro senza toccare la schedulazione."""
+        calls = []
+
+        def fake(legs_shooter, legs_target, max_range):
+            calls.append(max_range)
+            return [(50.0, 60.0)]
+
+        with patch.object(ER, 'engagement_intervals', fake):
+            result = self._run(_kill(max_range=3_000.0))
+
+        self.assertEqual(calls, [3_000.0])
+        self.assertAlmostEqual(result.salvos[0].t_launch, 50.0)
+
+    def test_interval_functions(self):
+        self.assertEqual(ER.engagement_intervals(self.LEGS['b1'], self.LEGS['r1'], 3_000.0), [(70.0, 100.0)])
+        self.assertEqual(ER.engagement_intervals_without_legs(40.0, 5_000.0, 100.0, 3_000.0), [])
+        self.assertEqual(ER.engagement_intervals_without_legs(40.0, 1_000.0, 100.0, 3_000.0), [(40.0, 100.0)])
+        self.assertEqual(ER.engagement_intervals_without_legs(40.0, None, 100.0, 3_000.0),
+                         [(float('-inf'), float('inf'))])
+
+    def test_shotspec_max_range_validation(self):
+        self.assertIsNone(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5).max_range)
+        self.assertEqual(ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, max_range=100).max_range, 100)
+        for value in (0.0, -1.0, True, '100'):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, max_range=value)
+
+
 # ── NON-MUTAZIONE E APPLICAZIONE, CON OGGETTI REALI ───────────────────────────
 
 class TestIntegrationWithRealObjects(unittest.TestCase):

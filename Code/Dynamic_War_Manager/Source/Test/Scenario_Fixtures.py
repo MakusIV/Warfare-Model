@@ -133,7 +133,7 @@ LOGGER_TARGETS = tuple(_SOURCE + name + '.logger' for name in (
     'Asset.Structure', 'Block.Block', 'Block.Military', 'Block.Production', 'Block.Transport',
     'Block.Storage', 'Block.Urban', 'DataType.State', 'Logic.Air_Route_Manager',
     'Logic.Engagement_Resolver', 'Logic.Contact_Scheduler', 'Logic.Fuel_Model',
-    'Logic.Damage_Model', 'Logic.Session_Simulator', 'Command.Session_Types',
+    'Logic.Damage_Model', 'Logic.Session_Simulator', 'Logic.Fire_Control', 'Command.Session_Types',
     'Context.Reaction_Profile', 'Context.Doctrine'))
 
 
