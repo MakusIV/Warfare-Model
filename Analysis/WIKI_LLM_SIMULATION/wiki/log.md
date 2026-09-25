@@ -1,5 +1,55 @@
 # Log delle Operazioni Wiki
 
+## [2026-09-25] aggiornamento | Sync post-motore: nebbia di guerra fatta, proposte SAM e gerarchia militari
+
+**Applicazione della regola "SYNC EVOLUZIONE PROGETTO"**, su richiesta esplicita dell'utente, a fine
+sessione (ProArt P16, dopo pull da osboxes). Tre agenti (Opus, effort medio salvo uno alto) lanciati
+in parallelo su file/moduli non sovrapposti, tutti verificati dalla sessione principale prima del
+sync.
+
+**1 decisione implementata, `status: accepted`**: nuova pagina
+[[nebbia-di-guerra-ricognizione]] — chiude il gap S9 segnalato in [[virtual-session-engine-des]]
+("collegamento fog-of-war reale a `detection_factor`"). `region_recon_detection_factor` in
+`Logic/Engagement_Resolver.py`, `unseen_factor` modulato da `Military.get_recon_efficiency()` con
+aggregazione per **massimo** (non media) fra le `Military` dello stesso lato in una regione. Suite:
+**3478 test OK (skipped=5)**, +34 sulla baseline 3444. Bug trovato durante l'implementazione, non
+corretto: `get_blocks_by_criteria(category='Military')` scarta `Military` reali con `category=''`
+— aggiunto a [[context-state]].
+
+**2 decisioni proposte, `status: proposed`, non ancora decise dall'utente**:
+- [[allocazione-munizioni-sam]] — problema riprodotto con scenario deterministico: i SAM a pool
+  condiviso (Strela-10) esauriscono le munizioni intercettando salve non dirette a sé e restano
+  vuoti quando il lanciatore entra a portata di tiro diretto. Causa in `_on_resolve`
+  (`Logic/Engagement_Resolver.py`): nessun controllo di bersaglio/distanza/riserva. 6 regole
+  valutate, raccomandazione D (capacità antimissile nei registri) + B (riserva 50%) + F (consumo
+  scorte dedicate prima), con A (autodifesa) come intervento minimo immediato. Va decisa **dopo**
+  la questione delle munizioni aggregate aerei (v. [[virtual-session-engine-des]] § seguiti),
+  altrimenti il test di verifica resta falsato.
+- [[gerarchia-unita-militari]] — analisi del documento storico caricato dall'utente
+  (`Analysis/Document/Forze.Armate.Mondiali.1960-1980.docx`, struttura Armata→Compagnia
+  1960-1980) contro il dubbio "`Military`=Armata implica una gerarchia di classi C2 esplicite".
+  Raccomandazione (Opus, effort alto): `Military` resta l'unità atomica (vincolato anche dalle
+  soglie di disingaggio per-forza-intera del motore DES), una sola classe nuova `Formation`
+  ricorsiva in `Command/` + base comune `C2_Node` con `C2_Manager`/`C2_Region_Manager`, autonomia
+  decisionale come dato in `Doctrine.py`. Compatibile con [[c2-hierarchy-design]] e lo generalizza,
+  ma non ancora decisa (Fase 0 di 9 decisioni utente nel documento completo). Limite di scala
+  segnalato: il motore DES regge ~10.000 asset totali, circa un Corpo d'Armata per lato con asset
+  1:1 — un "C2 di scenario = Gruppo di Armate" richiederebbe asset aggregati, fuori perimetro.
+
+**Pagine `project/` aggiornate**: [[block]] (nuovo consumatore di `get_recon_efficiency`, link alle
+3 proposte sopra), [[context-state]] (nuovo bug `get_blocks_by_criteria`), [[command]] (nota su
+`Formation.py`/`C2_Node.py` proposti, non ancora costruiti).
+
+**Pagine `decisions/` aggiornate**: [[virtual-session-engine-des]] (sezione "Prossimo passo"
+sostituita con l'elenco reale dei seguiti fatti/aperti dopo le 7 fasi), [[c2-hierarchy-design]]
+(nuovo punto in "Non ancora deciso" che rimanda a [[gerarchia-unita-militari]]).
+
+**Nessun file di codice toccato in questa operazione di sync** — solo wiki. Il codice della nebbia
+di guerra era già stato scritto, testato e committato dall'agente `des-developer` prima di questo
+sync (commit `388e6ea3`).
+
+---
+
 ## [2026-09-23] implementazione | Fase 7 del motore DES: validazione — MOTORE COMPLETO (7/7 fasi)
 
 Scenari S1-S18 (batteria estesa da 11 a 18 su richiesta dell'utente, con 7 nuovi scenari legati

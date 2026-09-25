@@ -3,10 +3,10 @@ title: "Motore sessioni virtuali: architettura DES a coda eventi"
 type: decision
 tags: [architecture, dwm, simulation, discrete-event, combat-resolution, routing]
 created: 2026-09-21
-updated: 2026-09-23
+updated: 2026-09-25
 status: accepted
 affects: ["[[logic-routing]]", "[[asset-air]]", "[[asset-ground-naval]]", "[[block]]", "[[command]]"]
-related: ["[[core-simulator-agnostic]]", "[[c2-hierarchy-design]]", "[[event-driven-simulation]]", "[[route-model-unification]]"]
+related: ["[[core-simulator-agnostic]]", "[[c2-hierarchy-design]]", "[[event-driven-simulation]]", "[[route-model-unification]]", "[[nebbia-di-guerra-ricognizione]]", "[[allocazione-munizioni-sam]]"]
 ---
 
 ## Contesto
@@ -247,11 +247,24 @@ che `ammunition` è già l'inventario fisico totale del veicolo, non una sotto-a
 invece di raddoppiarlo. Nuovo tipo `InterceptionEvent` (non più `AmmunitionEvent` con `purpose`)
 in `Engagement_Resolver.py`/`Session_Types.py`.
 
-**Prossimo passo**: nessuno obbligatorio — il motore DES a 7 fasi è completo. Possibili seguiti:
-selezione arma dai registri per `fire_control` (rimandata dalla Fase 4), collegamento fog-of-war
-reale (`Region`/`recon_cp_snapshot`) a `detection_factor` (gap documentato in S9), il manualetto
-Markdown con diagrammi UML richiesto dall'utente per fine sviluppo (v.
-[[project_virtual_session_engine_design]]).
+**Seguiti FATTI dopo la conclusione delle 7 fasi**:
+- **Manuale Markdown con diagrammi Mermaid** — fatto 2026-09-24, in
+  `Analysis/Document/Manuale_Motore_DES/`.
+- **Selezione arma dai registri per `fire_control`** — fatta 2026-09-24, `Logic/Fire_Control.py`
+  (`make_registry_fire_control`); il contratto `ShotSpec`/`fire_control` non è cambiato.
+- **Controllo di portata nel risolutore** — fatto 2026-09-24: `ShotSpec.max_range` opzionale, tiro
+  rimandato con `not_before` all'ingresso in portata. Aperti da questo lavoro (non ancora decisi):
+  munizioni aggregate aerei irrealistiche, bombe senza portata nel registro.
+- **Nebbia di guerra reale collegata a `detection_factor`** — fatta 2026-09-25 (gap S9 chiuso), v.
+  [[nebbia-di-guerra-ricognizione]].
+- **Analisi del problema SAM puri/intercettazione** — fatta 2026-09-25 (proposta, non ancora
+  decisa dall'utente), v. [[allocazione-munizioni-sam]]: emerso proprio dal controllo di portata
+  sopra, un SAM a pool condiviso può esaurire le munizioni intercettando salve non dirette a sé.
+
+**Non ancora deciso/fatto**: scelta fra le regole proposte in [[allocazione-munizioni-sam]];
+munizioni aggregate aerei/bombe senza portata (bloccano l'implementazione delle regole SAM);
+volumi di rilevamento/ingaggio generici (attività D del piano — oggi `run_session` usa solo una
+sfera, il cilindro `ThreatAA` resta usato solo da `Air_Route_Manager`).
 
 ## Fonti
 

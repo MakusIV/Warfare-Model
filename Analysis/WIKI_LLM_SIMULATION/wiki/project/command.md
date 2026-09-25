@@ -3,9 +3,9 @@ title: "Command"
 type: project-module
 tags: [package-python, command-control, c2, dwm, architecture]
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-25
 code_paths: [Code/Dynamic_War_Manager/Source/Command/]
-related_decisions: ["[[c2-hierarchy-design]]"]
+related_decisions: ["[[c2-hierarchy-design]]", "[[gerarchia-unita-militari]]"]
 related: ["[[context-state]]", "[[logic-decision]]"]
 ---
 
@@ -72,6 +72,12 @@ Aircraft/Vehicle/Ship).
 `Session_Mission_Planner.py` — tutto il resto della gerarchia C2 descritta in
 [[c2-hierarchy-design]]. Moduli correlati altrettanto non ancora costruiti in altri package:
 `Context/Theater.py`, `Logic/Strategical_Analysis.py`, `Logic/Session_Simulator.py`.
+
+**Proposta 2026-09-25, non ancora decisa** (v. [[gerarchia-unita-militari]]): due file aggiuntivi
+in questo package, `Formation.py` (livello intermedio ricorsivo fra `Military` e il C2 regionale,
+livello storico Corpo/Divisione/Brigata come attributo, non sottoclasse) e `C2_Node.py` (base
+comune per `C2_Manager`/`C2_Region_Manager`/`Formation`, protocollo proponi/approva generico). Se
+accettata, va progettata **insieme** a `C2_Manager.py`/`C2_Region_Manager.py`, non dopo.
 
 ## Copertura test
 

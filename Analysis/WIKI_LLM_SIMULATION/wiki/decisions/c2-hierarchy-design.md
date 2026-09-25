@@ -3,10 +3,10 @@ title: "Gerarchia C2 a due livelli, indirizzo strategico e modello sessioni"
 type: decision
 tags: [c2, command-control, session-model, architecture, command-package]
 created: 2026-09-17
-updated: 2026-09-23
+updated: 2026-09-25
 status: accepted
 affects: ["[[context-state]]", "[[logic-decision]]", "[[command]]"]
-related: ["[[c2-planner]]", "[[tlc-model]]", "[[campaign-temporal-model]]"]
+related: ["[[c2-planner]]", "[[tlc-model]]", "[[campaign-temporal-model]]", "[[gerarchia-unita-militari]]"]
 ---
 
 ## Contesto
@@ -74,6 +74,12 @@ Package `Command/` (stateful, distinto da `Logic/` stateless): **`Command_Types.
 ### Non ancora deciso
 - Meccanica esatta del loop di negoziazione quando il C2 globale modifica/rifiuta una proposta regionale.
 - Se la persistenza di `Campaign_State` avrà bisogno di ulteriori chiavi oltre a `session_id`/`mission_id` per il modello sessione-come-turno.
+- **Se la gerarchia a due livelli (globale/regionale) qui descritta va estesa con un livello
+  `Formation` intermedio** (Corpo d'Armata/Divisione/Brigata) e una base comune `C2_Node` condivisa
+  — proposta 2026-09-25 in [[gerarchia-unita-militari]], compatibile con questo design e lo
+  generalizza, ma non ancora decisa. Va risolta **prima** di scrivere `C2_Manager.py`/
+  `C2_Region_Manager.py` (v. sotto, ancora non costruiti), perché `C2_Node` andrebbe progettata
+  insieme a questi due.
 
 ## Fonti
 - [[project_c2_hierarchy_design]] (memoria di origine, autorevole — consultare per dettagli operativi come il recupero di TASK 1 da un worktree abbandonato)

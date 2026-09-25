@@ -3,9 +3,9 @@ title: "Context — Stato Operativo e Persistenza"
 type: project-module
 tags: [package-python, context, region, campaign-state, dottrina, combat-power, c2]
 created: 2026-09-18
-updated: 2026-09-18
+updated: 2026-09-25
 code_paths: [Code/Dynamic_War_Manager/Source/Context/Region.py, Code/Dynamic_War_Manager/Source/Context/Campaign_State.py, Code/Dynamic_War_Manager/Source/Context/Target_Status_History.py, Code/Dynamic_War_Manager/Source/Context/Doctrine.py, Code/Dynamic_War_Manager/Source/Context/Combat_Power_Estimation.py, Code/Dynamic_War_Manager/Source/Context/Coalition.py, Code/Dynamic_War_Manager/Source/Context/Rinomina_Campaign_State.py]
-related_decisions: ["[[region-tactical-strategic-refactor]]", "[[c2-hierarchy-design]]", "[[combat-power-priority-redesign]]"]
+related_decisions: ["[[region-tactical-strategic-refactor]]", "[[c2-hierarchy-design]]", "[[combat-power-priority-redesign]]", "[[nebbia-di-guerra-ricognizione]]"]
 related: ["[[context-foundation]]", "[[logic-decision]]", "[[command]]"]
 ---
 
@@ -157,6 +157,15 @@ risolti dal refactoring — fuori dal suo perimetro):**
   0 riferimenti esterni) — non toccata dal refactoring.
 - **`get_normalized_priority_blocks` — nessun guard contro `delta == 0`** (tutti i blocchi con
   la stessa priorità) → `ZeroDivisionError` non gestita. Ancora presente.
+- **`get_blocks_by_criteria(category='Military')` scarta `Military` reali con `category=''`
+  (trovato 2026-09-25)**: la catena `if/elif` confronta `block.category != category` alla lettera,
+  non `isinstance`/`mil_category` — una `Military` costruita senza passare esplicitamente
+  `category='Military'` (comune nelle fixture di test) viene esclusa. Impatta ogni chiamante che
+  filtra per `category='Military'`, incluso potenzialmente `update_military_priorities` e le
+  metriche aggregate sopra. Trovato mentre si implementava
+  [[nebbia-di-guerra-ricognizione]] (`region_recon_detection_factor` ne aggira l'effetto passando
+  esplicitamente `category='Military'` nei test); non corretto, tocca chiamanti esistenti, da
+  decidere a parte.
 
 ### `CampaignState` (Campaign_State.py)
 

@@ -1,7 +1,7 @@
 # Wiki Index — Modelli di Simulazione Bellica
 
 > **Catalogo completo dei contenuti wiki.** Aggiornato da Claude ad ogni ingestione, query o modifica.
-> Ultimo aggiornamento: 2026-09-23
+> Ultimo aggiornamento: 2026-09-25
 
 ---
 
@@ -13,8 +13,8 @@
 | Entità (Entities) | 15 | 2026-09-22 |
 | Concetti (Concepts) | 17 | 2026-09-22 |
 | Analisi (Analyses) | 3 | 2026-09-22 |
-| Struttura di progetto (Project) | 13 | 2026-09-22 |
-| Decisioni architetturali (Decisions) | 14 | 2026-09-22 |
+| Struttura di progetto (Project) | 13 | 2026-09-25 |
+| Decisioni architetturali (Decisions) | 17 | 2026-09-25 |
 
 ---
 
@@ -191,6 +191,9 @@ non fornisce citazioni utilizzabili; non creare pagine prima di aver trovato una
 | [[soglie-disingaggio-e-attrito-aggregato]] | accepted | Soglie di disingaggio (P1, dottrina di lato, per forza) come esito di prima classe `DISENGAGED`; S1-S11 confermati batteria ufficiale di Fase 7; P2 (forma-bersaglio del fallback aggregato) resta nota, nessuna azione |
 | [[llm-locale-ruolo-e-confini]] | proposed (rimandata 2026-09-23) | Regola generale «niente componenti non riproducibili sulla traiettoria di stato»; utente ha rimandato la decisione, nessun LLM nel motore per ora |
 | [[risolutore-ingaggio-salva-fase4]] | accepted | Termini del modello a salva di Hughes adottati in `Logic/Engagement_Resolver.py`: saturazione difensiva per-salva (funzione dedicata), soglia di shock (dottrina, per forza), munizioni per asset (rifornimento fuori scope), congelamento payload all'istante di fuoco |
+| [[nebbia-di-guerra-ricognizione]] | accepted | Fattore di rilevamento da ricognizione in `Logic/Engagement_Resolver.py`: istantanea pre-sessione, `unseen_factor` modulato da `Military.get_recon_efficiency()` (aggregazione: il massimo, non la media) |
+| [[allocazione-munizioni-sam]] | proposed | Problema riprodotto: SAM a pool condiviso esauriscono le munizioni intercettando salve non dirette a sé; 6 regole valutate, raccomandazione D+B+F non ancora decisa dall'utente |
+| [[gerarchia-unita-militari]] | proposed | `Military` resta l'unità atomica; una sola classe nuova `Formation` (ricorsiva, livello storico come attributo) + base comune `C2_Node`; Fase 0 di 9 decisioni utente non ancora prese |
 
 ---
 

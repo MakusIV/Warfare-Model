@@ -3,9 +3,9 @@ title: "Block"
 type: project-module
 tags: [package-python, block, military, combat-power, fog-of-war, dcs]
 created: 2026-09-18
-updated: 2026-09-22
+updated: 2026-09-25
 code_paths: [Code/Dynamic_War_Manager/Source/Block/Block.py, Code/Dynamic_War_Manager/Source/Block/Military.py, Code/Dynamic_War_Manager/Source/Block/Production.py, Code/Dynamic_War_Manager/Source/Block/Storage.py, Code/Dynamic_War_Manager/Source/Block/Transport.py, Code/Dynamic_War_Manager/Source/Block/Urban.py]
-related_decisions: ["[[combat-power-priority-redesign]]", "[[region-tactical-strategic-refactor]]", "[[virtual-session-engine-des]]"]
+related_decisions: ["[[combat-power-priority-redesign]]", "[[region-tactical-strategic-refactor]]", "[[virtual-session-engine-des]]", "[[nebbia-di-guerra-ricognizione]]", "[[allocazione-munizioni-sam]]", "[[gerarchia-unita-militari]]"]
 related: ["[[component]]", "[[context-foundation]]"]
 ---
 
@@ -124,7 +124,10 @@ Code/Dynamic_War_Manager/Source/Test -p "Test_Block.py"` → 91 test OK; stesso 
 - **`get_recon_efficiency()`**: mediana delle efficienze degli asset con
   `role == Asset_Role.RECONNAISSANCE.value`. Ora è l'**unica** implementazione nel sottosistema
   (v. sezione Note) — non più "override" nel senso del vecchio audit, dato che la versione in
-  `Block.py` è stata rimossa.
+  `Block.py` è stata rimossa. **Nuovo consumatore 2026-09-25**: `Logic.Engagement_Resolver.
+  region_recon_detection_factor` la usa per modulare `unseen_factor` della nebbia di guerra nel
+  risolutore, aggregando per **massimo** fra le `Military` dello stesso lato in una regione (non
+  per media) — v. [[nebbia-di-guerra-ricognizione]].
 - **`get_c2_efficiency()`**: mediana delle efficienze degli asset con `role == Asset_Role.C2.value`,
   filtrati per `is_operative()`. Invariato, confermato valido.
 - **`air_defense_volume() -> List[Cylinder]`**: delega a `Mobile.air_defense_volume()` su ogni
@@ -261,6 +264,11 @@ Comando eseguito e confermato in questa sessione:
 - [[virtual-session-engine-des]] — `Military.air_defense_threats()`/`detection_range()` (Fase 2)
   sono il livello Block del motore DES per le sessioni virtuali; nessun consumatore reale li
   chiama ancora, verranno usati dal `Contact_Scheduler` (Fase 3).
+- [[nebbia-di-guerra-ricognizione]] — nuovo consumatore di `get_recon_efficiency()` (v. sopra).
+- [[allocazione-munizioni-sam]] — proposta (non ancora decisa) che interviene su
+  `salvo_interceptors`/`interceptor_stock` per i SAM a pool condiviso.
+- [[gerarchia-unita-militari]] — proposta (non ancora decisa) che conferma `Military` come unità
+  atomica della gerarchia militare, senza modificarne l'implementazione.
 
 ## Note
 
