@@ -948,6 +948,252 @@ class TestWeatherDetectionFactor(unittest.TestCase):
         self.assertGreater(first_launch(self.ADVERSE), first_launch(self.GOOD))
 
 
+# ── NEBBIA DI GUERRA: FATTORE DA ISTANTANEA DI RICOGNIZIONE (attivita' C) ─────
+
+class _Blk:
+    """Blocco minimo: solo `id` e `side`, cio' che la nebbia di guerra legge."""
+    def __init__(self, block_id, side):
+        self.id = block_id
+        self.side = side
+
+
+def _on(asset_id, block):
+    """Stub di asset appartenente a `block` (None = asset senza blocco)."""
+    asset = _Asset(asset_id)
+    asset.block = block
+    return asset
+
+
+class TestReconDetectionFactorFn(unittest.TestCase):
+    """recon_detection_factor_fn: seen/unseen per lato, nessun effetto sul lato opposto."""
+
+    def setUp(self):
+        self.blue_blk, self.red_seen, self.red_unseen = _Blk('B1', 'Blue'), _Blk('R1', 'Red'), _Blk('R2', 'Red')
+        self.fn = ER.recon_detection_factor_fn({'R1'}, observer_side='Blue', unseen_factor=0.4)
+        self.observer = _on('b0', self.blue_blk)
+
+    def test_seen_and_unseen_targets(self):
+        self.assertEqual(self.fn(self.observer, _on('r0', self.red_seen)), 1.0)
+        self.assertEqual(self.fn(self.observer, _on('r1', self.red_unseen)), 0.4)
+
+    def test_custom_seen_factor(self):
+        fn = ER.recon_detection_factor_fn(['R1'], observer_side='Blue', unseen_factor=0.3, seen_factor=0.9)
+        self.assertEqual(fn(self.observer, _on('r0', self.red_seen)), 0.9)
+        self.assertEqual(fn(self.observer, _on('r1', self.red_unseen)), 0.3)
+
+    def test_other_side_observers_are_untouched(self):
+        red_observer = _on('r0', self.red_unseen)
+        self.assertEqual(self.fn(red_observer, _on('b1', self.blue_blk)), 1.0)
+        self.assertEqual(self.fn(red_observer, _on('r1', self.red_unseen)), 1.0)
+
+    def test_missing_blocks(self):
+        """Osservatore senza blocco: non attribuibile, 1.0. Bersaglio senza blocco: non visto."""
+        self.assertEqual(self.fn(_on('x', None), _on('r1', self.red_unseen)), 1.0)
+        self.assertEqual(self.fn(self.observer, _on('x', None)), 0.4)
+        self.assertEqual(self.fn(self.observer, _Asset('bare')), 0.4)
+
+    def test_own_side_targets_are_known(self):
+        self.assertEqual(self.fn(self.observer, _on('b1', _Blk('B2', 'Blue'))), 1.0)
+
+    def test_snapshot_is_frozen(self):
+        seen = {'R1'}
+        fn = ER.recon_detection_factor_fn(seen, observer_side='Blue', unseen_factor=0.4)
+        seen.add('R2')
+        self.assertEqual(fn(self.observer, _on('r1', self.red_unseen)), 0.4)
+
+    def test_bad_arguments_raise(self):
+        with self.assertRaises(ValueError):
+            ER.recon_detection_factor_fn([], observer_side='Green', unseen_factor=0.5)
+        with self.assertRaises(ValueError):
+            ER.recon_detection_factor_fn([], observer_side='Blue', unseen_factor=1.5)
+        with self.assertRaises(TypeError):
+            ER.recon_detection_factor_fn([], observer_side='Blue', unseen_factor='0.5')
+
+    def test_does_not_consume_the_rng(self):
+        """Stesso RNG a script: con o senza fattore le estrazioni sono le stesse, per numero e ordine."""
+        blue_blk, red_blk = _Blk('blue', 'Blue'), _Blk('red', 'Red')
+
+        def run(factor):
+            blue = _Force('blue', 'Blue', [_on('b0', blue_blk), _on('b1', blue_blk)])
+            red = _Force('red', 'Red', [_on('r0', red_blk), _on('r1', red_blk)])
+            windows = [_window('b0', 'r0', distance=500.0), _window('b1', 'r1', distance=500.0)]
+            rng = random.Random(7)
+            result = ER.resolve_engagement(blue, red, windows, lambda s, t: None, rng, detection_factor=factor)
+            return [d.draw for d in result.detections], rng.random()
+
+        fog = ER.recon_detection_factor_fn(set(), observer_side='Blue', unseen_factor=0.2)
+        self.assertEqual(run(None), run(fog))
+
+
+class TestCombineDetectionFactors(unittest.TestCase):
+
+    def test_product(self):
+        fn = ER.combine_detection_factors(lambda o, t: 0.5, lambda o, t: 0.8)
+        self.assertAlmostEqual(fn(None, None), 0.4)
+
+    def test_weather_and_recon(self):
+        blue_blk, red_blk = _Blk('B1', 'Blue'), _Blk('R2', 'Red')
+        weather = ER.weather_detection_factor_fn({'day': False, 'night': True, 'adverse_weather': False})
+        recon = ER.recon_detection_factor_fn(set(), observer_side='Blue', unseen_factor=0.5)
+        fn = ER.combine_detection_factors(weather, recon)
+
+        self.assertAlmostEqual(fn(_on('b', blue_blk), _on('r', red_blk)), ER.NIGHT_DETECTION_FACTOR * 0.5)
+        # Il lato Red subisce solo il meteo.
+        self.assertAlmostEqual(fn(_on('r', red_blk), _on('b', blue_blk)), ER.NIGHT_DETECTION_FACTOR)
+
+    def test_both_sides_fog(self):
+        blue_blk, red_blk = _Blk('B1', 'Blue'), _Blk('R1', 'Red')
+        fn = ER.combine_detection_factors(
+            ER.recon_detection_factor_fn(set(), observer_side='Blue', unseen_factor=0.5),
+            ER.recon_detection_factor_fn({'B1'}, observer_side='Red', unseen_factor=0.3))
+        self.assertEqual(fn(_on('b', blue_blk), _on('r', red_blk)), 0.5)
+        self.assertEqual(fn(_on('r', red_blk), _on('b', blue_blk)), 1.0)
+
+    def test_always_clamped_to_unit_interval(self):
+        self.assertEqual(ER.combine_detection_factors(lambda o, t: 1.7, lambda o, t: 0.5)(None, None), 0.5)
+        self.assertEqual(ER.combine_detection_factors(lambda o, t: -0.2, lambda o, t: 0.5)(None, None), 0.0)
+
+    def test_none_and_empty(self):
+        self.assertEqual(ER.combine_detection_factors()(None, None), 1.0)
+        self.assertEqual(ER.combine_detection_factors(None, lambda o, t: 0.6)(None, None), 0.6)
+
+    def test_bad_components_raise(self):
+        with self.assertRaises(TypeError):
+            ER.combine_detection_factors(0.5)
+        with self.assertRaises(TypeError):
+            ER.combine_detection_factors(lambda o, t: 'x')(None, None)
+
+
+class TestReconUnseenFactor(unittest.TestCase):
+    """Modulazione del fattore dei non visti con l'efficienza di ricognizione (stima dichiarata)."""
+
+    def test_no_recon_gives_base_factor(self):
+        self.assertEqual(ER.recon_unseen_factor(0.0), ER.UNSEEN_DETECTION_FACTOR)
+        self.assertEqual(ER.recon_unseen_factor(None), ER.UNSEEN_DETECTION_FACTOR)
+
+    def test_formula(self):
+        base, relief = ER.UNSEEN_DETECTION_FACTOR, ER.RECON_EFFICIENCY_FOG_RELIEF
+        for efficiency in (0.25, 0.5, 1.0):
+            with self.subTest(efficiency=efficiency):
+                self.assertAlmostEqual(ER.recon_unseen_factor(efficiency),
+                                       base + (1.0 - base) * relief * efficiency)
+
+    def test_monotone_and_never_reaches_seen(self):
+        values = [ER.recon_unseen_factor(e) for e in (0.0, 0.3, 0.6, 1.0)]
+        self.assertEqual(values, sorted(values))
+        self.assertLess(values[-1], 1.0)
+
+    def test_efficiency_is_clamped(self):
+        self.assertEqual(ER.recon_unseen_factor(2.0), ER.recon_unseen_factor(1.0))
+        self.assertEqual(ER.recon_unseen_factor(-1.0), ER.recon_unseen_factor(0.0))
+
+    def test_bad_efficiency_raises(self):
+        with self.assertRaises(TypeError):
+            ER.recon_unseen_factor('high')
+
+    def test_constants_are_declared_estimates_in_range(self):
+        self.assertTrue(0.0 < ER.UNSEEN_DETECTION_FACTOR < 1.0)
+        self.assertTrue(0.0 < ER.RECON_EFFICIENCY_FOG_RELIEF < 1.0)
+
+
+class TestRegionReconDetectionFactor(unittest.TestCase):
+    """region_recon_detection_factor con Region e Military REALI.
+
+    I blocchi Military sono creati con category='Military': `Region.get_blocks_by_criteria`
+    (usato da get_recon_reports) scarta oggi le Military con `category` diversa (limite
+    preesistente di Region, v. report dell'attivita' C). L'efficienza di ricognizione
+    diversa da 0 e' imposta con patch su `get_recon_efficiency` della singola istanza:
+    costruire asset con `efficiency` data richiederebbe di fissare balance_trade/salute,
+    che non e' cio' che questo test verifica.
+    """
+
+    GROUND = MILITARY_CATEGORY['Ground_Base'][4]
+
+    def setUp(self):
+        from Code.Dynamic_War_Manager.Source.Context.Region import Region
+
+        self._patches = [patch(_ER_LOGGER)] + [
+            patch(f'Code.Dynamic_War_Manager.Source.{name}.logger')
+            for name in ('Context.Region', 'Block.Block', 'Block.Military', 'Logic.Tactical_Analysis',
+                         'DataType.State')]
+        for patcher in self._patches:
+            patcher.start()
+
+        self.region = Region(name='Fog Region')
+        self.blue1 = self._military('Blue-1', 'Blue')
+        self.blue2 = self._military('Blue-2', 'Blue')
+        self.red_in = self._military('Red-In', 'Red')
+        self.red_out = self._military('Red-Out', 'Red', add=False)   # fuori regione: mai ricognito
+
+        self.observer = _on('b0', self.blue1)
+        self.seen_target = _on('r0', self.red_in)
+        self.unseen_target = _on('r1', self.red_out)
+
+    def tearDown(self):
+        for patcher in reversed(self._patches):
+            patcher.stop()
+
+    def _military(self, block_id, side, add=True):
+        block = Military(mil_category=self.GROUND, name=block_id, side=side, id=block_id, category='Military')
+        if add:
+            self.region.add_block(block)
+        return block
+
+    def test_zero_recon_efficiency(self):
+        """Nessun asset di ricognizione (get_recon_efficiency reale = 0.0): fattore base."""
+        self.assertEqual(ER.side_recon_efficiency(self.region, 'Blue'), 0.0)
+        fn = ER.region_recon_detection_factor(self.region, 'Blue')
+
+        self.assertEqual(fn(self.observer, self.seen_target), 1.0)
+        self.assertEqual(fn(self.observer, self.unseen_target), ER.UNSEEN_DETECTION_FACTOR)
+
+    def test_high_recon_efficiency_softens_the_fog(self):
+        with patch.object(self.blue1, 'get_recon_efficiency', return_value=0.9):
+            fn = ER.region_recon_detection_factor(self.region, 'Blue')
+
+        self.assertEqual(fn(self.observer, self.seen_target), 1.0)
+        self.assertAlmostEqual(fn(self.observer, self.unseen_target), ER.recon_unseen_factor(0.9))
+        self.assertGreater(fn(self.observer, self.unseen_target), ER.UNSEEN_DETECTION_FACTOR)
+
+    def test_several_military_of_the_side_take_the_best(self):
+        """Aggregazione dichiarata: il massimo fra le Military del lato, non la media."""
+        with patch.object(self.blue1, 'get_recon_efficiency', return_value=0.2), \
+             patch.object(self.blue2, 'get_recon_efficiency', return_value=0.8), \
+             patch.object(self.red_in, 'get_recon_efficiency', return_value=1.0):
+            self.assertEqual(ER.side_recon_efficiency(self.region, 'Blue'), 0.8)
+            fn = ER.region_recon_detection_factor(self.region, 'Blue')
+
+        self.assertAlmostEqual(fn(self.observer, self.unseen_target), ER.recon_unseen_factor(0.8))
+        # Anche un osservatore della Military con ricognizione scarsa beneficia del sensore migliore.
+        self.assertAlmostEqual(fn(_on('b9', self.blue2), self.unseen_target), ER.recon_unseen_factor(0.8))
+
+    def test_snapshot_is_taken_once_before_the_session(self):
+        """Un blocco aggiunto alla regione DOPO la costruzione del fattore resta non visto."""
+        fn = ER.region_recon_detection_factor(self.region, 'Blue')
+        late = self._military('Red-Late', 'Red')
+        self.assertEqual(fn(self.observer, _on('r2', late)), ER.UNSEEN_DETECTION_FACTOR)
+
+    def test_the_other_side_is_untouched(self):
+        fn = ER.region_recon_detection_factor(self.region, 'Blue')
+        self.assertEqual(fn(_on('r0', self.red_in), self.observer), 1.0)
+
+    def test_combined_with_weather(self):
+        weather = ER.weather_detection_factor_fn({'day': True, 'night': False, 'adverse_weather': True})
+        fn = ER.combine_detection_factors(weather, ER.region_recon_detection_factor(self.region, 'Blue'))
+
+        self.assertAlmostEqual(fn(self.observer, self.seen_target), ER.ADVERSE_WEATHER_DETECTION_FACTOR)
+        self.assertAlmostEqual(fn(self.observer, self.unseen_target),
+                               ER.ADVERSE_WEATHER_DETECTION_FACTOR * ER.UNSEEN_DETECTION_FACTOR)
+
+    def test_neutral_side_is_a_no_op(self):
+        fn = ER.region_recon_detection_factor(self.region, 'Neutral')
+        self.assertEqual(fn(self.observer, self.unseen_target), 1.0)
+
+    def test_invalid_side_raises(self):
+        with self.assertRaises(ValueError):
+            ER.region_recon_detection_factor(self.region, 'Green')
+
+
 # ── DETERMINISMO E ORDINE DELLE ESTRAZIONI ────────────────────────────────────
 
 class TestDeterminism(unittest.TestCase):

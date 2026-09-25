@@ -869,5 +869,154 @@ class TestS9PartialFogOfWar(F.LoggerSilencer, unittest.TestCase):
             self.assertEqual(F.damage_by_source(outcome, blue_ids), [])
 
 
+class TestS9RegionReconSnapshot(F.LoggerSilencer, unittest.TestCase):
+    """S9 con il collegamento vero (attivita' C, 2026-09-25): stessa composizione di S1, ma il
+    `detection_factor` del lato Blue viene da una `Region` REALE e dalla sua istantanea di
+    ricognizione (`ER.region_recon_detection_factor`), non da una lambda di test.
+
+    Varianti, sugli stessi seed:
+      * 'none'   — nessun fattore (riferimento);
+      * 'seen'   — tutti i blocchi nella regione: la ricognizione Blue conferma 'Red-Line';
+      * 'unseen' — 'Red-Line' NON e' nella regione (forza che entra da fuori area): nessun
+        report di ricognizione la conferma, i suoi asset valgono UNSEEN_DETECTION_FACTOR
+        per gli osservatori Blue (efficienza di ricognizione reale di Blue = 0.0: nessun
+        asset con ruolo Reconnaissance);
+      * 'recon'  — come 'unseen', ma con efficienza di ricognizione di Blue-Armor imposta a
+        1.0 (patch sull'istanza, solo durante la costruzione del fattore: l'istantanea e'
+        presa prima della sessione).
+
+    I blocchi hanno `category='Military'` perche' `Region.get_blocks_by_criteria` scarta
+    oggi le Military con category diversa (limite preesistente, v. report dell'attivita' C).
+
+    Domande verificate (qualitative, P3):
+      * con il bersaglio confermato il fattore e' neutro: esito identico a 'none';
+      * con il bersaglio non confermato la Pd di Blue e' scalata esattamente del fattore
+        dichiarato, quella di Red mai; Blue rileva meno;
+      * una ricognizione efficiente attenua la nebbia (fattore piu' alto, rilevamenti non meno);
+      * riproducibilita': stesso seed, stessi rilevamenti.
+    """
+
+    SEEDS = _seeds('S9R', 6)
+    VARIANTS = ('none', 'seen', 'unseen', 'recon')
+    _EXTRA_LOGGERS = ('Context.Region', 'Logic.Tactical_Analysis')
+
+    @classmethod
+    def _factor(cls, scenario, variant):
+        from Code.Dynamic_War_Manager.Source.Context.Region import Region
+
+        if variant == 'none':
+            return None
+
+        region = Region(name=f'S9R-{variant}')
+
+        for force in scenario.forces:
+            force.category = 'Military'
+
+            if variant == 'seen' or force.side == 'Blue':
+                region.add_block(force)
+
+        if variant == 'recon':
+            with patch.object(scenario.force('Blue-Armor'), 'get_recon_efficiency', return_value=1.0):
+                return ER.region_recon_detection_factor(region, 'Blue')
+
+        return ER.region_recon_detection_factor(region, 'Blue')
+
+    @classmethod
+    def _run(cls, variant, session_id):
+        scenario = F.combined_arms_scenario()
+        blue_ids = frozenset(a for force in scenario.forces_a for a in force.assets)
+        factor = cls._factor(scenario, variant)
+        captured = []
+        original = ER.resolve_engagement
+
+        def spy(*args, **kwargs):
+            result = original(*args, **kwargs)
+            captured.append(result)
+            return result
+
+        with patch.object(ER, 'resolve_engagement', side_effect=spy):
+            outcome = scenario.run(session_id, detection_factor=factor)
+
+        return blue_ids, outcome, [r for r in captured if r is not None]
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._extra = [patch(f'Code.Dynamic_War_Manager.Source.{name}.logger') for name in cls._EXTRA_LOGGERS]
+        for patcher in cls._extra:
+            patcher.start()
+
+        cls.runs = {variant: [cls._run(variant, session_id) for session_id in cls.SEEDS]
+                    for variant in cls.VARIANTS}
+
+    @classmethod
+    def tearDownClass(cls):
+        for patcher in reversed(cls._extra):
+            patcher.stop()
+        super().tearDownClass()
+
+    @staticmethod
+    def _signature(results):
+        return [(d.observer_id, d.target_id, d.probability, d.draw, d.detected, d.time)
+                for result in results for d in result.detections]
+
+    def _detections(self, variant, blue_side):
+        for blue_ids, _, results in self.runs[variant]:
+            for result in results:
+                for detection in result.detections:
+                    if (detection.observer_id in blue_ids) == blue_side:
+                        yield detection
+
+    def _rate(self, variant, blue_side):
+        detections = list(self._detections(variant, blue_side))
+        return sum(d.detected for d in detections) / len(detections) if detections else 0.0
+
+    def _factor_ratios(self, variant, blue_side):
+        """Pd registrata / Pd senza degradazione, per ogni rilevamento dentro la portata."""
+        ratios = set()
+
+        for d in self._detections(variant, blue_side):
+            if d.distance_cpa <= d.sensor_range:
+                base = ER.detection_probability(d.distance_cpa, d.sensor_range)
+                if base > 0:
+                    ratios.add(round(d.probability / base, 9))
+
+        return ratios
+
+    def test_engagements_happen(self):
+        for variant in self.VARIANTS:
+            with self.subTest(variant=variant):
+                self.assertTrue(any(results for _, _, results in self.runs[variant]))
+                self.assertTrue(list(self._detections(variant, True)))
+
+    def test_confirmed_target_leaves_the_session_unchanged(self):
+        for (_, none_outcome, none_results), (_, seen_outcome, seen_results) in zip(self.runs['none'],
+                                                                                   self.runs['seen']):
+            self.assertEqual(self._signature(none_results), self._signature(seen_results))
+            self.assertEqual(len(none_outcome.ammunition_events), len(seen_outcome.ammunition_events))
+
+    def test_unconfirmed_target_scales_only_blue_pd(self):
+        self.assertEqual(self._factor_ratios('unseen', True), {round(ER.UNSEEN_DETECTION_FACTOR, 9)})
+        self.assertEqual(self._factor_ratios('unseen', False), {1.0})
+        self.assertEqual(self._factor_ratios('seen', True), {1.0})
+
+    def test_unconfirmed_target_lowers_blue_detection_rate(self):
+        self.assertLess(self._rate('unseen', True), self._rate('seen', True))
+
+    def test_efficient_recon_softens_the_fog(self):
+        expected = round(ER.recon_unseen_factor(1.0), 9)
+        self.assertEqual(self._factor_ratios('recon', True), {expected})
+        self.assertGreater(expected, ER.UNSEEN_DETECTION_FACTOR)
+        # Stesse estrazioni di rilevamento, soglia piu' alta: osservato 0.73 contro 0.50.
+        self.assertGreater(self._rate('recon', True), self._rate('unseen', True))
+        self.assertLess(self._rate('recon', True), self._rate('seen', True))
+
+    def test_reproducible_with_the_same_seed(self):
+        for variant in ('unseen', 'recon'):
+            with self.subTest(variant=variant):
+                _, _, again = self._run(variant, self.SEEDS[0])
+                self.assertEqual(self._signature(again), self._signature(self.runs[variant][0][2]))
+
+
 if __name__ == '__main__':
     unittest.main()

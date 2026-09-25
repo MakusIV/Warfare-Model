@@ -165,6 +165,11 @@ eventi finisce sempre e solo quando la coda si svuota.
   (`detection_factor`, 1.0 di default). Il collegamento con `Meteo_Analysis` e' una
   fabbrica di quel fattore (`meteo_detection_factor`/`weather_detection_factor_fn`), che
   il chiamante passa esplicitamente; il fattore non distingue ancora radar da ottico.
+- Non applica la nebbia di guerra da se': anch'essa e' una fabbrica dello stesso fattore
+  (`recon_detection_factor_fn`, `region_recon_detection_factor`, attivita' C 2026-09-25),
+  costruita su un'istantanea di ricognizione presa PRIMA della sessione e combinabile col
+  meteo (`combine_detection_factors`). Nessuna nebbia dinamica: la ricognizione non
+  evolve durante l'ingaggio e il fattore non consuma l'RNG.
 - Ripartisce il fuoco fra i tiratori di una forza solo con una regola greedy locale
   (round-robin, v. `_EngagementRun._schedule_next`), non con un'assegnazione ottima.
 - Non tocca `Logic/Tactical_Evaluation.calcFightResult` (fallback aggregato, invariato).
@@ -212,6 +217,21 @@ PD_RANGE_EXPONENT = 4
 # Notte + meteo avverso = 0.56.
 NIGHT_DETECTION_FACTOR = 0.7
 ADVERSE_WEATHER_DETECTION_FACTOR = 0.8
+
+# Nebbia di guerra (v. recon_detection_factor_fn / region_recon_detection_factor),
+# moltiplicativa come il meteo. STIME DICHIARATE, nessuna fonte del progetto le fornisce;
+# da ricalibrare via ATCAL interno.
+# - UNSEEN_DETECTION_FACTOR: Pd di un bersaglio il cui blocco NON e' nell'istantanea di
+#   ricognizione dell'osservatore, con ricognizione nulla. 0.5 = "il sensore deve scoprirlo
+#   da se', senza cueing": dimezza la Pd senza accecare (un sensore attivo resta un
+#   sensore; la cecita' totale e' gia' esprimibile con un fattore 0.0 esplicito).
+# - RECON_EFFICIENCY_FOG_RELIEF: quota massima della penalita' (seen - unseen) che una
+#   ricognizione di efficienza 1.0 recupera. 0.5 = anche la ricognizione migliore non
+#   rende un blocco NON confermato equivalente a uno confermato (l'istantanea dice che la
+#   ricognizione non l'ha visto), ma ne dimezza lo svantaggio. Formula in
+#   `recon_unseen_factor`.
+UNSEEN_DETECTION_FACTOR = 0.5
+RECON_EFFICIENCY_FOG_RELIEF = 0.5
 
 # Una forza e' "operativa" per l'asset con salute sopra questa soglia: e' la stessa
 # frontiera di State.isOperative (sotto il 50% l'asset e' Critical, fuori combattimento).
@@ -637,6 +657,229 @@ def meteo_detection_factor(region_name: str, date, time) -> Callable:
     from Code.Dynamic_War_Manager.Source.Logic.Meteo_Analysis import get_meteo_conditions
 
     return weather_detection_factor_fn(get_meteo_conditions(region_name, date, time))
+
+
+# ── NEBBIA DI GUERRA: Pd DALL'ISTANTANEA DI RICOGNIZIONE (attivita' C) ─────────
+#
+# Solo costruttori del fattore iniettato `detection_factor`: il motore non cambia, e chi
+# non passa questi fattori ottiene esattamente il comportamento precedente. La nebbia e'
+# PER LATO (ognuno vede secondo la propria ricognizione) e STATICA: l'istantanea e' presa
+# prima della sessione (decisione utente, niente nebbia dinamica/RNG nel motore). I fattori
+# non consumano l'RNG di sessione: l'estrazione di rilevamento avviene comunque, una per
+# direzione, nell'ordine del contratto — il fattore sposta solo la soglia.
+
+_SIDES = ('Blue', 'Red', 'Neutral')
+
+
+def _block_attribute(asset, name: str):
+    """`asset.block.<name>`, None se l'asset non ha blocco (o il blocco non ha l'attributo)."""
+    block = getattr(asset, 'block', None)
+    return getattr(block, name, None) if block is not None else None
+
+
+def _check_side(side) -> str:
+    if side not in _SIDES:
+        raise ValueError(f"side must be one of {_SIDES}, got {side!r}")
+
+    return side
+
+
+def recon_detection_factor_fn(seen_block_ids: Iterable[str], *, observer_side: str,
+                              unseen_factor: float, seen_factor: float = 1.0) -> Callable:
+    """La callable `(observer, target) -> float` della nebbia di guerra di un lato.
+
+    Per un osservatore del lato `observer_side` (lato del suo blocco, `Asset.block.side`):
+
+        seen_factor     se il blocco del bersaglio (`target.block.id`) e' in `seen_block_ids`
+                        oppure e' dello stesso lato dell'osservatore (le proprie forze sono note)
+        unseen_factor   altrimenti (blocco non confermato dalla ricognizione, o bersaglio
+                        senza blocco: nessuna ricognizione puo' averlo confermato)
+
+    Per ogni altro osservatore (lato opposto, o asset senza blocco/lato: non si puo'
+    attribuirgli la ricognizione di `observer_side`) il fattore e' 1.0: la nebbia di un
+    lato non tocca l'altro. Per applicarla a entrambi i lati si combinano due fattori
+    (`combine_detection_factors`).
+
+    `seen_block_ids` e' copiato subito in un frozenset: e' un'istantanea, una modifica
+    successiva della collezione del chiamante non la altera.
+
+    Raises:
+        ValueError: `observer_side` non valido, fattori fuori [0, 1].
+        TypeError: fattori non numerici.
+    """
+    observer_side = _check_side(observer_side)
+    unseen_factor = _check_factor(unseen_factor)
+    seen_factor = _check_factor(seen_factor)
+    seen = frozenset(seen_block_ids)
+
+    def detection_factor(observer, target) -> float:
+        if _block_attribute(observer, 'side') != observer_side:
+            return 1.0
+
+        if _block_attribute(target, 'side') == observer_side:
+            return seen_factor
+
+        return seen_factor if _block_attribute(target, 'id') in seen else unseen_factor
+
+    return detection_factor
+
+
+def combine_detection_factors(*fns: Optional[Callable]) -> Callable:
+    """Una sola callable `(observer, target) -> float` dal PRODOTTO di piu' fattori.
+
+    Serve a usare insieme meteo e ricognizione (e le nebbie dei due lati) nell'unico
+    `detection_factor` che `resolve_engagement` accetta. Le degradazioni sono indipendenti
+    e moltiplicative, come gia' notte * meteo avverso in `weather_detection_factor`.
+
+    Ogni componente e' riportato in [0, 1] prima del prodotto (un componente fuori
+    dominio non puo' compensarne un altro), e il prodotto resta quindi in [0, 1]. Le voci
+    None sono ignorate (e' il default di `detection_factor`); nessuna voce -> 1.0.
+
+    Raises:
+        TypeError: una voce non e' callable (subito), o un componente restituisce un
+            valore non numerico (alla chiamata).
+    """
+    components = tuple(fn for fn in fns if fn is not None)
+
+    for fn in components:
+        if not callable(fn):
+            raise TypeError(f"detection factors must be callables, got {fn!r}")
+
+    def detection_factor(observer, target) -> float:
+        product = 1.0
+
+        for fn in components:
+            value = fn(observer, target)
+
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise TypeError(f"detection factor must be a number, got {value!r}")
+
+            product *= min(max(float(value), 0.0), 1.0)
+
+        return product
+
+    return detection_factor
+
+
+def recon_unseen_factor(recon_efficiency: Optional[float], *,
+                        unseen_factor: float = UNSEEN_DETECTION_FACTOR, seen_factor: float = 1.0,
+                        relief: float = RECON_EFFICIENCY_FOG_RELIEF) -> float:
+    """Fattore dei bersagli NON visti, modulato dall'efficienza di ricognizione dell'osservatore.
+
+        e      = recon_efficiency riportata in [0, 1] (None -> 0.0)
+        unseen = unseen_factor + (seen_factor - unseen_factor) * relief * e
+
+    STIMA DICHIARATA di forma (lineare) e di peso (`relief`, v. RECON_EFFICIENCY_FOG_RELIEF):
+    con ricognizione nulla il fattore e' `unseen_factor`; al crescere dell'efficienza si
+    avvicina a `seen_factor`, recuperandone al massimo la quota `relief` della distanza.
+    Razionale: un apparato di ricognizione efficiente fornisce cueing anche sui blocchi che
+    l'istantanea non ha confermato (settori coperti, tracce parziali), ma non li rende
+    confermati.
+
+    Raises:
+        ValueError/TypeError: fattori o `relief` fuori [0, 1] / non numerici.
+    """
+    unseen_factor = _check_factor(unseen_factor)
+    seen_factor = _check_factor(seen_factor)
+    relief = _check_factor(relief)
+
+    if recon_efficiency is None:
+        efficiency = 0.0
+    elif isinstance(recon_efficiency, bool) or not isinstance(recon_efficiency, (int, float)):
+        raise TypeError(f"recon_efficiency must be a number, got {recon_efficiency!r}")
+    else:
+        efficiency = min(max(float(recon_efficiency), 0.0), 1.0)
+
+    return unseen_factor + (seen_factor - unseen_factor) * relief * efficiency
+
+
+def side_recon_efficiency(region, side: str) -> float:
+    """Efficienza di ricognizione di un LATO in una regione: il MASSIMO fra le sue `Military`.
+
+    `Military.get_recon_efficiency()` e' per singolo blocco (mediana di `asset.efficiency`
+    degli asset con ruolo RECONNAISSANCE, 0.0 senza). Aggregazione scelta: il massimo sui
+    blocchi `Military` del lato nella regione, non la media di
+    `Region.get_region_recon_efficiency`. Motivo: quella media include i blocchi SENZA asset
+    di ricognizione (che valgono 0.0) e misura quanto la ricognizione e' diffusa nel lato;
+    qui serve invece se l'area e' "illuminata", e per questo basta un solo buon sensore —
+    una regione con cinque battaglioni corazzati e un solo ottimo squadrone da
+    ricognizione non deve risultare poco ricognita. La mediana resta DENTRO il blocco
+    (robusta agli asset anomali di una stessa unita'), il massimo FRA i blocchi. Limite
+    dichiarato: il massimo ignora la copertura geografica (un buon sensore illumina tutta
+    la regione, ovunque sia).
+
+    Blocchi selezionati come in `Region.get_recon_reports`
+    (`get_blocks_by_criteria(side, category='Military')`), cosi' osservatori e osservati
+    seguono la stessa regola. Valori non numerici ignorati; nessun blocco -> 0.0.
+    """
+    from Code.Dynamic_War_Manager.Source.Context.Region import BlockCategory
+
+    best = 0.0
+
+    for block_item in region.get_blocks_by_criteria(side=side, category=BlockCategory.MILITARY.value):
+        method = getattr(block_item.block, 'get_recon_efficiency', None)
+
+        if not callable(method):
+            continue
+
+        value = method()
+
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            logger.debug(f"side_recon_efficiency: non-numeric recon efficiency {value!r} "
+                         f"for block {getattr(block_item.block, 'id', None)!r}, ignored")
+            continue
+
+        best = max(best, float(value))
+
+    return best
+
+
+def region_recon_detection_factor(region, observer_side: str, *,
+                                  unseen_factor: float = UNSEEN_DETECTION_FACTOR,
+                                  seen_factor: float = 1.0,
+                                  relief: float = RECON_EFFICIENCY_FOG_RELIEF) -> Callable:
+    """`recon_detection_factor_fn` per `observer_side`, dall'istantanea di ricognizione di `region`.
+
+    L'istantanea e' scattata QUI, una sola volta, prima della sessione, con la stessa
+    ricetta di `Region.update_military_priorities(use_recon=True)`:
+
+        seen = build_recon_cp_snapshot(region.get_recon_reports(enemySide(observer_side))).keys()
+
+    e `unseen_factor` e' modulato dall'efficienza di ricognizione del lato osservatore
+    (`side_recon_efficiency`, massimo fra le sue `Military`) con `recon_unseen_factor`.
+
+    Casualita': `Block.get_recognition_report` estrae con il `random` di modulo
+    (`Utility.calcProbability`) quali CAMPI del report compilare; avviene qui, fuori dal
+    percorso del motore e prima della sessione, e non tocca l'RNG di sessione. L'insieme
+    dei blocchi visti (le chiavi dell'istantanea) non dipende da quelle estrazioni.
+
+    `observer_side == 'Neutral'` non e' un lato belligerante (stesso guard di
+    `update_military_priorities`): warning e fattore neutro (1.0 ovunque).
+
+    Raises:
+        ValueError: `observer_side` non valido, fattori fuori [0, 1].
+    """
+    from Code.Dynamic_War_Manager.Source.Logic import Tactical_Analysis
+    from Code.Dynamic_War_Manager.Source.Utility.Utility import enemySide
+
+    observer_side = _check_side(observer_side)
+
+    if observer_side == 'Neutral':
+        logger.warning(f"region_recon_detection_factor: side 'Neutral' is not a belligerent, "
+                       f"no fog of war applied (region {getattr(region, 'name', None)!r})")
+        return lambda observer, target: 1.0
+
+    snapshot = Tactical_Analysis.build_recon_cp_snapshot(region.get_recon_reports(enemySide(observer_side)))
+    efficiency = side_recon_efficiency(region, observer_side)
+    effective_unseen = recon_unseen_factor(efficiency, unseen_factor=unseen_factor,
+                                           seen_factor=seen_factor, relief=relief)
+
+    logger.debug(f"region_recon_detection_factor: side {observer_side!r} in region "
+                 f"{getattr(region, 'name', None)!r} sees {sorted(snapshot)} "
+                 f"(recon efficiency {efficiency:.3f} -> unseen factor {effective_unseen:.3f})")
+
+    return recon_detection_factor_fn(snapshot.keys(), observer_side=observer_side,
+                                     unseen_factor=effective_unseen, seen_factor=seen_factor)
 
 
 # ── STATO OMBRA ───────────────────────────────────────────────────────────────
