@@ -3618,7 +3618,24 @@ AIR_WEAPONS = {
             },
         },
     
-    },       
+    },
+    # Campo 'release' delle bombe (Analysis/Document/Proposta_Dati_Rilascio_Bombe.md, tabella §6, approvata
+    # dall'utente il 2026-09-26 con le decisioni D1-D5). Solo dato: nessun codice lo usa ancora (Proposta B).
+    # Unita': quote in METRI (min_altitude AGL), velocita' in KM/H, dive_angle in gradi (min, max).
+    # Attenzione: a differenza di 'max_height' dei missili (km), qui le quote sono in metri.
+    # Molti valori sono STIME (confidenza B/M), dichiarate nel commento di ciascuna voce.
+    # Tre forme:
+    #   1) finestra singola: {'modes', 'min_altitude', 'max_altitude', 'min_speed', 'max_speed',
+    #      'dive_angle', 'drag': 'low'|'high', 'glide_ratio'}
+    #   2) drag selezionabile (D2: Mk-82AIR, M/71, SAMP-400LD, SAMP-250HD): 'drag': 'selectable' e due
+    #      finestre 'low_drag' / 'high_drag' (ognuna con i propri modes, quote, velocita', dive_angle);
+    #      'modes' di primo livello e' l'unione. La regola che sceglie la finestra (es. quota d'attacco
+    #      pianificata sotto il min_altitude low_drag -> high_drag) spetta al futuro pianificatore
+    #      d'attacco (Proposta B) e non e' decisa qui.
+    #   3) dispenser planante (D3: BK-90*): finestra singola + 'standoff_range_km': (min, max) in km,
+    #      con 'glide_ratio': None (il rapporto di planata non e' fisicamente adatto a queste armi).
+    # Voci senza 'release' (KGBU-*, D4 sospesa in attesa di verifica del flag 'dispenser'): dato non
+    # modellato, da non trattare come vincolo a valle.
     'BOMBS': {
         "Mk-84": {
             "type": "Bombs",
@@ -3629,6 +3646,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 4.4,
             "warhead": 429,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt stima §0.2 (radice cubica carica, ancora FAB-500M62); velocita [F3]
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 750,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -3702,6 +3730,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 3.3,
             "warhead": 202,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt = ancora FAB-500M62 (stessa carica); velocita [F3]
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 570,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -3775,6 +3814,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.7,
             "warhead": 92,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt stima §0.2; velocita [F3]
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 450,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -3847,6 +3897,30 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 4,
             "warhead": 92,
+            # release: drag selezionabile, due finestre (decisione D2). Confidenza M.
+            # high_drag: tabella §6 (velocita [F3] A; 60 m M/B; max_alt e dive_angle B)
+            # low_drag: STIMA (B) = finestra della Mk-82 "madre" (ballute non aperto: stessa balistica)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],  # unione dei modes delle due finestre
+                'drag': 'selectable',
+                'glide_ratio': None,
+                'low_drag': {
+                    'modes': ['level', 'dive', 'loft'],
+                    'min_altitude': 450,  # m AGL
+                    'max_altitude': 12000,  # m
+                    'min_speed': 370,  # km/h
+                    'max_speed': 1110,  # km/h
+                    'dive_angle': (0, 60),  # gradi (min, max)
+                },
+                'high_drag': {
+                    'modes': ['level', 'dive'],
+                    'min_altitude': 60,  # m AGL
+                    'max_altitude': 1500,  # m
+                    'min_speed': 520,  # km/h
+                    'max_speed': 1300,  # km/h
+                    'dive_angle': (0, 30),  # gradi (min, max)
+                },
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -3919,6 +3993,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 27,
             "warhead": 428,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt della Mk-84 base (§0.2); max_alt e dive_angle stimati (B); non plana (§0.5)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 750,  # m AGL
+                'max_altitude': 10000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -3992,6 +4077,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 25,
             "warhead": 202,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt della Mk-83 base; max_alt e dive_angle stimati (B); non plana (§0.5)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 570,  # m AGL
+                'max_altitude': 10000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -4065,6 +4161,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 22,
             "warhead": 90,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: min_alt della Mk-82 base (§0.2); max_alt e dive_angle stimati (B); non plana (§0.5)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 450,  # m AGL
+                'max_altitude': 10000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -4136,6 +4243,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 55,
             "warhead": 429,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: [F8][F9]; min_alt e min_speed stimati; glide_ratio "effettivo" da ~30 km da 10 000 m
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 60,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 550,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': 3.0,
+            },
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -4212,6 +4330,17 @@ AIR_WEAPONS = {
             # (en.wikipedia BLU-109, GlobalSecurity BLU-109; altre fonti 240-243 kg).
             # Il valore precedente (429) era quello della Mk-84 (anomalia A1).
             "warhead": 250,
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: min_alt da carica reale BLU-109 ~240 kg (§0.2); resto per analogia Paveway
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 600,  # m AGL
+                'max_altitude': 10000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -4285,6 +4414,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 15,  # k$
             "weight": 222,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: apertura Mk-339 a 1,2 s [F18] -> drag high; quote e velocita stimate
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 150,  # m AGL
+                'max_altitude': 3000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'high',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4340,6 +4480,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 15,  # k$
             "weight": 305,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: rilascio radente; 60 m e velocita da letteratura non riverificata (M), max_alt 500 m stima (B)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 60,  # m AGL
+                'max_altitude': 500,  # m
+                'min_speed': 650,  # km/h
+                'max_speed': 1020,  # km/h
+                'dive_angle': None,  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'high',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4395,6 +4546,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 17,  # k$
             "weight": 347,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: spoletta Mk-339 [F19]; quote e velocita stimate
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 300,  # m AGL
+                'max_altitude': 3000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 45),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'high',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4441,6 +4603,18 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 15,  # k$
             "weight": 598,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M/B: [F20] fonte secondaria: 50-500 m, Mach 0,6-0,9, gittata ~5-10 km; standoff_range_km stima (B)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 50,  # m AGL
+                'max_altitude': 500,  # m
+                'min_speed': 735,  # km/h
+                'max_speed': 1100,  # km/h
+                'dive_angle': None,  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (5, 10),  # km (min, max): distanza di sgancio del dispenser planante, STIMA (B)
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4496,6 +4670,18 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 15,  # k$
             "weight": 605,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M/B: [F20] fonte secondaria: 50-500 m, Mach 0,6-0,9, gittata ~5-10 km; standoff_range_km stima (B)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 50,  # m AGL
+                'max_altitude': 500,  # m
+                'min_speed': 735,  # km/h
+                'max_speed': 1100,  # km/h
+                'dive_angle': None,  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (5, 10),  # km (min, max): distanza di sgancio del dispenser planante, STIMA (B)
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4551,6 +4737,18 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 15,  # k$
             "weight": 605,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M/B: [F20] fonte secondaria: 50-500 m, Mach 0,6-0,9, gittata ~5-10 km; standoff_range_km stima (B)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 50,  # m AGL
+                'max_altitude': 500,  # m
+                'min_speed': 735,  # km/h
+                'max_speed': 1100,  # km/h
+                'dive_angle': None,  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (5, 10),  # km (min, max): distanza di sgancio del dispenser planante, STIMA (B)
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4606,6 +4804,31 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2,  # k$
             "warhead": 40,  # kg
+            # release: drag selezionabile, due finestre (decisione D2). Confidenza B.
+            # high_drag: tabella §6 (analogia Mk-82AIR, nessun dato numerico) [F13]
+            # low_drag: STIMA (B): quote 330-12000 m dal §1 della proposta (min_alt §0.2, carica 40 kg);
+            #           velocita e dive_angle per analogia con le Mk-80 LD (Mk-82), nessuna "madre" diretta
+            "release": {
+                'modes': ['level', 'dive', 'loft'],  # unione dei modes delle due finestre
+                'drag': 'selectable',
+                'glide_ratio': None,
+                'low_drag': {
+                    'modes': ['level', 'dive', 'loft'],
+                    'min_altitude': 330,  # m AGL
+                    'max_altitude': 12000,  # m
+                    'min_speed': 370,  # km/h
+                    'max_speed': 1110,  # km/h
+                    'dive_angle': (0, 60),  # gradi (min, max)
+                },
+                'high_drag': {
+                    'modes': ['level', 'dive'],
+                    'min_altitude': 50,  # m AGL
+                    'max_altitude': 1500,  # m
+                    'min_speed': 500,  # km/h
+                    'max_speed': 1100,  # km/h
+                    'dive_angle': (0, 30),  # gradi (min, max)
+                },
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4699,6 +4922,20 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 3.3,  # k$
             "warhead": 202,  # kg
+            # release: finestra singola, non selezionabile (decisione utente 2026-09-26: il nome
+            # "LD" = Low Drag indica che questa voce non ha una configurazione frenata; la D2
+            # (drag selezionabile) si applica solo a Mk-82AIR/M-71/SAMP-250HD). Tabella §6
+            # (Proposta_Dati_Rilascio_Bombe.md), confidenza B: analogia Mk-83, stessa carica 202 kg.
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 570,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 370,  # km/h
+                'max_speed': 1110,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max)
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4809,6 +5046,30 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.7,  # k$
             "warhead": 92,  # kg
+            # release: drag selezionabile, due finestre (decisione D2). Confidenza B.
+            # high_drag: tabella §6 (analogia Mk-82AIR) [F12]
+            # low_drag: STIMA (B) per analogia con la Mk-82 (stessa carica 92 kg, finestra §6 della Mk-82)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],  # unione dei modes delle due finestre
+                'drag': 'selectable',
+                'glide_ratio': None,
+                'low_drag': {
+                    'modes': ['level', 'dive', 'loft'],
+                    'min_altitude': 450,  # m AGL
+                    'max_altitude': 12000,  # m
+                    'min_speed': 370,  # km/h
+                    'max_speed': 1110,  # km/h
+                    'dive_angle': (0, 60),  # gradi (min, max)
+                },
+                'high_drag': {
+                    'modes': ['level', 'dive'],
+                    'min_altitude': 60,  # m AGL
+                    'max_altitude': 1500,  # m
+                    'min_speed': 520,  # km/h
+                    'max_speed': 1100,  # km/h
+                    'dive_angle': (0, 30),  # gradi (min, max)
+                },
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiency variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -4906,6 +5167,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 6,  # k$
             "warhead": 667,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: max_alt/max_speed [F15] (A); min_alt stima §0.2, min_speed e dive_angle stimati (B)
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 850,  # m AGL
+                'max_altitude': 12500,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1200,  # km/h
+                'dive_angle': (0, 30),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -4997,6 +5269,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 3.3,  # k$
             "warhead": 201,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza A: quote e velocita [F1][F2] (ancora di §0.2); dive_angle stimato (B)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 570,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1180,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -5124,6 +5407,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 2.7,  # k$
             "warhead": 94,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B/M: min_alt stima §0.2; resto per analogia FAB-500M62
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 450,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1180,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -5243,6 +5537,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 1.5,  # k$
             "warhead": 39,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: nessun dato d'impiego: min_alt stima §0.2, resto per analogia
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 330,  # m AGL
+                'max_altitude': 12000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1150,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -5310,6 +5615,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 1,  # k$
             "warhead": 20,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: nessun dato d'impiego: min_alt stima §0.2, tetto e velocita ridotti (modello d'epoca)
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 270,  # m AGL
+                'max_altitude': 8000,  # m
+                'min_speed': 400,  # km/h
+                'max_speed': 1000,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Soft": {
@@ -5368,6 +5684,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 16,  # k$
             "weight": 250,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M/B: dato [F21] della RBK-250 PTAB-2,5M; max_alt ridotto a 5000 m (efficacia rosa), drag low stimato
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 250,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1400,  # km/h
+                'dive_angle': (0, 30),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Air_Defense": {
@@ -5413,6 +5740,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 17,  # k$
             "weight": 500,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza A/M: [F4][F22]; max_speed = limite dell'arma, da intersecare con l'inviluppo del loadout
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 2300,  # km/h
+                'dive_angle': (0, 30),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Air_Defense": {
@@ -5450,6 +5788,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 20,  # k$
             "weight": 500,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza A/M: [F23]; max_alt 5000 m per analogia con RBK-500AO (B)
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 2300,  # km/h
+                'dive_angle': (0, 30),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Air_Defense": {
@@ -5483,6 +5832,17 @@ AIR_WEAPONS = {
             # Russian aerial bombs"; 98 kg e' il TNT-equivalente). I valori precedenti
             # (92 kg / 2.7 k$) erano copiati da Mk-82/SAMP-250HD (anomalia A2).
             "warhead": 76,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza B: max_alt e velocita [F16]; min_alt stima §0.2 (30 m della fonte non credibile), dive_angle stimato
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 400,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 600,  # km/h
+                'max_speed': 1000,  # km/h
+                'dive_angle': (0, 60),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {
@@ -5554,6 +5914,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 25,  # k$
             "warhead": 201,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M/A: quote e velocita [F14]; dive_angle stimato (B); non plana (§0.5)
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 500,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1150,  # km/h
+                'dive_angle': (0, 50),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)
@@ -5672,6 +6043,17 @@ AIR_WEAPONS = {
             "end_service": None,
             "cost": 23,  # k$
             "warhead": 201,  # kg
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md §6). Confidenza M: per analogia con KAB-500L (stessa famiglia) [F10]; dive_angle stimato (B)
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 500,  # m AGL
+                'max_altitude': 5000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1150,  # km/h
+                'dive_angle': (0, 50),  # gradi (min, max), None se 'dive' non ammesso
+                'drag': 'low',
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.05,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Structure": {  # fixed target (guided bombs and agm missile are more efficiency)

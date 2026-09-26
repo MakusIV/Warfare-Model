@@ -1989,6 +1989,144 @@ class TestBombsRegistryAnomalies(unittest.TestCase):
         self.assertGreater(get_bombs_score("RBK-250AO"), 0.0)
 
 
+class TestBombsReleaseField(unittest.TestCase):
+    """Campo 'release' del registro BOMBS
+    (Analysis/Document/Proposta_Dati_Rilascio_Bombe.md, tabella §6, decisioni D1-D4).
+
+    Tre forme: finestra singola, drag selezionabile con due finestre (D2),
+    dispenser planante con standoff_range_km (D3). Le KGBU-* (D4) non hanno il campo.
+    Quote in m, velocita' in km/h.
+    """
+
+    WINDOW_KEYS = {'min_altitude', 'max_altitude', 'min_speed', 'max_speed', 'dive_angle'}
+    SELECTABLE = ("Mk-82AIR", "M/71", "SAMP-250HD")
+    STANDOFF = ("BK-90MJ1", "BK-90MJ1-2", "BK-90MJ2")
+    SUSPENDED = ("KGBU-2AO", "KGBU-2PTAB", "KGBU-96r")
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+        self.bombs = AIR_WEAPONS["BOMBS"]
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    def _check_window(self, win, modes):
+        self.assertTrue(self.WINDOW_KEYS.issubset(win.keys()))
+        self.assertTrue(set(modes).issubset({'level', 'dive', 'loft'}))
+        self.assertGreater(win['min_altitude'], 0)
+        self.assertLess(win['min_altitude'], win['max_altitude'])
+        self.assertLess(win['min_speed'], win['max_speed'])
+        if 'dive' in modes:
+            lo, hi = win['dive_angle']
+            self.assertLessEqual(0, lo)
+            self.assertLess(lo, hi)
+            self.assertLessEqual(hi, 90)
+        else:
+            self.assertIsNone(win['dive_angle'])
+
+    def test_release_present_on_29_bombs(self):
+        """Tutte le bombe (razzi/pod esclusi, non sono sotto BOMBS) tranne le 3 KGBU sospese."""
+        with_release = [m for m, d in self.bombs.items() if 'release' in d]
+        self.assertEqual(len(with_release), 29)
+        self.assertEqual(len(self.bombs), 32)
+
+    def test_suspended_kgbu_have_no_release(self):
+        for model in self.SUSPENDED:
+            with self.subTest(model=model):
+                self.assertNotIn('release', self.bombs[model])
+
+    def test_all_release_well_formed(self):
+        for model, data in self.bombs.items():
+            rel = data.get('release')
+            if rel is None:
+                continue
+            with self.subTest(model=model):
+                self.assertIn(rel['drag'], ('low', 'high', 'selectable'))
+                if rel['drag'] == 'selectable':
+                    self.assertIn(model, self.SELECTABLE)
+                    for key in ('low_drag', 'high_drag'):
+                        self._check_window(rel[key], rel[key]['modes'])
+                        self.assertTrue(set(rel[key]['modes']).issubset(rel['modes']))
+                else:
+                    self._check_window(rel, rel['modes'])
+
+    def test_single_window_mk84(self):
+        rel = self.bombs["Mk-84"]["release"]
+        self.assertEqual(rel['modes'], ['level', 'dive', 'loft'])
+        self.assertEqual((rel['min_altitude'], rel['max_altitude']), (750, 12000))
+        self.assertEqual((rel['min_speed'], rel['max_speed']), (370, 1110))
+        self.assertEqual(rel['dive_angle'], (0, 60))
+        self.assertEqual(rel['drag'], 'low')
+        self.assertIsNone(rel['glide_ratio'])
+        self.assertNotIn('standoff_range_km', rel)
+
+    def test_single_window_values_from_table(self):
+        rel = self.bombs["FAB-500M62"]["release"]
+        self.assertEqual((rel['min_altitude'], rel['max_altitude'], rel['min_speed'], rel['max_speed']),
+                         (570, 12000, 500, 1180))
+        self.assertEqual(self.bombs["GBU-24"]["release"]['glide_ratio'], 3.0)
+        blg = self.bombs["BLG66"]["release"]
+        self.assertEqual(blg['modes'], ['level'])
+        self.assertIsNone(blg['dive_angle'])
+        self.assertEqual(blg['drag'], 'high')
+
+    def test_samp400ld_single_window(self):
+        """SAMP-400LD ('LD' = Low Drag) non ha configurazione frenata: finestra
+        singola, identica alla Mk-83 (stessa carica 202 kg) come in tabella §6."""
+        rel = self.bombs["SAMP-400LD"]["release"]
+        self.assertEqual(rel['drag'], 'low')
+        self.assertNotIn('low_drag', rel)
+        self.assertNotIn('high_drag', rel)
+        mk83 = self.bombs["Mk-83"]["release"]
+        self.assertEqual((rel['min_altitude'], rel['max_altitude'], rel['min_speed'], rel['max_speed']),
+                         (mk83['min_altitude'], mk83['max_altitude'], mk83['min_speed'], mk83['max_speed']))
+
+    def test_selectable_two_windows(self):
+        for model in self.SELECTABLE:
+            with self.subTest(model=model):
+                rel = self.bombs[model]["release"]
+                self.assertEqual(rel['drag'], 'selectable')
+                self.assertIn('low_drag', rel)
+                self.assertIn('high_drag', rel)
+                # la finestra frenata permette quote piu' basse di quella a bassa resistenza
+                self.assertLess(rel['high_drag']['min_altitude'], rel['low_drag']['min_altitude'])
+                self.assertLessEqual(rel['high_drag']['max_altitude'], rel['low_drag']['max_altitude'])
+                self.assertNotIn('loft', rel['high_drag']['modes'])
+
+    def test_mk82air_low_drag_equals_mk82(self):
+        mk82 = self.bombs["Mk-82"]["release"]
+        low = self.bombs["Mk-82AIR"]["release"]['low_drag']
+        for key in self.WINDOW_KEYS | {'modes'}:
+            with self.subTest(key=key):
+                self.assertEqual(low[key], mk82[key])
+        high = self.bombs["Mk-82AIR"]["release"]['high_drag']
+        self.assertEqual((high['min_altitude'], high['max_altitude'], high['min_speed'], high['max_speed']),
+                         (60, 1500, 520, 1300))
+
+    def test_bk90_standoff_range(self):
+        for model in self.STANDOFF:
+            with self.subTest(model=model):
+                rel = self.bombs[model]["release"]
+                self.assertEqual(rel['standoff_range_km'], (5, 10))
+                self.assertIsNone(rel['glide_ratio'])
+                self.assertEqual(rel['modes'], ['level'])
+                self.assertEqual((rel['min_altitude'], rel['max_altitude']), (50, 500))
+
+    def test_standoff_only_on_bk90(self):
+        for model, data in self.bombs.items():
+            if model in self.STANDOFF or 'release' not in data:
+                continue
+            with self.subTest(model=model):
+                self.assertNotIn('standoff_range_km', data['release'])
+
+    def test_scores_unchanged_by_release(self):
+        """Il campo non deve entrare nel punteggio (WEAPON_PARAM['BOMBS'] usa solo warhead/weight)."""
+        for model in ("Mk-84", "Mk-82AIR", "BK-90MJ1"):
+            with self.subTest(model=model):
+                self.assertGreater(get_bombs_score(model), 0.0)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  UTILITÀ CONDIVISE PER LA GENERAZIONE DELLE TABELLE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2291,6 +2429,7 @@ def _run_tests() -> unittest.TestResult:
         TestGetWeaponEfficiency,
         TestGetWeaponCost,
         TestBombsRegistryAnomalies,
+        TestBombsReleaseField,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
