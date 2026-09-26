@@ -5,20 +5,34 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-**Stato del codice descritto**: HEAD del repository al momento della stesura,
-commit `f61aa2b7` (2026-09-23), branch `analysis/dce-dcs-persistence`. `git status` non
-mostrava, a quella data, modifiche in corso in `Code/Dynamic_War_Manager/Source/`: quanto
-descritto qui è quindi il contenuto dei file così come committati, non uno snapshot di lavoro
-in corso. Il motore stesso è **completo**: 7 fasi su 7, come registrato nella wiki di progetto
+**Stato del codice descritto**: HEAD del repository al momento della stesura iniziale,
+commit `f61aa2b7` (2026-09-23), branch `analysis/dce-dcs-persistence`; aggiornato al commit
+`1d0c1127` (2026-09-26) per le tre estensioni descritte più sotto. `git status` non mostrava, a
+quella data, modifiche in corso in `Code/Dynamic_War_Manager/Source/`: quanto descritto qui è
+quindi il contenuto dei file così come committati, non uno snapshot di lavoro in corso. Il motore
+stesso è **completo**: 7 fasi su 7, come registrato nella wiki di progetto
 (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/virtual-session-engine-des.md`) e nella memoria di
 sessione del 2026-09-23.
 
-**Nota di perimetro**: in parallelo a questo manuale, un altro filone di lavoro sta estendendo
-`Asset/Ground_Weapon_Data.py`, `Asset/Ship_Weapon_Data.py`, `Context/Context.py` e aggiungendo
-`Logic/Fire_Control.py` (selezione dell'arma dai registri, oggi assente — v. §6.1). Questo
-manuale **non descrive** quelle estensioni: documenta il motore come si presentava a HEAD prima
-di quel lavoro, in cui `fire_control` è sempre una funzione iniettata dal chiamante. Un capitolo
-successivo dovrà coprire la selezione dell'arma quando quel lavoro sarà concluso.
+**Nota di perimetro (aggiornata)**: alla stesura iniziale il manuale documentava il motore senza
+la selezione dell'arma dai registri (`fire_control` era sempre iniettata da un chiamante esterno)
+e senza il collegamento della nebbia di guerra alla Pd. Entrambe le estensioni sono state
+completate senza modificare il contratto del motore (`resolve_engagement`/`ShotSpec` invariati) e
+sono ora descritte al capitolo 4, §4.16-4.18: `Logic/Fire_Control.py` (selezione dell'arma dai
+registri d'arma reali più il controllo di portata `ShotSpec.max_range`, commit `15350cc5`,
+2026-09-24) e `region_recon_detection_factor`/`recon_detection_factor_fn` in
+`Logic/Engagement_Resolver.py` (nebbia di guerra come fattore di rilevamento per-lato, commit
+`388e6ea3`, 2026-09-25). I relativi limiti noti sono raccolti nel capitolo 9, §9.1.
+
+**Aggiornamento 2026-09-26 (commit `1d0c1127`, "Proposta A")**: il contatore di scorta aggregato
+per asset (`Mobile.ammunition`, decisione R3 del 2026-09-23) è stato sostituito come stato
+primario dalla scorta **per modello d'arma** (`Mobile._stores`, nuovo modulo
+`Asset/Weapon_Stores.py`); `ammunition`/`interceptor_stock` sono ora viste calcolate su di essa,
+e la regola del "SAM puro" (`interceptor_shares_ammunition`) è stata eliminata perché non più
+necessaria. `Logic/Fire_Control.py` restituisce ora tutte le armi adatte in ordine di
+preferenza (criterio Pk/costo, non solo Pk massima) e il risolutore spara con la prima che ha
+ancora scorta. Descritto al capitolo 4, §4.4/§4.5/§4.10/§4.16/§4.17/§4.19; capitolo 7 §7.6;
+capitolo 9 §9.1.
 
 ## Convenzioni di questo manuale
 
@@ -46,7 +60,9 @@ successivo dovrà coprire la selezione dell'arma quando quel lavoro sarà conclu
    `ContactWindow`.
 4. [Lo strato 2: il risolutore d'ingaggio](05_Strato2_Risolutore_Ingaggio.md) —
    `Logic/Engagement_Resolver.py`: rilevamento, latenze di reazione, salva di Hughes,
-   saturazione, disingaggio, ingaggi a N forze.
+   saturazione, disingaggio, ingaggi a N forze; `Logic/Fire_Control.py` (selezione dell'arma dai
+   registri e controllo di portata, §4.16-4.17); nebbia di guerra come fattore di rilevamento da
+   ricognizione (§4.18); scorta per modello d'arma, `Asset/Weapon_Stores.py` (§4.19).
 5. [Lo strato 3: applicazione dello stato](06_Strato3_Applicazione_Stato.md) —
    `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py`,
    `apply_engagement_result`.
@@ -73,3 +89,7 @@ successivo dovrà coprire la selezione dell'arma quando quel lavoro sarà conclu
 | D7 | Stati operativi di un asset (salute) | `stateDiagram-v2` | 5 |
 | D8 | Flusso dati di `run_session` | `flowchart TD` | 6 |
 | D9 | Coda eventi di sessione (ENGAGEMENT/MOVEMENT) | `sequenceDiagram` | 6 |
+| D10 | `Fire_Control`: catena di selezione dell'arma dai registri | `flowchart TD` | 4 |
+| D11 | Controllo di portata: rimando `not_before` di un candidato | `sequenceDiagram` | 4 |
+| D12 | Nebbia di guerra: composizione del fattore di rilevamento | `flowchart TD` | 4 |
+| D13 | Scorta per modello d'arma: dalla fire control al consumo | `flowchart TD` | 4 |

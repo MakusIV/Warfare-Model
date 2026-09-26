@@ -57,10 +57,15 @@ Metodi di lettura (nessuna mutazione, nessun ricalcolo): `force_outcomes`
 `interceptions_consumed()` (`:229-236`), `fuel_consumed()` (`:238-245`).
 
 Nota sul conteggio munizioni (`Command/Session_Types.py:213-221`): fino al 2026-09-23
-`ammunition_consumed()` sommava anche le intercettazioni; ora sono due contatori distinti,
-perché un cannone AA e un SAM consumano scorte fisicamente diverse (v. capitolo 4, §4.4). Per un
-SAM puro (`Mobile.interceptor_shares_ammunition`) il calo totale della scorta fisica è la somma
-dei due conteggi.
+`ammunition_consumed()` sommava anche le intercettazioni; ora sono due contatori distinti per
+scopo — fuoco offensivo e intercettazione restano due eventi diversi anche quando è la stessa
+arma a farli entrambi (v. capitolo 4, §4.4). **Aggiornamento 2026-09-26** (v. capitolo 4, §4.19):
+per un'arma modellata per scorta che ha anche un ruolo antiaereo, le due voci
+(`ammunition_consumed()` e `interceptions_consumed()`) scalano la **stessa** voce fisica di
+`Mobile.stores` — il calo totale della scorta fisica di quel modello d'arma è quindi la somma dei
+due conteggi, non più solo per il caso speciale del "SAM puro" (regola ormai eliminata,
+`Mobile.interceptor_shares_ammunition` non esiste più), ma per costruzione per ogni asset con
+scorta per arma.
 
 ## 2.4 `assemble_session_outcome` — la funzione pura di aggregazione
 

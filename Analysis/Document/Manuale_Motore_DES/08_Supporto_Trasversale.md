@@ -144,7 +144,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:172-184`, `:524-600`):
+legge di Pd (`Logic/Engagement_Resolver.py:248-249`, `:642-689`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
@@ -161,7 +161,7 @@ richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor
 date, time)` collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
 placeholder deterministico: nessuna casualità entra da qui).
 
-**Limite noto, dichiarato** (`:536-541`): il fattore è **unico per ogni sensore**. La finestra di
+**Limite noto, dichiarato** (`:654-659`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar e TVD (`Mobile.detection_range`, default =
 massimo dei due), e il risolutore non sa quale dei due l'ha prodotta: non può quindi risparmiare
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
@@ -195,7 +195,10 @@ capacita = Σ_i min(canali_i, scorta_i)
 
 sugli asset di `salvo_interceptors()`. **STIMA DI PARTENZA DICHIARATA**: ogni canale intercetta
 **un** colpo per salva (Pk dell'intercettore = 1 per canale — ipotesi ottimistica per la difesa,
-primo candidato alla ricalibrazione). Nota: il risolutore d'ingaggio **non chiama direttamente**
+primo candidato alla ricalibrazione). La formula non è cambiata dal 2026-09-26: cambia solo
+**cosa** legge `scorta_i` (`asset.interceptor_stock`), ora una vista sulla scorta per arma per
+chi la ha modellata (v. §7.6 e capitolo 4 §4.19). Nota: il risolutore d'ingaggio **non chiama
+direttamente**
 questo metodo per calcolare la capacità durante la run (ricalcola con `_capacity`, capitolo 4,
 §4.5, che replica la stessa formula sullo stato **ombra**, non sull'asset reale) — questo metodo
 resta la funzione di lettura pubblica per chi consulta lo stato reale fuori da un ingaggio in
@@ -203,21 +206,44 @@ corso.
 
 ## 7.6 Munizioni e carburante su `Asset/Mobile.py` e `Asset/Aircraft.py`
 
-### Munizioni offensive vs intercettori (`Asset/Mobile.py:132-201`)
+### Munizioni offensive vs intercettori — scorta per modello d'arma (decisione A1/A3, 2026-09-26)
 
-Due contatori **distinti** dal 2026-09-23 (ricalibrazione, v. capitolo 4, §4.5):
-`Mobile.ammunition` (munizioni offensive) e `Mobile.interceptor_stock` (intercettazioni ancora
-possibili). Per i cannoni AA, `ROUNDS_PER_GUN_INTERCEPT = 100` (**STIMA DICHIARATA**, da
-ricalibrare) converte colpi fisici in intercettazioni (uno Shilka da 2000 colpi → 20
-intercettazioni, non 2000). Per un SAM **puro** (solo missile, nessun cannone: Buk, S-300, Osa,
-Tor, Strela-10 — `interceptor_shares_ammunition = True`), `interceptor_stock` è una **vista** di
-`ammunition`: stesso pool fisico, perché un missile lanciato offensivamente e un missile usato
-per intercettare sono lo stesso oggetto fisico (`:184-201`, `Mobile.py:830-872`, proprietà
-`interceptor_stock` con getter/setter che ridirige su `ammunition` quando condiviso).
+**Aggiornamento rispetto alla stesura iniziale**: fino al 2026-09-26 la scorta era **un
+contatore scalare aggregato per asset** (`Mobile.ammunition`, decisione R3 del 2026-09-23), che
+sommava armi eterogenee — la fire control sceglieva un'arma per nome, ma il risolutore scalava
+sempre lo stesso scalare, indipendentemente da quale arma avesse davvero sparato (un A-10 con 4
+Maverick a bordo ne lanciava 642, pagati dai colpi del cannone, v. capitolo 4 §4.19 per il
+dettaglio del difetto e della correzione).
 
-`Mobile.consume_ammunition(rounds)` (`:717` e seguenti) e `Mobile.consume_interceptor_stock
-(amount)` (`:882-913`) sono i due punti di applicazione consumati da
-`apply_engagement_result` (capitolo 4, §4.12).
+Lo stato primario è ora `Mobile._stores: Optional[Dict[str, int]]` = `{modello_arma: quantità}`
+(`Asset/Mobile.py:320`, valore iniziale dal registro del modello, `stores_from_registry`,
+`:833-868`); `ammunition`/`interceptor_stock` sono **viste calcolate** su di esso, con le regole
+di contabilità in un modulo a parte, `Asset/Weapon_Stores.py` (funzioni pure, senza stato: v.
+capitolo 4 §4.19 per il dettaglio delle "quattro forme della scorta" e della vista sugli
+intercettori), condiviso con lo stato ombra del risolutore (`_Shadow`, capitolo 4 §4.10) perché
+le due contabilità non possano divergere.
+
+Due contatori **distinti per scopo** dal 2026-09-23: `Mobile.ammunition` (munizioni offensive,
+proprietà a `:694-731`, setter `:699-757` che imposta un pool anonimo per chi forza la scorta a
+mano) e `Mobile.interceptor_stock` (intercettazioni ancora possibili, proprietà a `:920-951`).
+Per i cannoni AA, `ROUNDS_PER_GUN_INTERCEPT = 100` (**STIMA DICHIARATA**, da ricalibrare,
+definita in `Weapon_Stores.py` e re-esportata da `Mobile.py:183`) converte colpi fisici in
+intercettazioni (uno Shilka da 2000 colpi → 20 intercettazioni, non 2000). Dal 2026-09-26, per
+qualunque asset con armi AD modellate per arma, `interceptor_stock` è una **vista sulle voci AD**
+di `stores`: un missile antiaereo lanciato offensivamente e lo stesso missile usato per
+intercettare scalano la stessa voce del dizionario, per costruzione. **La vecchia regola del "SAM
+puro" (`Mobile.interceptor_shares_ammunition`, che condivideva un intero pool solo per gli asset
+a solo missile) è stata eliminata**: non serve più, perché la condivisione per arma copre già
+ogni caso (M6-Linebacker, Arleigh Burke, ecc. — v. capitolo 4 §4.19). Senza vista attiva (pool
+anonimo, o scorta impostata a mano col setter `interceptor_stock`, `:936-951`) resta il pool
+anonimo di intercettori, distinto dalle munizioni come prima del 2026-09-26.
+
+`Mobile.consume_ammunition(rounds, weapon=None)` (`:763-788`) e
+`Mobile.consume_interceptor_stock(amount, weapon=None)` (`:976-1009`) sono i due punti di
+applicazione consumati da `apply_engagement_result` (capitolo 4, §4.12): con `weapon` presente in
+`stores` scalano quella voce e solo quella; senza arma, o con un nome estraneo, l'aggregato
+(v. `drain_order`, capitolo 4 §4.19). Deterministico in entrambi i casi: nessuna estrazione
+casuale, mai sotto zero.
 
 ### Carburante (`Asset/Mobile.py:220-262`)
 
@@ -244,17 +270,27 @@ ignoto, autonomia mancante, aereo senza loadout assegnato, propulsione nucleare
 (`NUCLEAR_ENGINE_TYPES`, l'autonomia dichiarata "convenzionalmente 20.000 nm" dal registro è
 trattata come segnaposto, non come dato, `:258-262`).
 
-### `Aircraft.assigned_loadout` (`Asset/Aircraft.py:160-234`)
+### `Aircraft.assigned_loadout` (`Asset/Aircraft.py:169-213`)
 
 La scorta di un aereo si ricava dal **loadout assegnato**, non dal modello (`Aircraft_Data` non
 ha un campo `weapons`): prima di questa proprietà non esisteva alcuno stato "loadout di questo
 volo" su un'istanza. Assegnare un loadout (`assigned_loadout = 'Strike'`) equivale ad armare il
-velivolo per la missione: **riarma** l'aereo (ricalcola munizioni via
-`load_ammunition_from_registry()` e carburante via `load_fuel_from_registry()`, sovrascrivendo
-l'eventuale consumo precedente) — è quindi un'operazione del ciclo di campagna/assemblaggio
-missione, **non** un canale di rifornimento durante l'ingaggio (il risolutore non la chiama mai).
-`ammunition_from_registry()` (`:213-233`) somma, dal loadout, la quantità di ogni pylon che è
-un'arma reale di `AIR_WEAPONS` (esclusi serbatoi e pod) più `gun_rounds`.
+velivolo per la missione: **riarma** l'aereo (ricalcola la scorta per arma via
+`load_stores_from_registry()`, che chiama l'override di `stores_from_registry()` sotto, e il
+carburante via `load_fuel_from_registry()`, sovrascrivendo l'eventuale consumo precedente) — è
+quindi un'operazione del ciclo di campagna/assemblaggio missione, **non** un canale di
+rifornimento durante l'ingaggio (il risolutore non la chiama mai).
+
+`Aircraft.stores_from_registry()` (`:215-267`, override di `Mobile.stores_from_registry`, v.
+capitolo 4 §4.19) costruisce `{modello_arma: quantità}` dal loadout assegnato
+(`AIRCRAFT_LOADOUTS[model][loadout]['stores']['pylons']`): per ogni pilone la quantità, **solo**
+se il nome è un'arma reale di `AIR_WEAPONS` (`get_weapon(...)` non `None`) — serbatoi esterni e
+pod di rifornimento stanno anch'essi nei piloni e vanno esclusi; piloni con la stessa arma si
+sommano. Il **cannone di bordo** (`stores['gun_rounds']`) **non entra** nella scorta (decisione
+A2 rimandata, v. capitolo 9 §9.1): non ha un modello d'arma né dati di Pk/portata nei registri
+aerei, e non è un'arma candidata della fire control (`Logic/Fire_Control.py`, capitolo 4 §4.16).
+Senza loadout assegnato, delega a `Mobile.stores_from_registry()`, che per un aereo restituisce
+`None` (non modellata).
 
 ## 7.7 I punti di iniezione `fire_control` e `detection_factor`
 
@@ -262,9 +298,17 @@ Entrambi sono parametri **iniettati** in `resolve_engagement`/`run_session`, mai
 motore stesso — è il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo
 10):
 
-- `fire_control: (shooter, target) -> ShotSpec | None` — interrogata al momento dello scheduling
-  del lancio (capitolo 4, §4.4). `Session_Simulator.run_session` ne passa **una sola** a ogni
-  ingaggio della sessione, non una per lato: la callable riceve gli asset reali e può distinguere
-  lato/blocco/modello da sé (`Logic/Session_Simulator.py:101-107`, capitolo 6).
+- `fire_control: (shooter, target) -> ShotSpec | Sequence[ShotSpec] | None` — interrogata al
+  momento dello scheduling del lancio (capitolo 4, §4.4). Dal 2026-09-26 può restituire una
+  **sequenza** ordinata di opzioni, e il risolutore spara con la prima che ha ancora scorta per
+  quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
+  `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
+  per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
+  (`Logic/Session_Simulator.py:101-107`, capitolo 6). Una fabbrica che seleziona davvero l'arma
+  dai registri, invece di una tabella di ruoli, esiste in
+  `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16).
 - `detection_factor: (observer, target) -> float in [0,1]` — degradazione della Pd (§7.4);
-  default nessuna degradazione (`factor=1.0`).
+  default nessuna degradazione (`factor=1.0`). Oltre al meteo (`weather_detection_factor_fn`/
+  `meteo_detection_factor`, §7.4), esistono fabbriche dello stesso fattore per la nebbia di guerra
+  da ricognizione (`region_recon_detection_factor`, capitolo 4, §4.18) e per comporre più
+  degradazioni insieme (`combine_detection_factors`).
