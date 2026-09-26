@@ -224,13 +224,16 @@ class Aircraft(Mobile) :
         serve anche il filtro get_weapon). `stores['devices']` (pod di puntamento, sensori)
         non contiene armi: non e' letto.
 
-        Il cannone di bordo (`gun_rounds`) NON entra nella scorta (decisione A2 rimandata,
-        2026-09-26): non ha un modello d'arma ne' dati di Pk/portata nei registri aerei, e
-        non e' un'arma candidata della fire control (Logic/Fire_Control.py). Fino al
-        2026-09-26 i suoi colpi si sommavano nello scalare aggregato e pagavano i missili
-        (un A-10 con 4 AGM-65D ne lanciava 642): con la scorta per arma questo e' escluso
-        per costruzione. Senza loadout assegnato delega a Mobile, che per un aereo
-        restituisce None (non modellata): comportamento invariato.
+        Il cannone di bordo (decisione A2, 2026-09-26) ha la PROPRIA voce di scorta
+        {modello_cannone: colpi}: i colpi sono `stores['gun_rounds']` del loadout e il
+        modello e' il campo `gun` di Aircraft_Data (v. get_aircraft_gun_rounds, che ripartisce
+        i colpi fra i cannoni di un armamento misto). E' un'arma candidata della fire control
+        (Logic/Fire_Control.py) come le armi dei piloni. Senza `gun` nel registro (aerei senza
+        cannone interno, o cannone non modellato) i `gun_rounds` restano fuori dalla scorta,
+        come prima. Fino al 2026-09-26 i colpi del cannone si sommavano nello scalare
+        aggregato e pagavano i missili (un A-10 con 4 AGM-65D ne lanciava 642): con la voce
+        separata questo e' escluso per costruzione. Senza loadout assegnato delega a Mobile,
+        che per un aereo restituisce None (non modellata): comportamento invariato.
         """
         loadout_name = self.assigned_loadout
 
@@ -263,6 +266,14 @@ class Aircraft(Mobile) :
                 continue
 
             stores[weapon_name] = stores.get(weapon_name, 0) + quantity
+
+        # Cannone di bordo (A2): voce propria, mai sommata a quella di un'arma dei piloni
+        # diversa. get_aircraft_gun_rounds restituisce {} se il modello non ha `gun` o se
+        # `gun_rounds` non e' un intero positivo.
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_gun_rounds
+
+        for gun_name, rounds in get_aircraft_gun_rounds(self._model, stores_data.get('gun_rounds')).items():
+            stores[gun_name] = stores.get(gun_name, 0) + rounds
 
         return stores
 

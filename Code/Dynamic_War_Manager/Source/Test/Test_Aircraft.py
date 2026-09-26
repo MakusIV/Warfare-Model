@@ -158,16 +158,20 @@ class TestAircraft(unittest.TestCase):
 
 class TestAircraftLoadoutAmmunition(unittest.TestCase):
     """Scorta di un aereo derivata dal loadout ASSEGNATO (decisione utente 2026-09-23),
-    PER ARMA dal 2026-09-26 (A1), cannone di bordo escluso (A2 rimandata).
+    PER ARMA dal 2026-09-26 (A1), cannone di bordo con la PROPRIA voce (A2, 2026-09-26).
 
-    Dati reali di Aircraft_Loadouts (F-14A Tomcat):
-      * "Phoenix Fleet Defense": 4 AIM-54A + 2 AIM-9L + 2 AIM-7M = 8 (i 675 colpi del
-        cannone non entrano: fino al 2026-09-26 lo scalare valeva 683 e pagava i missili);
-      * "Sparrow CAP/Escort": 4 AIM-7M + 2 AIM-9L (6) + 2 serbatoi 267gal (esclusi);
+    Dati reali di Aircraft_Loadouts (F-14A Tomcat, `gun` M61A1 in Aircraft_Data):
+      * "Phoenix Fleet Defense": 4 AIM-54A + 2 AIM-9L + 2 AIM-7M = 8 missili, piu' la voce
+        M61A1 con i 675 `gun_rounds` del loadout (fino al 2026-09-26 i colpi del cannone
+        stavano nello stesso scalare e pagavano i missili; ora sono una voce separata);
+      * "Sparrow CAP/Escort": 4 AIM-7M + 2 AIM-9L (6) + 675 colpi M61A1 + 2 serbatoi
+        267gal (esclusi);
       * un loadout con pod LANTIRN in `devices` (escluso).
     """
 
-    PHOENIX = {'AIM-54A-MK47': 4, 'AIM-9L': 2, 'AIM-7M': 2}
+    PHOENIX_MISSILES = {'AIM-54A-MK47': 4, 'AIM-9L': 2, 'AIM-7M': 2}
+    GUN, GUN_ROUNDS = 'M61A1', 675
+    PHOENIX = {**PHOENIX_MISSILES, GUN: GUN_ROUNDS}
 
     MODEL = "F-14A Tomcat"
 
@@ -194,14 +198,53 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         self.assertIsNone(aircraft.ammunition)
         self.assertIsNone(aircraft.ammunition_from_registry())
 
-    def test_stores_are_per_weapon_and_gun_rounds_are_excluded(self):
+    def test_stores_are_per_weapon_and_the_gun_has_its_own_entry(self):
         aircraft = self._aircraft()
         aircraft.assigned_loadout = "Phoenix Fleet Defense"
         self.assertEqual(aircraft.stores_from_registry(), self.PHOENIX)
         self.assertEqual(aircraft.stores, self.PHOENIX)
-        self.assertEqual(aircraft.ammunition_from_registry(), 8)
-        self.assertEqual(aircraft.ammunition, 8)   # vista: somma delle voci
+        self.assertEqual(aircraft.ammunition_from_registry(), 8 + self.GUN_ROUNDS)
+        self.assertEqual(aircraft.ammunition, 8 + self.GUN_ROUNDS)   # vista: somma delle voci
         self.assertEqual(aircraft.unmodelled_weapons, frozenset())
+
+    def test_a_gun_burst_consumes_only_the_gun_entry(self):
+        """A2: il cannone non paga mai i missili (e viceversa): voci separate."""
+        aircraft = self._aircraft()
+        aircraft.assigned_loadout = "Phoenix Fleet Defense"
+        self.assertEqual(aircraft.consume_ammunition(50, weapon=self.GUN), 50)
+        self.assertEqual(aircraft.stock_of(self.GUN), self.GUN_ROUNDS - 50)
+        for missile, quantity in self.PHOENIX_MISSILES.items():
+            self.assertEqual(aircraft.stock_of(missile), quantity)
+        # esaurito il cannone, i missili restano intatti
+        self.assertEqual(aircraft.consume_ammunition(10_000, weapon=self.GUN), self.GUN_ROUNDS - 50)
+        self.assertEqual(aircraft.stock_of(self.GUN), 0)
+        self.assertEqual(aircraft.ammunition, 8)
+
+    def test_aircraft_without_gun_field_keeps_gun_rounds_out(self):
+        """Un modello senza `gun` nel registro: nessuna voce di cannone (comportamento di prima)."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
+
+        model = 'AJ/ASJ 37 Viggen'   # gun_rounds 150 nei loadout, ma nessun cannone interno reale
+        self.assertIsNone(Aircraft_Data._registry[model].gun)
+        name, loadout = next(iter(AIRCRAFT_LOADOUTS[model].items()))
+        self.assertGreater(loadout['stores']['gun_rounds'], 0)
+        aircraft = self._aircraft(model=model)
+        aircraft.assigned_loadout = name
+        expected = {}
+        for weapon, quantity, *_ in loadout['stores']['pylons'].values():
+            if get_weapon(weapon) is not None:
+                expected[weapon] = expected.get(weapon, 0) + quantity
+        self.assertEqual(aircraft.stores, expected)
+
+    def test_mixed_gun_armament_splits_the_loadout_rounds(self):
+        """MiG-15bis: 1 N-37 (40 colpi) + 2 NR-23 (160): i 200 gun_rounds si ripartiscono."""
+        aircraft = self._aircraft(model='MiG-15bis')
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+        aircraft.assigned_loadout = next(iter(AIRCRAFT_LOADOUTS['MiG-15bis']))
+        self.assertEqual(aircraft.stock_of('N-37'), 40)
+        self.assertEqual(aircraft.stock_of('NR-23'), 160)
 
     def test_a_missile_consumes_only_its_own_entry(self):
         aircraft = self._aircraft()
@@ -209,13 +252,14 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         self.assertEqual(aircraft.consume_ammunition(10, weapon='AIM-54A-MK47'), 4)
         self.assertEqual(aircraft.stock_of('AIM-54A-MK47'), 0)
         self.assertEqual(aircraft.stock_of('AIM-9L'), 2)
-        self.assertEqual(aircraft.ammunition, 4)
+        self.assertEqual(aircraft.ammunition, 4 + self.GUN_ROUNDS)
+        self.assertEqual(aircraft.stock_of(self.GUN), self.GUN_ROUNDS)
 
     def test_fuel_tanks_on_pylons_are_excluded(self):
         aircraft = self._aircraft()
         aircraft.assigned_loadout = "Sparrow CAP/Escort"
-        self.assertEqual(aircraft.stores, {'AIM-7M': 4, 'AIM-9L': 2})
-        self.assertEqual(aircraft.ammunition, 6)
+        self.assertEqual(aircraft.stores, {'AIM-7M': 4, 'AIM-9L': 2, self.GUN: self.GUN_ROUNDS})
+        self.assertEqual(aircraft.ammunition, 6 + self.GUN_ROUNDS)
 
     def test_devices_are_excluded(self):
         from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
@@ -224,7 +268,9 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         model, name, loadout = next((m, n, l) for m, loadouts in AIRCRAFT_LOADOUTS.items()
                                     for n, l in loadouts.items() if l['stores']['devices'])
         stores = loadout['stores']
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_gun_rounds
         expected = sum(q for w, q, *_ in stores['pylons'].values() if get_weapon(w) is not None)
+        expected += sum(get_aircraft_gun_rounds(model, stores.get('gun_rounds')).values())
 
         aircraft = self._aircraft(model=model)
         aircraft.assigned_loadout = name
@@ -247,10 +293,10 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         aircraft = self._aircraft()
         aircraft.assigned_loadout = "Phoenix Fleet Defense"
         aircraft.consume_ammunition(3, weapon='AIM-54A-MK47')
-        self.assertEqual(aircraft.ammunition, 5)
+        self.assertEqual(aircraft.ammunition, 5 + self.GUN_ROUNDS)
 
         aircraft.assigned_loadout = "Phoenix Fleet Defense"
-        self.assertEqual(aircraft.ammunition, 8)
+        self.assertEqual(aircraft.ammunition, 8 + self.GUN_ROUNDS)
         self.assertEqual(aircraft.stores, self.PHOENIX)
 
         aircraft.assigned_loadout = None
@@ -284,7 +330,7 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
                                 [window], lambda s, t: None, random.Random(0), None, None, None,
                                 lambda asset: profile, None, 0.0, ER.DM.DERIVED)
 
-        self.assertEqual(run.shadows['b1'].ammunition, 8)
+        self.assertEqual(run.shadows['b1'].ammunition, 8 + self.GUN_ROUNDS)
         self.assertEqual(run.shadows['b1'].stores, self.PHOENIX)
 
         # Arma nominata: la salva e' limitata dalla SUA voce (4 AIM-54A), non dal totale.
@@ -295,12 +341,21 @@ class TestAircraftLoadoutAmmunition(unittest.TestCase):
         self.assertEqual(result.salvos[0].rounds, 4)
         self.assertEqual(result.ammunition_events[0].weapon, 'AIM-54A-MK47')
 
-        # Senza arma dichiarata (tabella di test): paga l'aggregato, cannone escluso.
+        # Cannone nominato (A2): una raffica consuma SOLO la voce M61A1, i missili restano.
+        gun = ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, rounds=1, weapon=self.GUN, stock_per_round=50)
+        result = ER.resolve_engagement(_Force('blue', 'Blue', [aircraft]), _Force('red', 'Red', [_Target()]),
+                                       [window], lambda s, t: gun, random.Random(0),
+                                       reaction_profile_for=lambda asset: profile)
+        self.assertTrue(result.salvos)
+        self.assertTrue(all(event.weapon == self.GUN for event in result.ammunition_events))
+        self.assertEqual(aircraft.stores, self.PHOENIX)   # la sessione lavora su una copia
+
+        # Senza arma dichiarata (tabella di test): paga l'aggregato di tutte le voci.
         anonymous = ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, rounds=700)
         result = ER.resolve_engagement(_Force('blue', 'Blue', [aircraft]), _Force('red', 'Red', [_Target()]),
                                        [window], lambda s, t: anonymous, random.Random(0),
                                        reaction_profile_for=lambda asset: profile)
-        self.assertEqual(result.salvos[0].rounds, 8)
+        self.assertEqual(result.salvos[0].rounds, 8 + self.GUN_ROUNDS)
 
 
 class TestAircraftLoadoutFuel(unittest.TestCase):

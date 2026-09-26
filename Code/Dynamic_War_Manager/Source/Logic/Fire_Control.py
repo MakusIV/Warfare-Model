@@ -22,9 +22,12 @@ un elemento), quindi le fire control a tabella non cambiano.
    * `Vehicle`: `Vehicle_Data._registry[model].weapons` -> `GROUND_WEAPONS`;
    * `Ship`: `Ship_Data._registry[model].weapons` -> `SHIP_WEAPONS`;
    * `Aircraft`: i piloni del loadout ASSEGNATO (`Aircraft.assigned_loadout` ->
-     `AIRCRAFT_LOADOUTS[model][loadout]['stores']['pylons']`) -> `AIR_WEAPONS`. Il cannone
-     di bordo (`stores['gun_rounds']`) non ha un modello d'arma e non e' candidato. Senza
-     loadout assegnato l'aereo non ha armi candidate.
+     `AIRCRAFT_LOADOUTS[model][loadout]['stores']['pylons']`) -> `AIR_WEAPONS`, piu' il
+     cannone di bordo (decisione A2, 2026-09-26): il campo `gun` di `Aircraft_Data` ->
+     `AIR_WEAPONS` ('CANNONS'/'MACHINE_GUNS'), candidato se il loadout gli assegna colpi
+     (`stores['gun_rounds']` > 0, ripartiti da `get_aircraft_gun_rounds`). Arma candidata
+     generica: nessun filtro per tipo di missione (A4). Senza loadout assegnato l'aereo non
+     ha armi candidate.
    * qualunque altro asset (`Structure`, ...): nessuna arma, quindi None.
 2. **Chiave del bersaglio** (classe, dimensione):
    * aereo in volo: la sottoclasse di `Context.get_air_target_class` (dalla category del
@@ -125,14 +128,15 @@ fredda). Le armi candidate sono memoizzate per (classe, modello, loadout).
 - Non conta le munizioni: e' pura, e la scorta per arma la legge il risolutore (v. sopra).
   L'ordine di preferenza non dipende dalla scorta residua ne' dalla missione (filtro ROE
   per tipo di missione rimandato all'entita' `Mission`, decisione A4).
-- Il cannone di bordo degli aerei non e' candidato (decisione A2 rimandata: nessun dato).
+- Non modella il cannone degli aerei senza campo `gun` in Aircraft_Data (nessun cannone
+  interno, o cannone non ancora nel registro: v. quel campo).
 - Non distingue stealth, contromisure o ECM (materia del rilevamento).
 - Nessun componente LLM, in nessuna forma; nessun uso del modulo `random`.
 """
 
 from typing import Callable, Dict, List, Optional, Tuple
 
-from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data, get_aircraft_gun_rounds
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
 from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
@@ -356,6 +360,18 @@ def _candidate_weapons(shooter_key: Tuple[str, str, Optional[str]]) -> Tuple[_We
                     weapons.append(_Weapon(name, weapon_type, 'air', db[name]))
                     seen.add(name)
                     break  # serbatoi e pod non sono in AIR_WEAPONS: saltati
+
+        # Cannone di bordo (A2): candidato solo con colpi nel loadout, la stessa voce di
+        # scorta di Aircraft.stores_from_registry (v. get_aircraft_gun_rounds).
+        for name in get_aircraft_gun_rounds(model, (stores or {}).get('gun_rounds')):
+            if name in seen:
+                continue
+
+            for weapon_type, db in AIR_WEAPONS.items():
+                if name in db:
+                    weapons.append(_Weapon(name, weapon_type, 'air', db[name]))
+                    seen.add(name)
+                    break
 
     else:
         if class_name == 'Ship':

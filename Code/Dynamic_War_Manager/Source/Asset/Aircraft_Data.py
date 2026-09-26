@@ -59,11 +59,42 @@ SYSTEM_WEIGHTS = {
     }
 }
 
+def _validate_gun(model: str, gun: Optional[Union[str, Dict[str, int]]]) -> Optional[Union[str, Dict[str, int]]]:
+    """Valida il campo `gun` di un record (v. Aircraft_Data.__init__): None, il nome di
+    un'arma di AIR_WEAPONS, o un dict {nome: colpi > 0} di armi di AIR_WEAPONS.
+
+    Raises:
+        TypeError: tipo del campo o delle voci non valido.
+        ValueError: arma non presente in AIR_WEAPONS, o colpi non positivi.
+    """
+    if gun is None:
+        return None
+
+    from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
+
+    if isinstance(gun, str):
+        shares = {gun: 1}
+    elif isinstance(gun, dict) and gun:
+        shares = gun
+    else:
+        raise TypeError(f"gun of {model!r} must be None, a str or a non-empty dict, got: {gun!r}")
+
+    for name, rounds in shares.items():
+        if not isinstance(name, str):
+            raise TypeError(f"gun of {model!r}: weapon name must be str, got: {name!r}")
+        if get_weapon(name) is None:
+            raise ValueError(f"gun of {model!r}: weapon {name!r} not found in AIR_WEAPONS")
+        if isinstance(rounds, bool) or not isinstance(rounds, int) or rounds <= 0:
+            raise ValueError(f"gun of {model!r}: rounds of {name!r} must be a positive int, got: {rounds!r}")
+
+    return gun
+
+
 @dataclass
 class Aircraft_Data:
     _registry = {}
         
-    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, length: int, width: int, height: int, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ground_fire_armored: bool = False, air_target_class: Optional[str] = None):
+    def __init__(self, constructor: str, users: List, made: str, model: str, start_service: str, end_service: str, category: str, cost: int, roles: str, weight: float, length: int, width: int, height: int, engine: Dict, radar: Dict, TVD: Dict, radio_nav: Dict, avionics: Dict, hydraulic: Dict, speed_data: Dict, ground_fire_armored: bool = False, air_target_class: Optional[str] = None, gun: Optional[Union[str, Dict[str, int]]] = None):
         for _dim_name, _dim_value in (('length', length), ('width', width), ('height', height)):
             if not isinstance(_dim_value, int) or _dim_value <= 0:
                 raise ValueError(f"{_dim_name} must be a positive int (metri), got: {_dim_value!r}")
@@ -103,6 +134,19 @@ class Aircraft_Data:
             raise ValueError(f"air_target_class must be None or one of {list(AIR_TARGET_CLASSES)}, got: {air_target_class!r}")
         self.ground_fire_armored = ground_fire_armored
         self.air_target_class = air_target_class
+        # Cannone di bordo (decisione A2, 2026-09-26; v. Analysis/Document/
+        # Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md). Campo OPZIONALE nei dict del
+        # registro, con il nome ESATTO della voce in AIR_WEAPONS (sezioni 'CANNONS' o
+        # 'MACHINE_GUNS'), cosi' che il cannone sia un'arma candidata della fire control con
+        # la propria voce di scorta (i colpi sono `stores['gun_rounds']` del loadout):
+        #   str: un solo tipo di cannone (tutti i colpi del loadout sono suoi);
+        #   dict {modello: colpi del carico completo reale}: armamento misto (MiG-15bis:
+        #       1 N-37 da 40 colpi + 2 NR-23 da 80), i colpi del loadout si ripartiscono in
+        #       proporzione (v. get_aircraft_gun_rounds).
+        # Assente/None: nessun cannone interno (bombardieri, trasporti, AWACS, droni) o
+        # cannone non modellato; le torrette difensive di coda (Tu-22M, Tu-95MS, Tu-142,
+        # Il-76MD) non sono armi d'ingaggio e restano fuori. Comportamento invariato.
+        self.gun = _validate_gun(self.model, gun)
         Aircraft_Data._registry[self.model] = self
 
     # --- Getter e Setter ---
@@ -1118,6 +1162,7 @@ f16_data_example = {
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],    
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
     "radar": {
@@ -1155,6 +1200,7 @@ f14a_data = {
     "users": ["USA", "Iran"], "start_service": 1974, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 38,
     "roles": ["CAP", "Intercept", "Escort"],    
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 18191, "length": 19, "width": 20, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     "engine": {"model": "TF30-P-414A", "capabilities": {"thrust": 19000, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 28, "mttr": 10}},
     "radar": {
@@ -1190,6 +1236,7 @@ f14b_data = {
     "users": ["USA"], "start_service": 1991, "end_service": 2006,
     "category": [Air_Asset_Type.FIGHTER], "cost": 43,
     "roles": ["CAP", "Intercept", "Escort", "Strike"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 18951, "length": 19, "width": 20, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-400", "capabilities": {"thrust": 24000, "fuel_efficiency": 0.72, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 7}},
@@ -1226,6 +1273,7 @@ f15c_data = {
     "users": ["USA", "Israel", "Saudi Arabia", "Japan"], "start_service": 1979, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 28,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 12973, "length": 19, "width": 13, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-220", "capabilities": {"thrust": 21500, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 55, "mttr": 8}},
@@ -1262,6 +1310,7 @@ f15e_data = {
     "users": ["USA", "Saudi Arabia", "Israel", "South Korea", "Singapore"], "start_service": 1989, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 31,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 14379, "length": 19, "width": 13, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-229", "capabilities": {"thrust": 26000, "fuel_efficiency": 0.77, "type": "turbofan"}, "reliability": {"mtbf": 58, "mttr": 7}},
@@ -1298,6 +1347,7 @@ fa18a_data = {
     "users": ["USA", "Australia", "Canada", "Spain", "Kuwait"], "start_service": 1983, "end_service": 2020,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 24,
     "roles": ["CAP", "Intercept", "Strike", "CAS", "Anti_Ship"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm nel muso
     "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-400", "capabilities": {"thrust": 14500, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
@@ -1334,6 +1384,7 @@ fa18c_data = {
     "users": ["USA", "Finland", "Switzerland", "Malaysia", "Kuwait"], "start_service": 1987, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 29,
     "roles": ["CAP", "Intercept", "Strike", "SEAD", "Anti_Ship"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm nel muso
     "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 5}},
@@ -1370,6 +1421,7 @@ fa18c_lot20_data = {
     "users": ["USA", "Switzerland"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 33,
     "roles": ["CAP", "Intercept", "Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm nel muso
     "weight": 10455, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F404-GE-402", "capabilities": {"thrust": 16000, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 46, "mttr": 5}},
@@ -1406,6 +1458,7 @@ f4e_data = {
     "users": ["USA", "Israel", "Turkey", "Greece", "Germany"], "start_service": 1961, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "CAS"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno (la E e' la prima variante col cannone interno)
     "weight": 13757, "length": 19, "width": 12, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J79-GE-17", "capabilities": {"thrust": 16200, "fuel_efficiency": 0.58, "type": "turbojet"}, "reliability": {"mtbf": 35, "mttr": 9}},
@@ -1442,6 +1495,7 @@ f5e_data = {
     "users": ["USA", "Taiwan", "South Korea", "Iran", "Saudi Arabia", "Switzerland"], "start_service": 1972, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept"],
+    "gun": "M39A3",  # cannone di bordo (A2, 2026-09-26): 2 x M39A3 20 mm nel muso
     "weight": 4392, "length": 15, "width": 8, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J85-GE-21", "capabilities": {"thrust": 4500, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
@@ -1478,6 +1532,7 @@ f86e_data = {
     "users": ["USA", "UK", "Canada", "Australia", "Norway"], "start_service": 1950, "end_service": 1975,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
+    "gun": "M3-Browning",  # cannone di bordo (A2, 2026-09-26): 6 x M3 Browning 12.7 mm nel muso
     "weight": 4967, "length": 11, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "J47-GE-27", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 6}},
@@ -1514,6 +1569,7 @@ f16a_data = {
     "users": ["USA", "Belgium", "Netherlands", "Denmark", "Norway", "Pakistan"], "start_service": 1978, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-200", "capabilities": {"thrust": 10800, "fuel_efficiency": 0.73, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 6}},
@@ -1550,6 +1606,7 @@ f16a_mlu_data = {
     "users": ["Belgium", "Netherlands", "Denmark", "Norway", "Portugal"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 11,
     "roles": ["CAP", "Intercept", "Strike", "SEAD"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 7690, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F100-PW-220E", "capabilities": {"thrust": 10900, "fuel_efficiency": 0.75, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
@@ -1586,6 +1643,7 @@ f16c_bl52d_data = {
     "users": ["USA", "Turkey", "Greece", "Israel"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 18,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 8663, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-100", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.78, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 5}},
@@ -1622,6 +1680,7 @@ f16cm_bl50_data = {
     "users": ["USA", "Israel", "South Korea"], "start_service": 1991, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 20,
     "roles": ["CAP", "Strike", "Pinpoint_Strike", "SEAD"],
+    "gun": "M61A1",  # cannone di bordo (A2, 2026-09-26): M61A1 Vulcan 20 mm interno
     "weight": 8663, "length": 15, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "F110-GE-129", "capabilities": {"thrust": 13400, "fuel_efficiency": 0.80, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 5}},
@@ -1661,6 +1720,7 @@ a10a_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 13,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS"],
+    "gun": "GAU-8/A",  # cannone di bordo (A2, 2026-09-26): GAU-8/A Avenger 30 mm
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100", "capabilities": {"thrust": 40200, "fuel_efficiency": 0.37, "type": "turbofan"}, "reliability": {"mtbf": 60, "mttr": 2.5}},
@@ -1698,6 +1758,7 @@ a10c_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 18,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
+    "gun": "GAU-8/A",  # cannone di bordo (A2, 2026-09-26): GAU-8/A Avenger 30 mm
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
@@ -1735,6 +1796,7 @@ a10c2_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 23,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
+    "gun": "GAU-8/A",  # cannone di bordo (A2, 2026-09-26): GAU-8/A Avenger 30 mm
     "weight": 11321, "length": 16, "width": 17, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "GE TF34-GE-100A", "capabilities": {"thrust": 40900, "fuel_efficiency": 0.38, "type": "turbofan"}, "reliability": {"mtbf": 65, "mttr": 2.2}},
@@ -1771,6 +1833,7 @@ a20g_data = {
     "users": ["USA", "UK", "USSR"], "start_service": 1941, "end_service": 1954,
     "category": [Air_Asset_Type.ATTACKER], "cost": 1,
     "roles": ["CAS", "Strike"],
+    "gun": "AN-M2",  # cannone di bordo (A2, 2026-09-26): 6 x AN/M2 12.7 mm nel muso (blocchi A-20G-5 e successivi)
     "weight": 7918, "length": 15, "width": 19, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Wright R-2600-23", "capabilities": {"thrust": 1700, "fuel_efficiency": 0.30, "type": "piston"}, "reliability": {"mtbf": 40, "mttr": 6}},
@@ -1807,6 +1870,7 @@ a4ec_data = {
     "users": ["USA", "Israel", "Australia", "Singapore"], "start_service": 1956, "end_service": 1998,
     "category": [Air_Asset_Type.ATTACKER], "cost": 5,
     "roles": ["CAS", "Strike", "Anti_Ship"],
+    "gun": "Mk-12",  # cannone di bordo (A2, 2026-09-26): 2 x Mk 12 20 mm nelle radici alari
     "weight": 4469, "length": 12, "width": 8, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Pratt & Whitney J52-P-8A", "capabilities": {"thrust": 37800, "fuel_efficiency": 0.45, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 4}},
@@ -2391,6 +2455,7 @@ m2000c_data = {
     "users": ["France", "India", "Egypt", "UAE", "Greece", "Qatar", "Taiwan", "Peru"], "start_service": 1984, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 23,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
+    "gun": "DEFA-554",  # cannone di bordo (A2, 2026-09-26): 2 x DEFA 554 30 mm
     "weight": 7500, "length": 14, "width": 9, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "SNECMA M53-P2", "capabilities": {"thrust": 95100, "fuel_efficiency": 0.42, "type": "turbofan"}, "reliability": {"mtbf": 45, "mttr": 3}},
@@ -2429,6 +2494,7 @@ mig15_data = {
     "users": ["USSR", "China", "North Korea"], "start_service": 1949, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
+    "gun": {"N-37": 40, "NR-23": 160},  # cannone di bordo (A2, 2026-09-26): armamento misto: 1 x N-37 37 mm (40 colpi) + 2 x NR-23 23 mm (80 colpi ciascuno)
     "weight": 3635, "length": 10, "width": 10, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov VK-1", "capabilities": {"thrust": 2700, "fuel_efficiency": 0.42, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
@@ -2465,6 +2531,7 @@ mig19p_data = {
     "users": ["USSR", "China"], "start_service": 1955, "end_service": 1980,
     "category": [Air_Asset_Type.FIGHTER], "cost": 1,
     "roles": ["CAP", "Intercept"],
+    "gun": "NR-30",  # cannone di bordo (A2, 2026-09-26): 2 x NR-30 30 mm nelle radici alari (come nel registro armi e in DCS; le prime serie montavano NR-23)
     "weight": 5447, "length": 13, "width": 9, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky RD-9B", "capabilities": {"thrust": 6400, "fuel_efficiency": 0.48, "type": "turbojet"}, "reliability": {"mtbf": 28, "mttr": 7}},
@@ -2501,6 +2568,7 @@ mig21bis_data = {
     "users": ["USSR", "Russia", "India", "Finland", "Algeria", "Vietnam"], "start_service": 1959, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 2,
     "roles": ["CAP", "Intercept", "Strike"],
+    "gun": "Gsh-23L",  # cannone di bordo (A2, 2026-09-26): GSh-23L 23 mm bitubo ventrale
     "weight": 5843, "length": 16, "width": 7, "height": 4,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-25-300", "capabilities": {"thrust": 9900, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 6}},
@@ -2537,6 +2605,7 @@ mig23mld_data = {
     "users": ["USSR", "Russia", "Syria", "Libya", "Algeria"], "start_service": 1983, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 6,
     "roles": ["CAP", "Strike", "CAS"],
+    "gun": "Gsh-23L",  # cannone di bordo (A2, 2026-09-26): GSh-23L 23 mm bitubo ventrale
     "weight": 10565, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-35-300", "capabilities": {"thrust": 13000, "fuel_efficiency": 0.55, "type": "turbojet"}, "reliability": {"mtbf": 32, "mttr": 7}},
@@ -2646,6 +2715,7 @@ mig27k_data = {
     "users": ["USSR", "Russia", "India"], "start_service": 1975, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS", "Pinpoint_Strike"],
+    "gun": "GSh-6-30",  # cannone di bordo (A2, 2026-09-26): GSh-6-30 30 mm rotativo ventrale
     "weight": 11908, "length": 17, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-29B-300", "capabilities": {"thrust": 11500, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
@@ -2682,6 +2752,7 @@ mig29a_data = {
     "users": ["USSR", "Russia", "Germany", "Poland", "Romania", "Hungary"], "start_service": 1982, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 11,
     "roles": ["CAP", "Intercept", "Fighter_Sweep"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare sinistra
     "weight": 10900, "length": 17, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov RD-33", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.62, "type": "turbofan"}, "reliability": {"mtbf": 35, "mttr": 6}},
@@ -2718,6 +2789,7 @@ mig29s_data = {
     "users": ["Russia", "Algeria"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 15,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Strike"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare sinistra
     "weight": 10900, "length": 17, "width": 11, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Klimov RD-33 Series 3", "capabilities": {"thrust": 16600, "fuel_efficiency": 0.63, "type": "turbofan"}, "reliability": {"mtbf": 37, "mttr": 6}},
@@ -2754,6 +2826,7 @@ mig31_data = {
     "users": ["USSR", "Russia"], "start_service": 1981, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 22,
     "roles": ["Intercept", "CAP"],
+    "gun": "GSh-6-23M",  # cannone di bordo (A2, 2026-09-26): GSh-6-23M 23 mm rotativo
     "weight": 21820, "length": 23, "width": 14, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Soloviev D-30F6", "capabilities": {"thrust": 31000, "fuel_efficiency": 0.52, "type": "turbofan"}, "reliability": {"mtbf": 30, "mttr": 9}},
@@ -2792,6 +2865,7 @@ su17m4_data = {
     "users": ["USSR", "Russia", "Syria", "Libya"], "start_service": 1970, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 5,
     "roles": ["Strike", "CAS"],
+    "gun": "NR-30",  # cannone di bordo (A2, 2026-09-26): 2 x NR-30 30 mm nelle radici alari
     "weight": 10000, "length": 19, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "AL-21F-3", "capabilities": {"thrust": 11200, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 7}},
@@ -2829,6 +2903,7 @@ su24m_data = {
     "category": [Air_Asset_Type.BOMBER], "cost": 24,
     "air_target_class": AIR_TARGET_CLASS_AIRCRAFT,  # eccezione per modello (decisione utente 2026-09-24): vola e manovra come un caccia/cacciabombardiere, non come un Aircraft_Heavy
     "roles": ["Strike", "Pinpoint_Strike", "SEAD"],
+    "gun": "GSh-6-23M",  # cannone di bordo (A2, 2026-09-26): GSh-6-23M 23 mm rotativo ventrale (sul Su-24MR e' rimosso)
     "weight": 22300, "length": 25, "width": 18, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-21F-3A", "capabilities": {"thrust": 22000, "fuel_efficiency": 0.52, "type": "turbojet"}, "reliability": {"mtbf": 30, "mttr": 8}},
@@ -2903,6 +2978,7 @@ su25_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 11,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike"],
+    "gun": "GSh-30-2",  # cannone di bordo (A2, 2026-09-26): GSh-30-2 30 mm bitubo (VPU-17A)
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-95Sh", "capabilities": {"thrust": 9000, "fuel_efficiency": 0.60, "type": "turbojet"}, "reliability": {"mtbf": 40, "mttr": 5}},
@@ -2940,6 +3016,7 @@ su25t_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 14,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike"],
+    "gun": "GSh-30-2",  # cannone di bordo (A2, 2026-09-26): GSh-30-2 30 mm bitubo (VPU-17A)
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 42, "mttr": 5}},
@@ -2977,6 +3054,7 @@ su25tm_data = {
     "category": [Air_Asset_Type.ATTACKER], "cost": 17,
     "ground_fire_armored": True,  # cellula CAS corazzata contro il fuoco da terra (B1, v. Context.get_air_target_class)
     "roles": ["CAS", "Strike", "Pinpoint_Strike", "SEAD"],
+    "gun": "GSh-30-2",  # cannone di bordo (A2, 2026-09-26): GSh-30-2 30 mm bitubo (VPU-17A)
     "weight": 9500, "length": 15, "width": 14, "height": 5,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Tumansky R-195", "capabilities": {"thrust": 9300, "fuel_efficiency": 0.62, "type": "turbojet"}, "reliability": {"mtbf": 44, "mttr": 5}},
@@ -3013,6 +3091,7 @@ su27_data = {
     "users": ["USSR", "Russia", "Ukraine", "Kazakhstan", "China"], "start_service": 1985, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER], "cost": 30,
     "roles": ["CAP", "Intercept", "Fighter_Sweep", "Escort"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare destra
     "weight": 16380, "length": 22, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31F", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
@@ -3049,6 +3128,7 @@ su30_data = {
     "users": ["Russia", "India", "China", "Malaysia", "Algeria"], "start_service": 1996, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 38,
     "roles": ["CAP", "Strike", "SEAD", "Anti_Ship", "Escort"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare destra
     "weight": 17700, "length": 22, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31FP (TVC)", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 40, "mttr": 6}},
@@ -3085,6 +3165,7 @@ su33_data = {
     "users": ["Russia"], "start_service": 1998, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER, Air_Asset_Type.FIGHTER_BOMBER], "cost": 37,
     "roles": ["CAP", "Intercept", "Strike"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare destra
     "weight": 18400, "length": 21, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31F3", "capabilities": {"thrust": 25000, "fuel_efficiency": 0.68, "type": "turbofan"}, "reliability": {"mtbf": 38, "mttr": 7}},
@@ -3121,6 +3202,7 @@ su34_data = {
     "users": ["Russia"], "start_service": 2014, "end_service": None,
     "category": [Air_Asset_Type.FIGHTER_BOMBER], "cost": 36,
     "roles": ["Strike", "Pinpoint_Strike", "SEAD", "Anti_Ship"],
+    "gun": "GSh-30-1",  # cannone di bordo (A2, 2026-09-26): GSh-30-1 30 mm nella radice alare destra
     "weight": 22500, "length": 23, "width": 15, "height": 6,  # metri (apertura alare per width); ricerca 2026-09-16
     
     "engine": {"model": "Saturn AL-31FM1", "capabilities": {"thrust": 27000, "fuel_efficiency": 0.70, "type": "turbofan"}, "reliability": {"mtbf": 42, "mttr": 6}},
@@ -3651,6 +3733,37 @@ _build_combat_aggregates()
 # STATIC METHODS (API)
 def get_aircraft_data(model: str):
     return AIRCRAFT[model]
+
+def get_aircraft_gun_rounds(model: str, gun_rounds) -> Dict[str, int]:
+    """Scorta del cannone di bordo {modello_cannone: colpi} per `gun_rounds` colpi del loadout.
+
+    Legge il campo `gun` del registro (v. Aircraft_Data.__init__, decisione A2):
+      * nessun `gun`, modello non nel registro, `gun_rounds` non intero o <= 0: {} (cannone
+        non modellato, nessuna voce di scorta);
+      * `gun` str: {gun: gun_rounds};
+      * `gun` dict (armamento misto): ripartizione proporzionale ai colpi del carico completo
+        reale, con parte intera per difetto e i colpi residui assegnati uno per volta ai
+        resti maggiori (a parita', nome del cannone): deterministico, e la somma e' sempre
+        `gun_rounds`. Le voci a 0 colpi sono omesse.
+    """
+    record = Aircraft_Data._registry.get(model)
+    gun = getattr(record, 'gun', None)
+
+    if gun is None or isinstance(gun_rounds, bool) or not isinstance(gun_rounds, int) or gun_rounds <= 0:
+        return {}
+
+    if isinstance(gun, str):
+        return {gun: gun_rounds}
+
+    total = sum(gun.values())
+    split = {name: gun_rounds * share // total for name, share in gun.items()}
+    remainders = sorted(gun, key=lambda name: (-(gun_rounds * gun[name] % total), name))
+
+    for name in remainders[:gun_rounds - sum(split.values())]:
+        split[name] += 1
+
+    return {name: rounds for name, rounds in split.items() if rounds > 0}
+
 
 def get_aircraft_physical_characteristics(model: str) -> Dict:
     """{'length','width','height','weight'} del modello (metri, metri, metri, kg). Usata da

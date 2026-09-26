@@ -310,8 +310,10 @@ class TestFireControlShipAndAircraft(_FireControlFixture, unittest.TestCase):
         self.assertIn(spec.weapon, AIR_WEAPONS['MISSILES_AAM'])
         self.assertEqual((spec.accuracy, spec.destroy_capacity),
                          _cell(AIR_WEAPONS['MISSILES_AAM'][spec.weapon]['efficiency'], 'Aircraft', 'med'))
-        # un AAM non spara a un bersaglio di superficie
-        self.assertIsNone(self.fc(f16, F.make_vehicle(self.red, 'Red/tank4', T72, (0, 0, 0))))
+        # un AAM non spara a un bersaglio di superficie: contro il carro resta solo il
+        # cannone di bordo (A2, 2026-09-26)
+        specs = self.ranked(f16, F.make_vehicle(self.red, 'Red/tank4', T72, (0, 0, 0)))
+        self.assertEqual([spec.weapon for spec in specs], ['M61A1'])
 
     def test_aircraft_without_loadout_has_no_weapon(self):
         self.assertIsNone(self.fc(self.aircraft(F16, 5_000.0, force=self.blue), self.aircraft(SU27, 5_000.0)))
@@ -422,6 +424,108 @@ class TestFireControlRanking(_FireControlFixture, unittest.TestCase):
         weapons = FC._candidate_weapons(('Aircraft', A10, 'Maverick/Gun CAS'))
         self.assertTrue(weapons)
         self.assertTrue(all(w.cost is not None and w.cost > 0 for w in weapons))
+
+
+class TestFireControlOnboardGun(_FireControlFixture, unittest.TestCase):
+    """A2 (2026-09-26): il cannone di bordo (`Aircraft_Data.gun`) e' un'arma candidata."""
+
+    def test_registry_association_sample(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
+        expected = {A10: 'GAU-8/A', 'A-10A Thunderbolt II': 'GAU-8/A', F16: 'M61A1',
+                    'F-14A Tomcat': 'M61A1', 'F-4E Phantom II': 'M61A1', 'F-5E Tiger II': 'M39A3',
+                    'A-4E Skyhawk': 'Mk-12', 'Mirage 2000C': 'DEFA-554', 'MiG-21bis': 'Gsh-23L',
+                    'MiG-27K': 'GSh-6-30', 'MiG-29A': 'GSh-30-1', 'MiG-31': 'GSh-6-23M',
+                    SU27: 'GSh-30-1', 'Su-25T': 'GSh-30-2', SU24M: 'GSh-6-23M', 'Su-17M4': 'NR-30',
+                    'F-86E Sabre': 'M3-Browning', 'A-20G Havoc': 'AN-M2',
+                    'MiG-15bis': {'N-37': 40, 'NR-23': 160}}
+        for model, gun in expected.items():
+            with self.subTest(model=model):
+                self.assertEqual(Aircraft_Data._registry[model].gun, gun)
+        # ogni cannone del registro aerei esiste in AIR_WEAPONS (validato anche dal costruttore)
+        for model, record in Aircraft_Data._registry.items():
+            for name in ([record.gun] if isinstance(record.gun, str) else list(record.gun or ())):
+                self.assertIsNotNone(get_weapon(name), (model, name))
+
+    def test_models_without_internal_gun(self):
+        for model in (B52, SU24MR, MIG25RB, 'B-1B Lancer', 'Tu-160', 'Tu-22M', 'E-3A Sentry', 'MQ-9 Reaper',
+                      'C-130 Hercules', 'F-117 Nighthawk', 'AJ/ASJ 37 Viggen'):
+            with self.subTest(model=model):
+                self.assertIsNone(Aircraft_Data._registry[model].gun)
+
+    def test_gun_field_validation(self):
+        from Code.Dynamic_War_Manager.Source.Asset import Aircraft_Data as AD
+        for value, error in (('No-Such-Gun', ValueError), (42, TypeError), ({}, TypeError),
+                             ({'M61A1': 0}, ValueError), ({'M61A1': True}, ValueError)):
+            with self.subTest(value=value):
+                with self.assertRaises(error):
+                    Aircraft_Data(**dict(AD.f16_data_example, model='Test-Gun-Probe', gun=value))
+                self.assertNotIn('Test-Gun-Probe', Aircraft_Data._registry)
+
+    def test_gun_rounds_split(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_gun_rounds
+        self.assertEqual(get_aircraft_gun_rounds(A10, 1174), {'GAU-8/A': 1174})
+        self.assertEqual(get_aircraft_gun_rounds('MiG-15bis', 200), {'N-37': 40, 'NR-23': 160})
+        self.assertEqual(get_aircraft_gun_rounds('MiG-15bis', 7), {'N-37': 1, 'NR-23': 6})  # 1.4/5.6
+        self.assertEqual(get_aircraft_gun_rounds('MiG-15bis', 1), {'NR-23': 1})
+        for model, rounds in ((A10, 0), (A10, None), (A10, True), (B52, 500), ('Unknown', 10)):
+            self.assertEqual(get_aircraft_gun_rounds(model, rounds), {}, (model, rounds))
+
+    def test_gun_is_a_candidate_against_soft_short_range_target(self):
+        """A-10C contro un bersaglio Soft (asset_type Motorized): il GAU-8/A e' fra le armi adatte,
+        con la portata corta del registro."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import AIR_WEAPONS
+        a10 = self.aircraft(A10, 1_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        truck = F.make_vehicle(self.red, 'Red/truck-gun', 'BTR-80', (0, 0, 0), asset_type='Motorized')
+        keys, dimension, is_air = FC.target_key(truck)
+        self.assertEqual(keys, ('Soft',))
+        specs = self.ranked(a10, truck)
+        gun = next(spec for spec in specs if spec.weapon == 'GAU-8/A')
+        data = AIR_WEAPONS['CANNONS']['GAU-8/A']
+        self.assertEqual((gun.accuracy, gun.destroy_capacity), _cell(data['efficiency'], 'Soft', dimension))
+        self.assertEqual(gun.max_range, data['range'] * 1000.0)
+        self.assertFalse(gun.interceptable)
+        self.assertEqual(gun.stock_per_round, FC.GUN_BURST_ROUNDS)   # 3900 colpi/min: raffica
+
+    def test_gun_candidate_only_with_rounds_and_registry_field(self):
+        names = {w.model for w in FC._candidate_weapons(('Aircraft', A10, 'Maverick/Gun CAS'))}
+        self.assertIn('GAU-8/A', names)
+        self.assertEqual({w.model for w in FC._candidate_weapons(('Aircraft', A10, None))}, set())
+        viggen = next(iter(__import__('Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts',
+                                      fromlist=['AIRCRAFT_LOADOUTS']).AIRCRAFT_LOADOUTS['AJ/ASJ 37 Viggen']))
+        self.assertFalse({'Oerlikon-KCA'} & {w.model for w in FC._candidate_weapons(('Aircraft', 'AJ/ASJ 37 Viggen', viggen))})
+
+    def test_gun_shot_consumes_only_the_gun_entry(self):
+        """Uno sparo di cannone nel risolutore scala SOLO la voce del cannone."""
+        import random
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+        from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import ContactWindow
+        from Code.Dynamic_War_Manager.Source.Context.Reaction_Profile import ReactionProfile
+
+        a10 = self.aircraft(A10, 1_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        truck = F.make_vehicle(self.red, 'Red/truck-gun2', 'BTR-80', (0, 0, 0), asset_type='Motorized')
+        before = dict(a10.stores)
+        self.assertEqual(before['GAU-8/A'], 1174)
+        gun = next(spec for spec in self.ranked(a10, truck) if spec.weapon == 'GAU-8/A')
+        gun = ER.ShotSpec(accuracy=0.0, destroy_capacity=gun.destroy_capacity, rounds=1, weapon='GAU-8/A',
+                          stock_per_round=gun.stock_per_round)
+
+        class _Force:
+            def __init__(self, name, side, assets):
+                self.name, self.side = name, side
+                self.assets = {a.id: a for a in assets}
+
+        window = ContactWindow(a10.id, truck.id, t_start=0.0, t_end=100.0, t_cpa=50.0, distance_cpa=0.0,
+                               range_a=1000.0, range_b=None)
+        profile = ReactionProfile(detection=1.0, evaluation=1.0, command=0.0, actuation=0.0)
+        result = ER.resolve_engagement(_Force('blue', 'Blue', [a10]), _Force('red', 'Red', [truck]),
+                                       [window], lambda s, t: gun if s is a10 else None, random.Random(0),
+                                       reaction_profile_for=lambda asset: profile)
+        events = [e for e in result.ammunition_events if e.asset_id == a10.id]
+        self.assertTrue(events)
+        self.assertTrue(all(e.weapon == 'GAU-8/A' for e in events))
+        spent = sum(e.rounds for e in events)
+        self.assertEqual(spent % FC.GUN_BURST_ROUNDS, 0)
+        self.assertGreater(spent, 0)
 
 
 class TestFireControlNoneAndDeterminism(_FireControlFixture, unittest.TestCase):
