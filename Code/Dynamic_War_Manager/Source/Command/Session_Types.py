@@ -211,18 +211,33 @@ class SessionOutcome:
         return tuple(outcome for outcome in self.force_outcomes if outcome.force_id == force_id)
 
     def ammunition_consumed(self) -> Dict[str, int]:
-        """Colpi sparati OFFENSIVAMENTE per asset nell'intera sessione (solo salve).
+        """Unita' di scorta spese OFFENSIVAMENTE per asset nell'intera sessione (solo salve).
 
         Cambio di comportamento del 2026-09-23: fino ad allora sommava anche le
         intercettazioni, registrate come AmmunitionEvent. Ora sono `InterceptionEvent` e
-        si leggono con `interceptions_consumed()`. Per un SAM puro
-        (Mobile.interceptor_shares_ammunition) il calo totale della scorta fisica e' la
-        somma dei due conteggi.
+        si leggono con `interceptions_consumed()`. Con la scorta per arma (2026-09-26) un
+        missile AD usato per intercettare cala la stessa voce della salva offensiva: il
+        calo totale di quella voce e' la somma dei due conteggi.
         """
         consumed: Dict[str, int] = {}
 
         for event in self.ammunition_events:
             consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.rounds
+
+        return consumed
+
+    def ammunition_consumed_by_weapon(self) -> Dict[str, Dict[Optional[str], int]]:
+        """Come `ammunition_consumed`, ripartito per arma: {asset: {arma | None: unita'}}.
+
+        E' la forma che la porta verso il simulatore ricevera' dall'altro lato (payload per
+        pilone di DCE, `Unit.getAmmo` per arma): la scorta per arma (2026-09-26) non va
+        appiattita all'uscita. None = salve senza arma dichiarata (pool anonimo).
+        """
+        consumed: Dict[str, Dict[Optional[str], int]] = {}
+
+        for event in self.ammunition_events:
+            by_weapon = consumed.setdefault(event.asset_id, {})
+            by_weapon[event.weapon] = by_weapon.get(event.weapon, 0) + event.rounds
 
         return consumed
 

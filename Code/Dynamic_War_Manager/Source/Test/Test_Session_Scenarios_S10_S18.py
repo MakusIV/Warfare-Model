@@ -51,9 +51,17 @@ Due rifiniture successive dello stesso giorno: (1) le intercettazioni sono un ti
 d'evento a parte, `ER.InterceptionEvent` in `SessionOutcome.interception_events`
 (`interceptions_consumed()`), e `ammunition_events`/`ammunition_consumed()` contano ora le
 sole salve offensive; (2) per i SAM puri (qui il 9K35-Strela-10 di S11/S13) munizioni e
-intercettori sono lo STESSO pool (Mobile.interceptor_shares_ammunition): S11 lo verifica
-sul confine di sessione. Shilka (cannone puro) e Molniya (SAM + cannoni + antinave)
-restano a contatori indipendenti.
+intercettori erano lo STESSO pool (regola "SAM puro", poi eliminata).
+
+Dal 2026-09-26 (decisione A1, `Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md`) la
+scorta e' PER ARMA (`Mobile.stores`) e munizioni/intercettori sono viste su di essa: un
+missile AD e' lo stesso per salve e intercettazioni (Strela-10), un cannone AD intercetta
+scalando ROUNDS_PER_GUN_INTERCEPT colpi dalla propria voce (Shilka: il fuoco offensivo e
+le intercettazioni erodono ora la stessa scorta di colpi). S11 verifica il confine di
+sessione ricostruendo le scorte arma per arma dagli eventi dell'esito. Esiti attesi e
+voluti del cambio: gli aerei non hanno piu' i colpi del cannone nella scorta (A-10C
+'Maverick/Gun CAS': 9 armi invece di 1183 "colpi"), e una difesa a cannone che spara
+anche in offensiva ha meno intercettazioni.
 
 S12/S13 continuano a usare l'arma che il loadout porta davvero — bombe (`SHOTS['bomb']`,
 non intercettabili: F-16C 'Strike' = Mk-82/Mk-83, F-15E 'Laser Strike' = GBU-12) —
@@ -73,6 +81,7 @@ import unittest
 from collections import Counter
 from unittest.mock import patch
 
+from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
@@ -348,12 +357,46 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
 
     @staticmethod
     def _snapshot(forces):
-        # Indici: 0 salute, 1 munizioni, 2 carburante, 3 intercettori, 4 SAM puro (pool
-        # unico munizioni/intercettori, Mobile.interceptor_shares_ammunition).
+        # Indici: 0 salute, 1 munizioni (vista), 2 carburante, 3 intercettori (vista), 4 scorta
+        # per arma (Mobile.stores, 2026-09-26), 5 armi AD della vista intercettori, 6 armi non
+        # modellate.
         return {asset_id: (asset.health, asset.ammunition, asset.fuel,
                            getattr(asset, 'interceptor_stock', None),
-                           bool(getattr(asset, 'interceptor_shares_ammunition', False)))
+                           getattr(asset, 'stores', None),
+                           getattr(asset, 'interceptor_weapons', None),
+                           frozenset(getattr(asset, 'unmodelled_weapons', ()) or ()))
                 for force in forces for asset_id, asset in force.assets.items()}
+
+    @staticmethod
+    def _replay(entry, outcome, asset_id):
+        """(munizioni, scorta per arma, intercettori) attesi: `entry` + i consumi di `outcome`.
+
+        Riapplica gli eventi dell'esito, con le regole di Asset/Weapon_Stores (quelle
+        dell'asset reale), nell'ordine di consumo dello stato ombra (tempo; lanci prima
+        delle intercettazioni). E' la verifica "stato = iniziale + esito": l'esito deve
+        bastare a ricostruire le scorte, arma per arma.
+        """
+        _, ammo, _, interceptors, stores, weapons, unmodelled = entry
+        stores = dict(stores) if stores is not None else None
+        anonymous = None if stores is not None else ammo
+        view = WS.interceptor_view_active(stores, weapons)
+        anonymous_interceptors = None if view else interceptors
+        events = sorted([(e.time, 0, i, e) for i, e in enumerate(outcome.ammunition_events)
+                         if e.asset_id == asset_id]
+                        + [(e.time, 1, i, e) for i, e in enumerate(outcome.interception_events)
+                           if e.asset_id == asset_id], key=lambda item: item[:3])
+
+        for _, kind, _, event in events:
+            if kind == 0:
+                _, anonymous = WS.consume_stock(stores, anonymous, unmodelled, event.weapon, event.rounds, weapons)
+            elif view:
+                WS.apply_interception_plan(stores, weapons,
+                                           WS.plan_interceptions(stores, weapons, event.interceptions, event.weapon))
+            elif anonymous_interceptors is not None:
+                anonymous_interceptors = max(anonymous_interceptors - event.interceptions, 0)
+
+        return (WS.total_stock(stores, anonymous), stores,
+                WS.interceptor_stock(stores, weapons, anonymous_interceptors))
 
     @classmethod
     def setUpClass(cls):
@@ -409,25 +452,14 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
             final_health = {}
             for event in outcome.damage_events:
                 final_health[event.target_id] = event.health_after
-            ammo = outcome.ammunition_consumed()
-            intercepts = outcome.interceptions_consumed()
             fuel = outcome.fuel_consumed()
 
-            for asset_id, (health, stock, level, interceptors, shares) in run['initial'].items():
+            for asset_id, entry in run['initial'].items():
+                health, level = entry[0], entry[2]
                 with self.subTest(asset=asset_id):
                     after = run['after_1'][asset_id]
                     self.assertEqual(after[0], final_health.get(asset_id, health))
-                    if shares:
-                        # SAM puro: salve e intercettazioni scalano lo stesso pool di missili.
-                        if stock is not None:
-                            spent = ammo.get(asset_id, 0) + intercepts.get(asset_id, 0)
-                            self.assertEqual(after[1], max(stock - spent, 0))
-                        self.assertEqual(after[3], after[1])
-                    else:
-                        if stock is not None:
-                            self.assertEqual(after[1], max(stock - ammo.get(asset_id, 0), 0))
-                        if interceptors is not None:
-                            self.assertEqual(after[3], max(interceptors - intercepts.get(asset_id, 0), 0))
+                    self.assertEqual((after[1], after[4], after[3]), self._replay(entry, outcome, asset_id))
                     if level is not None:
                         self.assertAlmostEqual(after[2], level - fuel.get(asset_id, 0.0), places=9)
 
@@ -462,67 +494,76 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(checked, 0)
 
     def test_ammunition_in_second_session_draws_on_the_residual_stock(self):
-        for run in self.runs:
-            fired = run['outcome_2'].ammunition_consumed()
-            intercepts = run['outcome_2'].interceptions_consumed()
-
-            for asset_id in set(fired) | set(intercepts):
-                shares = run['initial'][asset_id][4]
-                # Salve -> ammunition (indice 1), intercettazioni -> interceptor_stock (3):
-                # ciascuna scorta risponde solo del proprio consumo; per un SAM puro il pool
-                # e' unico (indice 1) e risponde di entrambi.
-                if shares:
-                    draws = ((1, fired.get(asset_id, 0) + intercepts.get(asset_id, 0)),)
-                else:
-                    draws = ((1, fired.get(asset_id, 0)), (3, intercepts.get(asset_id, 0)))
-
-                for index, rounds in draws:
-                    residual = run['after_1'][asset_id][index]
-                    with self.subTest(asset=asset_id, index=index):
-                        if residual is not None:
-                            self.assertLessEqual(rounds, residual)
-                            self.assertEqual(run['after_2'][asset_id][index], residual - rounds)
-
-    def test_interceptions_never_draw_on_the_offensive_ammunition(self):
-        """Asset NON SAM puri che hanno solo intercettato nella sessione 1: munizioni invariate."""
+        """Le scorte consumate nella 2 partono da quelle residue della 1, arma per arma."""
         checked = 0
 
         for run in self.runs:
-            fired = run['outcome_1'].ammunition_consumed()
-            intercepts = run['outcome_1'].interceptions_consumed()
+            outcome = run['outcome_2']
+            active = {e.asset_id for e in outcome.ammunition_events} | {e.asset_id for e in outcome.interception_events}
 
-            for asset_id in set(intercepts) - set(fired):
-                if run['initial'][asset_id][4]:
-                    continue
+            for asset_id in active:
                 with self.subTest(asset=asset_id):
-                    self.assertEqual(run['after_1'][asset_id][1], run['initial'][asset_id][1])
+                    after = run['after_2'][asset_id]
+                    self.assertEqual((after[1], after[4], after[3]),
+                                     self._replay(run['after_1'][asset_id], outcome, asset_id))
                     checked += 1
 
-        if checked == 0:
-            self.skipTest('no non-pure-SAM asset intercepted without also firing in these seeds')
+        self.assertGreater(checked, 0)
 
-    def test_pure_sam_interceptions_draw_on_its_missiles(self):
-        """SAM puro (qui il 9K35-Strela-10): ogni intercettazione e' un missile in meno per
-        sparare, e la sua scorta di intercettori resta sempre uguale alle munizioni."""
+    def test_every_salvo_is_paid_by_a_stock_the_asset_really_has(self):
+        """Nessuna salva senza scorta (il difetto d'origine della proposta A): le unita' spese
+        da ogni asset nella sessione 1 non superano la sua scorta iniziale."""
+        for run in self.runs:
+            fired = run['outcome_1'].ammunition_consumed()
+
+            for asset_id, units in fired.items():
+                initial = run['initial'][asset_id][1]
+                with self.subTest(asset=asset_id):
+                    if initial is not None:
+                        self.assertLessEqual(units, initial)
+
+    def test_interceptions_draw_on_the_air_defence_entries(self):
+        """Dal 2026-09-26 un'intercettazione scala la voce dell'arma AD dichiarata dall'evento
+        (un missile, o ROUNDS_PER_GUN_INTERCEPT colpi di un cannone), la stessa del fuoco
+        offensivo — non un contatore separato. (Fino al 2026-09-26 questo test verificava il
+        contrario per i non "SAM puri": regola eliminata con la scorta per arma.)"""
+        checked = 0
+
+        for run in self.runs:
+            for event in run['outcome_1'].interception_events:
+                weapons = run['initial'][event.asset_id][5]
+                with self.subTest(asset=event.asset_id, weapon=event.weapon):
+                    if weapons:
+                        self.assertIn(event.weapon, weapons)
+                        checked += 1
+                    else:
+                        self.assertIsNone(event.weapon)
+
+        if checked == 0:
+            self.skipTest('no air-defence asset intercepted in these seeds')
+
+    def test_missile_only_air_defence_shares_one_stock(self):
+        """SAM a soli missili (qui il 9K35-Strela-10): intercettori e munizioni sono la
+        stessa scorta, e ogni intercettazione e' un missile in meno per sparare."""
         checked = 0
 
         for run in self.runs:
             fired = run['outcome_1'].ammunition_consumed()
             intercepts = run['outcome_1'].interceptions_consumed()
 
-            for asset_id, (_, stock, _, _, shares) in run['initial'].items():
-                if not shares or stock is None:
+            for asset_id, entry in run['initial'].items():
+                stock, stores, weapons = entry[1], entry[4], entry[5]
+                if not weapons or stores is None or set(stores) != set(weapons) or any(weapons.values()):
                     continue
                 with self.subTest(asset=asset_id):
                     after = run['after_1'][asset_id]
                     self.assertEqual(after[3], after[1])
-                    spent = fired.get(asset_id, 0) + intercepts.get(asset_id, 0)
-                    self.assertEqual(after[1], stock - spent)
+                    self.assertEqual(after[1], stock - fired.get(asset_id, 0) - intercepts.get(asset_id, 0))
                     if intercepts.get(asset_id, 0) > 0:
                         checked += 1
 
         if checked == 0:
-            self.skipTest('no pure SAM intercepted in these seeds')
+            self.skipTest('no missile-only air defence intercepted in these seeds')
 
     def test_assets_out_of_action_after_first_session_do_not_fight_in_the_second(self):
         for run in self.runs:
@@ -719,11 +760,11 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
     def test_only_air_defence_assets_are_interceptors(self):
         self.assertEqual(self.interceptors, ['Red-FARP/aaa0', 'Red-FARP/sam0'])
 
-    def test_real_constructors_load_a_distinct_interceptor_stock(self):
-        """Vehicle.__init__ carica interceptor_stock dal registro: per lo Shilka (solo
-        cannone AA) un contatore distinto, molto minore dei colpi; per lo Strela-10 (SAM
-        puro, solo missili 9M37) lo stesso pool delle munizioni (decisione 2026-09-23);
-        nessuna scorta per chi non ha armi AD."""
+    def test_real_constructors_load_the_interceptor_view(self):
+        """Vehicle.__init__ carica la scorta per arma e la vista degli intercettori: per lo
+        Shilka (solo cannone AA) colpi // ROUNDS_PER_GUN_INTERCEPT, molto meno dei colpi; per
+        lo Strela-10 (solo missili 9M37) la stessa scorta delle munizioni; nessuna scorta per
+        chi non ha armi AD (scorta per arma, 2026-09-26)."""
         _, farp, _ = self._build()
         aaa, sam, support = (farp.assets[a] for a in ('Red-FARP/aaa0', 'Red-FARP/sam0', 'Red-FARP/sup0'))
 
@@ -732,10 +773,11 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
             self.assertGreater(asset.interceptor_stock, 0)
         self.assertLess(aaa.interceptor_stock * 10, aaa.ammunition)
         self.assertIsNone(support.interceptor_stock)
-        self.assertFalse(aaa.interceptor_shares_ammunition)
-        self.assertTrue(sam.interceptor_shares_ammunition)
+        self.assertTrue(all(aaa.interceptor_weapons.values()))        # solo cannoni AD
+        self.assertFalse(any(sam.interceptor_weapons.values()))       # solo missili AD
         self.assertEqual(sam.interceptor_stock, sam.ammunition)
-        sam.consume_ammunition(1)
+        missile = next(iter(sam.interceptor_weapons))
+        sam.consume_ammunition(1, weapon=missile)
         self.assertEqual(sam.interceptor_stock, sam.ammunition)
 
     def test_only_air_defence_assets_shoot(self):
@@ -969,8 +1011,8 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
     Composizione: Red-Port = `Military` 'Port' con 2 corvette FSG 1241.1MP Molniya
     ormeggiate (`Ship` senza rotta, quindi ferme), 1 banchina ('Dock') + 1 deposito
     carburante ('Oil_Tank') (`Structure`, tabella 'Port') e difesa costiera minima 1
-    ZSU-23-4. Blue-Naval-Strike 4 F/A-18C ('Anti-Ship', multiruolo: arpioni 'asm' sulle
-    navi, 'agm' sul resto, tutti intercettabili).
+    ZSU-23-4. Blue-Naval-Strike STRIKE_SIZE F/A-18C ('Anti-Ship', multiruolo: arpioni 'asm'
+    sulle navi, 'agm' sul resto, tutti intercettabili).
 
     Condizioni dell'incursione (dichiarate, necessarie perche' la domanda sia esercitata):
       * ENTRAMBI i lati ad oltranza (`BOTH_HOLD`), come l'ala di S6: con la dottrina di
@@ -1004,6 +1046,20 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
     Mobile.ROUNDS_PER_GUN_INTERCEPT: Molniya 16 SA-N-4, Shilka 20) le corvette esauriscono
     gli intercettori a meta' incursione e il surplus raggiunge il porto: la verifica e'
     ripristinata.
+
+    Scorta per arma (2026-09-26, decisione A1): fino ad allora ogni F/A-18C aveva nello
+    scalare anche i 578 colpi del cannone, e con la tabella di fuoco di riferimento
+    lanciava centinaia di 'asm'/'agm' "fantasma". Con la scorta reale del loadout
+    'Anti-Ship' (2 AGM-84A + 2 AIM-9M, cannone escluso) 4 aerei portano 16 armi contro
+    52 intercettazioni del porto (2 x 16 SA-N-4 + 20 dello Shilka): l'incursione era
+    assorbita per intero, senza un solo colpo su navi o strutture (esito fisicamente
+    sensato, verificato). Perche' la domanda dello scenario (un Block navale statico e'
+    bersaglio e combatte) resti esercitata, l'incursione e' portata a STRIKE_SIZE = 16
+    aerei (costante di scenario dichiarata, non calibrata: il minimo, fra 4/8/12/16/20/24
+    provati, con danni sia sulle navi sia sulle strutture in aggregato). La difesa non
+    arriva piu' a esaurire la scorta: la capacita' e' limitata dai CANALI per evento-salva,
+    e le poche salve reali non bastano a consumarla; la verifica di esaurimento e'
+    sostituita da quella di saturazione (colpi intercettabili oltre la capacita').
     """
 
     SEEDS = _seeds('S16', 4)
@@ -1011,9 +1067,10 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
     STRUCTURES = ('Red-Port/dock0', 'Red-Port/fuel0')
     LOW_LEVEL_FACTOR = 0.3   # costante di scenario dichiarata, non calibrata
     SALVO_WINDOW = 30.0      # [s], costante di scenario dichiarata
+    STRIKE_SIZE = 16         # aerei; costante di scenario dichiarata (v. docstring)
 
-    @staticmethod
-    def _build():
+    @classmethod
+    def _build(cls):
         port = F.make_force('Red-Port', 'Red', NAVAL_BASE[0])   # 'Port'
         F.add_assets(port, [
             F.make_ship(port, 'Red-Port/fsg0', 'FSG 1241.1MP Molniya', (0.0, 0.0)),
@@ -1021,7 +1078,7 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
             F.make_structure(port, 'Red-Port/dock0', (300.0, 200.0), category='Port', asset_type='Dock'),
             F.make_structure(port, 'Red-Port/fuel0', (600.0, 200.0), category='Port', asset_type='Oil_Tank'),
             F.make_vehicle(port, 'Red-Port/aaa0', 'ZSU-23-4-Shilka', (800.0, -200.0))])
-        strike = F.build_force('Blue-Naval-Strike', 'Blue', [F.Unit('aircraft', 'F/A-18C Hornet', 4,
+        strike = F.build_force('Blue-Naval-Strike', 'Blue', [F.Unit('aircraft', 'F/A-18C Hornet', cls.STRIKE_SIZE,
                                                                     origin=(-150_000.0, 0.0, 6_000.0),
                                                                     step=(0.0, 800.0), prefix='fa',
                                                                     loadout='Anti-Ship')],
@@ -1138,11 +1195,13 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
         self.assertGreater(structures, 0)
 
     def test_interceptions_are_bounded_by_the_interceptor_stock(self):
-        """Ogni asset intercetta al piu' la propria scorta iniziale (dal registro), e in
-        aggregato l'incursione la esaurisce su almeno un asset."""
-        exhausted = 0
+        """Ogni asset intercetta al piu' la propria scorta iniziale (dal registro); la scorta
+        finale e' al piu' quella iniziale meno le intercettazioni (di meno se l'arma AD ha
+        anche sparato in offensiva: stessa voce, scorta per arma 2026-09-26); e in aggregato
+        l'incursione SATURA la difesa (colpi intercettabili oltre la capacita')."""
+        saturated = 0
 
-        for port, _, outcome, _ in self.runs:
+        for port, _, outcome, results in self.runs:
             initial = {a: asset.interceptor_stock_from_registry() for a, asset in port.assets.items()
                        if hasattr(asset, 'interceptor_stock_from_registry')}
             used = outcome.interceptions_consumed()
@@ -1151,11 +1210,14 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
                 with self.subTest(asset=asset_id):
                     self.assertIsNotNone(initial[asset_id])
                     self.assertLessEqual(count, initial[asset_id])
-                    self.assertEqual(port.assets[asset_id].interceptor_stock, initial[asset_id] - count)
+                    self.assertLessEqual(port.assets[asset_id].interceptor_stock, initial[asset_id] - count)
+                    if asset_id not in outcome.ammunition_consumed():
+                        self.assertEqual(port.assets[asset_id].interceptor_stock, initial[asset_id] - count)
 
-            exhausted += sum(1 for a in used if port.assets[a].interceptor_stock == 0)
+            saturated += sum(r.interceptable_rounds - r.intercepted for result in results
+                             for r in result.resolutions if r.force_id == 'Red-Port')
 
-        self.assertGreater(exhausted, 0)
+        self.assertGreater(saturated, 0)
 
 
 # ── S17 — SWEEP DI SCALA GERARCHICA ───────────────────────────────────────────

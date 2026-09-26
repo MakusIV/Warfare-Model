@@ -45,15 +45,19 @@ _ER_LOGGER = 'Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver.logger'
 # ── STUB E COSTRUTTORI DI COMODO ──────────────────────────────────────────────
 
 class _Asset:
-    def __init__(self, asset_id, health=100, ammunition=None, interceptor_stock=None, shares=False):
+    def __init__(self, asset_id, health=100, ammunition=None, interceptor_stock=None, stores=None,
+                 interceptor_weapons=None, unmodelled=()):
         self.id = asset_id
         self.health = health
+        # Pool anonimi (stub precedenti al 2026-09-26): munizioni e intercettori distinti.
         self.ammunition = ammunition
-        # Scorta di intercettori, distinta dalle munizioni (ricalibrazione 2026-09-23),
-        # salvo per un SAM puro (shares=True): allora il risolutore usa `ammunition` come
-        # pool unico e ignora `interceptor_stock` (v. Mobile.interceptor_shares_ammunition).
         self.interceptor_stock = interceptor_stock
-        self.interceptor_shares_ammunition = shares
+        # Scorta PER ARMA (Mobile.stores, A1 2026-09-26): con `stores` il risolutore ignora
+        # il pool anonimo `ammunition`; con `interceptor_weapons` anche `interceptor_stock`
+        # e' la vista sulle voci AD (un missile AD e' lo stesso per salve e intercettazioni).
+        self.stores = stores
+        self.interceptor_weapons = interceptor_weapons
+        self.unmodelled_weapons = frozenset(unmodelled)
 
 
 class _Force:
@@ -270,16 +274,94 @@ class TestInitiative(unittest.TestCase):
         self.assertEqual(result.salvos, ())
 
 
+# ── SCORTA PER ARMA (A1/A3, 2026-09-26) ───────────────────────────────────────
+
+class TestPerWeaponStock(unittest.TestCase):
+    """Ogni salva consuma la voce della propria arma; la fire control puo' dare un ordine di preferenza."""
+
+    def _duel(self, shooter, fire_control, t_end=100.0):
+        blue = _Force('blue', 'Blue', [shooter])
+        red = _Force('red', 'Red', [_Asset('r1')])
+        return ER.resolve_engagement(blue, red, [_window('b1', 'r1', t_end=t_end, range_b=None)],
+                                     fire_control, random.Random(0),
+                                     reaction_profile_for=_profiles({'b1': (1.0, 1.0)}))
+
+    def test_named_weapon_stops_when_its_own_entry_is_empty(self):
+        """Il difetto d'origine: 4 Maverick reali sono 4, anche con 1174 colpi di cannone a bordo."""
+        shooter = _Asset('b1', stores={'AGM-65D': 4, 'GAU-8/A': 1174})
+        result = self._duel(shooter, _always(_miss(rounds=2, weapon='AGM-65D')))
+
+        self.assertEqual(sum(s.rounds for s in result.salvos), 4)
+        self.assertEqual(result.ammunition_consumed_by_weapon(), {'b1': {'AGM-65D': 4}})
+
+    def test_sequence_falls_back_to_the_next_weapon_with_stock(self):
+        shooter = _Asset('b1', stores={'99K120': 2, '2A46M': 3})
+        options = (_miss(rounds=2, weapon='99K120'), _miss(rounds=1, weapon='2A46M'))
+        result = self._duel(shooter, _always(options))
+
+        self.assertEqual([(s.spec.weapon, s.rounds) for s in result.salvos],
+                         [('99K120', 2), ('2A46M', 1), ('2A46M', 1), ('2A46M', 1)])
+
+    def test_no_option_with_stock_exhausts_the_candidate(self):
+        shooter = _Asset('b1', stores={'99K120': 0, '2A46M': 5})
+        result = self._duel(shooter, _always((_miss(weapon='99K120'),)))
+
+        self.assertEqual(result.salvos, ())
+
+    def test_stock_per_round_limits_bursts(self):
+        """A3: una raffica consuma stock_per_round colpi; 120 colpi = 2 raffiche da 50."""
+        shooter = _Asset('b1', stores={'AZP-23-23mm': 120})
+        result = self._duel(shooter, _always(_miss(rounds=1, weapon='AZP-23-23mm', stock_per_round=50)))
+
+        self.assertEqual(len(result.salvos), 2)
+        self.assertEqual([e.rounds for e in result.ammunition_events], [50, 50])
+        self.assertEqual(result.ammunition_consumed(), {'b1': 100})
+
+    def test_salvo_is_cut_to_the_whole_bursts_available(self):
+        shooter = _Asset('b1', stores={'gun': 130})
+        result = self._duel(shooter, _always(_miss(rounds=4, weapon='gun', stock_per_round=50)), t_end=1.5)
+
+        self.assertEqual([s.rounds for s in result.salvos], [2])
+        self.assertEqual(result.ammunition_consumed(), {'b1': 100})
+
+    def test_unmodelled_weapon_fires_without_limit(self):
+        shooter = _Asset('b1', stores={'2A46M': 0}, unmodelled=('PKT-7.62',))
+        result = self._duel(shooter, _always(_miss(rounds=1, weapon='PKT-7.62')), t_end=5.5)
+
+        self.assertEqual(len(result.salvos), 5)
+
+    def test_foreign_weapon_name_pays_the_aggregate(self):
+        """Fire control a tabella ('test:*'): stesso totale del vecchio contatore aggregato."""
+        shooter = _Asset('b1', stores={'2A46M': 2, '99K120': 1})
+        result = self._duel(shooter, _always(_miss(rounds=1, weapon='test:direct_fire')))
+
+        self.assertEqual(len(result.salvos), 3)
+
+    def test_bad_sequences_raise(self):
+        shooter = _Asset('b1', ammunition=5)
+
+        with self.assertRaises(TypeError):
+            self._duel(shooter, _always((_miss(), 'nope')))
+
+        with self.assertRaises(TypeError):
+            self._duel(shooter, _always('nope'))
+
+    def test_stock_per_round_is_validated(self):
+        for bad in (0, -1, 1.5, True):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                ER.ShotSpec(accuracy=0.5, destroy_capacity=0.5, stock_per_round=bad)
+
+
 # ── R1: SATURAZIONE PER SALVA ─────────────────────────────────────────────────
 
 class TestSalvoSaturation(unittest.TestCase):
     """I primi N colpi intercettabili sono fermati; il surplus raggiunge integralmente il danno."""
 
     def _scenario(self, spec, channels=3, interceptor_stock=None, interceptor_ammo=None,
-                  shooters=('b1',), latencies=None, salvo_window=0.0, shares=False):
+                  shooters=('b1',), latencies=None, salvo_window=0.0, stores=None, interceptor_weapons=None):
         blue = _Force('blue', 'Blue', [_Asset(s) for s in shooters])
         interceptor = _Asset('r2', ammunition=interceptor_ammo, interceptor_stock=interceptor_stock,
-                             shares=shares)
+                             stores=stores, interceptor_weapons=interceptor_weapons)
         red = _Force('red', 'Red', [_Asset('r1'), interceptor], interceptors=[(interceptor, channels)])
         # La finestra chiude prima del secondo lancio (re-fire 1 s): una salva per tiratore.
         windows = [_window(s, 'r1', t_end=2.9, range_b=None) for s in shooters]
@@ -371,38 +453,57 @@ class TestSalvoSaturation(unittest.TestCase):
         self.assertEqual(result.ammunition_consumed(), {'b1': 5})
         self.assertEqual(result.interceptions_consumed(), {'r2': 3})
 
-    def test_pure_sam_interceptions_draw_on_its_missiles(self):
-        """SAM puro: le intercettazioni consumano lo stesso pool delle munizioni offensive."""
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=None,
-                                interceptor_ammo=2, channels=3, shares=True)
+    def test_sam_interceptions_draw_on_its_missile_entry(self):
+        """Scorta per arma: le intercettazioni consumano la voce del missile AD."""
+        result = self._scenario(_miss(rounds=5, interceptable=True), stores={'9M38-SAM': 2},
+                                interceptor_weapons={'9M38-SAM': False}, channels=3)
 
         self.assertEqual(result.resolutions[0].capacity, 2)
         self.assertEqual(result.interceptions_consumed(), {'r2': 2})
+        self.assertEqual([e.weapon for e in result.interception_events], ['9M38-SAM'])
 
-    def _sam_duel(self, shares):
+    def test_mixed_system_intercepts_with_guns_first_one_event_per_weapon(self):
+        """Regola F: prima i cannoni (100 colpi l'uno), poi i missili; un evento per arma."""
+        result = self._scenario(_miss(rounds=5, interceptable=True), channels=3,
+                                stores={'2A38M-30mm': 150, '9M311-SAM': 8},
+                                interceptor_weapons={'2A38M-30mm': True, '9M311-SAM': False})
+
+        self.assertEqual([(e.weapon, e.interceptions) for e in result.interception_events],
+                         [('2A38M-30mm', 1), ('9M311-SAM', 2)])
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
+
+    def _sam_duel(self, per_weapon):
         """r2 (4 missili, 3 canali) spara 3 missili su b1 a t=1; b1 risponde con 5 colpi
-        intercettabili a t=2. Con pool unico a r2 resta 1 missile per intercettare."""
+        intercettabili a t=2. Con la scorta per arma a r2 resta 1 missile per intercettare."""
         b1 = _Asset('b1')
-        r2 = _Asset('r2', ammunition=4, interceptor_stock=None if shares else 4, shares=shares)
+
+        if per_weapon:
+            r2 = _Asset('r2', stores={'9M38-SAM': 4}, interceptor_weapons={'9M38-SAM': False})
+        else:
+            r2 = _Asset('r2', ammunition=4, interceptor_stock=4)
+
         blue = _Force('blue', 'Blue', [b1])
         red = _Force('red', 'Red', [r2], interceptors=[(r2, 3)])
-        specs = {'r2': _miss(rounds=3, cycle_time=100.0),
+        specs = {'r2': ER.ShotSpec(accuracy=0.0, destroy_capacity=0.0, rounds=3, cycle_time=100.0,
+                                   weapon='9M38-SAM'),
                  'b1': _miss(rounds=5, interceptable=True, cycle_time=100.0)}
         return ER.resolve_engagement(blue, red, [_window('b1', 'r2', t_end=2.9)],
                                      lambda shooter, target: specs[shooter.id], random.Random(0),
                                      reaction_profile_for=_profiles({'r2': (1.0, 1.0), 'b1': (2.0, 1.0)}))
 
-    def test_pure_sam_offensive_fire_reduces_its_interception_capacity(self):
-        shared = self._sam_duel(shares=True)
+    def test_sam_offensive_fire_reduces_its_interception_capacity(self):
+        """Un missile AD e' uno solo: 3 lanciati in salva, ne resta 1 per intercettare."""
+        shared = self._sam_duel(per_weapon=True)
         red_resolution = [r for r in shared.resolutions if r.force_id == 'red']
 
         self.assertEqual(shared.ammunition_consumed(), {'r2': 3, 'b1': 5})
+        self.assertEqual(shared.ammunition_consumed_by_weapon()['r2'], {'9M38-SAM': 3})
         self.assertEqual([(r.capacity, r.intercepted) for r in red_resolution], [(1, 1)])
         self.assertEqual(shared.interceptions_consumed(), {'r2': 1})
 
     def test_independent_counters_keep_the_full_capacity(self):
-        """Stesso duello senza pool unico (es. sistema misto/cannone): capacita' piena."""
-        independent = self._sam_duel(shares=False)
+        """Stesso duello con pool anonimi distinti (stub senza scorta per arma): capacita' piena."""
+        independent = self._sam_duel(per_weapon=False)
         red_resolution = [r for r in independent.resolutions if r.force_id == 'red']
 
         self.assertEqual([(r.capacity, r.intercepted) for r in red_resolution], [(3, 3)])
@@ -1743,18 +1844,48 @@ class TestIntegrationWithRealObjects(unittest.TestCase):
         self.assertEqual((asset.ammunition, asset.interceptor_stock), (10 - 3, 20 - 2))
         self.assertEqual((summary['ammunition_events'], summary['interception_events']), (1, 1))
 
-    def test_apply_on_a_pure_sam_draws_both_events_from_one_pool(self):
-        """SAM puro reale (Mobile con scorta condivisa): salva e intercettazione scalano ammunition."""
+    def test_apply_on_a_sam_draws_both_events_from_the_same_entry(self):
+        """Mobile reale con scorta per arma: salva e intercettazione scalano la stessa voce."""
         asset = self.red.assets['red-0']
-        asset._interceptor_shares_ammunition = True   # come dopo load_interceptor_stock_from_registry
+        asset.stores = {'9M38-SAM': 10}
+        asset._interceptor_weapons = {'9M38-SAM': False}   # come dopo load_interceptor_stock_from_registry
         result = ER.EngagementResult(
             t_start=0.0, t_end=1.0, forces=(),
-            ammunition_events=(ER.AmmunitionEvent(time=0.5, asset_id='red-0', rounds=3),),
-            interception_events=(ER.InterceptionEvent(time=1.0, asset_id='red-0', interceptions=2),))
+            ammunition_events=(ER.AmmunitionEvent(time=0.5, asset_id='red-0', rounds=3, weapon='9M38-SAM'),),
+            interception_events=(ER.InterceptionEvent(time=1.0, asset_id='red-0', interceptions=2,
+                                                      weapon='9M38-SAM'),))
 
         ER.apply_engagement_result(result, self.red)
 
         self.assertEqual((asset.ammunition, asset.interceptor_stock), (10 - 3 - 2, 10 - 3 - 2))
+
+    def test_apply_replays_consumptions_in_time_order(self):
+        """L'ordine conta con la scorta per arma: l'intercettazione a t=1 (una raffica da
+        100 colpi) precede la salva senza arma a t=2, che paga l'aggregato. Applicate nel
+        vecchio ordine (prima tutte le salve) l'intercettazione non troverebbe 100 colpi."""
+        asset = self.red.assets['red-0']
+        asset.stores = {'gun': 100, 'sam': 1}
+        asset._interceptor_weapons = {'gun': True, 'sam': False}
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=2.0, forces=(),
+            ammunition_events=(ER.AmmunitionEvent(time=2.0, asset_id='red-0', rounds=1),),
+            interception_events=(ER.InterceptionEvent(time=1.0, asset_id='red-0', interceptions=1,
+                                                      weapon='gun'),))
+
+        ER.apply_engagement_result(result, self.red)
+
+        self.assertEqual(asset.stores, {'gun': 0, 'sam': 0})
+
+    def test_apply_consumes_the_weapon_of_each_event(self):
+        asset = self.red.assets['red-0']
+        asset.stores = {'2A46M': 38, '99K120': 4}
+        result = ER.EngagementResult(
+            t_start=0.0, t_end=1.0, forces=(),
+            ammunition_events=(ER.AmmunitionEvent(time=0.5, asset_id='red-0', rounds=2, weapon='99K120'),))
+
+        ER.apply_engagement_result(result, self.red)
+
+        self.assertEqual(asset.stores, {'2A46M': 38, '99K120': 2})
 
     def test_applied_state_matches_the_reported_outcome(self):
         result = self._resolve()

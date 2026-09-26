@@ -3,15 +3,18 @@
 Passo B2 del motore di sessioni virtuali (v. [[project_virtual_session_engine_design]] e la
 proposta B1 `Analysis/Document/Proposta_Efficacia_Antiaerea.md`, approvata dall'utente il
 2026-09-24). Il risolutore d'ingaggio (`Logic/Engagement_Resolver.py`) riceve la dottrina
-di fuoco come funzione iniettata `fire_control(shooter, target) -> ShotSpec | None`; fino a
-qui l'unica implementazione era la tabella a ruoli di test (`Test/Scenario_Fixtures.py`).
-Questo modulo ne fornisce una che legge i registri veri:
+di fuoco come funzione iniettata `fire_control(shooter, target) -> ShotSpec | Sequence[ShotSpec]
+| None`; fino a qui l'unica implementazione era la tabella a ruoli di test
+(`Test/Scenario_Fixtures.py`). Questo modulo ne fornisce una che legge i registri veri:
 
     fire_control = make_registry_fire_control()
     run_session(order, forces, routes, fire_control, ...)
 
-Il motore (`Engagement_Resolver`, `Session_Simulator`) NON e' modificato e il contratto
-`ShotSpec` e' invariato.
+Dal 2026-09-26 (proposta A, `Analysis/Document/Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md`)
+la fire control restituisce TUTTE le armi adatte, come tupla di `ShotSpec` in ordine di
+preferenza (v. "Scelta"): il risolutore spara con la prima che ha ancora scorta per arma
+(`Mobile.stores`). Una `ShotSpec` singola resta un valore valido del contratto (sequenza di
+un elemento), quindi le fire control a tabella non cambiano.
 
 ## La catena, per ogni coppia (tiratore, bersaglio)
 
@@ -46,10 +49,16 @@ Il motore (`Engagement_Resolver`, `Session_Simulator`) NON e' modificato e il co
      Infantry_Support) puo' sparare anche a superficie, mentre `combat_range` li esclude.
    * Pk = accuracy x destroy_capacity > 0.
 4. **Filtro di quota** (solo bersagli aerei, v. "Quota" sotto).
-5. **Scelta.** Massima Pk = accuracy x destroy_capacity; a parita', tie-break
-   deterministico sul nome del modello d'arma (poi sul tipo). I valori sono letti GREZZI da
-   `efficiency[classe][dimensione]`: mai gli scorer (`calc_weapon_efficiency` usa il modulo
-   `random` globale e romperebbe il determinismo di sessione).
+5. **Ordine di preferenza (decisione A5, 2026-09-26: compromesso Pk/costo).** Tutte le
+   armi adatte, ordinate per punteggio decrescente (v. `preference_score`):
+
+       punteggio = Pk / costo ** WEAPON_COST_EXPONENT     (Pk = accuracy x destroy_capacity)
+
+   se TUTTE le armi adatte hanno un `cost` positivo nel registro; altrimenti la sola Pk
+   (criterio precedente). A parita' di punteggio: Pk maggiore, poi nome del modello, poi
+   tipo (deterministico). I valori sono letti GREZZI da `efficiency[classe][dimensione]`:
+   mai gli scorer (`calc_weapon_efficiency` usa il modulo `random` globale e romperebbe il
+   determinismo di sessione).
 
 ## Quota
 
@@ -97,6 +106,10 @@ mancanza di dato, stessa politica "None = non modellato" di munizioni e carburan
   lenti) un colpo e' un proietto e `cycle_time` = 60 / fire_rate. Per missili, bombe,
   razzi e siluri `rounds` = SALVO_ROUNDS per categoria e `cycle_time` None (intervallo
   del profilo di reazione).
+* `stock_per_round` (decisione A3, 2026-09-26): unita' di scorta consumate da un colpo
+  della salva. GUN_BURST_ROUNDS per le armi a tiro rapido (un colpo e' una raffica: uno
+  Shilka con 2000 colpi spara 40 raffiche, non 2000), 1 per tutte le altre. Un cannone
+  senza `fire_rate` nel registro resta a 1 (non si sa se spari a raffiche).
 
 ## Memoizzazione
 
@@ -109,8 +122,10 @@ fredda). Le armi candidate sono memoizzate per (classe, modello, loadout).
 ## Cosa NON fa
 
 - Non modula la Pk con la posizione nell'inviluppo (distanza, aspetto): valori di template.
-- Non conta le munizioni per arma: la scorta e' il contatore aggregato di `Mobile`, e per
-  le armi a raffica il risolutore consuma 1 unita' per raffica (sottostima dichiarata).
+- Non conta le munizioni: e' pura, e la scorta per arma la legge il risolutore (v. sopra).
+  L'ordine di preferenza non dipende dalla scorta residua ne' dalla missione (filtro ROE
+  per tipo di missione rimandato all'entita' `Mission`, decisione A4).
+- Il cannone di bordo degli aerei non e' candidato (decisione A2 rimandata: nessun dato).
 - Non distingue stealth, contromisure o ECM (materia del rilevamento).
 - Nessun componente LLM, in nessuna forma; nessun uso del modulo `random`.
 """
@@ -169,6 +184,29 @@ AUTOMATIC_FIRE_RATE_RPM = 200.0
 # (raffiche piu' brevi): 2A38M a 5000 colpi/min -> 0.6 s, S-68 a 240 -> 12.5 s.
 GUN_BURST_ROUNDS = 50
 
+# Esponente del costo nel punteggio di preferenza (decisione A5, 2026-09-26: "compromesso
+# Pk/costo", confermato dall'utente solo come PRINCIPIO; la formula e' un primo criterio
+# dichiarato, NON tarato):
+#
+#     punteggio = Pk / costo ** WEAPON_COST_EXPONENT
+#
+# E' l'unica manopola di ricalibrazione: 0 = sola Pk (criterio precedente), 1 = Pk per
+# unita' di costo (efficienza economica pura: un'arma che costa il doppio deve avere Pk
+# doppia per essere preferita). 0.5 (STIMA) sta nel mezzo: un'arma che costa 4 volte tanto
+# deve avere Pk doppia. Motivo del compromesso: con scorte per arma finite la massima Pk
+# spende i missili migliori su bersagli leggeri; la pura efficienza economica, all'opposto,
+# preferirebbe sempre la bomba da 3 contro il missile da 100 anche quando la bomba ha Pk
+# molto minore. Il punteggio e' invariante per l'unita' del costo (un fattore di scala
+# comune non cambia l'ordine), quindi non serve normalizzare i `cost` dei registri, che
+# non dichiarano l'unita' (plausibilmente migliaia di USD).
+#
+# Applicato SOLO se tutte le armi adatte della coppia hanno un `cost` > 0: oggi lo hanno
+# tutte le armi di Aircraft_Weapon_Data, mentre in Ground_Weapon_Data un solo modello su
+# ~110 ha il costo (2A46M) e Ship_Weapon_Data nessuno. Con un costo mancante il confronto
+# non e' possibile e si ripiega sulla sola Pk (nessun costo inventato): veicoli e navi
+# conservano quindi l'ordine di prima finche' i registri non avranno i costi.
+WEAPON_COST_EXPONENT = 0.5
+
 # Velocita' del suono al livello del mare [m/s], per i max_speed in Mach degli AAM di
 # Aircraft_Weapon_Data (gli ASM lo danno in m/s; atmosfera standard ISA a 15 °C: e' una
 # definizione, non una stima).
@@ -195,7 +233,7 @@ class _Weapon:
     """Un'arma candidata: dati del registro gia' normalizzati in unita' SI."""
 
     __slots__ = ('model', 'weapon_type', 'domain', 'kind', 'data', 'range_m', 'air_range_m', 'speed_ms',
-                 'fire_rate', 'min_alt', 'max_alt', 'max_height_m', 'tasks')
+                 'fire_rate', 'min_alt', 'max_alt', 'max_height_m', 'tasks', 'cost')
 
     def __init__(self, model: str, weapon_type: str, domain: str, data: Dict):
         self.model = model
@@ -213,6 +251,7 @@ class _Weapon:
         self.max_height_m = max_height * 1000.0 if max_height is not None else None  # km -> m
         tasks = data.get('task')
         self.tasks = frozenset(tasks) if isinstance(tasks, (list, tuple, set, frozenset)) else None
+        self.cost = _positive(data.get('cost'))   # unita' del registro; None se assente
 
     @property
     def efficiency(self) -> Dict:
@@ -470,15 +509,29 @@ def _cell(weapon: _Weapon, keys: Tuple[str, ...], dimension: str) -> Optional[Tu
     return None
 
 
-def select_weapon(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension: str, is_air: bool,
-                  shooter_z: Optional[float] = None, target_z: Optional[float] = None,
-                  altitude_filter: bool = True) -> Optional[Tuple[_Weapon, float, float]]:
-    """Arma con la massima Pk = accuracy x destroy_capacity fra quelle adatte, o None.
+def preference_score(pk: float, cost: Optional[float], use_cost: bool) -> float:
+    """Punteggio di preferenza di un'arma (decisione A5, v. WEAPON_COST_EXPONENT).
 
-    Tie-break deterministico: nome del modello, poi tipo d'arma.
+        punteggio = Pk / cost ** WEAPON_COST_EXPONENT    se use_cost
+        punteggio = Pk                                   altrimenti
     """
-    best = None
-    best_sort_key = None
+    if not use_cost or cost is None:
+        return pk
+
+    return pk / cost ** WEAPON_COST_EXPONENT
+
+
+def rank_weapons(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension: str, is_air: bool,
+                 shooter_z: Optional[float] = None, target_z: Optional[float] = None,
+                 altitude_filter: bool = True) -> Tuple[Tuple[_Weapon, float, float], ...]:
+    """TUTTE le armi adatte, in ordine di preferenza: tuple (arma, accuracy, destroy_capacity).
+
+    Adatte: filtro di dominio, Pk > 0, inviluppo di quota (v. docstring del modulo). Ordine:
+    `preference_score` decrescente — col costo solo se tutte le adatte lo hanno (v.
+    WEAPON_COST_EXPONENT) — poi Pk decrescente, nome del modello, tipo d'arma
+    (deterministico). Pura: nessuna dipendenza dalla scorta residua.
+    """
+    suitable = []
 
     for weapon in weapons:
         if not is_air and not _surface_capable(weapon):
@@ -498,12 +551,21 @@ def select_weapon(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension
         if is_air and altitude_filter and not in_altitude_envelope(weapon, shooter_z, target_z):
             continue
 
-        sort_key = (-pk, weapon.model, weapon.weapon_type)
+        suitable.append((weapon, accuracy, destroy_capacity, pk))
 
-        if best_sort_key is None or sort_key < best_sort_key:
-            best, best_sort_key = (weapon, accuracy, destroy_capacity), sort_key
+    use_cost = bool(suitable) and all(weapon.cost is not None for weapon, _, _, _ in suitable)
+    suitable.sort(key=lambda item: (-preference_score(item[3], item[0].cost, use_cost), -item[3],
+                                    item[0].model, item[0].weapon_type))
 
-    return best
+    return tuple((weapon, accuracy, destroy_capacity) for weapon, accuracy, destroy_capacity, _ in suitable)
+
+
+def select_weapon(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension: str, is_air: bool,
+                  shooter_z: Optional[float] = None, target_z: Optional[float] = None,
+                  altitude_filter: bool = True) -> Optional[Tuple[_Weapon, float, float]]:
+    """L'arma preferita fra quelle adatte (la prima di `rank_weapons`), o None."""
+    ranked = rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)
+    return ranked[0] if ranked else None
 
 
 def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_air: bool = False) -> ShotSpec:
@@ -529,22 +591,27 @@ def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_
         time_of_flight = DEFAULT_TIME_OF_FLIGHT_S[kind]
 
     cycle_time = None
+    burst = 1
 
     if kind == 'gun' and weapon.fire_rate is not None:
         burst = GUN_BURST_ROUNDS if weapon.fire_rate >= AUTOMATIC_FIRE_RATE_RPM else 1
         cycle_time = burst * 60.0 / weapon.fire_rate
 
+    # A3: un colpo della salva di un'arma a raffica consuma GUN_BURST_ROUNDS colpi di scorta.
     return ShotSpec(accuracy=min(1.0, max(0.0, accuracy)),
                     destroy_capacity=min(1.0, max(0.0, destroy_capacity)),
                     rounds=SALVO_ROUNDS[kind], weapon=weapon.model,
                     time_of_flight=time_of_flight, interceptable=interceptable,
-                    cycle_time=cycle_time, max_range=max_range)
+                    cycle_time=cycle_time, max_range=max_range, stock_per_round=burst)
 
 
 # ── FABBRICA ──────────────────────────────────────────────────────────────────
 
 def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = True) -> Callable:
-    """Fire control `(shooter, target) -> ShotSpec | None` dai registri d'arma.
+    """Fire control `(shooter, target) -> Tuple[ShotSpec, ...] | None` dai registri d'arma.
+
+    Restituisce le ShotSpec di TUTTE le armi adatte in ordine di preferenza (v.
+    `rank_weapons`), o None se nessuna e' adatta: il risolutore usa la prima con scorta.
 
     Args:
         altitude_filter (bool): applica il filtro d'inviluppo di quota ai bersagli aerei.
@@ -570,7 +637,7 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
 
         return candidates_cache[key]
 
-    def fire_control(shooter, target) -> Optional[ShotSpec]:
+    def fire_control(shooter, target) -> Optional[Tuple[ShotSpec, ...]]:
         shooter_key = _shooter_key(shooter)
 
         if shooter_key is None:
@@ -594,8 +661,8 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
         if memoize and cache_key in choice_cache:
             return choice_cache[cache_key]
 
-        choice = select_weapon(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)
-        spec = shot_spec_for(*choice, is_air=is_air) if choice is not None else None
+        ranked = rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)
+        spec = tuple(shot_spec_for(*choice, is_air=is_air) for choice in ranked) or None
 
         if memoize:
             choice_cache[cache_key] = spec

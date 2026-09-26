@@ -75,8 +75,18 @@ class TestS1CombinedArmsWithCAS(F.LoggerSilencer, unittest.TestCase):
     Domanda: l'ingaggio si risolve con perdite su entrambi i lati e l'esito riflette la
     superiorita' di chi la possiede. La superiorita' di A e' data dal CAS: si confronta lo
     stesso scontro CON e SENZA CAS sugli stessi seed. Senza CAS la difesa (che vede prima
-    con l'osservazione d'artiglieria e combatte da ferma) deve prevalere; con il CAS deve
-    prevalere l'attaccante. Aggregati su 8 repliche.
+    con l'osservazione d'artiglieria e combatte da ferma) deve prevalere; il CAS deve
+    spostare l'esito a favore dell'attaccante. Aggregati su 8 repliche.
+
+    Cambio del 2026-09-26 (scorta per arma, decisione A1): fino ad allora ogni A-10C
+    'Maverick/Gun CAS' aveva una scorta aggregata di 1183 unita' (9 armi + 1174 colpi del
+    cannone) e lanciava con la tabella di riferimento centinaia di 'agm' fantasma; con il
+    CAS l'attaccante prevaleva nettamente (perdite Red > perdite Blue-Armor). Con la
+    scorta reale (9 armi, cannone escluso: 144 unita' spese in 8 repliche, cioe' la
+    dotazione intera) il CAS porta le perdite Red da ~4 % a ~19 % e riduce quelle di
+    Blue-Armor da ~28 % a ~20 %, ma non basta piu' a ribaltare lo scontro: esito
+    fisicamente sensato per due aerei con 9 armi ciascuno. La verifica e' quindi
+    "il CAS sposta l'esito verso l'attaccante", non "l'attaccante prevale".
     """
 
     SEEDS = _seeds('S1', 8)
@@ -118,9 +128,22 @@ class TestS1CombinedArmsWithCAS(F.LoggerSilencer, unittest.TestCase):
                 self.assertGreater(blue, 0)
                 self.assertGreater(red, 0)
 
-    def test_with_cas_the_attacker_prevails(self):
+    def test_cas_shifts_the_outcome_towards_the_attacker(self):
         self.assertGreater(self._loss_fractions(self.with_cas, 'Red-Line'),
-                           self._loss_fractions(self.with_cas, 'Blue-Armor'))
+                           self._loss_fractions(self.without_cas, 'Red-Line'))
+        self.assertLess(self._loss_fractions(self.with_cas, 'Blue-Armor'),
+                        self._loss_fractions(self.without_cas, 'Blue-Armor'))
+
+    def test_cas_spends_no_more_than_its_real_stores(self):
+        """Nessuna arma fantasma: ogni A-10C spende al piu' la dotazione del loadout."""
+        for scenario, outcome in self.with_cas:
+            cas = next(force for force in scenario.forces_a if force.id == 'Blue-CAS')
+            spent = outcome.ammunition_consumed()
+
+            for asset_id, asset in cas.assets.items():
+                initial = asset.ammunition_from_registry()
+                with self.subTest(asset=asset_id):
+                    self.assertLessEqual(spent.get(asset_id, 0), initial)
 
     def test_without_cas_the_defence_prevails(self):
         self.assertGreater(self._loss_fractions(self.without_cas, 'Blue-Armor'),

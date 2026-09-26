@@ -158,7 +158,12 @@ class _FireControlFixture(F.LoggerSilencer):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.fc = staticmethod(FC.make_registry_fire_control())  # funzione, non metodo
+        # La fire control restituisce la tupla delle ShotSpec in ordine di preferenza
+        # (2026-09-26): `ranked` e' la funzione vera, `fc` la sua prima scelta (o None),
+        # che e' cio' che i test di selezione verificano.
+        ranked = FC.make_registry_fire_control()
+        cls.ranked = staticmethod(ranked)  # funzione, non metodo
+        cls.fc = staticmethod(lambda shooter, target: (ranked(shooter, target) or (None,))[0])
         cls.blue = F.make_force('Blue', 'Blue')
         cls.red = F.make_force('Red', 'Red')
         cls._n = 0
@@ -216,6 +221,12 @@ class TestFireControlGroundAir(_FireControlFixture, unittest.TestCase):
         self.assertEqual(spec.rounds, 1)
         fire_rate = GWD.GROUND_WEAPONS['AA_CANNONS']['AZP-23-23mm']['fire_rate']
         self.assertAlmostEqual(spec.cycle_time, FC.GUN_BURST_ROUNDS * 60.0 / fire_rate)
+        # A3: una raffica consuma GUN_BURST_ROUNDS colpi di scorta, non 1.
+        self.assertEqual(spec.stock_per_round, FC.GUN_BURST_ROUNDS)
+
+    def test_single_shot_weapons_consume_one_unit_per_round(self):
+        spec = self.fc(self.vehicle(BUK), self.aircraft(F16, 5_000.0))
+        self.assertEqual(spec.stock_per_round, 1)
 
     def test_time_of_flight_from_range_and_speed(self):
         spec = self.fc(self.vehicle(BUK), self.aircraft(F16, 5_000.0))
@@ -342,6 +353,75 @@ class TestFireControlMaxRange(_FireControlFixture, unittest.TestCase):
         self.assertIsNone(FC.shot_spec_for(bomb, 0.5, 0.5).max_range)
         aim9 = FC._Weapon('AIM-9M', 'MISSILES_AAM', 'air', {'range': 18.5, 'max_speed': 2.5})
         self.assertEqual(FC.shot_spec_for(aim9, 0.5, 0.5, is_air=True).max_range, 18_500.0)
+
+
+class TestFireControlRanking(_FireControlFixture, unittest.TestCase):
+    """Tutte le armi adatte in ordine di preferenza, criterio Pk/costo (A5, 2026-09-26)."""
+
+    @staticmethod
+    def _weapon(name, accuracy, destroy_capacity, cost=None):
+        row = {'Aircraft': {d: {'accuracy': accuracy, 'destroy_capacity': destroy_capacity} for d in DIMS}}
+        data = {'efficiency': row}
+
+        if cost is not None:
+            data['cost'] = cost
+
+        return FC._Weapon(name, 'MISSILES', 'ground', data)
+
+    def test_fire_control_returns_every_suitable_weapon_in_order(self):
+        tank = self.vehicle(T72)
+        ranked = self.ranked(tank, F.make_vehicle(self.red, 'Red/tank6', T72, (0, 0, 0)))
+        self.assertIsInstance(ranked, tuple)
+        self.assertGreater(len(ranked), 1)
+        self.assertTrue(all(isinstance(spec, ShotSpec) for spec in ranked))
+        self.assertEqual(len({spec.weapon for spec in ranked}), len(ranked))
+        self.assertEqual(ranked[0], self.fc(tank, F.make_vehicle(self.red, 'Red/tank7', T72, (0, 0, 0))))
+
+    def test_without_costs_the_order_is_by_pk(self):
+        """Veicoli e navi (registri senza `cost`): ordine per Pk, criterio precedente."""
+        weapons = (self._weapon('Low', 0.5, 0.5), self._weapon('High', 0.9, 0.9), self._weapon('Mid', 0.7, 0.7))
+        ranked = FC.rank_weapons(weapons, ('Aircraft',), 'med', True)
+        self.assertEqual([w.model for w, _, _ in ranked], ['High', 'Mid', 'Low'])
+
+    def test_a_missing_cost_disables_the_cost_criterion(self):
+        weapons = (self._weapon('Dear', 0.9, 0.9, cost=1000), self._weapon('Unknown', 0.5, 0.5))
+        ranked = FC.rank_weapons(weapons, ('Aircraft',), 'med', True)
+        self.assertEqual([w.model for w, _, _ in ranked], ['Dear', 'Unknown'])
+
+    def test_cost_trades_off_against_pk(self):
+        """Pk/costo^0.5: 4 volte il costo vale solo con piu' del doppio della Pk."""
+        cheap = self._weapon('Cheap', 0.5, 0.8, cost=10)        # Pk 0.40
+        dear = self._weapon('Dear', 0.9, 0.8, cost=40)          # Pk 0.72 < 2 x 0.40
+        ranked = FC.rank_weapons((dear, cheap), ('Aircraft',), 'med', True)
+        self.assertEqual([w.model for w, _, _ in ranked], ['Cheap', 'Dear'])
+
+        much_better = self._weapon('Better', 1.0, 0.9, cost=40)  # Pk 0.90 > 2 x 0.40
+        poor = self._weapon('Poor', 0.5, 0.8, cost=10)
+        ranked = FC.rank_weapons((poor, much_better), ('Aircraft',), 'med', True)
+        self.assertEqual([w.model for w, _, _ in ranked], ['Better', 'Poor'])
+
+    def test_score_formula_and_the_single_calibration_knob(self):
+        self.assertAlmostEqual(FC.preference_score(0.8, 16.0, True), 0.8 / 16.0 ** FC.WEAPON_COST_EXPONENT)
+        self.assertEqual(FC.preference_score(0.8, 16.0, False), 0.8)
+        self.assertEqual(FC.preference_score(0.8, None, True), 0.8)
+
+    def test_cost_criterion_is_scale_invariant(self):
+        """L'unita' del costo (non dichiarata dai registri) non cambia l'ordine."""
+        a = (self._weapon('A', 0.6, 0.8, cost=5), self._weapon('B', 0.9, 0.9, cost=30))
+        b = (self._weapon('A', 0.6, 0.8, cost=5000), self._weapon('B', 0.9, 0.9, cost=30000))
+        order = lambda ws: [w.model for w, _, _ in FC.rank_weapons(ws, ('Aircraft',), 'med', True)]
+        self.assertEqual(order(a), order(b))
+
+    def test_select_weapon_is_the_first_of_the_ranking(self):
+        weapons = (self._weapon('Cheap', 0.5, 0.8, cost=10), self._weapon('Dear', 0.9, 0.8, cost=40))
+        self.assertEqual(FC.select_weapon(weapons, ('Aircraft',), 'med', True),
+                         FC.rank_weapons(weapons, ('Aircraft',), 'med', True)[0])
+        self.assertIsNone(FC.select_weapon((), ('Aircraft',), 'med', True))
+
+    def test_aircraft_candidates_carry_the_registry_cost(self):
+        weapons = FC._candidate_weapons(('Aircraft', A10, 'Maverick/Gun CAS'))
+        self.assertTrue(weapons)
+        self.assertTrue(all(w.cost is not None and w.cost > 0 for w in weapons))
 
 
 class TestFireControlNoneAndDeterminism(_FireControlFixture, unittest.TestCase):

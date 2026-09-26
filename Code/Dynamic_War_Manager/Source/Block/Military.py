@@ -693,10 +693,10 @@ class Military(Block):
             contatore DISTINTO dalle munizioni offensive (Mobile.ammunition): fino alla
             ricalibrazione del 2026-09-23 si leggeva `ammunition`, che per i cannoni AA e'
             un conteggio di colpi (Shilka: 2000) e dava migliaia di intercettazioni per
-            asset. V. Mobile.ROUNDS_PER_GUN_INTERCEPT per la regola missili/cannoni. Per
-            un SAM puro (Mobile.interceptor_shares_ammunition) `interceptor_stock` e' una
-            vista di `ammunition`: i missili lanciati in salve offensive riducono anche la
-            capacita' di intercettazione (pool fisico unico, v. "SCORTA CONDIVISA").
+            asset. V. Mobile.ROUNDS_PER_GUN_INTERCEPT per la regola missili/cannoni. Dal
+            2026-09-26 `interceptor_stock` e' una vista sulle voci AD della scorta per
+            arma (Mobile.stores): i missili AD lanciati in salve offensive riducono anche
+            la capacita' di intercettazione (stessa voce), senza regole speciali.
         Ogni canale intercetta UN colpo per salva: equivale ad assumere Pk
         dell'intercettore = 1 per canale, ipotesi ottimistica per la difesa e primo
         candidato alla ricalibrazione.

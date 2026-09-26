@@ -150,6 +150,19 @@ class TestAssembleSessionOutcome(_Base):
         # Intervallo ricavato: min/max su ingaggi ed eventi (il carburante a 400 s incluso).
         self.assertEqual((outcome.t_start, outcome.t_end), (50.0, 400.0))
 
+    def test_ammunition_consumed_by_weapon(self):
+        """Scorta per arma (2026-09-26): il consumo arriva alla porta ripartito per arma."""
+        e1 = _result(0.0, 10.0, [_force('blue')],
+                     ammo=[ER.AmmunitionEvent(time=1.0, asset_id='b1', rounds=2, weapon='AGM-65D'),
+                           ER.AmmunitionEvent(time=2.0, asset_id='b1', rounds=2, weapon='Mk-82AIR'),
+                           ER.AmmunitionEvent(time=3.0, asset_id='b1', rounds=2, weapon='AGM-65D'),
+                           _ammo(4.0, 'b2', 1)])
+        outcome = ST.assemble_session_outcome('S1', [e1])
+
+        self.assertEqual(outcome.ammunition_consumed_by_weapon(),
+                         {'b1': {'AGM-65D': 4, 'Mk-82AIR': 2}, 'b2': {None: 1}})
+        self.assertEqual(outcome.ammunition_consumed(), {'b1': 6, 'b2': 1})
+
     def test_sort_is_stable_on_ties(self):
         """A parita' di istante: ordine interno dell'ingaggio, poi ordine degli ingaggi."""
         e1 = _result(0.0, 10.0, [_force('blue')],

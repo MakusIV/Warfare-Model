@@ -1340,20 +1340,39 @@ class TestDetectionRangeValues(unittest.TestCase):
 # Scorta di munizioni (Fase 4, R3) e canali di fuoco (R1)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Metodi e proprieta' reali di Mobile sulla scorta (per arma dal 2026-09-26), portati sugli
+# stub senza costruire un Mobile. Le staticmethod vanno ri-decorate (v. _MobileStub).
+_STORES_MEMBERS = (
+    '_stores_state', 'unmodelled_weapons', 'stores', 'stock_of', 'ammunition', 'has_ammunition',
+    'consume_ammunition', '_registry_weapons', 'stores_from_registry',
+    'unmodelled_weapons_from_registry', 'ammunition_from_registry', 'load_stores_from_registry',
+    'load_ammunition_from_registry', 'interceptor_weapons', 'interceptor_stock',
+    'has_interceptor_stock', 'plan_interceptor_consumption', 'consume_interceptor_stock',
+    'interceptor_weapons_from_registry', 'interceptor_stock_from_registry',
+    'load_interceptor_stock_from_registry',
+)
+
+
+def _with_stores_members(cls):
+    for name in _STORES_MEMBERS:
+        setattr(cls, name, Mobile.__dict__[name])
+
+    cls._valid_item = staticmethod(Mobile._valid_item)
+    return cls
+
+
+@_with_stores_members
 class _AmmoStub:
     """Porta i metodi reali di Mobile su munizioni e canali, senza costruire un Mobile."""
-    ammunition = Mobile.ammunition
-    has_ammunition = Mobile.has_ammunition
-    consume_ammunition = Mobile.consume_ammunition
-    ammunition_from_registry = Mobile.ammunition_from_registry
-    load_ammunition_from_registry = Mobile.load_ammunition_from_registry
     engagement_channels = Mobile.engagement_channels
     _sensor_range_km = staticmethod(Mobile._sensor_range_km)
 
-    def __init__(self, model=None, ammunition=None):
+    def __init__(self, model=None, ammunition=None, stores=None, unmodelled=()):
         self.id = 'stub'
         self._model = model
         self._ammunition = ammunition
+        self._stores = dict(stores) if stores is not None else None
+        self._unmodelled_weapons = frozenset(unmodelled)
 
 
 class _WeaponsRecord:
@@ -1363,7 +1382,7 @@ class _WeaponsRecord:
 
 
 class TestAmmunitionCounter(unittest.TestCase):
-    """Contatore aggregato per asset: consumo esplicito, deterministico, mai sotto zero."""
+    """Pool ANONIMO (stub, setter): consumo esplicito, deterministico, mai sotto zero."""
 
     def setUp(self):
         self._log = patch(_MOBILE_LOGGER, MagicMock())
@@ -1393,6 +1412,13 @@ class TestAmmunitionCounter(unittest.TestCase):
         self.assertEqual(stub.consume_ammunition(50), 50)
         self.assertIsNone(stub.ammunition)
 
+    def test_anonymous_pool_is_usable_by_any_weapon(self):
+        stub = _AmmoStub(ammunition=10)
+        self.assertEqual(stub.stock_of('qualunque'), 10)
+        self.assertEqual(stub.consume_ammunition(4, weapon='qualunque'), 4)
+        self.assertEqual(stub.ammunition, 6)
+        self.assertIsNone(stub.stores)
+
     def test_consume_is_not_a_resupply_channel(self):
         with self.assertRaises(ValueError):
             _AmmoStub(ammunition=5).consume_ammunition(-1)
@@ -1414,16 +1440,92 @@ class TestAmmunitionCounter(unittest.TestCase):
         with self.assertRaises(TypeError):
             stub.ammunition = 2.5
 
+    def test_setter_replaces_per_weapon_stores_with_an_anonymous_pool(self):
+        stub = _AmmoStub(stores={'2A46M': 38, '99K120': 4})
+        stub.ammunition = 10
+        self.assertIsNone(stub.stores)
+        self.assertEqual(stub.ammunition, 10)
+        self.assertEqual(stub.stock_of('99K120'), 10)
+
     def test_real_mobile_starts_unmodelled(self):
         from Code.Dynamic_War_Manager.Source.Block.Block import Block
 
         mobile = Mobile(block=MagicMock(spec=Block), name='m')
         self.assertIsNone(mobile.ammunition)
+        self.assertIsNone(mobile.stores)
         self.assertTrue(mobile.has_ammunition())
 
 
+class TestPerWeaponStores(unittest.TestCase):
+    """Scorta PER ARMA (decisione A1, 2026-09-26): ogni arma consuma la propria voce."""
+
+    def setUp(self):
+        self._log = patch(_MOBILE_LOGGER, MagicMock())
+        self._log.start()
+
+    def tearDown(self):
+        self._log.stop()
+
+    def _t72(self):
+        return _AmmoStub(stores={'2A46M': 38, '99K120': 4}, unmodelled=('PKT-7.62',))
+
+    def test_ammunition_is_the_sum_of_the_entries(self):
+        self.assertEqual(self._t72().ammunition, 42)
+
+    def test_stores_is_a_copy(self):
+        stub = self._t72()
+        stores = stub.stores
+        stores['99K120'] = 999
+        self.assertEqual(stub.stock_of('99K120'), 4)
+
+    def test_a_weapon_consumes_only_its_own_entry(self):
+        """Il difetto d'origine: i missili non sono piu' pagati dai colpi del cannone."""
+        stub = self._t72()
+        self.assertEqual(stub.consume_ammunition(2, weapon='99K120'), 2)
+        self.assertEqual(stub.consume_ammunition(5, weapon='99K120'), 2)   # solo il residuo
+        self.assertEqual(stub.stores, {'2A46M': 38, '99K120': 0})
+        self.assertEqual(stub.stock_of('99K120'), 0)
+        self.assertEqual(stub.stock_of('2A46M'), 38)
+        self.assertTrue(stub.has_ammunition())
+
+    def test_unmodelled_weapons_fire_without_limit(self):
+        """Armi contate a unita' (mitragliatrici): nessun dato di scorta, nessun vincolo."""
+        stub = _AmmoStub(stores={'2A46M': 0}, unmodelled=('PKT-7.62',))
+        self.assertIsNone(stub.stock_of('PKT-7.62'))
+        self.assertEqual(stub.consume_ammunition(50, weapon='PKT-7.62'), 50)
+        self.assertEqual(stub.stores, {'2A46M': 0})
+        self.assertTrue(stub.has_ammunition())
+
+    def test_no_stock_and_no_unmodelled_weapon_cannot_fire(self):
+        self.assertFalse(_AmmoStub(stores={'9M38-SAM': 0}).has_ammunition())
+
+    def test_foreign_or_missing_weapon_pays_the_aggregate(self):
+        """Fire control a tabella (nomi 'test:*') o senza arma: l'aggregato, come prima."""
+        stub = self._t72()
+        self.assertEqual(stub.stock_of('test:direct_fire'), 42)
+        self.assertEqual(stub.consume_ammunition(40, weapon='test:direct_fire'), 40)
+        self.assertEqual(stub.ammunition, 2)
+        self.assertEqual(stub.consume_ammunition(5), 2)
+        self.assertEqual(stub.ammunition, 0)
+
+    def test_aggregate_drains_non_air_defence_weapons_first(self):
+        stub = _AmmoStub(stores={'FIM-92-Stinger': 4, 'M242-25mm': 900})
+        stub._interceptor_weapons = {'FIM-92-Stinger': False}
+        stub.consume_ammunition(902)
+        self.assertEqual(stub.stores, {'FIM-92-Stinger': 2, 'M242-25mm': 0})
+
+    def test_stores_setter_validates(self):
+        stub = _AmmoStub(ammunition=5)
+        stub.stores = {'a': 3}
+        self.assertEqual((stub.stores, stub.ammunition), ({'a': 3}, 3))
+        with self.assertRaises(ValueError):
+            stub.stores = {'a': -1}
+        with self.assertRaises(TypeError):
+            stub.stores = {'a': 1.5}
+
+
 class TestAmmunitionFromRegistry(unittest.TestCase):
-    """Scorta iniziale dal registro: somma dei colpi, esclusi i tipi contati a unita'."""
+    """Scorta iniziale per arma dal registro: voci per modello, esclusi i tipi contati a unita'."""
 
     def setUp(self):
         _FakeVehicleData._registry.clear()
@@ -1445,18 +1547,28 @@ class TestAmmunitionFromRegistry(unittest.TestCase):
             'MISSILES': [('9K119M', 6)],
             'MACHINE_GUNS': [('PKT-7.62', 1), ('Kord-12.7', 1)],
         })
-        self.assertEqual(_AmmoStub(model='t72').ammunition_from_registry(), 48)
+        stub = _AmmoStub(model='t72')
+        self.assertEqual(stub.ammunition_from_registry(), 48)
+        self.assertEqual(stub.stores_from_registry(), {'2A46M': 42, '9K119M': 6})
+        self.assertEqual(stub.unmodelled_weapons_from_registry(), frozenset({'PKT-7.62', 'Kord-12.7'}))
+
+    def test_same_model_entries_are_summed(self):
+        _FakeVehicleData._registry['dup'] = _WeaponsRecord({'CANNONS': [('2A46M', 20), ('2A46M', 22)]})
+        self.assertEqual(_AmmoStub(model='dup').stores_from_registry(), {'2A46M': 42})
 
     def test_ship_ciws_is_excluded(self):
         Ship_Data._registry['test-ammo-ship'] = _ship_record({
             'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
             'CIWS': [('Mk-15-Phalanx', 3)],
         })
-        self.assertEqual(_AmmoStub(model='test-ammo-ship').ammunition_from_registry(), 40)
+        stub = _AmmoStub(model='test-ammo-ship')
+        self.assertEqual(stub.ammunition_from_registry(), 40)
+        self.assertEqual(stub.stores_from_registry(), {'RIM-162-ESSM': 32, 'RIM-7M-Sea-Sparrow': 8})
 
     def test_only_unit_counted_weapons_means_not_modelled(self):
         _FakeVehicleData._registry['truck'] = _WeaponsRecord({'MACHINE_GUNS': [('PKT-7.62', 1)]})
         self.assertIsNone(_AmmoStub(model='truck').ammunition_from_registry())
+        self.assertIsNone(_AmmoStub(model='truck').stores_from_registry())
 
     def test_aircraft_registry_has_no_weapons(self):
         """L'armamento di un aereo e' il loadout, non il modello: non modellata."""
@@ -1478,42 +1590,34 @@ class TestAmmunitionFromRegistry(unittest.TestCase):
         stub = _AmmoStub(model='osa')
         self.assertTrue(stub.load_ammunition_from_registry())
         self.assertEqual(stub.ammunition, 6)
+        self.assertEqual(stub.stores, {'9M33-SAM': 6})
 
         unknown = _AmmoStub(model='ignoto')
         self.assertFalse(unknown.load_ammunition_from_registry())
         self.assertIsNone(unknown.ammunition)
+        self.assertIsNone(unknown.stores)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Scorta di intercettori (ricalibrazione Fase 4, 2026-09-23)
+# Scorta di intercettori (ricalibrazione Fase 4 2026-09-23; vista per arma dal 2026-09-26)
 # ─────────────────────────────────────────────────────────────────────────────
 
+@_with_stores_members
 class _InterceptorStub:
     """Porta i metodi reali di Mobile su scorta di intercettori e munizioni, senza costruire un Mobile."""
-    ammunition = Mobile.ammunition
-    has_ammunition = Mobile.has_ammunition
-    consume_ammunition = Mobile.consume_ammunition
-    ammunition_from_registry = Mobile.ammunition_from_registry
-    load_ammunition_from_registry = Mobile.load_ammunition_from_registry
-    interceptor_shares_ammunition = Mobile.interceptor_shares_ammunition
-    interceptor_stock = Mobile.interceptor_stock
-    has_interceptor_stock = Mobile.has_interceptor_stock
-    consume_interceptor_stock = Mobile.consume_interceptor_stock
-    _interceptor_registry_breakdown = Mobile._interceptor_registry_breakdown
-    interceptor_stock_from_registry = Mobile.interceptor_stock_from_registry
-    interceptor_shares_ammunition_from_registry = Mobile.interceptor_shares_ammunition_from_registry
-    load_interceptor_stock_from_registry = Mobile.load_interceptor_stock_from_registry
 
-    def __init__(self, model=None, interceptor_stock=None, ammunition=None, shares=False):
+    def __init__(self, model=None, interceptor_stock=None, ammunition=None, stores=None,
+                 interceptor_weapons=None):
         self.id = 'stub'
         self._model = model
         self._interceptor_stock = interceptor_stock
         self._ammunition = ammunition
-        self._interceptor_shares_ammunition = shares
+        self._stores = dict(stores) if stores is not None else None
+        self._interceptor_weapons = interceptor_weapons
 
 
 class TestInterceptorStockCounter(unittest.TestCase):
-    """Stessa disciplina delle munizioni, contatore DISTINTO (asset non SAM puri)."""
+    """Pool ANONIMO di intercettori: stessa disciplina delle munizioni, contatore distinto."""
 
     def setUp(self):
         self._log = patch(_MOBILE_LOGGER, MagicMock())
@@ -1565,8 +1669,8 @@ class TestInterceptorStockCounter(unittest.TestCase):
         with self.assertRaises(TypeError):
             stub.interceptor_stock = True
 
-    def test_the_two_counters_are_independent(self):
-        """Senza scorta condivisa: intercettare non tocca ammunition, sparare non tocca interceptor_stock."""
+    def test_the_anonymous_pools_are_independent(self):
+        """Senza vista per arma: intercettare non tocca ammunition, sparare non tocca interceptor_stock."""
         stub = _InterceptorStub(interceptor_stock=20, ammunition=2000)
         stub.consume_interceptor_stock(5)
         self.assertEqual((stub.interceptor_stock, stub.ammunition), (15, 2000))
@@ -1579,11 +1683,12 @@ class TestInterceptorStockCounter(unittest.TestCase):
         mobile = Mobile(block=MagicMock(spec=Block), name='m')
         self.assertIsNone(mobile.interceptor_stock)
         self.assertTrue(mobile.has_interceptor_stock())
-        self.assertFalse(mobile.interceptor_shares_ammunition)
+        self.assertIsNone(mobile.interceptor_weapons)
+        self.assertFalse(hasattr(mobile, 'interceptor_shares_ammunition'))   # regola eliminata
 
 
-class TestInterceptorSharedPool(unittest.TestCase):
-    """SAM puri: interceptor_stock e' una vista di ammunition (pool fisico unico, 2026-09-23)."""
+class TestInterceptorStockView(unittest.TestCase):
+    """Vista per arma (A1, 2026-09-26): missili AD condivisi con il fuoco offensivo, cannoni a raffiche."""
 
     def setUp(self):
         self._log = patch(_MOBILE_LOGGER, MagicMock())
@@ -1592,36 +1697,68 @@ class TestInterceptorSharedPool(unittest.TestCase):
     def tearDown(self):
         self._log.stop()
 
-    def test_firing_offensively_reduces_the_interceptor_stock(self):
-        buk = _InterceptorStub(ammunition=4, shares=True)
+    def test_firing_a_sam_offensively_reduces_the_interceptor_stock(self):
+        """Buk: 4 missili 9M38 sono 4 lanci in tutto, non 4 salve + 4 intercettazioni."""
+        buk = _InterceptorStub(stores={'9M38-SAM': 4}, interceptor_weapons={'9M38-SAM': False})
         self.assertEqual(buk.interceptor_stock, 4)
-        buk.consume_ammunition(3)
+        buk.consume_ammunition(3, weapon='9M38-SAM')
         self.assertEqual((buk.ammunition, buk.interceptor_stock), (1, 1))
 
-    def test_intercepting_reduces_the_offensive_ammunition(self):
-        buk = _InterceptorStub(ammunition=4, shares=True)
-        self.assertEqual(buk.consume_interceptor_stock(3), 3)
-        self.assertEqual((buk.ammunition, buk.interceptor_stock), (1, 1))
-
-    def test_the_pool_is_exhausted_by_both_uses_together(self):
-        buk = _InterceptorStub(ammunition=4, shares=True)
-        buk.consume_ammunition(2)
-        self.assertEqual(buk.consume_interceptor_stock(5), 2)
+    def test_intercepting_reduces_the_offensive_stock_of_that_missile(self):
+        buk = _InterceptorStub(stores={'9M38-SAM': 4}, interceptor_weapons={'9M38-SAM': False})
+        self.assertEqual(buk.consume_interceptor_stock(5), 4)
         self.assertEqual((buk.ammunition, buk.interceptor_stock), (0, 0))
         self.assertFalse(buk.has_interceptor_stock())
         self.assertFalse(buk.has_ammunition())
 
-    def test_setter_writes_through_to_ammunition(self):
-        buk = _InterceptorStub(ammunition=4, shares=True)
-        buk.interceptor_stock = 2
-        self.assertEqual((buk.ammunition, buk.interceptor_stock), (2, 2))
-        self.assertIsNone(buk._interceptor_stock)
+    def test_non_air_defence_weapons_stay_separate(self):
+        """M6-Linebacker: gli Stinger sono condivisi, il M242 no (prima: due contatori interi)."""
+        m6 = _InterceptorStub(stores={'FIM-92-Stinger': 4, 'M242-25mm': 900},
+                              interceptor_weapons={'FIM-92-Stinger': False})
+        m6.consume_ammunition(300, weapon='M242-25mm')
+        self.assertEqual(m6.interceptor_stock, 4)
+        m6.consume_interceptor_stock(1)
+        self.assertEqual(m6.stores, {'FIM-92-Stinger': 3, 'M242-25mm': 600})
 
-    def test_unmodelled_ammunition_means_unmodelled_interceptors(self):
-        buk = _InterceptorStub(ammunition=None, shares=True)
-        self.assertIsNone(buk.interceptor_stock)
-        self.assertTrue(buk.has_interceptor_stock())
-        self.assertEqual(buk.consume_interceptor_stock(7), 7)
+    def test_gun_interceptions_cost_a_burst_each(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Mobile import ROUNDS_PER_GUN_INTERCEPT
+
+        zsu = _InterceptorStub(stores={'AZP-23-23mm': 2000}, interceptor_weapons={'AZP-23-23mm': True})
+        self.assertEqual(zsu.interceptor_stock, 2000 // ROUNDS_PER_GUN_INTERCEPT)
+        zsu.consume_interceptor_stock(2)
+        self.assertEqual(zsu.stock_of('AZP-23-23mm'), 2000 - 2 * ROUNDS_PER_GUN_INTERCEPT)
+        # Il fuoco offensivo erode la stessa voce: 150 colpi in meno = 1 intercettazione in meno.
+        zsu.consume_ammunition(150, weapon='AZP-23-23mm')
+        self.assertEqual(zsu.interceptor_stock, (2000 - 2 * ROUNDS_PER_GUN_INTERCEPT - 150) // ROUNDS_PER_GUN_INTERCEPT)
+
+    def test_mixed_system_consumes_guns_first_then_missiles(self):
+        """Regola F: prima i cannoni, poi i missili. Tunguska: 8 + 1904 // 100 = 27."""
+        tunguska = _InterceptorStub(stores={'2A38M-30mm': 1904, '9M311-SAM': 8},
+                                    interceptor_weapons={'2A38M-30mm': True, '9M311-SAM': False})
+        self.assertEqual(tunguska.interceptor_stock, 27)
+        self.assertEqual(tunguska.plan_interceptor_consumption(21), [('2A38M-30mm', 19), ('9M311-SAM', 2)])
+        self.assertEqual(tunguska.consume_interceptor_stock(21), 21)
+        self.assertEqual(tunguska.stores, {'2A38M-30mm': 4, '9M311-SAM': 6})
+
+    def test_named_weapon_is_consumed_alone(self):
+        tunguska = _InterceptorStub(stores={'2A38M-30mm': 1904, '9M311-SAM': 8},
+                                    interceptor_weapons={'2A38M-30mm': True, '9M311-SAM': False})
+        self.assertEqual(tunguska.consume_interceptor_stock(3, weapon='9M311-SAM'), 3)
+        self.assertEqual(tunguska.stores, {'2A38M-30mm': 1904, '9M311-SAM': 5})
+
+    def test_setting_ammunition_freezes_the_view_into_an_anonymous_pool(self):
+        """Forzare le munizioni a mano (test) non cambia la difesa: vista congelata."""
+        buk = _InterceptorStub(stores={'9M38-SAM': 4}, interceptor_weapons={'9M38-SAM': False})
+        buk.ammunition = 10
+        self.assertEqual((buk.ammunition, buk.interceptor_stock), (10, 4))
+        buk.consume_ammunition(3)
+        self.assertEqual(buk.interceptor_stock, 4)
+
+    def test_interceptor_setter_detaches_the_view(self):
+        buk = _InterceptorStub(stores={'9M38-SAM': 4}, interceptor_weapons={'9M38-SAM': False})
+        buk.interceptor_stock = 2
+        self.assertEqual((buk.ammunition, buk.interceptor_stock), (4, 2))
+        self.assertIsNone(buk.interceptor_weapons)
 
 
 class TestInterceptorStockFromRegistry(unittest.TestCase):
@@ -1673,8 +1810,9 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
             'AA_CANNONS': [('2A38M-30mm', 1904)],
             'MISSILES': [('9M311-SAM', 8)],
         })
-        self.assertEqual(_InterceptorStub(model='tunguska').interceptor_stock_from_registry(),
-                         8 + 1904 // ROUNDS_PER_GUN_INTERCEPT)
+        stub = _InterceptorStub(model='tunguska')
+        self.assertEqual(stub.interceptor_stock_from_registry(), 8 + 1904 // ROUNDS_PER_GUN_INTERCEPT)
+        self.assertEqual(stub.interceptor_weapons_from_registry(), {'2A38M-30mm': True, '9M311-SAM': False})
 
     def test_non_air_defence_weapons_are_ignored(self):
         """Missili anticarro, cannoni principali, autocannoni e mitragliatrici non intercettano."""
@@ -1683,7 +1821,9 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
             'AUTO_CANNONS': [('M242-25mm', 900)],
             'MACHINE_GUNS': [('PKT-7.62', 1)],
         })
-        self.assertEqual(_InterceptorStub(model='linebacker').interceptor_stock_from_registry(), 4)
+        stub = _InterceptorStub(model='linebacker')
+        self.assertEqual(stub.interceptor_stock_from_registry(), 4)
+        self.assertEqual(stub.interceptor_weapons_from_registry(), {'FIM-92-Stinger': False})
 
     def test_no_air_defence_weapon_means_not_modelled(self):
         _FakeVehicleData._registry['t90'] = _WeaponsRecord({
@@ -1714,69 +1854,31 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
         })
         self.assertEqual(_InterceptorStub(model='odd').interceptor_stock_from_registry(), 6)
 
-    def test_load_assigns_or_leaves_default(self):
+    def test_load_without_stores_falls_back_to_an_anonymous_pool(self):
+        """Scorta per arma non caricata: pool anonimo col valore del registro, come prima."""
         _FakeVehicleData._registry['zsu'] = _WeaponsRecord({'AA_CANNONS': [('AZP-23-23mm', 2000)]})
         stub = _InterceptorStub(model='zsu')
         self.assertTrue(stub.load_interceptor_stock_from_registry())
         self.assertEqual(stub.interceptor_stock, 20)
-        self.assertFalse(stub.interceptor_shares_ammunition)
+        self.assertIsNone(stub.interceptor_weapons)
 
         unknown = _InterceptorStub(model='ignoto')
         self.assertFalse(unknown.load_interceptor_stock_from_registry())
         self.assertIsNone(unknown.interceptor_stock)
-        self.assertFalse(unknown.interceptor_shares_ammunition)
 
-    def test_load_marks_a_pure_sam_as_shared_pool(self):
-        """Osa: 6 missili e nient'altro -> pool unico, non 6 salve + 6 intercettazioni."""
+    def test_load_with_stores_activates_the_view(self):
+        """Osa: 6 missili e nient'altro -> 6 lanci in tutto, fra salve e intercettazioni."""
         _FakeVehicleData._registry['osa'] = _WeaponsRecord({'MISSILES': [('9M33-SAM', 6)]})
         stub = _InterceptorStub(model='osa')
         self.assertTrue(stub.load_ammunition_from_registry())
         self.assertTrue(stub.load_interceptor_stock_from_registry())
-        self.assertTrue(stub.interceptor_shares_ammunition)
         self.assertIsNone(stub._interceptor_stock)
         self.assertEqual((stub.ammunition, stub.interceptor_stock), (6, 6))
-        stub.consume_ammunition(2)
+        stub.consume_ammunition(2, weapon='9M33-SAM')
         self.assertEqual(stub.interceptor_stock, 4)
 
-    def test_shared_pool_classification(self):
-        """SAM puro: missili AD, nessun cannone AD, munizioni = soli missili AD."""
-        _FakeVehicleData._registry['buk'] = _WeaponsRecord({'MISSILES': [('9M38-SAM', 4)]})
-        _FakeVehicleData._registry['buk-mg'] = _WeaponsRecord({
-            'MISSILES': [('9M38-SAM', 4)],
-            'MACHINE_GUNS': [('PKT-7.62', 1)],   # contata a unita': non entra in ammunition
-        })
-        _FakeVehicleData._registry['zsu'] = _WeaponsRecord({'AA_CANNONS': [('AZP-23-23mm', 2000)]})
-        _FakeVehicleData._registry['tunguska'] = _WeaponsRecord({
-            'AA_CANNONS': [('2A38M-30mm', 1904)],
-            'MISSILES': [('9M311-SAM', 8)],
-        })
-        _FakeVehicleData._registry['linebacker'] = _WeaponsRecord({
-            'MISSILES': [('FIM-92-Stinger', 4)],
-            'AUTO_CANNONS': [('M242-25mm', 900)],   # non AD, ma contato in ammunition
-        })
-        _FakeVehicleData._registry['t90'] = _WeaponsRecord({'MISSILES': [('9K119M', 6)]})
-
-        shared = {model: _InterceptorStub(model=model).interceptor_shares_ammunition_from_registry()
-                  for model in ('buk', 'buk-mg', 'zsu', 'tunguska', 'linebacker', 't90', 'ignoto')}
-        self.assertEqual(shared, {'buk': True, 'buk-mg': True, 'zsu': False, 'tunguska': False,
-                                  'linebacker': False, 't90': False, 'ignoto': False})
-
-    def test_ship_shared_pool_only_without_other_counted_weapons(self):
-        """Nave con soli SAM (+ CIWS contati a impianti): pool unico; con cannoni/antinave: no."""
-        Ship_Data._registry['test-sam-only-ship'] = _ship_record({
-            'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
-            'CIWS': [('Mk-15-Phalanx', 3)],
-        })
-        Ship_Data._registry['test-interceptor-ship'] = _ship_record({
-            'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
-            'MISSILES_ASM': [('RGM-84-Harpoon', 8)],
-            'GUNS': [('Mk-45-5in', 600)],
-        })
-        self.assertTrue(_InterceptorStub(model='test-sam-only-ship').interceptor_shares_ammunition_from_registry())
-        self.assertFalse(_InterceptorStub(model='test-interceptor-ship').interceptor_shares_ammunition_from_registry())
-
-    def test_gun_and_mixed_systems_keep_independent_counters(self):
-        """Shilka (cannone puro) e Tunguska (misto): comportamento invariato, due contatori."""
+    def test_mixed_systems_share_per_weapon(self):
+        """Shilka e Tunguska: i cannoni AD condividono la voce (100 colpi = 1 intercettazione)."""
         from Code.Dynamic_War_Manager.Source.Asset.Mobile import ROUNDS_PER_GUN_INTERCEPT
 
         _FakeVehicleData._registry['zsu'] = _WeaponsRecord({'AA_CANNONS': [('AZP-23-23mm', 2000)]})
@@ -1785,18 +1887,18 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
             'MISSILES': [('9M311-SAM', 8)],
         })
 
-        for model, ammo, stock in (('zsu', 2000, 2000 // ROUNDS_PER_GUN_INTERCEPT),
-                                   ('tunguska', 1912, 8 + 1904 // ROUNDS_PER_GUN_INTERCEPT)):
+        for model, gun, ammo, stock in (('zsu', 'AZP-23-23mm', 2000, 2000 // ROUNDS_PER_GUN_INTERCEPT),
+                                        ('tunguska', '2A38M-30mm', 1912, 8 + 1904 // ROUNDS_PER_GUN_INTERCEPT)):
             with self.subTest(model=model):
                 stub = _InterceptorStub(model=model)
                 stub.load_ammunition_from_registry()
                 stub.load_interceptor_stock_from_registry()
-                self.assertFalse(stub.interceptor_shares_ammunition)
                 self.assertEqual((stub.ammunition, stub.interceptor_stock), (ammo, stock))
-                stub.consume_ammunition(100)
-                self.assertEqual(stub.interceptor_stock, stock)
+                stub.consume_ammunition(ROUNDS_PER_GUN_INTERCEPT, weapon=gun)
+                self.assertEqual(stub.interceptor_stock, stock - 1)
                 stub.consume_interceptor_stock(1)
-                self.assertEqual((stub.ammunition, stub.interceptor_stock), (ammo - 100, stock - 1))
+                self.assertEqual(stub.interceptor_stock, stock - 2)
+                self.assertEqual(stub.ammunition, ammo - 2 * ROUNDS_PER_GUN_INTERCEPT)
 
 
 class TestEngagementChannels(unittest.TestCase):

@@ -72,7 +72,8 @@ class Aircraft(Mobile) :
             # (Prima non era popolabile affatto: il setter passava per checkParam, che le
             # sottoclassi sovrascrivono con firme senza 'speed' — v. Mobile.speed.setter.)
             self.load_speed_from_registry()
-            # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
+            # Scorta per arma (A1, v. Mobile.UNIT_COUNTED_WEAPON_TYPES): senza loadout
+            # assegnato resta None (non modellata).
             self.load_ammunition_from_registry()
             # Carburante: come le munizioni dipende dal loadout assegnato, quindi qui resta
             # None (non modellato) finche' assigned_loadout non viene impostato.
@@ -175,7 +176,7 @@ class Aircraft(Mobile) :
         """Assegna (o toglie, con None) il loadout e RIARMA l'aereo di conseguenza.
 
         Assegnare un loadout equivale ad armare il velivolo per la missione: la scorta
-        viene ricalcolata da quel loadout (load_ammunition_from_registry) e l'eventuale
+        per arma viene ricalcolata da quel loadout (load_stores_from_registry) e l'eventuale
         consumo precedente viene sovrascritto. E' quindi un'operazione del ciclo di
         campagna/assemblaggio missione, non un canale di rifornimento durante l'ingaggio
         (il risolutore non la chiama mai). Con None la scorta torna None (non modellata):
@@ -202,7 +203,8 @@ class Aircraft(Mobile) :
 
         self._assigned_loadout = loadout
 
-        if not self.load_ammunition_from_registry():
+        if not self.load_stores_from_registry():
+            self._stores = None
             self._ammunition = None
 
         # Stessa regola per il carburante (Fase 5): assegnare il loadout equivale a preparare
@@ -210,27 +212,30 @@ class Aircraft(Mobile) :
         if not self.load_fuel_from_registry():
             self._fuel = None
 
-    def ammunition_from_registry(self) -> Optional[int]:
-        """Scorta [colpi] dal loadout assegnato, o None se nessun loadout e' assegnato.
+    def stores_from_registry(self) -> Optional[Dict[str, int]]:
+        """Scorta per arma {modello: quantita'} dal loadout assegnato, o None senza loadout.
 
-        Somma, dal loadout `AIRCRAFT_LOADOUTS[model][assigned_loadout]['stores']`:
-          * per ogni pylon `[weapon_name, quantita', ...]` la quantita', SOLO se
-            `weapon_name` e' un'arma di AIR_WEAPONS (get_weapon non None): serbatoi
-            (`370gal_tank`, `PTB-1500`, ...) e pod di rifornimento stanno anch'essi nei
-            pylon e vanno esclusi; ogni unita' e' un colpo usabile una volta, come la
-            quantita' dei registri di Vehicle/Ship;
-          * `gun_rounds` (colpi del cannone), se intero positivo.
-        `stores['devices']` (pod di puntamento, sensori) non contiene armi: non e' letto.
+        Dal loadout `AIRCRAFT_LOADOUTS[model][assigned_loadout]['stores']`: per ogni pylon
+        `[weapon_name, quantita', ...]` la quantita', SOLO se `weapon_name` e' un'arma di
+        AIR_WEAPONS (get_weapon non None): serbatoi (`370gal_tank`, `PTB-1500`, ...) e pod
+        di rifornimento stanno anch'essi nei pylon e vanno esclusi. Piloni con la stessa
+        arma si sommano (stessa forma di Air_Resources_Assigner._pylons_to_weapons_dict,
+        non riusata per non importare il modulo di pianificazione dall'asset e perche' qui
+        serve anche il filtro get_weapon). `stores['devices']` (pod di puntamento, sensori)
+        non contiene armi: non e' letto.
 
-        Stesso contatore AGGREGATO di Mobile (v. UNIT_COUNTED_WEAPON_TYPES): missili e colpi
-        del cannone si sommano in un solo numero, come fanno gia' i 42 colpi del 2A46M e i
-        6 missili di un T-72. Senza loadout assegnato delega a Mobile, che per un aereo
+        Il cannone di bordo (`gun_rounds`) NON entra nella scorta (decisione A2 rimandata,
+        2026-09-26): non ha un modello d'arma ne' dati di Pk/portata nei registri aerei, e
+        non e' un'arma candidata della fire control (Logic/Fire_Control.py). Fino al
+        2026-09-26 i suoi colpi si sommavano nello scalare aggregato e pagavano i missili
+        (un A-10 con 4 AGM-65D ne lanciava 642): con la scorta per arma questo e' escluso
+        per costruzione. Senza loadout assegnato delega a Mobile, che per un aereo
         restituisce None (non modellata): comportamento invariato.
         """
         loadout_name = self.assigned_loadout
 
         if loadout_name is None:
-            return super().ammunition_from_registry()
+            return super().stores_from_registry()
 
         from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
         from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Weapon_Data import get_weapon
@@ -238,14 +243,14 @@ class Aircraft(Mobile) :
         loadout = AIRCRAFT_LOADOUTS.get(self._model, {}).get(loadout_name)
 
         if not isinstance(loadout, dict):
-            logger.debug(f"ammunition_from_registry: loadout {loadout_name!r} not found for "
-                         f"model {self._model!r}, ammunition not modelled")
+            logger.debug(f"stores_from_registry: loadout {loadout_name!r} not found for "
+                         f"model {self._model!r}, stores not modelled")
             return None
 
-        stores = loadout.get('stores') or {}
-        total = 0
+        stores_data = loadout.get('stores') or {}
+        stores: Dict[str, int] = {}
 
-        for item in (stores.get('pylons') or {}).values():
+        for item in (stores_data.get('pylons') or {}).values():
             if not isinstance(item, (list, tuple)) or len(item) < 2:
                 continue
 
@@ -257,14 +262,9 @@ class Aircraft(Mobile) :
             if isinstance(quantity, bool) or not isinstance(quantity, int) or quantity < 0:
                 continue
 
-            total += quantity
+            stores[weapon_name] = stores.get(weapon_name, 0) + quantity
 
-        gun_rounds = stores.get('gun_rounds')
-
-        if isinstance(gun_rounds, int) and not isinstance(gun_rounds, bool) and gun_rounds > 0:
-            total += gun_rounds
-
-        return total
+        return stores
 
     # ── carburante dal loadout assegnato (motore di sessioni virtuali, Fase 5) ───
 

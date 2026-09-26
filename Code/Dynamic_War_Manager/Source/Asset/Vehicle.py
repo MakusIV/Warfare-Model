@@ -61,9 +61,9 @@ class Vehicle(Mobile) :
             # restava a None e che nessuna riga del progetto leggeva.
             self._speed = default_speed_profile(off_road=True)
             self.load_speed_from_registry()
-            # Scorta di munizioni dal registro (R3, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
+            # Scorta per arma dal registro (A1, v. Mobile.UNIT_COUNTED_WEAPON_TYPES).
             self.load_ammunition_from_registry()
-            # Scorta di intercettori, distinta dalle munizioni (v. Mobile.ROUNDS_PER_GUN_INTERCEPT).
+            # Scorta di intercettori: vista sulle voci AD della scorta (v. Mobile.ROUNDS_PER_GUN_INTERCEPT).
             self.load_interceptor_stock_from_registry()
             # Carburante dal registro (autonomia `range`, v. Mobile.FUEL_FULL).
             self.load_fuel_from_registry()

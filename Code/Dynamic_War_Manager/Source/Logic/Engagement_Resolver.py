@@ -23,7 +23,9 @@ attraverso l'RNG di sessione passato dal chiamante.
    l'iniziativa, che i modelli a rapporto di forze non sanno rappresentare.
 3. **Dottrina di fuoco / ROE — se e con cosa si spara.** Iniettata: `fire_control(shooter,
    target)` restituisce una `ShotSpec` (accuracy, destroy_capacity, colpi per salva, tempo
-   di volo, intercettabilita') oppure None (non ingaggia: ROE, arma inadatta).
+   di volo, intercettabilita'), una SEQUENZA di `ShotSpec` in ordine di preferenza, oppure
+   None (non ingaggia: ROE, arma inadatta). Con una sequenza il tiratore spara con la prima
+   opzione la cui arma ha ancora scorta nello stato ombra (v. "Scorta per arma").
 4. **Salva e saturazione (Hughes, R1).** I colpi che arrivano su una forza nello stesso
    evento-salva sono prima confrontati con la capacita' di intercettazione del bersaglio
    (`Military.salvo_interceptors`): i primi N intercettabili sono fermati e non
@@ -33,9 +35,8 @@ attraverso l'RNG di sessione passato dal chiamante.
    distinto dall'`AmmunitionEvent` delle salve offensive (`Mobile.ammunition`): due
    contatori distinti, v. Mobile.ROUNDS_PER_GUN_INTERCEPT (ricalibrazione 2026-09-23 —
    prima si leggeva `ammunition`, e un cannone AA con 2000 colpi poteva intercettare 2000
-   colpi in arrivo). Eccezione dichiarata: per un SAM puro
-   (`Mobile.interceptor_shares_ammunition`) i due contatori sono lo stesso pool di
-   missili, e lo stato ombra lo rispetta (v. `_Shadow`).
+   colpi in arrivo). Dal 2026-09-26 entrambe le scorte sono viste sulla scorta PER ARMA
+   (v. "Scorta per arma"): un missile AD che intercetta e' lo stesso della salva offensiva.
 5. **Danno per singolo colpo.** Ogni colpo superstite passa da
    `Damage_Model.build_damage_event` (che chiama `resolve_hit`), con un `draw` estratto
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
@@ -82,6 +83,31 @@ LANCIO: la salva parte solo quando la distanza 3D tiratore-bersaglio e' <= max_r
   avviene all'istante di ingresso gia' calcolato. Il controllo non estrae numeri casuali:
   l'ordine delle estrazioni RNG e' invariato, e con `max_range=None` il percorso di codice
   e' identico a quello precedente.
+
+## Scorta per arma (decisione A1/A3, 2026-09-26)
+
+Fino al 2026-09-26 lo stato ombra copiava lo scalare aggregato `Mobile.ammunition` e ogni
+salva lo scalava, qualunque arma la fire control avesse scelto: l'arma non consumava mai
+la propria scorta (un A-10 con 4 AGM-65D ne lanciava 642, pagati dai colpi del cannone).
+Ora `_Shadow` porta una COPIA di `Mobile.stores` e la contabilita' e' quella di
+`Asset/Weapon_Stores.py`, la stessa dell'asset reale:
+
+* allo scheduling si prende la PRIMA opzione della fire control la cui arma ha scorta per
+  almeno un colpo (`stock // stock_per_round >= 1`); se nessuna ne ha, il candidato e'
+  esaurito come per un None. I colpi sono `min(spec.rounds, stock // stock_per_round)`;
+* al lancio si scalano `rounds x stock_per_round` unita' dalla voce di quell'arma
+  (`ShotSpec.stock_per_round`: 1, o i colpi di una raffica per le armi a tiro rapido);
+  l'`AmmunitionEvent` porta l'arma e le UNITA' DI SCORTA consumate;
+* le intercettazioni scalano le voci AD (cannoni prima, poi missili: regola F), un
+  `InterceptionEvent` per arma;
+* il tiratore smette di sparare quando nessuna arma ha piu' scorta (le armi non modellate,
+  contate a unita' nei registri, non hanno vincolo);
+* uno stub senza `stores` (pool anonimo `ammunition`) resta al comportamento precedente.
+
+La scelta resta deterministica: dipende solo dallo stato della coda, come la ripartizione
+del fuoco. Limite dichiarato: la scelta per scorta precede il controllo di portata; se
+l'opzione con scorta e' fuori portata il candidato e' rimandato o esaurito anche se
+un'opzione successiva sarebbe gia' in portata.
 
 ## Ingaggi a N forze (2+)
 
@@ -157,6 +183,9 @@ eventi finisce sempre e solo quando la coda si svuota.
 - Non seleziona l'arma dai registri: `fire_control` e' iniettata. Una fire control che
   la seleziona dai registri esiste (`Logic/Fire_Control.make_registry_fire_control`, B2
   2026-09-24); la modulazione della Pk con la posizione nell'inviluppo resta da fare.
+- Non evita il sovraffollamento delle proprie salve sullo stesso bersaglio (un tiratore
+  puo' spendere tutta la scorta di un'arma prima del primo impatto): rischio residuo
+  dichiarato nella proposta A (§1.6), da chiudere a parte.
 - La portata dell'arma e' un vincolo solo se la `ShotSpec` la dichiara (`max_range`, v.
   "Controllo di portata"); il resto dell'inviluppo (quota) e' materia della fire control.
   Una salva gia' lanciata arriva comunque (R4), anche se il bersaglio esce di portata
@@ -180,6 +209,7 @@ from collections import abc
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
+from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Context import Reaction_Profile as RP
 from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCategory
@@ -279,6 +309,9 @@ class ShotSpec:
         max_range: portata massima dell'arma [m], distanza tiratore-bersaglio (3D) oltre la
             quale la salva non parte (v. "Controllo di portata"); None = nessun vincolo di
             portata, comportamento precedente al 2026-09-24.
+        stock_per_round: unita' di scorta dell'arma consumate da UN colpo della salva
+            (>= 1, decisione A3 2026-09-26): 1 per missili, bombe e proietti singoli; i
+            colpi di una raffica per le armi a tiro rapido, il cui "colpo" e' una raffica.
     """
     accuracy: float
     destroy_capacity: float
@@ -288,6 +321,7 @@ class ShotSpec:
     interceptable: bool = False
     cycle_time: Optional[float] = None
     max_range: Optional[float] = None
+    stock_per_round: int = 1
 
     def __post_init__(self):
         for name in ('accuracy', 'destroy_capacity'):
@@ -315,6 +349,10 @@ class ShotSpec:
                                            or not isinstance(self.max_range, (int, float))
                                            or self.max_range <= 0):
             raise ValueError(f"max_range must be None or a positive number, got {self.max_range!r}")
+
+        if isinstance(self.stock_per_round, bool) or not isinstance(self.stock_per_round, int) \
+                or self.stock_per_round < 1:
+            raise ValueError(f"stock_per_round must be an int >= 1, got {self.stock_per_round!r}")
 
 
 @dataclass(frozen=True)
@@ -386,8 +424,15 @@ class SalvoResolution:
 
 @dataclass(frozen=True)
 class AmmunitionEvent:
-    """Consumo esplicito di munizioni OFFENSIVE (R3): `rounds` colpi sparati da `asset_id`
-    in una salva lanciata all'istante `time`. Si applica con `Mobile.consume_ammunition`.
+    """Consumo esplicito di munizioni OFFENSIVE (R3): `rounds` unita' di scorta consumate da
+    `asset_id` in una salva lanciata all'istante `time`. Si applica con
+    `Mobile.consume_ammunition(rounds, weapon=weapon)`.
+
+    Dal 2026-09-26 (A1/A3): `weapon` e' il modello d'arma della salva (None se la fire
+    control non lo dichiara: paga l'aggregato, v. Asset/Weapon_Stores.py), e `rounds` sono
+    UNITA' DI SCORTA, cioe' colpi della salva x `ShotSpec.stock_per_round` (per le armi a
+    raffica i colpi sparati, non le raffiche; per tutte le altre coincidono con i colpi
+    della salva, `Salvo.rounds`).
 
     Solo fuoco offensivo: le intercettazioni hanno il proprio tipo, `InterceptionEvent`
     (2026-09-23). Fino ad allora entrambe passavano di qui, distinte da un campo `purpose`
@@ -398,6 +443,7 @@ class AmmunitionEvent:
     time: float
     asset_id: str
     rounds: int
+    weapon: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -410,9 +456,11 @@ class InterceptionEvent:
     intercettata. L'unita' e' l'intercettazione, non il colpo: per un cannone AA una
     intercettazione costa ~ROUNDS_PER_GUN_INTERCEPT colpi, gia' conteggiati nella scorta
     (v. Mobile.ROUNDS_PER_GUN_INTERCEPT) — per questo il campo non si chiama `rounds`.
-    Per un SAM puro un'intercettazione e' un missile del pool condiviso con le munizioni
-    (Mobile.interceptor_shares_ammunition): l'evento resta comunque un'intercettazione, e'
-    l'asset a sapere da quale contatore scalarla.
+    `weapon` (2026-09-26) e' l'arma AD che ha intercettato, dalla scorta per arma
+    dell'asset (Mobile.stores): un missile AD e' lo stesso della salva offensiva, quindi
+    intercettare riduce anche la scorta offensiva di quell'arma. Un asset che intercetta con
+    piu' armi nello stesso evento (cannoni esauriti, poi missili: regola F) produce un
+    evento per arma. None = pool anonimo di intercettori (stub, scorta impostata a mano).
 
     Tracciabilita': `force_id` e `salvo_ids` identificano l'evento-salva intercettato — la
     `SalvoResolution` con lo stesso `time` e `force_id`. Si referenziano tutte le salve
@@ -428,6 +476,7 @@ class InterceptionEvent:
     interceptions: int
     force_id: Optional[str] = None
     salvo_ids: Tuple[int, ...] = ()
+    weapon: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -480,17 +529,27 @@ class EngagementResult:
         return None
 
     def ammunition_consumed(self) -> Dict[str, int]:
-        """Colpi sparati OFFENSIVAMENTE per asset (solo salve, `ammunition_events`).
+        """Unita' di scorta spese OFFENSIVAMENTE per asset (solo salve, `ammunition_events`).
 
         Cambio di comportamento del 2026-09-23: prima sommava anche le intercettazioni.
-        Ora non piu' — per quelle v. `interceptions_consumed()`. Per un SAM puro il pool
-        fisico e' uno solo, ma i due conteggi restano separati per scopo: il calo totale
-        della sua `ammunition` e' la somma dei due.
+        Ora non piu' — per quelle v. `interceptions_consumed()`. Un missile AD usato per
+        intercettare cala la stessa voce di scorta della salva offensiva (2026-09-26), ma i
+        due conteggi restano separati per scopo.
         """
         consumed: Dict[str, int] = {}
 
         for event in self.ammunition_events:
             consumed[event.asset_id] = consumed.get(event.asset_id, 0) + event.rounds
+
+        return consumed
+
+    def ammunition_consumed_by_weapon(self) -> Dict[str, Dict[Optional[str], int]]:
+        """Come `ammunition_consumed`, ripartito per arma: {asset: {arma: unita'}}."""
+        consumed: Dict[str, Dict[Optional[str], int]] = {}
+
+        for event in self.ammunition_events:
+            by_weapon = consumed.setdefault(event.asset_id, {})
+            by_weapon[event.weapon] = by_weapon.get(event.weapon, 0) + event.rounds
 
         return consumed
 
@@ -885,39 +944,71 @@ def region_recon_detection_factor(region, observer_side: str, *,
 # ── STATO OMBRA ───────────────────────────────────────────────────────────────
 
 class _Shadow:
-    """Copia di lavoro di un asset impegnato: salute e scorta evolvono qui, non sull'asset.
+    """Copia di lavoro di un asset impegnato: salute e scorte evolvono qui, non sull'asset.
 
     Espone `id` e `health` perche' `Damage_Model.build_damage_event` la tratti come un
     asset (duck typing): cosi' il contratto del danno resta uno solo.
 
-    Scorte: munizioni offensive (salve) e intercettori (saturazione) sono due contatori
-    distinti, tranne con `shared_pool` (SAM puro, `Mobile.interceptor_shares_ammunition`):
-    allora `interceptor_stock` e' una vista di `ammunition`, come sull'asset reale. Senza
-    questa vista lo stato ombra concederebbe a un Buk 4 salve E 4 intercettazioni, e
-    `apply_engagement_result` troverebbe poi il pool reale esaurito a meta'.
+    Scorte (dal 2026-09-26): la stessa forma di `Mobile` — `stores` (COPIA della scorta per
+    arma, o None), il pool anonimo `anonymous` (usato solo senza `stores`), le armi non
+    modellate `unmodelled`, le armi AD `interceptor_weapons` su cui `interceptor_stock` e'
+    una vista, e il pool anonimo di intercettori. La contabilita' e' quella di
+    `Asset/Weapon_Stores.py`, condivisa con l'asset reale: cosi' `apply_engagement_result`
+    ritrova sull'asset esattamente i consumi che l'ombra ha concesso. (Fino al 2026-09-26
+    la condivisione munizioni/intercettori esisteva solo per i "SAM puri", `shared_pool`:
+    ora e' per arma, per costruzione.)
     """
-    __slots__ = ('id', 'asset', 'force_id', 'health', 'ammunition', '_interceptor_stock', 'shared_pool')
+    __slots__ = ('id', 'asset', 'force_id', 'health', 'stores', 'anonymous', 'unmodelled',
+                 'interceptor_weapons', 'anonymous_interceptors')
 
-    def __init__(self, asset_id: str, asset, force_id: str, health: int, ammunition: Optional[int],
-                 interceptor_stock: Optional[int] = None, shared_pool: bool = False):
+    def __init__(self, asset_id: str, asset, force_id: str, health: int, ammunition: Optional[int] = None,
+                 interceptor_stock: Optional[int] = None, stores: Optional[Dict[str, int]] = None,
+                 unmodelled: Iterable[str] = (), interceptor_weapons: Optional[Dict[str, bool]] = None):
         self.id = asset_id
         self.asset = asset
         self.force_id = force_id
         self.health = health
-        self.ammunition = ammunition
-        self.shared_pool = shared_pool
-        self._interceptor_stock = None if shared_pool else interceptor_stock
+        self.stores = dict(stores) if stores is not None else None
+        self.anonymous = None if stores is not None else ammunition
+        self.unmodelled = WS.frozen_names(unmodelled)
+        self.interceptor_weapons = dict(interceptor_weapons) if interceptor_weapons else None
+        view = WS.interceptor_view_active(self.stores, self.interceptor_weapons)
+        self.anonymous_interceptors = None if view else interceptor_stock
+
+    @property
+    def ammunition(self) -> Optional[int]:
+        """Scorta totale (vista, come `Mobile.ammunition`)."""
+        return WS.total_stock(self.stores, self.anonymous)
+
+    def available(self, weapon: Optional[str]) -> Optional[int]:
+        """Unita' spendibili da `weapon`; None = nessun vincolo."""
+        return WS.available_stock(self.stores, self.anonymous, self.unmodelled, weapon)
+
+    def has_stock(self) -> bool:
+        return WS.has_stock(self.stores, self.anonymous, self.unmodelled)
+
+    def consume(self, weapon: Optional[str], units: int) -> int:
+        consumed, self.anonymous = WS.consume_stock(self.stores, self.anonymous, self.unmodelled, weapon,
+                                                    units, self.interceptor_weapons)
+        return consumed
 
     @property
     def interceptor_stock(self) -> Optional[int]:
-        return self.ammunition if self.shared_pool else self._interceptor_stock
+        return WS.interceptor_stock(self.stores, self.interceptor_weapons, self.anonymous_interceptors)
 
-    @interceptor_stock.setter
-    def interceptor_stock(self, value: Optional[int]) -> None:
-        if self.shared_pool:
-            self.ammunition = value
-        else:
-            self._interceptor_stock = value
+    def consume_interceptions(self, amount: int) -> List[Tuple[Optional[str], int]]:
+        """Consuma `amount` intercettazioni; ritorna la ripartizione [(arma | None, n), ...]."""
+        if WS.interceptor_view_active(self.stores, self.interceptor_weapons):
+            plan = WS.plan_interceptions(self.stores, self.interceptor_weapons, amount)
+            WS.apply_interception_plan(self.stores, self.interceptor_weapons, plan)
+            return plan
+
+        if self.anonymous_interceptors is None:
+            return [(None, amount)] if amount > 0 else []
+
+        used = min(amount, self.anonymous_interceptors)
+        self.anonymous_interceptors -= used
+        return [(None, used)] if used > 0 else []
 
     @property
     def operative(self) -> bool:
@@ -1124,22 +1215,7 @@ class _EngagementRun:
                 if health <= OPERATIVE_HEALTH_FLOOR:
                     continue
 
-                ammunition = getattr(asset, 'ammunition', None)
-
-                if isinstance(ammunition, bool) or not isinstance(ammunition, int):
-                    ammunition = None
-
-                interceptor_stock = getattr(asset, 'interceptor_stock', None)
-
-                if isinstance(interceptor_stock, bool) or not isinstance(interceptor_stock, int):
-                    interceptor_stock = None
-
-                # SAM puro: pool unico (v. _Shadow). Solo un True esplicito lo attiva, cosi'
-                # uno stub duck-typed senza l'attributo resta a contatori distinti.
-                shared_pool = getattr(asset, 'interceptor_shares_ammunition', False) is True
-
-                self.shadows[asset_id] = _Shadow(asset_id, asset, force_id, health, ammunition,
-                                                 interceptor_stock, shared_pool)
+                self.shadows[asset_id] = self._shadow_of(asset_id, asset, force_id, health)
                 committed_ids.append(asset_id)
 
             side = getattr(force, 'side', None)
@@ -1178,6 +1254,34 @@ class _EngagementRun:
         logger.warning(f"resolve_engagement: forces {empty} have no committed operative asset, "
                        f"they take no part in the engagement")
         return True
+
+    @staticmethod
+    def _shadow_of(asset_id: str, asset, force_id: str, health: int) -> _Shadow:
+        """Stato ombra dalle scorte dell'asset (per arma se le ha, altrimenti pool anonimi).
+
+        Letture difensive: uno stub duck-typed senza `stores` (o con valori non validi)
+        ricade sul pool anonimo `ammunition`, comportamento precedente al 2026-09-26.
+        """
+        def _int_or_none(value):
+            return value if isinstance(value, int) and not isinstance(value, bool) else None
+
+        stores = getattr(asset, 'stores', None)
+
+        try:
+            stores = WS.normalize_stores(stores) if isinstance(stores, abc.Mapping) else None
+        except (TypeError, ValueError):
+            logger.warning(f"resolve_engagement: asset {asset_id!r} has malformed stores, ignored")
+            stores = None
+
+        unmodelled = getattr(asset, 'unmodelled_weapons', None)
+        unmodelled = unmodelled if isinstance(unmodelled, (set, frozenset, tuple, list)) else ()
+        weapons = getattr(asset, 'interceptor_weapons', None)
+        weapons = dict(weapons) if isinstance(weapons, abc.Mapping) else None
+
+        return _Shadow(asset_id, asset, force_id, health,
+                       ammunition=None if stores is not None else _int_or_none(getattr(asset, 'ammunition', None)),
+                       interceptor_stock=_int_or_none(getattr(asset, 'interceptor_stock', None)),
+                       stores=stores, unmodelled=unmodelled, interceptor_weapons=weapons)
 
     def _interceptors_of(self, force, force_id: str) -> List[Tuple[_Shadow, int]]:
         provider = getattr(force, 'salvo_interceptors', None)
@@ -1372,7 +1476,8 @@ class _EngagementRun:
         if shooter.force_id in self.broken_forces:
             return
 
-        if not shooter.operative or (shooter.ammunition is not None and shooter.ammunition <= 0):
+        if not shooter.operative or not shooter.has_stock():
+            # Nessuna arma con scorta (le armi non modellate non hanno vincolo).
             return
 
         candidates = self.candidates.get(shooter_id, [])
@@ -1421,15 +1526,15 @@ class _EngagementRun:
                     best = key
 
             _, t_fire, _, target_id, index = best
-            spec = self.fire_control(shooter.asset, self.shadows[target_id].asset)
+            choice = self._first_with_stock(shooter, self.fire_control(shooter.asset, self.shadows[target_id].asset))
 
-            if spec is None:
-                # ROE o arma inadatta: questo bersaglio non verra' mai ingaggiato da lui.
+            if choice is None:
+                # ROE o arma inadatta (None), oppure nessuna delle armi adatte ha piu'
+                # scorta: questo bersaglio non verra' piu' ingaggiato da lui.
                 candidates[index].exhausted = True
                 continue
 
-            if not isinstance(spec, ShotSpec):
-                raise TypeError(f"fire_control must return a ShotSpec or None, got {type(spec).__name__}")
+            spec, rounds = choice
 
             if spec.max_range is not None:
                 # Controllo di portata (v. docstring del modulo): il tiro parte solo col
@@ -1447,10 +1552,47 @@ class _EngagementRun:
                     candidates[index].not_before = t_in_range
                     continue
 
-            rounds = spec.rounds if shooter.ammunition is None else min(spec.rounds, shooter.ammunition)
             self.assigned[shooter_id] = target_id
             self._push(t_fire, _LAUNCH, shooter_id, (index, spec, rounds))
             return
+
+    @staticmethod
+    def _options(result) -> Tuple[ShotSpec, ...]:
+        """Le opzioni di una risposta della fire control: None, una ShotSpec o una sequenza."""
+        if result is None:
+            return ()
+
+        if isinstance(result, ShotSpec):
+            return (result,)
+
+        if isinstance(result, (str, bytes)) or not isinstance(result, abc.Sequence):
+            raise TypeError(f"fire_control must return a ShotSpec, a sequence of ShotSpec or None, "
+                            f"got {type(result).__name__}")
+
+        for option in result:
+            if not isinstance(option, ShotSpec):
+                raise TypeError(f"fire_control sequences must contain only ShotSpec, got {type(option).__name__}")
+
+        return tuple(result)
+
+    def _first_with_stock(self, shooter: _Shadow, result) -> Optional[Tuple[ShotSpec, int]]:
+        """(ShotSpec, colpi) della prima opzione la cui arma ha scorta per almeno un colpo.
+
+        colpi = min(spec.rounds, scorta // stock_per_round); con scorta non vincolante
+        (None) colpi = spec.rounds. None se nessuna opzione ha scorta (o nessuna opzione).
+        """
+        for spec in self._options(result):
+            stock = shooter.available(spec.weapon)
+
+            if stock is None:
+                return spec, spec.rounds
+
+            rounds = min(spec.rounds, stock // spec.stock_per_round)
+
+            if rounds >= 1:
+                return spec, rounds
+
+        return None
 
     def _range_entry(self, shooter_id: str, candidate: _Candidate, max_range: float,
                      t_from: float) -> Optional[float]:
@@ -1520,19 +1662,20 @@ class _EngagementRun:
             self._schedule_next(shooter_id, next_time)
             return
 
-        if shooter.ammunition is not None and shooter.ammunition < rounds:
-            # Scorta erosa dopo lo scheduling: stesso trattamento. Succede con un SAM puro
-            # (pool unico), le cui intercettazioni fra scheduling e lancio consumano gli
-            # stessi missili; per gli altri asset le intercettazioni consumano
-            # interceptor_stock, e il controllo resta come difesa dell'invariante "la
-            # scorta non va mai sotto zero".
+        units = rounds * spec.stock_per_round
+        stock = shooter.available(spec.weapon)
+
+        if stock is not None and stock < units:
+            # Scorta dell'arma erosa dopo lo scheduling: stesso trattamento. Succede quando
+            # le intercettazioni fra scheduling e lancio consumano la stessa voce (un
+            # missile AD e' uno solo, v. "Scorta per arma"); il controllo difende anche
+            # l'invariante "la scorta non va mai sotto zero".
             self._schedule_next(shooter_id, next_time)
             return
 
-        if shooter.ammunition is not None:
-            shooter.ammunition -= rounds
-
-        self.ammunition_events.append(AmmunitionEvent(time=time, asset_id=shooter_id, rounds=rounds))
+        shooter.consume(spec.weapon, units)
+        self.ammunition_events.append(AmmunitionEvent(time=time, asset_id=shooter_id, rounds=units,
+                                                      weapon=spec.weapon))
 
         salvo = Salvo(salvo_id=len(self.salvos), t_launch=time,
                       t_impact=time + float(spec.time_of_flight), shooter_id=shooter_id,
@@ -1589,9 +1732,9 @@ class _EngagementRun:
         intercepted = min(interceptable, capacity)
 
         # Ogni intercettazione consuma la scorta di INTERCETTORI del difensore (R3,
-        # ricalibrazione 2026-09-23) — per un SAM puro lo stesso pool delle munizioni (v.
-        # _Shadow) — ed e' un InterceptionEvent, mai un AmmunitionEvent: consumo esplicito,
-        # asset in ordine di id.
+        # ricalibrazione 2026-09-23) — dal 2026-09-26 le voci AD della sua scorta per arma,
+        # cannoni prima e poi missili (v. _Shadow) — ed e' un InterceptionEvent (uno per
+        # arma), mai un AmmunitionEvent: consumo esplicito, asset in ordine di id.
         remaining = intercepted
         salvo_ids = tuple(s.salvo_id for s in ordered)
 
@@ -1609,12 +1752,11 @@ class _EngagementRun:
             if used <= 0:
                 continue
 
-            if stock is not None:
-                shadow.interceptor_stock = stock - used
+            for weapon, count in shadow.consume_interceptions(used):
+                self.interception_events.append(InterceptionEvent(time=time, asset_id=shadow.id,
+                                                                  interceptions=count, force_id=force_id,
+                                                                  salvo_ids=salvo_ids, weapon=weapon))
 
-            self.interception_events.append(InterceptionEvent(time=time, asset_id=shadow.id,
-                                                              interceptions=used, force_id=force_id,
-                                                              salvo_ids=salvo_ids))
             remaining -= used
 
         # I colpi fermati sono i primi intercettabili nell'ordine (impatto, salva).
@@ -1772,9 +1914,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             finestre con asset non impegnati, o fra asset della stessa forza, sono ignorate.
             Con `range_type='engagement_range'` lo scheduler produce finestre "a tiro"
             invece che "a vista": la scelta e' del chiamante.
-        fire_control: `(shooter, target) -> ShotSpec | None`, riceve gli asset REALI (per
-            la selezione dell'arma, non per leggerne lo stato: lo stato che evolve e'
-            quello ombra del risolutore).
+        fire_control: `(shooter, target) -> ShotSpec | Sequence[ShotSpec] | None`, riceve
+            gli asset REALI (per la selezione dell'arma, non per leggerne lo stato: lo
+            stato che evolve e' quello ombra del risolutore). Una sequenza e' l'ordine di
+            preferenza: si spara con la prima opzione che ha scorta (v. "Scorta per arma").
         rng: oggetto con `.random()` in [0, 1), es. `random.Random(seed)`. Unica sorgente
             di casualita'.
         legs: `{asset_id: [Leg, ...]}` (`Contact_Scheduler.route_legs/static_legs`) per
@@ -1799,7 +1942,7 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
 
     Raises:
         TypeError: `rng` senza `.random()`, `fire_control` non chiamabile o che non
-            restituisce una ShotSpec.
+            restituisce una ShotSpec, una sequenza di ShotSpec o None.
         ValueError: `salvo_window` negativo, provenance sconosciuta, forze ripetute o
             con asset in comune.
     """
@@ -1827,6 +1970,18 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     return run.run()
 
 
+def _call_with_weapon(consume: Callable, amount: int, weapon: Optional[str]) -> None:
+    """`consume(amount, weapon=weapon)`; senza arma, la chiamata storica `consume(amount)`.
+
+    Cosi' un asset duck-typed con la firma precedente al 2026-09-26 resta applicabile per
+    gli eventi senza arma (pool anonimo).
+    """
+    if weapon is None:
+        consume(amount)
+    else:
+        consume(amount, weapon=weapon)
+
+
 def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]:
     """Applica un esito agli asset reali: danni (Damage_Model) e consumi di scorte.
 
@@ -1834,9 +1989,10 @@ def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]
     ispezionato, confrontato fra repliche o scartato senza aver toccato la campagna.
     I DamageEvent si applicano nell'ordine in cui sono stati prodotti (i loro delta sono
     coerenti con quell'ordine); i consumi per tipo d'evento: gli `AmmunitionEvent` (salve)
-    con `consume_ammunition`, gli `InterceptionEvent` con `consume_interceptor_stock` (due
-    scorte distinte, v. Mobile.ROUNDS_PER_GUN_INTERCEPT; per un SAM puro
-    `consume_interceptor_stock` scala da se' il pool condiviso).
+    con `consume_ammunition(rounds, weapon=...)`, gli `InterceptionEvent` con
+    `consume_interceptor_stock(interceptions, weapon=...)`: con la scorta per arma
+    (2026-09-26) ciascun evento scala la voce della propria arma, la stessa scalata dallo
+    stato ombra. Un asset stub senza il parametro `weapon` riceve la chiamata storica.
 
     Returns:
         {'damage_events': applicati, 'ammunition_events': applicati,
@@ -1868,33 +2024,39 @@ def apply_engagement_result(result: EngagementResult, *forces) -> Dict[str, int]
         DM.apply_damage_event(asset, event)
         summary['damage_events'] += 1
 
-    for event in result.ammunition_events:
+    # Consumi nell'ORDINE in cui lo stato ombra li ha scalati (2026-09-26): per tempo, e a
+    # parita' di istante i lanci prima delle intercettazioni (LANCIO < RISOLUZIONE nella
+    # coda eventi); nell'ordine di produzione dentro ciascun tipo. Con la scorta per arma
+    # l'ordine conta: un consumo che paga l'aggregato (arma non dichiarata) e
+    # un'intercettazione sulla stessa voce non commutano quando la voce si esaurisce, e
+    # applicarli in un ordine diverso da quello dell'ombra potrebbe lasciare sull'asset
+    # uno stato diverso da quello che l'esito descrive.
+    consumptions = sorted([(event.time, 0, index, event) for index, event in enumerate(result.ammunition_events)]
+                          + [(event.time, 1, index, event) for index, event in enumerate(result.interception_events)],
+                          key=lambda item: item[:3])
+
+    for _, kind, _, event in consumptions:
         asset = assets.get(event.asset_id)
 
         if asset is None:
-            logger.warning(f"apply_engagement_result: shooter {event.asset_id!r} not found")
+            role = 'shooter' if kind == 0 else 'interceptor'
+            logger.warning(f"apply_engagement_result: {role} {event.asset_id!r} not found")
             summary['missing_assets'] += 1
             continue
 
-        consume = getattr(asset, 'consume_ammunition', None)
+        if kind == 0:
+            consume = getattr(asset, 'consume_ammunition', None)
 
-        if callable(consume):
-            consume(event.rounds)
+            if callable(consume):
+                _call_with_weapon(consume, event.rounds, event.weapon)
 
-        summary['ammunition_events'] += 1
-
-    for event in result.interception_events:
-        asset = assets.get(event.asset_id)
-
-        if asset is None:
-            logger.warning(f"apply_engagement_result: interceptor {event.asset_id!r} not found")
-            summary['missing_assets'] += 1
+            summary['ammunition_events'] += 1
             continue
 
         consume = getattr(asset, 'consume_interceptor_stock', None)
 
         if callable(consume):
-            consume(event.interceptions)
+            _call_with_weapon(consume, event.interceptions, event.weapon)
 
         summary['interception_events'] += 1
 

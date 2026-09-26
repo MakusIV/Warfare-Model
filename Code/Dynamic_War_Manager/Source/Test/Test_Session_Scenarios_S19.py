@@ -82,7 +82,7 @@ def _run(session_id):
 def _signature(outcome):
     """Rappresentazione confrontabile degli eventi dell'esito (ordine incluso)."""
     return (tuple((e.time, e.target_id, e.source_id, e.weapon, e.outcome, e.health_after) for e in outcome.damage_events),
-            tuple((e.asset_id, getattr(e, 'time', None)) for e in outcome.ammunition_events))
+            tuple((e.asset_id, getattr(e, 'time', None), e.weapon, e.rounds) for e in outcome.ammunition_events))
 
 
 def _air_capable(weapon_model):
@@ -146,7 +146,9 @@ class TestS19RegistryFireControl(F.LoggerSilencer, unittest.TestCase):
 
             for event in F.damage_on(outcome, blue.assets):
                 shooter, target = red.assets[event.source_id], blue.assets[event.target_id]
-                spec = fire_control(shooter, target)
+                # La fire control restituisce tutte le armi adatte in ordine di preferenza
+                # (2026-09-26): la ShotSpec usata e' quella dell'arma del colpo.
+                spec = next(option for option in fire_control(shooter, target) if option.weapon == event.weapon)
                 t_launch = event.time - spec.time_of_flight
                 p_target = CS.position_on_legs(CS.route_legs(routes[target.id], t0=0.0), t_launch)
                 p_shooter = (float(shooter.position.x), float(shooter.position.y), float(shooter.position.z))
