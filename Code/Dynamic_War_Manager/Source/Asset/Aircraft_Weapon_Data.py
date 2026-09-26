@@ -4208,7 +4208,10 @@ AIR_WEAPONS = {
             "start_service": 1985,
             "end_service": None,
             "cost": 55,
-            "warhead": 429,
+            # testata penetrante BLU-109: carica 550 lb (~250 kg) Tritonal/PBXN-109
+            # (en.wikipedia BLU-109, GlobalSecurity BLU-109; altre fonti 240-243 kg).
+            # Il valore precedente (429) era quello della Mk-84 (anomalia A1).
+            "warhead": 250,
             "perc_efficiency_variability": 0.05,
             "efficiency": {
                 "Soft": {
@@ -5377,18 +5380,26 @@ AIR_WEAPONS = {
                     "med": {"accuracy": 0.7, "destroy_capacity": 4.3},
                     "small": {"accuracy": 0.65, "destroy_capacity": 7.5}
                 },
+                # RBK-250 AO-1SCh: 150 submunizioni AO-1SCh a frammentazione/scoppio con corpo
+                # in ghisa e spoletta a impatto, anti-personale/anti-materiale, senza carica cava
+                # (METIS/Fenix Insight RBK-250-275 AO-1SCh; Brown Moses, cluster munitions of
+                # the Syrian civil war). I valori precedenti (1/3/6) erano un profilo anticarro
+                # da RBK-250 PTAB-2,5M (anomalia A3).
+                # STIMA: valori ridotti sotto la CBU-52B (1/1.5/2, bomblet BLU-61 piu' pesanti):
+                # effetto su corazzati limitato a danni a ottiche, cingoli e mezzi leggeri.
+                # La riga resta perche' get_bombs_score legge Armored/med per le cluster.
                 "Armored": {  # mobile target armor
                     "big": {
                         "accuracy": 0.75,
-                        "destroy_capacity": 1,
+                        "destroy_capacity": 0.3,
                     },
                     "med": {
                         "accuracy": 0.7,
-                        "destroy_capacity": 3,
+                        "destroy_capacity": 0.6,
                     },
                     "small": {
                         "accuracy": 0.65,
-                        "destroy_capacity": 6,
+                        "destroy_capacity": 1.0,
                     }
                 },
             },
@@ -5465,8 +5476,13 @@ AIR_WEAPONS = {
             "task": ["Strike", "Anti_Ship"],
             "start_service": 1962,
             "end_service": None,
-            "cost": 2.7,  # k$
-            "warhead": 92,  # kg
+            # STIMA per analogia (nessun prezzo in fonti aperte): tra FAB-500M62 (3.3) e
+            # Mk-84 (4.4), piu' cara della FAB-500 per il corpo in acciaio spesso da penetratore
+            "cost": 4.0,  # k$
+            # bomba 477 kg, carica 76 kg (GlobalSecurity BETAB-500, en.wikipedia "Soviet and
+            # Russian aerial bombs"; 98 kg e' il TNT-equivalente). I valori precedenti
+            # (92 kg / 2.7 k$) erano copiati da Mk-82/SAMP-250HD (anomalia A2).
+            "warhead": 76,  # kg
             "perc_efficiency_variability": 0.1,
             "efficiency": {
                 "Structure": {

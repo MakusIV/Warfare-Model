@@ -1942,6 +1942,53 @@ class TestGetWeaponCost(unittest.TestCase):
             self.assertGreater(cost, 0.0, f"MACHINE_GUNS/{model}: cost deve essere > 0")
 
 
+class TestBombsRegistryAnomalies(unittest.TestCase):
+    """Regressione sulle anomalie A1-A3 del registro BOMBS
+    (Analysis/Document/Proposta_Dati_Rilascio_Bombe.md, sezione 7).
+
+    A1: GBU-27 monta la BLU-109 (~250 kg di carica), non la Mk-84 (429 kg).
+    A2: BetAB-500 ha carica 76 kg, non i dati copiati da Mk-82/SAMP-250HD.
+    A3: RBK-250AO (AO-1SCh, frammentazione) ha un profilo anti-Armored ridotto,
+        non quello anticarro della RBK-250 PTAB-2,5M.
+    """
+
+    def setUp(self):
+        self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
+        self._logger_patcher.start()
+        self.bombs = AIR_WEAPONS["BOMBS"]
+
+    def tearDown(self):
+        self._logger_patcher.stop()
+
+    def test_gbu27_warhead_is_blu109(self):
+        self.assertEqual(self.bombs["GBU-27"]["warhead"], 250)
+        self.assertNotEqual(self.bombs["GBU-27"]["warhead"], self.bombs["Mk-84"]["warhead"])
+
+    def test_gbu24_warhead_unchanged_mk84(self):
+        """La GBU-24 del registro e' la versione su Mk-84 (power BLAST/HE, non PENETRATION)."""
+        self.assertEqual(self.bombs["GBU-24"]["warhead"], self.bombs["Mk-84"]["warhead"])
+
+    def test_betab500_warhead_and_cost(self):
+        betab = self.bombs["BetAB-500"]
+        self.assertEqual(betab["warhead"], 76)
+        self.assertEqual(betab["cost"], 4.0)
+        self.assertNotEqual(betab["warhead"], self.bombs["Mk-82"]["warhead"])
+
+    def test_rbk250ao_fragmentation_profile(self):
+        """Contro Armored la RBK-250AO deve rendere molto meno che contro Soft,
+        e meno della variante anticarro RBK-500PTAB."""
+        eff = self.bombs["RBK-250AO"]["efficiency"]
+        ptab = self.bombs["RBK-500PTAB"]["efficiency"]
+        for dim in ("big", "med", "small"):
+            with self.subTest(dim=dim):
+                arm = eff["Armored"][dim]["destroy_capacity"]
+                self.assertLess(arm, eff["Soft"][dim]["destroy_capacity"] / 2)
+                self.assertLess(arm, ptab["Armored"][dim]["destroy_capacity"])
+
+    def test_rbk250ao_score_still_positive(self):
+        self.assertGreater(get_bombs_score("RBK-250AO"), 0.0)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  UTILITÀ CONDIVISE PER LA GENERAZIONE DELLE TABELLE
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2243,6 +2290,7 @@ def _run_tests() -> unittest.TestResult:
         TestGetWeaponScoreTarget,
         TestGetWeaponEfficiency,
         TestGetWeaponCost,
+        TestBombsRegistryAnomalies,
     ):
         suite.addTests(loader.loadTestsFromTestCase(cls))
     return unittest.TextTestRunner(verbosity=2).run(suite)
