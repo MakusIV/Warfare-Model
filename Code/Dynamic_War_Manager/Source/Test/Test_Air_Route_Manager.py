@@ -100,8 +100,11 @@ class GPT_TestModule(unittest.TestCase):
         wpB = Waypoint("B", Point3D(20, 0, 10), None)
         segment = Segment3D(wpA.point, wpB.point)
         max_len = self.threat.calcMaxLenghtCrossSegment(aircraft_speed=2, aircraft_altitude=10, time_to_inversion=1.0)
-        self.assertGreater(max_len, MIN_SECURE_LENGTH_EDGE)
-        self.assertAlmostEqual(max_len, 4.03, delta=0.1)
+        # 2026-09-26: valore aggiornato dopo la correzione della formula (prima 4.03, frutto di un'equazione
+        # dimensionalmente incoerente: raggio + quota^2). Con il modello corretto: x0 = 5 - 2*1 = 3, h = 10,
+        # k = 2/600 -> lm ~ 10.43, t* = 1 + lm/600 ~ 1.0174 s, L = (t* - 1) * 2 ~ 0.0348: l'intercettore
+        # (600 u/s) arriva quasi subito, resta solo il margine fra t* e il tempo d'inversione.
+        self.assertAlmostEqual(max_len, 0.0348, delta=0.0005)
 
     def test_route_planner_calcRoute_no_threats(self):
         print("\n"+self._testMethodName + " -------------------------------------------------- ")
@@ -467,8 +470,11 @@ class GPT_TestModule(unittest.TestCase):
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
-        self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 33.30, delta = 0.1)
+        # 2026-09-26: prima 5 edge / 33.30, valori prodotti dalla formula errata di calcMaxLenghtCrossSegment.
+        # Con la formula corretta (intercettore veloce quanto l'aereo) la corda attraversabile e' molto piu'
+        # corta e il percorso devia di piu'.
+        self.assertEqual(len(route.edges), 6)
+        self.assertAlmostEqual(route.length, 43.85, delta = 0.1)
 
 
         threats = copy.deepcopy(threats_)
@@ -524,20 +530,21 @@ class GPT_TestModule(unittest.TestCase):
         route = planner.calcRoute(start_point, end_point, threats, aircraft_altitude_route=19,
                                   aircraft_altitude_min=5, aircraft_altitude_max=20,
                                   aircraft_speed_max=1.5, aircraft_speed=1,
-                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2, 
+                                  aircraft_range_max=1000, aircraft_time_to_inversion = 2,
                                   change_alt_option="no_change", intersecate_threat=True, consider_aircraft_altitude_route=False)
-                
-        points = route.getPoints() 
-        
+
+        points = route.getPoints()
+
         for point in points:
-            print(getFormattedPoint(point)) 
-            
+            print(getFormattedPoint(point))
+
         self.assertEqual(points[0], start_point)
         self.assertEqual(points[-1], end_point)
         self.assertIsNotNone(route)
         #self.assertGreater(len(route.edges), 1)
         self.assertEqual(len(route.edges), 5)
-        self.assertAlmostEqual(route.length, 33.30, delta = 0.1)
+        # 2026-09-26: prima 33.30, valore prodotto dalla formula errata di calcMaxLenghtCrossSegment
+        self.assertAlmostEqual(route.length, 40.49, delta = 0.1)
 
 
 
@@ -834,7 +841,9 @@ class GPT_TestModule(unittest.TestCase):
         self.assertIsNotNone(route)
         self.assertEqual(len(route.edges), 6)
         self.assertAlmostEqual(route.length, 83, delta = 3.0)
-        self.assertAlmostEqual(route.danger, 8, delta = 0.1)
+        # 2026-09-26: prima 8. end e' dentro la minaccia centrata in (46.18, 55.08), che prima veniva esclusa
+        # dal calcolo; ora il tratto terminale che vi entra ne registra il danger (+4)
+        self.assertAlmostEqual(route.danger, 12, delta = 0.1)
 
         # avoid threat zone @ route altitude, no altitude change
         print("\n"+self._testMethodName + " avoid threat zone @ route altitude, no altitude change")
@@ -993,8 +1002,11 @@ class GPT_TestModule(unittest.TestCase):
                 
         
         self.assertIsNotNone(route)
-        self.assertEqual(len(route.edges), 8)
-        self.assertAlmostEqual(route.length, 83, delta = 3.0)
+        # 2026-09-26: prima 8 edge / 83 / danger 12. La formula corretta di calcMaxLenghtCrossSegment cambia
+        # il percorso (7 edge, ~119, danger 8 dagli attraversamenti) e la minaccia sul punto d'arrivo, prima
+        # esclusa, aggiunge il suo danger (+4) al tratto terminale
+        self.assertEqual(len(route.edges), 7)
+        self.assertAlmostEqual(route.length, 119.3, delta = 3.0)
         self.assertAlmostEqual(route.danger, 12, delta = 0.1)
 
         # avoid threat zone @ route altitude, no altitude change
@@ -1582,6 +1594,147 @@ class TestRoutePlanner(unittest.TestCase):
     # (test_route_planner_calcRoute_*), which is more meaningful coverage than a
     # mocked call here — and the old version of this test mocked a
     # RoutePlanner.calcLenghtPath method that no longer exists in production.
+
+
+class TestCrossFormulaAndTerminalThreat(unittest.TestCase):
+    """2026-09-26: correzione di calcMaxLenghtCrossSegment (formula dimensionalmente coerente) e della
+    minaccia sul punto d'arrivo (non piu' esclusa: non evitabile, ma il suo danger pesa sul percorso)."""
+
+    START = Point3D(0, 0, 10)
+    END = Point3D(22, 25, 10)
+
+    def _threat(self, center, radius, height, danger=3.0, interception_speed=6, min_fire_time=5.0):
+        return ThreatAA(danger_level=danger, interception_speed=interception_speed, min_fire_time=min_fire_time,
+                        min_detection_time=7, cylinder=Cylinder(center=center, radius=radius, height=height))
+
+    def _route(self, threats, intersecate_threat):
+        planner = RoutePlanner(self.START, self.END, threats)
+        return planner.calcRoute(self.START, self.END, threats, aircraft_altitude_route=10,
+                                 aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                 aircraft_speed_max=1.5, aircraft_speed=1,
+                                 aircraft_range_max=1000, aircraft_time_to_inversion=2,
+                                 change_alt_option="no_change", intersecate_threat=intersecate_threat,
+                                 consider_aircraft_altitude_route=False)
+
+    # --- (a) formula ----------------------------------------------------------------------------
+
+    def test_cross_formula_hand_computed(self):
+        # v_a = 250, v_i = 500 (k = 0.5), t_f = 4, R = 6500, h = 4000 (base cilindro a quota 0), t_inv = 6
+        # x0 = 6500 - 250*4 = 5500; lm = 5000 soddisfa lm^2 = (5500 - 0.5*lm)^2 + 4000^2 (3000-4000-5000)
+        # t* = 4 + 5000/500 = 14 s -> L = (14 - 6) * 250 = 2000 m
+        threat = self._threat(Point3D(0, 0, 0), 6500, 10000, interception_speed=500, min_fire_time=4.0)
+        self.assertAlmostEqual(threat.calcMaxLenghtCrossSegment(250, 4000, 6), 2000.0, places=6)
+        # tempo d'inversione superiore al tempo d'intercettazione: nessun attraversamento sicuro
+        self.assertEqual(threat.calcMaxLenghtCrossSegment(250, 4000, 20), 0.0)
+
+    def test_cross_formula_altitude_relative_to_threat_base(self):
+        # stesso caso con base del cilindro a quota 1000: conta la quota relativa (5000 - 1000 = 4000)
+        threat = self._threat(Point3D(0, 0, 1000), 6500, 10000, interception_speed=500, min_fire_time=4.0)
+        self.assertAlmostEqual(threat.calcMaxLenghtCrossSegment(250, 5000, 6), 2000.0, places=6)
+
+    def test_cross_formula_is_dimensionally_coherent(self):
+        # cambiando unita' di lunghezza (m -> km: lunghezze e velocita' / 1000, tempi invariati) il risultato
+        # deve scalare dello stesso fattore. La vecchia formula (raggio + quota^2) non lo rispettava.
+        threat_m = self._threat(Point3D(0, 0, 0), 20000, 15000, interception_speed=900, min_fire_time=5.0)
+        threat_km = self._threat(Point3D(0, 0, 0), 20.0, 15.0, interception_speed=0.9, min_fire_time=5.0)
+        l_m = threat_m.calcMaxLenghtCrossSegment(250, 6000, 10)
+        l_km = threat_km.calcMaxLenghtCrossSegment(0.25, 6.0, 10)
+        self.assertGreater(l_m, 0)
+        self.assertAlmostEqual(l_m / 1000, l_km, places=6)
+
+    def test_cross_formula_unreachable_aircraft(self):
+        # intercettore piu' lento dell'aereo che al lancio ha gia' superato il sito: nessuna intercettazione
+        threat = self._threat(Point3D(0, 0, 0), 500, 100, interception_speed=200, min_fire_time=4.0)
+        self.assertEqual(threat.calcMaxLenghtCrossSegment(250, 0, 1), float('inf'))
+
+    def test_cross_formula_monotonic_in_inversion_time(self):
+        # piu' tempo serve per la manovra d'uscita, meno si puo' penetrare (la vecchia formula lo sommava)
+        threat = self._threat(Point3D(0, 0, 0), 20000, 15000, interception_speed=900, min_fire_time=5.0)
+        self.assertGreater(threat.calcMaxLenghtCrossSegment(250, 6000, 5),
+                           threat.calcMaxLenghtCrossSegment(250, 6000, 15))
+
+    # --- (b) minaccia sul punto d'arrivo --------------------------------------------------------
+
+    def _assert_terminal_route(self, route, expected_danger):
+        self.assertIsNotNone(route)
+        points = route.getPoints()
+        self.assertEqual(points[0], self.START)
+        self.assertEqual(points[-1], self.END)
+        self.assertAlmostEqual(float(route.danger), expected_danger, delta=1e-9)
+        last_edge = [edge for edge in route.edges.values() if edge.wpB.point == self.END][0]
+        self.assertAlmostEqual(last_edge.danger, 3.0, delta=1e-9)
+
+    def test_terminal_threat_avoid_mode(self):
+        route = self._route([self._threat(Point3D(20, 23, 0), 5, 25)], intersecate_threat=False)
+        self._assert_terminal_route(route, 3.0)
+        self.assertEqual(len(route.edges), 1) # nessuna deviazione: la minaccia non e' evitabile
+        self.assertAlmostEqual(float(route.length), float(self.START.distance(self.END)), delta=1e-6)
+
+    def test_terminal_threat_cross_mode(self):
+        route = self._route([self._threat(Point3D(20, 23, 0), 5, 25)], intersecate_threat=True)
+        self._assert_terminal_route(route, 3.0)
+        self.assertEqual(len(route.edges), 1)
+
+    def test_terminal_threat_with_mid_route_threat_avoid_mode(self):
+        mid = self._threat(Point3D(12, 10, 10), 4, 15, danger=2.0)
+        route = self._route([self._threat(Point3D(20, 23, 0), 5, 25), mid], intersecate_threat=False)
+        self._assert_terminal_route(route, 3.0) # la minaccia intermedia e' evitata: nessun suo danger
+        self.assertGreater(len(route.edges), 1)
+        for edge in route.edges.values():
+            self.assertIsNone(mid.edgeIntersect(edge)[1])
+
+    def test_terminal_threat_with_mid_route_threat_cross_mode(self):
+        mid = self._threat(Point3D(12, 10, 10), 4, 15, danger=2.0, interception_speed=1, min_fire_time=1.0)
+        route = self._route([self._threat(Point3D(20, 23, 0), 5, 25), mid], intersecate_threat=True)
+        self._assert_terminal_route(route, 5.0) # 2 (attraversamento intermedio) + 3 (tratto terminale)
+
+    def test_start_threat_still_excluded(self):
+        # comportamento invariato: la minaccia che contiene start (base propria) resta esclusa
+        route = self._route([self._threat(Point3D(1, 1, 0), 5, 25)], intersecate_threat=False)
+        self.assertIsNotNone(route)
+        self.assertEqual(float(route.danger), 0.0)
+
+    def test_extract_terminal_threats(self):
+        planner = RoutePlanner(self.START, self.END, [])
+        terminal = self._threat(Point3D(20, 23, 0), 5, 25)
+        other = self._threat(Point3D(12, 10, 10), 4, 15)
+        threats = [terminal, other]
+        self.assertEqual(planner.extractTerminalThreats(threats, self.END), [terminal])
+        self.assertEqual(threats, [other])
+
+    def test_apply_terminal_threats_danger_counts_entries_once(self):
+        planner = RoutePlanner(self.START, self.END, [])
+        terminal = self._threat(Point3D(20, 23, 0), 5, 25)
+        wp_out = Waypoint("out", Point3D(10, 23, 10), None)
+        wp_in1 = Waypoint("in1", Point3D(18, 23, 10), None)
+        wp_in2 = Waypoint("in2", Point3D(21, 24, 10), None)
+        path = Path([Edge("e0", 0, wp_out, wp_in1, 1), Edge("e1", 1, wp_in1, wp_in2, 1)])
+        processed = set()
+        planner.applyTerminalThreatsDanger(path, [terminal], processed)
+        self.assertEqual([edge.danger for edge in path.edges], [3.0, 0])
+        self.assertEqual(path.total_danger, 3.0)
+        # stessi Edge riapplicati (p.e. condivisi da un altro path): nessuna doppia registrazione
+        planner.applyTerminalThreatsDanger(path, [terminal], processed)
+        self.assertEqual(path.total_danger, 3.0)
+
+    # --- (c) regressione: minaccia lontana da start/end ------------------------------------------
+
+    def test_mid_route_threat_still_avoided(self):
+        mid = self._threat(Point3D(12, 10, 10), 4, 15, danger=2.0)
+        route = self._route([mid], intersecate_threat=False)
+        self.assertIsNotNone(route)
+        self.assertEqual(route.getPoints()[-1], self.END)
+        self.assertGreater(len(route.edges), 1)
+        self.assertEqual(float(route.danger), 0.0)
+        for edge in route.edges.values():
+            self.assertIsNone(mid.edgeIntersect(edge)[1])
+
+    def test_mid_route_threat_still_crossed_with_danger(self):
+        mid = self._threat(Point3D(12, 10, 10), 4, 15, danger=2.0, interception_speed=1, min_fire_time=1.0)
+        route = self._route([mid], intersecate_threat=True)
+        self.assertIsNotNone(route)
+        self.assertEqual(route.getPoints()[-1], self.END)
+        self.assertAlmostEqual(float(route.danger), 2.0, delta=1e-9)
 
 
 if __name__ == "__main__":

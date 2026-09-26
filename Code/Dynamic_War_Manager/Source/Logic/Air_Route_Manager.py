@@ -68,32 +68,74 @@ class ThreatAA:
         return False
 
     def calcMaxLenghtCrossSegment(self, aircraft_speed: float, aircraft_altitude: float, time_to_inversion: float) -> float:
-        """ Calculate the maximum length of the segment that can be crossed in the threat zone before interception. Returns the length in meters. """
-        a = 1 / aircraft_speed 
-        b = 0.5 / self.interception_speed 
-        c = -(self.cylinder.radius + aircraft_altitude * aircraft_altitude) / aircraft_speed
-        delta = b**2 - 4*a*c
-        
-        if delta < 0:
+        """ Calculate the maximum length of the segment that can be crossed in the threat zone before interception. Returns the length in meters.
+
+        Modella specificamente il volume di INTERCETTAZIONE di ThreatAA (portata/velocita' dell'arma),
+        non un eventuale volume di rilevamento distinto (radar di scoperta, rete EWR): quella
+        distinzione non esiste ancora nel modello (v. proposta `Analysis/Document/
+        Proposta_Volumi_Rilevamento_Intercettazione.md`, decisioni D-1..D-9). Quando arrivera' un
+        `DetectionThreat` separato, questo metodo restera' il caso "attraversamento senza essere
+        intercettati"; l'ipotesi sul tempo di rilevamento sotto va riletta a quella luce.
+
+        Modello fisico (tutte le grandezze in m, s, m/s):
+          - l'aereo entra nel volume sulla superficie laterale (distanza orizzontale R dal sito) e vola
+            RADIALMENTE verso il sito a velocita' v_a, quota relativa h = aircraft_altitude - quota base del
+            cilindro: e' il caso peggiore per chi attraversa (velocita' di avvicinamento massima, quindi
+            intercettazione piu' precoce), per cui la lunghezza ottenuta e' conservativa per qualsiasi corda;
+          - l'intercettore parte dal sito dopo min_fire_time (t_f) e vola in linea retta a v_i;
+          - lm = distanza percorsa dall'intercettore fino all'intercettazione. In quell'istante l'aereo e'
+            a distanza orizzontale x0 - k*lm, con x0 = R - v_a*t_f (posizione al lancio) e k = v_a/v_i, e la
+            distanza obliqua deve eguagliare lm:  lm^2 = (x0 - k*lm)^2 + h^2, cioe'
+                (1 - k^2)*lm^2 + 2*k*x0*lm - (x0^2 + h^2) = 0      [tutti i termini in m^2]
+          - tempo di intercettazione dall'ingresso: t* = t_f + lm/v_i. L'aereo deve essere fuori prima di
+            t* e gli serve time_to_inversion per la manovra d'uscita, che consuma il tempo disponibile:
+                L_max = v_a * (t* - time_to_inversion), saturato a 0.
+        Se l'intercettore non puo' raggiungere l'aereo (nessuna radice positiva) restituisce float('inf'):
+        qualsiasi attraversamento e' sicuro.
+        Il tempo di rilevamento (min_detection_time) non entra: il radar acquisisce prima che l'aereo entri
+        nell'inviluppo d'ingaggio (portata radar > portata arma), scelta conservativa. Approssimazione
+        dichiarata, non sempre vera (sensore e lanciatore non co-locati, portata guida > portata
+        scoperta): sara' sostituita da un volume di rilevamento distinto (v. nota sopra).
+        """
+        if aircraft_speed <= 0:
             return 0
-        
-        sqrt_delta = math.sqrt(delta)
-        lm1 = (-b + sqrt_delta) / (2*a)
-        lm2 = (-b - sqrt_delta) / (2*a)
-        
-        if lm1 <= 0 and lm2 <= 0:
-            return 0
-        
-        if lm1>lm2:
-            lm = lm1
-            
+
+        v_a = aircraft_speed
+        v_i = self.interception_speed
+        k = v_a / v_i
+        # quota relativa al sito. APPROSSIMAZIONE: la base del cilindro e' quota del sito + quota minima d'ingaggio
+        # (v. Mobile.air_defense_volume), la sola informazione disponibile qui; h risulta sottostimato di quella
+        # quota minima, quindi l'intercettazione anticipata: errore conservativo
+        h = max(0.0, aircraft_altitude - self.cylinder.bottom_center.z)
+        x0 = self.cylinder.radius - v_a * self.min_fire_time                 # distanza orizzontale al lancio
+
+        a = 1 - k**2
+        b = 2 * k * x0
+        c = -(x0**2 + h**2)
+
+        if abs(a) < 1e-12:  # v_a == v_i: equazione di primo grado
+            if b != 0:
+                roots = [-c / b]
+            else:
+                roots = [0.0] if c == 0 else [] # aereo sul sito al lancio: intercettazione immediata
         else:
-            lm = lm2
-        
+            delta = b**2 - 4*a*c
 
-        time_max_in_threat_zone = lm / self.interception_speed
-        max_segment_lenght_in_threat_zone = ( time_max_in_threat_zone + time_to_inversion + self.min_fire_time) * aircraft_speed
+            if delta < 0:
+                roots = []
+            else:
+                sqrt_delta = math.sqrt(delta)
+                roots = [(-b + sqrt_delta) / (2*a), (-b - sqrt_delta) / (2*a)]
 
+        positive_roots = [r for r in roots if r >= 0]
+
+        if not positive_roots:
+            return float('inf')
+
+        lm = min(positive_roots) # prima intercettazione possibile
+
+        time_to_interception = self.min_fire_time + lm / v_i
+        max_segment_lenght_in_threat_zone = max(0.0, (time_to_interception - time_to_inversion) * v_a)
 
         return max_segment_lenght_in_threat_zone
      
@@ -776,9 +818,15 @@ class RoutePlanner:
         path_collection = PathCollection()
         initial_path_id = path_collection.add_path()
 
-        # esclusione dal calcolo delle threats che includono l'inizio e la fine del percorso
+        # esclusione dal calcolo delle threats che includono l'inizio del percorso (tipicamente la base propria)
         self.excludeThreat(threats, start)
-        self.excludeThreat(threats, end)
+
+        # le threats che includono la fine del percorso NON vengono piu' ignorate: se end e' un bersaglio difeso
+        # la minaccia sopra di esso e' reale. Per costruzione pero' non e' evitabile (end e' al suo interno):
+        # viene tolta dalla ricerca (evitamento/attraversamento), che altrimenti fallirebbe o produrrebbe
+        # deviazioni assurde, e il suo danger viene registrato sui tratti che entrano nel suo volume
+        # (v. applyTerminalThreatsDanger), cosi' pesa su total_danger e quindi sulla scelta del percorso migliore.
+        terminal_threats = self.extractTerminalThreats(threats, end)
 
         if consider_aircraft_altitude_route:
 
@@ -830,6 +878,13 @@ class RoutePlanner:
         
         
         if found_path: # if a path is found
+
+            processed_edges = set()
+
+            for _path in path_collection.paths:
+
+                if _path.completed:
+                    self.applyTerminalThreatsDanger(_path, terminal_threats, processed_edges)
 
             for id_path in range(len(path_collection.paths)):
                 _path = path_collection.get_path(id_path)                
@@ -926,6 +981,67 @@ class RoutePlanner:
 
         return check_for_altitude or check_for_point
     
+    def extractTerminalThreats(self, threats: list[ThreatAA], end: Point3D) -> list[ThreatAA]:
+        """Remove from threats (in place) the threats whose volume contains the end point and returns them.
+
+        Una minaccia che contiene end non e' evitabile se si vuole raggiungere end: la ricerca del percorso non
+        deve tentare di evitarla (ne' di attraversarla con una corda di sicurezza, poiche' non si esce dal suo
+        volume prima di arrivare). Viene quindi separata dalle minacce della ricerca e il suo danger viene
+        applicato a posteriori con applyTerminalThreatsDanger.
+
+        Args:
+            threats (list[ThreatAA]): _list of threats considered in path search (modified in place)_
+            end (Point3D): _end point of the route_
+
+        Returns:
+            list[ThreatAA]: _threats containing end point_
+        """
+        terminal_threats = [threat for threat in threats if threat.innerPoint(end)]
+
+        for threat in terminal_threats:
+            threats.remove(threat)
+
+        return terminal_threats
+
+    def applyTerminalThreatsDanger(self, path: Path, terminal_threats: list[ThreatAA], processed_edges: Optional[set] = None) -> None:
+        """Add the danger level of terminal threats to the edges of the path entering their volume.
+
+        Un edge "entra" nel volume se lo interseca partendo da un punto esterno: ogni ingresso nel volume conta
+        una volta (un edge che parte gia' dentro il volume non e' un nuovo ingresso). E' la stessa convenzione di
+        _handle_threat_crossing, dove il danger della minaccia attraversata e' assegnato al solo edge di
+        attraversamento. Le metriche del path vengono ricalcolate.
+
+        Args:
+            path (Path): _completed path_
+            terminal_threats (list[ThreatAA]): _threats containing the end point of the route_
+            processed_edges (set, optional): _id of edges already processed: protects against a double
+                application if the same Edge object were shared by more paths_
+        """
+        if not terminal_threats:
+            return
+
+        if processed_edges is None:
+            processed_edges = set()
+
+        for edge in path.edges:
+
+            if id(edge) in processed_edges:
+                continue
+
+            processed_edges.add(id(edge))
+
+            for threat in terminal_threats:
+
+                if threat.innerPoint(edge.wpA.point):
+                    continue
+
+                _, intersection = threat.edgeIntersect(edge)
+
+                if intersection is not None or threat.innerPoint(edge.wpB.point):
+                    edge.danger += threat.danger_level
+
+        path._calculate_metrics()
+
     def firstThreatIntersected(self, edge: Edge, threats: list[ThreatAA]) -> ThreatAA:
         """_Returns first threat intersected by the edge and the intersection with the threat volume._
 
