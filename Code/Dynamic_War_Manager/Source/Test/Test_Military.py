@@ -602,6 +602,55 @@ class TestMilitary(unittest.TestCase):
             self.assertEqual(self.groundbase.air_defense_power(), 0.0)
 
     # ------------------------------------------------------------------ #
+    # air_detection_threats (volumi di rilevamento, 2026-09-26)           #
+    # ------------------------------------------------------------------ #
+
+    def test_air_detection_threats_empty_block(self):
+        self.groundbase._assets = {}
+        self.assertEqual(self.groundbase.air_detection_threats(1000.0), [])
+
+    def test_air_detection_threats_one_per_sensor_asset_at_route_altitude(self):
+        threat = MagicMock()
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_detection_threat',
+                   return_value=threat) as factory:
+            result = self.groundbase.air_detection_threats(300.0)
+
+        self.assertEqual(result, [threat])
+        factory.assert_called_once_with(self.mock_vehicle, 300.0)
+
+    def test_air_detection_threats_excludes_asset_without_sensor(self):
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_detection_threat',
+                   return_value=None):
+            self.assertEqual(self.groundbase.air_detection_threats(300.0), [])
+
+    def test_air_detection_threats_excludes_non_operative_and_aircraft(self):
+        self.groundbase._assets = {'v1': self.mock_vehicle_damaged}
+        self.airbase._assets = {'a1': self.mock_aircraft}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_detection_threat',
+                   return_value=MagicMock()) as factory:
+            self.assertEqual(self.groundbase.air_detection_threats(300.0), [])
+            self.assertEqual(self.airbase.air_detection_threats(300.0), [])
+
+        factory.assert_not_called()
+
+    def test_air_defense_power_ignores_detection_threats(self):
+        """Un rilevamento non e' potenza di fuoco: air_defense_power legge solo build_threat_aa."""
+        self.groundbase._assets = {'v1': self.mock_vehicle}
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_threat_aa',
+                   return_value=None), \
+             patch('Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager.build_detection_threat',
+                   return_value=MagicMock(danger_level=0.9)) as detection_factory:
+            self.assertEqual(self.groundbase.air_defense_power(), 0.0)
+
+        detection_factory.assert_not_called()
+
+    # ------------------------------------------------------------------ #
     # salvo_interceptors / salvo_interception_capacity (Fase 4, R1)       #
     # ------------------------------------------------------------------ #
 

@@ -22,11 +22,13 @@ Strategia di setup
 """
 
 import logging
+import math
 import unittest
 from sympy import Point3D
 
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data
+from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     Ground_Vehicle_Asset_Type as gat,
@@ -34,7 +36,17 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
 )
 from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import (
     ThreatAA,
+    DetectionThreat,
     build_threat_aa,
+    build_detection_threat,
+    build_air_defense_threats,
+    radar_horizon_range,
+    sensor_antenna_height,
+    EARTH_RADIUS_M,
+    SENSOR_HEIGHT_VEHICLE_M,
+    SENSOR_HEIGHT_EWR_M,
+    SENSOR_HEIGHT_SHIP_M,
+    DETECTION_VOLUME_CEILING_M,
     threat_danger_level,
     threat_reaction_times,
     SAM_REACTION_TABLE,
@@ -51,14 +63,17 @@ from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import (
 
 
 class _AssetStub:
-    """Asset minimo: porta il vero air_defense_volume() e i tre campi che la fabbrica legge."""
+    """Asset minimo: porta i veri air_defense_volume()/detection_range() e i campi che le fabbriche leggono."""
 
     air_defense_volume = Mobile.air_defense_volume
+    detection_range = Mobile.detection_range
+    _sensor_range_km = staticmethod(Mobile._sensor_range_km)
 
-    def __init__(self, model=None, category=None, position=Point3D(0, 0, 0)):
+    def __init__(self, model=None, category=None, position=Point3D(0, 0, 0), id=None):
         self._model = model
         self.category = category
         self._position = position
+        self.id = id
 
 
 def _silence_data_warnings():
@@ -231,7 +246,8 @@ class TestBuildThreatAA(unittest.TestCase):
         threat = build_threat_aa(_AssetStub(model='9A33-Osa', category=gat.SAM_SMALL.value))
         detection, fire = threat_reaction_times(_AssetStub(model='9A33-Osa',
                                                            category=gat.SAM_SMALL.value))
-        self.assertAlmostEqual(threat.min_detection_time, detection)
+        self.assertAlmostEqual(threat.acquisition_time, detection)
+        self.assertAlmostEqual(threat.min_detection_time, detection)  # alias storico (D-6)
         self.assertAlmostEqual(threat.min_fire_time, fire)
 
     def test_altitudes_come_from_the_envelope(self):
@@ -337,6 +353,190 @@ class TestInterceptionSpeedFallback(unittest.TestCase):
                                                   aircraft_altitude=5_000.0,
                                                   time_to_inversion=30.0)
         self.assertIsNotNone(length)
+
+
+def _horizon(h_antenna, h_target, k=4.0 / 3.0):
+    """Orizzonte calcolato qui, indipendente dall'implementazione: sqrt(2kR)*(sqrt(h_a)+sqrt(h_t))."""
+    return math.sqrt(2.0 * k * 6_371_000.0) * (math.sqrt(h_antenna) + math.sqrt(h_target))
+
+
+class TestRadarHorizon(unittest.TestCase):
+    """radar_horizon_range: formula standard dell'orizzonte radar (terra 4/3)."""
+
+    def test_standard_constant_is_4_12_km_per_sqrt_m(self):
+        """d_km ~= 4,12*(sqrt(h_a) + sqrt(h_t)), h in metri."""
+        self.assertAlmostEqual(radar_horizon_range(1.0, 0.0) / 1000.0, 4.12, places=2)
+
+    def test_values_of_the_proposal_table(self):
+        """Proposta §2.5 (calcolata con 4,12 arrotondato): 31,8 / 50,4 / 139,5 km per antenna 5 m."""
+        self.assertAlmostEqual(radar_horizon_range(5.0, 30.0) / 1000.0, 31.8, delta=0.05)
+        self.assertAlmostEqual(radar_horizon_range(5.0, 100.0) / 1000.0, 50.4, delta=0.05)
+        self.assertAlmostEqual(radar_horizon_range(5.0, 1000.0) / 1000.0, 139.5, delta=0.1)
+        self.assertAlmostEqual(radar_horizon_range(20.0, 30.0) / 1000.0, 41.0, delta=0.05)
+
+    def test_geometric_line_of_sight_is_shorter(self):
+        """k = 1 (TVD, linea di vista geometrica) < k = 4/3 (radar)."""
+        self.assertLess(radar_horizon_range(5.0, 30.0, 1.0), radar_horizon_range(5.0, 30.0))
+        self.assertAlmostEqual(radar_horizon_range(5.0, 30.0, 1.0), _horizon(5.0, 30.0, 1.0))
+
+    def test_negative_heights_saturate(self):
+        self.assertAlmostEqual(radar_horizon_range(5.0, -100.0), _horizon(5.0, 0.0))
+
+
+class TestBuildDetectionThreat(unittest.TestCase):
+    """Volume di RILEVAMENTO dai dati sensore reali; SA-6 = 2K12-Kub (radar 1S91: scoperta 75 km,
+    guida 28 km; missile 3M9: 24 km, 100-14 000 m)."""
+
+    @classmethod
+    def setUpClass(cls):
+        _silence_data_warnings()
+
+    def _sa6(self, z=0.0, id='sa6-1'):
+        return _AssetStub(model='2K12-Kub', category=gat.SAM_MEDIUM.value,
+                          position=Point3D(1000, 2000, z), id=id)
+
+    def test_sa6_in_altitude_sees_at_full_acquisition_range(self):
+        """A 1000 m l'orizzonte (139 km) non limita: raggio = acquisition_range 75 km."""
+        threat = build_detection_threat(self._sa6(), 1000.0)
+
+        self.assertIsInstance(threat, DetectionThreat)
+        self.assertAlmostEqual(float(threat.cylinder.radius), 75_000.0)
+        self.assertEqual(threat.sensor, 'radar')
+        self.assertAlmostEqual(threat.acquisition_range, 75_000.0)
+        self.assertAlmostEqual(threat.reference_altitude, 1000.0)
+
+    def test_sa6_at_low_altitude_is_limited_by_the_horizon(self):
+        """A 30 m: min(75 km, orizzonte(5 m, 30 m) ~ 31,8 km)."""
+        threat = build_detection_threat(self._sa6(), 30.0)
+        self.assertAlmostEqual(float(threat.cylinder.radius), _horizon(SENSOR_HEIGHT_VEHICLE_M, 30.0), places=3)
+        self.assertAlmostEqual(threat.acquisition_range, 75_000.0)  # la portata nominale resta
+
+    def test_target_height_is_relative_to_the_site(self):
+        low = build_detection_threat(self._sa6(z=0.0), 30.0)
+        high = build_detection_threat(self._sa6(z=500.0), 530.0)
+        self.assertAlmostEqual(float(low.cylinder.radius), float(high.cylinder.radius), places=6)
+
+    def test_volume_geometry_and_zero_danger(self):
+        threat = build_detection_threat(self._sa6(z=200.0), 1000.0)
+
+        self.assertAlmostEqual(float(threat.cylinder.bottom_center.x), 1000.0)
+        self.assertAlmostEqual(float(threat.cylinder.bottom_center.y), 2000.0)
+        self.assertAlmostEqual(float(threat.min_altitude), 200.0)
+        self.assertAlmostEqual(float(threat.max_altitude), 200.0 + DETECTION_VOLUME_CEILING_M)
+        self.assertEqual(threat.danger_level, 0.0)
+        self.assertIs(threat.volume, threat.cylinder)
+        self.assertEqual(threat.source_id, 'sa6-1')
+
+    def test_tvd_only_system(self):
+        """Strela-1 (SA-9): solo TVD 8 km; a 30 m la linea di vista (~27 km) non limita."""
+        threat = build_detection_threat(_AssetStub(model='Strela-1-9P31', category=gat.SAM_SMALL.value), 30.0)
+        self.assertEqual(threat.sensor, 'TVD')
+        self.assertAlmostEqual(float(threat.cylinder.radius), 8_000.0)
+
+    def test_systems_without_sensor_data_give_none(self):
+        """ZSU-57-2 e M163-VADS non hanno sensori nei registri: rilevamento non modellato (D-4)."""
+        for model in ('ZSU-57-2', 'M163-VADS'):
+            asset = _AssetStub(model=model, category=gat.AAA.value)
+            self.assertIsNone(build_detection_threat(asset, 1000.0), msg=model)
+            self.assertIsNotNone(build_threat_aa(asset), msg=model)  # l'intercettazione resta
+
+    def test_none_guards(self):
+        self.assertIsNone(build_detection_threat(_AssetStub(model='T-90M', category=gat.TANK.value), 1000.0))
+        self.assertIsNone(build_detection_threat(_AssetStub(model='inesistente'), 1000.0))
+        self.assertIsNone(build_detection_threat(_AssetStub(model='2K12-Kub', position=None), 1000.0))
+
+        class _Plain:
+            _model = '2K12-Kub'
+            _position = Point3D(0, 0, 0)
+        self.assertIsNone(build_detection_threat(_Plain(), 1000.0))
+
+    def test_ship_uses_mast_height(self):
+        asset = _AssetStub(model='CVN-70 Carl Vinson', category=sat.CARRIER.value)
+        self.assertEqual(sensor_antenna_height(asset, 'radar'), SENSOR_HEIGHT_SHIP_M)
+        threat = build_detection_threat(asset, 30.0)
+        self.assertAlmostEqual(float(threat.cylinder.radius), _horizon(SENSOR_HEIGHT_SHIP_M, 30.0), places=3)
+
+    def test_ewr_class_uses_pole_height(self):
+        self.assertEqual(sensor_antenna_height(_AssetStub(model='2K12-Kub', category='EWR'), 'radar'),
+                         SENSOR_HEIGHT_EWR_M)
+        self.assertEqual(sensor_antenna_height(self._sa6(), 'radar'), SENSOR_HEIGHT_VEHICLE_M)
+
+    def test_sensor_only_record_with_registry_antenna_height(self):
+        """Sito sensore puro (forma EWR/AWACS: engagement_range 0) con `antenna_height` di registro:
+        produce il volume di rilevamento senza produrre minacce d'intercettazione."""
+        record = object.__new__(Vehicle_Data)
+        record.weapons = {}
+        record.category = 'EWR'
+        record.radar = {'model': 'test-ewr', 'antenna_height': 30.0,
+                        'capabilities': {'air': (True, {'tracking_range': 0, 'acquisition_range': 300,
+                                                        'engagement_range': 0, 'multi_target_capacity': 0})}}
+        record.TVD = False
+        Vehicle_Data._registry['test-ewr-sensor-only'] = record
+
+        try:
+            asset = _AssetStub(model='test-ewr-sensor-only', category='EWR', id='ewr-1')
+            detection, interception = build_air_defense_threats(asset, 5000.0)
+        finally:
+            Vehicle_Data._registry.pop('test-ewr-sensor-only', None)
+
+        self.assertIsNone(interception)
+        self.assertEqual(detection.source_id, 'ewr-1')
+        # a 5000 m l'orizzonte da 30 m e' ~314 km > 300 km: vale la portata nominale
+        self.assertAlmostEqual(float(detection.cylinder.radius), 300_000.0)
+        self.assertGreater(_horizon(30.0, 5000.0), 300_000.0)
+
+
+class TestBuildAirDefenseThreats(unittest.TestCase):
+    """build_air_defense_threats: i due volumi dello stesso sito, legati da source_id."""
+
+    @classmethod
+    def setUpClass(cls):
+        _silence_data_warnings()
+
+    def test_sa6_two_distinct_volumes(self):
+        """SA-6 a 1000 m: rilevamento 75 km, intercettazione 24 km (arma 3M9), stesso source_id."""
+        asset = _AssetStub(model='2K12-Kub', category=gat.SAM_MEDIUM.value, id='kub-7')
+        detection, interception = build_air_defense_threats(asset, 1000.0)
+
+        self.assertIsInstance(detection, DetectionThreat)
+        self.assertIsInstance(interception, ThreatAA)
+        self.assertAlmostEqual(float(detection.cylinder.radius), 75_000.0)
+        self.assertAlmostEqual(float(interception.cylinder.radius), 24_000.0)
+        self.assertEqual(detection.source_id, 'kub-7')
+        self.assertEqual(interception.source_id, 'kub-7')
+        self.assertEqual(detection.danger_level, 0.0)
+        self.assertGreater(interception.danger_level, 0.0)
+
+    def test_interception_part_equals_build_threat_aa(self):
+        asset = _AssetStub(model='2K12-Kub', category=gat.SAM_MEDIUM.value)
+        _, interception = build_air_defense_threats(asset, 1000.0)
+        reference = build_threat_aa(asset)
+
+        self.assertAlmostEqual(interception.danger_level, reference.danger_level)
+        self.assertAlmostEqual(interception.interception_speed, reference.interception_speed)
+        self.assertAlmostEqual(interception.acquisition_time, reference.acquisition_time)
+        self.assertAlmostEqual(float(interception.cylinder.radius), float(reference.cylinder.radius))
+        self.assertIsNone(reference.source_id)  # build_threat_aa invariata: nessun source_id
+
+    def test_nesting_is_checked_on_declared_values_not_assumed(self):
+        """Il rilevamento NON contiene sempre l'intercettazione. SA-6 a 30 m: 31,8 km > 24 km (annidati);
+        S-300PS a 30 m: l'orizzonte (31,8 km) e' sotto la portata del 5V55R (75 km) e la quota 30 m e'
+        dentro la sua fascia (da 25 m): evitare il volume di rilevamento NON evita l'intercettazione."""
+        _det, _int = build_air_defense_threats(
+            _AssetStub(model='2K12-Kub', category=gat.SAM_MEDIUM.value), 30.0)
+        self.assertGreater(float(_det.cylinder.radius), float(_int.cylinder.radius))
+
+        det, inter = build_air_defense_threats(
+            _AssetStub(model='S-300PS', category=gat.SAM_BIG.value), 30.0)
+        self.assertLess(float(det.cylinder.radius), float(inter.cylinder.radius))
+        self.assertTrue(inter.min_altitude <= 30.0 <= inter.max_altitude)
+        point_outside_detection = Point3D(float(det.cylinder.radius) + 5_000.0, 0, 30.0)
+        self.assertFalse(det.innerPoint(point_outside_detection))
+        self.assertTrue(inter.innerPoint(point_outside_detection))
+
+    def test_asset_without_anything(self):
+        self.assertEqual(build_air_defense_threats(_AssetStub(model='T-90M', category=gat.TANK.value), 1000.0),
+                         (None, None))
 
 
 if __name__ == '__main__':

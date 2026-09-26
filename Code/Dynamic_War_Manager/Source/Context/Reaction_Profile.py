@@ -238,11 +238,12 @@ def _skill_factor(skill) -> float:
 def _air_defense_profile(asset, has_missiles: bool) -> ReactionProfile:
     """Profilo di un sistema AD non documentato qui, dalla fabbrica ThreatAA esistente.
 
-    `Logic/Air_Route_Manager.threat_reaction_times` fornisce gia' (min_detection_time,
-    min_fire_time) per ogni asset AD — il primo dalla tabella minacce SAM ricercata o da
-    una stima per classe, il secondo da una stima per tipo di lanciatore — ed e' cio' che
+    `Logic/Air_Route_Manager.threat_reaction_times` fornisce gia' (acquisition_time,
+    min_fire_time) per ogni asset AD — il primo (gia' min_detection_time, rinominato il
+    2026-09-26) dalla tabella minacce SAM ricercata o da una stima per classe, il secondo
+    da una stima per tipo di lanciatore — ed e' cio' che
     la pianificazione di rotta usa per la STESSA minaccia. Riusarlo qui evita due verita'
-    diverse sulla reattivita' dello stesso sito: RIV = min_detection_time, ATT =
+    diverse sulla reattivita' dello stesso sito: RIV = acquisition_time, ATT =
     min_fire_time, VAL e COM da sistema automatico. Import locale: Context non deve
     dipendere da Logic a tempo di import.
     """

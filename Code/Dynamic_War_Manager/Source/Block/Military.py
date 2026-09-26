@@ -576,6 +576,35 @@ class Military(Block):
                 threats.append(threat)
         return threats
 
+    def air_detection_threats(self, route_altitude: float) -> List:
+        """Return the DetectionThreat objects of all operative sensor assets in this block.
+
+        Pendant di air_defense_threats() per il volume di RILEVAMENTO (proposta
+        Proposta_Volumi_Rilevamento_Intercettazione, 2026-09-26): una DetectionThreat per ogni
+        Vehicle/Ship operativo con portata di scoperta aria nei registri, costruita alla quota
+        di rotta `route_altitude` (il raggio dipende dall'orizzonte radar a quella quota, v.
+        Logic/Air_Route_Manager.build_detection_threat). Non richiede armi: un sito sensore
+        puro (EWR) produce il suo volume di rilevamento senza produrre minacce d'intercettazione.
+
+        Non entra in air_defense_power(): un rilevamento non e' potenza di fuoco
+        (DetectionThreat.danger_level == 0 per costruzione).
+
+        Returns:
+            List[DetectionThreat] — vuota se nessun asset ha dati di scoperta aria utilizzabili.
+        """
+        from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import build_detection_threat
+
+        threats = []
+        for asset in self.assets.values():
+            if not (validate_class(asset, "Vehicle") or validate_class(asset, "Ship")):
+                continue
+            if not asset.is_operative():
+                continue
+            threat = build_detection_threat(asset, route_altitude)
+            if threat is not None:
+                threats.append(threat)
+        return threats
+
     def air_defense_power(self) -> float:
         """Potenza di difesa aerea del blocco, in [0, 1].
 

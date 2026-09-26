@@ -142,7 +142,8 @@ class ThreatWindow:
 
     Prodotto del meccanismo A. Il consumatore di Fase 4 legge `t_entry`/`t_exit` per sapere
     quando il difensore puo' iniziare la propria sequenza di reazione (e la confronta con
-    `ThreatAA.min_detection_time` + `min_fire_time`, che dicono quanto tempo *serve*), e
+    `ThreatAA.acquisition_time` (gia' `min_detection_time`) + `min_fire_time`, che dicono quanto
+    tempo *serve*), e
     `danger_level` per pesare l'esito.
 
     Attributes:

@@ -1753,6 +1753,256 @@ class TestCrossFormulaAndTerminalThreat(unittest.TestCase):
         self.assertAlmostEqual(float(route.danger), 2.0, delta=1e-9)
 
 
+class TestDetectionAndInterceptionVolumes(unittest.TestCase):
+    """2026-09-26: volumi distinti di rilevamento (DetectionThreat) e d'intercettazione (ThreatAA),
+    ThreatMode e metriche di rilevamento del Path (proposta Proposta_Volumi_Rilevamento_Intercettazione,
+    decisioni D-1..D-7)."""
+
+    START = Point3D(0, 0, 10)
+    END = Point3D(22, 25, 10)
+
+    def _interception(self, center, radius, height=25, danger=2.0, interception_speed=1, min_fire_time=1.0):
+        return ThreatAA(danger_level=danger, interception_speed=interception_speed, min_fire_time=min_fire_time,
+                        acquisition_time=7, cylinder=Cylinder(center=center, radius=radius, height=height),
+                        source_id='site')
+
+    def _detection(self, center, radius, height=100, acquisition_range=None):
+        return DetectionThreat(cylinder=Cylinder(center=center, radius=radius, height=height), sensor='radar',
+                               acquisition_range=acquisition_range if acquisition_range is not None else radius,
+                               reference_altitude=10, source_id='site')
+
+    def _route(self, threats, detections, mode=None, intersecate_threat=False, change_alt_option="no_change"):
+        planner = RoutePlanner(self.START, self.END, threats)
+        return planner.calcRoute(self.START, self.END, threats, aircraft_altitude_route=10,
+                                 aircraft_altitude_min=5, aircraft_altitude_max=20,
+                                 aircraft_speed_max=1.5, aircraft_speed=1,
+                                 aircraft_range_max=1000, aircraft_time_to_inversion=2,
+                                 change_alt_option=change_alt_option, intersecate_threat=intersecate_threat,
+                                 consider_aircraft_altitude_route=False, mode=mode, detection_threats=detections)
+
+    def _assert_avoids(self, route, threat):
+        for edge in route.edges.values():
+            self.assertIsNone(threat.edgeIntersect(edge)[1], msg=f"edge {edge!r} intersects {threat!r}")
+
+    # --- tipi e rinomine (D-6) -------------------------------------------------------------------
+
+    def test_threat_types_share_the_air_threat_base(self):
+        interception = self._interception(Point3D(0, 0, 0), 4)
+        detection = self._detection(Point3D(0, 0, 0), 6)
+        self.assertIsInstance(interception, AirThreat)
+        self.assertIsInstance(detection, AirThreat)
+        self.assertNotIsInstance(detection, ThreatAA)
+        self.assertEqual(detection.danger_level, 0.0)
+        self.assertIs(interception.cylinder, interception.volume)
+        self.assertEqual(interception.source_id, detection.source_id)
+
+    def test_acquisition_time_and_its_legacy_alias(self):
+        by_new_name = ThreatAA(1.0, 500, 2, acquisition_time=7, cylinder=Cylinder(Point3D(0, 0, 0), 10, 20))
+        by_old_name = ThreatAA(1.0, 500, 2, min_detection_time=7, cylinder=Cylinder(Point3D(0, 0, 0), 10, 20))
+        positional = ThreatAA(1.0, 500, 2, 7, Cylinder(Point3D(0, 0, 0), 10, 20))
+
+        for threat in (by_new_name, by_old_name, positional):
+            self.assertEqual(threat.acquisition_time, 7)
+            self.assertEqual(threat.min_detection_time, 7)
+
+        by_old_name.min_detection_time = 9
+        self.assertEqual(by_old_name.acquisition_time, 9)
+
+        with self.assertRaises(TypeError):
+            ThreatAA(1.0, 500, 2, acquisition_time=7, min_detection_time=8, cylinder=Cylinder(Point3D(0, 0, 0), 10, 20))
+
+    def test_interception_chord_rename_keeps_the_alias(self):
+        threat = self._interception(Point3D(0, 0, 0), 6500, 10000, interception_speed=500, min_fire_time=4.0)
+        self.assertAlmostEqual(threat.calcMaxLenghtCrossSegmentInterception(250, 4000, 6), 2000.0, places=6)
+        self.assertEqual(threat.calcMaxLenghtCrossSegment(250, 4000, 6),
+                         threat.calcMaxLenghtCrossSegmentInterception(250, 4000, 6))
+
+    def test_ready_delay_is_equivalent_to_a_longer_launch_sequence(self):
+        # proposta §6: x0 = R - v_a*(t_f + t_r), t* = t_r + t_f + lm/v_i -> identico a t_f' = t_f + t_r
+        delayed = self._interception(Point3D(0, 0, 0), 6500, 10000, interception_speed=500, min_fire_time=4.0)
+        slower = self._interception(Point3D(0, 0, 0), 6500, 10000, interception_speed=500, min_fire_time=6.0)
+        self.assertAlmostEqual(delayed.calcMaxLenghtCrossSegmentInterception(250, 4000, 6, ready_delay_s=2.0),
+                               slower.calcMaxLenghtCrossSegmentInterception(250, 4000, 6), places=6)
+        self.assertGreater(delayed.calcMaxLenghtCrossSegmentInterception(250, 4000, 6, ready_delay_s=2.0),
+                           delayed.calcMaxLenghtCrossSegmentInterception(250, 4000, 6))
+
+    # --- ThreatMode (D-2) ----------------------------------------------------------------------
+
+    def test_resolve_threat_mode(self):
+        self.assertEqual(resolve_threat_mode(None, False), ThreatMode.AVOID)
+        self.assertEqual(resolve_threat_mode(None, True), ThreatMode.CROSS_UNINTERCEPTED)
+        self.assertEqual(resolve_threat_mode(ThreatMode.AVOID_DETECTION, True), ThreatMode.AVOID_DETECTION)
+        self.assertEqual(resolve_threat_mode('avoid_detection'), ThreatMode.AVOID_DETECTION)
+        with self.assertRaises(ValueError):
+            resolve_threat_mode('fly_through')
+
+    def test_mode_prevails_on_legacy_flag(self):
+        mid = self._interception(Point3D(12, 10, 0), 4)
+        by_mode = self._route([mid], None, mode=ThreatMode.CROSS_UNINTERCEPTED, intersecate_threat=False)
+        by_flag = self._route([mid], None, intersecate_threat=True)
+        self.assertAlmostEqual(float(by_mode.danger), 2.0, delta=1e-9)
+        self.assertAlmostEqual(float(by_mode.length), float(by_flag.length), delta=1e-9)
+
+        avoided = self._route([mid], None, mode=ThreatMode.AVOID, intersecate_threat=True)
+        self.assertEqual(float(avoided.danger), 0.0)
+        self._assert_avoids(avoided, mid)
+
+    # --- AVOID_DETECTION -----------------------------------------------------------------------
+
+    def test_avoid_detection_crosses_an_interception_volume_larger_than_detection(self):
+        """Sito co-locato con volume d'intercettazione PIU' GRANDE di quello di rilevamento (il caso del
+        S-300 a bassa quota, orizzonte < portata dell'arma): aggirare il rilevamento non basta, il tratto
+        dentro l'intercettazione e' attraversato con la corda limitata e ne porta il danger."""
+        interception = self._interception(Point3D(12, 10, 0), 4)
+        detection = self._detection(Point3D(12, 10, 0), 2)
+
+        route = self._route([interception], [detection], mode=ThreatMode.AVOID_DETECTION)
+
+        self.assertIsNotNone(route)
+        self.assertEqual(route.getPoints()[0], self.START)
+        self.assertEqual(route.getPoints()[-1], self.END)
+        self._assert_avoids(route, detection)
+        self.assertAlmostEqual(float(route.danger), 2.0, delta=1e-9)
+        crossing = [edge for edge in route.edges.values() if edge.danger > 0]
+        self.assertEqual(len(crossing), 1)
+        max_length = interception.calcMaxLenghtCrossSegmentInterception(1, 10, 2)
+        self.assertLessEqual(float(crossing[0].length), max_length + 2 * TOLERANCE_FOR_INTERSECTION_CALCULUS)
+        self.assertEqual(route.detection_metrics['detection_exposure_s'], 0.0)
+
+    def test_avoid_detection_with_separate_volumes_checks_interception_explicitly(self):
+        """Volumi NON annidati (sensore e lanciatore in posti diversi): la rotta aggira il rilevamento e
+        attraversa l'intercettazione che incontra comunque. Nessuna ipotesi di annidamento."""
+        interception = self._interception(Point3D(5, 6, 0), 2)
+        detection = self._detection(Point3D(15, 17, 0), 3)
+
+        route = self._route([interception], [detection], mode=ThreatMode.AVOID_DETECTION)
+
+        self.assertIsNotNone(route)
+        self.assertEqual(route.getPoints()[-1], self.END)
+        self._assert_avoids(route, detection)
+        self.assertAlmostEqual(float(route.danger), 2.0, delta=1e-9)
+        self.assertTrue(any(interception.edgeIntersect(edge)[1] is not None for edge in route.edges.values()))
+
+    def test_avoid_detection_with_nested_volumes_avoids_both(self):
+        """Caso tipico (rilevamento > intercettazione, co-locati): aggirare il rilevamento evita anche
+        l'intercettazione, verificato sul risultato."""
+        interception = self._interception(Point3D(12, 10, 0), 3)
+        detection = self._detection(Point3D(12, 10, 0), 5)
+
+        route = self._route([interception], [detection], mode=ThreatMode.AVOID_DETECTION)
+
+        self.assertIsNotNone(route)
+        self._assert_avoids(route, detection)
+        self._assert_avoids(route, interception)
+        self.assertEqual(float(route.danger), 0.0)
+        self.assertEqual(route.detection_metrics['detection_exposure_s'], 0.0)
+        self.assertIsNone(route.detection_metrics['first_detection_time_s'])
+
+    def test_avoid_detection_drops_an_uncrossable_interception(self):
+        """Intercettore rapidissimo: corda massima nulla, nessun attraversamento sicuro -> nessuna rotta
+        che passi dal volume (qui la sola rotta possibile: None)."""
+        interception = self._interception(Point3D(12, 10, 0), 4, interception_speed=1000, min_fire_time=0.0)
+        self.assertEqual(interception.calcMaxLenghtCrossSegmentInterception(1, 10, 2), 0.0)
+        route = self._route([interception], [], mode=ThreatMode.AVOID_DETECTION)
+        self.assertIsNone(route)
+
+    def test_avoid_detection_never_changes_altitude_over_a_detection_volume(self):
+        """Il volume di rilevamento e' costruito alla sola quota di rotta: niente change_up, anche se la
+        sua fascia (fino a 15) sarebbe scavalcabile dall'aereo (fino a 20)."""
+        detection = self._detection(Point3D(12, 10, 0), 4, height=15)
+        route = self._route([], [detection], mode=ThreatMode.AVOID_DETECTION, change_alt_option="change_up")
+
+        self.assertIsNotNone(route)
+        self._assert_avoids(route, detection)
+        for point in route.getPoints():
+            self.assertEqual(float(point.z), 10.0)
+
+        # stessa geometria come volume d'intercettazione: il cambio di quota resta disponibile
+        interception = self._interception(Point3D(12, 10, 0), 4, height=15)
+        over = self._route([interception], None, mode=ThreatMode.AVOID, change_alt_option="change_up")
+        self.assertTrue(any(float(point.z) > 10.0 for point in over.getPoints()))
+
+    def test_terminal_detection_volume_is_extracted_and_measured(self):
+        """Il bersaglio dentro un volume di rilevamento: non evitabile, niente deviazione, ma il preavviso
+        al difensore e' misurato (warning_time_s > 0) e il danger resta 0."""
+        detection = self._detection(Point3D(20, 23, 0), 5)
+        route = self._route([], [detection], mode=ThreatMode.AVOID_DETECTION)
+
+        self.assertIsNotNone(route)
+        self.assertEqual(len(route.edges), 1)
+        self.assertEqual(float(route.danger), 0.0)
+        metrics = route.detection_metrics
+        self.assertGreater(metrics['detection_exposure_s'], 0.0)
+        self.assertAlmostEqual(metrics['warning_time_s'], metrics['detection_exposure_s'], places=6)
+        self.assertAlmostEqual(metrics['first_detection_time_s'] + metrics['warning_time_s'],
+                               float(self.START.distance(self.END)), places=6)
+
+    # --- metriche separate (D-3, D-5) --------------------------------------------------------------
+
+    def test_detection_metrics_hand_computed(self):
+        # edge da (0,0,10) a (20,0,10), cilindro di rilevamento centrato in (10,0,0) raggio 5:
+        # dentro per x in [5, 15] -> 10 unita' a velocita' 2 = 5 s; ingresso a 2,5 s; arrivo a 10 s
+        # d minima dal sito = 10 (sulla verticale), R = 20 -> Pd = 1 - 0,5*(10/20)^4 = 0,96875
+        edge = Edge("e", 0, Waypoint("a", Point3D(0, 0, 10), None), Waypoint("b", Point3D(20, 0, 10), None), 2)
+        path = Path([edge])
+        detection = self._detection(Point3D(10, 0, 0), 5, acquisition_range=20)
+
+        path.compute_detection_metrics([detection], speed=2)
+
+        self.assertAlmostEqual(path.detection_exposure_s, 5.0, places=9)
+        self.assertAlmostEqual(path.first_detection_time_s, 2.5, places=9)
+        self.assertAlmostEqual(path.warning_time_s, 7.5, places=9)
+        self.assertAlmostEqual(path.max_detection_probability, 1 - 0.5 * (10 / 20) ** 4, places=9)
+        self.assertEqual(len(path.detection_tracts), 1)
+        self.assertEqual(path.detection_tracts[0]['source_id'], 'site')
+        self.assertEqual(path.total_danger, 0)  # il rilevamento non entra in total_danger
+
+    def test_detection_probability_metric_replicates_the_des_law(self):
+        from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import detection_probability
+        edge = Edge("e", 0, Waypoint("a", Point3D(0, 3, 0), None), Waypoint("b", Point3D(20, 3, 0), None), 1)
+        path = Path([edge])
+        path.compute_detection_metrics([self._detection(Point3D(10, 0, 0), 8, acquisition_range=12)], speed=1)
+        self.assertAlmostEqual(path.max_detection_probability, detection_probability(3.0, 12.0), places=9)
+
+    def test_no_detection_threats_leave_default_metrics(self):
+        route = self._route([], None)
+        self.assertEqual(route.detection_metrics['detection_exposure_s'], 0.0)
+        self.assertIsNone(route.detection_metrics['first_detection_time_s'])
+        self.assertEqual(route.detection_metrics['warning_time_s'], 0.0)
+
+    def test_avoid_mode_measures_detection_without_changing_the_route(self):
+        """In AVOID i volumi di rilevamento sono solo metrica: stessa rotta, danger invariato."""
+        mid = self._interception(Point3D(12, 10, 0), 4)
+        sensor = self._detection(Point3D(12, 10, 0), 9)
+        with_sensor = self._route([mid], [sensor], mode=ThreatMode.AVOID)
+        without = self._route([mid], None, mode=ThreatMode.AVOID)
+
+        self.assertAlmostEqual(float(with_sensor.length), float(without.length), delta=1e-9)
+        self.assertEqual(float(with_sensor.danger), 0.0)
+        self.assertGreater(with_sensor.detection_metrics['detection_exposure_s'], 0.0)
+
+    def test_best_path_key_depends_on_mode(self):
+        low_danger_exposed = Path([])
+        low_danger_exposed.total_danger, low_danger_exposed.total_length = 0.0, 10.0
+        low_danger_exposed.detection_exposure_s = 30.0
+        hidden_but_dangerous = Path([])
+        hidden_but_dangerous.total_danger, hidden_but_dangerous.total_length = 2.0, 12.0
+        hidden_but_dangerous.detection_exposure_s = 0.0
+        paths = [low_danger_exposed, hidden_but_dangerous]
+
+        self.assertIs(min(paths, key=PathCollection.best_path_key()), low_danger_exposed)
+        self.assertIs(min(paths, key=PathCollection.best_path_key(ThreatMode.AVOID)), low_danger_exposed)
+        self.assertIs(min(paths, key=PathCollection.best_path_key(ThreatMode.AVOID_DETECTION)), hidden_but_dangerous)
+
+    def test_exclude_threat_accepts_both_types_and_rejects_others(self):
+        planner = RoutePlanner(self.START, self.END, [])
+        threats = [self._interception(Point3D(1, 1, 0), 4), self._detection(Point3D(1, 1, 0), 6)]
+        planner.excludeThreat(threats, self.START)
+        self.assertEqual(threats, [])
+        with self.assertRaises(TypeError):
+            planner.excludeThreat([Cylinder(Point3D(0, 0, 0), 1, 1)], self.START)
+
+
 if __name__ == "__main__":
 
     # Esegui tutti i test
