@@ -1316,6 +1316,22 @@ class TestPathCollection(unittest.TestCase):
         best_path = collection.get_best_path(max_range=100000)
         self.assertEqual(best_path, collection.paths[path_id1])
 
+    def test_get_best_path_skips_no_path_when_consecutive_paths_exceed_max_range(self):
+        """Regressione: filtrare per max_range non deve saltare un percorso fuori
+        portata solo perche' quello immediatamente precedente in lista e' stato
+        scartato (bug del ciclo for+remove sulla stessa lista, corretto)."""
+        collection = PathCollection()
+
+        # Entrambi lunghezza 10 (edge1 + edge2, 5 + 5), entrambi oltre max_range=8,
+        # e CONSECUTIVI in collection.paths: e' la condizione che il ciclo for+remove
+        # gestiva male (rimuoveva il primo e saltava la verifica del secondo).
+        path_id1 = collection.add_path([self.edge1, self.edge2])
+        path_id2 = collection.add_path([self.edge1, self.edge2])
+        collection.mark_path_completed(path_id1)
+        collection.mark_path_completed(path_id2)
+
+        self.assertIsNone(collection.get_best_path(max_range=8))
+
 
 class TestRoutePlanner(unittest.TestCase):
     def setUp(self):

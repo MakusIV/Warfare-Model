@@ -733,9 +733,11 @@ class PathCollection:
         # Filtra solo i percorsi completati
         completed_paths = [p for p in self.paths if p.completed]
 
-        for path in completed_paths:
-            if path.total_length > max_range:
-                completed_paths.remove(path)
+        # Filtro per lunghezza massima. NON un ciclo for+remove sulla stessa lista: rimuovere un
+        # elemento durante l'iterazione fa saltare l'elemento successivo (l'indice dell'iteratore
+        # avanza ma la lista si e' accorciata), lasciando in lista percorsi che superano max_range
+        # quando due o piu' di essi sono consecutivi (verificato).
+        completed_paths = [path for path in completed_paths if path.total_length <= max_range]
 
         if not completed_paths:
             return None
@@ -1798,9 +1800,10 @@ class RoutePlanner:
                         valid_lateral_movement_ext_p1 = True
                         break
             
-                if not valid_lateral_movement_ext_p1 and debug:            
+                if not valid_lateral_movement_ext_p1:
+                    if debug:
+                        print(f"Not valid lateral movement of Extended point ext_p1. ext_p1 is inside another threat: {other_threat!r}")
                     ext_p1 = None
-                    print(f"Not valid lateral movement of Extended point ext_p1 {getFormattedPoint(ext_p1)}. ext_p1 is inside another threat: {other_threat!r}")
 
 
             if ext_p2 and other_threat != threat and other_threat.innerPoint(ext_p2):
@@ -1822,9 +1825,10 @@ class RoutePlanner:
                         break
                 
                 
-                if not valid_lateral_movement_ext_p2 and debug:
+                if not valid_lateral_movement_ext_p2:
+                    if debug:
+                        print(f"Not valid lateral movement of Extended point ext_p2. ext_p2 is inside another threat: {other_threat!r}")
                     ext_p2 = None
-                    print(f"Not valid lateral movement of Extended point ext_p2 {getFormattedPoint(ext_p2)}. ext_p2 is inside another threat: {other_threat!r}")        
 
         if len(path_collection.paths) < MAX_PATHS: # procedono sia ext_p1 che  ext_p2 il primo con il path corrente, il secondo con un nuovo path
             path_edges_copy = copy.deepcopy(path_collection.get_path(path_id).edges) #copy list of edges of current path
