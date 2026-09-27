@@ -6,6 +6,22 @@ come test di contratto), `Test/Test_Session_Scenarios.py` (S1-S9), `Test/
 Test_Session_Scenarios_S10_S18.py` (S10-S18). Suite finale della Fase 7: **3371 test, OK
 (skipped=5)** (wiki `decisions/virtual-session-engine-des`, sezione Fase 7).
 
+**Aggiornamento rispetto alla stesura iniziale**: le estensioni successive alla Fase 7 (selezione
+arma dai registri, nebbia di guerra, scorta per modello d'arma, cannone di bordo, finestre di
+rilascio delle bombe, volumi di rilevamento/intercettazione distinti, pianificatore d'attacco —
+v. capitolo 4 §4.16-4.20 e capitolo 7 §7.6-7.9) hanno portato la suite a **3645 test, OK
+(skipped=5)** al commit `6754bf1c` (2026-09-27), tutte nello stesso harness di questo capitolo. Fra
+i moduli di test aggiunti dall'ultimo aggiornamento: `Test/Test_Aircraft_Weapon_Data.py` (classe
+`TestBombsReleaseField`, campo `release` del registro bombe), `Test/Test_Fire_Control.py`
+(`TestFireControlOnboardGun`, cannone di bordo candidato; `TestFireControlBombRelease`, gittata e
+tempo di caduta dalla balistica), `Test/Test_Air_Route_Manager.py` e
+`Test/Test_Threat_AA_Factory.py` (volumi di rilevamento/intercettazione distinti,
+`TestDetectionAndInterceptionVolumes`, `TestBuildDetectionThreat`, `TestBuildAirDefenseThreats`),
+`Test/Test_Military.py` (`test_air_detection_threats_*`), e il nuovo
+`Test/Test_Weapon_Delivery.py` (balistica e pianificazione del profilo d'attacco, classi
+`TestReleaseWindows`/`TestBallistics`/`TestBombEngagementEstimate`/`TestPlanFeasibility`/
+`TestPlanGeometry`/`TestPlanThreats`/`TestExposureRule`/`TestTransitAndRealAssets`).
+
 ## 8.1 `Test/Scenario_Fixtures.py` — la fabbrica di scenari
 
 Costruisce con **oggetti reali** gli ingredienti comuni agli scenari: nessuna logica del motore

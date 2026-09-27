@@ -3,13 +3,16 @@
 Modulo: `Logic/Engagement_Resolver.py`. È il modulo più esteso del motore (2063 righe) e il primo
 punto in cui entra la casualità, sempre e solo attraverso l'RNG di sessione passato dal
 chiamante (`Logic/Engagement_Resolver.py:9-10`). Il capitolo copre anche `Logic/Fire_Control.py`
-(§4.16-4.17), un modulo satellite che **non modifica** il contratto del risolutore: fornisce una
-`fire_control` reale, dai registri d'arma, da iniettare al posto di una tabella di test — la
-nebbia di guerra (§4.18), due costruttori del fattore `detection_factor` già previsto dal
-contratto del capitolo 4.2 — e la **scorta per modello d'arma** (§4.19,
-`Asset/Weapon_Stores.py`, decisione utente 2026-09-26, commit `1d0c1127`), che ha sostituito il
-contatore aggregato per asset come stato primario delle munizioni: §4.4, §4.5 e §4.10 sono stati
-aggiornati di conseguenza rispetto alla stesura iniziale di questo manuale.
+(§4.16-4.17, §4.16bis, §4.20), un modulo satellite che **non modifica** il contratto del
+risolutore: fornisce una `fire_control` reale, dai registri d'arma, da iniettare al posto di una
+tabella di test, con il cannone di bordo come arma candidata (§4.16bis, decisione A2, 2026-09-26,
+commit `8bd69727`) e, per le bombe, gittata e tempo di caduta da una balistica reale invece di
+valori di ripiego (§4.20, decisione B6, 2026-09-27, commit `6754bf1c`) — la nebbia di guerra
+(§4.18), due costruttori del fattore `detection_factor` già previsto dal contratto del capitolo
+4.2 — e la **scorta per modello d'arma** (§4.19, `Asset/Weapon_Stores.py`, decisione utente
+2026-09-26, commit `1d0c1127`), che ha sostituito il contatore aggregato per asset come stato
+primario delle munizioni: §4.4, §4.5 e §4.10 sono stati aggiornati di conseguenza rispetto alla
+stesura iniziale di questo manuale.
 
 ## 4.1 La catena, per ogni ingaggio
 
@@ -441,11 +444,13 @@ stateDiagram-v2
 
 Modulo satellite (2026-09-24, decisione utente, v. proposta B1
 `Analysis/Document/Proposta_Efficacia_Antiaerea.md`; aggiornato 2026-09-26, decisione A5 della
-proposta A, `Analysis/Document/Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md`), che **non
-tocca** il contratto di `Engagement_Resolver`: fornisce una `fire_control` che consulta i
-registri d'arma reali (`Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Weapon_Data`) invece
-della tabella a ruoli di test (`Test/Scenario_Fixtures.py`), da iniettare al posto di
-quest'ultima senza toccare il chiamante:
+proposta A, `Analysis/Document/Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md`; aggiornato di
+nuovo il 2026-09-26 per il cannone di bordo, decisione A2, commit `8bd69727`, e il 2026-09-27 per
+la gittata delle bombe, decisione B6, commit `6754bf1c`, v. §4.20), che **non tocca** il contratto
+di `Engagement_Resolver`: fornisce una `fire_control` che consulta i registri d'arma reali
+(`Aircraft_Weapon_Data`, `Ground_Weapon_Data`, `Ship_Weapon_Data`) invece della tabella a ruoli di
+test (`Test/Scenario_Fixtures.py`), da iniettare al posto di quest'ultima senza toccare il
+chiamante:
 
 ```python
 fire_control = make_registry_fire_control()
@@ -455,37 +460,38 @@ run_session(order, forces, routes, fire_control, ...)
 Dal 2026-09-26 la fire control restituisce **tutte** le armi adatte del tiratore, come tupla di
 `ShotSpec` **in ordine di preferenza** (`Fire_Control.py:14-17`), non solo la migliore: il
 risolutore spara con la prima che ha ancora scorta per quel modello d'arma (`_first_with_stock`,
-v. §4.4 e §4.19). Per ogni coppia (tiratore, bersaglio), la catena (`Fire_Control.py:19-61`, righe
+v. §4.4 e §4.19). Per ogni coppia (tiratore, bersaglio), la catena (`Fire_Control.py:19-64`, righe
 di questo paragrafo sempre relative a questo file, non a `Engagement_Resolver.py`):
 
-1. **Armi candidate del tiratore**, dal registro giusto per la sua classe (`:21-28`):
-   `Vehicle` → `Vehicle_Data._registry[model].weapons` → `GROUND_WEAPONS`; `Ship` →
+1. **Armi candidate del tiratore**, dal registro giusto per la sua classe (`_candidate_weapons`,
+   `:350-413`): `Vehicle` → `Vehicle_Data._registry[model].weapons` → `GROUND_WEAPONS`; `Ship` →
    `Ship_Data._registry[model].weapons` → `SHIP_WEAPONS`; `Aircraft` → i piloni del loadout
-   **assegnato** (`Aircraft.assigned_loadout`) → `AIR_WEAPONS` (il cannone di bordo non ha un
-   modello d'arma e non è candidato; senza loadout assegnato, nessuna arma candidata); qualunque
-   altro asset (`Structure`, ...): nessuna arma.
-2. **Chiave del bersaglio** (`:29-37`): per un aereo in volo, la sottoclasse di
+   **assegnato** (`Aircraft.assigned_loadout`) → `AIR_WEAPONS`, **più il cannone di bordo**
+   (decisione A2, 2026-09-26, `:375-385`, v. §4.16bis) se il loadout gli assegna colpi; senza
+   loadout assegnato, nessuna arma candidata (cannone compreso). Qualunque altro asset
+   (`Structure`, ...): nessuna arma.
+2. **Chiave del bersaglio** (`:32-40`): per un aereo in volo, la sottoclasse di
    `Context.get_air_target_class` (dal registro del modello, con fallback `'Aircraft'` se l'arma
    non ha quella riga); per ogni altro bersaglio,
    `get_weapon_target_class(get_target_classification(asset_type))` — nessuna classificazione
    trovata, nessun tiro (`None`).
-3. **Filtro di adeguatezza** (`:38-50`): un bersaglio aereo richiede una riga aerea nel template
+3. **Filtro di adeguatezza** (`:41-53`): un bersaglio aereo richiede una riga aerea nel template
    dell'arma (sono state aggiunte solo alle armi antiaeree: un cannone da carro o un ATGM non è
    mai candidato contro un aereo); un bersaglio di superficie richiede almeno un task che non sia
-   puramente antiaereo (`AIR_ONLY_TASKS`, `:154`) — un SAM o un AAM non spara mai a superficie,
+   puramente antiaereo (`AIR_ONLY_TASKS`, `:169`) — un SAM o un AAM non spara mai a superficie,
    anche se il template ha righe terrestri "inutili"; in ogni caso Pk = accuracy ×
    destroy_capacity deve essere > 0.
 4. **Filtro di quota** (solo bersagli aerei, v. sotto).
-5. **Ordine di preferenza — decisione A5, "compromesso Pk/costo"** (`:52-61`, `rank_weapons`,
-   `:524-560`): **tutte** le armi adatte, ordinate per punteggio decrescente
-   (`preference_score`, `:512-521`):
+5. **Ordine di preferenza — decisione A5, "compromesso Pk/costo"** (`:55-64`, `rank_weapons`,
+   `:551-589`): **tutte** le armi adatte, ordinate per punteggio decrescente
+   (`preference_score`, `:539-548`):
 
    ```
    punteggio = Pk / costo ** WEAPON_COST_EXPONENT     (Pk = accuracy x destroy_capacity)
    ```
 
    applicata **solo se tutte** le armi adatte della coppia hanno un `cost` positivo nel registro
-   (`WEAPON_COST_EXPONENT = 0.5`, **STIMA DICHIARATA** non tarata, `:187-208`); altrimenti si
+   (`WEAPON_COST_EXPONENT = 0.5`, **STIMA DICHIARATA** non tarata, `:202-223`); altrimenti si
    ripiega sulla sola Pk (criterio precedente al 2026-09-26). Oggi hanno il costo tutte le armi
    di `Aircraft_Weapon_Data`, un solo modello su ~110 di `Ground_Weapon_Data` (2A46M) e nessuno
    di `Ship_Weapon_Data`: per veicoli e navi la mancanza di un costo dichiarato fa quindi
@@ -494,7 +500,7 @@ di questo paragrafo sempre relative a questo file, non a `Engagement_Resolver.py
    `efficiency[classe][dimensione]`, mai dagli scorer di pianificazione (`calc_weapon_efficiency`
    usa il `random` di modulo e romperebbe il determinismo di sessione).
 
-Il **perché** del compromesso (`:187-201`, dichiarato, non tarato): con scorte finite per arma
+Il **perché** del compromesso (`:202-216`, dichiarato, non tarato): con scorte finite per arma
 (v. §4.19) la massima Pk da sola spende sempre i missili migliori anche su bersagli leggeri; la
 pura efficienza economica (`WEAPON_COST_EXPONENT = 1`) preferirebbe sempre la bomba da costo 3
 al missile da costo 100 anche con Pk molto minore. `0.5` sta nel mezzo: un'arma che costa 4 volte
@@ -502,7 +508,7 @@ tanto deve avere Pk doppia per essere preferita. Il punteggio è invariante per 
 (un fattore di scala comune non cambia l'ordine): i `cost` dei registri, che non dichiarano
 l'unità (plausibilmente migliaia di USD), non vanno quindi normalizzati.
 
-### Quota (`:63-85`)
+### Quota (`:66-88`)
 
 La quota corrente è `asset.position.z` [m]: il motore non aggiorna `position` durante la sessione
 (le rotte sono consumate dal `Contact_Scheduler`, non scritte sull'asset), quindi per un aereo in
@@ -514,45 +520,49 @@ non sale oltre la propria portata — non una costante stimata. Se la posizione 
 bersaglio non è disponibile, il filtro **non si applica** (stessa politica "None = non modellato"
 di munizioni e carburante, v. capitolo 7 §7.6).
 
-### `air_range_m` vs `range_m` (`_air_range_m`, `:289-301`)
+### `air_range_m` vs `range_m` (`_air_range_m`, `:304-316`)
 
 Per un'arma terra-aria il cui registro dichiara `range` come `{direct, indirect}`, contro un
 bersaglio **aereo** si usa la portata di tiro **diretto** (a vista), non quella indiretta contro
 superficie: un cannone AA S-68 con `indirect` 12 km ingaggia un aereo solo entro `direct` 4 km.
 Per `Ship`/`Air` esiste solo l'unica portata del registro.
 
-### Velocità stimata e tempo di volo (`_speed_ms`, `:304-320`; `shot_spec_for`, `:571-605`)
+### Velocità stimata e tempo di volo (`_speed_ms`, `:319-335`; `shot_spec_for`, `:598-643`)
 
 `_speed_ms` legge `speed`/`muzzle_speed` dal registro; per gli AAM di `Aircraft_Weapon_Data`
 converte `max_speed` (in Mach) tramite `SPEED_OF_SOUND_MS = 340.3` m/s (atmosfera ISA a 15 °C:
 una definizione, non una stima); per i siluri converte i nodi in m/s tramite `KNOT_MS`.
 `time_of_flight = ENGAGEMENT_RANGE_FRACTION × max_range / velocità` quando il registro dà
 entrambi — **STIMA DICHIARATA**: si assume l'ingaggio a metà portata
-(`ENGAGEMENT_RANGE_FRACTION = 0.5`, `:163`), non nota alla fire control (la distanza vera la
-calcola il risolutore, dopo); altrimenti `DEFAULT_TIME_OF_FLIGHT_S` per categoria (`:169`, ordini
+(`ENGAGEMENT_RANGE_FRACTION = 0.5`, `:178`), non nota alla fire control (la distanza vera la
+calcola il risolutore, dopo); altrimenti `DEFAULT_TIME_OF_FLIGHT_S` per categoria (`:184`, ordini
 di grandezza non tarati).
 
-### Campi derivati della `ShotSpec` (`:87-112`, `shot_spec_for`, `:571-605`)
+### Campi derivati della `ShotSpec` (`:90-124`, `shot_spec_for`, `:598-643`)
 
 - `weapon`: nome del modello d'arma — dal 2026-09-26 anche la chiave della scorta consumata (v.
   §4.19).
 - `max_range` [m] (**controllo di portata del risolutore**, v. §4.17): la portata del registro
   convertita in metri; contro un bersaglio aereo, per le armi terrestri, la portata di tiro
-  diretto; `None` quando il registro non dichiara una portata — le bombe libere di
-  `Aircraft_Weapon_Data` non hanno `range`: per quell'arma nessun vincolo di portata si applica
-  (limite noto, v. capitolo 9 §9.1).
+  diretto; `None` quando il registro non dichiara una portata. **Dal 2026-09-27 (decisione B6,
+  commit `6754bf1c`, v. §4.20)** questo vale ancora per un aereo bersaglio, ma non più per le
+  bombe contro un bersaglio di **superficie**: per quelle, `max_range` (gittata obliqua) e
+  `time_of_flight` (tempo di caduta) vengono dalla balistica di rilascio di
+  `Logic/Weapon_Delivery.bomb_engagement_estimate`, non dal registro. Restano senza vincolo di
+  portata solo le tre bombe senza dati di rilascio (KGBU-2AO/2PTAB/96r, decisione D4 sospesa) e i
+  casi senza posizione nota di tiratore o bersaglio.
 - `interceptable`: `True` per missili e bombe guidate (`type == 'Guided bombs'`); `False` per
   proiettili, razzi non guidati, bombe a caduta libera e siluri.
 - `rounds`/`cycle_time`: per le armi a tiro rapido (`fire_rate >= AUTOMATIC_FIRE_RATE_RPM = 200`
   colpi/min) un colpo della `ShotSpec` è una **raffica** di `GUN_BURST_ROUNDS = 50` colpi; per le
   armi a tiro singolo un colpo è un proietto; per missili/bombe/razzi/siluri `rounds =
   SALVO_ROUNDS` per categoria e `cycle_time = None` (intervallo del profilo di reazione).
-- `stock_per_round` (decisione A3, 2026-09-26, `:109-112`): unità di scorta consumate da UN
+- `stock_per_round` (decisione A3, 2026-09-26, `:121-124`): unità di scorta consumate da UN
   colpo della salva — `GUN_BURST_ROUNDS` per le armi a tiro rapido (un colpo è una raffica: uno
   Shilka con 2000 colpi spara 40 raffiche, non 2000 colpi), `1` per tutte le altre. Un cannone
   senza `fire_rate` nel registro resta a `1` (non si sa se sparerebbe a raffiche).
 
-### Memoizzazione (`:114-120`)
+### Memoizzazione (`:126-133`)
 
 La scelta è una funzione **pura** di (tiratore: classe, modello, loadout; bersaglio: chiave,
 dimensione; quote): ogni fire control creata da `make_registry_fire_control` ha una propria cache
@@ -561,22 +571,20 @@ sessione non cambia (due run con lo stesso seed restano identiche, cache calda o
 candidate sono memoizzate per (classe, modello, loadout); le scelte per (tiratore, chiave del
 bersaglio, dimensione, quote).
 
-### Cosa non fa (`:122-130`)
+### Cosa non fa (`:135-144`)
 
 Non modula la Pk con la posizione nell'inviluppo (distanza, aspetto): valori di template. Non
 conta le munizioni: è pura, e la scorta per arma la legge il risolutore dallo stato ombra (v.
 §4.19) — l'ordine di preferenza non dipende dalla scorta residua né dalla missione (filtro ROE
-per tipo di missione rimandato, manca l'entità `Mission`, decisione A4). Il cannone di bordo
-degli aerei non è candidato (decisione A2 rimandata: nessun dato di Pk/portata nei registri per
-il cannone di bordo). Non distingue stealth, contromisure o ECM. Nessun componente LLM, nessun
-uso del modulo `random`.
+per tipo di missione rimandato, manca l'entità `Mission`, decisione A4). Non distingue stealth,
+contromisure o ECM. Nessun componente LLM, nessun uso del modulo `random`.
 
 ```mermaid
 flowchart TD
     A["shooter, target"] --> B{"classe del tiratore"}
     B -->|Vehicle| C1["Vehicle_Data.weapons -> GROUND_WEAPONS"]
     B -->|Ship| C2["Ship_Data.weapons -> SHIP_WEAPONS"]
-    B -->|Aircraft| C3["piloni di assigned_loadout -> AIR_WEAPONS"]
+    B -->|Aircraft| C3["piloni di assigned_loadout -> AIR_WEAPONS<br/>+ cannone di bordo (A2, v. 4.16bis)"]
     B -->|altro| C4["nessuna arma -> None"]
     C1 --> D["armi candidate"]
     C2 --> D
@@ -592,6 +600,49 @@ flowchart TD
     I --> J["tupla ordinata di ShotSpec<br/>(max_range, stock_per_round, interceptable, ...)"]
     J --> K["risolutore: _first_with_stock<br/>prova in ordine, prima con scorta vince"]
 ```
+
+## 4.16bis Il cannone di bordo come arma candidata (decisione A2, 2026-09-26, commit `8bd69727`)
+
+I 13 cannoni interni reali erano già completamente modellati nei registri (Pk, portata, cadenza,
+v. `AIR_WEAPONS['CANNONS']`/`['MACHINE_GUNS']`), ma **esclusi** da `_candidate_weapons` e i loro
+colpi scartati dalla scorta per arma della Proposta A (§4.19): mancava solo l'associazione
+aereo → cannone. Colmata con un nuovo campo opzionale `gun` di `Aircraft_Data`
+(`Asset/Aircraft_Data.py`, validato da `_validate_gun`): il nome **esatto** di una voce di
+`AIR_WEAPONS` (`str`, un solo cannone), oppure un `dict {modello: colpi del carico completo
+reale}` per un armamento **misto** (il solo caso reale: il MiG-15bis porta un N-37 da 40 colpi più
+due NR-23 da 80). Assente/`None`: nessun cannone d'ingaggio modellato — bombardieri strategici,
+trasporti, AWACS/ISR, droni e tanker, e le torrette difensive di coda dei bombardieri (Tu-22M,
+Tu-95MS, Tu-142, Il-76MD), non sono armi d'ingaggio nel senso di questo modulo. **Anomalia dati
+segnalata, non risolta**: l'AJ/ASJ 37 Viggen ha `gun_rounds` nel loadout ma nessun cannone interno
+proprio nel registro (l'Oerlikon-KCA appartiene alla variante JA 37; l'AJ 37 portava storicamente
+un pod ADEN esterno, non modellato) — lasciato senza `gun` piuttosto che assegnargli un'arma
+sbagliata.
+
+`get_aircraft_gun_rounds(model, gun_rounds)` (`Asset/Aircraft_Data.py:3737-3765`) converte i colpi
+del loadout (`stores['gun_rounds']`) nella scorta per arma del cannone: `{gun: gun_rounds}` per un
+cannone singolo; per un armamento misto, ripartizione **proporzionale** ai colpi del carico
+completo reale dichiarato in `gun`, con parte intera per difetto e i colpi residui assegnati uno
+alla volta ai resti maggiori (a parità, nome del cannone) — deterministico, somma sempre
+`gun_rounds`, voci a 0 colpi omesse. Restituisce `{}` (nessun vincolo) se il modello non ha `gun`,
+non è nel registro, o `gun_rounds` non è un intero positivo.
+
+Tre punti consumano la stessa funzione, con lo stesso risultato per costruzione:
+
+- `Aircraft.stores_from_registry()` (`Asset/Aircraft.py:270-277`, v. §7.6): il cannone ottiene la
+  **propria** voce di scorta, mai sommata a quella di un'arma dei piloni — fino a questa data i
+  colpi del cannone finivano nello scalare aggregato e pagavano i missili (il difetto del
+  contatore aggregato di §4.19, "un A-10 con 4 Maverick ne lanciava 642");
+- `Fire_Control._candidate_weapons` (`Logic/Fire_Control.py:375-385`): il cannone è candidato
+  **solo** se il loadout gli assegna colpi (`get_aircraft_gun_rounds(...)` non vuoto), con la
+  stessa voce di `AIR_WEAPONS` delle altre armi del loadout — da qui in poi segue esattamente la
+  stessa catena di adeguatezza/quota/ranking del resto del capitolo;
+- la fire control stessa (`make_registry_fire_control`, righe citate sopra), che quindi
+  restituisce anche il cannone fra le opzioni ordinate.
+
+**Comportamento cambiato**: un aereo in missione CAP (o comunque senza altre armi adatte contro un
+bersaglio di superficie) può ora ingaggiarlo col cannone di bordo — prima non sparava affatto.
+Nessun filtro per tipo di missione (decisione A4 rimandata, come per il resto della fire control):
+il cannone è un'arma candidata generica.
 
 ## 4.17 Controllo di portata: `ShotSpec.max_range` e il rimando `not_before` (D11)
 
@@ -885,3 +936,49 @@ flowchart TD
     I -->|erosa da un'intercettazione nel frattempo| K["lancio annullato,<br/>_schedule_next per il prossimo bersaglio"]
     J --> L["salva in volo -> impatto -> eventuale intercettazione<br/>sulla STESSA voce se l'arma e' anche AD (regola F)"]
 ```
+
+## 4.20 Bombe: gittata e tempo di caduta dalla balistica di `Weapon_Delivery` (decisione B6, 2026-09-27, commit `6754bf1c`)
+
+Fino al 2026-09-27 le bombe a caduta libera (`AIR_WEAPONS['BOMBS']`) non hanno `range` né dato di
+velocità nel registro: `shot_spec_for` produceva quindi `max_range = None` (nessun controllo di
+portata, v. §4.17) e `time_of_flight = DEFAULT_TIME_OF_FLIGHT_S['bomb']` — un F-16 armato di bombe
+libere poteva sganciarle da qualunque distanza entro il rilevamento. Con B6 il risolutore riusa,
+per le sole bombe contro un bersaglio di **superficie** (`kind == 'bomb' and not is_air`,
+`Logic/Fire_Control.py:613-614`), la **stessa** balistica del pianificatore d'attacco
+(`Logic/Weapon_Delivery.bomb_engagement_estimate`, v. §7.9): "una fisica, un pianificatore, due
+esecutori" — il DES e un futuro adapter DCS condividono la stessa legge di caduta, non due
+implementazioni che potrebbero divergere.
+
+**Quota di rilascio** (`make_registry_fire_control`, `Logic/Fire_Control.py:706-720`): la
+differenza di quota fra tiratore e bersaglio (`shooter_z - target_z`, entrambe da `asset.position.z`,
+la stessa fonte del filtro di quota di §4.16), letta anche per un tiratore aereo contro un
+bersaglio di superficie — prima di B6 le quote si leggevano solo per bersagli **aerei** (filtro
+d'inviluppo); ora anche per questo caso (`bomber = not is_air and shooter_key[0] == 'Aircraft'`).
+La **velocità** è `attack.speed` del loadout assegnato (`_attack_speed_kmh`, `:646-654`), `None`
+se il loadout non dichiara un profilo `attack` (nessuna bomba, o loadout senza dati) — in quel
+caso `bomb_engagement_estimate` usa il centro della finestra di velocità dell'arma.
+
+`bomb_engagement_estimate` (v. §7.9) sceglie un rilascio **livellato** (picchiata a metà fascia se
+il livellato non è ammesso dalla finestra), e porta quota/velocità fuori finestra al valore
+ammesso più vicino — lo stesso comportamento dichiarato dell'IA di DCS ("will choose closest
+altitude"): il risolutore non rifiuta un aereo troppo alto o troppo veloce per l'arma, gli assegna
+la soluzione balistica al bordo della finestra. Il risultato (`ReleaseSolution`) alimenta
+`ShotSpec.max_range = slant_range_m` (gittata **obliqua**, coerente con la sfera di portata che il
+risolutore confronta in §4.17: con un rilascio livellato l'ingresso nella sfera coincide col punto
+di sgancio) e `ShotSpec.time_of_flight = fall_time_s` (`Logic/Fire_Control.py:623-625`).
+
+Senza dati di rilascio (le tre KGBU-2AO/2PTAB/96r, decisione D4 sospesa) o senza le due posizioni,
+`release` resta `None` e il comportamento è quello precedente a B6 (nessun vincolo di portata,
+tempo di volo di ripiego): **non una regressione silenziosa**, lo stesso ramo di codice che girava
+prima del 2026-09-27 per ogni bomba.
+
+**Memoizzazione** (v. "Memoizzazione" sopra): la chiave della cache delle scelte include ora le
+quote anche per un tiratore aereo contro un bersaglio di superficie (non solo contro un bersaglio
+aereo), perché la gittata di una bomba dipende dalla quota di sgancio — la purezza della funzione
+non cambia, cambia solo la granularità della chiave.
+
+**Limiti dichiarati** (v. anche capitolo 9, §9.1, e il docstring di `Weapon_Delivery.py`): la
+geometria della picchiata/cabrata non entra nel tratto valutato qui, solo nella balistica (gittata
+e caduta); la sfera di portata del DES non ha una distanza minima, quindi un aereo già sopra il
+bersaglio "sgancia" comunque; quota e velocità fuori finestra sono portate (clampate) al bordo
+ammesso invece di far fallire il tiro.

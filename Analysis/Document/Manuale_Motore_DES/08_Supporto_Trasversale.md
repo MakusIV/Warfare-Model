@@ -169,7 +169,7 @@ compromesso fra i due sensori.
 
 ## 7.5 Le dimensioni militari di `Block/Military.py`
 
-### `air_defense_power() -> float` (`Block/Military.py:579-616`)
+### `air_defense_power() -> float` (`Block/Military.py:612-649`)
 
 È la dimensione che manca alla combat power: SAM, AAA e EWR valgono 0 nelle tabelle di efficacia
 (`Context.GROUND_COMBAT_EFFICACY`) **per definizione**, perché quella misura fuoco e manovra
@@ -281,16 +281,21 @@ carburante via `load_fuel_from_registry()`, sovrascrivendo l'eventuale consumo p
 quindi un'operazione del ciclo di campagna/assemblaggio missione, **non** un canale di
 rifornimento durante l'ingaggio (il risolutore non la chiama mai).
 
-`Aircraft.stores_from_registry()` (`:215-267`, override di `Mobile.stores_from_registry`, v.
+`Aircraft.stores_from_registry()` (`:215-278`, override di `Mobile.stores_from_registry`, v.
 capitolo 4 §4.19) costruisce `{modello_arma: quantità}` dal loadout assegnato
 (`AIRCRAFT_LOADOUTS[model][loadout]['stores']['pylons']`): per ogni pilone la quantità, **solo**
 se il nome è un'arma reale di `AIR_WEAPONS` (`get_weapon(...)` non `None`) — serbatoi esterni e
 pod di rifornimento stanno anch'essi nei piloni e vanno esclusi; piloni con la stessa arma si
-sommano. Il **cannone di bordo** (`stores['gun_rounds']`) **non entra** nella scorta (decisione
-A2 rimandata, v. capitolo 9 §9.1): non ha un modello d'arma né dati di Pk/portata nei registri
-aerei, e non è un'arma candidata della fire control (`Logic/Fire_Control.py`, capitolo 4 §4.16).
-Senza loadout assegnato, delega a `Mobile.stores_from_registry()`, che per un aereo restituisce
-`None` (non modellata).
+sommano. **Dal 2026-09-26 (decisione A2, commit `8bd69727`, v. capitolo 4 §4.16bis)** il **cannone
+di bordo** ottiene la propria voce di scorta, `{modello_cannone: colpi}` da
+`get_aircraft_gun_rounds(model, stores['gun_rounds'])` (`Asset/Aircraft_Data.py:3737-3765`), MAI
+sommata a quella di un'arma dei piloni diversa: fino a questa data i colpi del cannone
+(`stores['gun_rounds']`) non entravano affatto nella scorta per arma e finivano nel contatore
+scalare aggregato (v. capitolo 4 §4.19), pagando i missili dello stesso asset — è il difetto
+descritto in dettaglio al capitolo 4, §4.16bis. Il cannone è candidato della fire control
+(`Logic/Fire_Control._candidate_weapons`, capitolo 4 §4.16bis) esattamente come le armi dei
+piloni. Senza loadout assegnato, delega a `Mobile.stores_from_registry()`, che per un aereo
+restituisce `None` (non modellata).
 
 ## 7.7 I punti di iniezione `fire_control` e `detection_factor`
 
@@ -312,3 +317,285 @@ motore stesso — è il punto di estensione esplicito verso ciò che il motore n
   `meteo_detection_factor`, §7.4), esistono fabbriche dello stesso fattore per la nebbia di guerra
   da ricognizione (`region_recon_detection_factor`, capitolo 4, §4.18) e per comporre più
   degradazioni insieme (`combine_detection_factors`).
+
+## 7.8 Il pianificatore di rotta aerea: volumi di rilevamento e intercettazione distinti (`Logic/Air_Route_Manager.py`, decisioni D-1..D-7, 2026-09-26, commit `815dc35f`)
+
+**Fuori dal motore DES in senso stretto** (non è uno dei quattro strati dei capitoli 2-6): è il
+pianificatore di rotta che precede una missione, consumato più a monte. Entra in questo manuale
+perché condivide con il motore la stessa legge di rilevamento (`Engagement_Resolver.
+detection_probability`, v. §4.2) e perché `Block/Military.py` lo espone come una delle dimensioni
+militari del capitolo 7. Documento di riferimento:
+`Analysis/Document/Proposta_Volumi_Rilevamento_Intercettazione.md`.
+
+### Il problema che ha motivato l'estensione
+
+`Mobile.air_defense_volume()` costruisce da sempre un solo `Cylinder` per asset di difesa aerea:
+il volume di **intercettazione**, cioè la portata dell'arma. I registri dichiarano però anche una
+portata di **scoperta** del sensore, quasi sempre maggiore (un SA-6/2K12-Kub scopre a 75 km e
+intercetta a 24 km), mai letta dal pianificatore prima di questa data: un aereo che aggirava
+"la minaccia" aggirava in realtà solo la sua arma, non il suo sensore.
+
+### Due tipi, una base comune (`AirThreat`, `:77-131`)
+
+`AirThreat` è la base comune (`danger_level`, `volume`/`cylinder` — alias finché l'unica forma è
+il cilindro —, `min_altitude`/`max_altitude` dal cilindro, `source_id`, `edgeIntersect`/
+`innerPoint` usati dalla ricerca di percorso): due specializzazioni con parametri disgiunti.
+
+- **`ThreatAA(AirThreat)`** (`:134-277`) — la classe storica del pianificatore, ora sottoclasse:
+  stesso costruttore posizionale `(danger_level, interception_speed, min_fire_time,
+  acquisition_time, cylinder)`, quindi compatibile con ogni chiamata preesistente.
+  `acquisition_time` (**rinominato** da `min_detection_time`, decisione D-6: `min_detection_time`
+  resta accettato come parola chiave e come attributo alias) è la **latenza di acquisizione** —
+  dal contatto a una traccia utile al tiro, lo stesso RIV del profilo di reazione del DES
+  (capitolo 7, §7.3) — non un volume né un tempo di rilevamento: il nome precedente confondeva le
+  due nozioni. `calcMaxLenghtCrossSegmentInterception` (rinominata da
+  `calcMaxLenghtCrossSegment`, alias mantenuto) modella **solo** il volume d'intercettazione:
+  moto radiale dell'aereo a velocità `v_a`, sito pronto a lanciare dopo `ready_delay_s` (0 nel
+  pianificatore odierno) + `min_fire_time`, intercettore a velocità `v_i` — equazione di secondo
+  grado nella distanza percorsa dall'intercettore, `float('inf')` se non esiste soluzione positiva
+  (nessun intercettore può raggiungere l'aereo: qualunque corda è sicura).
+- **`DetectionThreat(AirThreat)`** (`:280-329`, nuova) — il volume di **rilevamento**:
+  `danger_level` è sempre `0.0` per costruzione (decisione D-3), così `total_danger` dei percorsi
+  e `Military.air_defense_power()` (capitolo 7, §7.5) restano misure della sola potenza di fuoco.
+  Il cilindro è costruito **alla quota di rotta** `route_altitude` (un vero volume di rilevamento
+  è un solido il cui raggio cresce con la quota; il cilindro ne è la sola sezione a quella quota,
+  per cui il pianificatore non ammette cambi di quota per aggirarlo, v. sotto), con raggio
+  `min(acquisition_range, orizzonte_radar)`.
+
+### Orizzonte radar (`radar_horizon_range`, `:665-677`)
+
+```
+d = sqrt(2*k*R_terra*h_antenna) + sqrt(2*k*R_terra*h_bersaglio)      k = 4/3 (radar standard)
+```
+
+`build_detection_threat(asset, route_altitude)` (`:726-779`) prova i sensori `'radar'` e `'TVD'`
+dell'asset (`Mobile.detection_range('air', sensor=...)`), tiene quello col raggio **effettivo**
+maggiore, e restituisce `None` senza sollevare se l'asset non ha posizione o nessun
+`acquisition_range` aria utilizzabile (es. ZSU-57-2, M163-VADS: nessun sensore nei registri,
+decisione D-4 sospesa, dati da ricercare). Un sensore puro (EWR) produce la sua `DetectionThreat`
+senza bisogno di armi. `build_air_defense_threats(asset, route_altitude)` (`:782-802`) restituisce
+la coppia `(DetectionThreat, ThreatAA)` dello stesso sito, con lo **stesso `source_id`**: è il
+legame che il pianificatore d'attacco userà per sapere quando un sito ha già acquisito l'aereo
+(v. §7.9). **Limite noto**: il raggio d'intercettazione resta la sola portata dell'arma, senza il
+minimo con l'`engagement_range` della guida — verificato che con i dati attuali la guida è sempre
+≥ la portata dell'arma (nessuna differenza pratica oggi).
+
+### `ThreatMode`: tre modalità di trattamento (`:37-74`)
+
+`resolve_threat_mode(mode=None, intersecate_threat=False)` decide la modalità effettiva: `mode`
+prevale, altrimenti l'alias storico `intersecate_threat` (`False` → `AVOID`, `True` →
+`CROSS_UNINTERCEPTED`) — nessuna chiamata preesistente cambia comportamento.
+
+| Modalità | Comportamento |
+|---|---|
+| `AVOID` | Aggira i volumi d'**intercettazione** (comportamento storico, `intersecate_threat=False`). |
+| `CROSS_UNINTERCEPTED` | Attraversa i volumi d'intercettazione con la corda di sicurezza (`intersecate_threat=True`). |
+| `AVOID_DETECTION` | Aggira i volumi di **rilevamento** e attraversa con la stessa corda limitata ogni volume d'intercettazione toccato comunque. |
+
+In `AVOID_DETECTION` (`calcRoute`, `:1395-1419`) il motore di ricerca dell'aggiramento (invariato)
+lavora sui volumi di rilevamento (`detections`); i volumi d'intercettazione (`threats`) diventano
+`cross_threats`, attraversati a corda limitata da `_cross_interception_while_avoiding`
+(`:1792-1899`) quando un arco già scelto per evitare il rilevamento li tocca comunque — **mai per
+costruzione**: ogni intersezione è verificata sui volumi dichiarati (intersezione completa
+richiesta, corda massima da `calcMaxLenghtCrossSegmentInterception`, come in
+`CROSS_UNINTERCEPTED`), non assunta nulla dal solo fatto che il rilevamento sia stato evitato — per
+i SAM tipici (sensore e arma co-locati) i due volumi sono annidati, ma a bassa quota l'orizzonte
+radar può rendere il volume di rilevamento **più piccolo** di quello d'intercettazione. Nessun
+cambio di quota è ammesso per un volume di rilevamento (`_handle_threat_avoidance`, `:2326-2332`):
+è costruito a una sola quota, e cambiarla richiederebbe ricostruirlo, non ancora fatto
+(proposta §3.6, Attività D, fuori scope di questo commit).
+
+### Metriche di rilevamento del percorso (decisione D-3/D-5, `Path.compute_detection_metrics`, `:1073-1142`)
+
+Separate da `total_danger` (che resta la sola intercettazione): `detection_exposure_s` (somma
+delle durate nei volumi di rilevamento, volumi sovrapposti contati ciascuno), `first_detection_
+time_s` (primo ingresso, `None` se mai), `warning_time_s` (arrivo − primo rilevamento),
+`max_detection_probability` (replica **esatta** la legge di Pd del DES,
+`Engagement_Resolver.detection_probability`, come metrica di pianificazione — nessuna modifica al
+risolutore). `PathCollection.best_path_key(mode)` (`:1231-1242`) cambia il criterio di scelta del
+percorso migliore solo in `AVOID_DETECTION`: prima il minimo tempo sotto sensore, poi il pericolo
+residuo d'intercettazione, poi la lunghezza (altre modalità: la chiave storica pericolo→lunghezza).
+
+### `Block/Military.py`: le due liste per blocco
+
+`Military.air_defense_threats()` (`Block/Military.py:551-581`, preesistente, ora con
+`source_id` impostato — v. §7.9) e la nuova `Military.air_detection_threats(route_altitude)`
+(`:583-610`) restituiscono rispettivamente i `ThreatAA` e le `DetectionThreat` di tutti gli asset
+Vehicle/Ship operativi del blocco con dati utilizzabili — la stessa selezione di asset, due volumi
+per sito. Nessuna delle due entra in `air_defense_power()` per la parte di rilevamento
+(`DetectionThreat.danger_level == 0.0` per costruzione).
+
+### Fuori perimetro, dichiarato
+
+Reti di sensori/cueing EWR→SAM (D-7); dati EWR e sensore visivo per ZSU-57-2/M163 (D-4b/c,
+ricerca dati separata); attraversamento a corda limitata del **solo** rilevamento (D-5, opzione 2:
+richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge del risolutore
+DES); la firma a due liste minacce di `plan_attack_profile` (D-8) — implementata insieme al
+pianificatore d'attacco, v. §7.9.
+
+### Diagramma D14 — tipi e modalità
+
+```mermaid
+classDiagram
+    class AirThreat {
+        +float danger_level
+        +Cylinder volume
+        +float min_altitude
+        +float max_altitude
+        +str source_id
+        +edgeIntersect(edge) tuple
+        +innerPoint(point) bool
+    }
+
+    class ThreatAA {
+        +float interception_speed
+        +float min_fire_time
+        +float acquisition_time
+        +calcMaxLenghtCrossSegmentInterception(speed, altitude, t_inv) float
+    }
+
+    class DetectionThreat {
+        +str sensor
+        +float acquisition_range
+        +float reference_altitude
+    }
+
+    class ThreatMode {
+        <<enumeration>>
+        AVOID
+        CROSS_UNINTERCEPTED
+        AVOID_DETECTION
+    }
+
+    AirThreat <|-- ThreatAA
+    AirThreat <|-- DetectionThreat
+```
+
+## 7.9 Il pianificatore d'attacco: quota di sgancio e profilo (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, decisioni B1-B6, 2026-09-27, commit `6754bf1c`)
+
+**Anche questo fuori dal motore DES in senso stretto**: è il pianificatore che, prima di una
+missione, decide da che quota, velocità, profilo e direzione un aereo sgancia una bomba — ma è
+**l'input** che il capitolo 4 consuma (§4.20, decisione B6): "una fisica, un pianificatore, due
+esecutori" (`Logic/Weapon_Delivery.py:1-14`, decisione B2). Documento di riferimento:
+`Analysis/Document/Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md` (Proposta B).
+
+Due livelli, entrambi stateless, senza RNG:
+
+### Livello 1 — fisica pura (`release_windows`, `fall_time`, `release_solution`, `bomb_engagement_estimate`)
+
+Moto parabolico nel vuoto con velocità iniziale `v` inclinata di `pitch` (negativo in picchiata,
+positivo in cabrata a `LOFT_PITCH_DEG = 30°`, zero livellato), da quota `h` **AGL sopra il
+bersaglio** (`fall_time`, `:254-259`):
+
+```
+v_z = v * sin(pitch);   t_vuoto = (v_z + sqrt(v_z^2 + 2*g*h)) / g;   R_vuoto = v * cos(pitch) * t_vuoto
+```
+
+poi i fattori di resistenza per classe `drag` — **STIME DICHIARATE**, non tarate
+(`DRAG_FACTORS`, `:123-126`): bassa resistenza (`low`) −10% di gittata/+5% di caduta rispetto al
+vuoto, frenata (`high`, Snakeye/ballute/paracadute) circa −50% di gittata/+30% di caduta.
+Due casi sostituiscono la balistica (`_solve`, `:262-285`): `glide_ratio` (bombe plananti guidate,
+es. GBU-24: `R = max(balistica, glide_ratio * h)`, planata a velocità costante se vince) e
+`standoff_range_km` (dispenser plananti BK-90: `R` interpolata linearmente nella finestra di quota
+del registro fra `(min, max)` — fisicamente non è planata, è la distanza di sgancio dichiarata).
+
+`release_windows(weapon)` (`:227-251`) legge il campo `release` del registro (v. capitolo 9, §9.1,
+per le 29/32 bombe che lo hanno) e lo normalizza in una o due `ReleaseWindow` (`low_drag`/
+`high_drag` per il drag selezionabile, Mk-82AIR/M-71/SAMP-250HD); `select_window` (`:333-340`)
+sceglie la finestra `low_drag` se la quota ci sta, altrimenti `high_drag` (decisione utente).
+`bomb_engagement_estimate(weapon, altitude_agl, speed_kmh)` (`:343-382`, v. capitolo 4, §4.20) è
+l'ingresso usato dal DES: rilascio **livellato** (picchiata a metà fascia se il livellato non è
+ammesso), quota e velocità **portate al valore ammesso più vicino** se fuori finestra — lo stesso
+comportamento dichiarato dell'IA di DCS. Restituisce `None` solo se l'arma non ha dati di rilascio.
+
+### Livello 2 — pianificazione (`plan_attack_profile`, `:657-813`)
+
+Euristica deterministica (nessun RNG), a ricerca su griglia:
+
+1. **Fascia ammessa** = inviluppo `attack` del loadout ∩ finestra `release` dell'arma (quota AGL,
+   velocità); vuota → `feasible=False` con il motivo (evita che DCS corregga la quota in silenzio,
+   `Controller.md:157`, citato nel modulo).
+2. **Velocità**: quella `attack` del loadout, ridotta al massimo della finestra se la supera (un
+   aereo rallenta, non accelera oltre il proprio inviluppo).
+3. **Quote candidate** (`_candidate_altitudes`, `:526-548`): griglia di `ALTITUDE_GRID_STEPS = 6`
+   quote sulla fascia, più i bordi di ogni volume d'**intercettazione** (con gli stessi margini
+   ±5% di `Air_Route_Manager`) che cadono nella fascia — gli stessi punti "critici" che il
+   pianificatore di rotta userebbe. Profili candidati: quelli ammessi dalla finestra; angoli di
+   picchiata `DIVE_ANGLES_DEG = (15°, 30°, 45°, 60°)` dentro `dive_angle`; cabrata a
+   `LOFT_PITCH_DEG`.
+4. **Azimut**: `AZIMUTH_COUNT = 12` direzioni equispaziate (o quelle imposte dal chiamante).
+5. **Esposizione per candidato** (`_evaluate_exposure`, `:433-493`): per il tratto IP → sgancio →
+   uscita a quota/velocità costanti, le finestre di permanenza in **ogni** volume (intercettazione
+   e rilevamento) via l'intervallo analitico `_segment_cylinder_interval` (lo stesso di
+   `Air_Route_Manager`, non `Contact_Scheduler.route_threat_windows`: quest'ultimo usa geometria
+   sympy, troppo lenta per le centinaia di candidati valutati — sui segmenti rettilinei dà lo
+   stesso intervallo, quindi nessuna perdita di correttezza, solo di generalità geometrica).
+   L'esposizione **effettiva** a un volume d'intercettazione segue la regola B3/D-8:
+
+   ```
+   t_lancio  = max(t_ingresso_V_I, t_contatto_V_R + acquisition_time) + min_fire_time
+   effettivo = max(0, t_uscita_V_I - t_lancio)
+   ```
+
+   dove `V_R` è il volume di **rilevamento** con lo **stesso `source_id`** del volume
+   d'intercettazione `V_I` (il legame impostato da `build_air_defense_threats`/
+   `Military.air_defense_threats`, v. §7.8). Senza `V_R` associato: `t_contatto = -inf` (sito
+   già in traccia, ipotesi conservativa); con `V_R` associato ma mai toccato: il sito non vede
+   l'aereo, esposizione effettiva 0; IP già dentro `V_R`: rilevato prima dell'IP.
+6. **Scelta**: minimo di `Σ(effettivo × danger_level)` (esposizione pesata; 0 = nessuna possibilità
+   di lancio nemico nel tratto), poi quota più bassa (precisione di sgancio), poi azimut più vicino
+   alla direzione della base se data, poi azimut/profilo/angolo/drag per determinismo. **Le
+   minacce non rendono mai il profilo non fattibile** (decisione utente): una minaccia non
+   evitabile vicino al bersaglio si accetta, decide solo quale profilo scegliere fra quelli
+   fattibili.
+7. **Transito opzionale** (`home_point` dato): rotte base→IP e uscita→base con
+   `RoutePlanner.calcCanonicalRoute`, concatenate nella `full_route`.
+
+`detection_threats_factory(assets)` (`:816-829`) costruisce, per un elenco di asset, la funzione
+`quota_assoluta -> DetectionThreat` che `plan_attack_profile` usa per ricalcolare il volume di
+rilevamento a **ogni** quota candidata (il raggio dipende dall'orizzonte radar, v. §7.8): senza
+questa fabbrica, un `Sequence` fisso di `DetectionThreat` costruito a una sola quota sottostimerebbe
+o sovrastimerebbe il raggio alle altre quote valutate.
+
+### `Command/Attack_Types.py`: `AttackProfile` e `ThreatExposure`
+
+Tipi immutabili (`@dataclass(frozen=True)`), senza logica di calcolo, senza dipendenze da `Logic/`
+(evita cicli con `Weapon_Delivery`): `AttackProfile` è ciò che **due esecutori** consumano allo
+stesso modo (vincolo simulator-agnostic, v. capitolo 1) — il motore DES legge `release_slant_range_m`
+(→ `ShotSpec.max_range`, capitolo 4 §4.20) e `fall_time_s` (→ `ShotSpec.time_of_flight`); un
+futuro adapter DCS leggerebbe `release_altitude_m` (`altitude`), `run_in_azimuth_deg`
+(`direction`), `weapon` (`weaponType`) e `quantity`/`passes` (`expend`/`attackQty`) dei task DCS
+`AttackGroup`/`Bombing` — il punto di sgancio esatto lo calcola comunque l'IA di DCS, il core le
+fornisce solo il profilo, validato contro la finestra di rilascio dell'arma. `ThreatExposure`
+porta, per ogni minaccia d'intercettazione toccata, `seconds`/`effective_seconds`/`danger_level` e
+i tempi di rilevamento/preavviso (`detected_at_s`/`warning_time_s`/`detected`) descritti sopra.
+Con `feasible=False` il profilo porta solo arma, bersaglio e motivo: nessun campo geometrico.
+
+### Limiti dichiarati (dal docstring del modulo, `Logic/Weapon_Delivery.py:76-84`)
+
+- La geometria della picchiata/cabrata **non è nel tratto**: IP → sgancio è a quota costante, il
+  profilo entra solo nella balistica (gittata e caduta) — non nella traiettoria valutata per
+  l'esposizione alle minacce.
+- Il cilindro d'intercettazione è l'unione degli inviluppi dell'asset: nessuna zona morta interna;
+  il vantaggio del volo basso viene dall'orizzonte radar del volume di **rilevamento**, quando è
+  fornito.
+- Terreno non modellato: AGL = quota assoluta − quota del bersaglio.
+- Solo armi a caduta (`AIR_WEAPONS['BOMBS']`); i missili aria-superficie sono fuori scope.
+- Nessun componente LLM, nessun uso del modulo `random`.
+- `route_threat_windows` di `Contact_Scheduler` (capitolo 3) resta **senza consumatori di
+  produzione**: sia il pianificatore di rotta (§7.8) sia questo pianificatore d'attacco usano
+  l'intervallo analitico `_segment_cylinder_interval`, più veloce sui segmenti rettilinei — la
+  funzione sympy resta disponibile ma non è la via effettivamente percorsa oggi.
+
+### Diagramma D15 — dal pianificatore all'`AttackProfile`, verso DES e DCS
+
+```mermaid
+flowchart TD
+    A["plan_attack_profile(aircraft, loadout, weapon, target,<br/>threats: ThreatAA[], detection_threats: DetectionThreat[]/factory)"] --> B["griglia quota x velocita' x profilo x azimut"]
+    B --> C["release_solution: balistica (livello 1)"]
+    C --> D["_evaluate_exposure: finestre nei volumi V_I/V_R,<br/>regola B3/D-8"]
+    D --> E["scelta: min esposizione pesata,<br/>poi quota, poi azimut verso base"]
+    E --> F["AttackProfile (Command/Attack_Types.py)"]
+    F --> G["DES: Logic/Fire_Control.shot_spec_for (B6, cap.4 §4.20)<br/>max_range/time_of_flight dalla balistica"]
+    F --> H["futuro adapter DCS: altitude/direction/weaponType/expend<br/>dei task AttackGroup/Bombing"]
+```

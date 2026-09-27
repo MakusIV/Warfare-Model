@@ -5,7 +5,7 @@
 Raccolti dai "Cosa NON fa" dei singoli moduli, già citati nei capitoli precedenti; qui riuniti
 per avere un solo punto di riferimento.
 
-### Selezione dell'arma dai registri — fatta (2026-09-24), con un limite noto sulle bombe libere
+### Selezione dell'arma dai registri — fatta (2026-09-24), estesa al cannone di bordo (2026-09-26) e alla gittata delle bombe (2026-09-27)
 
 Aggiornamento rispetto alla stesura iniziale di questo manuale: `fire_control` resta sempre
 **iniettata** dal chiamante (`Logic/Engagement_Resolver.py:24-28`, il contratto non è cambiato,
@@ -16,28 +16,36 @@ un'implementazione che seleziona davvero l'arma dai registri
 ruoli. Dal 2026-09-26 (decisione A5) non seleziona più solo l'arma a Pk massima: restituisce
 **tutte** le armi adatte in ordine di preferenza Pk/costo (`rank_weapons`, capitolo 4, §4.16), e
 il risolutore prova le opzioni in ordine, sparando con la prima che ha ancora scorta (v. sotto).
-Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:122-130`): la modulazione
+Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:135-144`): la modulazione
 della Pk con la posizione nell'inviluppo (distanza, aspetto) — i valori restano quelli di
-template, indipendenti da dove avviene realmente il tiro nella finestra; il cannone di bordo
-degli aerei non è candidato (decisione A2 rimandata: nessun dato di Pk/portata nei registri); e
-il filtro per tipo di missione/bersaglio (ROE) non esiste (decisione A4 rimandata: manca
-l'entità `Mission` nel progetto — un caccia intercettore sceglierebbe oggi le stesse armi in
-missione CAP o in missione strike).
+template, indipendenti da dove avviene realmente il tiro nella finestra; e il filtro per tipo di
+missione/bersaglio (ROE) non esiste (decisione A4 rimandata: manca l'entità `Mission` nel progetto
+— un caccia intercettore sceglierebbe oggi le stesse armi in missione CAP o in missione strike).
 
-**Limite noto, non corretto**: le bombe a caduta libera (es. Mk-83) non hanno un campo `range` né
-un dato di velocità nel registro `Aircraft_Weapon_Data` — `_range_m`/`_speed_ms`
-(`Logic/Fire_Control.py:273-286, 304-320`) restituiscono quindi `None`, e
-`shot_spec_for` (`:571-605`) produce una `ShotSpec` con `max_range = None`: **nessun controllo di
-portata** si applica a quell'arma (v. §4.17 per il meccanismo). Concretamente, un F-16 armato di
-bombe libere può sganciarle da qualunque distanza entro il rilevamento, mentre un missile o un
-cannone della stessa fire control resta vincolato dalla propria portata. Non è un difetto del
-controllo di portata (che funziona correttamente per ogni arma con un dato di portata nel
-registro): è un dato assente nel registro delle bombe libere, dichiarato nel docstring del modulo
-(`Logic/Fire_Control.py:90-95`) e non corretto in attesa di una decisione dell'utente (aggiungere
-un dato di portata/tempo di caduta al registro, o accettare il limite). Negli scenari di
-validazione (capitolo 8) il ruolo di `fire_control` è ancora coperto anche da
-`Scenario_Fixtures.make_fire_control`, dichiarato esplicitamente come tabella di ruoli non
-calibrata, per gli scenari che non hanno bisogno di una selezione reale dai registri.
+**Risolto rispetto alla stesura precedente di questo manuale — il cannone di bordo è ora candidato**
+(decisione A2, 2026-09-26, commit `8bd69727`, v. capitolo 4 §4.16bis): campo `gun` di
+`Aircraft_Data` (37 modelli) più `get_aircraft_gun_rounds` per la ripartizione proporzionale di un
+armamento misto, propria voce di scorta e candidatura in `_candidate_weapons`. Non risolto: nessun
+filtro per tipo di missione (A4, come sopra); l'AJ/ASJ 37 Viggen resta senza `gun` per un'anomalia
+dei dati (`gun_rounds` nel loadout ma nessun cannone interno proprio nel registro per quella
+variante — v. capitolo 4 §4.16bis).
+
+**Risolto in parte rispetto alla stesura precedente — le bombe hanno ora gittata e tempo di caduta
+reali** (decisione B6, 2026-09-27, commit `6754bf1c`, v. capitolo 4 §4.20): per le 29 bombe su 32
+con dati di rilascio (`AIR_WEAPONS['BOMBS'][...]['release']`, commit `4ddbb089`), `shot_spec_for`
+non produce più `max_range = None` contro un bersaglio di superficie, ma la gittata obliqua e il
+tempo di caduta dalla balistica di `Logic/Weapon_Delivery.bomb_engagement_estimate`, alla quota
+tiratore−bersaglio e alla velocità `attack` del loadout. **Limite noto, non corretto**: le tre
+KGBU-2AO/2PTAB/96r restano senza dati di rilascio (decisione D4 sospesa, in attesa che l'utente
+verifichi la documentazione DCS su queste voci, probabile KMGU-2 mal identificato nel registro) —
+per quelle tre bombe `shot_spec_for` produce ancora `max_range = None`, lo stesso comportamento di
+prima del 2026-09-27. Restano inoltre, dichiarati nel modulo `Weapon_Delivery` (v. capitolo 7,
+§7.9): la geometria della picchiata/cabrata non entra nel tratto valutato per la gittata (solo
+nella balistica); la sfera di portata del DES non ha distanza minima; quota e velocità fuori dalla
+finestra di rilascio sono portate (clampate) al bordo ammesso invece di far fallire il tiro, come
+fa l'IA di DCS. Negli scenari di validazione (capitolo 8) il ruolo di `fire_control` è ancora
+coperto anche da `Scenario_Fixtures.make_fire_control`, dichiarato esplicitamente come tabella di
+ruoli non calibrata, per gli scenari che non hanno bisogno di una selezione reale dai registri.
 
 ### Scorta munizioni indifferenziata per arma — **risolta** (2026-09-26, decisione A1/A3, commit `1d0c1127`)
 
@@ -62,10 +70,9 @@ scorta è ora per costruzione, per qualunque asset con armi AD modellate per arm
 
 **Limiti noti che RESTANO, non corretti da questo lavoro**:
 
-- Il **cannone di bordo** degli aerei resta escluso dalla scorta (decisione A2 rimandata):
-  nessun modello d'arma né dato di Pk/portata per il cannone nei registri `Aircraft_Weapon_Data`,
-  quindi non c'è una voce da consumare — un aereo con solo il cannone come arma non ha scorta
-  modellata.
+- Il **cannone di bordo** degli aerei — risolto separatamente il 2026-09-26 (decisione A2, commit
+  `8bd69727`, v. sopra e capitolo 4 §4.16bis): ha ora una propria voce di scorta ed è candidato
+  della fire control.
 - Il **filtro per tipo di missione/bersaglio** (ROE) non esiste (decisione A4 rimandata): manca
   l'entità `Mission` nel progetto; l'ordine di preferenza delle armi (v. §4.16) non distingue
   ancora, ad esempio, un'intercettazione aria-aria da una missione di scorta.
@@ -166,6 +173,44 @@ finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento
   ciclo di campagna in entrambi i moduli (`Logic/Fuel_Model.py:31-32`, wiki
   `decisions/risolutore-ingaggio-salva-fase4` §R3).
 
+### Limiti del pianificatore di rotta e del pianificatore d'attacco (2026-09-26/27, commit `815dc35f`/`6754bf1c`)
+
+Non fanno parte del motore DES in senso stretto (v. capitolo 7, §7.8-7.9), ma ne alimentano
+l'input (§4.20) o condividono lo stesso schema di volumi (`ThreatAA`/`DetectionThreat`); raccolti
+qui perché dichiarati esplicitamente nel codice come punti aperti:
+
+- **`Contact_Scheduler.route_threat_windows` resta senza consumatori di produzione**: sia il
+  pianificatore di rotta (`Logic/Air_Route_Manager.py`, metriche di rilevamento del `Path`) sia il
+  pianificatore d'attacco (`Logic/Weapon_Delivery._evaluate_exposure`) usano l'intervallo analitico
+  più veloce `Air_Route_Manager._segment_cylinder_interval` — geometria sympy della funzione del
+  capitolo 3 resta disponibile, ma su segmenti rettilinei dà lo stesso risultato e nessun
+  chiamante di produzione la esercita ancora.
+- **Geometria di picchiata/cabrata isolata dalla balistica**: `plan_attack_profile` valuta
+  l'esposizione alle minacce sul tratto IP → sgancio → uscita a quota e velocità **costanti**; il
+  profilo (livellato/picchiata/cabrata) entra solo nel calcolo di gittata e tempo di caduta
+  (`Weapon_Delivery` livello 1), non nella traiettoria usata per calcolare quanto tempo l'aereo
+  passa dentro un volume di minaccia.
+- **La sfera di portata del DES non ha una distanza minima**: sia per il controllo di portata di
+  §4.17 sia per la gittata delle bombe di §4.20, un aereo già sopra (o vicinissimo a) il bersaglio
+  risulta "in portata" per costruzione — nessun vincolo geometrico impedisce uno sgancio a distanza
+  quasi nulla.
+- **Clamp della quota/velocità fuori dalla finestra di rilascio**: sia `bomb_engagement_estimate`
+  (DES, §4.20) sia `plan_attack_profile` (pianificazione, §7.9) portano un tiratore fuori
+  inviluppo al bordo ammesso più vicino invece di rifiutare il tiro — scelta dichiarata, identica
+  al comportamento noto dell'IA di DCS ("will choose closest altitude"), non un errore silenzioso.
+- **Dati di rilevamento mancanti per alcuni asset** (decisione D-4, sospesa): ZSU-57-2 e M163-VADS
+  non hanno sensori nei registri, quindi `build_detection_threat` restituisce sempre `None` per
+  loro (nessun volume di rilevamento, non un errore); i dati EWR dedicati e il sensore visivo di
+  ripiego (D-4b/c) restano da ricercare separatamente.
+- **Reti di sensori/cueing EWR→SAM (D-7) fuori perimetro**: ogni sito calcola il proprio
+  rilevamento in isolamento; un EWR che passa una traccia a un SAM lontano non è modellato.
+- **Attraversamento a corda limitata del solo rilevamento (D-5, opzione 2) non implementato**:
+  richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge di Pd del
+  risolutore, non fatto in questo lavoro.
+- **KGBU-2AO/2PTAB/96r senza dati di rilascio** (decisione D4 sospesa, v. §9.1): tre bombe su 32
+  restano prive del campo `release`, in attesa che l'utente verifichi la documentazione DCS
+  (probabile KMGU-2 mal identificato nel registro).
+
 ## 9.2 Divergenze fra il codice e la wiki di progetto
 
 Verificate confrontando il codice a HEAD con i tre documenti indicati come fonte
@@ -211,9 +256,11 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 
 | Estensione | Punto di aggancio |
 |---|---|
-| Selezione arma dai registri | **Fatta** (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4 §4.16), con ordine di preferenza Pk/costo dal 2026-09-26; resta da fare: modulare la Pk con la posizione nell'inviluppo di tiro (distanza, aspetto), e dare un dato di portata alle bombe libere (`Logic/Fire_Control.py:87-95`, v. §9.1) per far funzionare anche per loro il controllo di portata di §4.17. |
-| Scorta per modello d'arma | **Fatta** (`Asset/Weapon_Stores.py`, decisione A1/A3, capitolo 4 §4.19, capitolo 7 §7.6); resta da fare: cannone di bordo degli aerei nella scorta (decisione A2), filtro missione/bersaglio (decisione A4, manca l'entità `Mission`), far precedere il controllo di portata alla scelta per scorta (v. §9.1). |
+| Selezione arma dai registri | **Fatta** (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4 §4.16), con ordine di preferenza Pk/costo dal 2026-09-26, cannone di bordo candidato dal 2026-09-26 (§4.16bis) e gittata/tempo di caduta reali per le bombe dal 2026-09-27 (§4.20); resta da fare: modulare la Pk con la posizione nell'inviluppo di tiro (distanza, aspetto), e i dati di rilascio delle tre KGBU-2AO/2PTAB/96r (decisione D4 sospesa, v. §9.1). |
+| Scorta per modello d'arma | **Fatta** (`Asset/Weapon_Stores.py`, decisione A1/A3, capitolo 4 §4.19, capitolo 7 §7.6), cannone di bordo incluso dal 2026-09-26 (decisione A2); resta da fare: filtro missione/bersaglio (decisione A4, manca l'entità `Mission`), far precedere il controllo di portata alla scelta per scorta (v. §9.1). |
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
+| Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); resta da fare: dati EWR/sensore visivo per ZSU-57-2/M163 (D-4b/c), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
+| Pianificatore d'attacco (quota e profilo di sgancio) | **Fatto** (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, capitolo 7 §7.9, alimenta il DES via §4.20); resta da fare: entità `Mission` per collegare il profilo a una missione strutturata (`Analisi_Modello_Missione_Sessione.md`), missili aria-superficie (fuori scope dichiarato), geometria di picchiata/cabrata nel tratto d'esposizione (v. §9.1). |
 | Re-scheduling dopo disingaggio | Livello C2/campagna: leggere `ForceOutcome.outcome == DISENGAGED` dal `SessionOutcome`, decidere una nuova rotta, e far ripartire `Contact_Scheduler.schedule_contacts` per quella forza in una sessione successiva (non dentro `resolve_engagement`, che è a stato ombra e non muta rotte). |
 | Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:188-223`, `Logic/Engagement_Resolver.py:642-689`). |
 | Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:1434-1557`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
@@ -233,10 +280,24 @@ estensione, non prevista nella stesura iniziale, è stata completata il 2026-09-
 `1d0c1127`, "Proposta A"): la scorta per modello d'arma (`Asset/Weapon_Stores.py`, capitolo 4
 §4.19), che ha sostituito il contatore aggregato per asset come stato primario delle munizioni e
 ha reso l'ordine di preferenza della fire control sensibile anche al costo dell'arma (decisione
-A5, capitolo 4 §4.16), non solo alla Pk. I seguiti possibili restano quelli di §9.3: i limiti
-"minori ma non corretti" già presenti (bombe libere senza portata; bug di
-`get_blocks_by_criteria`) più quelli appena aggiunti dalla Proposta A (cannone di bordo escluso
-dalla scorta, filtro missione/bersaglio assente, scelta per scorta che precede il controllo di
-portata), la modulazione della Pk con la posizione nell'inviluppo, un criterio di "non visto" più
-stringente, e il resto della lista già presente (assegnazione ottima arma-bersaglio, movimento
-persistente fra sessioni, rifornimento, Pd per tipo di sensore).
+A5, capitolo 4 §4.16), non solo alla Pk.
+
+**Aggiornamento 2026-09-26/27**: quattro estensioni ulteriori, tutte sui moduli satellite che
+alimentano il motore dall'esterno, non sul motore in sé: (1) le finestre di rilascio di 29 bombe
+su 32 (commit `4ddbb089`, dato di registro, prerequisito delle altre); (2) il cannone di bordo come
+arma candidata reale, con propria voce di scorta (commit `8bd69727`, decisione A2, capitolo 4
+§4.16bis); (3) i volumi di rilevamento e intercettazione distinti nel pianificatore di rotta
+(commit `815dc35f`, capitolo 7 §7.8); (4) il pianificatore d'attacco con quota e profilo di
+sgancio, che alimenta il DES con una gittata e un tempo di caduta reali per le bombe (commit
+`6754bf1c`, decisione B6, capitolo 4 §4.20, capitolo 7 §7.9). La suite di test è passata da 3371 a
+**3645 test, OK (skipped=5)** attraverso queste sette estensioni (capitolo 8).
+
+I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" già presenti (bug di
+`get_blocks_by_criteria`; le tre KGBU senza dati di rilascio) più quelli appena aggiunti (filtro
+missione/bersaglio assente — decisione A4, manca l'entità `Mission`; scelta per scorta che precede
+il controllo di portata; modulazione della Pk con la posizione nell'inviluppo; un criterio di "non
+visto" più stringente; geometria di picchiata/cabrata isolata dalla balistica nel pianificatore
+d'attacco; dati EWR/sensore visivo mancanti per alcuni asset AD; reti di sensori/cueing EWR→SAM;
+`route_threat_windows` ancora senza consumatori di produzione), e il resto della lista già presente
+(assegnazione ottima arma-bersaglio, movimento persistente fra sessioni, rifornimento, Pd per tipo
+di sensore).
