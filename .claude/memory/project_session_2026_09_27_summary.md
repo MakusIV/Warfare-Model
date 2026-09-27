@@ -40,4 +40,13 @@ aerei degli scenari volano a 5000 m di default, gittata ~8 km, ingaggi già dent
 - Limiti: geometria picchiata/cabrata solo nella balistica; sfera DES senza distanza minima; A-10/aerei
   con quota sotto il min_altitude della bomba vengono "alzati" dal DES (clamp).
 - Resto invariato dalla lista di [[project_session_2026_09_26_summary]]: D4 KGBU, A4/A6, D-4b/c, D-5
-  opz. 2, 6 decisioni missione, manuale DES (ora da aggiornare anche per Weapon_Delivery), Fase 0 C2.
+  opz. 2, 6 decisioni missione, Fase 0 C2.
+
+## Manuale DES — aggiornato (stesso giorno, dopo crash dell'agente)
+L'agente `des-manual-writer` è crashato a lavoro quasi finito (nessun file troncato). Completato inline:
+riallineati ~20 riferimenti di riga di `Fire_Control.py` nel §4.16 (spostati da B6), indice (estensione 4
+→ §4.20), `10_Limiti` (`:135-144`), `08_Supporto` (`Military.air_defense_power` `:612-649`).
+Il manuale è ora ancorato a `6754bf1c`: §4.16bis (cannone A2), §4.20 (bombe B6), §7.8 (volumi
+rilevamento/intercettazione, D14), §7.9 (pianificatore d'attacco, D15), suite 3645. Commit `fb914f0e`,
+pushato. Lezione: dopo un crash dell'agente verificare i riferimenti `file:riga` dei capitoli che
+l'agente ha solo ritoccato (non riscritto), sono quelli che restano vecchi.
