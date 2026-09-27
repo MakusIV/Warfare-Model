@@ -94,8 +94,17 @@ mancanza di dato, stessa politica "None = non modellato" di munizioni e carburan
   registro convertita in metri (Ground in m, Ship e Air in km). Contro un bersaglio aereo,
   per le armi terrestri, la portata di tiro DIRETTO (`range['direct']`), non quella
   indiretta; contro la superficie la maggiore delle due. None quando il registro non
-  dichiara una portata (le bombe di Aircraft_Weapon_Data non hanno `range`): per
-  quell'arma nessun vincolo di portata, dichiarato.
+  dichiara una portata: per quell'arma nessun vincolo di portata, dichiarato.
+* Bombe (decisione B6, 2026-09-27, Proposta B): `max_range` = gittata OBLIQUA al rilascio
+  e `time_of_flight` = tempo di caduta, da `Logic/Weapon_Delivery.bomb_engagement_estimate`
+  (la stessa balistica del pianificatore d'attacco: una fisica, due esecutori), con quota =
+  z del tiratore - z del bersaglio e velocita' = `attack.speed` del loadout assegnato.
+  Rilascio livellato; quota e velocita' fuori dalla finestra di rilascio dell'arma sono
+  portate al valore ammesso piu' vicino (come fa l'IA di DCS). La gittata obliqua e' quella
+  giusta per la SFERA di portata del risolutore: con un rilascio livellato l'ingresso nella
+  sfera coincide col punto di sgancio. Senza posizioni o senza dati `release` (KGBU-*, D4
+  sospesa) resta il comportamento precedente: `max_range` None e DEFAULT_TIME_OF_FLIGHT_S.
+  Limite: la sfera non ha distanza minima (un aereo gia' sopra il bersaglio sgancia).
 * `interceptable`: True per missili (SAM, AAM, ASM, ATGM) e bombe guidate
   (`type == 'Guided bombs'`); False per proiettili, razzi non guidati, bombe a caduta
   libera e siluri (le difese di salva sono SAM/cannoni AA, che non intercettano un siluro).
@@ -117,7 +126,8 @@ mancanza di dato, stessa politica "None = non modellato" di munizioni e carburan
 ## Memoizzazione
 
 La scelta e' una funzione PURA di (tiratore: classe, modello, loadout; bersaglio: chiave,
-dimensione; quote). Ogni fire control creata da `make_registry_fire_control` ha una propria
+dimensione; quote — per i tiratori aerei anche contro bersagli di superficie, perche' la
+gittata delle bombe dipende dalla quota di sgancio). Ogni fire control creata da `make_registry_fire_control` ha una propria
 cache per quella chiave: nessuno stato che dipenda dall'ordine delle chiamate, quindi il
 determinismo non cambia (due run con lo stesso seed restano identiche, cache calda o
 fredda). Le armi candidate sono memoizzate per (classe, modello, loadout).
@@ -145,6 +155,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data
 from Code.Dynamic_War_Manager.Source.Context import Context
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import ShotSpec
+from Code.Dynamic_War_Manager.Source.Logic.Weapon_Delivery import bomb_engagement_estimate
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 
@@ -584,15 +595,23 @@ def select_weapon(weapons: Tuple[_Weapon, ...], keys: Tuple[str, ...], dimension
     return ranked[0] if ranked else None
 
 
-def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_air: bool = False) -> ShotSpec:
+def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_air: bool = False,
+                  release_altitude_m: Optional[float] = None,
+                  attack_speed_kmh: Optional[float] = None) -> ShotSpec:
     """ShotSpec della scelta, con i campi derivati del docstring del modulo.
 
     `max_range` = portata del registro (contro un aereo quella di tiro diretto, v.
-    `_air_range_m`); None se il registro non la dichiara (bombe a caduta di
-    Aircraft_Weapon_Data): nessun vincolo di portata per quell'arma.
+    `_air_range_m`); None se il registro non la dichiara: nessun vincolo di portata.
+    Per le bombe con `release_altitude_m` (quota del tiratore sopra il bersaglio [m]) e dati
+    di rilascio, `max_range` e `time_of_flight` vengono dalla balistica di
+    `Weapon_Delivery.bomb_engagement_estimate` (B6), alla velocita' `attack_speed_kmh`.
     """
     kind = weapon.kind
     max_range = weapon.air_range_m if is_air else weapon.range_m
+    release = None
+
+    if kind == 'bomb' and not is_air and release_altitude_m is not None:
+        release = bomb_engagement_estimate(weapon.data, release_altitude_m, attack_speed_kmh)
 
     if kind == 'missile':
         interceptable = True
@@ -601,7 +620,10 @@ def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_
     else:
         interceptable = False
 
-    if max_range is not None and weapon.speed_ms is not None:
+    if release is not None:
+        max_range = release.slant_range_m
+        time_of_flight = release.fall_time_s
+    elif max_range is not None and weapon.speed_ms is not None:
         time_of_flight = ENGAGEMENT_RANGE_FRACTION * max_range / weapon.speed_ms
     else:
         time_of_flight = DEFAULT_TIME_OF_FLIGHT_S[kind]
@@ -619,6 +641,17 @@ def shot_spec_for(weapon: _Weapon, accuracy: float, destroy_capacity: float, is_
                     rounds=SALVO_ROUNDS[kind], weapon=weapon.model,
                     time_of_flight=time_of_flight, interceptable=interceptable,
                     cycle_time=cycle_time, max_range=max_range, stock_per_round=burst)
+
+
+def _attack_speed_kmh(shooter_key: Tuple[str, str, Optional[str]]) -> Optional[float]:
+    """Velocita' `attack` [km/h] del loadout assegnato a un aereo, None se non disponibile."""
+    class_name, model, loadout = shooter_key
+
+    if class_name != 'Aircraft' or not loadout:
+        return None
+
+    attack = (AIRCRAFT_LOADOUTS.get(model, {}).get(loadout) or {}).get('attack') or {}
+    return _positive(attack.get('speed'))
 
 
 # ── FABBRICA ──────────────────────────────────────────────────────────────────
@@ -670,15 +703,21 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
             return None
 
         keys, dimension, is_air = t_key
-        shooter_z = _z(shooter) if is_air else None
-        target_z = _z(target) if is_air else None
+        # Quote: per il filtro d'inviluppo contro gli aerei e, per un tiratore aereo, per la
+        # gittata delle bombe contro la superficie (B6).
+        bomber = not is_air and shooter_key[0] == 'Aircraft'
+        shooter_z = _z(shooter) if is_air or bomber else None
+        target_z = _z(target) if is_air or bomber else None
         cache_key = (shooter_key, keys, dimension, is_air, shooter_z, target_z)
 
         if memoize and cache_key in choice_cache:
             return choice_cache[cache_key]
 
         ranked = rank_weapons(weapons, keys, dimension, is_air, shooter_z, target_z, altitude_filter)
-        spec = tuple(shot_spec_for(*choice, is_air=is_air) for choice in ranked) or None
+        release_altitude = shooter_z - target_z if bomber and shooter_z is not None and target_z is not None else None
+        attack_speed = _attack_speed_kmh(shooter_key) if release_altitude is not None else None
+        spec = tuple(shot_spec_for(*choice, is_air=is_air, release_altitude_m=release_altitude,
+                                   attack_speed_kmh=attack_speed) for choice in ranked) or None
 
         if memoize:
             choice_cache[cache_key] = spec

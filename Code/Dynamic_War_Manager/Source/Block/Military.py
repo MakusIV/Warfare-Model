@@ -573,6 +573,10 @@ class Military(Block):
                 continue
             threat = build_threat_aa(asset)
             if threat is not None:
+                # stesso source_id della DetectionThreat del sito (v. air_detection_threats):
+                # lega i due volumi, e il pianificatore d'attacco (Logic/Weapon_Delivery) lo usa
+                # per sapere quando il sito vede l'aereo
+                threat.source_id = str(asset.id) if getattr(asset, 'id', None) is not None else None
                 threats.append(threat)
         return threats
 

@@ -3,6 +3,22 @@
 **Stato**: ANALISI E PROPOSTA (2026-09-26), in attesa delle decisioni dell'utente (§5). Nessun file
 di codice modificato, nessun test scritto. Tre script di prova in sola lettura sono stati eseguiti
 fuori dal repository, nella scratchpad di sessione (§3).
+**Aggiornamento 2026-09-27 — Proposta B IMPLEMENTATA** (primo giro, senza l'entità `Mission`):
+- decisioni: B1 fatta il 2026-09-26 (dati `release`); B2 tutte le missioni; B3 sostituita dalla D-8
+  di `Proposta_Volumi_Rilevamento_Intercettazione.md` §4 (due liste di minacce, esposizione dopo il
+  primo lancio possibile); B4 livellato/picchiata/cabrata con un solo modello balistico vettoriale;
+  B5 direzione libera; B6 sì, subito; B7 fatta il 2026-09-26; drag selezionabile: `low_drag` se la
+  quota ci sta, altrimenti `high_drag`;
+- codice: `Logic/Weapon_Delivery.py` (balistica + `plan_attack_profile` + transiti opzionali con
+  `RoutePlanner.calcCanonicalRoute`), `Command/Attack_Types.py` (`AttackProfile`, `ThreatExposure`),
+  `Logic/Fire_Control.py` (B6: `max_range`/`time_of_flight` delle bombe dalla balistica),
+  `Block/Military.air_defense_threats` (ora imposta `source_id`, per legare V_I e V_R dello stesso sito);
+- scostamenti dal §2.4: le finestre del tratto d'attacco usano l'intervallo analitico
+  `_segment_cylinder_interval` e non `route_threat_windows` (sympy, troppo lento per centinaia di
+  candidati); spareggio aggiuntivo sull'azimut più vicino alla base; la geometria di picchiata/cabrata
+  entra solo nella balistica, non nel tratto IP → sgancio (a quota costante);
+- test: `Test/Test_Weapon_Delivery.py` + classe `TestFireControlBombRelease`; suite 3645 OK.
+
 **Oggetto**: (A) verificare che il contatore aggregato `Mobile.ammunition` lasci sparare un asset con
 armi che non ha più, e valutare una scorta compatibile con missione e bersaglio; (B) valutare un
 pianificatore di profili d'attacco (quota e velocità di sgancio vincolate dalla finestra di rilascio

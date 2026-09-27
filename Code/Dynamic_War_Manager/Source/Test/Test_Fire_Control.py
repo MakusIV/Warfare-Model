@@ -18,6 +18,8 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
 from Code.Dynamic_War_Manager.Source.Context import Context as C
 from Code.Dynamic_War_Manager.Source.Logic import Fire_Control as FC
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import ShotSpec
+from Code.Dynamic_War_Manager.Source.Logic import Weapon_Delivery as WD
+from Code.Dynamic_War_Manager.Source.Asset import Aircraft_Weapon_Data as AWD
 
 
 AIR_KEYS = C.AIR_TARGET_CLASSES
@@ -572,6 +574,40 @@ class TestFireControlNoneAndDeterminism(_FireControlFixture, unittest.TestCase):
     def test_factory_argument_validation(self):
         with self.assertRaises(TypeError):
             FC.make_registry_fire_control(altitude_filter='yes')
+
+
+class TestFireControlBombRelease(_FireControlFixture, unittest.TestCase):
+    """B6 (Proposta B): gittata obliqua e tempo di caduta delle bombe dalla balistica di
+    Weapon_Delivery, alla quota del tiratore sopra il bersaglio e alla velocita' 'attack'."""
+
+    def bomb_spec(self, z, target_z=0.0):
+        target = F.make_vehicle(self.blue, f'Blue/t{z}-{target_z}', T72, (3_000.0, 0.0, target_z))
+        specs = self.ranked(self.aircraft(F16, z, loadout='Strike'), target)
+        return next(s for s in specs if s.weapon == 'Mk-83')
+
+    def test_range_and_time_from_release_ballistics(self):
+        expected = WD.bomb_engagement_estimate('Mk-83', 3_000.0, 850.0)   # F-16C 'Strike': attack 850 km/h
+        spec = self.bomb_spec(3_000.0)
+        self.assertAlmostEqual(spec.max_range, expected.slant_range_m)
+        self.assertAlmostEqual(spec.time_of_flight, expected.fall_time_s)
+
+    def test_higher_release_reaches_farther(self):
+        self.assertGreater(self.bomb_spec(3_000.0).max_range, self.bomb_spec(1_000.0).max_range)
+
+    def test_altitude_is_relative_to_the_target(self):
+        self.assertAlmostEqual(self.bomb_spec(3_000.0, target_z=1_000.0).max_range, self.bomb_spec(2_000.0).max_range)
+
+    def test_without_release_altitude_keeps_previous_behaviour(self):
+        weapon = FC._Weapon('Mk-83', 'BOMBS', 'air', AWD.AIR_WEAPONS['BOMBS']['Mk-83'])
+        spec = FC.shot_spec_for(weapon, 0.8, 0.8)
+        self.assertIsNone(spec.max_range)
+        self.assertEqual(spec.time_of_flight, FC.DEFAULT_TIME_OF_FLIGHT_S['bomb'])
+
+    def test_bomb_without_release_data_keeps_previous_behaviour(self):
+        weapon = FC._Weapon('KGBU-2AO', 'BOMBS', 'air', AWD.AIR_WEAPONS['BOMBS']['KGBU-2AO'])
+        spec = FC.shot_spec_for(weapon, 0.8, 0.8, release_altitude_m=1_000.0, attack_speed_kmh=800.0)
+        self.assertIsNone(spec.max_range)
+        self.assertEqual(spec.time_of_flight, FC.DEFAULT_TIME_OF_FLIGHT_S['bomb'])
 
 
 if __name__ == '__main__':
