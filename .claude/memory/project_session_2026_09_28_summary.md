@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9bc0955f-e706-4f76-bae5-8515dde95b83
-  modified: 2026-09-28T16:54:48.219Z
+  modified: 2026-09-28T17:17:01.279Z
 ---
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. L'auto mode ha avuto
@@ -31,6 +31,14 @@ lavoro) + un tempo di valutazione e assegnazione (riusare Reaction_Profile se ba
 Fase 0 C2); Q4: prelazione sì; Q5: il lanciatore deve essere già rilevato; Q6: un solo task
 `Anti_Missile`. Ordine: (1) proposta di dati `Anti_Missile` sulle 16 armi Anti_Air terrestri, (2) D+F,
 (3) riproduzione Strela/Buk come test persistente, (4) L1 nel risolutore, (5) L2+L3.
+
+## A6 passo 4 (L1) — FATTO, suite 3663 OK, non committato al momento della scrittura
+Passo 3 committato (`aedd7fa5`). `Engagement_Resolver._on_resolve` ora alloca PER SALVA:
+`_may_intercept` (punto di lancio a t_launch fuori dal cilindro `air_defense_volume` dell'intercettore,
+posizioni da `position_on_legs`), `_interception_zone` e cache per run. Senza vincoli = identico a
+prima (nessuno scenario cambiato). Test `TestLauncherInsideInterceptionZone` (7). Resta passo 5:
+L2 (priorità di bersaglio ai lanciatori a tiro, dentro la classe resta la copertura) + L3
+(prelazione con tempo di valutazione/assegnazione), v. proposta §7.7 Q3/Q4.
 
 ## A6 passo 3 — FATTO (S19), suite 3656 OK, non committato al momento della scrittura
 Passi 1-2 committati (`37ca477e`). Nuovo `Test/Test_Session_Scenarios_S19_Air_Defence.py`: Strela
