@@ -290,7 +290,7 @@ trasformato in uno scenario di test persistente in `Test_Session_Scenarios_*`, c
 
 ## 7. Revisione 2026-09-28 (A6): D + F + L, sopra la scorta per arma
 
-**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-3 FATTI il 2026-09-28: dati `Anti_Missile` e D + F (`Proposta_Dati_Anti_Missile.md` §6), scenario persistente S19 (§7.8). Passi 4-5 (L1, L2+L3) da fare.
+**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-4 FATTI il 2026-09-28: dati `Anti_Missile` e D + F (`Proposta_Dati_Anti_Missile.md` §6), scenario persistente S19 (§7.8), L1 nel risolutore (§7.9). Passo 5 (L2 + L3) da fare.
 
 ### 7.1 Regole di dottrina date dall'utente
 
@@ -448,3 +448,18 @@ modo stabile negli scenari: sarà un test unitario a geometria controllata del r
 Una misura su 16 seed ha trovato un solo caso di intercettazione *prima* del tiro del Tor, dovuta al
 fatto che l'intercettazione non richiede tempo di reazione (§5.4): è materia di L3 e della nebbia di
 guerra, non di L1.
+
+### 7.9 Passo 4: L1 nel risolutore (2026-09-28)
+
+`Engagement_Resolver._on_resolve` alloca le intercettazioni **per salva**: salve nell'ordine
+(impatto, salva), intercettori nell'ordine F, ognuno fino a min(canali, scorta) per evento. Un
+intercettore può fermare i colpi di una salva solo se il punto di lancio (posizione del lanciatore
+all'istante `t_launch`, dai tratti di rotta o dalla posizione ferma) è fuori dal suo V_I
+(`Mobile.air_defense_volume`, cilindro: raggio orizzontale e fascia di quota; il bordo conta come
+dentro). Senza volume o senza posizioni la regola non si applica (dato mancante = non modellato).
+Senza vincoli il risultato coincide con l'allocazione sul totale di prima: nessuno scenario
+esistente ha cambiato esito. `SalvoResolution.capacity` è ora un tetto.
+
+Test: `Test_Engagement_Resolver.TestLauncherInsideInterceptionZone` (7 casi a geometria controllata:
+fuori zona, dentro, bordo, sopra il tetto, zona per intercettore (Q1), senza dato, colpi non
+intercettabili). Suite 3663 OK.

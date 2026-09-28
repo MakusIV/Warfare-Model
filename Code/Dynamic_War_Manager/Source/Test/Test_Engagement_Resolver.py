@@ -35,6 +35,7 @@ from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Context.Context import MILITARY_CATEGORY
 from Code.Dynamic_War_Manager.Source.Context.Reaction_Profile import ReactionProfile
+from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import ContactWindow, Leg
@@ -1633,6 +1634,85 @@ class TestShotSpec(unittest.TestCase):
 
 
 # ── CONTROLLO DI PORTATA (ShotSpec.max_range, 2026-09-24) ────────────────────
+
+class _ZonedInterceptor(_Asset):
+    """Intercettore con posizione e volume d'intercettazione V_I (come Mobile.air_defense_volume)."""
+
+    def __init__(self, asset_id, position, radius, bottom=0.0, height=6_000.0, **kwargs):
+        super().__init__(asset_id, **kwargs)
+        self.position = Point3D(*position)
+        self._volume = None if radius is None else Cylinder(
+            center=Point3D(position[0], position[1], position[2] + bottom), radius=radius, height=height)
+
+    def air_defense_volume(self):
+        return self._volume
+
+
+class TestLauncherInsideInterceptionZone(unittest.TestCase):
+    """Regola L1 (2026-09-28, Proposta_Regole_Allocazione_SAM.md §7): un colpo si intercetta solo
+    se il punto di lancio e' FUORI dal volume V_I dell'intercettore; un lanciatore che spara da
+    dentro la zona e' un bersaglio, non si inseguono i suoi colpi (Q2: mai intercettati).
+
+    Geometria: bersaglio r1 nell'origine; intercettore r2 nell'origine, V_I cilindrico di 12 km
+    (0-6000 m); il tiratore b1 e' fermo a quota `z` e distanza `x` lungo l'asse x. Una salva di 5
+    colpi intercettabili a t = 2 s; 3 canali, scorta non vincolante.
+    """
+
+    def _run(self, x, z=0.0, interceptors=None, spec=None):
+        spec = spec or _miss(rounds=5, interceptable=True)
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        interceptors = interceptors or [_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)]
+        red = _Force('red', 'Red', [_Asset('r1')] + interceptors, interceptors=[(i, 3) for i in interceptors])
+        legs = {'b1': [Leg(0.0, 100.0, (x, 0.0, z), (x, 0.0, z))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        for i in interceptors:
+            p = (float(i.position.x), float(i.position.y), float(i.position.z))
+            legs[i.id] = [Leg(0.0, 100.0, p, p)]
+        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
+                                 range_a=50_000.0, range_b=None)]
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, _always(spec), _ScriptedRng([0.0] * 20),
+                                         legs=legs, reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
+
+    def test_launch_outside_the_zone_is_intercepted(self):
+        result = self._run(x=15_000.0)
+        self.assertEqual(result.resolutions[0].intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r2': 3})
+
+    def test_launch_inside_the_zone_is_never_intercepted(self):
+        result = self._run(x=8_000.0)
+        resolution, = result.resolutions
+        self.assertEqual(resolution.interceptable_rounds, 5)
+        self.assertEqual(resolution.capacity, 3)          # tetto, non garantita
+        self.assertEqual(resolution.intercepted, 0)
+        self.assertEqual(result.interception_events, ())
+        self.assertEqual(len(result.damage_events), 5)
+
+    def test_zone_boundary_counts_as_inside(self):
+        self.assertEqual(self._run(x=12_000.0).resolutions[0].intercepted, 0)
+
+    def test_launch_above_the_zone_ceiling_is_outside(self):
+        """Il V_I e' un cilindro: sopra il tetto (6000 m) il lanciatore e' fuori zona."""
+        self.assertEqual(self._run(x=8_000.0, z=7_000.0).resolutions[0].intercepted, 3)
+
+    def test_zone_is_per_interceptor(self):
+        """Q1: si valuta sul V_I del singolo intercettore. Il lancio e' dentro i 12 km di r2 ma
+        fuori dai 5 km di r3, che quindi intercetta (e paga) da solo."""
+        r2 = _ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)
+        r3 = _ZonedInterceptor('r3', (0.0, 300.0, 0.0), 5_000.0)
+        result = self._run(x=8_000.0, interceptors=[r2, r3])
+        self.assertEqual(result.resolutions[0].intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r3': 3})
+
+    def test_without_zone_data_the_rule_does_not_apply(self):
+        """Dato mancante = non modellato: senza V_I l'intercettore intercetta come prima."""
+        result = self._run(x=8_000.0, interceptors=[_ZonedInterceptor('r2', (0.0, 0.0, 0.0), None)])
+        self.assertEqual(result.resolutions[0].intercepted, 3)
+
+    def test_non_interceptable_rounds_are_unaffected(self):
+        result = self._run(x=15_000.0, spec=_miss(rounds=5, interceptable=False))
+        self.assertEqual(result.resolutions[0].intercepted, 0)
+
 
 class TestWeaponRange(unittest.TestCase):
     """Il lancio parte solo col bersaglio entro max_range; None = comportamento precedente.

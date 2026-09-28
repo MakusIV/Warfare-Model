@@ -7,7 +7,7 @@ difesa aerea a corto raggio, attaccata da A-10C che lanciano AGM-65D da ~16 km.
 Regole verificate (esito QUALITATIVO, non numerico, come chiede il §6 della proposta):
   * **D** (fatta): intercetta solo un'arma che dichiara il task 'Anti_Missile'. Lo Strela-10
     (9M37) non intercetta i Maverick, quindi conserva i missili per gli aerei;
-  * **L** (L1 al passo 4, da fare): un colpo e' intercettabile solo se lanciato da FUORI dal
+  * **L** (L1 implementata il 2026-09-28, passo 4): un colpo e' intercettabile solo se lanciato da FUORI dal
     volume d'intercettazione V_I dell'intercettore; se il lanciatore era dentro, si spara a lui.
     Il Tor arretrato (lancio a ~15-19 km, fuori dai suoi 12 km) intercetta; col Tor avanzato e
     gli A-10C che attaccano solo i BMP-2, i lanci partono a ~9,5 km dal Tor (dentro) e il Tor
@@ -19,7 +19,8 @@ arrivino, e il Tor spende gli 8 missili su di lui. La verifica resta qui come re
 caso che solo L1 distingue (intercettore con scorta in avanzo e lancio da dentro la zona) non
 si ottiene in modo stabile con questa geometria: la portata del Maverick (15 km) supera la zona
 del Tor (12 km), quindi un Tor raggiungibile viene attaccato da fuori zona. Va verificato con un
-test unitario a geometria controllata del risolutore (passo 4).
+test unitario a geometria controllata del risolutore: Test_Engagement_Resolver.
+  TestLauncherInsideInterceptionZone.
 
 Fire control: i registri veri (`Fire_Control.make_registry_fire_control`), ma l'A-10C spara
 solo AGM-65D. Con il criterio Pk/costo (A5) sceglierebbe la Mk-82AIR del loadout 'Maverick/Gun

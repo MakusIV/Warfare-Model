@@ -37,6 +37,12 @@ attraverso l'RNG di sessione passato dal chiamante.
    prima si leggeva `ammunition`, e un cannone AA con 2000 colpi poteva intercettare 2000
    colpi in arrivo). Dal 2026-09-26 entrambe le scorte sono viste sulla scorta PER ARMA
    (v. "Scorta per arma"): un missile AD che intercetta e' lo stesso della salva offensiva.
+   Dal 2026-09-28 (Proposta_Regole_Allocazione_SAM.md §7) intercetta solo un asset con armi
+   dichiarate 'Anti_Missile' (regola D, v. Military.salvo_interceptors), prima quelli a soli
+   cannoni (regola F), e l'allocazione e' PER SALVA (regola L1): un colpo e' intercettabile
+   da un intercettore solo se il punto di lancio della salva e' fuori dal suo volume
+   d'intercettazione V_I (`Mobile.air_defense_volume`, posizioni all'istante del lancio). Il
+   lanciatore che spara da dentro la zona e' un bersaglio: i suoi colpi non si intercettano.
 5. **Danno per singolo colpo.** Ogni colpo superstite passa da
    `Damage_Model.build_damage_event` (che chiama `resolve_hit`), con un `draw` estratto
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
@@ -214,7 +220,7 @@ from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Context import Reaction_Profile as RP
 from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCategory
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
-from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS, range_intervals
+from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS, position_on_legs, range_intervals
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
 
@@ -403,8 +409,10 @@ class SalvoResolution:
         force_id: forza colpita.
         salvo_ids: salve che compongono l'evento.
         rounds: colpi in arrivo; interceptable_rounds: di cui intercettabili.
-        capacity: capacita' di intercettazione disponibile all'istante.
-        intercepted: colpi fermati (min(interceptable_rounds, capacity)).
+        capacity: capacita' di intercettazione disponibile all'istante: un TETTO (dal
+            2026-09-28, regola L1, non tutti gli intercettori possono fermare ogni salva).
+        intercepted: colpi fermati, <= min(interceptable_rounds, capacity); coincide col
+            minimo quando la regola L1 non esclude nessun intercettore.
         wasted: colpi arrivati su bersagli gia' distrutti (nessuna estrazione).
         losses: asset impegnati passati da operativi a non operativi in questo evento.
         shock/erosion: frazioni dell'organico impegnato, v. Context/Doctrine.
@@ -1133,6 +1141,8 @@ class _EngagementRun:
         self.fire_control = fire_control
         self.rng = rng
         self.legs = legs or {}
+        self.zone_cache: Dict[str, Optional[Tuple[float, float, float]]] = {}
+        self.may_intercept_cache: Dict[Tuple[str, int], bool] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
         self.salvo_window = float(salvo_window)
@@ -1713,6 +1723,66 @@ class _EngagementRun:
 
         return capacity
 
+    def _position_at(self, shadow: "_Shadow", t: float) -> Optional[Tuple[float, float, float]]:
+        """Posizione (x, y, z) all'istante t: dai tratti di rotta se ci sono, altrimenti la
+        posizione dell'asset (ferma). None se non nota."""
+        position = position_on_legs(self.legs.get(shadow.id) or (), t)
+
+        if position is not None:
+            return position
+
+        point = getattr(shadow.asset, 'position', None)
+
+        try:
+            return float(point.x), float(point.y), float(point.z)
+        except (AttributeError, TypeError, ValueError):
+            return None
+
+    def _interception_zone(self, shadow: "_Shadow") -> Optional[Tuple[float, float, float]]:
+        """V_I dell'intercettore come (raggio, quota base, quota tetto) RELATIVI alla sua
+        posizione, da Mobile.air_defense_volume(); memoizzato. None = zona non modellata."""
+        if shadow.id not in self.zone_cache:
+            zone = None
+            volume_of = getattr(shadow.asset, 'air_defense_volume', None)
+            volume = volume_of() if callable(volume_of) else None
+            point = getattr(shadow.asset, 'position', None)
+
+            if volume is not None and type(volume).__name__ == 'Cylinder' and point is not None:
+                try:
+                    base = float(volume.center.z) - float(point.z)
+                    zone = (float(volume.radius), base, base + float(volume.height))
+                except (AttributeError, TypeError, ValueError):
+                    zone = None
+
+            self.zone_cache[shadow.id] = zone
+
+        return self.zone_cache[shadow.id]
+
+    def _may_intercept(self, shadow: "_Shadow", salvo: Salvo) -> bool:
+        """Regola L1: True se il punto di lancio della salva e' FUORI dal V_I dell'intercettore.
+
+        Posizioni all'istante del lancio (l'intercettore puo' essere in moto, es. una nave).
+        Senza zona, o senza posizione del lanciatore o dell'intercettore, nessun vincolo
+        (dato mancante = non modellato, come per scorte e carburante).
+        """
+        key = (shadow.id, salvo.salvo_id)
+
+        if key not in self.may_intercept_cache:
+            allowed = True
+            zone = self._interception_zone(shadow)
+            launch = self._position_at(self.shadows[salvo.shooter_id], salvo.t_launch)
+            here = self._position_at(shadow, salvo.t_launch)
+
+            if zone is not None and launch is not None and here is not None:
+                radius, bottom, top = zone
+                horizontal = ((launch[0] - here[0]) ** 2 + (launch[1] - here[1]) ** 2) ** 0.5
+                height = launch[2] - here[2]
+                allowed = not (horizontal <= radius and bottom <= height <= top)
+
+            self.may_intercept_cache[key] = allowed
+
+        return self.may_intercept_cache[key]
+
     def _on_resolve(self, time: float, force_id: str) -> None:
         group = self.pending.pop(force_id, None)
 
@@ -1730,47 +1800,65 @@ class _EngagementRun:
         rounds = sum(s.rounds for s in ordered)
         interceptable = sum(s.rounds for s in ordered if s.spec.interceptable)
         capacity = self._capacity(state)
-        intercepted = min(interceptable, capacity)
+
+        # Allocazione PER SALVA (regola L1, 2026-09-28, Proposta_Regole_Allocazione_SAM.md §7):
+        # un colpo intercettabile e' fermato solo da un intercettore per cui il punto di lancio
+        # della salva e' FUORI dal proprio volume d'intercettazione V_I (Mobile.air_defense_volume):
+        # un lanciatore che ha sparato da dentro la zona e' un bersaglio, non si inseguono i suoi
+        # colpi. Salve nell'ordine (impatto, salva), intercettori nell'ordine della regola F, ogni
+        # intercettore fino a min(canali, scorta) per evento. Senza vincoli geometrici (nessun
+        # dato di volume o di posizione) il risultato coincide con l'allocazione sul totale usata
+        # fino al 2026-09-28: stessi consumi per intercettore, stesse salve fermate.
+        available = {}
+
+        for shadow, channels in state.interceptors:
+            if shadow.operative:
+                stock = shadow.interceptor_stock
+                available[shadow.id] = channels if stock is None else min(channels, stock)
+
+        used: Dict[str, int] = {}
+        stopped: Dict[int, int] = {}
+
+        for salvo in ordered:
+            if not salvo.spec.interceptable:
+                continue
+
+            left = salvo.rounds
+
+            for shadow, _ in state.interceptors:
+                if left <= 0:
+                    break
+
+                free = available.get(shadow.id, 0) - used.get(shadow.id, 0)
+
+                if free <= 0 or not self._may_intercept(shadow, salvo):
+                    continue
+
+                take = min(free, left)
+                used[shadow.id] = used.get(shadow.id, 0) + take
+                left -= take
+
+            if left < salvo.rounds:
+                stopped[salvo.salvo_id] = salvo.rounds - left
+
+        intercepted = sum(stopped.values())
 
         # Ogni intercettazione consuma la scorta di INTERCETTORI del difensore (R3,
         # ricalibrazione 2026-09-23) — dal 2026-09-26 le voci AD della sua scorta per arma,
         # cannoni prima e poi missili (v. _Shadow) — ed e' un InterceptionEvent (uno per
-        # arma), mai un AmmunitionEvent: consumo esplicito, asset in ordine di id.
-        remaining = intercepted
+        # arma), mai un AmmunitionEvent: consumo esplicito, asset nell'ordine F.
         salvo_ids = tuple(s.salvo_id for s in ordered)
 
-        for shadow, channels in state.interceptors:
-            if remaining <= 0:
-                break
+        for shadow, _ in state.interceptors:
+            count_used = used.get(shadow.id, 0)
 
-            if not shadow.operative:
+            if count_used <= 0:
                 continue
 
-            stock = shadow.interceptor_stock
-            available = channels if stock is None else min(channels, stock)
-            used = min(available, remaining)
-
-            if used <= 0:
-                continue
-
-            for weapon, count in shadow.consume_interceptions(used):
+            for weapon, count in shadow.consume_interceptions(count_used):
                 self.interception_events.append(InterceptionEvent(time=time, asset_id=shadow.id,
                                                                   interceptions=count, force_id=force_id,
                                                                   salvo_ids=salvo_ids, weapon=weapon))
-
-            remaining -= used
-
-        # I colpi fermati sono i primi intercettabili nell'ordine (impatto, salva).
-        stopped: Dict[int, int] = {}
-        left = intercepted
-
-        for salvo in ordered:
-            if left <= 0:
-                break
-
-            if salvo.spec.interceptable:
-                stopped[salvo.salvo_id] = min(salvo.rounds, left)
-                left -= stopped[salvo.salvo_id]
 
         wasted = 0
 

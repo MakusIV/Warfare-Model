@@ -749,6 +749,8 @@ class Military(Block):
             2026-09-26 `interceptor_stock` e' una vista sulle voci AD della scorta per
             arma (Mobile.stores): i missili AD lanciati in salve offensive riducono anche
             la capacita' di intercettazione (stessa voce), senza regole speciali.
+        Dal 2026-09-28 e' un TETTO: la regola L1 del risolutore (Engagement_Resolver._on_resolve)
+        esclude, salva per salva, gli intercettori dentro il cui volume V_I e' partito il lancio.
         Ogni canale intercetta UN colpo per salva: equivale ad assumere Pk
         dell'intercettore = 1 per canale, ipotesi ottimistica per la difesa e primo
         candidato alla ricalibrazione.
