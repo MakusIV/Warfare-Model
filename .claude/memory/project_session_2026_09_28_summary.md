@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9bc0955f-e706-4f76-bae5-8515dde95b83
-  modified: 2026-09-28T14:47:11.975Z
+  modified: 2026-09-28T16:15:37.348Z
 ---
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. L'auto mode ha avuto
@@ -31,6 +31,16 @@ lavoro) + un tempo di valutazione e assegnazione (riusare Reaction_Profile se ba
 Fase 0 C2); Q4: prelazione sì; Q5: il lanciatore deve essere già rilevato; Q6: un solo task
 `Anti_Missile`. Ordine: (1) proposta di dati `Anti_Missile` sulle 16 armi Anti_Air terrestri, (2) D+F,
 (3) riproduzione Strela/Buk come test persistente, (4) L1 nel risolutore, (5) L2+L3.
+
+## A6 passi 1-2 (dati Anti_Missile + D + F) — FATTI, suite 3650 OK (non committati al momento della scrittura)
+Armi committate (`0df5ddf9`). `Proposta_Dati_Anti_Missile.md` approvata (D-AM1 Osa/Stinger NO,
+D-AM2 CIWS navali intercettori con quote + `rounds_per_mount`, D-AM3 9M311 = M1). Anti_Missile su
+Tor, Buk, S-300PS, Tunguska (missile+cannone), Gepard. `Mobile.interceptor_capability()` (True/False/
+None), `INTERCEPTOR_TASK`, scorta CIWS = impianti x rounds_per_mount, `WS.interceptor_rank` (ordine F
+fra asset, anche nel risolutore). Esiti cambiati: S13 senza intercettori; S11 difesa → Gepard+Tor (per
+non far saltare in silenzio i test sulle scorte d'intercettazione); S1 con CAS: Red si disingaggia
+prima dello scontro coi blindati (regola D + difetto §5.3 disingaggio alla prima perdita, ora più
+visibile — da discutere). Prossimo: passo 3 (riproduzione Strela/Buk come test), 4 (L1), 5 (L2+L3).
 
 ## Armi DCS mancanti — INSERITE (seconda ricerca, non committate al momento della scrittura)
 D4 + A6 committate (`89f1aa34`, memoria `697a031d`, nessun push). Poi seconda ricerca Haiku a tre gruppi
