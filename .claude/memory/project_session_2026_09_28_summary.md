@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9bc0955f-e706-4f76-bae5-8515dde95b83
-  modified: 2026-09-28T16:15:37.348Z
+  modified: 2026-09-28T16:54:48.219Z
 ---
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. L'auto mode ha avuto
@@ -31,6 +31,16 @@ lavoro) + un tempo di valutazione e assegnazione (riusare Reaction_Profile se ba
 Fase 0 C2); Q4: prelazione sì; Q5: il lanciatore deve essere già rilevato; Q6: un solo task
 `Anti_Missile`. Ordine: (1) proposta di dati `Anti_Missile` sulle 16 armi Anti_Air terrestri, (2) D+F,
 (3) riproduzione Strela/Buk come test persistente, (4) L1 nel risolutore, (5) L2+L3.
+
+## A6 passo 3 — FATTO (S19), suite 3656 OK, non committato al momento della scrittura
+Passi 1-2 committati (`37ca477e`). Nuovo `Test/Test_Session_Scenarios_S19_Air_Defence.py`: Strela
+sorvolo/standoff, Tor arretrato (intercetta, lanci fuori zona), Tor avanzato con A-10 solo sui BMP
+(spara ai lanciatori, 0 intercettazioni). Scoperta: il motore rispetta già L per TEMPISTICA (il
+lanciatore entra nella zona prima dell'impatto) e il Maverick (15 km) supera la zona del Tor (12 km),
+quindi il caso che solo L1 distingue non è stabile negli scenari → al passo 4 serve un test UNITARIO
+a geometria controllata in Test_Engagement_Resolver. Errore mio evitato: avevo scritto un
+expectedFailure su un caso che in realtà era un lancio da FUORI zona (misurare le distanze, non
+stimarle). Documentato in `Proposta_Regole_Allocazione_SAM.md` §7.8.
 
 ## A6 passi 1-2 (dati Anti_Missile + D + F) — FATTI, suite 3650 OK (non committati al momento della scrittura)
 Armi committate (`0df5ddf9`). `Proposta_Dati_Anti_Missile.md` approvata (D-AM1 Osa/Stinger NO,
