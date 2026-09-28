@@ -1,15 +1,39 @@
 ---
 name: project-session-2026-09-28-summary
-description: "Sessione 2026-09-28 (ProArt P16): D4 KMGU-2 CHIUSA (suite 3646 OK, non committata), A6 riprogettata come D+F+L con regole dottrinali dell'utente e APPROVATA (non implementata), ricerca armi DCS mancanti fatta da Haiku ma inaffidabile"
+description: "Sessione 2026-09-28 (ProArt P16): D4 KMGU-2 chiusa, 39 armi DCS inserite in AIR_WEAPONS, A6 COMPLETA (D Anti_Missile + CIWS, F, L1 lancio fuori zona, L2 priorità ai lanciatori, L3 prelazione), scenario S19; suite 3668 OK; tutto committato e pushato"
 metadata:
   node_type: memory
   type: project
   originSessionId: 9bc0955f-e706-4f76-bae5-8515dde95b83
-  modified: 2026-09-28T17:17:01.279Z
+  modified: 2026-09-28T18:43:04.247Z
 ---
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. L'auto mode ha avuto
 il classificatore guasto per tutta la sessione; l'utente è passato ad "accept edits on".
+
+## STATO FINALE (fine sessione) — tutto committato e pushato
+Commit della sessione: `89f1aa34` D4+A6 riprogettata, `0df5ddf9` armi DCS, `37ca477e` A6 passi 1-2,
+`aedd7fa5` S19, `24a43d10` L1, commit finale L2+L3 (+ memoria). Suite **3668 OK** (5 skipped).
+Documenti di riferimento: `Proposta_Regole_Allocazione_SAM.md` §7 (§7.7 decisioni, §7.8-7.10
+implementazione), `Proposta_Dati_Anti_Missile.md`, `Ricerca_Armi_DCS_2026_09_28/README.md`.
+
+## PROSSIMI PASSI (in ordine di blocco, da proporre all'utente)
+1. **Disingaggio alla prima perdita per forze piccole** (proposta SAM §5.3): con 4-6 asset una
+   perdita dà shock >= 0,20 e la forza rompe il contatto. Con la regola D è diventato evidente in S1
+   con CAS (Red si ritira prima dello scontro coi blindati; test rilassato). Va deciso prima di tarare
+   altro: soglia di shock dipendente dalla dimensione della forza? minimo di perdite assolute?
+2. **Overkill dello stesso tiratore** (§5.2): `_engaged_shooters` esclude il tiratore che decide, un
+   Tor mette 4 salve sullo stesso A-10 prima del primo impatto (visto nelle misure di S19).
+3. **Intercettazione senza tempo di reazione** (§5.4): l'intercettazione è istantanea e non richiede
+   rilevamento del colpo; con la nebbia di guerra.
+4. **A4** (filtro armi per missione) resta legato all'entità `Mission` (6 decisioni di
+   `Analisi_Modello_Missione_Sessione.md`); S19 usa un filtro "solo Maverick" di test al suo posto.
+5. Residui volumi: D-4b/c, D-5 opz. 2, D-7 seconda parte, D-8.
+6. **Fase 0 gerarchia C2** (la più vecchia in sospeso), che dovrà anche modellare il legame C2 fra
+   unità di difesa aerea (limite di L3: ogni tiratore usa il proprio refire_interval).
+7. Bug noti non corretti: `get_blocks_by_criteria`, `Military.is_helibase` mancante.
+8. Manuale DES da aggiornare (A6: Anti_Missile, CIWS, L1/L2/L3, S19; armi nuove) — con
+   `des-manual-writer`, verificando poi i riferimenti file:riga.
 
 ## D4 — FATTA (non committata al momento della scrittura)
 L'utente ha verificato in DCS: nessuna arma "KGBU"; il dispenser è il **KMG-2F/2B** (KMGU-2), resta sul
@@ -31,6 +55,16 @@ lavoro) + un tempo di valutazione e assegnazione (riusare Reaction_Profile se ba
 Fase 0 C2); Q4: prelazione sì; Q5: il lanciatore deve essere già rilevato; Q6: un solo task
 `Anti_Missile`. Ordine: (1) proposta di dati `Anti_Missile` sulle 16 armi Anti_Air terrestri, (2) D+F,
 (3) riproduzione Strela/Buk come test persistente, (4) L1 nel risolutore, (5) L2+L3.
+
+## A6 passo 5 (L2 + L3) — FATTO, A6 COMPLETA; suite 3668 OK, non committato al momento della scrittura
+Passo 4 committato (`24a43d10`). L2 in `_schedule_next` (lanciatori A2G contro la mia forza, a portata,
+passano davanti; copertura invariata fra loro). L3: `_register_launcher` al primo lancio A2G di un
+aereo → generazione++ (annulla il lancio programmato) + evento `_DECIDE` a t + refire_interval
+(`_on_decide`). Lezione: la prima stesura ridecideva SUBITO e due lanciatori simultanei non venivano
+ripartiti — il tempo di valutazione deve precedere la decisione, non solo il tiro. Test
+`TestLauncherPriority` (5). Limite: legame C2 fra unità non modellato (Fase 0 C2).
+Aperti dopo A6: difetto disingaggio alla prima perdita (§5.3, ora più visibile in S1), overkill dello
+stesso tiratore (§5.2), intercettazione senza tempo di reazione (§5.4).
 
 ## A6 passo 4 (L1) — FATTO, suite 3663 OK, non committato al momento della scrittura
 Passo 3 committato (`aedd7fa5`). `Engagement_Resolver._on_resolve` ora alloca PER SALVA:
