@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 9bc0955f-e706-4f76-bae5-8515dde95b83
-  modified: 2026-09-28T13:38:09.375Z
+  modified: 2026-09-28T14:47:11.975Z
 ---
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. L'auto mode ha avuto
@@ -32,7 +32,15 @@ Fase 0 C2); Q4: prelazione sì; Q5: il lanciatore deve essere già rilevato; Q6:
 `Anti_Missile`. Ordine: (1) proposta di dati `Anti_Missile` sulle 16 armi Anti_Air terrestri, (2) D+F,
 (3) riproduzione Strela/Buk come test persistente, (4) L1 nel risolutore, (5) L2+L3.
 
-## Armi DCS mancanti — ricerca Haiku NON utilizzabile così com'è
+## Armi DCS mancanti — INSERITE (seconda ricerca, non committate al momento della scrittura)
+D4 + A6 committate (`89f1aa34`, memoria `697a031d`, nessun push). Poi seconda ricerca Haiku a tre gruppi
+con lo schema esatto → 4 AAM, 12 ASM, 23 bombe inserite in `Aircraft_Weapon_Data.py` (+ righe
+`_WEAPON_PARAM_TYPE`), suite **3647 OK**. Correzioni mie documentate in
+`Analysis/Document/Ricerca_Armi_DCS_2026_09_28/README.md` (Kh-22/Kh-58U non inseriti perché alias,
+Kh-41 320 kg, KD-20 ricostruito, classi efficiency ereditate dal modello, LS-6 planante con standoff
+(10, 60), Mk-84 AIR drag selezionabile). Test: SELECTABLE +Mk-84 AIR, nuovo GLIDE_STANDOFF (LS-6).
+
+## Armi DCS mancanti — prima ricerca Haiku NON utilizzabile così com'è
 Fonte: `Analysis/Document/bombe_missili_russi.pdf` (7 schermate del menu armi DCS, anche armi cinesi).
 Il rapporto Haiku (scratchpad, effimero) ha sbagliato il confronto (dava come mancanti Kh-101, Kh-25*,
 Kh-29L/T, che ci sono), ha usato uno schema inventato ("ship", "seeker", "reliability", senza tutte
