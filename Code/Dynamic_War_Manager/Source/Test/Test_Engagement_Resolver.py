@@ -1714,6 +1714,85 @@ class TestLauncherInsideInterceptionZone(unittest.TestCase):
         self.assertEqual(result.resolutions[0].intercepted, 0)
 
 
+class Aircraft(_Asset):
+    """Stub di aereo: il risolutore riconosce gli aerei per nome di classe (validate_class)."""
+
+
+class TestLauncherPriority(unittest.TestCase):
+    """Regole L2/L3 (2026-09-28, Proposta_Regole_Allocazione_SAM.md §7).
+
+    L2: per la difesa aerea un aereo che ha lanciato armi aria-superficie contro la sua forza, gia'
+    a portata, passa davanti a ogni altro bersaglio; fra piu' lanciatori il lavoro si ripartisce
+    (copertura), con uno solo ci si concentra. L3: al primo lancio la difesa rinuncia al tiro gia'
+    programmato su un bersaglio non prioritario e ridecide dopo il proprio refire_interval.
+
+    Blue: 'a_esc' (scorta, non attacca) e i lanciatori 'b_atk'/'c_atk' (sparano su r1 a t = 2).
+    Red: r1 e le difese 'r_ad*'. A pari condizioni la difesa sceglierebbe 'a_esc' (id minore).
+    """
+
+    AD_SPEC = _miss(rounds=1)
+    ATTACK_SPEC = _miss(rounds=1, interceptable=True, time_of_flight=50.0)
+
+    def _run(self, ad_ids=('r_ad',), attackers=('b_atk',), ad_profile=(5.0, 1.0)):
+        blue_assets = [Aircraft('a_esc')] + [Aircraft(a) for a in attackers]
+        blue = _Force('blue', 'Blue', blue_assets)
+        red = _Force('red', 'Red', [_Asset('r1')] + [_Asset(a) for a in ad_ids])
+        windows = [_window(a, 'r1', t_end=30.0, range_b=None) for a in attackers]
+        windows += [_window(ad, b.id, t_end=30.0, range_b=None) for ad in ad_ids for b in blue_assets]
+
+        def fire_control(shooter, target):
+            if shooter.id.startswith('r_ad') and isinstance(target, Aircraft):
+                return self.AD_SPEC
+            if shooter.id in attackers and target.id == 'r1':
+                return self.ATTACK_SPEC
+            return None
+
+        profiles = {a: (2.0, 2.0) for a in attackers}   # primo lancio a t = 2, poi ogni 2 s
+        profiles.update({ad: ad_profile for ad in ad_ids})
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, fire_control, _ScriptedRng([0.0] * 200),
+                                         reaction_profile_for=_profiles(profiles, default=(2.0, 1.0)))
+
+    @staticmethod
+    def _targets_of(result, shooter_id):
+        return [s.target_id for s in sorted(result.salvos, key=lambda s: s.t_launch) if s.shooter_id == shooter_id]
+
+    def test_premise_without_launches_the_escort_comes_first(self):
+        """Senza lanciatori (nessun attaccante) la difesa sceglie la scorta: id minore."""
+        result = self._run(attackers=())
+        self.assertEqual(self._targets_of(result, 'r_ad')[0], 'a_esc')
+
+    def test_preemption_redirects_the_scheduled_launch_to_the_launcher(self):
+        """L3: la difesa aveva programmato il primo tiro (t = 5) sulla scorta; b_atk lancia a
+        t = 2, quindi a t = 3 (refire 1 s) la difesa ridecide e il primo tiro va su b_atk."""
+        result = self._run()
+        targets = self._targets_of(result, 'r_ad')
+        self.assertEqual(targets[0], 'b_atk')
+        first = min(s.t_launch for s in result.salvos if s.shooter_id == 'r_ad')
+        self.assertGreaterEqual(first, 5.0 - 1e-9)   # i tempi di reazione non si saltano
+
+    def test_priority_holds_on_later_decisions(self):
+        """L2: finche' il lanciatore e' ingaggiabile, ogni tiro successivo va su di lui."""
+        result = self._run(ad_profile=(1.0, 1.0))
+        targets = self._targets_of(result, 'r_ad')
+        after_launch = [t for s, t in zip(sorted((s for s in result.salvos if s.shooter_id == 'r_ad'),
+                                                 key=lambda s: s.t_launch), targets) if s.t_launch > 3.0]
+        self.assertTrue(after_launch)
+        self.assertEqual(set(after_launch), {'b_atk'})
+
+    def test_single_launcher_concentrates_the_defence(self):
+        """Un solo lanciatore: entrambe le difese sparano su di lui."""
+        result = self._run(ad_ids=('r_ad1', 'r_ad2'))
+        self.assertEqual(self._targets_of(result, 'r_ad1')[0], 'b_atk')
+        self.assertEqual(self._targets_of(result, 'r_ad2')[0], 'b_atk')
+
+    def test_two_launchers_split_the_work(self):
+        """Q3: con due lanciatori e due difese indipendenti il lavoro si ripartisce."""
+        result = self._run(ad_ids=('r_ad1', 'r_ad2'), attackers=('b_atk', 'c_atk'))
+        firsts = {self._targets_of(result, 'r_ad1')[0], self._targets_of(result, 'r_ad2')[0]}
+        self.assertEqual(firsts, {'b_atk', 'c_atk'})
+
+
 class TestWeaponRange(unittest.TestCase):
     """Il lancio parte solo col bersaglio entro max_range; None = comportamento precedente.
 

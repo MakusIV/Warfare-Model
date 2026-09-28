@@ -290,7 +290,7 @@ trasformato in uno scenario di test persistente in `Test_Session_Scenarios_*`, c
 
 ## 7. Revisione 2026-09-28 (A6): D + F + L, sopra la scorta per arma
 
-**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-4 FATTI il 2026-09-28: dati `Anti_Missile` e D + F (`Proposta_Dati_Anti_Missile.md` §6), scenario persistente S19 (§7.8), L1 nel risolutore (§7.9). Passo 5 (L2 + L3) da fare.
+**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). TUTTI I PASSI FATTI il 2026-09-28: dati `Anti_Missile` e D + F (`Proposta_Dati_Anti_Missile.md` §6), scenario persistente S19 (§7.8), L1 (§7.9), L2 + L3 (§7.10).
 
 ### 7.1 Regole di dottrina date dall'utente
 
@@ -463,3 +463,25 @@ esistente ha cambiato esito. `SalvoResolution.capacity` è ora un tetto.
 Test: `Test_Engagement_Resolver.TestLauncherInsideInterceptionZone` (7 casi a geometria controllata:
 fuori zona, dentro, bordo, sopra il tetto, zona per intercettore (Q1), senza dato, colpi non
 intercettabili). Suite 3663 OK.
+
+### 7.10 Passo 5: L2 + L3 nel risolutore (2026-09-28)
+
+- **L2** (`_schedule_next`): se fra i candidati ci sono aerei che hanno lanciato armi aria-superficie
+  contro la forza del tiratore e sono a portata al loro istante di tiro, si sceglie solo fra loro,
+  con la copertura esistente: più lanciatori vengono ripartiti fra le difese, uno solo le concentra.
+  La salva resta quella della fire control (Q3, nessuna costante).
+- **L3** (`_register_launcher`, `_on_decide`): alla prima salva aria-superficie di un aereo contro
+  una forza, i tiratori di quella forza che lo hanno a portata e non sono già su un lanciatore
+  annullano il lancio programmato (contatore di generazione) e **ridecidono dopo il proprio
+  `refire_interval`** (VAL + COM + ATT del profilo di reazione): è il tempo di valutazione e
+  assegnazione chiesto al Q3, senza costanti nuove. La decisione è presa alla fine di quel tempo,
+  con i lanciatori noti allora: nella prima stesura si ridecideva subito, e due lanciatori
+  simultanei finivano entrambi sotto il fuoco delle stesse difese invece di essere ripartiti (un
+  test lo ha mostrato).
+- Q5: il lanciatore dev'essere un candidato del tiratore, cioè già rilevato.
+- Test: `Test_Engagement_Resolver.TestLauncherPriority` (premessa senza lanciatori, prelazione del
+  primo tiro, priorità sulle decisioni successive, concentrazione su un lanciatore, ripartizione su
+  due). Nessuno scenario esistente ha cambiato esito qualitativo. Suite 3668 OK.
+- Limite: il legame C2 fra le unità (una batteria integrata assegna più in fretta di unità
+  indipendenti) non è modellato: ogni tiratore usa il proprio profilo. Da riprendere con la Fase 0
+  della gerarchia C2.

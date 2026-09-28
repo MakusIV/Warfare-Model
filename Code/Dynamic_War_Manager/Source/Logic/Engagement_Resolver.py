@@ -292,6 +292,9 @@ TRIGGER_ANNIHILATION = 'annihilation'
 _LAUNCH = 0
 _IMPACT = 1
 _RESOLVE = 2
+# Ridecisione dopo la prelazione (regola L3, 2026-09-28): ultima a parita' d'istante, cosi' che
+# la decisione veda tutti i lanci avvenuti in quell'istante.
+_DECIDE = 3
 
 
 # ── TIPI DI SCAMBIO ───────────────────────────────────────────────────────────
@@ -1142,6 +1145,11 @@ class _EngagementRun:
         self.rng = rng
         self.legs = legs or {}
         self.zone_cache: Dict[str, Optional[Tuple[float, float, float]]] = {}
+        # Regole L2/L3 (2026-09-28): aerei che hanno lanciato armi aria-superficie contro
+        # ciascuna forza, e generazione del lancio programmato di ogni tiratore (prelazione).
+        self.launchers_against: Dict[str, set] = {}
+        self.launch_generation: Dict[str, int] = {}
+        self.pending_decide: set = set()
         self.may_intercept_cache: Dict[Tuple[str, int], bool] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
@@ -1474,6 +1482,17 @@ class _EngagementRun:
         prima decisione di ogni tiratore vede i lanci gia' schedulati dai tiratori con id
         minore.
 
+        ## Priorita' ai lanciatori (regole L2/L3, 2026-09-28, Proposta_Regole_Allocazione_SAM.md §7)
+
+        Prima della regola sopra: se fra i bersagli possibili ci sono aerei che hanno gia'
+        lanciato armi aria-superficie contro la forza del tiratore (`launchers_against`) e che
+        sono ingaggiabili a portata al loro istante di tiro, la scelta si fa SOLO fra loro,
+        anche se non sono al primo istante utile, con la stessa copertura (piu' lanciatori:
+        il lavoro si ripartisce; uno solo: tutti su di lui). Alla prima salva aria-superficie
+        di un aereo i tiratori della forza colpita che lo hanno a portata rinunciano al lancio
+        programmato su un bersaglio non prioritario (annullamento per generazione, R4) e
+        ridecidono dopo il proprio `refire_interval` (evento _DECIDE, v. _register_launcher).
+
         E' "semplice" perche' e' una regola greedy locale, presa dal singolo tiratore
         quando schedula il PROPRIO prossimo lancio. Cosa NON fa: non ottimizza globalmente
         l'assegnazione arma-bersaglio (nessun WTA, nessun peso per valore del bersaglio o
@@ -1522,12 +1541,20 @@ class _EngagementRun:
             if not viable:
                 return
 
+            # Regola L2 (2026-09-28): i lanciatori aria-superficie contro la mia forza, gia' a
+            # portata, passano davanti a ogni altro bersaglio; fra loro resta la copertura (piu'
+            # lanciatori -> il lavoro si ripartisce, uno solo -> tutti su di lui).
+            priority = [item for item in viable
+                        if self._is_launcher_against(item[2].target_id, shooter.force_id)
+                        and self._in_range_at(shooter, item[1], item[2], item[0])]
+
             # Round-robin (v. docstring): primo istante utile, poi copertura, poi il resto.
-            t_first = min(t_fire for t_fire, _, _ in viable)
+            pool = priority or viable
+            t_first = min(t_fire for t_fire, _, _ in pool)
             best = None
 
-            for t_fire, index, candidate in viable:
-                if t_fire > t_first + TIME_EPS:
+            for t_fire, index, candidate in pool:
+                if not priority and t_fire > t_first + TIME_EPS:
                     continue
 
                 engaged = self._engaged_shooters(candidate.target_id, shooter.force_id, shooter_id)
@@ -1564,8 +1591,86 @@ class _EngagementRun:
                     continue
 
             self.assigned[shooter_id] = target_id
-            self._push(t_fire, _LAUNCH, shooter_id, (index, spec, rounds))
+            self._push(t_fire, _LAUNCH, shooter_id, (index, spec, rounds, self.launch_generation.get(shooter_id, 0)))
             return
+
+    def _is_launcher_against(self, asset_id: str, force_id: str) -> bool:
+        return asset_id in self.launchers_against.get(force_id, ())
+
+    def _in_range_at(self, shooter: "_Shadow", index: int, candidate: "_Candidate", t_fire: float) -> bool:
+        """Il bersaglio del candidato e' ingaggiabile (arma con scorta, entro portata) a t_fire?
+
+        Stessa scelta d'arma e stesso controllo di portata della schedulazione, senza effetti
+        collaterali sul candidato. Senza portata dichiarata: ingaggiabile.
+        """
+        choice = self._first_with_stock(shooter, self.fire_control(shooter.asset,
+                                                                   self.shadows[candidate.target_id].asset))
+
+        if choice is None:
+            return False
+
+        spec, _ = choice
+
+        if spec.max_range is None:
+            return True
+
+        t_in_range = self._range_entry(shooter.id, candidate, spec.max_range, t_fire)
+        return t_in_range is not None and t_in_range <= t_fire + TIME_EPS
+
+    def _register_launcher(self, time: float, launcher: "_Shadow", target_force_id: str) -> None:
+        """Regola L3 (2026-09-28): primo lancio aria-superficie di un aereo contro una forza.
+
+        I tiratori di quella forza che lo hanno fra i candidati e a portata, e che non sono gia'
+        impegnati su un lanciatore (o gia' in ridecisione), rinunciano al lancio programmato su
+        un bersaglio non prioritario (generazione) e RIDECIDONO dopo il loro `refire_interval`
+        (VAL + COM + ATT del profilo di reazione): il tempo per valutare la minaccia e
+        riassegnare il lavoro (decisione Q3/Q4), senza costanti nuove. La decisione e' presa
+        ALLA FINE di quel tempo (evento _DECIDE) con cio' che si sa allora: piu' lanciatori
+        comparsi nel frattempo vengono ripartiti fra le difese (copertura, L2).
+        """
+        launchers = self.launchers_against.setdefault(target_force_id, set())
+
+        if launcher.id in launchers:
+            return
+
+        launchers.add(launcher.id)
+
+        for shooter_id in sorted(self.candidates):
+            shooter = self.shadows[shooter_id]
+
+            if shooter.force_id != target_force_id or not shooter.operative \
+                    or shooter.force_id in self.broken_forces:
+                continue
+
+            if shooter_id in self.pending_decide \
+                    or self._is_launcher_against(self.assigned.get(shooter_id), target_force_id):
+                continue
+
+            t_decide = time + self._profile(shooter_id).refire_interval
+
+            for index, candidate in enumerate(self.candidates[shooter_id]):
+                if candidate.target_id != launcher.id or candidate.exhausted:
+                    continue
+
+                t_fire = max(candidate.t_ready, t_decide)
+
+                if t_fire > candidate.t_end + TIME_EPS or not self._in_range_at(shooter, index, candidate, t_fire):
+                    continue
+
+                generation = self.launch_generation.get(shooter_id, 0) + 1
+                self.launch_generation[shooter_id] = generation
+                self.assigned.pop(shooter_id, None)
+                self.pending_decide.add(shooter_id)
+                self._push(t_decide, _DECIDE, shooter_id, generation)
+                break
+
+    def _on_decide(self, time: float, shooter_id: str, generation: int) -> None:
+        """Fine della valutazione dopo una prelazione (L3): nuova decisione con lo stato attuale."""
+        if generation != self.launch_generation.get(shooter_id, 0):
+            return
+
+        self.pending_decide.discard(shooter_id)
+        self._schedule_next(shooter_id, time)
 
     @staticmethod
     def _options(result) -> Tuple[ShotSpec, ...]:
@@ -1644,7 +1749,13 @@ class _EngagementRun:
         return spec.cycle_time if spec.cycle_time is not None else self._profile(shooter_id).refire_interval
 
     def _on_launch(self, time: float, shooter_id: str, payload) -> None:
-        index, spec, rounds = payload
+        index, spec, rounds, generation = payload
+
+        if generation != self.launch_generation.get(shooter_id, 0):
+            # Lancio annullato dalla prelazione (regola L3): il tiratore ha gia' un nuovo
+            # lancio programmato, questo evento non fa nulla.
+            return
+
         # Il lancio schedulato si esaurisce qui, qualunque sia l'esito: se la salva parte,
         # la copertura passa a `in_flight`; se e' annullata, non copre piu' nulla.
         self.assigned.pop(shooter_id, None)
@@ -1697,6 +1808,9 @@ class _EngagementRun:
         self._touch(time)
         self._push(salvo.t_impact, _IMPACT, target.force_id, salvo)
         self._schedule_next(shooter_id, next_time)
+
+        if validate_class(shooter.asset, 'Aircraft') and not validate_class(target.asset, 'Aircraft'):
+            self._register_launcher(time, shooter, target.force_id)
 
     # ── fase 3: impatto, saturazione, danno ───────────────────────────────────
 
@@ -1947,8 +2061,10 @@ class _EngagementRun:
                 self._on_launch(time, key, payload)
             elif kind == _IMPACT:
                 self._on_impact(time, key, payload)
-            else:
+            elif kind == _RESOLVE:
                 self._on_resolve(time, key)
+            else:
+                self._on_decide(time, key, payload)
 
         return self._result()
 
