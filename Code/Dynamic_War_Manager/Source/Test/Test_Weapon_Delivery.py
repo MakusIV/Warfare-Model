@@ -2,7 +2,7 @@
 
 I valori attesi della balistica sono ricalcolati qui dalla formula del vuoto (sqrt(2h/g), moto
 parabolico) e dai fattori dichiarati del modulo, non copiati dall'implementazione. I dati d'arma e di
-loadout sono quelli REALI dei registri (Mk-82/Mk-83/Mk-82AIR/GBU-24/BK-90/KGBU, F/A-18C, A-10C, B-52H);
+loadout sono quelli REALI dei registri (Mk-82/Mk-83/Mk-82AIR/GBU-24/BK-90/KMGU-2, F/A-18C, A-10C, B-52H);
 le minacce sono cilindri scritti a mano, cosi' la geometria attesa e' nota.
 
 Logger: silenziati con `Scenario_Fixtures.LoggerSilencer` (mixin, non un TestCase).
@@ -63,7 +63,8 @@ class TestReleaseWindows(unittest.TestCase):
         self.assertNotIn('loft', high.modes)
 
     def test_no_release_data_means_no_window(self):
-        self.assertEqual(WD.release_windows('KGBU-2AO'), ())
+        mk83_without_release = {k: v for k, v in AIR_WEAPONS['BOMBS']['Mk-83'].items() if k != 'release'}
+        self.assertEqual(WD.release_windows(mk83_without_release), ())
         self.assertEqual(WD.release_windows('AGM-65D'), ())
         self.assertEqual(WD.release_windows('not-a-weapon'), ())
 
@@ -161,7 +162,16 @@ class TestBombEngagementEstimate(unittest.TestCase):
         self.assertEqual(est.speed_kmh, (370.0 + 1_110.0) / 2.0)
 
     def test_no_release_data_returns_none(self):
-        self.assertIsNone(WD.bomb_engagement_estimate('KGBU-2AO', 1_000.0, 800.0))
+        mk83_without_release = {k: v for k, v in AIR_WEAPONS['BOMBS']['Mk-83'].items() if k != 'release'}
+        self.assertIsNone(WD.bomb_engagement_estimate(mk83_without_release, 1_000.0, 800.0))
+
+    def test_kmgu_dispenser_releases_level_high_drag_almost_overhead(self):
+        """D4: il KMGU-2 resta sul pilone; cadono i blocchi di submunizioni (drag high) da bassa quota."""
+        (window,) = WD.release_windows('KMGU-2AO')
+        self.assertEqual((window.modes, window.drag), (('level',), 'high'))
+        est = WD.bomb_engagement_estimate('KMGU-2AO', 200.0, 800.0)
+        self.assertEqual(est.drag, 'high')
+        self.assertLess(est.slant_range_m, 1_500.0)
 
 
 # ── LIVELLO 2: PIANIFICAZIONE ─────────────────────────────────────────────────

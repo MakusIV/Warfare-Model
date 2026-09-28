@@ -209,7 +209,6 @@ _WEAPON_PARAM_TYPE = {
     'GBU-24':      {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
     'KAB-500L':    {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
     'KAB-500Kr':   {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
-    'KGBU-96r':    {'precision': [_wae.PRECISION], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
     # Bombe bunker-buster / penetranti
     'GBU-27':      {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION]},
     'SAMP-250HD':  {'precision': [_wae.LOCALIZED], 'power': [_wpe.PENETRATION]},
@@ -224,8 +223,8 @@ _WEAPON_PARAM_TYPE = {
     'RBK-250AO':   {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
     'RBK-500AO':   {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
     'RBK-500PTAB': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
-    'KGBU-2AO':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
-    'KGBU-2PTAB':  {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'KMGU-2AO':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'KMGU-2PTAB':  {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
 
     # --- ROCKETS ---
     # Razzi non guidati HE / FRAG
@@ -3634,8 +3633,9 @@ AIR_WEAPONS = {
     #      d'attacco (Proposta B) e non e' decisa qui.
     #   3) dispenser planante (D3: BK-90*): finestra singola + 'standoff_range_km': (min, max) in km,
     #      con 'glide_ratio': None (il rapporto di planata non e' fisicamente adatto a queste armi).
-    # Voci senza 'release' (KGBU-*, D4 sospesa in attesa di verifica del flag 'dispenser'): dato non
-    # modellato, da non trattare come vincolo a valle.
+    #   4) dispenser che resta sul pilone (D4: KMGU-2*): 'dispenser': True a livello di voce e finestra
+    #      solo 'level' a bassa quota; il contenitore non cade, cadono i blocchi di submunizioni (drag
+    #      high), quindi la distanza di sgancio e' di fatto nulla e l'aereo sorvola il bersaglio.
     'BOMBS': {
         "Mk-84": {
             "type": "Bombs",
@@ -6163,15 +6163,28 @@ AIR_WEAPONS = {
                 },
             },
         },            
-        "KGBU-2AO": {  # cluster bomb soft target
+        "KMGU-2AO": {  # KMGU-2 - 96 x AO-2.5RT, submunizioni HE-frag (soft target)
             "type": "Cluster bombs",
-            "model": "KGBU-2AO",
+            "model": "KMGU-2AO",
             "users": ["USSR", "Russia"],
             "task": ["Strike"],
             "start_service": 1970,
             "end_service": None,
             "cost": 12,  # k$
-            "weight": 250,  # ??--kg
+            "weight": 525,  # kg, carico completo [F5]
+            "dispenser": True,  # D4 (2026-09-28): il KMGU-2 resta sul pilone ed espelle i blocchi BKF
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md, D4). Confidenza A sui numeri [F5],
+            # M sull'identificazione del nome DCS (KMG-2F/2B, verificata dall'utente il 2026-09-28)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 30,  # m AGL
+                'max_altitude': 1000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1100,  # km/h
+                'dive_angle': None,  # 'dive' non ammesso
+                'drag': 'high',  # cadono i blocchi di submunizioni, non il contenitore
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # non Anti-tank but antenna, launcher gear and PSU system are like soft units
@@ -6218,15 +6231,28 @@ AIR_WEAPONS = {
                 },
             },
         },            
-        "KGBU-2PTAB": {  # cluster bomb armor target
+        "KMGU-2PTAB": {  # KMGU-2 - 96 x PTAB-2.5KO, submunizioni a carica cava (armor)
             "type": "Cluster bombs",
-            "model": "KGBU-2PTAB",
+            "model": "KMGU-2PTAB",
             "users": ["USSR", "Russia"],
             "task": ["Strike"],
             "start_service": 1970,
             "end_service": None,
             "cost": 16,  # k$
-            "weight": 250,  # ??--kg
+            "weight": 525,  # kg, carico completo [F5]
+            "dispenser": True,  # D4 (2026-09-28): il KMGU-2 resta sul pilone ed espelle i blocchi BKF
+            # release: finestra di rilascio (Proposta_Dati_Rilascio_Bombe.md, D4). Confidenza A sui numeri [F5],
+            # M sull'identificazione del nome DCS (KMG-2F/2B, verificata dall'utente il 2026-09-28)
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 30,  # m AGL
+                'max_altitude': 1000,  # m
+                'min_speed': 500,  # km/h
+                'max_speed': 1100,  # km/h
+                'dive_angle': None,  # 'dive' non ammesso
+                'drag': 'high',  # cadono i blocchi di submunizioni, non il contenitore
+                'glide_ratio': None,
+            },
             "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
             "efficiency": {
                 "Air_Defense": {  # non Anti-tank but antenna, launcher gear and PSU system are like soft units
@@ -6273,61 +6299,7 @@ AIR_WEAPONS = {
                 },
             },
         },            
-        "KGBU-96r": {  # ?? cluster bomb soft target VERIFY
-            "type": "Cluster bombs",
-            "model": "KGBU-96r",
-            "users": ["USSR", "Russia"],
-            "task": ["Strike"],
-            "start_service": 1970,
-            "end_service": None,
-            "cost": 12,  # k$
-            "weight": 250,  # ??--kg
-            "perc_efficiency_variability": 0.1,  # percentage of efficiecy variability 0-1 (100%)
-            "efficiency": {
-                "Air_Defense": {  # non Anti-tank but antenna, launcher gear and PSU system are like soft units
-                    "big": {
-                        "accuracy": 0.75,  # 1 max, 0.1 min ( hit success percentage )
-                        "destroy_capacity": 2,  # element destroyed (single hit), 0.1 min ( element destroy capacity )
-                    },
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 3,
-                    },
-                    "small": {
-                        "accuracy": 0.65,
-                        "destroy_capacity": 4,
-                    }
-                },
-                "Soft": {  # mobile target(artillery group)
-                    "big": {
-                        "accuracy": 0.75,
-                        "destroy_capacity": 3.2,
-                    },
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 4.3,
-                    },
-                    "small": {
-                        "accuracy": 0.65,
-                        "destroy_capacity": 7.5,
-                    }
-                },
-                "Armored": {  # mobile target armor
-                    "big": {
-                        "accuracy": 0.75,
-                        "destroy_capacity": 1,
-                    },
-                    "med": {
-                        "accuracy": 0.7,
-                        "destroy_capacity": 2,
-                    },
-                    "small": {
-                        "accuracy": 0.65,
-                        "destroy_capacity": 3,
-                    }
-                },
-            },
-        },        
+        
     },
     'ROCKETS': {   
         "Zuni-Mk71": {  # Rockets 127 mm HE

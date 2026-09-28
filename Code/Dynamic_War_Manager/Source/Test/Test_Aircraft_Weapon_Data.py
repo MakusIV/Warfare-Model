@@ -369,12 +369,12 @@ class TestAircraftWeaponsDataStructure(unittest.TestCase):
                               f"Missile ARM {model}: 'Air_Defense' mancante in efficiency")
 
     def test_cluster_bombs_efficiency_covers_area_targets(self):
-        """Le cluster bomb (Mk-20, CBU-52B, BLG66, BK-90MJ1, RBK-*, KGBU-*)
+        """Le cluster bomb (Mk-20, CBU-52B, BLG66, BK-90MJ1, RBK-*, KMGU-2*)
         devono coprire i target di area (Soft, Armored, Air_Defense)."""
         cluster_models = [
             "Mk-20", "CBU-52B", "BLG66", "BK-90MJ1", "BK-90MJ1-2", "BK-90MJ2",
             "RBK-250AO", "RBK-500AO", "RBK-500PTAB",
-            "KGBU-2AO", "KGBU-2PTAB", "KGBU-96r",
+            "KMGU-2AO", "KMGU-2PTAB",
         ]
         area_targets = {"Soft", "Armored", "Air_Defense"}
         for model in cluster_models:
@@ -1994,14 +1994,14 @@ class TestBombsReleaseField(unittest.TestCase):
     (Analysis/Document/Proposta_Dati_Rilascio_Bombe.md, tabella §6, decisioni D1-D4).
 
     Tre forme: finestra singola, drag selezionabile con due finestre (D2),
-    dispenser planante con standoff_range_km (D3). Le KGBU-* (D4) non hanno il campo.
+    dispenser planante con standoff_range_km (D3), dispenser che resta sul pilone (D4, KMGU-2*).
     Quote in m, velocita' in km/h.
     """
 
     WINDOW_KEYS = {'min_altitude', 'max_altitude', 'min_speed', 'max_speed', 'dive_angle'}
     SELECTABLE = ("Mk-82AIR", "M/71", "SAMP-250HD")
     STANDOFF = ("BK-90MJ1", "BK-90MJ1-2", "BK-90MJ2")
-    SUSPENDED = ("KGBU-2AO", "KGBU-2PTAB", "KGBU-96r")
+    PYLON_DISPENSERS = ("KMGU-2AO", "KMGU-2PTAB")
 
     def setUp(self):
         self._logger_patcher = patch(_LOGGER_PATH, MagicMock())
@@ -2025,16 +2025,25 @@ class TestBombsReleaseField(unittest.TestCase):
         else:
             self.assertIsNone(win['dive_angle'])
 
-    def test_release_present_on_29_bombs(self):
-        """Tutte le bombe (razzi/pod esclusi, non sono sotto BOMBS) tranne le 3 KGBU sospese."""
+    def test_release_present_on_all_31_bombs(self):
+        """Tutte le bombe (razzi/pod esclusi, non sono sotto BOMBS); KGBU-96r eliminata (D4, doppione)."""
         with_release = [m for m, d in self.bombs.items() if 'release' in d]
-        self.assertEqual(len(with_release), 29)
-        self.assertEqual(len(self.bombs), 32)
+        self.assertEqual(len(with_release), 31)
+        self.assertEqual(len(self.bombs), 31)
 
-    def test_suspended_kgbu_have_no_release(self):
-        for model in self.SUSPENDED:
+    def test_kmgu_pylon_dispensers(self):
+        """D4: KMGU-2 (nome DCS KMG-2F/2B) resta sul pilone: solo level, 30-1000 m, 500-1100 km/h, drag high."""
+        self.assertNotIn('KGBU-96r', self.bombs)
+        for model in self.PYLON_DISPENSERS:
             with self.subTest(model=model):
-                self.assertNotIn('release', self.bombs[model])
+                data = self.bombs[model]
+                rel = data['release']
+                self.assertIs(data['dispenser'], True)
+                self.assertEqual(data['weight'], 525)
+                self.assertEqual(rel['modes'], ['level'])
+                self.assertEqual((rel['min_altitude'], rel['max_altitude']), (30, 1000))
+                self.assertEqual((rel['min_speed'], rel['max_speed']), (500, 1100))
+                self.assertEqual(rel['drag'], 'high')
 
     def test_all_release_well_formed(self):
         for model, data in self.bombs.items():

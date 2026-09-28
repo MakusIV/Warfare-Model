@@ -549,7 +549,7 @@ di grandezza non tarati).
   bombe contro un bersaglio di **superficie**: per quelle, `max_range` (gittata obliqua) e
   `time_of_flight` (tempo di caduta) vengono dalla balistica di rilascio di
   `Logic/Weapon_Delivery.bomb_engagement_estimate`, non dal registro. Restano senza vincolo di
-  portata solo le tre bombe senza dati di rilascio (KGBU-2AO/2PTAB/96r, decisione D4 sospesa) e i
+  portata solo le tre bombe senza dati di rilascio (KGBU-2AO/2PTAB/96r, D4 — chiusa il 2026-09-28: oggi nessuna) e i
   casi senza posizione nota di tiratore o bersaglio.
 - `interceptable`: `True` per missili e bombe guidate (`type == 'Guided bombs'`); `False` per
   proiettili, razzi non guidati, bombe a caduta libera e siluri.
@@ -967,7 +967,7 @@ la soluzione balistica al bordo della finestra. Il risultato (`ReleaseSolution`)
 risolutore confronta in §4.17: con un rilascio livellato l'ingresso nella sfera coincide col punto
 di sgancio) e `ShotSpec.time_of_flight = fall_time_s` (`Logic/Fire_Control.py:623-625`).
 
-Senza dati di rilascio (le tre KGBU-2AO/2PTAB/96r, decisione D4 sospesa) o senza le due posizioni,
+Senza dati di rilascio (erano le tre KGBU-2AO/2PTAB/96r; D4 chiusa il 2026-09-28, oggi nessuna bomba) o senza le due posizioni,
 `release` resta `None` e il comportamento è quello precedente a B6 (nessun vincolo di portata,
 tempo di volo di ripiego): **non una regressione silenziosa**, lo stesso ramo di codice che girava
 prima del 2026-09-27 per ogni bomba.

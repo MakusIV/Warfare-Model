@@ -46,7 +46,7 @@ registro), qui riassunte e dettagliate nei capitoli indicati:
 1. **Finestre di rilascio delle bombe** (`4ddbb089`, dato di registro, nessun codice consumatore
    ancora): campo `release` per 29 bombe su 32 di `Asset/Aircraft_Weapon_Data.py` (quote/velocità
    minime e massime, angolo di picchiata, resistenza aerodinamica, planata o standoff); le tre
-   KGBU-2AO/2PTAB/96r restano senza (decisione D4 sospesa, verifica utente pendente). Prerequisito
+   KGBU-2AO/2PTAB/96r restavano senza (D4, chiusa il 2026-09-28: ora KMGU-2AO/2PTAB con dati di rilascio). Prerequisito
    dati delle due estensioni successive. Capitolo 9, §9.1.
 2. **Il cannone di bordo diventa un'arma candidata reale** (`8bd69727`, decisione A2): campo `gun`
    di `Asset/Aircraft_Data.py` (37 modelli), `get_aircraft_gun_rounds` per ripartire i colpi del

@@ -604,7 +604,8 @@ class TestFireControlBombRelease(_FireControlFixture, unittest.TestCase):
         self.assertEqual(spec.time_of_flight, FC.DEFAULT_TIME_OF_FLIGHT_S['bomb'])
 
     def test_bomb_without_release_data_keeps_previous_behaviour(self):
-        weapon = FC._Weapon('KGBU-2AO', 'BOMBS', 'air', AWD.AIR_WEAPONS['BOMBS']['KGBU-2AO'])
+        data = {k: v for k, v in AWD.AIR_WEAPONS['BOMBS']['Mk-83'].items() if k != 'release'}
+        weapon = FC._Weapon('Mk-83', 'BOMBS', 'air', data)
         spec = FC.shot_spec_for(weapon, 0.8, 0.8, release_altitude_m=1_000.0, attack_speed_kmh=800.0)
         self.assertIsNone(spec.max_range)
         self.assertEqual(spec.time_of_flight, FC.DEFAULT_TIME_OF_FLIGHT_S['bomb'])

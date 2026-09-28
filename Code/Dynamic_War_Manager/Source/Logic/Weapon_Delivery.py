@@ -230,7 +230,7 @@ def release_windows(weapon: Union[str, Mapping]) -> Tuple[ReleaseWindow, ...]:
     Args:
         weapon: nome in `AIR_WEAPONS['BOMBS']` o il dizionario del registro.
     Returns:
-        Tupla vuota se l'arma non e' una bomba o non ha il campo `release` (es. KGBU-*, D4 sospesa):
+        Tupla vuota se l'arma non e' una bomba o non ha il campo `release` (oggi nessuna bomba del registro):
         dato non modellato, nessun vincolo a valle.
     """
     data = _weapon_data(weapon)

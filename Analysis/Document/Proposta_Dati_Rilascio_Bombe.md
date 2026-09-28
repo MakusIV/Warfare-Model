@@ -461,5 +461,10 @@ Nessuna riga è interamente **A**. Anche le migliori hanno almeno un campo stima
   `range` (come gli ASM)?
 - **D4** KMGU ("KGBU-*"): flag `dispenser: True` con distanza di sgancio nulla, e chiarimento di
   KGBU-96r (doppione da eliminare?).
+  **CHIUSA 2026-09-28**: l'utente ha verificato in DCS che nessuna arma si chiama KGBU e che il
+  dispenser è il KMG-2F/2B (KMGU-2), che resta sul pilone. Voci rinominate `KMGU-2AO` e
+  `KMGU-2PTAB`, `KGBU-96r` eliminata (doppione), `weight` 525, `dispenser: True` e `release` come da
+  tabella (solo level, 30-1000 m, 500-1100 km/h, drag high). La distanza di sgancio nulla non
+  richiede logica dedicata: cadono i blocchi di submunizioni con drag high, gittata ~0,7 km da 200 m.
 - **D5** Correggere le anomalie A1-A5 in un intervento separato, prima o dopo l'inserimento di
   `release`?

@@ -1,6 +1,9 @@
 # Proposta: allocazione dei missili dei SAM puri fra intercettazione e tiro offensivo
 
 **Stato**: PROPOSTA, in attesa di scelta dell'utente (2026-09-25). Nessun file del motore modificato.
+**Revisione 2026-09-28 (A6)**: l'utente ha dato due regole di dottrina che sostituiscono B e
+riprendono C in forma non onnisciente. La proposta corrente è il **§7 (D + F + L)**; i §4-§6 restano
+come storia della decisione.
 **Costanti**: le poche costanti introdotte dalle regole qui sotto sono **stime non tarate** e vanno
 marcate come tali anche nei commenti del codice.
 
@@ -282,3 +285,143 @@ dovuto forzare a mano la scorta a 4.
 Quando una regola viene implementata, lo scenario del §1.1 (4 A-10, sorvolo e standoff) va
 trasformato in uno scenario di test persistente in `Test_Session_Scenarios_*`, con esito qualitativo
 (lo Strela conserva missili e spara agli A-10), non numerico.
+
+---
+
+## 7. Revisione 2026-09-28 (A6): D + F + L, sopra la scorta per arma
+
+**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7), non ancora implementata.
+
+### 7.1 Regole di dottrina date dall'utente
+
+1. **Priorità al lanciatore.** La difesa aerea (SAM e AAA) dà la **massima priorità, di tempo e di
+   numero di armi impiegate**, all'intercettazione del velivolo che ha lanciato un'arma A2G, se il
+   velivolo è entro il raggio d'intercettazione della difesa.
+2. **Armi autonome come bersaglio.** Sono bersagli legittimi della difesa aerea **solo** le armi
+   autonome (missili, droni, bombe plananti) lanciate a distanza considerevole dalle zone
+   d'intercettazione, e solo se il sistema che intercetta (missile, cannone, puntamento) è in grado
+   di intercettarle e colpirle.
+
+### 7.2 Cosa cambia rispetto alla raccomandazione del §6 [V + I]
+
+Prerequisito ormai chiuso: la scorta per arma (A1, commit `1d0c1127`) ha eliminato le munizioni
+aggregate e la regola "SAM puro". Nel codice attuale (verificato il 2026-09-28) il difetto dello
+Strela resta, perché:
+- `Military.salvo_interceptors` seleziona ancora **ogni** asset con `ThreatAA`, con Pk = 1 per canale;
+- `Engagement_Resolver._on_resolve` confronta ancora il **totale** dei colpi intercettabili della
+  forza con la capacità della forza, senza guardare né chi ha lanciato né da dove;
+- la scelta del bersaglio (`_schedule_next`, chiave `(coperture, t_fire, t_ready, target_id)`) è un
+  round-robin: nessuna priorità per chi sta attaccando.
+
+| Regola | §6 (2026-09-25) | §7 (ora) | Motivo |
+|---|---|---|---|
+| **D**, capacità dichiarata | per asset | **per arma** (`Anti_Missile`) | scorta per arma: il Tunguska intercetta col 9M311 e col 2A38M, lo Strela col 9M37 no. È la condizione "il sistema è in grado di intercettare" della regola 2 |
+| **B**, riserva 50 % | adottata | **eliminata** | superata dalla regola 2: un'arma lanciata dentro la zona non si intercetta (si spara al lanciatore); una lanciata da fuori, da un lanciatore che non entrerà mai a tiro, è esattamente dove conviene spendere i missili. La riserva non ha più un caso d'uso, e sparisce la sua costante arbitraria |
+| **C**, priorità al lanciatore | scartata (onnisciente: rotta futura del nemico) | **ripresa come L**, senza previsione | la regola 1 guarda dove il lanciatore **è** (all'istante del lancio e della decisione), non dove andrà: nessuna informazione nascosta, nessuna costante di orizzonte |
+| **F**, ordine di consumo | fra asset | dentro l'asset **già fatto** (cannoni, poi missili: `Weapon_Stores.interceptor_order`); resta l'ordine fra asset | invariato nello spirito |
+
+### 7.3 Regola L: dettaglio
+
+**L1 — Idoneità di un colpo all'intercettazione** (per intercettore *i*, con arma AD *w*). Un colpo
+della salva *s* è intercettabile da *i* con *w* solo se valgono tutte e tre:
+- (a) **arma autonoma**: `s.spec.interceptable` (già oggi: missili e bombe guidate; proiettili,
+  razzi non guidati, bombe a caduta libera e siluri no). Droni: nessun drone è oggi nei registri come
+  munizione, entrerebbero dallo stesso flag;
+- (b) **capacità (D)**: *w* dichiara il task `Anti_Missile`;
+- (c) **lancio da fuori zona**: il punto di lancio `P_L` (posizione del lanciatore a `s.t_launch`,
+  ricavata dai tratti di rotta già in `self.legs`) è **fuori dal volume d'intercettazione V_I** di *i*
+  (lo stesso volume dichiarato di `Proposta_Volumi_Rilevamento_Intercettazione.md`, già usato dal
+  pianificatore delle rotte: una sola definizione di "zona d'intercettazione" in tutto il modello).
+  Soglia a margine zero: "fuori da V_I" e basta, nessuna costante "distanza considerevole".
+
+Se (c) è falsa, il colpo **non** si intercetta e il lanciatore diventa un bersaglio prioritario (L2).
+
+**L2 — Priorità di bersaglio (numero di armi).** Nella scelta del bersaglio di un tiratore AD, un
+candidato che **ha lanciato un'arma A2G contro la forza del tiratore** ed è entro la portata del
+tiratore passa davanti a ogni altro. La chiave di `_schedule_next` acquista un primo elemento di priorità, e
+per i bersagli prioritari la copertura (`_engaged_shooters`) **non** disperde più il fuoco: tutti gli
+AD a portata si concentrano sul lanciatore (è il "massimo numero di armi"). La dimensione della salva
+resta quella della fire control (nessuna nuova costante).
+
+**L3 — Priorità di tempo (prelazione).** Quando una forza subisce il lancio di una salva A2G, i suoi
+tiratori AD che hanno il lanciatore a portata **ridecidono subito**: un lancio già schedulato su un
+bersaglio non prioritario viene annullato (contatore di generazione sul lancio schedulato, stesso
+schema di annullamento già usato in `_on_launch`), e il nuovo tiro rispetta comunque i tempi di
+reazione del profilo (`min_fire_time`), che non si saltano.
+
+**Nebbia di guerra.** Il lanciatore è bersaglio prioritario solo se è un **candidato** del tiratore,
+cioè già rilevato: il lancio non rivela da solo il lanciatore (decisione Q5 sotto). Con V_I di
+norma dentro la portata dei sensori, il caso tipico (lanciatore a tiro) è già rilevato.
+
+### 7.4 Esiti attesi (da verificare con la riproduzione, non ancora misurati)
+
+| Caso | Oggi | Con D + F + L |
+|---|---|---|
+| 4 A-10 contro Strela-10 (V_I 5 km), Maverick lanciati a ~16 km, sorvolo | lo Strela spende 8 missili sui Maverick, 0 salve sugli A-10 | Maverick lanciati fuori zona ma 9M37 non `Anti_Missile` → nessuna intercettazione; A-10 a 5 km → bersagli prioritari, lo Strela spara i suoi 8 missili sugli A-10 |
+| stesso, standoff (A-10 mai sotto i 5 km) | 8 intercettazioni | 0 intercettazioni, 0 salve: lo Strela conserva gli 8 missili (plausibile per uno SHORAD IR) |
+| Buk (V_I ~30 km) nella stessa forza, A-10 a 16 km | il Buk spende missili sui Maverick | Maverick lanciati **dentro** V_I del Buk → non intercettati dal Buk; A-10 bersaglio prioritario del Buk |
+| Kh-59 lanciato a 100 km su una forza con Buk/Tor | intercettazione | lancio fuori zona e arma capace → intercettazione legittima; il lanciatore non è raggiungibile |
+
+Nota: dopo A5 l'A-10 preferisce la Mk-82AIR al Maverick. Prima di tarare qualunque cosa la
+riproduzione del §1.1 va rifatta sul motore attuale, e diventa lo scenario di test persistente.
+
+### 7.5 Mappa d'impatto
+
+| Componente | Modifica |
+|---|---|
+| `Context.GROUND_WEAPON_TASK` | + `Anti_Missile` |
+| `Asset/Ground_Weapon_Data.py` | task `Anti_Missile` sulle armi idonee fra le 16 Anti_Air (S-68, AZP-23, M61, Oerlikon-KDA, 2A38M; 9M311, 9M31, MIM-72, 9M33, 9M37, Roland, 9M331, FIM-92, 3M9, 9M38, 5V55R): **proposta di dati con fonti da approvare**, stile B1 |
+| `Asset/Ship_Weapon_Data.py` | già 12 armi `Anti_Missile`; da verificare le navi con armi Anti_Air senza il task, che smetterebbero di intercettare |
+| `Asset/Mobile.interceptor_weapons_from_registry` | filtro `Anti_Missile`: punto unico, capacità e scorta degli intercettori lo seguono |
+| `Block/Military.salvo_interceptors` | seleziona gli asset con almeno un'arma intercettrice (non più "ogni ThreatAA"); ordine F fra asset: prima gli intercettori a soli cannoni, poi per id |
+| `Logic/Engagement_Resolver._on_resolve` | allocazione **per salva** con l'idoneità L1; `_capacity` diventa un tetto, `SalvoResolution.capacity` ridocumentata (campo invariato) |
+| `Logic/Engagement_Resolver` (`Salvo`, `_schedule_next`, `_on_launch`) | `Salvo.launch_position` (campo opzionale, additivo); chiave di priorità L2; prelazione L3 |
+| Test | `Test_Engagement_Resolver` (intercettazioni dei SAM), S10-S18 (esiti), nuovo scenario Strela/Buk persistente |
+
+Contratto pubblico: `ShotSpec`, `InterceptionEvent`, `resolve_engagement` invariati; `Salvo` e
+`SalvoResolution` cambiano solo in modo additivo o nella documentazione. Nessuna estrazione casuale
+nuova: il determinismo non cambia.
+
+### 7.6 Decisioni richieste
+
+- **Q1 — Zona per intercettore o per forza?** (c) si valuta sul V_I **del singolo intercettore**
+  (raccomandato: un Tor lontano dal lanciatore intercetta anche se il Buk della stessa forza ha il
+  lanciatore a tiro) o sull'unione dei V_I della forza (la difesa come sistema unico)?
+- **Q2 — Colpi lanciati dentro la zona**: mai intercettati (lettura letterale della regola 2,
+  raccomandata), oppure intercettabili con la capacità che avanza dopo aver servito il lanciatore?
+- **Q3 — "Numero di armi"**: concentrazione di tutti gli AD a portata sul lanciatore con la salva
+  normale (raccomandato, nessuna costante), oppure anche salva maggiorata (es. 2 missili, tiro
+  "shoot-shoot") con una costante stimata?
+- **Q4 — Prelazione L3**: sì (raccomandato: è la "priorità di tempo"), o solo priorità alla
+  prossima decisione naturale del tiratore (più semplice, meno fedele)?
+- **Q5 — Rilevamento del lanciatore**: il lanciatore deve essere già rilevato (raccomandato, coerente
+  con la nebbia di guerra), o il lancio lo rivela automaticamente alla forza bersaglio?
+- **Q6 — Granularità di D**: un solo task `Anti_Missile` per tutte le armi autonome (raccomandato
+  ora), o capacità distinte per classe (missile da crociera, ASM, bomba planante, drone)?
+
+Ordine di lavoro proposto: (1) proposta di dati `Anti_Missile` da approvare; (2) D + F (filtro e
+ordinamento); (3) riproduzione aggiornata come test persistente; (4) L1 nel risolutore; (5) L2 + L3.
+
+### 7.7 Decisioni dell'utente (2026-09-28)
+
+**APPROVATA**: D + F + L, con l'ordine di lavoro del §7.6.
+- **Q1**: zona valutata sul V_I del **singolo intercettore**.
+- **Q2**: i colpi lanciati dentro la zona **non si intercettano mai**.
+- **Q3**: concentrazione sul lanciatore con la salva normale, **con una precisazione**: in presenza di
+  più aerei nemici, una difesa fatta di più unità indipendenti deve **distribuire** il lavoro
+  d'intercettazione fra i lanciatori, e la distribuzione **richiede tempo** (valutazione e
+  assegnazione). Conseguenze sul disegno di L2/L3:
+  - L2 diventa: la **classe di priorità** è il primo elemento della chiave di `_schedule_next`, e
+    **dentro** la classe prioritaria resta la copertura (`_engaged_shooters`). Con un solo lanciatore
+    a tiro tutti gli AD ci si concentrano (nessun altro bersaglio prioritario); con più lanciatori il
+    round-robin esistente li ripartisce. Non si disattiva più la copertura per i bersagli
+    prioritari, come proposto al §7.3.
+  - L3: la ridecisione dopo un lancio nemico non è istantanea. Al tempo di reazione del tiratore si
+    somma un **tempo di valutazione e assegnazione** del lavoro fra unità. Va dichiarato come stima,
+    e verificato prima di introdurre una costante nuova: se i profili di reazione esistenti
+    (`Reaction_Profile`, fasi rilevamento → decisione → fuoco) coprono già questa fase, la si
+    riusa. Dipende anche dal legame C2 fra le unità: unità indipendenti senza rete comune sono più
+    lente di una batteria integrata. Da tenere coerente con la Fase 0 della gerarchia C2.
+- **Q4**: prelazione L3 **sì** (con il tempo di assegnazione di Q3).
+- **Q5**: il lanciatore deve essere **già rilevato**.
+- **Q6**: **un solo** task `Anti_Missile`.

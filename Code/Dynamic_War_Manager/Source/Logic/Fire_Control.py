@@ -102,8 +102,8 @@ mancanza di dato, stessa politica "None = non modellato" di munizioni e carburan
   Rilascio livellato; quota e velocita' fuori dalla finestra di rilascio dell'arma sono
   portate al valore ammesso piu' vicino (come fa l'IA di DCS). La gittata obliqua e' quella
   giusta per la SFERA di portata del risolutore: con un rilascio livellato l'ingresso nella
-  sfera coincide col punto di sgancio. Senza posizioni o senza dati `release` (KGBU-*, D4
-  sospesa) resta il comportamento precedente: `max_range` None e DEFAULT_TIME_OF_FLIGHT_S.
+  sfera coincide col punto di sgancio. Senza posizioni o senza dati `release`
+  resta il comportamento precedente: `max_range` None e DEFAULT_TIME_OF_FLIGHT_S.
   Limite: la sfera non ha distanza minima (un aereo gia' sopra il bersaglio sgancia).
 * `interceptable`: True per missili (SAM, AAM, ASM, ATGM) e bombe guidate
   (`type == 'Guided bombs'`); False per proiettili, razzi non guidati, bombe a caduta

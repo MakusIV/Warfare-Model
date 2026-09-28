@@ -36,7 +36,7 @@ con dati di rilascio (`AIR_WEAPONS['BOMBS'][...]['release']`, commit `4ddbb089`)
 non produce più `max_range = None` contro un bersaglio di superficie, ma la gittata obliqua e il
 tempo di caduta dalla balistica di `Logic/Weapon_Delivery.bomb_engagement_estimate`, alla quota
 tiratore−bersaglio e alla velocità `attack` del loadout. **Limite noto, non corretto**: le tre
-KGBU-2AO/2PTAB/96r restano senza dati di rilascio (decisione D4 sospesa, in attesa che l'utente
+[Aggiornamento 2026-09-28: D4 chiusa, le KGBU-* sono diventate KMGU-2AO/KMGU-2PTAB con dati di rilascio; KGBU-96r eliminata.] KGBU-2AO/2PTAB/96r restavano senza dati di rilascio (decisione D4 sospesa, in attesa che l'utente
 verifichi la documentazione DCS su queste voci, probabile KMGU-2 mal identificato nel registro) —
 per quelle tre bombe `shot_spec_for` produce ancora `max_range = None`, lo stesso comportamento di
 prima del 2026-09-27. Restano inoltre, dichiarati nel modulo `Weapon_Delivery` (v. capitolo 7,
@@ -207,7 +207,7 @@ qui perché dichiarati esplicitamente nel codice come punti aperti:
 - **Attraversamento a corda limitata del solo rilevamento (D-5, opzione 2) non implementato**:
   richiederebbe un dato di tempo di permanenza del sensore e un cambio della legge di Pd del
   risolutore, non fatto in questo lavoro.
-- **KGBU-2AO/2PTAB/96r senza dati di rilascio** (decisione D4 sospesa, v. §9.1): tre bombe su 32
+- ~~**KGBU-2AO/2PTAB/96r senza dati di rilascio**~~ (RISOLTO 2026-09-28: KMGU-2AO/2PTAB con `release`, D4 chiusa) (decisione D4 sospesa, v. §9.1): tre bombe su 32
   restano prive del campo `release`, in attesa che l'utente verifichi la documentazione DCS
   (probabile KMGU-2 mal identificato nel registro).
 
@@ -256,7 +256,7 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 
 | Estensione | Punto di aggancio |
 |---|---|
-| Selezione arma dai registri | **Fatta** (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4 §4.16), con ordine di preferenza Pk/costo dal 2026-09-26, cannone di bordo candidato dal 2026-09-26 (§4.16bis) e gittata/tempo di caduta reali per le bombe dal 2026-09-27 (§4.20); resta da fare: modulare la Pk con la posizione nell'inviluppo di tiro (distanza, aspetto), e i dati di rilascio delle tre KGBU-2AO/2PTAB/96r (decisione D4 sospesa, v. §9.1). |
+| Selezione arma dai registri | **Fatta** (`Logic/Fire_Control.make_registry_fire_control`, capitolo 4 §4.16), con ordine di preferenza Pk/costo dal 2026-09-26, cannone di bordo candidato dal 2026-09-26 (§4.16bis) e gittata/tempo di caduta reali per le bombe dal 2026-09-27 (§4.20); resta da fare: modulare la Pk con la posizione nell'inviluppo di tiro (distanza, aspetto), (i dati di rilascio delle KGBU, ora KMGU-2*, sono stati aggiunti il 2026-09-28, D4 chiusa). |
 | Scorta per modello d'arma | **Fatta** (`Asset/Weapon_Stores.py`, decisione A1/A3, capitolo 4 §4.19, capitolo 7 §7.6), cannone di bordo incluso dal 2026-09-26 (decisione A2); resta da fare: filtro missione/bersaglio (decisione A4, manca l'entità `Mission`), far precedere il controllo di portata alla scelta per scorta (v. §9.1). |
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
 | Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); resta da fare: dati EWR/sensore visivo per ZSU-57-2/M163 (D-4b/c), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
