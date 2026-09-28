@@ -166,11 +166,10 @@ UNIT_COUNTED_WEAPON_TYPES = ('MACHINE_GUNS', 'CIWS')
 #
 # Selezione delle armi AD — stessa di Mobile.air_defense_volume() e di
 # Air_Route_Manager._air_defense_weapons() (veicoli: AA_CANNONS e MISSILES con task
-# Anti_Air e dati di quota; navi: MISSILES_SAM), cosi' che "chi intercetta" e "con quale
-# scorta" descrivano lo stesso armamento. Esclusi: CIWS navali (in UNIT_COUNTED_WEAPON_TYPES
-# il registro dichiara il numero di impianti, non i colpi — nessun dato di scorta; e
-# comunque non sono nella selezione AD di air_defense_volume), cannoni navali GUNS,
-# AUTO_CANNONS dei veicoli, missili anticarro/antinave.
+# Anti_Air e dati di quota; navi: MISSILES_SAM), RISTRETTA dal 2026-09-28 alle armi con task
+# INTERCEPTOR_TASK (regola D, v. sotto) e ESTESA ai CIWS navali (D-AM2: colpi a bordo da
+# `rounds_per_mount`). Esclusi: cannoni navali GUNS, AUTO_CANNONS dei veicoli, missili
+# anticarro/antinave.
 #
 # Senza vista (asset con pool anonimo di munizioni, o scorta di intercettori impostata a
 # mano col setter) `interceptor_stock` e' il pool anonimo `_interceptor_stock`, distinto
@@ -186,8 +185,35 @@ ROUNDS_PER_GUN_INTERCEPT = WS.ROUNDS_PER_GUN_INTERCEPT
 # selezioni di air_defense_volume(); la ripartizione missile/cannone decide il costo di
 # un'intercettazione.
 INTERCEPTOR_WEAPON_TYPES_VEHICLE = ('AA_CANNONS', 'MISSILES')
-INTERCEPTOR_WEAPON_TYPES_SHIP = ('MISSILES_SAM',)
-INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS',)
+INTERCEPTOR_WEAPON_TYPES_SHIP = ('MISSILES_SAM', 'CIWS')
+INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS', 'CIWS')
+
+# DECISIONE D (2026-09-28, Proposta_Regole_Allocazione_SAM.md §7 e Proposta_Dati_Anti_Missile.md):
+# intercetta munizioni in arrivo solo un'arma AD che dichiara il task 'Anti_Missile' (armi
+# autonome: missili, bombe guidate/plananti, droni). Uno Strela-10 o uno Shilka restano armi
+# antiaeree (air_defense_volume, fuoco contro aerei) ma non sono intercettori. Il task
+# qui sotto e' lo stesso nome in GROUND_WEAPON_TASK e nei registri navali.
+INTERCEPTOR_TASK = 'Anti_Missile'
+
+# CIWS navali (D-AM2): il registro della nave dichiara il NUMERO DI IMPIANTI (tipo in
+# UNIT_COUNTED_WEAPON_TYPES); se l'arma dichiara `rounds_per_mount` la scorta diventa
+# impianti x colpi per impianto ed entra in `_stores` come un cannone AD qualunque.
+MOUNT_ROUNDS_WEAPON_TYPES = ('CIWS',)
+
+
+def _mount_rounds(weapon_type: str, model: str) -> Optional[int]:
+    """Colpi a bordo per impianto di un'arma contata a unita' (CIWS, D-AM2), o None."""
+    if weapon_type not in MOUNT_ROUNDS_WEAPON_TYPES:
+        return None
+
+    from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+    rounds = (SHIP_WEAPONS.get(weapon_type, {}).get(model) or {}).get('rounds_per_mount')
+
+    if isinstance(rounds, bool) or not isinstance(rounds, int) or rounds <= 0:
+        return None
+
+    return rounds
 
 # ── CARBURANTE (motore di sessioni virtuali, Fase 5) ──────────────────────────
 #
@@ -851,13 +877,22 @@ class Mobile(Asset) :
         stores: Dict[str, int] = {}
 
         for weapon_type, weapon_list in weapons.items():
-            if weapon_type in UNIT_COUNTED_WEAPON_TYPES:
-                continue
-
             for item in weapon_list or []:
                 valid = self._valid_item(item)
 
-                if valid is not None:
+                if valid is None:
+                    continue
+
+                if weapon_type in UNIT_COUNTED_WEAPON_TYPES:
+                    # Quantita' = impianti: entra in scorta solo se l'arma dichiara i colpi
+                    # per impianto (CIWS, D-AM2); altrimenti resta non modellata.
+                    rounds = _mount_rounds(weapon_type, valid[0])
+
+                    if rounds is None:
+                        continue
+
+                    stores[valid[0]] = stores.get(valid[0], 0) + valid[1] * rounds
+                else:
                     stores[valid[0]] = stores.get(valid[0], 0) + valid[1]
 
         if not stores:
@@ -879,7 +914,8 @@ class Mobile(Asset) :
 
         for weapon_type in UNIT_COUNTED_WEAPON_TYPES:
             for item in weapons.get(weapon_type) or []:
-                if isinstance(item, (tuple, list)) and item and isinstance(item[0], str):
+                if isinstance(item, (tuple, list)) and item and isinstance(item[0], str) \
+                        and _mount_rounds(weapon_type, item[0]) is None:
                     names.add(item[0])
 
         return frozenset(names)
@@ -1009,14 +1045,16 @@ class Mobile(Asset) :
         return consumed
 
     def interceptor_weapons_from_registry(self) -> Optional[Dict[str, bool]]:
-        """Armi AD del modello {modello: e'_cannone}, o None.
+        """Armi INTERCETTRICI del modello {modello: e'_cannone}, o None.
 
-        Una sola selezione delle armi AD — quella di air_defense_volume() — cosi' che la
-        vista degli intercettori non possa divergere da "chi intercetta".
+        Una sola selezione — le armi AD di air_defense_volume() con il task INTERCEPTOR_TASK
+        (regola D, 2026-09-28), piu' i CIWS navali — usata sia per la vista della scorta di
+        intercettori sia per decidere chi intercetta (interceptor_capability), cosi' che le
+        due cose non possano divergere.
 
         Returns:
             dict, oppure None — senza sollevare — se il modello non e' noto, se il registro
-            non descrive armi (Aircraft_Data) o se nessuna arma e' di difesa aerea.
+            non descrive armi (Aircraft_Data) o se nessuna arma e' un intercettore.
         """
         from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
         from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
@@ -1059,9 +1097,11 @@ class Mobile(Asset) :
 
                 wdata = weapon_db.get(valid[0])
 
-                # Stesso filtro di air_defense_volume(): dati di quota e task Anti_Air.
-                if (wdata is None or 'min_altitude' not in wdata or 'max_altitude' not in wdata
-                        or ('task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'])):
+                # Filtro di air_defense_volume() (dati di quota, task Anti_Air) piu' la regola D:
+                # task INTERCEPTOR_TASK dichiarato. Senza campo `task` l'arma non e' capace.
+                if (wdata is None or wdata.get('min_altitude') is None or wdata.get('max_altitude') is None
+                        or ('task' in wdata and GROUND_WEAPON_TASK['Anti_Air'] not in wdata['task'])
+                        or INTERCEPTOR_TASK not in (wdata.get('task') or ())):
                     continue
 
                 if float(wdata.get('max_altitude', 0)) <= 0.0:
@@ -1075,6 +1115,20 @@ class Mobile(Asset) :
             return None
 
         return result
+
+    def interceptor_capability(self) -> Optional[bool]:
+        """Regola D: il registro dichiara almeno un'arma capace di intercettare munizioni?
+
+        Returns:
+            True se interceptor_weapons_from_registry() trova armi intercettrici; False se il
+            modello e' noto e descrive armi ma nessuna lo e' (Strela-10, Shilka: antiaerei ma
+            non intercettori); None se il registro non descrive armi del modello (modello
+            ignoto, stub, Aircraft_Data): dato mancante, la decisione spetta al chiamante.
+        """
+        if self._registry_weapons() is None:
+            return None
+
+        return self.interceptor_weapons_from_registry() is not None
 
     def interceptor_stock_from_registry(self) -> Optional[int]:
         """Scorta iniziale di intercettori dal registro del modello, o None se non ricavabile.

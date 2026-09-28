@@ -290,7 +290,7 @@ trasformato in uno scenario di test persistente in `Test_Session_Scenarios_*`, c
 
 ## 7. Revisione 2026-09-28 (A6): D + F + L, sopra la scorta per arma
 
-**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7), non ancora implementata.
+**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-2 (dati `Anti_Missile`, D + F) FATTI il 2026-09-28 (`Proposta_Dati_Anti_Missile.md` §6); passi 3-5 (riproduzione, L1, L2+L3) da fare.
 
 ### 7.1 Regole di dottrina date dall'utente
 

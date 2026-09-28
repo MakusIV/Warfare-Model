@@ -1524,6 +1524,9 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'fire_rate':      4500,    # rpm
             'range':          1.5,     # km
             'ammo_type':      ['APFSDS'],
+            'min_altitude':   0,      # m AGL (D-AM2, 2026-09-28)
+            'max_altitude':   1500,   # m AGL, STIMA B: non oltre la portata
+            'rounds_per_mount': 1550,  # colpi a bordo per impianto, confidenza A (D-AM2)
             'task':           ['Anti_Missile', 'Anti_Air'],
             'perc_efficiency_variability': 0.08,
             'efficiency':     _EFF_CIWS,
@@ -1537,6 +1540,9 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'fire_rate':      5000,
             'range':          4.0,
             'ammo_type':      ['HE', 'FRAG'],
+            'min_altitude':   0,      # m AGL (D-AM2, 2026-09-28)
+            'max_altitude':   3000,   # m AGL, STIMA B: non oltre la portata
+            'rounds_per_mount': 2000,  # colpi a bordo per impianto, confidenza M (D-AM2)
             'task':           ['Anti_Missile', 'Anti_Air'],
             'perc_efficiency_variability': 0.10,
             'efficiency':     _EFF_CIWS,
@@ -1550,6 +1556,9 @@ SHIP_WEAPONS: Dict[str, Dict[str, Any]] = {
             'fire_rate':      5800,
             'range':          3.0,
             'ammo_type':      ['HE', 'FRAG'],
+            'min_altitude':   0,      # m AGL (D-AM2, 2026-09-28)
+            'max_altitude':   3000,   # m AGL, STIMA B: non oltre la portata
+            'rounds_per_mount': 1280,  # colpi a bordo per impianto, confidenza M (D-AM2)
             'task':           ['Anti_Missile', 'Anti_Air'],
             'perc_efficiency_variability': 0.09,
             'efficiency':     _EFF_CIWS,

@@ -2311,7 +2311,7 @@ GROUND_WEAPONS = {
             'min_altitude': 0,    # m AGL
             'max_altitude': 3000, # m AGL
             'ammo_type': ['HE', 'AP'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_AA_CANNON,
         },
@@ -2327,7 +2327,7 @@ GROUND_WEAPONS = {
             'min_altitude': 0,    # m AGL
             'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'AP'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Infantry_Support'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.2,
             'efficiency': _EFF_AA_CANNON,
         },
@@ -2564,7 +2564,7 @@ GROUND_WEAPONS = {
             'min_altitude': 15,   # m AGL
             'max_altitude': 3500, # m AGL
             'ammo_type': ['HE', 'FRAG'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.15,
             'efficiency': _EFF_SAM_MERAD,
         },
@@ -2660,7 +2660,7 @@ GROUND_WEAPONS = {
             'min_altitude': 10,   # m AGL
             'max_altitude': 6000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.15,
             'efficiency': _EFF_SAM_MERAD,
         },
@@ -2708,7 +2708,7 @@ GROUND_WEAPONS = {
             'min_altitude': 15,    # m AGL
             'max_altitude': 22000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.1,
             'efficiency': _EFF_SAM_LORAD,
         },
@@ -2724,7 +2724,7 @@ GROUND_WEAPONS = {
             'min_altitude': 25,    # m AGL
             'max_altitude': 27000, # m AGL
             'ammo_type': ['HE', 'FRAG'],
-            'task': [GROUND_WEAPON_TASK['Anti_Air']],
+            'task': [GROUND_WEAPON_TASK['Anti_Air'], GROUND_WEAPON_TASK['Anti_Missile']],  # Proposta_Dati_Anti_Missile.md
             'perc_efficiency_variability': 0.1,
             'efficiency': _EFF_SAM_LORAD,
         },

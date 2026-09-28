@@ -368,7 +368,10 @@ GROUND_WEAPON_TASK = {
     'Anti_Tank': 'Anti_Tank',
     'Anti_Air':  'Anti_Air',
     'Artillery': 'Artillery',
-    'Infantry_Support': 'Infantry_Support'
+    'Infantry_Support': 'Infantry_Support',
+    # Capacita' di intercettare armi autonome (missili, bombe guidate/plananti, droni): regola D
+    # della proposta SAM (Proposta_Dati_Anti_Missile.md, approvata 2026-09-28)
+    'Anti_Missile': 'Anti_Missile',
 }
 
 

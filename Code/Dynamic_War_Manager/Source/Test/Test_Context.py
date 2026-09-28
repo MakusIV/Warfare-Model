@@ -374,8 +374,8 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(set(WEIGHT_FORCE_GROUND_ASSET.keys()), expected_types)
 
     def test_ground_weapon_task_keys(self):
-        """GROUND_WEAPON_TASK contains Anti_Tank, Anti_Air, Artillery, Infantry_Support."""
-        expected = {'Anti_Tank', 'Anti_Air', 'Artillery', 'Infantry_Support'}
+        """GROUND_WEAPON_TASK contains Anti_Tank, Anti_Air, Artillery, Infantry_Support, Anti_Missile (regola D)."""
+        expected = {'Anti_Tank', 'Anti_Air', 'Artillery', 'Infantry_Support', 'Anti_Missile'}
         self.assertEqual(set(GROUND_WEAPON_TASK.keys()), expected)
 
     # ---- ASSET DICTS -------------------------------------------------------

@@ -1299,7 +1299,8 @@ class _EngagementRun:
 
             interceptors.append((shadow, int(channels)))
 
-        interceptors.sort(key=lambda item: item[0].id)
+        # Regola F fra asset (2026-09-28): prima gli intercettori a soli cannoni, poi per id.
+        interceptors.sort(key=lambda item: (WS.interceptor_rank(item[0].interceptor_weapons), item[0].id))
 
         return interceptors
 

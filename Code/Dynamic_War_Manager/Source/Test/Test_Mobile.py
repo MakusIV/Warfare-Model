@@ -1348,7 +1348,7 @@ _STORES_MEMBERS = (
     'unmodelled_weapons_from_registry', 'ammunition_from_registry', 'load_stores_from_registry',
     'load_ammunition_from_registry', 'interceptor_weapons', 'interceptor_stock',
     'has_interceptor_stock', 'plan_interceptor_consumption', 'consume_interceptor_stock',
-    'interceptor_weapons_from_registry', 'interceptor_stock_from_registry',
+    'interceptor_weapons_from_registry', 'interceptor_capability', 'interceptor_stock_from_registry',
     'load_interceptor_stock_from_registry',
 )
 
@@ -1556,14 +1556,17 @@ class TestAmmunitionFromRegistry(unittest.TestCase):
         _FakeVehicleData._registry['dup'] = _WeaponsRecord({'CANNONS': [('2A46M', 20), ('2A46M', 22)]})
         self.assertEqual(_AmmoStub(model='dup').stores_from_registry(), {'2A46M': 42})
 
-    def test_ship_ciws_is_excluded(self):
+    def test_ship_ciws_rounds_from_mounts(self):
+        """D-AM2: il registro nave conta gli impianti CIWS; la scorta e' impianti x rounds_per_mount."""
         Ship_Data._registry['test-ammo-ship'] = _ship_record({
             'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
             'CIWS': [('Mk-15-Phalanx', 3)],
         })
         stub = _AmmoStub(model='test-ammo-ship')
-        self.assertEqual(stub.ammunition_from_registry(), 40)
-        self.assertEqual(stub.stores_from_registry(), {'RIM-162-ESSM': 32, 'RIM-7M-Sea-Sparrow': 8})
+        self.assertEqual(stub.ammunition_from_registry(), 40 + 3 * 1550)
+        self.assertEqual(stub.stores_from_registry(),
+                         {'RIM-162-ESSM': 32, 'RIM-7M-Sea-Sparrow': 8, 'Mk-15-Phalanx': 3 * 1550})
+        self.assertEqual(stub.unmodelled_weapons_from_registry(), frozenset())
 
     def test_only_unit_counted_weapons_means_not_modelled(self):
         _FakeVehicleData._registry['truck'] = _WeaponsRecord({'MACHINE_GUNS': [('PKT-7.62', 1)]})
@@ -1766,7 +1769,9 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
 
     # Armi di terra finte (il modulo Ground_Weapon_Data e' sostituito da _FAKE_GW): stessa
     # forma dei dati reali, solo i campi letti dal filtro AD (quote e task).
-    _AD = {'range': {'direct': 3000}, 'min_altitude': 0, 'max_altitude': 3000, 'task': ['Anti_Air']}
+    # Regola D (2026-09-28): un'arma AD e' un intercettore solo con il task 'Anti_Missile'.
+    _AD = {'range': {'direct': 3000}, 'min_altitude': 0, 'max_altitude': 3000, 'task': ['Anti_Air', 'Anti_Missile']}
+    _AA_ONLY = {'range': {'direct': 5000}, 'min_altitude': 10, 'max_altitude': 3500, 'task': ['Anti_Air']}
     _AT = {'range': {'direct': 5000}, 'task': ['Anti_Tank']}   # niente quote: non AD
 
     def setUp(self):
@@ -1777,7 +1782,7 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
         _FAKE_GW['AA_CANNONS'] = {'AZP-23-23mm': dict(self._AD), '2A38M-30mm': dict(self._AD)}
         _FAKE_GW['MISSILES'] = {'9M38-SAM': dict(self._AD), '9M311-SAM': dict(self._AD),
                                 'FIM-92-Stinger': dict(self._AD), '9M33-SAM': dict(self._AD),
-                                '9K119M': dict(self._AT)}
+                                '9K119M': dict(self._AT), '9M37-SAM': dict(self._AA_ONLY)}
         _FAKE_GW['AUTO_CANNONS'] = {'M242-25mm': dict(self._AD)}   # AD-capace ma tipo non AD
         self._log = patch(_MOBILE_LOGGER, MagicMock())
         self._log.start()
@@ -1832,15 +1837,30 @@ class TestInterceptorStockFromRegistry(unittest.TestCase):
         })
         self.assertIsNone(_InterceptorStub(model='t90').interceptor_stock_from_registry())
 
-    def test_ship_counts_only_sam_missiles(self):
-        """CIWS (numero di impianti), cannoni e antinave non entrano nella scorta."""
+    def test_anti_air_without_anti_missile_is_not_an_interceptor(self):
+        """Regola D: lo Strela-10 (9M37, solo Anti_Air) e' antiaereo ma non intercetta munizioni."""
+        _FakeVehicleData._registry['strela10'] = _WeaponsRecord({'MISSILES': [('9M37-SAM', 8)]})
+        stub = _InterceptorStub(model='strela10')
+        self.assertIsNone(stub.interceptor_weapons_from_registry())
+        self.assertIsNone(stub.interceptor_stock_from_registry())
+        self.assertIs(stub.interceptor_capability(), False)
+        _FakeVehicleData._registry['buk'] = _WeaponsRecord({'MISSILES': [('9M38-SAM', 4)]})
+        self.assertIs(_InterceptorStub(model='buk').interceptor_capability(), True)
+        self.assertIsNone(_InterceptorStub(model='ignoto').interceptor_capability())
+
+    def test_ship_counts_sam_missiles_and_ciws(self):
+        """Missili SAM antimissile + CIWS (D-AM2: impianti x rounds_per_mount, come cannone AD);
+        cannoni navali e antinave non entrano nella scorta di intercettori."""
         Ship_Data._registry['test-interceptor-ship'] = _ship_record({
             'MISSILES_SAM': [('RIM-162-ESSM', 32), ('RIM-7M-Sea-Sparrow', 8)],
             'MISSILES_ASM': [('RGM-84-Harpoon', 8)],
             'GUNS': [('Mk-45-5in', 600)],
             'CIWS': [('Mk-15-Phalanx', 3)],
         })
-        self.assertEqual(_InterceptorStub(model='test-interceptor-ship').interceptor_stock_from_registry(), 40)
+        from Code.Dynamic_War_Manager.Source.Asset.Mobile import ROUNDS_PER_GUN_INTERCEPT
+        phalanx_rounds = 3 * 1550
+        self.assertEqual(_InterceptorStub(model='test-interceptor-ship').interceptor_stock_from_registry(),
+                         40 + phalanx_rounds // ROUNDS_PER_GUN_INTERCEPT)
 
     def test_aircraft_and_unknown_models_are_none(self):
         _FakeAircraftData._registry['f16'] = _Record({})

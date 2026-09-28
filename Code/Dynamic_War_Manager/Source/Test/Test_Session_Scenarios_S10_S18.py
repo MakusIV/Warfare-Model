@@ -297,8 +297,12 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
 
     Composizione (realistica, non minimale): Blue-Mech 3 M1A2 + 3 M2 Bradley in avanzata,
     Blue-CAS 2 A-10C ('Maverick/Gun CAS', ruolo strike); Red-Battalion 3 T-72B + 3 BMP-2 +
-    1 2S19-Msta + 1 ZSU-23-4 + 1 9K35 Strela-10, in difesa; Red-CAP 2 MiG-29S ('CAP') in
+    1 2S19-Msta + 1 Flakpanzer Gepard + 1 9K331 Tor, in difesa; Red-CAP 2 MiG-29S ('CAP') in
     pattugliamento. Entrambe le sessioni hanno rotte (quindi consumo di carburante).
+    Dal 2026-09-28 (regola D) la difesa e' Gepard + Tor, non piu' ZSU-23-4 + Strela-10: lo
+    scenario deve contenere intercettori veri (task 'Anti_Missile') perche' le verifiche
+    sulle scorte d'intercettazione abbiano casi da controllare. Gepard = soli cannoni AD,
+    Tor = soli missili AD: le stesse due forme di prima.
 
     Domanda: "il confine fra sessioni non perde stato". Verifiche:
       * dopo la sessione 1 lo stato reale (salute, munizioni, carburante, intercettori) e'
@@ -337,8 +341,8 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
             F.Unit('vehicle', 'BMP-2', 3, origin=(300.0, 150.0), step=(0.0, 300.0), prefix='ifv', sensors=VISUAL),
             F.Unit('vehicle', '2S19-Msta', 1, origin=(6_000.0, 300.0), prefix='art',
                    sensors={'ground': F.DECLARED_ARTILLERY_OBSERVATION_RANGE}),
-            F.Unit('vehicle', 'ZSU-23-4-Shilka', 1, origin=(1_000.0, 600.0), prefix='aaa'),
-            F.Unit('vehicle', '9K35-Strela-10', 1, origin=(1_000.0, -300.0), prefix='sam')],
+            F.Unit('vehicle', 'Flakpanzer-Gepard', 1, origin=(1_000.0, 600.0), prefix='aaa'),
+            F.Unit('vehicle', '9K331-Tor', 1, origin=(1_000.0, -300.0), prefix='sam')],
             mil_category=GROUND_BASE[3])   # 'Battallion'
         cap = F.build_force('Red-CAP', 'Red', [F.Unit('aircraft', 'MiG-29S', 2, origin=(40_000.0, 0.0, 6_000.0),
                                                       step=(0.0, 1_000.0), prefix='cap', loadout='CAP')],
@@ -543,7 +547,7 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
             self.skipTest('no air-defence asset intercepted in these seeds')
 
     def test_missile_only_air_defence_shares_one_stock(self):
-        """SAM a soli missili (qui il 9K35-Strela-10): intercettori e munizioni sono la
+        """SAM a soli missili (qui il 9K331-Tor): intercettori e munizioni sono la
         stessa scorta, e ogni intercettazione e' un missile in meno per sparare."""
         checked = 0
 
@@ -713,8 +717,9 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
     Col ruolo strike la difesa sopravvive, vede l'incursione al passaggio e spara.
 
     Domanda: il motore gestisce un Block con asset di tipi e ruoli diversi senza assumere
-    che abbiano lo stesso ruolo. Verifiche: solo AAA/SAM sparano e solo loro sono
-    intercettori (`Military.salvo_interceptors`); strutture e MT-LB non sparano mai; i
+    che abbiano lo stesso ruolo. Verifiche: solo AAA/SAM sparano; dal 2026-09-28 (regola D)
+    nessuno e' intercettore, perche' ne' lo Shilka ne' lo Strela-10 dichiarano il task
+    'Anti_Missile' (`Military.salvo_interceptors`); strutture e MT-LB non sparano mai; i
     danni cadono su piu' classi di asset (Structure e Vehicle) dello stesso Block; tutti
     gli asset (strutture comprese) sono contati fra gli impegnati.
     """
@@ -757,28 +762,24 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
         self.assertEqual(set(self.roles.values()), {'structure', 'ground', 'aaa', 'sam'})
         self.assertEqual({self.types[a] for a in self.roles}, {'Structure', 'Vehicle'})
 
-    def test_only_air_defence_assets_are_interceptors(self):
-        self.assertEqual(self.interceptors, ['Red-FARP/aaa0', 'Red-FARP/sam0'])
+    def test_no_interceptors_without_anti_missile_weapons(self):
+        """Regola D (2026-09-28): Shilka (AZP-23) e Strela-10 (9M37) sono antiaerei ma non
+        intercettori di munizioni (nessun task 'Anti_Missile'): il FARP non ne ha."""
+        self.assertEqual(self.interceptors, [])
 
     def test_real_constructors_load_the_interceptor_view(self):
-        """Vehicle.__init__ carica la scorta per arma e la vista degli intercettori: per lo
-        Shilka (solo cannone AA) colpi // ROUNDS_PER_GUN_INTERCEPT, molto meno dei colpi; per
-        lo Strela-10 (solo missili 9M37) la stessa scorta delle munizioni; nessuna scorta per
-        chi non ha armi AD (scorta per arma, 2026-09-26)."""
+        """Vehicle.__init__ carica la scorta per arma; per Shilka e Strela-10 la vista degli
+        intercettori NON si attiva (regola D): capacita' False, scorta di intercettori non
+        modellata. Nessuna scorta per chi non ha armi AD."""
         _, farp, _ = self._build()
         aaa, sam, support = (farp.assets[a] for a in ('Red-FARP/aaa0', 'Red-FARP/sam0', 'Red-FARP/sup0'))
 
         for asset in (aaa, sam):
-            self.assertEqual(asset.interceptor_stock, asset.interceptor_stock_from_registry())
-            self.assertGreater(asset.interceptor_stock, 0)
-        self.assertLess(aaa.interceptor_stock * 10, aaa.ammunition)
+            self.assertIs(asset.interceptor_capability(), False)
+            self.assertIsNone(asset.interceptor_weapons_from_registry())
+            self.assertIsNone(asset.interceptor_stock)
+            self.assertGreater(asset.ammunition, 0)
         self.assertIsNone(support.interceptor_stock)
-        self.assertTrue(all(aaa.interceptor_weapons.values()))        # solo cannoni AD
-        self.assertFalse(any(sam.interceptor_weapons.values()))       # solo missili AD
-        self.assertEqual(sam.interceptor_stock, sam.ammunition)
-        missile = next(iter(sam.interceptor_weapons))
-        sam.consume_ammunition(1, weapon=missile)
-        self.assertEqual(sam.interceptor_stock, sam.ammunition)
 
     def test_only_air_defence_assets_shoot(self):
         """Ne' salve ne' intercettazioni da asset senza armi AD."""

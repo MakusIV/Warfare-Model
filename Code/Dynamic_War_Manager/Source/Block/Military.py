@@ -8,6 +8,7 @@ from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.DataType.State import StateCategory
 from Code.Dynamic_War_Manager.Source.DataType.Event import Event
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
+from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Context.Context import (
     GROUND_ACTION, 
@@ -660,13 +661,18 @@ class Military(Block):
         che evolve durante l'ingaggio, quindi ricalcola la capacita' salva per salva
         partendo da questo elenco.
 
-        Selezione: gli stessi asset di air_defense_threats() — Vehicle o Ship operativi per
-        cui esiste una ThreatAA — cosi' che "chi pesa nella difesa aerea" (air_defense_power)
-        e "chi intercetta" siano per costruzione lo stesso insieme.
+        Selezione: Vehicle o Ship operativi con almeno un'arma INTERCETTRICE (regola D,
+        2026-09-28, Proposta_Regole_Allocazione_SAM.md §7: task 'Anti_Missile' nel registro,
+        v. Mobile.interceptor_capability). Uno Strela-10 o uno Shilka pesano nella difesa
+        aerea (air_defense_power, fuoco contro aerei) ma non intercettano munizioni. Asset
+        senza dato di registro (modello ignoto, stub): vale la regola precedente, cioe' ogni
+        asset per cui esiste una ThreatAA.
 
         Returns:
-            Lista di (asset, canali) ordinata per id dell'asset (l'ordine di consumo delle
-            scorte fa parte del contratto di riproducibilita'); vuota se nessun asset AD.
+            Lista di (asset, canali) ordinata per (rango F, id): prima gli intercettori a
+            soli cannoni, che hanno una scorta dedicata, poi quelli con missili
+            (Weapon_Stores.interceptor_rank). L'ordine di consumo delle scorte fa parte del
+            contratto di riproducibilita'. Vuota se nessun intercettore.
         """
         from Code.Dynamic_War_Manager.Source.Logic.Air_Route_Manager import build_threat_aa
 
@@ -677,7 +683,16 @@ class Military(Block):
                 continue
             if not asset.is_operative():
                 continue
-            if build_threat_aa(asset) is None:
+
+            capability = getattr(asset, 'interceptor_capability', None)
+            capable = capability() if callable(capability) else None
+
+            if not isinstance(capable, bool):
+                capable = None
+
+            if capable is False:
+                continue
+            if capable is None and build_threat_aa(asset) is None:
                 continue
 
             channels = None
@@ -691,7 +706,11 @@ class Military(Block):
 
             interceptors.append((asset, channels))
 
-        interceptors.sort(key=lambda item: str(getattr(item[0], 'id', '')))
+        def _rank(asset) -> int:
+            weapons = getattr(asset, 'interceptor_weapons_from_registry', None)
+            return WS.interceptor_rank(weapons() if callable(weapons) else None)
+
+        interceptors.sort(key=lambda item: (_rank(item[0]), str(getattr(item[0], 'id', ''))))
 
         return interceptors
 

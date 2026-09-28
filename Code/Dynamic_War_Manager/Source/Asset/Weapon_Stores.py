@@ -239,6 +239,16 @@ def interceptor_order(interceptor_weapons: Mapping[str, bool]) -> List[str]:
     return sorted(interceptor_weapons, key=lambda model: (not interceptor_weapons[model], model))
 
 
+def interceptor_rank(interceptor_weapons: Optional[Mapping[str, bool]]) -> int:
+    """Ordine di consumo FRA asset (regola F, 2026-09-28): 0 = intercettore a soli cannoni
+    (scorta dedicata, si consuma per prima), 1 = con missili o senza dato. Chiave primaria,
+    l'id dell'asset resta la secondaria: l'ordine e' deterministico."""
+    if isinstance(interceptor_weapons, Mapping) and interceptor_weapons and all(interceptor_weapons.values()):
+        return 0
+
+    return 1
+
+
 def plan_interceptions(stores: Mapping[str, int], interceptor_weapons: Mapping[str, bool], amount: int,
                        weapon: Optional[str] = None) -> List[Tuple[str, int]]:
     """Ripartizione per arma di `amount` intercettazioni, SENZA mutare `stores`.

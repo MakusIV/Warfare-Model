@@ -740,6 +740,35 @@ class TestMilitary(unittest.TestCase):
         with patch(self._BUILD_THREAT, return_value=MagicMock()):
             self.assertEqual([asset.id for asset, _ in self.groundbase.salvo_interceptors()], ['a', 'b'])
 
+    def test_salvo_interceptors_follow_rule_d(self):
+        """Regola D (2026-09-28): un asset con registro noto ma senza armi 'Anti_Missile'
+        (interceptor_capability() False) non intercetta, anche se ha una ThreatAA; True
+        intercetta; None (dato mancante) ricade sulla ThreatAA."""
+        capable = self._ad_asset(_Vehicle, 'tor', channels=1)
+        capable.interceptor_capability.return_value = True
+        not_capable = self._ad_asset(_Vehicle, 'strela', channels=1)
+        not_capable.interceptor_capability.return_value = False
+        unknown = self._ad_asset(_Vehicle, 'stub', channels=1)
+        unknown.interceptor_capability.return_value = None
+        self.groundbase._assets = {'tor': capable, 'strela': not_capable, 'stub': unknown}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual(sorted(a.id for a, _ in self.groundbase.salvo_interceptors()), ['stub', 'tor'])
+
+    def test_salvo_interceptors_gun_only_first(self):
+        """Regola F fra asset: prima gli intercettori a soli cannoni (scorta dedicata), poi per id."""
+        tor = self._ad_asset(_Vehicle, 'a-tor', channels=1)
+        tor.interceptor_weapons_from_registry.return_value = {'9M331-SAM': False}
+        gepard = self._ad_asset(_Vehicle, 'z-gepard', channels=1)
+        gepard.interceptor_weapons_from_registry.return_value = {'Oerlikon-KDA-35mm': True}
+        tunguska = self._ad_asset(_Vehicle, 'b-tunguska', channels=1)
+        tunguska.interceptor_weapons_from_registry.return_value = {'2A38M-30mm': True, '9M311-SAM': False}
+        self.groundbase._assets = {'a-tor': tor, 'z-gepard': gepard, 'b-tunguska': tunguska}
+
+        with patch(self._BUILD_THREAT, return_value=MagicMock()):
+            self.assertEqual([a.id for a, _ in self.groundbase.salvo_interceptors()],
+                             ['z-gepard', 'a-tor', 'b-tunguska'])
+
     def test_salvo_capacity_is_independent_from_air_defense_power(self):
         """Due grandezze separate apposta (R1): un livello in [0,1] e un conteggio di colpi."""
         threat = MagicMock()
