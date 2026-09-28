@@ -290,7 +290,7 @@ trasformato in uno scenario di test persistente in `Test_Session_Scenarios_*`, c
 
 ## 7. Revisione 2026-09-28 (A6): D + F + L, sopra la scorta per arma
 
-**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-2 (dati `Anti_Missile`, D + F) FATTI il 2026-09-28 (`Proposta_Dati_Anti_Missile.md` §6); passi 3-5 (riproduzione, L1, L2+L3) da fare.
+**Stato**: APPROVATA il 2026-09-28 (decisioni al §7.7). Passi 1-3 FATTI il 2026-09-28: dati `Anti_Missile` e D + F (`Proposta_Dati_Anti_Missile.md` §6), scenario persistente S19 (§7.8). Passi 4-5 (L1, L2+L3) da fare.
 
 ### 7.1 Regole di dottrina date dall'utente
 
@@ -425,3 +425,26 @@ ordinamento); (3) riproduzione aggiornata come test persistente; (4) L1 nel riso
 - **Q4**: prelazione L3 **sì** (con il tempo di assegnazione di Q3).
 - **Q5**: il lanciatore deve essere **già rilevato**.
 - **Q6**: **un solo** task `Anti_Missile`.
+
+### 7.8 Passo 3: scenario persistente S19 (2026-09-28)
+
+`Test/Test_Session_Scenarios_S19_Air_Defence.py`: 3 BMP-2 + una difesa, 1-4 A-10C con i soli
+AGM-65D (il criterio Pk/costo preferirebbe la Mk-82AIR, non intercettabile: il filtro fa le veci di
+A4), dottrina ad oltranza. Esiti qualitativi verificati sul motore attuale (D + F):
+
+| Variante | Esito |
+|---|---|
+| Strela-10, sorvolo | 0 intercettazioni; lo Strela spara i suoi missili sugli A-10C e ne abbatte |
+| Strela-10, standoff | 0 intercettazioni, 0 lanci: lo Strela conserva gli 8 missili |
+| Tor arretrato (lanci a 15-19 km, fuori dai 12 km) | intercetta: bersagli legittimi per L1 |
+| Tor avanzato, A-10C solo sui BMP (lanci a ~9,5 km, dentro) | spara ai lanciatori, 0 intercettazioni |
+
+**Scoperta**: nell'ultimo caso il motore rispetta già la regola L, ma **per tempistica e non per
+costruzione**. Il lanciatore entra nei 12 km prima che i suoi Maverick arrivino, e il Tor spende gli
+8 missili su di lui. Inoltre la portata del Maverick (15 km) supera la zona del Tor (12 km): un Tor
+raggiungibile viene attaccato da fuori zona, e le sue intercettazioni sono legittime. Il caso che
+solo L1 distingue (intercettore con scorta in avanzo e lancio da dentro la zona) non si ottiene in
+modo stabile negli scenari: sarà un test unitario a geometria controllata del risolutore (passo 4).
+Una misura su 16 seed ha trovato un solo caso di intercettazione *prima* del tiro del Tor, dovuta al
+fatto che l'intercettazione non richiede tempo di reazione (§5.4): è materia di L3 e della nebbia di
+guerra, non di L1.
