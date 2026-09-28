@@ -1999,8 +1999,9 @@ class TestBombsReleaseField(unittest.TestCase):
     """
 
     WINDOW_KEYS = {'min_altitude', 'max_altitude', 'min_speed', 'max_speed', 'dive_angle'}
-    SELECTABLE = ("Mk-82AIR", "M/71", "SAMP-250HD")
+    SELECTABLE = ("Mk-82AIR", "M/71", "SAMP-250HD", "Mk-84 AIR GP HD", "Mk-84 AIR TP HD")
     STANDOFF = ("BK-90MJ1", "BK-90MJ1-2", "BK-90MJ2")
+    GLIDE_STANDOFF = ("LS-6", "LS-6-100", "LS-6-250")  # bombe plananti Leishi-6 (2026-09-28)
     PYLON_DISPENSERS = ("KMGU-2AO", "KMGU-2PTAB")
 
     def setUp(self):
@@ -2025,11 +2026,11 @@ class TestBombsReleaseField(unittest.TestCase):
         else:
             self.assertIsNone(win['dive_angle'])
 
-    def test_release_present_on_all_31_bombs(self):
-        """Tutte le bombe (razzi/pod esclusi, non sono sotto BOMBS); KGBU-96r eliminata (D4, doppione)."""
+    def test_release_present_on_all_54_bombs(self):
+        """Tutte le bombe (razzi/pod esclusi, non sono sotto BOMBS); KGBU-96r eliminata (D4, doppione); 23 aggiunte il 2026-09-28 (armi DCS mancanti)."""
         with_release = [m for m, d in self.bombs.items() if 'release' in d]
-        self.assertEqual(len(with_release), 31)
-        self.assertEqual(len(self.bombs), 31)
+        self.assertEqual(len(with_release), 54)
+        self.assertEqual(len(self.bombs), 54)
 
     def test_kmgu_pylon_dispensers(self):
         """D4: KMGU-2 (nome DCS KMG-2F/2B) resta sul pilone: solo level, 30-1000 m, 500-1100 km/h, drag high."""
@@ -2124,10 +2125,20 @@ class TestBombsReleaseField(unittest.TestCase):
 
     def test_standoff_only_on_bk90(self):
         for model, data in self.bombs.items():
-            if model in self.STANDOFF or 'release' not in data:
+            if model in self.STANDOFF or model in self.GLIDE_STANDOFF or 'release' not in data:
                 continue
             with self.subTest(model=model):
                 self.assertNotIn('standoff_range_km', data['release'])
+
+    def test_ls6_glide_standoff(self):
+        """LS-6 (armi DCS mancanti, 2026-09-28): planante, stessa forma dei BK-90 ma lanciata in quota."""
+        for model in self.GLIDE_STANDOFF:
+            with self.subTest(model=model):
+                rel = self.bombs[model]["release"]
+                self.assertEqual(rel['standoff_range_km'], (10, 60))
+                self.assertIsNone(rel['glide_ratio'])
+                self.assertEqual(rel['modes'], ['level'])
+                self.assertEqual((rel['min_altitude'], rel['max_altitude']), (1000, 12000))
 
     def test_scores_unchanged_by_release(self):
         """Il campo non deve entrare nel punteggio (WEAPON_PARAM['BOMBS'] usa solo warhead/weight)."""

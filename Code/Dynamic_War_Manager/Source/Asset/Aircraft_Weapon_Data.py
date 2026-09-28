@@ -189,6 +189,19 @@ _WEAPON_PARAM_TYPE = {
     # Missile leggero (testata piccola frammentante)
     'Mistral':   {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION]},
 
+    # Aggiunte 2026-09-28 (armi DCS mancanti)
+    'Kh-29TE': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-31A': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-31P': {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'Kh-35': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-41': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-65': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-555': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Kh-59M': {'precision': [_wae.PRECISION], 'power': [_wpe.PENETRATION, _wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'LD-10': {'precision': [_wae.PRECISION], 'power': [_wpe.FRAGMENTATION, _wpe.BLAST]},
+    'KD-63': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KD-63B': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KD-20': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
     # --- BOMBS ---
     # Bombe libere (non guidate) - area effect
     'Mk-84':       {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
@@ -226,6 +239,30 @@ _WEAPON_PARAM_TYPE = {
     'KMGU-2AO':    {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
     'KMGU-2PTAB':  {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
 
+    # Aggiunte 2026-09-28 (armi DCS mancanti)
+    'KAB-500Kr-OD': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-500S': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-1500Kr': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-1500LG-Pr': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'KAB-1500LG-Pr-E': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'LS-6': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'LS-6-100': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'LS-6-250': {'precision': [_wae.PRECISION], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'OFAB-100-120': {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'OFAB-100-120 TU': {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'OFAB-100-110TU': {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
+    'OFAB-250-270': {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'ODAB-500PM': {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE]},
+    'Mk-84 AIR GP HD': {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'Mk-84 AIR TP HD': {'precision': [_wae.WIDE], 'power': [_wpe.BLAST, _wpe.HIGH_EXPLOSIVE, _wpe.FRAGMENTATION]},
+    'RBK-250 PTAB-2.5M': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'RBK-250 ZAB-2.5': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-250-275 AO-1SCh': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-250 ShOAB-0.5': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-500 ShOAB-0.5': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
+    'RBK-500 SPBE-D': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'RBK-500-255 PTAB-10-5': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.PENETRATION]},
+    'RBK-500U': {'precision': [_wae.WIDE], 'power': [_wpe.CLUSTER, _wpe.FRAGMENTATION]},
     # --- ROCKETS ---
     # Razzi non guidati HE / FRAG
     'Zuni-Mk71':   {'precision': [_wae.LOCALIZED], 'power': [_wpe.BLAST, _wpe.FRAGMENTATION]},
@@ -1928,6 +1965,151 @@ AIR_WEAPONS = {
             },
         },
 
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_AAM.md; cost/efficiency stime B.
+        "PL-12": {
+            "type": 'AAM',
+            "model": 'PL-12',
+            "users": ['China', 'Pakistan', 'Myanmar'],
+            "seeker": 'radar',
+            "task": ['A2A'],
+            "start_service": 2005,
+            "end_service": None,
+            "cost": 180,
+            "warhead": 24,
+            "reliability": 0.75,
+            "range": 80,
+            "semiactive_range": 50,
+            "max_height": 21,
+            "max_speed": 4.0,
+            "manouvrability": 0.75,
+            "accuracy": 0.8,
+            "perc_efficiency_variability": 0.09,
+            "efficiency": {
+                'Aircraft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1.0,
+                    },
+                    'med': {
+                        'accuracy': 0.72,
+                        'destroy_capacity': 1.0,
+                    },
+                    'small': {
+                        'accuracy': 0.57,
+                        'destroy_capacity': 1.0,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_AAM.md; cost/efficiency stime B.
+        "PL-5EII": {
+            "type": 'AAM',
+            "model": 'PL-5EII',
+            "users": ['China', 'Pakistan', 'Bangladesh', 'Myanmar', 'Egypt', 'Iran', 'Sri Lanka', 'Sudan', 'Tanzania', 'Venezuela', 'Zimbabwe'],
+            "seeker": 'infrared',
+            "task": ['A2A'],
+            "start_service": 1990,
+            "end_service": None,
+            "cost": 75,
+            "warhead": 6,
+            "reliability": 0.7,
+            "range": 18,
+            "max_height": 18,
+            "max_speed": 2.5,
+            "manouvrability": 0.72,
+            "accuracy": 0.72,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                'Aircraft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.72,
+                        'destroy_capacity': 0.92,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.0,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_AAM.md; cost/efficiency stime B.
+        "PL-8A": {
+            "type": 'AAM',
+            "model": 'PL-8A',
+            "users": ['China', 'Pakistan'],
+            "seeker": 'infrared',
+            "task": ['A2A'],
+            "start_service": 1993,
+            "end_service": None,
+            "cost": 85,
+            "warhead": 11,
+            "reliability": 0.72,
+            "range": 20,
+            "max_height": 21,
+            "max_speed": 3.5,
+            "manouvrability": 0.78,
+            "accuracy": 0.75,
+            "perc_efficiency_variability": 0.14,
+            "efficiency": {
+                'Aircraft': {
+                    'big': {
+                        'accuracy': 0.82,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.92,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1.0,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_AAM.md; cost/efficiency stime B.
+        "PL-8B": {
+            "type": 'AAM',
+            "model": 'PL-8B',
+            "users": ['China', 'Pakistan'],
+            "seeker": 'infrared',
+            "task": ['A2A'],
+            "start_service": 1989,
+            "end_service": None,
+            "cost": 95,
+            "warhead": 11,
+            "reliability": 0.78,
+            "range": 20,
+            "max_height": 21,
+            "max_speed": 3.5,
+            "manouvrability": 0.82,
+            "accuracy": 0.78,
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                'Aircraft': {
+                    'big': {
+                        'accuracy': 0.88,
+                        'destroy_capacity': 0.75,
+                    },
+                    'med': {
+                        'accuracy': 0.78,
+                        'destroy_capacity': 0.93,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.0,
+                    },
+                },
+            },
+        },
     },
     'MISSILES_ASM': {
         "RB-05A": {
@@ -3617,6 +3799,1420 @@ AIR_WEAPONS = {
             },
         },
     
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-29TE": {
+            "type": 'ASM',
+            "model": 'Kh-29TE',
+            "users": ['USSR', 'Russia', 'India', 'China', 'Syria', 'Algeria'],
+            "task": ['Anti_Ship', 'Strike', 'SEAD'],
+            "start_service": 1980,
+            "end_service": None,
+            "cost": 160,
+            "warhead": 320,
+            "range": 30,
+            "max_speed": 900,
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.9,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.7,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.95,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.9,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-31A": {
+            "type": 'ASM',
+            "model": 'Kh-31A',
+            "users": ['USSR', 'Russia', 'India', 'Bulgaria', 'Syria', 'Libya', 'Iraq', 'Algeria', 'Poland'],
+            "task": ['Anti_Ship'],
+            "start_service": 1991,
+            "end_service": None,
+            "cost": 650,
+            "warhead": 94,
+            "range": 70,
+            "max_speed": 680,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'ship': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.85,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-31P": {
+            "type": 'ASM',
+            "model": 'Kh-31P',
+            "users": ['USSR', 'Russia', 'Bulgaria', 'Georgia', 'Syria', 'Libya', 'Iraq', 'Algeria', 'Poland'],
+            "task": ['SEAD'],
+            "start_service": 1991,
+            "end_service": None,
+            "cost": 700,
+            "warhead": 87,
+            "range": 110,
+            "max_speed": 1000,
+            "perc_efficiency_variability": 0.2,
+            "efficiency": {
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.85,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.95,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-35": {
+            "type": 'ASM',
+            "model": 'Kh-35',
+            "users": ['USSR', 'Russia', 'Ukraine', 'India', 'Belarus', 'Pakistan', 'Algeria', 'Turkmenistan'],
+            "task": ['Anti_Ship'],
+            "start_service": 1992,
+            "end_service": None,
+            "cost": 500,
+            "warhead": 150,
+            "range": 130,
+            "max_speed": 280,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'ship': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.95,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-41": {
+            "type": 'ASM',
+            "model": 'Kh-41',
+            "users": ['USSR', 'Russia', 'India'],
+            "task": ['Anti_Ship'],
+            "start_service": 2000,
+            "end_service": None,
+            "cost": 2500,
+            "warhead": 320,
+            "range": 240,
+            "max_speed": 850,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'ship': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.75,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-65": {
+            "type": 'ASM',
+            "model": 'Kh-65',
+            "users": ['USSR', 'Russia'],
+            "task": ['Strike'],
+            "start_service": 1992,
+            "end_service": None,
+            "cost": 1200,
+            "warhead": 410,
+            "range": 600,
+            "max_speed": 240,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.85,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.75,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.25,
+                    },
+                    'med': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.28,
+                    },
+                    'small': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.3,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.05,
+                    },
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.08,
+                    },
+                    'small': {
+                        'accuracy': 0.45,
+                        'destroy_capacity': 0.1,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.38,
+                    },
+                    'med': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.48,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.5,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.55,
+                    },
+                    'small': {
+                        'accuracy': 0.53,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.18,
+                    },
+                    'small': {
+                        'accuracy': 0.56,
+                        'destroy_capacity': 0.22,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.28,
+                    },
+                    'med': {
+                        'accuracy': 0.53,
+                        'destroy_capacity': 0.32,
+                    },
+                    'small': {
+                        'accuracy': 0.48,
+                        'destroy_capacity': 0.38,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-555": {
+            "type": 'ASM',
+            "model": 'Kh-555',
+            "users": ['USSR', 'Russia', 'Ukraine'],
+            "task": ['Strike'],
+            "start_service": 1992,
+            "end_service": None,
+            "cost": 2000,
+            "warhead": 400,
+            "range": 3500,
+            "max_speed": 240,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.92,
+                    },
+                    'med': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.88,
+                    },
+                    'small': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.83,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.62,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.57,
+                        'destroy_capacity': 0.35,
+                    },
+                    'small': {
+                        'accuracy': 0.52,
+                        'destroy_capacity': 0.4,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.57,
+                        'destroy_capacity': 0.08,
+                    },
+                    'med': {
+                        'accuracy': 0.52,
+                        'destroy_capacity': 0.12,
+                    },
+                    'small': {
+                        'accuracy': 0.47,
+                        'destroy_capacity': 0.15,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.45,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.55,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.61,
+                        'destroy_capacity': 0.3,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.53,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "Kh-59M": {
+            "type": 'ASM',
+            "model": 'Kh-59M',
+            "users": ['USSR', 'Russia', 'India', 'China', 'Algeria'],
+            "task": ['Anti_Ship', 'Strike', 'SEAD'],
+            "start_service": 1990,
+            "end_service": None,
+            "cost": 800,
+            "warhead": 360,
+            "range": 115,
+            "max_speed": 310,
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.85,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.5,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.85,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.85,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "LD-10": {
+            "type": 'ASM',
+            "model": 'LD-10',
+            "users": ['China'],
+            "task": ['SEAD'],
+            "start_service": 2012,
+            "end_service": None,
+            "cost": 150,
+            "warhead": 20,
+            "range": 80,
+            "max_speed": 600,
+            "perc_efficiency_variability": 0.25,
+            "efficiency": {
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.75,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "KD-63": {
+            "type": 'ASM',
+            "model": 'KD-63',
+            "users": ['China'],
+            "task": ['Strike'],
+            "start_service": 2005,
+            "end_service": None,
+            "cost": 1100,
+            "warhead": 500,
+            "range": 180,
+            "max_speed": 250,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.15,
+                    },
+                    'med': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.5,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': 0.72,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.35,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "KD-63B": {
+            "type": 'ASM',
+            "model": 'KD-63B',
+            "users": ['China'],
+            "task": ['Strike'],
+            "start_service": 2013,
+            "end_service": None,
+            "cost": 1150,
+            "warhead": 500,
+            "range": 180,
+            "max_speed": 250,
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.97,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.93,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.85,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.72,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.52,
+                    },
+                    'small': {
+                        'accuracy': 0.58,
+                        'destroy_capacity': 0.62,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.18,
+                    },
+                    'med': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': 0.28,
+                    },
+                    'small': {
+                        'accuracy': 0.53,
+                        'destroy_capacity': 0.38,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.78,
+                        'destroy_capacity': 0.52,
+                    },
+                    'med': {
+                        'accuracy': 0.78,
+                        'destroy_capacity': 0.62,
+                    },
+                    'small': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': 0.72,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.78,
+                        'destroy_capacity': 0.68,
+                    },
+                    'med': {
+                        'accuracy': 0.76,
+                        'destroy_capacity': 0.75,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 0.82,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': 0.38,
+                    },
+                    'small': {
+                        'accuracy': 0.71,
+                        'destroy_capacity': 0.48,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.52,
+                    },
+                    'small': {
+                        'accuracy': 0.63,
+                        'destroy_capacity': 0.62,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_ASM.md; cost/efficiency stime B.
+        "KD-20": {
+            "type": 'ASM',
+            "model": 'KD-20',
+            "users": ['China'],
+            "task": ['Strike'],
+            "start_service": 2015,
+            "end_service": None,
+            "cost": 1500,
+            "warhead": 500,
+            "range": 1500,
+            "max_speed": 240,
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.55,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.15,
+                    },
+                    'med': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.5,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.73,
+                        'destroy_capacity': 0.72,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.35,
+                    },
+                    'small': {
+                        'accuracy': 0.68,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+            },
+        },
     },
     # Campo 'release' delle bombe (Analysis/Document/Proposta_Dati_Rilascio_Bombe.md, tabella §6, approvata
     # dall'utente il 2026-09-26 con le decisioni D1-D5). Solo dato: nessun codice lo usa ancora (Proposta B).
@@ -6300,6 +7896,3425 @@ AIR_WEAPONS = {
             },
         },            
         
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "KAB-500Kr-OD": {
+            "type": 'Guided bombs',
+            "model": 'KAB-500Kr-OD',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1995,
+            "end_service": None,
+            "cost": 24,
+            "warhead": 201,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 500,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 50),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "KAB-500S": {
+            "type": 'Guided bombs',
+            "model": 'KAB-500S',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1992,
+            "end_service": None,
+            "cost": 25,
+            "warhead": 201,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 500,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 50),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "KAB-1500Kr": {
+            "type": 'Guided bombs',
+            "model": 'KAB-1500Kr',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1988,
+            "end_service": None,
+            "cost": 40,
+            "warhead": 667,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 600,
+                'max_altitude': 10000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 50),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.65,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1.2,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1.1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "KAB-1500LG-Pr": {
+            "type": 'Guided bombs',
+            "model": 'KAB-1500LG-Pr',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1995,
+            "end_service": None,
+            "cost": 42,
+            "warhead": 667,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 600,
+                'max_altitude': 10000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 50),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.65,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1.2,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1.1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "KAB-1500LG-Pr-E": {
+            "type": 'Guided bombs',
+            "model": 'KAB-1500LG-Pr-E',
+            "users": ['Russia', 'Syria', 'Iran', 'North Korea'],
+            "task": ['Strike'],
+            "start_service": 1998,
+            "end_service": None,
+            "cost": 43,
+            "warhead": 667,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 600,
+                'max_altitude': 10000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 50),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.05,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.7,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.65,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1.2,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1.1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.2,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "LS-6": {
+            "type": 'Guided bombs',
+            "model": 'LS-6',
+            "users": ['China', 'Pakistan'],
+            "task": ['Strike'],
+            "start_service": 2008,
+            "end_service": None,
+            "cost": 18,
+            "warhead": 250,
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 1000,
+                'max_altitude': 12000,
+                'min_speed': 400,
+                'max_speed': 1100,
+                'dive_angle': None,
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (10, 60),
+            },
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.5,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.55,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.45,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "LS-6-100": {
+            "type": 'Guided bombs',
+            "model": 'LS-6-100',
+            "users": ['China'],
+            "task": ['Strike'],
+            "start_service": 2010,
+            "end_service": None,
+            "cost": 10,
+            "warhead": 50,
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 1000,
+                'max_altitude': 12000,
+                'min_speed': 350,
+                'max_speed': 1100,
+                'dive_angle': None,
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (10, 60),
+            },
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.35,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.4,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.25,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.3,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.6,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Hard, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da KAB-500L (stima B, revisione)
+        "LS-6-250": {
+            "type": 'Guided bombs',
+            "model": 'LS-6-250',
+            "users": ['China'],
+            "task": ['Strike'],
+            "start_service": 2009,
+            "end_service": None,
+            "cost": 14,
+            "warhead": 125,
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 1000,
+                'max_altitude': 12000,
+                'min_speed': 375,
+                'max_speed': 1100,
+                'dive_angle': None,
+                'drag': 'low',
+                'glide_ratio': None,
+                'standoff_range_km': (10, 60),
+            },
+            "perc_efficiency_variability": 0.08,
+            "efficiency": {
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.4,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 0.95,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.9,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.95,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.75,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.55,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.65,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.75,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Structure, ship, Bridge, Airbase, Port, Shipyard, Farp, Stronghold: copiate da FAB-100 (stima B, revisione)
+        "OFAB-100-120": {
+            "type": 'Bombs',
+            "model": 'OFAB-100-120',
+            "users": ['USSR', 'Russia', 'India', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1960,
+            "end_service": None,
+            "cost": 1.2,
+            "warhead": 60,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 330,
+                'max_altitude': 12000,
+                'min_speed': 500,
+                'max_speed': 1150,
+                'dive_angle': (0, 60),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.7,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.2,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.3,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.15,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.18,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.25,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.3,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Structure': {
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'ship': {
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Bridge': {
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Structure, ship, Bridge, Airbase, Port, Shipyard, Farp, Stronghold: copiate da FAB-100 (stima B, revisione)
+        "OFAB-100-120 TU": {
+            "type": 'Bombs',
+            "model": 'OFAB-100-120 TU',
+            "users": ['USSR', 'Russia', 'India', 'Syria'],
+            "task": ['Strike'],
+            "start_service": 1965,
+            "end_service": None,
+            "cost": 1.5,
+            "warhead": 60,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 50,
+                'max_altitude': 1500,
+                'min_speed': 450,
+                'max_speed': 1000,
+                'dive_angle': (0, 30),
+                'drag': 'high',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.6,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.7,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.2,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.3,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.15,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.18,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.25,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.3,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Structure': {
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'ship': {
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Bridge': {
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Structure, ship, Bridge, Airbase, Port, Shipyard, Farp, Stronghold: copiate da FAB-100 (stima B, revisione)
+        "OFAB-100-110TU": {
+            "type": 'Bombs',
+            "model": 'OFAB-100-110TU',
+            "users": ['USSR', 'Russia', 'Syria'],
+            "task": ['Strike'],
+            "start_service": 1975,
+            "end_service": None,
+            "cost": 1.8,
+            "warhead": 55,
+            "release": {
+                'modes': ['level', 'dive'],
+                'min_altitude': 50,
+                'max_altitude': 1500,
+                'min_speed': 450,
+                'max_speed': 1000,
+                'dive_angle': (0, 30),
+                'drag': 'high',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.58,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.68,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.78,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.19,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.24,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.29,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.14,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.17,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.19,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.24,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.29,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 0.34,
+                    },
+                },
+                'Structure': {
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'ship': {
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.1,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Bridge': {
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Structure, Bridge, ship, Airbase, Port, Shipyard, Farp, Stronghold: copiate da FAB-250M54 (stima B, revisione)
+        "OFAB-250-270": {
+            "type": 'Bombs',
+            "model": 'OFAB-250-270',
+            "users": ['USSR', 'Russia', 'India', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1965,
+            "end_service": None,
+            "cost": 2.5,
+            "warhead": 135,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 480,
+                'max_altitude': 12000,
+                'min_speed': 500,
+                'max_speed': 1180,
+                'dive_angle': (0, 60),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.2,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.25,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.3,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.45,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.55,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.15,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.22,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.53,
+                    },
+                },
+                'Bridge': {
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.22,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.33,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.22,
+                    },
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.27,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.35,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Bridge, ship, Air_Defense, Airbase, Port, Shipyard, Farp, Stronghold: copiate da FAB-500M62 (stima B, revisione)
+        "ODAB-500PM": {
+            "type": 'Bombs',
+            "model": 'ODAB-500PM',
+            "users": ['USSR', 'Russia', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1985,
+            "end_service": None,
+            "cost": 8,
+            "warhead": 300,
+            "release": {
+                'modes': ['level'],
+                'min_altitude': 200,
+                'max_altitude': 2000,
+                'min_speed': 400,
+                'max_speed': 900,
+                'dive_angle': None,
+                'drag': 'high',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 1.5,
+                    },
+                    'med': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 2,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 2.5,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.1,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.15,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.2,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.35,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.45,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.42,
+                    },
+                    'med': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.5,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Airbase, Port, Shipyard, Farp, Stronghold, ship: copiate da Mk-84 (stima B, revisione)
+        "Mk-84 AIR GP HD": {
+            "type": 'Bombs',
+            "model": 'Mk-84 AIR GP HD',
+            "users": ['USA', 'UK', 'Italy'],
+            "task": ['Strike', 'Anti_Ship'],
+            "start_service": 1965,
+            "end_service": None,
+            "cost": 5.5,
+            "warhead": 429,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'drag': 'selectable',
+                'glide_ratio': None,
+                'low_drag': {
+                    'modes': ['level', 'dive', 'loft'],
+                    'min_altitude': 750,
+                    'max_altitude': 12000,
+                    'min_speed': 370,
+                    'max_speed': 1110,
+                    'dive_angle': (0, 60),
+                },
+                'high_drag': {
+                    'modes': ['level', 'dive'],
+                    'min_altitude': 90,
+                    'max_altitude': 2000,
+                    'min_speed': 520,
+                    'max_speed': 1300,
+                    'dive_angle': (0, 30),
+                },
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.85,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.95,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.7,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.85,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        # efficiency Airbase, Port, Shipyard, Farp, Stronghold, ship: copiate da Mk-84 (stima B, revisione)
+        "Mk-84 AIR TP HD": {
+            "type": 'Bombs',
+            "model": 'Mk-84 AIR TP HD',
+            "users": ['USA', 'UK'],
+            "task": ['Strike', 'Anti_Ship'],
+            "start_service": 1975,
+            "end_service": None,
+            "cost": 6.5,
+            "warhead": 429,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'drag': 'selectable',
+                'glide_ratio': None,
+                'low_drag': {
+                    'modes': ['level', 'dive', 'loft'],
+                    'min_altitude': 750,
+                    'max_altitude': 12000,
+                    'min_speed': 370,
+                    'max_speed': 1110,
+                    'dive_angle': (0, 60),
+                },
+                'high_drag': {
+                    'modes': ['level', 'dive'],
+                    'min_altitude': 90,
+                    'max_altitude': 2000,
+                    'min_speed': 520,
+                    'max_speed': 1300,
+                    'dive_angle': (0, 30),
+                },
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.85,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.95,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Hard': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.65,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.7,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.8,
+                    },
+                },
+                'Structure': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.8,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.9,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 0.95,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1,
+                    },
+                },
+                'Bridge': {
+                    'big': {
+                        'accuracy': 1,
+                        'destroy_capacity': 0.7,
+                    },
+                    'med': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 0.8,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 0.9,
+                    },
+                },
+                'Airbase': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Port': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Shipyard': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Farp': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'Stronghold': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': _INFRA_MIN,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1e-08,
+                    },
+                },
+                'ship': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 0.85,
+                    },
+                    'med': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 1,
+                    },
+                    'small': {
+                        'accuracy': 0.2,
+                        'destroy_capacity': 1,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-250 PTAB-2.5M": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-250 PTAB-2.5M',
+            "users": ['USSR', 'Russia', 'India', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1970,
+            "end_service": None,
+            "cost": 16,
+            "weight": 250,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 250,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1400,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 3.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 4.5,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 2.5,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 4,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 5.5,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 7,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-250 ZAB-2.5": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-250 ZAB-2.5',
+            "users": ['USSR', 'Russia', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1972,
+            "end_service": None,
+            "cost": 12,
+            "weight": 250,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 250,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1400,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.15,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 5,
+                    },
+                    'med': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 7,
+                    },
+                    'small': {
+                        'accuracy': 0.6,
+                        'destroy_capacity': 9,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.35,
+                        'destroy_capacity': 0.4,
+                    },
+                    'small': {
+                        'accuracy': 0.3,
+                        'destroy_capacity': 0.5,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.5,
+                        'destroy_capacity': 1.5,
+                    },
+                    'med': {
+                        'accuracy': 0.45,
+                        'destroy_capacity': 2,
+                    },
+                    'small': {
+                        'accuracy': 0.4,
+                        'destroy_capacity': 2.5,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-250-275 AO-1SCh": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-250-275 AO-1SCh',
+            "users": ['USSR', 'Russia', 'Syria', 'Iraq'],
+            "task": ['Strike'],
+            "start_service": 1980,
+            "end_service": None,
+            "cost": 15,
+            "weight": 250,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 250,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1400,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 3,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 4,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3.2,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4.3,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 7.5,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 0.3,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 0.6,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 1.0,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-250 ShOAB-0.5": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-250 ShOAB-0.5',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1995,
+            "end_service": None,
+            "cost": 18,
+            "weight": 250,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 250,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 1400,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 6,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 3,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2.3,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 3,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 4,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-500 ShOAB-0.5": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-500 ShOAB-0.5',
+            "users": ['Russia'],
+            "task": ['Strike'],
+            "start_service": 1995,
+            "end_service": None,
+            "cost": 22,
+            "weight": 500,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 2300,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.12,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 6.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 8,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 2.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 4,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 5,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-500 SPBE-D": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-500 SPBE-D',
+            "users": ['Russia'],
+            "task": ['Strike', 'Anti_Ship'],
+            "start_service": 2000,
+            "end_service": None,
+            "cost": 35,
+            "weight": 500,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 2300,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1.2,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.5,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.9,
+                        'destroy_capacity': 6,
+                    },
+                    'med': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 8,
+                    },
+                    'small': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 10,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.85,
+                        'destroy_capacity': 5,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 6.5,
+                    },
+                    'small': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 8,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-500-255 PTAB-10-5": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-500-255 PTAB-10-5',
+            "users": ['Russia', 'Syria'],
+            "task": ['Strike'],
+            "start_service": 1985,
+            "end_service": None,
+            "cost": 25,
+            "weight": 500,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 2300,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 4.5,
+                    },
+                    'med': {
+                        'accuracy': 0.8,
+                        'destroy_capacity': 6,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 8,
+                    },
+                },
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 1,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 1.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 2,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 5,
+                    },
+                },
+            },
+        },
+        # Aggiunta 2026-09-28 (armi DCS mancanti): fonti e confidenza per campo in
+        # Analysis/Document/Ricerca_Armi_DCS_2026_09_28/Ricerca_Bombe.md; cost/efficiency stime B.
+        "RBK-500U": {
+            "type": 'Cluster bombs',
+            "model": 'RBK-500U',
+            "users": ['Russia', 'Syria', 'Iran'],
+            "task": ['Strike'],
+            "start_service": 1992,
+            "end_service": None,
+            "cost": 20,
+            "weight": 500,
+            "release": {
+                'modes': ['level', 'dive', 'loft'],
+                'min_altitude': 300,
+                'max_altitude': 5000,
+                'min_speed': 500,
+                'max_speed': 2300,
+                'dive_angle': (0, 30),
+                'drag': 'low',
+                'glide_ratio': None,
+            },
+            "perc_efficiency_variability": 0.1,
+            "efficiency": {
+                'Soft': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4.5,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 6,
+                    },
+                },
+                'Armored': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2,
+                    },
+                    'med': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 3,
+                    },
+                    'small': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 4,
+                    },
+                },
+                'Air_Defense': {
+                    'big': {
+                        'accuracy': 0.75,
+                        'destroy_capacity': 2.5,
+                    },
+                    'med': {
+                        'accuracy': 0.7,
+                        'destroy_capacity': 3.2,
+                    },
+                    'small': {
+                        'accuracy': 0.65,
+                        'destroy_capacity': 4,
+                    },
+                },
+            },
+        },
     },
     'ROCKETS': {   
         "Zuni-Mk71": {  # Rockets 127 mm HE
