@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-09-29-summary
-description: "Sessione 2026-09-29 (osboxes/VM): soglia di rottura stocastica (D1-D9) + efficacia difensiva antiaerea E(N) (D4a-D4e) implementate, suite 3705 OK; NON committato al momento della scrittura"
+description: "Sessione 2026-09-29 (osboxes/VM): soglia di rottura stocastica (D1-D9) + efficacia difensiva antiaerea E(N) (D4a-D4e) implementate, suite 3705 OK; committato e pushato (72c7f7c8 + memoria)"
 metadata:
   node_type: memory
   type: project
@@ -26,7 +26,7 @@ Esiti: S1 senza CAS rottura alla 1ª perdita 3/8 (prima 7/8); S5 2/6 formazioni 
 Test aggiornati: S10 usa `FIXED_THRESHOLDS` + caso DISPERSIONE, S5 asserzione a distribuzione.
 
 ## Da fare / aperto
-1. **Commit + push** (non fatto: chiedere all'utente). File: Doctrine.py, Air_Defense_Efficacy.py
+1. **Commit + push FATTI** (`72c7f7c8` codice+documenti, commit memoria dopo). File: Doctrine.py, Air_Defense_Efficacy.py
    (nuovo), Engagement_Resolver.py, Session_Simulator.py, test (Doctrine, Engagement_Resolver,
    Session_Simulator, Air_Defense_Efficacy nuovo, Scenarios, S10_S18), 2 documenti Analysis.
 2. Scelte implementative da far rivedere all'utente (§12 della proposta): B(t) ricalcolata a ogni
