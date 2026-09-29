@@ -51,3 +51,14 @@ S5: fuoco senza risposta 1 → 0, esiti 4/2 invariati. Suite 3720 OK.
 Decisione utente finale: la minaccia percepita da una forza aerea usa la scorta di DOTAZIONE stimata
 (registro), non quella residua ("non è un dato certo"); in S5 il rapporto percepito è sempre definito.
 Aperto: verifica dei dati RWR (voci a fiducia media/bassa, SPO-15 su AAA, A-4E).
+Terza parte: `classificazione_sam_1950_2000.md` (dell'utente) usata come fonte primaria delle categorie
+SAM (`SAM_WEAPON_CATEGORY` per sistema missilistico; ripiego ruolo/portata); cambia solo M6 Linebacker
+→ VSHORAD. Registrato il futuro modulo mappe ([[project-map-module-plan]]).
+Quarta parte (committata): ricerca RWR con agente Sonnet (rapporto salvato in
+`Analysis/Document/Ricerca_RWR_2026_09_29.md`); decisioni utente: SPO-15 RILEVA lo Shilka (verificato
+in DCS con Su-25), SPO-10 = 4 quadranti/SAM-o-EWR/solo tracciamento, SPO-15 = 8 settori/3 classi
+(VSHORAD-SHORAD, MRSAM, LRSAM)/ricerca-tracciamento-guida; RWR fissati per Il-76MD (SPO-10), MiG-25RB,
+Il-78M, Tu-142 (SPO-15), Tu-160 (BKO-1 Baykal), F-117 (nessuno), KC-130 (ALR-69(V)), Mirage (SERVAL/
+SPIRALE). Schema RWR con classes/modes/sectors/ewr; RWR solo-tracciamento percepisce al lancio.
+Nota: il campo `avionics` del registro dice SPO-15 per il Tu-95MS, adottato L-150 Pastel. Suite 3725 OK.
+Aperto: settori e granularità delle classi RWR registrati ma non usati dal modello.
