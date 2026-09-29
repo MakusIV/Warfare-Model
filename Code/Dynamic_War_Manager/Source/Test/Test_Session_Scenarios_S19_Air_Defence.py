@@ -140,7 +140,13 @@ class TestS19AirDefenceAllocation(F.LoggerSilencer, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.strela_overflight = [run_variant(s, '9K35-Strela-10', 1_000.0, -300.0, 4, OVERFLIGHT)[::2]
+        # Dal 2026-09-29 (dottrina di tiro, Proposta_Overkill_Tiro.md) gli A-10C non sprecano piu'
+        # Maverick sui BMP gia' condannati e con la stessa dotazione distruggono anche lo Strela,
+        # da fuori dei suoi 5 km, prima che spari: il caso d'origine (lo Strela conserva i
+        # missili per gli aerei) richiede che gli aerei attacchino solo i BMP, come nella
+        # variante con il Tor avanzato.
+        cls.strela_overflight = [run_variant(s, '9K35-Strela-10', 1_000.0, -300.0, 4, OVERFLIGHT,
+                                             targets_ifv_only=True)[::2]
                                  for s in cls.SEEDS]
         cls.strela_standoff = [run_variant(s, '9K35-Strela-10', 1_000.0, -300.0, 4, STANDOFF)[::2]
                                for s in cls.SEEDS]

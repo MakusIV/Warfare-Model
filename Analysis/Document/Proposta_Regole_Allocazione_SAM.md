@@ -252,6 +252,8 @@ righe e non introduce costanti. Si abbina a qualunque delle regole sopra.
    esclude il tiratore che decide, quindi l'A-10 mette 16 salve sullo stesso BMP prima del primo
    impatto (refire 1.5 s, tempo di volo 23 s). Le proprie salve in volo dovrebbero contare come
    copertura (tiro "shoot-look-shoot").
+   **Risolto 2026-09-29**: saturazione del bersaglio per la forza (P_cov ≥ 0,9) e tetto "due
+   missili, poi guarda" per tiratore. V. `Proposta_Overkill_Tiro.md`.
 3. **Disingaggio alla prima perdita**: con 4 asset, una perdita dà shock 0.25 ≥ 0.20, e la forza rompe
    il contatto al primo impatto. Per forze piccole la soglia di shock è quasi un interruttore.
    **Risolto 2026-09-29**: soglia di rottura stocastica modulata da morale, rapporto di forze

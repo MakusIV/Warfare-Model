@@ -171,5 +171,32 @@ class TestBreakpointParameters(unittest.TestCase):
                     Doctrine.validate_disengagement_thresholds(self._table(**{key: value}))
 
 
+class TestFireDoctrine(unittest.TestCase):
+    """Dottrina di tiro (2026-09-29): saturazione e "due missili, poi guarda"."""
+
+    def test_default_values(self):
+        for side in ("Blue", "Red", "Neutral"):
+            with self.subTest(side=side):
+                self.assertEqual(Doctrine.get_fire_doctrine(side),
+                                 {"kill_probability_threshold": 0.9, "max_rounds_in_flight": 2})
+
+    def test_unknown_side_has_no_rules(self):
+        self.assertEqual(Doctrine.get_fire_doctrine("Green"),
+                         {"kill_probability_threshold": None, "max_rounds_in_flight": None})
+        self.assertEqual(Doctrine.get_fire_doctrine("Blue", {}),
+                         {"kill_probability_threshold": None, "max_rounds_in_flight": None})
+
+    def test_invalid_values(self):
+        for entry, error in (({"kill_probability_threshold": 0.0}, ValueError),
+                             ({"kill_probability_threshold": 1.2}, ValueError),
+                             ({"max_rounds_in_flight": 0}, ValueError),
+                             ({"max_rounds_in_flight": 2.0}, TypeError),
+                             ({"max_rounds_in_flight": True}, TypeError),
+                             ({"altro": 1}, ValueError)):
+            with self.subTest(entry=entry):
+                with self.assertRaises(error):
+                    Doctrine.validate_fire_doctrine({"Blue": entry})
+
+
 if __name__ == '__main__':
     unittest.main()

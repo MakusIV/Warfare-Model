@@ -568,10 +568,14 @@ def _one_shooter_vs_ten(shooter_side='Blue', target_side='Red', shooters=1):
 class TestDisengagementErosion(unittest.TestCase):
 
     def test_force_disengages_when_cumulative_losses_reach_the_threshold(self):
-        """Uccisioni a t = 2, 4, 6: il lancio a t = 3 era gia' deciso contro il bersaglio
-        ucciso a t = 2 (payload congelato allo scheduling), viene annullato e la nuova
-        decisione costa un altro ciclo di tiro (shoot-look-shoot). Alla terza perdita
-        l'erosione vale 0.3 e la forza si disingaggia."""
+        """Uccisioni a t = 2, 3, 4: alla terza perdita l'erosione vale 0.3 e la forza si
+        disingaggia.
+
+        Fino al 2026-09-29 le uccisioni erano a t = 2, 4, 6: il lancio a t = 3 veniva deciso a
+        t = 2 contro il bersaglio che la salva appena lanciata stava per uccidere (overkill),
+        era annullato e la nuova decisione costava un ciclo di tiro. Con la dottrina di tiro
+        (Proposta_Overkill_Tiro.md) quel bersaglio e' gia' saturo (P_cov = 1) e il tiratore
+        passa subito al successivo."""
         attackers, defenders, windows = _one_shooter_vs_ten()
         result = ER.resolve_engagement(attackers, defenders, windows, _always(_kill()), random.Random(0),
                                        reaction_profile_for=_profiles({}, default=(2.0, 1.0)))
@@ -581,7 +585,7 @@ class TestDisengagementErosion(unittest.TestCase):
         self.assertEqual(outcome.triggers, (ER.TRIGGER_EROSION,))
         self.assertEqual(outcome.lost, 3)
         self.assertAlmostEqual(outcome.erosion, 0.3)
-        self.assertAlmostEqual(outcome.time, 6.0)
+        self.assertAlmostEqual(outcome.time, 4.0)
 
     def test_disengagement_is_not_destruction(self):
         """La forza superstite non sparisce: 7 asset su 10 restano operativi."""
@@ -2309,6 +2313,72 @@ class TestRwrPerception(unittest.TestCase):
 
     def test_rwr_perception_enters_the_force_ratio(self):
         self.assertIsNotNone(self._air_outcome('A-10C Thunderbolt II', '9K37-Buk', '9M38-SAM').force_ratio)
+
+
+class TestFireDoctrine(unittest.TestCase):
+    """Dottrina di tiro (2026-09-29, Proposta_Overkill_Tiro.md): saturazione del bersaglio per la
+    forza e tetto "due missili, poi guarda" per tiratore; attesa del primo impatto."""
+
+    @staticmethod
+    def _one_target(shooters, spec, fire_doctrine=None, t_end=1000.0):
+        target = _Asset('t00')
+        shooter_assets = [_Asset(f's{i}') for i in range(shooters)]
+        attackers = _Force('attackers', 'Blue', shooter_assets)
+        defenders = _Force('defenders', 'Red', [target])
+        windows = [_window(a.id, 't00', t_end=t_end, range_b=None) for a in shooter_assets]
+        return ER.resolve_engagement(attackers, defenders, windows, _always(spec), random.Random(0),
+                                     reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                     thresholds=_doctrine(erosion=1.0, shock=1.0),
+                                     fire_doctrine=fire_doctrine)
+
+    def test_saturated_target_gets_no_more_salvos_from_the_force(self):
+        """Colpo certo in volo (P_cov = 1): il secondo tiratore non spara sullo stesso bersaglio."""
+        result = self._one_target(2, _kill(time_of_flight=10.0))
+
+        self.assertEqual([(s.t_launch, s.shooter_id) for s in result.salvos], [(2.0, 's0')])
+
+    def test_without_doctrine_the_force_overkills(self):
+        result = self._one_target(2, _kill(time_of_flight=10.0), fire_doctrine={})
+
+        self.assertGreater(len(result.salvos), 2)
+
+    def test_two_rounds_then_look(self):
+        """Colpi a vuoto (P_cov = 0, mai saturo): al massimo 2 colpi in volo, poi si guarda."""
+        result = self._one_target(1, _miss(time_of_flight=10.0), t_end=14.0)
+
+        self.assertEqual([s.t_launch for s in result.salvos], [2.0, 3.0, 12.0, 13.0])
+
+    def test_a_salvo_is_not_split(self):
+        """Salva da 2 colpi e tetto 2: parte intera con 0 colpi in volo, poi si aspetta."""
+        result = self._one_target(1, _miss(rounds=2, time_of_flight=10.0), t_end=13.0)
+
+        self.assertEqual([s.t_launch for s in result.salvos], [2.0, 12.0])
+
+    def test_waiting_never_shortens_the_fire_cycle(self):
+        """Tempo di volo nullo: l'impatto e' immediato, il tiro resta al ritmo di refire (1 s)."""
+        result = self._one_target(1, _miss(), t_end=6.0)
+
+        self.assertEqual([s.t_launch for s in result.salvos], [2.0, 3.0, 4.0, 5.0, 6.0])
+
+    def test_launchers_are_exempt_from_saturation_not_from_the_cap(self):
+        run = ER._EngagementRun((_Force('air', 'Blue', [_Asset('a1')]), _Force('ground', 'Red', [_Asset('g1')])),
+                                [], _always(_kill()), random.Random(0), None, None, None, None, None, 0.0,
+                                DM.DERIVED)
+        shooter = run.shadows['g1']
+        run.in_flight[0] = ER.Salvo(salvo_id=0, t_launch=0.0, t_impact=5.0, shooter_id='g1', target_id='a1',
+                                    target_force_id='air', rounds=1, spec=_kill())
+
+        self.assertAlmostEqual(run._coverage('a1', 'ground'), 1.0)
+        self.assertTrue(run._blocked(shooter, 'a1', exempt_from_saturation=False))
+        self.assertFalse(run._blocked(shooter, 'a1', exempt_from_saturation=True))
+
+        run.in_flight[1] = ER.Salvo(salvo_id=1, t_launch=1.0, t_impact=6.0, shooter_id='g1', target_id='a1',
+                                    target_force_id='air', rounds=1, spec=_kill())
+        self.assertTrue(run._blocked(shooter, 'a1', exempt_from_saturation=True))
+
+    def test_invalid_fire_doctrine_raises(self):
+        with self.assertRaises(ValueError):
+            self._one_target(1, _kill(), fire_doctrine={'Blue': {'kill_probability_threshold': 1.5}})
 
 
 if __name__ == '__main__':

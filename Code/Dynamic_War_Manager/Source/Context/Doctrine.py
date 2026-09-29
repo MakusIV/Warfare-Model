@@ -310,3 +310,88 @@ def disengagement_parameter(entry: Dict, key: str):
         raise KeyError(f"unknown disengagement parameter {key!r}")
 
     return entry.get(key, DISENGAGEMENT_NEUTRAL[key])
+
+
+# ── DOTTRINA DI TIRO: SATURAZIONE E "DUE MISSILI, POI GUARDA" (2026-09-29) ─────
+#
+# DECISIONE (Analysis/Document/Proposta_Overkill_Tiro.md, O1-O6). Un tiratore non deve continuare
+# a lanciare su un bersaglio gia' condannato dalle salve in volo (overkill). Due regole, di lato:
+#
+#   'kill_probability_threshold'  soglia P_des: un bersaglio e' SATURO per una forza quando la
+#       probabilita' che le salve gia' dirette contro di esso dalla forza (in volo o schedulate)
+#       lo distruggano, 1 - prod (1 - accuracy x destroy_capacity)^colpi, raggiunge la soglia.
+#       Nessun tiratore della forza gli aggiunge salve (i lanciatori prioritari della regola L2
+#       sono esenti). Le intercettazioni possibili sono ignorate nella stima (O5).
+#   'max_rounds_in_flight'  tetto per TIRATORE e bersaglio: "due missili, poi guarda". Un tiratore
+#       non lancia su un bersaglio finche' ha gia' in volo verso di esso almeno questo numero di
+#       colpi (una salva non si spezza: con 0 in volo parte la salva intera).
+#
+# Se tutti i bersagli di un tiratore sono bloccati, il tiratore aspetta il primo impatto previsto
+# su uno di essi e ridecide (O6). Un lato assente dalla tabella (o una chiave None) non ha la
+# regola: comportamento precedente al 2026-09-29.
+#
+# VALORI: STIME DICHIARATE. 0.9 (decisione O3 dell'utente); 2 colpi = la dottrina reale di tiro
+# dei SAM "shoot-shoot-look" (decisione dell'utente).
+FIRE_KILL_THRESHOLD = 'kill_probability_threshold'
+FIRE_MAX_ROUNDS_IN_FLIGHT = 'max_rounds_in_flight'
+FIRE_DOCTRINE_KEYS = (FIRE_KILL_THRESHOLD, FIRE_MAX_ROUNDS_IN_FLIGHT)
+
+_DEFAULT_FIRE_DOCTRINE = {FIRE_KILL_THRESHOLD: 0.9, FIRE_MAX_ROUNDS_IN_FLIGHT: 2}
+
+DEFAULT_FIRE_DOCTRINE = {
+    "Blue":    dict(_DEFAULT_FIRE_DOCTRINE),
+    "Red":     dict(_DEFAULT_FIRE_DOCTRINE),
+    "Neutral": dict(_DEFAULT_FIRE_DOCTRINE),
+}
+
+
+def validate_fire_doctrine(value: Dict) -> None:
+    """Valida {side: {'kill_probability_threshold': float | None, 'max_rounds_in_flight': int | None}}.
+
+    Raises:
+        TypeError: struttura non a dizionario, lato non stringa, valore del tipo sbagliato.
+        ValueError: chiave sconosciuta, soglia fuori (0, 1], tetto < 1.
+    """
+    if not isinstance(value, dict):
+        raise TypeError("Fire doctrine must be a dictionary")
+
+    for side, entry in value.items():
+        if not isinstance(side, str):
+            raise TypeError(f"Side key {side!r} must be a string")
+
+        if not isinstance(entry, dict):
+            raise TypeError(f"Fire doctrine for side {side!r} must be a dictionary")
+
+        unknown = [key for key in entry if key not in FIRE_DOCTRINE_KEYS]
+
+        if unknown:
+            raise ValueError(f"Fire doctrine for side {side!r} has unknown keys {unknown}")
+
+        threshold = entry.get(FIRE_KILL_THRESHOLD)
+
+        if threshold is not None:
+            number = _check_number(side, FIRE_KILL_THRESHOLD, threshold)
+            if not 0.0 < number <= 1.0:
+                raise ValueError(f"{FIRE_KILL_THRESHOLD!r} for side {side!r} must be in (0, 1], got {threshold!r}")
+
+        cap = entry.get(FIRE_MAX_ROUNDS_IN_FLIGHT)
+
+        if cap is not None:
+            if isinstance(cap, bool) or not isinstance(cap, int):
+                raise TypeError(f"{FIRE_MAX_ROUNDS_IN_FLIGHT!r} for side {side!r} must be an int, got {cap!r}")
+            if cap < 1:
+                raise ValueError(f"{FIRE_MAX_ROUNDS_IN_FLIGHT!r} for side {side!r} must be >= 1, got {cap!r}")
+
+
+def get_fire_doctrine(side: Optional[str], doctrine: Optional[Dict] = None) -> Dict:
+    """Dottrina di tiro del lato: COPIA con entrambe le chiavi (None = regola assente).
+
+    Un lato sconosciuto non ha regole ({chiave: None}): e' un dato mancante, non un errore.
+    """
+    table = DEFAULT_FIRE_DOCTRINE if doctrine is None else doctrine
+    validate_fire_doctrine(table)
+
+    entry = table.get(side) if isinstance(side, str) else None
+    entry = entry or {}
+
+    return {key: entry.get(key) for key in FIRE_DOCTRINE_KEYS}

@@ -223,9 +223,9 @@ eventi finisce sempre e solo quando la coda si svuota.
 - Non seleziona l'arma dai registri: `fire_control` e' iniettata. Una fire control che
   la seleziona dai registri esiste (`Logic/Fire_Control.make_registry_fire_control`, B2
   2026-09-24); la modulazione della Pk con la posizione nell'inviluppo resta da fare.
-- Non evita il sovraffollamento delle proprie salve sullo stesso bersaglio (un tiratore
-  puo' spendere tutta la scorta di un'arma prima del primo impatto): rischio residuo
-  dichiarato nella proposta A (§1.6), da chiudere a parte.
+- Dal 2026-09-29 non spreca piu' salve su bersagli gia' condannati (v. "Dottrina di tiro"
+  in `_schedule_next`): prima un tiratore poteva spendere tutta la scorta di un'arma prima
+  del primo impatto, e tiratori diversi della stessa forza si sommavano sullo stesso bersaglio.
 - La portata dell'arma e' un vincolo solo se la `ShotSpec` la dichiara (`max_range`, v.
   "Controllo di portata"); il resto dell'inviluppo (quota) e' materia della fire control.
   Una salva gia' lanciata arriva comunque (R4), anche se il bersaglio esce di portata
@@ -1124,6 +1124,8 @@ class _ForceState:
     breakpoint: Optional[float] = None
     force_ratio: Optional[float] = None
     unanswered_fraction: float = 0.0
+    # Dottrina di tiro (2026-09-29): soglia di saturazione e tetto "due missili, poi guarda".
+    fire: Dict[str, Optional[float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -1207,8 +1209,9 @@ class _EngagementRun:
 
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance,
-                 breakpoint_rng=None, morale_for=None, enemy_estimate_for=None):
+                 breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None):
         self.fire_control = fire_control
+        self.fire_doctrine = fire_doctrine
         self.rng = rng
         self.breakpoint_rng = breakpoint_rng
         self.morale_for = morale_for
@@ -1239,6 +1242,11 @@ class _EngagementRun:
         # Ripartizione del fuoco (v. _schedule_next): bersaglio del lancio schedulato e non
         # ancora eseguito di ogni tiratore, e salve lanciate non ancora risolte.
         self.assigned: Dict[str, str] = {}
+        # (ShotSpec, colpi, istante di lancio) del lancio schedulato di ogni tiratore: serve alla
+        # stima della copertura (saturazione, v. _blocked); vale solo finche' `assigned` lo cita.
+        self.assigned_shot: Dict[str, Tuple["ShotSpec", int, float]] = {}
+        # Istante dell'evento in corso (per scartare lanci schedulati gia' passati).
+        self.now = float('-inf')
         self.in_flight: Dict[int, Salvo] = {}
         # Geometria "bersaglio entro la portata" (sostituibile, v. engagement_intervals) e
         # intervalli gia' calcolati per (tiratore, bersaglio, max_range): v. _range_entry.
@@ -1328,7 +1336,8 @@ class _EngagementRun:
                                    f"(force {force_id!r}): it will fight until annihilation")
 
             state = _ForceState(force_id=force_id, side=side, committed=tuple(committed_ids),
-                                thresholds=side_thresholds, force=force)
+                                thresholds=side_thresholds, force=force,
+                                fire=Doctrine.get_fire_doctrine(side, self.fire_doctrine))
             state.interceptors = self._interceptors_of(force, force_id)
             self.force_states[force_id] = state
             self.force_order.append(force_id)
@@ -1582,10 +1591,21 @@ class _EngagementRun:
         programmato su un bersaglio non prioritario (annullamento per generazione, R4) e
         ridecidono dopo il proprio `refire_interval` (evento _DECIDE, v. _register_launcher).
 
+        ## Dottrina di tiro (2026-09-29, Proposta_Overkill_Tiro.md)
+
+        Prima della scelta si escludono i bersagli bloccati (`_blocked`): SATURI per la forza —
+        la probabilita' che le salve gia' dirette contro di essi dalla forza (in volo o
+        schedulate) li distruggano raggiunge `kill_probability_threshold` (0.9) — oppure su cui
+        il tiratore ha gia' in volo `max_rounds_in_flight` colpi (2: "due missili, poi
+        guarda"). I lanciatori prioritari (L2) sono esenti dalla saturazione, non dal tetto. Se
+        tutti i bersagli sono bloccati il tiratore aspetta il primo impatto previsto su uno di
+        essi (mai prima del proprio prossimo istante di tiro) e ridecide (`_wait`, evento
+        _DECIDE). Dottrina di lato in `Context/Doctrine.DEFAULT_FIRE_DOCTRINE`.
+
         E' "semplice" perche' e' una regola greedy locale, presa dal singolo tiratore
         quando schedula il PROPRIO prossimo lancio. Cosa NON fa: non ottimizza globalmente
-        l'assegnazione arma-bersaglio (nessun WTA, nessun peso per valore del bersaglio o
-        per Pk della coppia); non redistribuisce assegnazioni gia' fatte — un lancio gia'
+        l'assegnazione arma-bersaglio (nessun WTA, nessun peso per valore del bersaglio; la Pk
+        della coppia entra solo nella saturazione); non redistribuisce assegnazioni gia' fatte — un lancio gia'
         in coda non viene mai spostato su un altro bersaglio (R4: al piu' annullato), e una
         salva in volo arriva dove era diretta; non tiene memoria del passato remoto: una
         salva gia' risolta non conta piu' come copertura.
@@ -1637,8 +1657,19 @@ class _EngagementRun:
                         if self._is_launcher_against(item[2].target_id, shooter.force_id)
                         and self._in_range_at(shooter, item[1], item[2], item[0])]
 
-            # Round-robin (v. docstring): primo istante utile, poi copertura, poi il resto.
+            # Dottrina di tiro (2026-09-29): fuori i bersagli saturi per la forza (i lanciatori
+            # prioritari ne sono esenti) e quelli su cui il tiratore ha gia' in volo il tetto di
+            # colpi; se non resta nulla il tiratore aspetta il primo impatto e ridecide.
             pool = priority or viable
+            open_pool = [item for item in pool if not self._blocked(shooter, item[2].target_id, bool(priority))]
+
+            if not open_pool:
+                if self._wait(shooter, pool, t_earliest):
+                    return
+            else:
+                pool = open_pool
+
+            # Round-robin (v. docstring): primo istante utile, poi copertura, poi il resto.
             t_first = min(t_fire for t_fire, _, _ in pool)
             best = None
 
@@ -1680,8 +1711,83 @@ class _EngagementRun:
                     continue
 
             self.assigned[shooter_id] = target_id
+            self.assigned_shot[shooter_id] = (spec, rounds, t_fire)
             self._push(t_fire, _LAUNCH, shooter_id, (index, spec, rounds, self.launch_generation.get(shooter_id, 0)))
             return
+
+    # ── dottrina di tiro: saturazione e "due missili, poi guarda" (2026-09-29) ──
+
+    def _force_shots_on(self, target_id: str, force_id: str):
+        """(ShotSpec, colpi, istante di arrivo) delle salve della forza dirette a `target_id`:
+        in volo (non ancora risolte) o schedulate e non ancora lanciate."""
+        for salvo in self.in_flight.values():
+            if salvo.target_id == target_id and self.shadows[salvo.shooter_id].force_id == force_id:
+                yield salvo.spec, salvo.rounds, salvo.t_impact, salvo.shooter_id
+
+        for other_id, assigned in self.assigned.items():
+            shot = self.assigned_shot.get(other_id)
+
+            if assigned == target_id and shot is not None and self.shadows[other_id].force_id == force_id:
+                spec, rounds, t_fire = shot
+
+                if t_fire < self.now - TIME_EPS:
+                    continue   # lancio gia' passato e non eseguito: non copre nulla
+
+                yield spec, rounds, t_fire + float(spec.time_of_flight), other_id
+
+    def _coverage(self, target_id: str, force_id: str) -> float:
+        """P_cov: probabilita' che le salve gia' dirette dalla forza distruggano il bersaglio.
+
+        Esito KILL del modello di danno (accuracy x destroy_capacity per colpo), colpi
+        indipendenti; intercettazioni ignorate (decisione O5).
+        """
+        survival = 1.0
+
+        for spec, rounds, _, _ in self._force_shots_on(target_id, force_id):
+            survival *= (1.0 - spec.accuracy * spec.destroy_capacity) ** rounds
+
+        return 1.0 - survival
+
+    def _rounds_in_flight(self, shooter_id: str, target_id: str) -> int:
+        return sum(salvo.rounds for salvo in self.in_flight.values()
+                   if salvo.shooter_id == shooter_id and salvo.target_id == target_id)
+
+    def _blocked(self, shooter: _Shadow, target_id: str, exempt_from_saturation: bool) -> bool:
+        """Il tiratore non deve aggiungere salve su `target_id` (tetto o saturazione)."""
+        fire = self.force_states[shooter.force_id].fire
+        cap = fire.get(Doctrine.FIRE_MAX_ROUNDS_IN_FLIGHT)
+
+        if cap is not None and self._rounds_in_flight(shooter.id, target_id) >= cap:
+            return True
+
+        threshold = fire.get(Doctrine.FIRE_KILL_THRESHOLD)
+
+        if threshold is None or exempt_from_saturation:
+            return False
+
+        return self._coverage(target_id, shooter.force_id) >= threshold - FRACTION_EPS
+
+    def _wait(self, shooter: _Shadow, pool, t_earliest: float) -> bool:
+        """Tutti i bersagli bloccati: ridecisione al primo impatto previsto su uno di essi (O6).
+
+        La ridecisione avviene al piu' tardi fra quell'impatto e `t_earliest`, il primo istante in
+        cui il tiratore potrebbe comunque sparare: l'attesa non accorcia mai il ciclo di tiro.
+
+        Returns:
+            True se l'attesa e' stata programmata; False se non c'e' nessun impatto da aspettare
+            (non dovrebbe accadere: un blocco nasce solo da salve in volo o schedulate), nel qual
+            caso il chiamante procede senza il filtro, per non fermare il tiratore per sempre.
+        """
+        arrivals = [t_arrival + self.salvo_window
+                    for _, _, candidate in pool
+                    for _, _, t_arrival, _ in self._force_shots_on(candidate.target_id, shooter.force_id)]
+
+        if not arrivals:
+            return False
+
+        self._push(max(min(arrivals), t_earliest, self.now), _DECIDE, shooter.id,
+                   self.launch_generation.get(shooter.id, 0))
+        return True
 
     def _is_launcher_against(self, asset_id: str, force_id: str) -> bool:
         return asset_id in self.launchers_against.get(force_id, ())
@@ -2355,6 +2461,7 @@ class _EngagementRun:
 
         while self.queue:
             time, kind, key, _, payload = heapq.heappop(self.queue)
+            self.now = time
 
             if kind == _LAUNCH:
                 self._on_launch(time, key, payload)
@@ -2407,7 +2514,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        provenance: str = DM.DERIVED,
                        breakpoint_rng=None,
                        morale_for: Optional[Callable] = None,
-                       enemy_estimate_for: Optional[Callable] = None) -> Optional[EngagementResult]:
+                       enemy_estimate_for: Optional[Callable] = None,
+                       fire_doctrine: Optional[Dict] = None) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
@@ -2454,6 +2562,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             (C2/ricognizione) nella stessa misura del rapporto percepito: minaccia
             antiaerea in aerei abbattuti attesi per una forza aerea, conteggio pesato per una
             di superficie. La forza nemica percepita e' il massimo fra stima e rilevato.
+        fire_doctrine: tabella al posto di `Doctrine.DEFAULT_FIRE_DOCTRINE` (saturazione del
+            bersaglio e tetto "due missili, poi guarda", v. `_blocked`); `{}` = nessuna regola.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -2490,7 +2600,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     run = _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, legs,
                          committed, thresholds, reaction_profile_for, detection_factor,
                          salvo_window, provenance, breakpoint_rng=breakpoint_rng,
-                         morale_for=morale_for, enemy_estimate_for=enemy_estimate_for)
+                         morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
+                         fire_doctrine=fire_doctrine)
 
     if not run.usable:
         return None

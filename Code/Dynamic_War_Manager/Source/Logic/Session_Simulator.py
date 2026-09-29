@@ -480,7 +480,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 detection_factor: Optional[Callable] = None,
                 provenance: str = DM.DERIVED,
                 morale_for: Optional[Callable] = None,
-                enemy_estimate_for: Optional[Callable] = None) -> SessionOutcome:
+                enemy_estimate_for: Optional[Callable] = None,
+                fire_doctrine: Optional[Dict] = None) -> SessionOutcome:
     """Esegue una sessione virtuale e restituisce il suo `SessionOutcome`. **Muta gli asset.**
 
     Danno, munizioni e carburante sono applicati agli asset reali man mano che gli eventi
@@ -501,7 +502,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         margin/range_type: passati a `schedule_contacts` (range_type decide se le finestre
             sono "a vista" o "a tiro").
         thresholds/reaction_profile_for/detection_factor/provenance/morale_for/
-            enemy_estimate_for: passati a `resolve_engagement`; `provenance` vale anche per i
+            enemy_estimate_for/fire_doctrine: passati a `resolve_engagement`; `provenance` vale anche per i
             FuelEvent. La tempra delle forze (soglia di rottura) e' estratta dal flusso
             `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio.
 
@@ -595,7 +596,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                                                     event_id=temper_event_id(*force_ids),
                                                                     counter=0),
                                            morale_for=morale_for,
-                                           enemy_estimate_for=enemy_estimate_for)
+                                           enemy_estimate_for=enemy_estimate_for,
+                                           fire_doctrine=fire_doctrine)
             results.append(result)
 
             if result is not None:
