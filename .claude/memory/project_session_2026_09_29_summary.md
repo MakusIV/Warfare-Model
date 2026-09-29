@@ -63,5 +63,5 @@ sessione; lì python è in `.direnv/python-3.12/bin/python3` (v. [[feedback-venv
 - Un'attesa che ridecide a un istante fisso deve rispettare il proprio ciclo di tiro, altrimenti con
   tempo di volo nullo si ha un ciclo infinito allo stesso istante.
 - `pkill -f` con un pattern che compare nella propria riga di comando uccide anche la shell corrente.
-- File dell'utente non tracciati da non committare: `Analysis/Document/Untitled 1.odt`,
-  `Documentazione e Guida Mappe DCS World.docx` (quest'ultimo servirà al modulo mappe).
+- File dell'utente non tracciato da non committare: `Analysis/Document/Untitled 1.odt`. Il .docx
+  `Documentazione e Guida Mappe DCS World.docx` è stato aggiunto al repository (4dbf9479).

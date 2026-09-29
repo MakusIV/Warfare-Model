@@ -9,7 +9,7 @@ metadata:
 ---
 
 Dichiarato dall'utente il 2026-09-29. Il documento `Analysis/Document/Documentazione e Guida Mappe DCS World.docx`
-(fornito dall'utente, non tracciato in git al momento) contiene le informazioni per realizzare un
+(fornito dall'utente, tracciato in git dal 2026-09-29, commit 4dbf9479) contiene le informazioni per realizzare un
 **modulo di gestione delle mappe**. Il modulo darà le funzionalità di base per due moduli successivi:
 1. volumi **effettivi** di rilevamento e/o minaccia che tengano conto della **morfologia del terreno**
    (oggi i volumi sono geometrici: cilindri + orizzonte radar, v. [[project-detection-interception-volumes]]);
