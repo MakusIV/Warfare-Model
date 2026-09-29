@@ -3299,7 +3299,7 @@ tu95ms_data = {
         "reliability": {"mtbf": 999, "mttr": 0}, "type": "none",
     },
     "radio_nav": {"model": "RSBN-6S", "capabilities": {"navigation_system": 0.80, "communication_system": 0.82, "communication_range": 600}, "reliability": {"mtbf": 55, "mttr": 4}},
-    "avionics": {"model": "SPO-15 Beryoza", "capabilities": {"flight_control": 0.68, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 10}},
+    "avionics": {"model": "L-150 Pastel", "capabilities": {"flight_control": 0.68, "self_defense": 0.58}, "reliability": {"mtbf": 38, "mttr": 10}},
     "hydraulic": {"model": "Generic Hydraulic System", "capabilities": {"pressure": 3000, "fluid_capacity": 300}, "reliability": {"mtbf": 120, "mttr": 14}},
     "speed_data": {
         "sustained": {"metric": "metric", "type_speed": "true_airspeed", "airspeed": 740, "altitude": 12000, "consume": 13000},

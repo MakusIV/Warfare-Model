@@ -137,7 +137,7 @@ AIRCRAFT_RWR: Dict[str, dict] = {
     'B-52H Stratofortress':    _entry(_digital('AN/ALR-46'), 'alta'),
     'Tu-160':                  _entry(_digital('BKO-1 Baykal (Baikal-3)'), 'media'),   # utente: equivalenza
     'Tu-22M':                  _entry(_spo15(), 'alta'),
-    'Tu-95MS':                 _entry(_digital('L-150 Pastel'), 'media'),   # utente; il registro dice SPO-15
+    'Tu-95MS':                 _entry(_digital('L-150 Pastel'), 'media'),   # utente; registro allineato
     'Tu-142':                  _entry(_spo15(), 'alta'),                    # utente
     # ── AEW, pattugliamento, ricognizione (ESM di bordo) ──
     'A-50':                    _entry(_digital('ESM di bordo'), 'media'),

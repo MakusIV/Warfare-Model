@@ -366,8 +366,8 @@ Note:
 
 - l'SPO-15 rileva il radar dello Shilka: verificato dall'utente in DCS con il Su-25 (la ricerca
   proponeva il contrario, sulla base di una banda di frequenza da fonte debole);
-- Tu-95MS: la ricerca indica l'L-150 Pastel, adottato; il campo `avionics` del registro dice ancora
-  SPO-15;
+- Tu-95MS: la ricerca indica l'L-150 Pastel, adottato; il campo `avionics` del registro è stato
+  allineato (prima diceva SPO-15);
 - Tu-160: il "Baikal-3 EW" del registro è considerato equivalente alla suite BKO-1 Baykal;
 - A-4E: il registro indica AN/ALR-45, adottato (la ricerca parlava dell'APR-25 del modulo DCS);
 - la **direzione** (settori) e la **granularità delle classi** sono registrate ma non ancora usate

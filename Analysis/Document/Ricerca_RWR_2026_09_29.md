@@ -14,7 +14,7 @@
 > - F-117: nessun RWR (bassa osservabilità radar); KC-130: AN/ALR-69(V);
 > - Mirage 2000C: SERVAL/SPIRALE, digitale, libreria di minacce superiore all'SPO-15;
 > - approvate le proposte del rapporto su F-14A (ALR-45: AAA + SAM generico), C-17A (ALR-69A),
->   Tu-95MS (L-150 Pastel; il campo `avionics` del registro dice ancora SPO-15), Viggen (nessun
+>   Tu-95MS (L-150 Pastel; campo `avionics` del registro allineato, prima SPO-15), Viggen (nessun
 >   riconoscimento).
 
 ---
