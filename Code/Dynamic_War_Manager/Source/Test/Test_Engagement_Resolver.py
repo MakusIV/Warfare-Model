@@ -2058,5 +2058,200 @@ class TestIntegrationWithRealObjects(unittest.TestCase):
             ER.apply_engagement_result('nope', self.blue)
 
 
+# ── SOGLIA DI ROTTURA STOCASTICA (2026-09-29) ─────────────────────────────────
+
+def _breaking_scenario(targets_see=False, shooters=1):
+    """`shooters` tiratori certi contro 10 bersagli; i bersagli non sparano mai.
+
+    Un tiratore uccide un bersaglio al secondo: le perdite crescono di 1/10 per salva, e con
+    una soglia B il numero di perdite al disingaggio e' ceil(B x 10). `targets_see` decide se
+    i bersagli rilevano i tiratori (rapporto di forze percepito, fuoco con risposta).
+    """
+    attackers, defenders, windows = _one_shooter_vs_ten(shooters=shooters)
+
+    if targets_see:
+        windows = [_window(w.asset_a_id, w.asset_b_id) for w in windows]
+
+    return attackers, defenders, windows
+
+
+def _only_shooters(shooter, target):
+    return _kill() if shooter.id.startswith('s') else None
+
+
+def _doctrine(**entry):
+    entry.setdefault('erosion', 0.3)
+    entry.setdefault('shock', 0.2)
+    return {'Blue': dict(entry), 'Red': dict(entry)}
+
+
+class TestStochasticBreakpoint(unittest.TestCase):
+    """Soglia di rottura B(t) (Proposta_Soglia_Rottura_Stocastica.md, D1-D9, D4a-D4e).
+
+    Ogni test isola UN fattore dichiarando solo la sua chiave facoltativa: le altre restano
+    ai valori neutri di Doctrine.DISENGAGEMENT_NEUTRAL.
+    """
+
+    def _lost(self, doctrine, targets_see=False, **kwargs):
+        attackers, defenders, windows = _breaking_scenario(targets_see, kwargs.pop('shooters', 1))
+        result = ER.resolve_engagement(attackers, defenders, windows, _only_shooters, random.Random(0),
+                                       reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                       thresholds=doctrine, **kwargs)
+        return result.outcome_of('defenders')
+
+    def test_neutral_table_is_the_fixed_threshold(self):
+        """Solo erosion/shock: soglia fissa, nessuna estrazione anche con il flusso dedicato."""
+        rng = _ScriptedRng([0.01])
+        outcome = self._lost(_doctrine(), breakpoint_rng=rng)
+
+        self.assertEqual(outcome.lost, 3)
+        self.assertAlmostEqual(outcome.breakpoint, 0.3)
+        self.assertIsNone(outcome.temper)
+        self.assertEqual(rng.calls, 0)
+
+    def test_temper_moves_the_breakpoint(self):
+        """D1/D2: tempra bassa -> rompe prima, alta -> dopo; una estrazione per forza."""
+        low_rng, high_rng = _ScriptedRng([0.05, 0.05]), _ScriptedRng([0.95, 0.95])
+        low = self._lost(_doctrine(dispersion=0.5), breakpoint_rng=low_rng)
+        high = self._lost(_doctrine(dispersion=0.5), breakpoint_rng=high_rng)
+
+        self.assertEqual(low_rng.calls, 2)
+        self.assertAlmostEqual(low.temper, 0.05)
+        self.assertLess(low.breakpoint, 0.3)
+        self.assertGreater(high.breakpoint, 0.3)
+        self.assertEqual((low.lost, high.lost), (2, 5))
+
+    def test_temper_stream_does_not_shift_the_engagement_draws(self):
+        """D8: il flusso della tempra e' separato, i rilevamenti restano identici."""
+        attackers, defenders, windows = _breaking_scenario()
+        common = dict(reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                      thresholds=_doctrine(dispersion=0.5))
+        without = ER.resolve_engagement(attackers, defenders, windows, _only_shooters, random.Random(3), **common)
+        with_temper = ER.resolve_engagement(attackers, defenders, windows, _only_shooters, random.Random(3),
+                                            breakpoint_rng=random.Random(99), **common)
+
+        self.assertEqual([d.draw for d in without.detections], [d.draw for d in with_temper.detections])
+
+    def test_without_temper_stream_the_breakpoint_is_the_median(self):
+        outcome = self._lost(_doctrine(dispersion=0.5))
+
+        self.assertIsNone(outcome.temper)
+        self.assertAlmostEqual(outcome.breakpoint, 0.3)
+
+    def test_morale(self):
+        """D3: morale 1 alza la mediana del 30%, morale 0 la abbassa, None e' neutro."""
+        doctrine = _doctrine(erosion=0.4, morale_weight=0.3)
+
+        self.assertEqual(self._lost(doctrine, morale_for=lambda force: 1.0).lost, 6)   # 0.52
+        self.assertEqual(self._lost(doctrine, morale_for=lambda force: None).lost, 4)  # 0.40
+        self.assertEqual(self._lost(doctrine, morale_for=lambda force: 0.0).lost, 3)   # 0.28
+
+    def test_invalid_morale_is_neutral_with_a_warning(self):
+        with patch(_ER_LOGGER) as mock_logger:
+            outcome = self._lost(_doctrine(erosion=0.4, morale_weight=0.3), morale_for=lambda force: 7)
+
+        self.assertIsNone(outcome.morale)
+        self.assertEqual(outcome.lost, 4)
+        mock_logger.warning.assert_called()
+
+    def test_unanswered_fire(self):
+        """D5: perdite da tiratori mai rilevati abbassano la soglia."""
+        doctrine = _doctrine(erosion=0.4, unanswered_fire_weight=0.3)
+        unseen = self._lost(doctrine, targets_see=False)
+        seen = self._lost(doctrine, targets_see=True)
+
+        self.assertEqual((unseen.unanswered_fraction, unseen.lost), (1.0, 3))   # 0.28
+        self.assertEqual((seen.unanswered_fraction, seen.lost), (0.0, 4))       # 0.40
+
+    def test_force_ratio_on_the_surface(self):
+        """D4e: 10 bersagli che vedono 1 tiratore -> rho alto, R al limite superiore 1.5."""
+        doctrine = _doctrine(force_ratio_exponent=0.5)
+        seen = self._lost(doctrine, targets_see=True)
+        unseen = self._lost(doctrine, targets_see=False)
+
+        self.assertEqual(seen.lost, 5)                     # 0.45
+        self.assertAlmostEqual(seen.force_ratio, 5.0)      # 5 operativi contro 1 all'ultima valutazione
+        self.assertIsNone(unseen.force_ratio)              # nessun nemico percepito: neutro
+        self.assertEqual(unseen.lost, 3)
+
+    def test_enemy_estimate_counts_before_detection(self):
+        doctrine = _doctrine(force_ratio_exponent=0.5)
+        outcome = self._lost(doctrine, enemy_estimate_for=lambda force: 20.0 if force.name == 'defenders' else None)
+
+        self.assertLess(outcome.force_ratio, 1.0)
+        self.assertLess(outcome.breakpoint, 0.3)
+
+    def test_defensive_posture(self):
+        """D6: forza ferma per tutto l'ingaggio -> soglia x 1.2; in movimento o senza tratti no."""
+        doctrine = _doctrine(defensive_posture_factor=1.2)
+        still = {f't{i:02d}': [Leg(0.0, 1000.0, (i, 0.0, 0.0), (i, 0.0, 0.0))] for i in range(10)}
+        moving = {f't{i:02d}': [Leg(0.0, 1000.0, (i, 0.0, 0.0), (i, 500.0, 0.0))] for i in range(10)}
+
+        self.assertEqual(self._lost(doctrine, legs=still).lost, 4)   # 0.36
+        self.assertEqual(self._lost(doctrine, legs=moving).lost, 3)
+        self.assertEqual(self._lost(doctrine).lost, 3)
+
+    def test_shock_needs_the_minimum_losses(self):
+        """D7: 2 perdite per salva; con minimo 3 lo shock non scatta, con minimo 2 si'."""
+        strict = self._lost(_doctrine(erosion=0.5, shock_min_losses=3), shooters=2)
+        loose = self._lost(_doctrine(erosion=0.5, shock_min_losses=2), shooters=2)
+
+        self.assertEqual((strict.triggers, strict.lost), ((ER.TRIGGER_EROSION,), 6))
+        self.assertEqual((loose.triggers, loose.lost), ((ER.TRIGGER_SHOCK,), 2))
+
+    def test_fight_to_annihilation_is_not_modulated(self):
+        doctrine = _doctrine(erosion=1.0, shock=1.0, dispersion=0.5, unanswered_fire_weight=0.3)
+        outcome = self._lost(doctrine, breakpoint_rng=_ScriptedRng([0.01, 0.01]))
+
+        self.assertEqual(outcome.outcome, ER.DESTROYED)
+        self.assertEqual(outcome.breakpoint, 1.0)
+
+    def test_input_type_errors(self):
+        attackers, defenders, windows = _breaking_scenario()
+        for kwargs in ({'breakpoint_rng': object()}, {'morale_for': 3}, {'enemy_estimate_for': 'x'}):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(TypeError):
+                    ER.resolve_engagement(attackers, defenders, windows, _only_shooters, random.Random(0),
+                                          **kwargs)
+
+
+class _ADStub(_Asset):
+    """Asset di difesa aerea stub con modello reale: l'efficacia la legge dal registro."""
+
+    def __init__(self, asset_id, model, stores):
+        super().__init__(asset_id, stores=stores)
+        self._model = model
+
+
+class TestAirForceRatio(unittest.TestCase):
+    """D4a/D4d: una forza aerea misura il nemico in aerei abbattuti attesi, E(N)."""
+
+    def _ratio(self, model, weapon, missiles):
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        aircraft = [Aircraft('a0'), Aircraft('a1')]
+        air = _Force('air', 'Blue', aircraft)
+        site = _ADStub('sam', model, {weapon: missiles})
+        ground = _Force('ground', 'Red', [site])
+        windows = [_window('a0', 'sam', distance=0.0), _window('a1', 'sam', distance=0.0)]
+        fire = lambda shooter, target: _kill() if shooter.id == 'sam' else None
+        result = ER.resolve_engagement(air, ground, windows, fire, random.Random(0),
+                                       reaction_profile_for=_profiles({'sam': (2.0, 1.0)}, default=(500.0, 1.0)),
+                                       thresholds=_doctrine(force_ratio_exponent=0.5))
+        outcome = result.outcome_of('air')
+        spent = sum(e.rounds for e in result.ammunition_events if e.asset_id == 'sam')
+        expected = 1 / (2.0 * ADE.air_defense_efficacy(site, 1, stock={weapon: missiles - spent}))
+        return outcome, expected
+
+    def test_buk_threatens_more_than_kub(self):
+        buk, buk_expected = self._ratio('9K37-Buk', '9M38-SAM', 4)
+        kub, kub_expected = self._ratio('2K12-Kub', '3M9-SAM', 3)
+
+        self.assertAlmostEqual(buk.force_ratio, buk_expected)
+        self.assertAlmostEqual(kub.force_ratio, kub_expected)
+        self.assertLess(buk.force_ratio, kub.force_ratio)
+
+
+
 if __name__ == '__main__':
     unittest.main()

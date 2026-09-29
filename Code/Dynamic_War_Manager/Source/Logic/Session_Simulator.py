@@ -181,6 +181,9 @@ MOVEMENT_EVENT = 1
 
 # Etichetta del primo elemento dell'event_id di un ingaggio (v. engagement_event_id).
 ENGAGEMENT_EVENT_TAG = 'engagement'
+# Tag dell'event_id del flusso casuale SEPARATO della tempra delle forze (soglia di rottura
+# stocastica, 2026-09-29): stesse forze, flusso diverso da quello di rilevamento e danno.
+TEMPER_EVENT_TAG = 'temper'
 
 # Regimi di consumo (Mobile.FUEL_REGIMES).
 CRUISE_REGIME = 'nominal'
@@ -230,6 +233,19 @@ def engagement_event_id(*force_ids: str) -> str:
         raise ValueError(f"force ids must be distinct, got {force_ids!r}")
 
     return json.dumps([ENGAGEMENT_EVENT_TAG, *sorted(force_ids)],
+                      ensure_ascii=True, separators=(',', ':'))
+
+
+def temper_event_id(*force_ids: str) -> str:
+    """`event_id` del flusso della tempra per l'ingaggio fra le forze date.
+
+    Stessa forma e stessi vincoli di `engagement_event_id`, tag diverso: il flusso della
+    tempra e' indipendente da quello dell'ingaggio, cosi' che estrarre la tempra non sposti
+    le estrazioni di rilevamento e danno.
+    """
+    engagement_event_id(*force_ids)  # stessa validazione
+
+    return json.dumps([TEMPER_EVENT_TAG, *sorted(force_ids)],
                       ensure_ascii=True, separators=(',', ':'))
 
 
@@ -462,7 +478,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 thresholds: Optional[Dict] = None,
                 reaction_profile_for: Optional[Callable] = None,
                 detection_factor: Optional[Callable] = None,
-                provenance: str = DM.DERIVED) -> SessionOutcome:
+                provenance: str = DM.DERIVED,
+                morale_for: Optional[Callable] = None,
+                enemy_estimate_for: Optional[Callable] = None) -> SessionOutcome:
     """Esegue una sessione virtuale e restituisce il suo `SessionOutcome`. **Muta gli asset.**
 
     Danno, munizioni e carburante sono applicati agli asset reali man mano che gli eventi
@@ -482,8 +500,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             senza rotta = fermo in posizione.
         margin/range_type: passati a `schedule_contacts` (range_type decide se le finestre
             sono "a vista" o "a tiro").
-        thresholds/reaction_profile_for/detection_factor/provenance: passati a
-            `resolve_engagement`; `provenance` vale anche per i FuelEvent.
+        thresholds/reaction_profile_for/detection_factor/provenance/morale_for/
+            enemy_estimate_for: passati a `resolve_engagement`; `provenance` vale anche per i
+            FuelEvent. La tempra delle forze (soglia di rottura) e' estratta dal flusso
+            `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio.
 
     Returns:
         Il `SessionOutcome`; vuoto ma valido se nessuno si incontra e nessuno si muove.
@@ -570,7 +590,12 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                            reaction_profile_for=reaction_profile_for,
                                            detection_factor=detection_factor,
                                            salvo_window=order.salvo_window,
-                                           provenance=provenance)
+                                           provenance=provenance,
+                                           breakpoint_rng=order.rng(mission_id=None,
+                                                                    event_id=temper_event_id(*force_ids),
+                                                                    counter=0),
+                                           morale_for=morale_for,
+                                           enemy_estimate_for=enemy_estimate_for)
             results.append(result)
 
             if result is not None:

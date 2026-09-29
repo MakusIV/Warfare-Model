@@ -48,7 +48,8 @@ attraverso l'RNG di sessione passato dal chiamante.
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
 6. **Disingaggio (P1 + R2).** Dopo ogni evento-salva la forza colpita confronta le proprie
    perdite con la dottrina di lato (`Context/Doctrine.get_disengagement_thresholds`):
-   erosione cumulata *oppure* shock della singola salva, qualunque scatti per primo. Se
+   erosione cumulata *oppure* shock della singola salva, qualunque scatti per primo, con la
+   soglia di rottura propria della forza (v. "Soglia di rottura", dal 2026-09-29). Se
    scatta, **tutta la forza** rompe il contatto: esito `DISENGAGED`, distinto da
    `DESTROYED` (nessun asset impegnato ancora operativo).
 
@@ -63,6 +64,33 @@ attraverso l'RNG di sessione passato dal chiamante.
    Il controllo e' sulla gerarchia di classe (`validate_class`), non su un campo testuale
    come `category`. Un oggetto che non e' affatto un `Block` (stub duck-typed nei test,
    adapter futuri) resta trattato come una forza combattente: legge la dottrina di lato.
+
+## Soglia di rottura (2026-09-29, decisioni D1-D9 e D4a-D4e)
+
+`Analysis/Document/Proposta_Soglia_Rottura_Stocastica.md`. Con soglie fisse la perdita
+minima 1/n faceva scattare il disingaggio alla prima perdita per le forze piccole (S1: 5
+carri si ritiravano per un carro in 7 repliche su 8). Ora la soglia di erosione e' la soglia
+di rottura B(t) della forza, con mediana `erosion` e parametri di `Context/Doctrine`:
+
+* **tempra**: un quantile `u` estratto UNA volta per forza e per ingaggio, dal flusso
+  separato `breakpoint_rng` (in sessione `SessionOrder.rng(event_id=temper_event_id(...))`):
+  le estrazioni di rilevamento e danno di `rng` restano quelle di prima. Senza flusso
+  dedicato la tempra non si estrae e B(t) sta alla mediana modulata;
+* **morale** (`morale_for`, None = neutro), **rapporto di forze percepito** rho(t) dai
+  nemici rilevati entro t (`seen_by`) e dalla stima a priori (`enemy_estimate_for`),
+  **fuoco senza risposta** (perdite causate da tiratori non ancora rilevati: `loss_shooters`),
+  **postura** (forza con tutti i tratti di rotta fermi);
+* rho(t) per una forza AEREA (tutti gli asset impegnati sono aerei): aerei propri operativi /
+  (air_force_ratio_scale x minaccia), con minaccia = somma di `Air_Defense_Efficacy.air_threat_weight`
+  dei nemici rilevati (E(N) degli asset AD con la scorta ombra corrente, 1 per i caccia);
+  per una forza di SUPERFICIE: somma dei `surface_threat_weight` propri / nemici (SAM puri 0).
+  Nemici distrutti esclusi, danneggiati inclusi. Rapporto non definito -> neutro;
+* **shock**: soglia (shock / erosion) x B(t), e solo se la salva ha tolto almeno
+  `shock_min_losses` asset.
+
+B(t) e' ricalcolata a ogni risoluzione di salva contro la forza. Una tabella con le sole
+`erosion`/`shock` (chiavi facoltative ai valori neutri) riproduce esattamente le soglie
+fisse precedenti; `erosion` = 1 resta "combatte fino all'annientamento".
 
 ## Controllo di portata (2026-09-24, decisione utente)
 
@@ -211,11 +239,14 @@ eventi finisce sempre e solo quando la coda si svuota.
 """
 
 import heapq
+import math
 from collections import abc
+from statistics import NormalDist
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
+from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
 from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Context import Reaction_Profile as RP
 from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCategory
@@ -276,6 +307,11 @@ OPERATIVE_HEALTH_FLOOR = int(round(DM.HEALTH_MAX * HEALTH_LEVEL[StateCategory.CR
 # Tolleranza nei confronti fra frazioni di perdita e soglie dottrinali: 3/10 deve valere
 # 0.30 anche con l'aritmetica in virgola mobile.
 FRACTION_EPS = 1e-9
+
+# Soglia di rottura (2026-09-29): limiti del quantile della tempra (Phi^-1 finito) e
+# tolleranza [m] per dire "fermo" un tratto di rotta.
+BREAKPOINT_U_EPS = 1e-9
+STATIONARY_EPS = 1e-6
 
 # Esiti di forza.
 HELD = 'held'                  # ancora in contatto a fine ingaggio (o nessuno ha rotto)
@@ -501,6 +537,13 @@ class ForceOutcome:
         triggers: motivi (TRIGGER_*) — possono scattare insieme erosione e shock.
         committed: asset impegnati all'inizio; lost: di questi, non piu' operativi alla fine.
         erosion: lost / committed alla fine; max_shock: la salva peggiore subita.
+        temper: quantile `u` della tempra estratto per la forza (None: non estratto, mediana).
+        breakpoint: soglia di rottura B(t) all'ultima valutazione (None: mai valutata o
+            forza senza dottrina).
+        morale: morale usato (None: sconosciuto, neutro).
+        force_ratio: rapporto di forze percepito rho all'ultima valutazione (None: non
+            definito, neutro).
+        unanswered_fraction: quota delle perdite causate da tiratori non rilevati.
     """
     force_id: str
     side: Optional[str]
@@ -511,6 +554,11 @@ class ForceOutcome:
     lost: int
     erosion: float
     max_shock: float
+    temper: Optional[float] = None
+    breakpoint: Optional[float] = None
+    morale: Optional[float] = None
+    force_ratio: Optional[float] = None
+    unanswered_fraction: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -1058,6 +1106,18 @@ class _ForceState:
     time: Optional[float] = None
     triggers: Tuple[str, ...] = ()
     max_shock: float = 0.0
+    # Soglia di rottura stocastica (2026-09-29, v. "Soglia di rottura" nel docstring).
+    force: object = None
+    air: bool = False
+    temper: Optional[float] = None
+    temper_z: float = 0.0
+    morale: Optional[float] = None
+    enemy_estimate: Optional[float] = None
+    stationary: Optional[bool] = None
+    loss_shooters: Dict[str, Tuple[str, float]] = field(default_factory=dict)
+    breakpoint: Optional[float] = None
+    force_ratio: Optional[float] = None
+    unanswered_fraction: float = 0.0
 
 
 @dataclass
@@ -1140,9 +1200,17 @@ class _EngagementRun:
     """Stato e coda eventi di UN ingaggio (2+ forze). Uso interno: v. `resolve_engagement`."""
 
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
-                 reaction_profile_for, detection_factor, salvo_window, provenance):
+                 reaction_profile_for, detection_factor, salvo_window, provenance,
+                 breakpoint_rng=None, morale_for=None, enemy_estimate_for=None):
         self.fire_control = fire_control
         self.rng = rng
+        self.breakpoint_rng = breakpoint_rng
+        self.morale_for = morale_for
+        self.enemy_estimate_for = enemy_estimate_for
+        # Primo istante in cui ciascuna forza ha rilevato ciascun asset nemico (qualunque
+        # suo osservatore): la base della percezione del nemico (soglia di rottura, D4/D5).
+        self.seen_by: Dict[str, Dict[str, float]] = {}
+        self.surface_weights: Dict[str, float] = {}
         self.legs = legs or {}
         self.zone_cache: Dict[str, Optional[Tuple[float, float, float]]] = {}
         # Regole L2/L3 (2026-09-28): aerei che hanno lanciato armi aria-superficie contro
@@ -1188,6 +1256,9 @@ class _EngagementRun:
         self.interception_events: List[InterceptionEvent] = []
 
         self.usable = self._build_forces(forces, committed, thresholds)
+
+        if self.usable:
+            self._init_breakpoints()
 
     # ── costruzione ───────────────────────────────────────────────────────────
 
@@ -1251,7 +1322,7 @@ class _EngagementRun:
                                    f"(force {force_id!r}): it will fight until annihilation")
 
             state = _ForceState(force_id=force_id, side=side, committed=tuple(committed_ids),
-                                thresholds=side_thresholds)
+                                thresholds=side_thresholds, force=force)
             state.interceptors = self._interceptors_of(force, force_id)
             self.force_states[force_id] = state
             self.force_order.append(force_id)
@@ -1370,6 +1441,8 @@ class _EngagementRun:
         if detected:
             radius = detection_radius(draw, own_range, factor)
             time = self._detection_time(window, observer.id, target.id, own_range, other_range, radius)
+            seen = self.seen_by.setdefault(observer.force_id, {})
+            seen[target.id] = min(seen.get(target.id, time), time)
 
             t_ready = time + self._profile(observer.id).total
 
@@ -1985,11 +2058,16 @@ class _EngagementRun:
                     wasted += 1
                     continue
 
+                was_operative = target.operative
                 event = DM.build_damage_event(target, salvo.spec.accuracy, salvo.spec.destroy_capacity,
                                               self._draw(), time=time, source_id=salvo.shooter_id,
                                               weapon=salvo.spec.weapon, provenance=self.provenance)
                 target.health = event.health_after
                 self.damage_events.append(event)
+
+                if was_operative and not target.operative:
+                    # Chi ha messo fuori combattimento l'asset (fuoco senza risposta, D5).
+                    state.loss_shooters[target.id] = (salvo.shooter_id, time)
 
         after = {asset_id for asset_id in committed if self.shadows[asset_id].operative}
         losses = tuple(sorted(before - after))
@@ -2003,17 +2081,20 @@ class _EngagementRun:
                                                 wasted=wasted, losses=losses, shock=shock,
                                                 erosion=erosion))
         self._touch(time)
-        self._check_doctrine(time, state, shock, erosion, len(after))
+        self._check_doctrine(time, state, shock, erosion, len(after), len(losses))
 
     # ── fase 4: disingaggio ───────────────────────────────────────────────────
 
     def _check_doctrine(self, time: float, state: _ForceState, shock: float, erosion: float,
-                        operative_left: int) -> None:
+                        operative_left: int, salvo_losses: int = 0) -> None:
         """Confronta le perdite con la dottrina del lato, per la FORZA INTERA (P1 + R2).
 
         Le due soglie sono verificate con la stessa regola per entrambi i lati: nessun
         trattamento speciale per chi ha colpito o per chi ha iniziato (R2 lo richiede
-        esplicitamente, per non ereditare l'applicazione incoerente della fonte).
+        esplicitamente, per non ereditare l'applicazione incoerente della fonte). Dal
+        2026-09-29 la soglia di erosione e' la soglia di rottura B(t) della forza e quella di
+        shock (shock / erosion) x B(t), con un minimo di perdite nella salva (v. "Soglia di
+        rottura" nel docstring del modulo).
         """
         state.max_shock = max(state.max_shock, shock)
 
@@ -2030,12 +2111,16 @@ class _EngagementRun:
         if state.outcome is not None or state.thresholds is None:
             return
 
+        breakpoint = self._breakpoint(time, state)
+        median = state.thresholds[Doctrine.DISENGAGEMENT_EROSION]
+        shock_threshold = state.thresholds[Doctrine.DISENGAGEMENT_SHOCK] * (breakpoint / median)
+        min_losses = Doctrine.disengagement_parameter(state.thresholds, Doctrine.SHOCK_MIN_LOSSES)
         triggers = []
 
-        if erosion >= state.thresholds[Doctrine.DISENGAGEMENT_EROSION] - FRACTION_EPS:
+        if erosion >= breakpoint - FRACTION_EPS:
             triggers.append(TRIGGER_EROSION)
 
-        if shock >= state.thresholds[Doctrine.DISENGAGEMENT_SHOCK] - FRACTION_EPS:
+        if salvo_losses >= min_losses and shock >= shock_threshold - FRACTION_EPS:
             triggers.append(TRIGGER_SHOCK)
 
         if triggers:
@@ -2044,7 +2129,200 @@ class _EngagementRun:
             state.triggers = tuple(triggers)
             self.broken_forces.add(state.force_id)
             logger.debug(f"force {state.force_id!r} disengages at t={time} ({triggers}): "
-                         f"erosion={erosion:.3f}, shock={shock:.3f}")
+                         f"erosion={erosion:.3f}, shock={shock:.3f}, breakpoint={breakpoint:.3f}")
+
+    # ── soglia di rottura stocastica (2026-09-29) ─────────────────────────────
+
+    def _init_breakpoints(self) -> None:
+        """Tempra, morale, stima a priori e postura di ogni forza con dottrina.
+
+        Un'estrazione della tempra per forza, nell'ordine di ingresso delle forze, dal flusso
+        SEPARATO `breakpoint_rng` e solo se la dottrina ha dispersione > 0: l'ordine delle
+        estrazioni di rilevamento e danno (`rng`) non cambia. Senza `breakpoint_rng` la tempra
+        non e' estratta (z = 0, soglia alla mediana): politica dichiarata per le chiamate
+        dirette senza flusso dedicato.
+        """
+        for force_id in self.force_order:
+            state = self.force_states[force_id]
+
+            if state.thresholds is None:
+                continue
+
+            state.air = bool(state.committed) and all(
+                validate_class(self.shadows[asset_id].asset, 'Aircraft') for asset_id in state.committed)
+            state.morale = self._morale_of(state)
+            state.enemy_estimate = self._enemy_estimate_of(state)
+            state.stationary = self._stationary(state)
+
+            dispersion = Doctrine.disengagement_parameter(state.thresholds, Doctrine.BREAKPOINT_DISPERSION)
+
+            if dispersion > 0.0 and self.breakpoint_rng is not None:
+                u = float(self.breakpoint_rng.random())
+
+                if not 0.0 <= u < 1.0:
+                    raise ValueError(f"breakpoint_rng.random() must return a float in [0, 1), got {u!r}")
+
+                u = min(max(u, BREAKPOINT_U_EPS), 1.0 - BREAKPOINT_U_EPS)
+                state.temper = u
+                state.temper_z = NormalDist().inv_cdf(u)
+
+    def _morale_of(self, state: _ForceState) -> Optional[float]:
+        if self.morale_for is None:
+            return None
+
+        value = self.morale_for(state.force)
+
+        if value is None:
+            return None
+
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.0 <= value <= 1.0:
+            logger.warning(f"resolve_engagement: morale {value!r} of force {state.force_id!r} not in [0, 1], "
+                           f"treated as unknown (neutral)")
+            return None
+
+        return float(value)
+
+    def _enemy_estimate_of(self, state: _ForceState) -> Optional[float]:
+        if self.enemy_estimate_for is None:
+            return None
+
+        value = self.enemy_estimate_for(state.force)
+
+        if value is None:
+            return None
+
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+            logger.warning(f"resolve_engagement: enemy estimate {value!r} of force {state.force_id!r} "
+                           f"not a number >= 0, ignored")
+            return None
+
+        return float(value)
+
+    def _stationary(self, state: _ForceState) -> Optional[bool]:
+        """True se tutti gli asset con tratti di rotta sono fermi; None se nessuno ne ha."""
+        known = False
+
+        for asset_id in state.committed:
+            legs = self.legs.get(asset_id)
+
+            if not legs:
+                continue
+
+            known = True
+
+            for leg in legs:
+                if any(abs(a - b) > STATIONARY_EPS for a, b in zip(leg.p_start, leg.p_end)):
+                    return False
+
+        return True if known else None
+
+    def _is_enemy(self, state: _ForceState, shadow: _Shadow) -> bool:
+        if shadow.force_id == state.force_id:
+            return False
+
+        other = self.force_states[shadow.force_id].side
+
+        return state.side is None or other is None or other != state.side
+
+    def _perceived_ratio(self, time: float, state: _ForceState) -> Optional[float]:
+        """rho(t): forza propria / forza nemica percepita (D4a-D4e), None se non definito."""
+        seen = self.seen_by.get(state.force_id, {})
+        enemies = [self.shadows[asset_id] for asset_id, t_seen in seen.items()
+                   if t_seen <= time + TIME_EPS and self._is_enemy(state, self.shadows[asset_id])
+                   and not self.shadows[asset_id].destroyed]
+        own = [self.shadows[asset_id] for asset_id in state.committed if self.shadows[asset_id].operative]
+
+        if state.air:
+            n_aircraft = len(own)
+            threat = sum(ADE.air_threat_weight(shadow.asset, n_aircraft, stock=shadow.stores)
+                         for shadow in enemies)
+
+            if state.enemy_estimate is not None:
+                threat = max(threat, state.enemy_estimate)
+
+            if threat <= 0.0:
+                return None
+
+            scale = Doctrine.disengagement_parameter(state.thresholds, Doctrine.AIR_FORCE_RATIO_SCALE)
+
+            return n_aircraft / (scale * threat)
+
+        enemy = sum(self._surface_weight(shadow) for shadow in enemies)
+
+        if state.enemy_estimate is not None:
+            enemy = max(enemy, state.enemy_estimate)
+
+        own_strength = sum(self._surface_weight(shadow) for shadow in own)
+
+        if enemy <= 0.0 or own_strength <= 0.0:
+            return None
+
+        return own_strength / enemy
+
+    def _surface_weight(self, shadow: _Shadow) -> float:
+        weight = self.surface_weights.get(shadow.id)
+
+        if weight is None:
+            weight = ADE.surface_threat_weight(shadow.asset)
+            self.surface_weights[shadow.id] = weight
+
+        return weight
+
+    def _unanswered_fraction(self, state: _ForceState) -> float:
+        """Quota delle perdite causate da tiratori che la forza non aveva rilevato (D5)."""
+        if not state.loss_shooters:
+            return 0.0
+
+        seen = self.seen_by.get(state.force_id, {})
+        unanswered = sum(1 for shooter_id, t_loss in state.loss_shooters.values()
+                         if seen.get(shooter_id, float('inf')) > t_loss + TIME_EPS)
+
+        return unanswered / len(state.loss_shooters)
+
+    def _breakpoint(self, time: float, state: _ForceState) -> float:
+        """B(t) = logistic(logit(mu_eff) + dispersion x z), v. Context/Doctrine."""
+        thresholds = state.thresholds
+        median = thresholds[Doctrine.DISENGAGEMENT_EROSION]
+
+        if median >= 1.0 - FRACTION_EPS:
+            # "Combatte fino all'annientamento": nessuna modulazione.
+            state.breakpoint = 1.0
+            return 1.0
+
+        param = lambda key: Doctrine.disengagement_parameter(thresholds, key)
+        factor = 1.0
+
+        if state.morale is not None:
+            factor *= 1.0 + param(Doctrine.MORALE_WEIGHT) * (2.0 * state.morale - 1.0)
+
+        rho = self._perceived_ratio(time, state)
+        state.force_ratio = rho
+        exponent = param(Doctrine.FORCE_RATIO_EXPONENT)
+
+        if rho is not None and exponent > 0.0:
+            low, high = param(Doctrine.FORCE_RATIO_BOUNDS)
+            factor *= min(max(rho ** exponent if rho > 0.0 else 0.0, low), high)
+
+        state.unanswered_fraction = self._unanswered_fraction(state)
+        factor *= 1.0 - param(Doctrine.UNANSWERED_FIRE_WEIGHT) * state.unanswered_fraction
+
+        if state.stationary:
+            factor *= param(Doctrine.DEFENSIVE_POSTURE_FACTOR)
+
+        mu = median * factor
+
+        if factor != 1.0:
+            low, high = param(Doctrine.MEDIAN_BOUNDS)
+            mu = min(max(mu, min(low, median)), max(high, median))
+
+        dispersion = param(Doctrine.BREAKPOINT_DISPERSION)
+
+        if dispersion > 0.0 and state.temper_z != 0.0:
+            logit = math.log(mu / (1.0 - mu)) + dispersion * state.temper_z
+            mu = 1.0 / (1.0 + math.exp(-logit))
+
+        state.breakpoint = mu
+        return mu
 
     # ── ciclo principale ──────────────────────────────────────────────────────
 
@@ -2081,7 +2359,10 @@ class _EngagementRun:
                                          outcome=state.outcome or HELD, time=state.time,
                                          triggers=state.triggers, committed=committed, lost=lost,
                                          erosion=lost / committed if committed else 0.0,
-                                         max_shock=state.max_shock))
+                                         max_shock=state.max_shock, temper=state.temper,
+                                         breakpoint=state.breakpoint, morale=state.morale,
+                                         force_ratio=state.force_ratio,
+                                         unanswered_fraction=state.unanswered_fraction))
 
         return EngagementResult(t_start=self.t_start,
                                 t_end=self.t_end if self.t_end is not None else self.t_start,
@@ -2102,7 +2383,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        reaction_profile_for: Optional[Callable] = None,
                        detection_factor: Optional[Callable] = None,
                        salvo_window: float = 0.0,
-                       provenance: str = DM.DERIVED) -> Optional[EngagementResult]:
+                       provenance: str = DM.DERIVED,
+                       breakpoint_rng=None,
+                       morale_for: Optional[Callable] = None,
+                       enemy_estimate_for: Optional[Callable] = None) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
@@ -2139,6 +2423,16 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             simultanei — la scelta piu' conservativa; quale finestra usare e' un punto
             aperto di modello, da decidere con la taratura.
         provenance: provenienza dei DamageEvent prodotti (default DERIVED).
+        breakpoint_rng: flusso casuale SEPARATO (oggetto con `.random()`) da cui estrarre la
+            tempra di ogni forza (v. "Soglia di rottura"); None = tempra non estratta, soglia
+            alla mediana modulata. Separato da `rng` perche' le sue estrazioni non spostino
+            quelle di rilevamento e danno.
+        morale_for: `force -> float in [0, 1] | None`, morale della forza; default None per
+            tutte (neutro, mai "morale nullo").
+        enemy_estimate_for: `force -> float >= 0 | None`, stima a priori della forza nemica
+            (C2/ricognizione) nella stessa misura del rapporto percepito: minaccia
+            antiaerea in aerei abbattuti attesi per una forza aerea, conteggio pesato per una
+            di superficie. La forza nemica percepita e' il massimo fra stima e rilevato.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -2165,9 +2459,17 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
 
     extra_forces = tuple(extra_forces) if extra_forces is not None else ()
 
+    if breakpoint_rng is not None and not callable(getattr(breakpoint_rng, 'random', None)):
+        raise TypeError("breakpoint_rng must expose a random() method returning a float in [0, 1)")
+
+    for name, fn in (('morale_for', morale_for), ('enemy_estimate_for', enemy_estimate_for)):
+        if fn is not None and not callable(fn):
+            raise TypeError(f"{name} must be callable")
+
     run = _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, legs,
                          committed, thresholds, reaction_profile_for, detection_factor,
-                         salvo_window, provenance)
+                         salvo_window, provenance, breakpoint_rng=breakpoint_rng,
+                         morale_for=morale_for, enemy_estimate_for=enemy_estimate_for)
 
     if not run.usable:
         return None

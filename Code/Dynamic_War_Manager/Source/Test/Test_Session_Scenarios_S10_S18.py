@@ -109,6 +109,13 @@ RED_HOLDS = {
 # Entrambi i lati ad oltranza: uno scambio che non si interrompe alla prima perdita.
 BOTH_HOLD = {'Blue': dict(_HOLD), 'Red': dict(_HOLD)}
 
+# Soglie FISSE (solo erosione/shock, chiavi facoltative ai valori neutri): i valori di
+# mediana della dottrina di default, senza tempra ne' modulazione. E' la modalita'
+# deterministica della soglia di rottura (2026-09-29), usata da S10 per verificare il
+# meccanismo di disingaggio indipendentemente dalla sua taratura.
+_FIXED = {key: Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Red'][key] for key in Doctrine.DISENGAGEMENT_KEYS}
+FIXED_THRESHOLDS = {'Blue': dict(_FIXED), 'Red': dict(_FIXED)}
+
 # Tabella di fuoco per le missioni di bombardamento (v. "Intercettazione" nel docstring):
 # il ruolo 'strike' sgancia bombe non intercettabili (`SHOTS['bomb']`, l'arma dei loadout
 # 'Strike'/'Laser Strike') sui bersagli di superficie non-AD; tutto il resto come nella
@@ -154,8 +161,10 @@ class TestS10DisengagementThreshold(F.LoggerSilencer, unittest.TestCase):
     arma SOLO i carri Blue (tabella vuota + override per id): Red non risponde, cosi' le
     perdite di Red sono l'unica variabile e l'esito dipende solo dalla dottrina.
 
-    Casi (dottrina di default, `Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS`: erosione 0.30,
-    shock 0.20 per entrambi i lati):
+    Casi (soglie FISSE alla mediana della dottrina di default, `FIXED_THRESHOLDS`: erosione
+    0.30, shock 0.20 per entrambi i lati; dal 2026-09-29 la dottrina di default e' la soglia
+    di rottura stocastica, e il meccanismo si verifica nella sua modalita' deterministica —
+    la dottrina di default ha un caso a parte, DISPERSIONE, in fondo):
       * EROSIONE — 1 solo tiratore: ogni salva costa a Red al massimo 1 mezzo su 10 (0.10,
         sotto lo shock), quindi la soglia che scatta e' l'erosione, a ingaggio gia' in
         corso (dopo salve che non l'hanno fatta scattare). Domanda: esito DISENGAGED, non
@@ -177,6 +186,10 @@ class TestS10DisengagementThreshold(F.LoggerSilencer, unittest.TestCase):
         rilevato non e' mai ingaggiato e l'esito osservato e' HELD con perdite = mezzi
         rilevati (7-9 su 10). E' il comportamento dichiarato del risolutore (§1 del suo
         docstring), non un limite della dottrina.
+      * DISPERSIONE — 4 tiratori con la dottrina di DEFAULT (soglia di rottura stocastica):
+        la tempra e' estratta dal flusso separato della sessione, e il punto di rottura non
+        e' piu' lo stesso in ogni replica. Domanda: le soglie estratte sono diverse fra le
+        repliche, e ogni forza rotta ha superato la PROPRIA soglia.
 
     Nota sul docstring di P3 ("la forza superstite rientra nello scheduler dei contatti su
     una nuova rotta"): il ri-instradamento dopo un disingaggio NON e' implementato (R4,
@@ -202,7 +215,7 @@ class TestS10DisengagementThreshold(F.LoggerSilencer, unittest.TestCase):
         return blue, red, fire
 
     @classmethod
-    def _run(cls, session_id, *, shooters=1, ammunition=None, thresholds=None):
+    def _run(cls, session_id, *, shooters=1, ammunition=None, thresholds=FIXED_THRESHOLDS):
         blue, red, fire = cls._build(shooters, ammunition)
         return blue, red, F.run(session_id, [blue], [red], fire, duration=3_600.0, thresholds=thresholds)
 
@@ -213,6 +226,20 @@ class TestS10DisengagementThreshold(F.LoggerSilencer, unittest.TestCase):
         cls.shock = [cls._run(s, shooters=4) for s in cls.SEEDS]
         cls.control = [cls._run(s, ammunition=2) for s in cls.SEEDS]
         cls.press_on = [cls._run(s, thresholds=RED_HOLDS) for s in cls.SEEDS]
+        cls.default = [cls._run(s, shooters=4, thresholds=None) for s in cls.SEEDS]
+
+    def test_default_doctrine_draws_a_break_point_per_replica(self):
+        breakpoints = set()
+
+        for _, _, outcome in self.default:
+            red = F.force_outcome(outcome, 'Red-Column')
+            self.assertIsNotNone(red.temper)
+            breakpoints.add(round(red.breakpoint, 6))
+
+            if red.outcome == ER.DISENGAGED and ER.TRIGGER_EROSION in red.triggers:
+                self.assertGreaterEqual(red.erosion, red.breakpoint - ER.FRACTION_EPS)
+
+        self.assertGreater(len(breakpoints), 1)
 
     def test_erosion_threshold_gives_disengaged_not_annihilation(self):
         erosion = Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Red'][Doctrine.DISENGAGEMENT_EROSION]

@@ -260,7 +260,8 @@ class TestSeedDiscipline(_Base):
                             self._run('S-beta')[0].damage_events)
 
     def test_engagement_uses_the_documented_stream(self):
-        """Ripetere a mano l'ingaggio del fronte est con order.rng(None, event_id, 0)."""
+        """Ripetere a mano l'ingaggio del fronte est con order.rng(None, event_id, 0), e la
+        tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0)."""
         outcome, _, _ = self._run('S-gamma')
         # Scenario pulito (i due fronti non condividono forze), stesso ingaggio, stream documentato.
         blue3, red3, routes = self._scenario()
@@ -271,7 +272,8 @@ class TestSeedDiscipline(_Base):
         manual = ER.resolve_engagement(
             blue3[1], red3[1], windows, _fire,
             order.rng(mission_id=None, event_id=SS.engagement_event_id(blue3[1].id, red3[1].id)),
-            legs=legs, reaction_profile_for=_profile)
+            legs=legs, reaction_profile_for=_profile,
+            breakpoint_rng=order.rng(mission_id=None, event_id=SS.temper_event_id(blue3[1].id, red3[1].id)))
         self.assertIn(manual.forces, outcome.engagement_outcomes)
         self.assertTrue(set(manual.damage_events) <= set(outcome.damage_events))
 
@@ -289,6 +291,14 @@ class TestSeedDiscipline(_Base):
         for ids in (('a',), (), ('a', 'a'), ('a', ''), ('a', None)):
             with self.subTest(ids=ids), self.assertRaises(ValueError):
                 SS.engagement_event_id(*ids)
+
+    def test_temper_stream_is_distinct_and_order_independent(self):
+        """Soglia di rottura (2026-09-29): la tempra ha un flusso proprio, non quello dell'ingaggio."""
+        self.assertNotEqual(SS.temper_event_id('a', 'b'), SS.engagement_event_id('a', 'b'))
+        self.assertEqual(SS.temper_event_id('a', 'b'), SS.temper_event_id('b', 'a'))
+        for ids in (('a',), ('a', 'a')):
+            with self.subTest(ids=ids), self.assertRaises(ValueError):
+                SS.temper_event_id(*ids)
 
 
 class TestNoContact(_Base):

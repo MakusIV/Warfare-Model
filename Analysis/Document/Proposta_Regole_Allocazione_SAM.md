@@ -254,6 +254,9 @@ righe e non introduce costanti. Si abbina a qualunque delle regole sopra.
    copertura (tiro "shoot-look-shoot").
 3. **Disingaggio alla prima perdita**: con 4 asset, una perdita dà shock 0.25 ≥ 0.20, e la forza rompe
    il contatto al primo impatto. Per forze piccole la soglia di shock è quasi un interruttore.
+   **Risolto 2026-09-29**: soglia di rottura stocastica modulata da morale, rapporto di forze
+   percepito (efficacia antiaerea per le forze aeree), fuoco senza risposta e postura; shock con
+   minimo 2 perdite. V. `Proposta_Soglia_Rottura_Stocastica.md`.
 4. **Intercettazione senza rilevamento**: né il colpo né il lanciatore devono essere stati rilevati
    dall'intercettore. Ne terrà conto la nebbia di guerra (C).
 5. **Canali rigenerati per evento** (§2, punto 6): con `salvo_window = 0` il limite di canali non frena

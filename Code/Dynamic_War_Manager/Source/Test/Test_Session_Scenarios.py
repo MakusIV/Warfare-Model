@@ -123,10 +123,12 @@ class TestS1CombinedArmsWithCAS(F.LoggerSilencer, unittest.TestCase):
 
         Con il CAS, dal 2026-09-28 (regola D, Proposta_Regole_Allocazione_SAM.md §7), lo
         Shilka e lo Strela-10 di Red-Line non intercettano piu' i Maverick: gli A-10 tolgono
-        2-3 mezzi su 6 da fuori portata, lo shock supera la soglia di disingaggio (0,20) e Red
-        rompe il contatto prima dello scontro coi blindati, quindi Blue non subisce danni. E'
-        l'effetto combinato della regola D e del difetto noto del disingaggio alla prima
-        perdita per forze piccole (§5.3 della stessa proposta), non un errore del risolutore.
+        mezzi da fuori portata e Red rompe il contatto prima dello scontro coi blindati,
+        quindi Blue non subisce danni. Dal 2026-09-29 (soglia di rottura stocastica,
+        Proposta_Soglia_Rottura_Stocastica.md) la rottura avviene fra la 1a e la 3a perdita
+        secondo la tempra, sempre sotto fuoco SENZA RISPOSTA (gli A-10 non sono rilevati
+        da Red): una forza colpita da un nemico che non vede e non puo' colpire che si
+        ritira e' l'esito plausibile discusso con l'utente il 2026-09-29, non un difetto.
         """
         for label, runs in (('with CAS', self.with_cas), ('without CAS', self.without_cas)):
             blue = sum(len(F.damage_on(o, [a for f in s.forces_a for a in f.assets])) for s, o in runs)
@@ -420,9 +422,18 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
     oppure viene fermata prima. Due varianti:
       * dottrina "ad oltranza" (PRESS_ON): gli strati ingaggiano nell'ordine geometrico, e la
         missione o arriva al bersaglio o viene distrutta;
-      * dottrina di default: alla prima perdita la formazione rompe il contatto, e da quel
-        momento nessuno strato successivo la puo' piu' ingaggiare (forza rotta, v.
-        "Forze rotte" in Engagement_Resolver).
+      * dottrina di default: la formazione rompe il contatto quando le perdite superano la
+        sua soglia di rottura, e da quel momento nessuno strato successivo la puo' piu'
+        ingaggiare (forza rotta, v. "Forze rotte" in Engagement_Resolver).
+
+    Cambio del 2026-09-29 (soglia di rottura stocastica, Proposta_Soglia_Rottura_Stocastica.md):
+    fino ad allora 1 perdita su 4 (0,25) superava sempre lo shock fisso (0,20) e la
+    formazione si fermava SEMPRE al primo strato. Ora lo shock richiede 2 perdite nella
+    stessa salva e la soglia dipende da tempra, minaccia percepita e fuoco senza risposta
+    (gli F-15E non rilevano quasi mai i SAM, i loro sensori non hanno il modo 'ground'):
+    misurato su 6 repliche, 4 formazioni si fermano al primo strato con 1-2 perdite e 2
+    proseguono fino al Buk. La verifica diventa una distribuzione: entrambi gli esiti
+    compaiono, e dopo la rottura nessuno sparava piu'.
     """
 
     SEEDS = _seeds('S5', 6)
@@ -485,23 +496,29 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
             reached = any(e.asset_id in strike.assets for e in outcome.ammunition_events)
             self.assertTrue(reached or result.outcome in (ER.DESTROYED, ER.DISENGAGED))
 
-    def test_default_doctrine_stops_the_mission_at_the_first_layer(self):
+    def test_default_doctrine_break_point_varies_between_replicas(self):
+        stopped_at_first, went_on = 0, 0
+
         for _, reds, outcome in self.default:
             result = F.force_outcome(outcome, 'Blue-Deep')
             shots = self._layer_first_shots(reds, outcome)
 
             if result.outcome == ER.HELD:
-                continue   # nessuna perdita al primo strato: nulla da verificare
+                continue   # nessuna perdita: nulla da verificare
 
-            self.assertIsNone(shots['Red-L2-Medium'])
-            self.assertIsNone(shots['Red-L3-Point'])
+            if shots['Red-L2-Medium'] is None:
+                stopped_at_first += 1
+            else:
+                went_on += 1
+
             # Dopo la rottura nessuna forza rossa lancia piu' contro la formazione.
             red_ids = {a for force in reds for a in force.assets}
             late = [e for e in outcome.ammunition_events
                     if e.asset_id in red_ids and e.time > result.time]
             self.assertEqual(late, [])
 
-        self.assertTrue(any(F.force_outcome(o, 'Blue-Deep').outcome != ER.HELD for _, _, o in self.default))
+        self.assertGreater(stopped_at_first, 0)
+        self.assertGreater(went_on, 0)
 
 
 # ── S6 — GRUPPO NAVALE CONTRO DIFESA COSTIERA ─────────────────────────────────
