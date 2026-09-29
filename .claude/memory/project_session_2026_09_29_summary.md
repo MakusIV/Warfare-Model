@@ -1,64 +1,67 @@
 ---
 name: project-session-2026-09-29-summary
-description: "Sessione 2026-09-29 (osboxes/VM): soglia di rottura stocastica (D1-D9) + efficacia difensiva antiaerea E(N) (D4a-D4e) implementate, suite 3705 OK; committato e pushato (72c7f7c8 + memoria)"
+description: "Sessione 2026-09-29 (osboxes/VM) CHIUSA: soglia di rottura stocastica, efficacia antiaerea E(N), puntamento condiviso, RWR per classi/modalità, classificazione SAM, overkill (dottrina di tiro); suite 3735 OK; tutto committato e pushato; prossima sessione su ProArt P16"
 metadata:
   node_type: memory
   type: project
   originSessionId: c96aae50-d207-4afc-a001-15c7352ab468
-  modified: 2026-09-29T10:07:24.352Z
+  modified: 2026-09-29T16:54:37.521Z
 ---
 
-**Macchina**: osboxes (VM), branch `analysis/dce-dcs-persistence`, allineato a origin a inizio
-sessione (`d4044024`). Suite di partenza 3668 OK; python di sistema (`python3`, nessun venv/ qui).
+**Macchina**: osboxes (VM), branch `analysis/dce-dcs-persistence`. Sessione chiusa con tutto
+committato e pushato. **Prossima sessione sull'Asus ProArt P16 (WSL2)**: fare `git pull` a inizio
+sessione; lì python è in `.direnv/python-3.12/bin/python3` (v. [[feedback-venv]]). Suite: 3735 OK
+(5 skipped), ~14 min sulla VM. Comando dalla root:
+`python -m unittest discover -s Code/Dynamic_War_Manager/Source/Test -p "Test_*.py"`.
 
-## Fatto: difetto §5.3 (disingaggio alla prima perdita) risolto
-Proposta + decisioni + implementazione in `Analysis/Document/Proposta_Soglia_Rottura_Stocastica.md`
-(§10 decisioni, §11 D4, §12 implementazione). Soglia di rottura B(t) per forza: tempra estratta una
-volta (logit-normale, mediana 0,30, σ 0,5, flusso separato `temper_event_id`), modulata da morale
-(ingresso `morale_for`, None = neutro, ±30%), rapporto di forze percepito (dai rilevamenti, `R` in
-[0,6;1,5]), fuoco senza risposta (γ 0,3), postura ferma (×1,2); shock = 2/3·B(t) con minimo 2 perdite.
-D4 (l'utente ha respinto il conteggio puro): nuovo `Context/Air_Defense_Efficacy.py`, E(N) = aerei
-abbattuti attesi (p per ingaggio × ingaggi limitati da canali, cicli nel tempo di attraversamento,
-scorta corrente); forza aerea: ρ = N/(2·Σ E), forza di superficie: conteggio con SAM puri a peso 0.
-Tabelle con sole erosion/shock = soglie fisse di prima (compatibilità).
+## STATO DI FATTO (tutto implementato, testato, pushato)
 
-Esiti: S1 senza CAS rottura alla 1ª perdita 3/8 (prima 7/8); S5 2/6 formazioni arrivano al Buk.
-Test aggiornati: S10 usa `FIXED_THRESHOLDS` + caso DISPERSIONE, S5 asserzione a distribuzione.
+1. **Soglia di rottura stocastica** (difetto §5.3 disingaggio alla prima perdita) —
+   `Analysis/Document/Proposta_Soglia_Rottura_Stocastica.md` (documento finale, §1-11). Tempra per
+   forza (logit-normale, mediana 0,30, σ 0,5, flusso separato `temper_event_id`), morale in ingresso
+   (None = neutro), rapporto di forze percepito, fuoco senza risposta, postura, shock con minimo 2
+   perdite. Tabella con sole erosion/shock = soglie fisse di prima.
+2. **Efficacia antiaerea E(N)** (`Context/Air_Defense_Efficacy.py`): aerei abbattuti attesi;
+   armi dello stesso sistema di puntamento ripartiscono il tempo-canale (Tunguska: radar condiviso;
+   nave: direttore SAM condiviso, CIWS a parte); minaccia percepita su scorta di DOTAZIONE stimata.
+3. **Categorie SAM**: fonte primaria `classificazione_sam_1950_2000.md` (dell'utente) per sistema
+   missilistico (`SAM_WEAPON_CATEGORY`), ripiego ruolo/portata.
+4. **RWR** (`Asset/Aircraft_Rwr_Data.py`, 65 aerei): classi distinte, modalità (ricerca/
+   tracciamento/guida), settori, EWR. SPO-15 rileva lo Shilka (verificato dall'utente in DCS);
+   SPO-10 = 4 quadranti, "SAM" generico, solo tracciamento (percepisce al lancio); SPO-15 = 8
+   settori, 3 classi. Ricerca Sonnet in `Analysis/Document/Ricerca_RWR_2026_09_29.md` (decisioni
+   utente prevalenti). Tu-95MS: `avionics` allineato a L-150 Pastel.
+5. **Overkill** (§5.2) — `Analysis/Document/Proposta_Overkill_Tiro.md`: `Doctrine.DEFAULT_FIRE_DOCTRINE`
+   (saturazione del bersaglio per la forza a P_cov ≥ 0,9; tetto "due missili, poi guarda" per
+   tiratore; lanciatori L2 esenti dalla saturazione; attesa al primo impatto, mai prima del
+   prossimo istante di tiro). Salve sprecate → 0 negli scenari S19/S1.
 
-## Da fare / aperto
-1. **Commit + push FATTI** (`72c7f7c8` codice+documenti, commit memoria dopo). File: Doctrine.py, Air_Defense_Efficacy.py
-   (nuovo), Engagement_Resolver.py, Session_Simulator.py, test (Doctrine, Engagement_Resolver,
-   Session_Simulator, Air_Defense_Efficacy nuovo, Scenarios, S10_S18), 2 documenti Analysis.
-2. Scelte implementative da far rivedere all'utente (§12 della proposta): B(t) ricalcolata a ogni
-   salva, distrutti esclusi dai nemici percepiti, armi di un asset combinate indipendenti.
-3. Limite emerso: gli F-15E non rilevano i SAM (nessun modo 'ground'), fuoco senza risposta sempre 1
-   → legare all'avviso radar (RWR) in futuro.
-4. D9: `Block.morale` rotto (success_ratio mai alimentato → 0, MF fuzzy fuori scala) — dopo.
-5. Restano dalla lista del 2026-09-28: overkill stesso tiratore (§5.2), intercettazione senza tempo di
-   reazione (§5.4), A4/Mission, residui volumi, Fase 0 C2, bug noti, manuale DES (ora anche soglia di
-   rottura + Air_Defense_Efficacy).
+## PROSSIME ATTIVITÀ (in ordine, da proporre all'utente)
 
-## Seconda parte (dopo il commit 72c7f7c8) — committata e pushata
-Richieste dell'utente: (1) documento ripulito da errori di testo/formattazione → riscritto per intero
-(stato finale, §1-11); (2) armi dello stesso sistema di puntamento NON indipendenti → `_director` in
-Air_Defense_Efficacy (veicolo: radar di tiro condiviso, IR/ottico per arma; nave: direttore SAM
-condiviso, CIWS per tipo con canali = impianti), ripartizione del tempo-canale all'arma più letale
-finché ha scorta; (3) fuoco senza risposta valutato con l'RWR di ogni aereo per categoria SAM
-(VSHORAD/SHORAD/MRSAM/LRSAM): `Asset/Aircraft_Rwr_Data.py` nuovo (65 aerei, grado di fiducia,
-**DA VERIFICARE dall'utente in DCS**), `sam_category`/`emits_radar`/`rwr_identifies`, percezione in
-`_detect_direction` (SAM che emette e rileva un aereo che lo identifica → percepito dalla forza).
-S5: fuoco senza risposta 1 → 0, esiti 4/2 invariati. Suite 3720 OK.
-Decisione utente finale: la minaccia percepita da una forza aerea usa la scorta di DOTAZIONE stimata
-(registro), non quella residua ("non è un dato certo"); in S5 il rapporto percepito è sempre definito.
-Aperto: verifica dei dati RWR (voci a fiducia media/bassa, SPO-15 su AAA, A-4E).
-Terza parte: `classificazione_sam_1950_2000.md` (dell'utente) usata come fonte primaria delle categorie
-SAM (`SAM_WEAPON_CATEGORY` per sistema missilistico; ripiego ruolo/portata); cambia solo M6 Linebacker
-→ VSHORAD. Registrato il futuro modulo mappe ([[project-map-module-plan]]).
-Quarta parte (committata): ricerca RWR con agente Sonnet (rapporto salvato in
-`Analysis/Document/Ricerca_RWR_2026_09_29.md`); decisioni utente: SPO-15 RILEVA lo Shilka (verificato
-in DCS con Su-25), SPO-10 = 4 quadranti/SAM-o-EWR/solo tracciamento, SPO-15 = 8 settori/3 classi
-(VSHORAD-SHORAD, MRSAM, LRSAM)/ricerca-tracciamento-guida; RWR fissati per Il-76MD (SPO-10), MiG-25RB,
-Il-78M, Tu-142 (SPO-15), Tu-160 (BKO-1 Baykal), F-117 (nessuno), KC-130 (ALR-69(V)), Mirage (SERVAL/
-SPIRALE). Schema RWR con classes/modes/sectors/ewr; RWR solo-tracciamento percepisce al lancio.
-Nota: il campo `avionics` del registro dice SPO-15 per il Tu-95MS, adottato L-150 Pastel. Suite 3725 OK.
-Aperto: settori e granularità delle classi RWR registrati ma non usati dal modello.
+1. **Intercettazione senza tempo di reazione** (§5.4 di `Proposta_Regole_Allocazione_SAM.md`):
+   l'intercettazione è istantanea e non richiede di aver rilevato il colpo in arrivo. Legarla a
+   rilevamento del colpo + tempo di reazione dell'intercettore (con nebbia di guerra C).
+2. **Uso di direzione (settori) e granularità delle classi RWR**: registrati in
+   `Aircraft_Rwr_Data` ma il modello li ignora (percezione sì/no, minaccia con la E(N) del sistema
+   specifico).
+3. **A4 — filtro armi per missione**: legato all'entità `Mission` e alle 6 decisioni di
+   `Analisi_Modello_Missione_Sessione.md` (S19 usa ancora il filtro di test `ifv_only`/"solo Maverick").
+4. **Dettagli del calcolo rotte**, poi **modulo mappe** (v. [[project-map-module-plan]]), poi volumi
+   con terreno. Il .docx sulle mappe non è ancora letto (volutamente).
+5. Residui volumi: D-4b/c, D-5 opz. 2, D-7 seconda parte, D-8.
+6. **Fase 0 gerarchia C2** (la più vecchia; anche legame C2 fra unità AD e contagio del disingaggio).
+7. D9: correggere `Block.morale` (success_ratio mai alimentato, MF fuzzy fuori scala) e alimentarlo
+   dagli esiti degli ingaggi.
+8. Bug noti non corretti: `get_blocks_by_criteria`, `Military.is_helibase` mancante.
+9. **Manuale DES** da aggiornare (soglia di rottura, Air_Defense_Efficacy, RWR, dottrina di tiro,
+   A6) con `des-manual-writer`, verificando i riferimenti file:riga.
+
+## Lezioni della sessione
+- Un agente di ricerca va fatto con Sonnet (non Haiku) passando lo schema esatto e la tabella da
+  verificare; le sue conclusioni da fonti deboli vanno filtrate (SPO-15/Shilka: la ricerca diceva il
+  contrario di quanto l'utente ha verificato in DCS).
+- Un'attesa che ridecide a un istante fisso deve rispettare il proprio ciclo di tiro, altrimenti con
+  tempo di volo nullo si ha un ciclo infinito allo stesso istante.
+- `pkill -f` con un pattern che compare nella propria riga di comando uccide anche la shell corrente.
+- File dell'utente non tracciati da non committare: `Analysis/Document/Untitled 1.odt`,
+  `Documentazione e Guida Mappe DCS World.docx` (quest'ultimo servirà al modulo mappe).
