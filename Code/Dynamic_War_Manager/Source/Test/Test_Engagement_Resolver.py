@@ -2239,8 +2239,8 @@ class TestAirForceRatio(unittest.TestCase):
                                        reaction_profile_for=_profiles({'sam': (2.0, 1.0)}, default=(500.0, 1.0)),
                                        thresholds=_doctrine(force_ratio_exponent=0.5))
         outcome = result.outcome_of('air')
-        spent = sum(e.rounds for e in result.ammunition_events if e.asset_id == 'sam')
-        expected = 1 / (2.0 * ADE.air_defense_efficacy(site, 1, stock={weapon: missiles - spent}))
+        # Minaccia percepita con la scorta di DOTAZIONE stimata, non con quella residua.
+        expected = 1 / (2.0 * ADE.air_defense_efficacy(site, 1))
         return outcome, expected
 
     def test_buk_threatens_more_than_kub(self):
@@ -2251,6 +2251,43 @@ class TestAirForceRatio(unittest.TestCase):
         self.assertAlmostEqual(kub.force_ratio, kub_expected)
         self.assertLess(buk.force_ratio, kub.force_ratio)
 
+
+
+class _RwrAircraft(Aircraft):
+    """Aereo stub con un modello reale: l'RWR lo legge da Asset/Aircraft_Rwr_Data."""
+
+    def __init__(self, asset_id, model):
+        super().__init__(asset_id)
+        self._model = model
+
+
+class TestRwrPerception(unittest.TestCase):
+    """RWR (2026-09-29): un SAM che illumina un aereo capace di identificarlo e' percepito dalla
+    sua forza, anche se i sensori della forza non lo vedono; le perdite che causa hanno risposta."""
+
+    def _air_outcome(self, aircraft_model, sam_model, weapon):
+        aircraft = [_RwrAircraft('a0', aircraft_model), _RwrAircraft('a1', aircraft_model)]
+        air = _Force('air', 'Blue', aircraft)
+        ground = _Force('ground', 'Red', [_ADStub('sam', sam_model, {weapon: 4})])
+        # Gli aerei non vedono il SAM (range_a=None): lo sa solo l'RWR.
+        windows = [_window('a0', 'sam', range_a=None), _window('a1', 'sam', range_a=None)]
+        fire = lambda shooter, target: _kill() if shooter.id == 'sam' else None
+        result = ER.resolve_engagement(air, ground, windows, fire, random.Random(0),
+                                       reaction_profile_for=_profiles({'sam': (2.0, 1.0)}),
+                                       thresholds=_doctrine(unanswered_fire_weight=0.3))
+        return result.outcome_of('air')
+
+    def test_identified_emitter_is_answered(self):
+        self.assertEqual(self._air_outcome('A-10C Thunderbolt II', '9K37-Buk', '9M38-SAM').unanswered_fraction, 0.0)
+
+    def test_rwr_without_identification(self):
+        self.assertEqual(self._air_outcome('MiG-21bis', '9K37-Buk', '9M38-SAM').unanswered_fraction, 1.0)
+
+    def test_ir_system_does_not_light_the_rwr(self):
+        self.assertEqual(self._air_outcome('A-10C Thunderbolt II', '9K35-Strela-10', '9M37-SAM').unanswered_fraction, 1.0)
+
+    def test_rwr_perception_enters_the_force_ratio(self):
+        self.assertIsNotNone(self._air_outcome('A-10C Thunderbolt II', '9K37-Buk', '9M38-SAM').force_ratio)
 
 
 if __name__ == '__main__':

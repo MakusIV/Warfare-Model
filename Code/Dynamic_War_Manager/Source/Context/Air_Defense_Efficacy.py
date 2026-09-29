@@ -18,7 +18,7 @@ Per un asset di difesa aerea e N aerei nemici nella sua zona d'intercettazione:
   registri d'arma, B1), per i cannoni per raffica (`Fire_Control.GUN_BURST_ROUNDS`);
   eventualmente corretta per modello (`EFFICACY_CORRECTIONS`, D4c).
 * `K_w` — ingaggi possibili mentre un aereo attraversa la zona:
-  `min(canali x cicli, scorta_w // colpi_per_ingaggio)`. I canali sono
+  `min(quota di tempo-canale x canali x cicli, scorta_w // colpi_per_ingaggio)`. I canali sono
   `Mobile.engagement_channels('air')` (default 1); i cicli sono gli ingaggi successivi
   possibili nel tempo di esposizione `T = 2 x portata / REFERENCE_AIRCRAFT_SPEED`
   (attraversamento lungo il diametro, D4b): il primo dopo acquisizione + sequenza di lancio
@@ -27,9 +27,15 @@ Per un asset di difesa aerea e N aerei nemici nella sua zona d'intercettazione:
   quella CORRENTE quando il chiamante la passa (un Buk senza missili vale 0).
 * Gli ingaggi sono distribuiti uniformemente sugli N aerei e ogni aereo si abbatte una volta
   sola: per N = 1 e' la letalita' contro un aereo solo, per N grande tende a sum(K_w x p_w),
-  quanti aerei il sistema puo' abbattere al massimo. Le armi di uno stesso asset (missili e
-  cannoni di un Tunguska) sono combinate come indipendenti, ciascuna con i propri canali:
-  approssimazione dichiarata, per eccesso.
+  quanti aerei il sistema puo' abbattere al massimo.
+
+## Sistema di puntamento (2026-09-29, richiesta dell'utente)
+
+Le armi guidate dallo STESSO sistema di puntamento non si sommano come indipendenti: si
+ripartiscono i suoi canali nel tempo di esposizione. Dentro un sistema si impiega prima l'arma
+piu' letale finche' ha scorta, poi la successiva nel tempo-canale che resta (Tunguska: prima i
+9M311, poi i 2A38M). Sistemi di puntamento diversi dello stesso asset (i SAM di una nave e i
+suoi CIWS, un'arma IR a guida autonoma) restano indipendenti fra loro. Regole in `_director`.
 
 ## Pesi di minaccia (D4d, D4e)
 
@@ -80,6 +86,10 @@ AIR_TO_AIR_TYPES = ('Fighter', 'Fighter_Bomber')
 NON_COMBAT_AIRCRAFT_TYPES = ('Transport', 'Recon', 'Awacs')
 
 
+# Guide autonome: l'arma non dipende dal radar di tiro dell'asset (cercatore IR del missile).
+AUTONOMOUS_GUIDANCE = ('IR',)
+
+
 @dataclass(frozen=True)
 class ADWeaponProfile:
     """Parte statica (dipende solo dal modello) dell'efficacia di un'arma antiaerea.
@@ -87,15 +97,26 @@ class ADWeaponProfile:
     Attributes:
         weapon: modello dell'arma (chiave della scorta per arma).
         p: probabilita' di abbattimento per ingaggio contro il bersaglio di riferimento.
-        time_limited_engagements: canali x cicli nel tempo di esposizione.
+        director: sistema di puntamento che guida l'arma (v. "Sistema di puntamento"); le armi
+            con lo stesso `director` si ripartiscono i suoi canali, non si sommano.
+        channels: canali del sistema di puntamento.
+        cycles: ingaggi successivi possibili per canale nel tempo di esposizione, se l'arma
+            avesse il sistema di puntamento tutto per se'.
         rounds_per_engagement: unita' di scorta per ingaggio (1 missile, o una raffica).
         full_stock: scorta di dotazione (registro), usata se il chiamante non ne passa una.
     """
     weapon: str
     p: float
-    time_limited_engagements: int
+    director: str
+    channels: int
+    cycles: int
     rounds_per_engagement: int
     full_stock: Optional[int]
+
+    @property
+    def time_limited_engagements(self) -> int:
+        """Canali x cicli: il tetto di ingaggi dell'arma da sola."""
+        return self.channels * self.cycles
 
 
 @dataclass(frozen=True)
@@ -201,6 +222,39 @@ def _channels(asset) -> int:
     return channels
 
 
+def _has_air_radar(record) -> bool:
+    radar = getattr(record, 'radar', None)
+
+    try:
+        return bool(radar and radar['capabilities']['air'][0])
+    except (KeyError, IndexError, TypeError):
+        return False
+
+
+def _director(is_ship: bool, weapon_type: str, weapon: str, wdata, has_radar: bool,
+              quantity: int, asset_channels: int) -> Tuple[str, int]:
+    """(sistema di puntamento, canali) dell'arma.
+
+    * Veicolo: le armi guidate dal radar di tiro dell'asset (comando radio, SARH, SACLOS e i
+      cannoni di un mezzo con radar) condividono il radar e i suoi canali — il caso del
+      Tunguska, cannoni e missili sotto lo stesso 1RL144. Le armi a guida autonoma (IR) e i
+      cannoni senza radar puntano da se', un canale per arma.
+    * Nave: i SAM condividono il direttore di tiro della nave e i suoi canali; ogni tipo di
+      CIWS ha il proprio radar, con un canale per impianto (quantita' del registro).
+    """
+    if is_ship:
+        if weapon_type == 'CIWS':
+            return f'ciws:{weapon}', max(int(quantity), 1)
+        return 'director', asset_channels
+
+    guidance = wdata.get('guide')
+
+    if has_radar and guidance not in AUTONOMOUS_GUIDANCE:
+        return 'radar', asset_channels
+
+    return f'own:{weapon}', 1
+
+
 def _full_stock(asset) -> Optional[Dict[str, int]]:
     stores_from_registry = getattr(asset, 'stores_from_registry', None)
     full = stores_from_registry() if callable(stores_from_registry) else None
@@ -221,6 +275,7 @@ def _build_profile(asset, model: str, channels: int,
 
     allowed = _AD_WEAPON_TYPES_SHIP if is_ship else _AD_WEAPON_TYPES_VEHICLE
     database = _weapon_db(is_ship)
+    has_radar = _has_air_radar(record)
     profiles = []
 
     for weapon_type, weapon_list in weapons.items():
@@ -250,9 +305,12 @@ def _build_profile(asset, model: str, channels: int,
             if weapon_range <= 0.0:
                 continue
 
+            quantity = item[1] if len(item) > 1 and isinstance(item[1], int) else 1
+            director, director_channels = _director(is_ship, weapon_type, weapon, wdata, has_radar,
+                                                    quantity, channels)
             profiles.append(ADWeaponProfile(
-                weapon=weapon, p=p,
-                time_limited_engagements=channels * _cycles(asset, wdata, weapon_range, is_gun),
+                weapon=weapon, p=p, director=director, channels=director_channels,
+                cycles=_cycles(asset, wdata, weapon_range, is_gun),
                 rounds_per_engagement=GUN_BURST_ROUNDS if is_gun else 1,
                 full_stock=(full or {}).get(weapon)))
 
@@ -260,7 +318,8 @@ def _build_profile(asset, model: str, channels: int,
         logger.debug(f"air_defense_profile: model {model!r} has no air-defence weapon with data")
         return None
 
-    profiles.sort(key=lambda w: w.weapon)
+    # Dentro un sistema di puntamento si impiega prima l'arma piu' letale (v. expected_kills).
+    profiles.sort(key=lambda w: (w.director, -w.p, w.weapon))
 
     return ADProfile(model=model, weapons=tuple(profiles))
 
@@ -305,16 +364,27 @@ def expected_kills(profile: ADProfile, n_aircraft: int,
         return 0.0
 
     log_survival = 0.0
+    time_left: Dict[str, float] = {}
 
     for weapon in profile.weapons:
+        # Quota del tempo-canale del sistema di puntamento ancora libera: le armi dello stesso
+        # sistema se la ripartiscono, nell'ordine di letalita' (la migliore finche' ha scorta).
+        left = time_left.get(weapon.director, 1.0)
+        capacity = weapon.time_limited_engagements
+
+        if left <= 0.0 or capacity <= 0:
+            continue
+
         units = stock.get(weapon.weapon) if stock is not None and weapon.weapon in stock else weapon.full_stock
-        engagements = weapon.time_limited_engagements
+        engagements = left * capacity
 
         if units is not None:
             engagements = min(engagements, max(int(units), 0) // weapon.rounds_per_engagement)
 
         if engagements <= 0:
             continue
+
+        time_left[weapon.director] = left - engagements / capacity
 
         if weapon.p >= 1.0:
             return float(n_aircraft)
@@ -401,3 +471,82 @@ def air_threat_weight(asset, n_aircraft: int, *,
     efficacy = air_defense_efficacy(asset, n_aircraft, stock=stock)
 
     return efficacy if efficacy is not None else 0.0
+
+
+# ── RWR E CATEGORIE SAM (2026-09-29, richiesta dell'utente) ───────────────────
+#
+# Un aereo "sa" di essere ingaggiato da un sistema di difesa aerea se il suo RWR identifica la
+# categoria di quel sistema quando il radar del sistema lo illumina (Asset/Aircraft_Rwr_Data).
+# Categorie: VSHORAD (AAA), SHORAD, MRSAM, LRSAM. Per i veicoli dai `roles` del registro (la
+# categoria piu' alta dichiarata vince: Tunguska AAA + SHORAD -> SHORAD); per le navi dalla
+# portata del SAM piu' lungo (soglie SHIP_SAM_*_KM, stima dichiarata), VSHORAD se ha solo CIWS.
+# Solo chi EMETTE e' identificabile: un veicolo senza radar aria (Strela-1/10, Chaparral,
+# Linebacker, ZSU-57-2, VADS: puntamento ottico o cercatore IR) non accende nessun RWR.
+
+from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Rwr_Data import (  # noqa: E402
+    LRSAM, MRSAM, SHORAD, VSHORAD, rwr_categories)
+
+SAM_CATEGORIES = (VSHORAD, SHORAD, MRSAM, LRSAM)
+_ROLE_CATEGORY = (('LORAD', LRSAM), ('MERAD', MRSAM), ('SHORAD', SHORAD), ('AAA', VSHORAD))
+SHIP_SAM_LONG_RANGE_KM = 100.0
+SHIP_SAM_MEDIUM_RANGE_KM = 30.0
+
+
+def sam_category(asset) -> Optional[str]:
+    """Categoria SAM dell'asset di difesa aerea (v. sopra), o None se non classificabile."""
+    if validate_class(asset, 'Aircraft'):
+        return None
+
+    model = getattr(asset, '_model', None)
+
+    if not isinstance(model, str):
+        return None
+
+    record, is_ship = _registry_entry(model)
+
+    if record is None:
+        return None
+
+    if not is_ship:
+        roles = getattr(record, 'roles', None) or ()
+
+        for role, category in _ROLE_CATEGORY:
+            if role in roles:
+                return category
+
+        return None
+
+    weapons = getattr(record, 'weapons', None) or {}
+    ranges = [float((_weapon_db(True).get('MISSILES_SAM', {}).get(item[0]) or {}).get('range') or 0.0)
+              for item in weapons.get('MISSILES_SAM') or () if isinstance(item, (tuple, list)) and item]
+
+    if ranges and max(ranges) > 0.0:
+        longest = max(ranges)
+        return LRSAM if longest >= SHIP_SAM_LONG_RANGE_KM else MRSAM if longest >= SHIP_SAM_MEDIUM_RANGE_KM else SHORAD
+
+    return VSHORAD if weapons.get('CIWS') else None
+
+
+def emits_radar(asset) -> bool:
+    """True se l'asset ha un radar aria (le navi sempre): solo allora un RWR lo puo' vedere."""
+    model = getattr(asset, '_model', None)
+
+    if not isinstance(model, str):
+        return False
+
+    record, is_ship = _registry_entry(model)
+
+    if record is None:
+        return False
+
+    return True if is_ship else _has_air_radar(record)
+
+
+def rwr_identifies(aircraft, emitter) -> bool:
+    """True se l'RWR di `aircraft` identifica la categoria SAM di `emitter` che lo illumina."""
+    if not validate_class(aircraft, 'Aircraft') or not emits_radar(emitter):
+        return False
+
+    category = sam_category(emitter)
+
+    return category is not None and category in rwr_categories(getattr(aircraft, '_model', None))

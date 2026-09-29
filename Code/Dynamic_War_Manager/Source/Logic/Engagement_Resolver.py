@@ -80,9 +80,15 @@ di rottura B(t) della forza, con mediana `erosion` e parametri di `Context/Doctr
   nemici rilevati entro t (`seen_by`) e dalla stima a priori (`enemy_estimate_for`),
   **fuoco senza risposta** (perdite causate da tiratori non ancora rilevati: `loss_shooters`),
   **postura** (forza con tutti i tratti di rotta fermi);
+* percezione dei nemici: rilevamento dei propri sensori, oppure (forza aerea) RWR — un asset
+  AD che emette e rileva un aereo il cui RWR ne identifica la categoria SAM
+  (`Air_Defense_Efficacy.rwr_identifies`, dati in `Asset/Aircraft_Rwr_Data`) e' percepito dalla
+  forza dell'aereo dall'istante del rilevamento; conta nel rapporto e rende "con risposta" le
+  perdite che causa;
 * rho(t) per una forza AEREA (tutti gli asset impegnati sono aerei): aerei propri operativi /
   (air_force_ratio_scale x minaccia), con minaccia = somma di `Air_Defense_Efficacy.air_threat_weight`
-  dei nemici rilevati (E(N) degli asset AD con la scorta ombra corrente, 1 per i caccia);
+  dei nemici percepiti (E(N) degli asset AD con la scorta di DOTAZIONE stimata, perche' chi
+  osserva non conosce quella residua; 1 per i caccia);
   per una forza di SUPERFICIE: somma dei `surface_threat_weight` propri / nemici (SAM puri 0).
   Nemici distrutti esclusi, danneggiati inclusi. Rapporto non definito -> neutro;
 * **shock**: soglia (shock / erosion) x B(t), e solo se la salva ha tolto almeno
@@ -1441,8 +1447,13 @@ class _EngagementRun:
         if detected:
             radius = detection_radius(draw, own_range, factor)
             time = self._detection_time(window, observer.id, target.id, own_range, other_range, radius)
-            seen = self.seen_by.setdefault(observer.force_id, {})
-            seen[target.id] = min(seen.get(target.id, time), time)
+            self._perceive(observer.force_id, target.id, time)
+
+            # RWR (2026-09-29): il radar dell'osservatore illumina il bersaglio; se il bersaglio e'
+            # un aereo il cui RWR identifica la categoria SAM dell'osservatore, la sua forza sa da
+            # quell'istante chi la sta ingaggiando (percezione e fuoco senza risposta).
+            if ADE.rwr_identifies(target.asset, observer.asset):
+                self._perceive(target.force_id, observer.id, time)
 
             t_ready = time + self._profile(observer.id).total
 
@@ -1455,6 +1466,11 @@ class _EngagementRun:
                                          sensor_range=float(own_range), distance_cpa=distance,
                                          probability=probability, draw=draw, detected=detected,
                                          time=time))
+
+    def _perceive(self, force_id: str, asset_id: str, time: float) -> None:
+        """La forza `force_id` percepisce l'asset nemico `asset_id` dall'istante `time`."""
+        seen = self.seen_by.setdefault(force_id, {})
+        seen[asset_id] = min(seen.get(asset_id, time), time)
 
     def _detection_time(self, window, observer_id: str, target_id: str, own_range: float,
                         other_range: Optional[float], radius: Optional[float]) -> float:
@@ -2234,8 +2250,9 @@ class _EngagementRun:
 
         if state.air:
             n_aircraft = len(own)
-            threat = sum(ADE.air_threat_weight(shadow.asset, n_aircraft, stock=shadow.stores)
-                         for shadow in enemies)
+            # Scorta di DOTAZIONE (registro), non quella residua: chi osserva un sistema AD non sa
+            # quanti missili gli restano, puo' solo presumere la dotazione (stima, non dato certo).
+            threat = sum(ADE.air_threat_weight(shadow.asset, n_aircraft) for shadow in enemies)
 
             if state.enemy_estimate is not None:
                 threat = max(threat, state.enemy_estimate)
