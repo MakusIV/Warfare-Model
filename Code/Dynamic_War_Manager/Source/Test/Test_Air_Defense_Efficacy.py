@@ -220,6 +220,17 @@ class TestSamCategoryAndRwr(_Base, unittest.TestCase):
 
         self.assertIsNone(ADE.sam_category(self.vehicle('T-72B')))
 
+    def test_listed_system_wins_over_the_vehicle_role(self):
+        """classificazione_sam_1950_2000.md: lo Stinger e' VSHORAD, anche se il Linebacker ha ruolo SHORAD."""
+        self.assertEqual(ADE.sam_category(self.vehicle('M6-Linebacker')), 'VSHORAD')
+
+    def test_every_listed_weapon_exists_in_a_registry(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Ground_Weapon_Data import GROUND_WEAPONS
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Weapon_Data import SHIP_WEAPONS
+
+        known = {m for db in (GROUND_WEAPONS, SHIP_WEAPONS) for weapons in db.values() for m in weapons}
+        self.assertEqual(set(ADE.SAM_WEAPON_CATEGORY) - known, set())
+
     def test_only_radar_emitters_are_visible(self):
         self.assertTrue(ADE.emits_radar(self.vehicle('9K37-Buk')))
         for model in ('9K35-Strela-10', 'M6-Linebacker', 'ZSU-57-2', 'M163-VADS'):
@@ -232,10 +243,28 @@ class TestSamCategoryAndRwr(_Base, unittest.TestCase):
         mig21 = F.make_aircraft(blue, 'ADE-Test-Air/m21', 'MiG-21bis', (0.0, 0.0, 3000.0))
         buk, strela = self.vehicle('9K37-Buk'), self.vehicle('9K35-Strela-10')
 
+        mig19 = F.make_aircraft(blue, 'ADE-Test-Air/m19', 'MiG-19P', (0.0, 0.0, 3000.0))
+        su25 = F.make_aircraft(blue, 'ADE-Test-Air/su25', 'Su-25', (0.0, 0.0, 3000.0))
+        shilka = self.vehicle('ZSU-23-4-Shilka')
+
         self.assertTrue(ADE.rwr_identifies(a10, buk))
         self.assertFalse(ADE.rwr_identifies(a10, strela))    # IR, non emette
-        self.assertFalse(ADE.rwr_identifies(mig21, buk))     # Sirena-3: allarme senza identificazione
+        self.assertTrue(ADE.rwr_identifies(mig21, buk))      # SPO-10: "SAM" generico
+        self.assertFalse(ADE.rwr_identifies(mig19, buk))     # Sirena-2: solo allarme
+        self.assertTrue(ADE.rwr_identifies(su25, shilka))    # SPO-15 vede il Gun Dish (verificato in DCS)
         self.assertFalse(ADE.rwr_identifies(buk, a10))       # solo un aereo ha un RWR
+
+    def test_rwr_perception_time(self):
+        """Ricerca rilevata -> al rilevamento; solo tracciamento (SPO-10) -> al lancio."""
+        blue = F.make_force('ADE-Test-Air2', 'Blue', F.AIR_UNIT)
+        a10 = F.make_aircraft(blue, 'ADE-Test-Air2/a10', 'A-10C Thunderbolt II', (0.0, 0.0, 3000.0))
+        mig21 = F.make_aircraft(blue, 'ADE-Test-Air2/m21', 'MiG-21bis', (0.0, 0.0, 3000.0))
+        mig19 = F.make_aircraft(blue, 'ADE-Test-Air2/m19', 'MiG-19P', (0.0, 0.0, 3000.0))
+        buk = self.vehicle('9K37-Buk')
+
+        self.assertEqual(ADE.rwr_perception(a10, buk), ADE.PERCEIVED_AT_DETECTION)
+        self.assertEqual(ADE.rwr_perception(mig21, buk), ADE.PERCEIVED_AT_LAUNCH)
+        self.assertIsNone(ADE.rwr_perception(mig19, buk))
 
 
 class TestRwrTable(unittest.TestCase):
@@ -251,10 +280,30 @@ class TestRwrTable(unittest.TestCase):
 
         for model, entry in RWR.AIRCRAFT_RWR.items():
             with self.subTest(model=model):
-                self.assertTrue(set(entry['identifies']) <= set(ADE.SAM_CATEGORIES))
+                self.assertEqual(set(entry), {'rwr', 'classes', 'modes', 'sectors', 'ewr', 'confidence'})
+                for group in entry['classes']:
+                    self.assertTrue(group and set(group) <= set(ADE.SAM_CATEGORIES))
+                # Ogni categoria sta al piu' in una classe.
+                self.assertEqual(sum(len(g) for g in entry['classes']), len(RWR.rwr_categories(model)))
+                self.assertTrue(set(entry['modes']) <= set(RWR.RWR_MODES))
+                self.assertIn(entry['sectors'], (None, 4, 8))
                 self.assertIn(entry['confidence'], ('alta', 'media', 'bassa'))
                 if entry['rwr'] is None:
-                    self.assertEqual(entry['identifies'], RWR.NONE)
+                    self.assertEqual(entry['classes'], ())
+                    self.assertEqual(entry['modes'], frozenset())
+
+    def test_user_decided_families(self):
+        """Decisioni dell'utente del 2026-09-29 su SPO-10 e SPO-15."""
+        from Code.Dynamic_War_Manager.Source.Asset import Aircraft_Rwr_Data as RWR
+
+        spo10 = RWR.rwr_entry('Il-76MD')
+        self.assertEqual((spo10['sectors'], spo10['modes'], len(spo10['classes'])), (4, frozenset({RWR.TRACK}), 1))
+        spo15 = RWR.rwr_entry('Il-78M')
+        self.assertEqual(spo15['sectors'], 8)
+        self.assertEqual(spo15['classes'], (frozenset({RWR.VSHORAD, RWR.SHORAD}), frozenset({RWR.MRSAM}),
+                                            frozenset({RWR.LRSAM})))
+        self.assertEqual(spo15['modes'], frozenset(RWR.RWR_MODES))
+        self.assertEqual(RWR.rwr_categories('F-117 Nighthawk'), RWR.NONE)
 
     def test_unknown_model_has_no_rwr(self):
         from Code.Dynamic_War_Manager.Source.Asset import Aircraft_Rwr_Data as RWR

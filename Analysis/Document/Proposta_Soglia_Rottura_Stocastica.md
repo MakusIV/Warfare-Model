@@ -3,8 +3,8 @@
 > **Stato**: approvata e implementata il 2026-09-29 (decisioni al §10). Risolve il difetto §5.3 di
 > `Proposta_Regole_Allocazione_SAM.md`: disingaggio alla prima perdita per le forze piccole.
 > Scelta di partenza dell'utente: opzione D (soglia casuale per forza), estesa con morale, stima
-> della forza avversaria, efficacia della difesa aerea e RWR. I dati RWR del §5 sono una proposta
-> **da verificare** voce per voce.
+> della forza avversaria, efficacia della difesa aerea e RWR. I dati RWR del §5 seguono il registro,
+> le decisioni dell'utente e la ricerca `Ricerca_RWR_2026_09_29.md`.
 
 ## 1. Il problema, misurato
 
@@ -300,13 +300,21 @@ Cosa la tabella rivela sui dati:
 
 ### 5.1 Regola
 
-Un asset di difesa aerea che **emette** (ha un radar aria) e rileva un aereo è percepito dalla
-forza di quell'aereo, dall'istante del rilevamento, se l'RWR di quell'aereo **identifica la
-categoria SAM** dell'asset. La valutazione è fatta su ogni aereo illuminato, con il suo RWR; la
-percezione vale per la sua forza (la formazione). Da quell'istante l'asset:
+Un asset di difesa aerea che **emette** (ha un radar aria) e illumina un aereo è percepito dalla
+forza di quell'aereo se l'RWR di quell'aereo **riconosce la sua categoria SAM**, cioè se la
+categoria sta in una delle classi che l'RWR distingue (§5.3). Basta la classe: un RWR che dice
+solo "SAM" (SPO-10) riconosce comunque la minaccia. La valutazione è fatta su ogni aereo
+illuminato, con il suo RWR; la percezione vale per la sua forza (la formazione).
 
-- conta nella minaccia percepita (§4.3);
-- rende "con risposta" le perdite che causa (§3.4).
+**Quando** la minaccia è percepita dipende dalle modalità radar che l'RWR rileva:
+
+- l'RWR rileva la **ricerca** (SPO-15, sistemi digitali): dall'istante in cui il radar del sistema
+  rileva l'aereo;
+- l'RWR rileva solo **tracciamento o guida** (SPO-10): dal lancio contro l'aereo, che il
+  tracciamento precede (approssimazione dichiarata).
+
+Da quell'istante l'asset conta nella minaccia percepita (§4.3) e rende "con risposta" le perdite
+che causa (§3.4).
 
 Un sistema che non emette (cercatore IR, puntamento ottico: Strela-1, Strela-10, Chaparral,
 Linebacker, ZSU-57-2, VADS) non accende nessun RWR e resta non percepito finché i sensori della
@@ -314,43 +322,56 @@ forza non lo vedono.
 
 ### 5.2 Categorie SAM
 
-| categoria | veicoli (da `roles` del registro) | navi (dal SAM a portata maggiore) |
+Fonte primaria: `classificazione_sam_1950_2000.md` (classificazione per sistema missilistico,
+fornita dall'utente), in `Air_Defense_Efficacy.SAM_WEAPON_CATEGORY`. Un asset prende la categoria
+più alta fra quelle dei suoi missili elencati. Per le armi che il documento non elenca vale il
+ripiego: `roles` del veicolo, o portata del SAM a portata maggiore per le navi.
+
+| categoria | sistemi dal documento | ripiego |
 |---|---|---|
-| VSHORAD | `AAA` (Shilka, Gepard, ZSU-57-2, VADS) | solo CIWS |
-| SHORAD | `SHORAD` (Tor, Osa, Roland, Tunguska, Strela, Chaparral, Linebacker) | < 30 km |
-| MRSAM | `MERAD` (Kub, Buk) | 30-100 km |
-| LRSAM | `LORAD` (S-300PS) | ≥ 100 km |
+| VSHORAD | Stinger (M6 Linebacker) | veicoli `AAA` (Shilka, Gepard, ZSU-57-2, VADS); navi con solo CIWS |
+| SHORAD | Strela-1, Strela-10, Osa, Tor, Chaparral, Roland; HHQ-7; SA-N-4 e SA-N-9 (varianti navali di Osa e Tor) | veicoli `SHORAD` (Tunguska: `AAA` + `SHORAD`, vince la più alta); navi < 30 km |
+| MRSAM | Kub, Buk | veicoli `MERAD`; navi 30-100 km (ESSM, SM-1, HHQ-16) |
+| LRSAM | S-300PS; HHQ-9; S-300F (variante navale) | veicoli `LORAD`; navi ≥ 100 km (SM-2ER) |
 
-Quando un veicolo dichiara più ruoli vince la categoria più alta (Tunguska `AAA` + `SHORAD` →
-SHORAD). Le soglie di portata delle navi sono una stima dichiarata.
+Le varianti navali sono ricondotte al sistema terrestre da cui derivano: è una derivazione, non
+un dato del documento. Le soglie di portata delle navi sono una stima dichiarata. Rispetto alla
+classificazione per ruolo cambia solo l'M6 Linebacker (SHORAD → VSHORAD), senza effetti sull'RWR:
+lo Stinger non emette.
 
-### 5.3 Dati RWR (da verificare)
+### 5.3 Dati RWR
 
-`Asset/Aircraft_Rwr_Data.py`, una voce per ciascuno dei 65 aerei del registro, con nome del
-sistema, categorie identificate e grado di fiducia. Un RWR "identifica" una categoria se
-riconosce i radar di quella categoria come minaccia di quel tipo (simbolo o classe sul display).
-Un semplice allarme di illuminazione (Sirena, radarvarnare del Viggen) non identifica nulla.
+`Asset/Aircraft_Rwr_Data.py`, una voce per ciascuno dei 65 aerei del registro. Fonti: il campo
+`avionics` del registro (dove nomina l'RWR), le decisioni dell'utente del 2026-09-29 e la ricerca
+`Ricerca_RWR_2026_09_29.md` (con fonti web; dove diverge prevalgono le decisioni dell'utente).
+Ogni voce dichiara:
 
-| gruppo | RWR | categorie | fiducia |
-|---|---|---|---|
-| A-10A/C, F-16A/MLU, C-130 | AN/ALR-69 | tutte | alta (C-130: media) |
-| F-15C/E, F-16C Block 52d/50 | AN/ALR-56C/M | tutte | alta |
-| F/A-18A/C, F-14B | AN/ALR-67 | tutte | alta |
-| F-14A, F-4E, F-5E, B-52H, B-1B, Mirage 2000C | ALR-45, ALR-46, ALR-87, ALQ-161, Serval | tutte | alta |
-| Su-25, Su-27, Su-33, MiG-29A/S | SPO-15 Beryoza | tutte | alta |
-| MiG-23MLD, MiG-25PD, MiG-27K, MiG-31, Su-17M4, Su-24M/MR | SPO-15 Beryoza | tutte | media |
-| Su-25T/TM, Su-30, Su-34 | L-150 Pastel | tutte | alta / media |
-| E-2D, E-3A, A-50, S-3B | ESM di bordo | tutte | alta / media |
-| A-4E, KC-130, Tu-22M, Tu-95MS, Tu-142, Il-76MD, Il-78M, MiG-25RB | vari | tutte | bassa |
-| F-117, Tu-160 | RWR / ESM | tutte | media |
-| MiG-19P, MiG-21bis, AJS-37 Viggen | Sirena-2, Sirena-3, radarvarnare | nessuna (solo allarme) | alta / media |
-| F-86E, MiG-15bis, A-20G, Yak-40, MQ-1, MQ-9 | nessuno | nessuna | alta |
-| An-26B, An-30M, KC-135 (2), C-17A | nessuno | nessuna | media / bassa |
+- `classes`: le classi di minaccia SAM che il sistema distingue; una classe con più categorie
+  significa che il sistema non le separa;
+- `modes`: le modalità del radar nemico rilevate (ricerca, tracciamento, guida del missile);
+- `sectors`: settori di direzione (4, 8, oppure direzione precisa);
+- `ewr`: se riconosce i radar di scoperta come classe a parte;
+- `confidence`: alta, media o bassa.
 
-Le voci con fiducia media o bassa sono le prime da verificare in DCS. Sono aperti due punti:
-l'SPO-15 classifica i radar dei cannoni AAA fra le minacce a corto raggio (qui conta come
-identificazione VSHORAD); l'APR-25 dell'A-4E copre le bande dei SAM dell'epoca, non quelle dei
-sistemi più recenti.
+| famiglia | classi SAM | modalità | direzione | aerei |
+|---|---|---|---|---|
+| sistemi digitali (ALR-46/56/67/69, ALQ-161, SERVAL/SPIRALE, L-150 Pastel/SPO-32, BKO-1 Baykal, ESM) | VSHORAD, SHORAD, MRSAM, LRSAM separate | ricerca, tracciamento, guida | precisa | A-10A/C, F-4E, F-5E, F-14B, F-15C/E, F-16 (tutti), F/A-18 (tutti), Mirage 2000C, B-1B, B-52H, Su-25T/TM, Su-30, Su-34, Tu-95MS, Tu-160, E-2D, E-3A, A-50, S-3B, C-130, KC-130, C-17A |
+| SPO-15 Beryoza (L, LE, LM) | VSHORAD-SHORAD, MRSAM, LRSAM | ricerca, tracciamento, guida | 8 settori | MiG-23MLD, MiG-25PD/RB, MiG-27K, MiG-29A/S, MiG-31, Su-17M4, Su-24M/MR, Su-25, Su-27, Su-33, Tu-22M, Tu-142, Il-78M |
+| AN/ALR-45 | VSHORAD; SAM generico | ricerca, tracciamento, guida | precisa | F-14A, A-4E |
+| SPO-10 Sirena-3 | SAM generico (più EWR) | solo tracciamento | 4 quadranti | MiG-21bis, Il-76MD |
+| solo allarme (Sirena-2, radarvarnare) | nessuna | — | — | MiG-19P, AJS-37 Viggen |
+| nessun RWR | nessuna | — | — | F-117, F-86E, MiG-15bis, A-20G, Yak-40, An-26B, An-30M, KC-135 (2), MQ-1, MQ-9 |
+
+Note:
+
+- l'SPO-15 rileva il radar dello Shilka: verificato dall'utente in DCS con il Su-25 (la ricerca
+  proponeva il contrario, sulla base di una banda di frequenza da fonte debole);
+- Tu-95MS: la ricerca indica l'L-150 Pastel, adottato; il campo `avionics` del registro dice ancora
+  SPO-15;
+- Tu-160: il "Baikal-3 EW" del registro è considerato equivalente alla suite BKO-1 Baykal;
+- A-4E: il registro indica AN/ALR-45, adottato (la ricerca parlava dell'APR-25 del modulo DCS);
+- la **direzione** (settori) e la **granularità delle classi** sono registrate ma non ancora usate
+  dal modello: la percezione è sì/no e la minaccia usa la E(N) del sistema specifico (§8).
 
 ## 6. Dove vive
 
@@ -393,8 +414,9 @@ percepito è sempre definito (fra 0,34 e 0,84) e la ripartizione degli esiti res
 - **Scorta nella minaccia percepita**: si usa la dotazione di registro, una stima e non un dato
   certo. Un SAM che ha sparato tutto continua a pesare come se fosse carico, perché chi lo osserva
   non può saperlo (decisione dell'utente, 2026-09-29).
-- **RWR e sistema specifico**: l'RWR identifica la categoria, ma la minaccia usa la E(N) del
-  sistema specifico. Gli RWR moderni hanno librerie per sistema; l'SPO-15 no.
+- **RWR e sistema specifico**: l'RWR riconosce una classe, ma la minaccia usa la E(N) del sistema
+  specifico. Gli RWR digitali hanno librerie per sistema; SPO-15 e SPO-10 no. Direzione (settori)
+  e granularità delle classi sono nei dati ma non ancora nel modello.
 - **Fuoco senza risposta**: conta solo la percezione del tiratore, non la capacità di ingaggiarlo.
 - **Sensori degli aerei**: nessun modo 'ground' nei registri, quindi senza RWR un aereo non
   percepisce mai i SAM.
@@ -425,16 +447,18 @@ al C2 regionale ("orientamento guidato da morale", [[c2-hierarchy-design]]).
 | D8 | Flusso casuale separato per la tempra | approvata |
 | D9 | Correggere `Block.morale` più avanti (§9) | approvata |
 | — | Armi dello stesso sistema di puntamento non indipendenti (§4.2) | richiesta dell'utente, implementata |
-| — | Fuoco senza risposta valutato con l'RWR di ogni aereo, per categoria SAM (§5) | richiesta dell'utente, implementata; **dati RWR da verificare** |
+| — | Fuoco senza risposta valutato con l'RWR di ogni aereo, per categoria SAM (§5) | richiesta dell'utente, implementata |
 | — | Minaccia percepita sulla scorta di dotazione stimata, non su quella residua (§4.3) | richiesta dell'utente, implementata |
+| — | Classificazione SAM per sistema missilistico da `classificazione_sam_1950_2000.md` (§5.2) | richiesta dell'utente, implementata |
+| — | Dati RWR: SPO-15 rileva lo Shilka; SPO-10 e SPO-15 come al §5.3; RWR di Il-76MD, MiG-25RB, Il-78M, Tu-142, Tu-160, F-117, KC-130, Mirage 2000C; proposte della ricerca su F-14A, C-17A, Tu-95MS, Viggen | decisioni dell'utente, implementate |
 
 ## 11. Implementazione e test
 
 | file | cosa |
 |---|---|
 | `Context/Doctrine.py` | chiavi facoltative della soglia di rottura, valori neutri `DISENGAGEMENT_NEUTRAL`, `disengagement_parameter`, validazione |
-| `Context/Air_Defense_Efficacy.py` (nuovo) | `air_defense_profile`, `expected_kills`, `air_defense_efficacy`, sistema di puntamento (`_director`), `surface_threat_weight`, `air_threat_weight`, `sam_category`, `emits_radar`, `rwr_identifies`, `EFFICACY_CORRECTIONS` |
-| `Asset/Aircraft_Rwr_Data.py` (nuovo) | `AIRCRAFT_RWR`, `rwr_categories` |
+| `Context/Air_Defense_Efficacy.py` (nuovo) | `air_defense_profile`, `expected_kills`, `air_defense_efficacy`, sistema di puntamento (`_director`), `surface_threat_weight`, `air_threat_weight`, `SAM_WEAPON_CATEGORY`, `sam_category`, `emits_radar`, `rwr_identifies`, `rwr_perception`, `EFFICACY_CORRECTIONS` |
+| `Asset/Aircraft_Rwr_Data.py` (nuovo) | `AIRCRAFT_RWR` (classi, modalità, settori, EWR, fiducia), `rwr_entry`, `rwr_categories`, `rwr_modes`, `rwr_classes` |
 | `Logic/Engagement_Resolver.py` | tempra, `seen_by` (percezione: sensori e RWR), `loss_shooters`, `_breakpoint`, `_perceived_ratio`, `_unanswered_fraction`, `_stationary`; `_check_doctrine` con B(t) e minimo di perdite per lo shock; ingressi `breakpoint_rng`, `morale_for`, `enemy_estimate_for`; nuovi campi di `ForceOutcome` |
 | `Logic/Session_Simulator.py` | `temper_event_id`, flusso della tempra, `run_session(morale_for=..., enemy_estimate_for=...)` |
 

@@ -477,16 +477,41 @@ def air_threat_weight(asset, n_aircraft: int, *,
 #
 # Un aereo "sa" di essere ingaggiato da un sistema di difesa aerea se il suo RWR identifica la
 # categoria di quel sistema quando il radar del sistema lo illumina (Asset/Aircraft_Rwr_Data).
-# Categorie: VSHORAD (AAA), SHORAD, MRSAM, LRSAM. Per i veicoli dai `roles` del registro (la
-# categoria piu' alta dichiarata vince: Tunguska AAA + SHORAD -> SHORAD); per le navi dalla
-# portata del SAM piu' lungo (soglie SHIP_SAM_*_KM, stima dichiarata), VSHORAD se ha solo CIWS.
+# Categorie: VSHORAD, SHORAD, MRSAM, LRSAM. Fonte primaria SAM_WEAPON_CATEGORY (classificazione
+# per sistema missilistico fornita dall'utente); ripiego per i veicoli dai `roles` del registro
+# (la categoria piu' alta dichiarata vince: Tunguska AAA + SHORAD -> SHORAD; AAA -> VSHORAD), per
+# le navi dalla portata del SAM piu' lungo (soglie SHIP_SAM_*_KM, stima dichiarata), VSHORAD se
+# ha solo CIWS.
 # Solo chi EMETTE e' identificabile: un veicolo senza radar aria (Strela-1/10, Chaparral,
 # Linebacker, ZSU-57-2, VADS: puntamento ottico o cercatore IR) non accende nessun RWR.
 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Rwr_Data import (  # noqa: E402
-    LRSAM, MRSAM, SHORAD, VSHORAD, rwr_categories)
+    GUIDANCE, LRSAM, MRSAM, SEARCH, SHORAD, TRACK, VSHORAD, rwr_categories, rwr_modes)
 
 SAM_CATEGORIES = (VSHORAD, SHORAD, MRSAM, LRSAM)
+
+# Categoria per SISTEMA MISSILISTICO, fonte primaria: `Analysis/Document/classificazione_sam_1950_2000.md`
+# (tabella 1, fornita dall'utente il 2026-09-29). Solo i missili dei registri che vi compaiono;
+# le varianti navali sono ricondotte al sistema terrestre da cui derivano (derivazione, annotata).
+# Per le armi assenti vale il ripiego: `roles` del veicolo o portata del SAM navale.
+SAM_WEAPON_CATEGORY = {
+    'FIM-92-Stinger': VSHORAD,      # FIM-92 Stinger
+    '9M31-SAM': SHORAD,             # 9K31 Strela-1 (SA-9)
+    '9M37-SAM': SHORAD,             # 9K35 Strela-10 (SA-13)
+    '9M33-SAM': SHORAD,             # 9K33 Osa (SA-8)
+    '9M331-SAM': SHORAD,            # 9K330 Tor (SA-15)
+    'MIM-72-SAM': SHORAD,           # MIM-72 Chaparral
+    'Roland-SAM': SHORAD,           # Roland
+    '3M9-SAM': MRSAM,               # 2K12 Kub (SA-6)
+    '9M38-SAM': MRSAM,              # 9K37 Buk (SA-11)
+    '5V55R-SAM': LRSAM,             # S-300P (SA-10)
+    'HHQ-7': SHORAD,                # HQ-7, versione navale
+    'HHQ-9': LRSAM,                 # HQ-9, versione navale
+    'SA-N-4-Gecko': SHORAD,         # derivazione: versione navale dell'Osa
+    'SA-N-9-Gauntlet': SHORAD,      # derivazione: versione navale del Tor
+    'S-300F': LRSAM,                # derivazione: versione navale dell'S-300
+}
+_CATEGORY_RANK = {category: rank for rank, category in enumerate(SAM_CATEGORIES)}
 _ROLE_CATEGORY = (('LORAD', LRSAM), ('MERAD', MRSAM), ('SHORAD', SHORAD), ('AAA', VSHORAD))
 SHIP_SAM_LONG_RANGE_KM = 100.0
 SHIP_SAM_MEDIUM_RANGE_KM = 30.0
@@ -506,6 +531,13 @@ def sam_category(asset) -> Optional[str]:
 
     if record is None:
         return None
+
+    # Fonte primaria: la categoria dei sistemi missilistici dell'asset (la piu' alta).
+    listed = [SAM_WEAPON_CATEGORY[item[0]] for items in (getattr(record, 'weapons', None) or {}).values()
+              for item in items or () if isinstance(item, (tuple, list)) and item and item[0] in SAM_WEAPON_CATEGORY]
+
+    if listed:
+        return max(listed, key=_CATEGORY_RANK.__getitem__)
 
     if not is_ship:
         roles = getattr(record, 'roles', None) or ()
@@ -543,10 +575,42 @@ def emits_radar(asset) -> bool:
 
 
 def rwr_identifies(aircraft, emitter) -> bool:
-    """True se l'RWR di `aircraft` identifica la categoria SAM di `emitter` che lo illumina."""
+    """True se l'RWR di `aircraft` riconosce come minaccia SAM la categoria di `emitter`, che emette.
+
+    Basta che la categoria stia in una delle classi dell'RWR: un RWR che non separa le categorie
+    (SPO-10: "SAM" generico; ALR-45: SAM non distinti fra loro) riconosce comunque la minaccia.
+    """
     if not validate_class(aircraft, 'Aircraft') or not emits_radar(emitter):
         return False
 
     category = sam_category(emitter)
 
     return category is not None and category in rwr_categories(getattr(aircraft, '_model', None))
+
+
+# Istante in cui la minaccia riconosciuta e' percepita (v. rwr_perception).
+PERCEIVED_AT_DETECTION = 'detection'
+PERCEIVED_AT_LAUNCH = 'launch'
+
+
+def rwr_perception(aircraft, emitter) -> Optional[str]:
+    """Quando l'RWR di `aircraft` percepisce `emitter` come minaccia SAM, o None se mai.
+
+    * PERCEIVED_AT_DETECTION — l'RWR rileva la ricerca: la minaccia e' percepita quando il radar
+      del sistema rileva l'aereo;
+    * PERCEIVED_AT_LAUNCH — l'RWR rileva solo tracciamento o guida (SPO-10): la minaccia e'
+      percepita al lancio contro l'aereo, preceduto dal tracciamento (approssimazione dichiarata:
+      il tracciamento comincia qualche istante prima).
+    """
+    if not rwr_identifies(aircraft, emitter):
+        return None
+
+    modes = rwr_modes(getattr(aircraft, '_model', None))
+
+    if SEARCH in modes:
+        return PERCEIVED_AT_DETECTION
+
+    if TRACK in modes or GUIDANCE in modes:
+        return PERCEIVED_AT_LAUNCH
+
+    return None

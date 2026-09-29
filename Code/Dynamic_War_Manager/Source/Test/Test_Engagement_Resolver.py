@@ -2281,7 +2281,28 @@ class TestRwrPerception(unittest.TestCase):
         self.assertEqual(self._air_outcome('A-10C Thunderbolt II', '9K37-Buk', '9M38-SAM').unanswered_fraction, 0.0)
 
     def test_rwr_without_identification(self):
-        self.assertEqual(self._air_outcome('MiG-21bis', '9K37-Buk', '9M38-SAM').unanswered_fraction, 1.0)
+        """Sirena-2 (MiG-19P): solo allarme, nessun riconoscimento."""
+        self.assertEqual(self._air_outcome('MiG-19P', '9K37-Buk', '9M38-SAM').unanswered_fraction, 1.0)
+
+    def test_track_only_rwr_perceives_at_launch(self):
+        """SPO-10 (MiG-21bis): rileva solo il tracciamento, la minaccia e' percepita al lancio."""
+        self.assertEqual(self._air_outcome('MiG-21bis', '9K37-Buk', '9M38-SAM').unanswered_fraction, 0.0)
+
+        for model, perceived_at_launch in (('MiG-21bis', True), ('A-10C Thunderbolt II', False)):
+            aircraft = [_RwrAircraft('a0', model)]
+            ground = _Force('ground', 'Red', [_ADStub('sam', '9K37-Buk', {'9M38-SAM': 4})])
+            run = ER._EngagementRun((_Force('air', 'Blue', aircraft), ground),
+                                    [_window('a0', 'sam', range_a=None)],
+                                    lambda shooter, target: _kill() if shooter.id == 'sam' else None,
+                                    random.Random(0), None, None, _doctrine(), _profiles({'sam': (2.0, 1.0)}),
+                                    None, 0.0, DM.DERIVED)
+            result = run.run()
+            first_launch = min(s.t_launch for s in result.salvos)
+            detection = next(d.time for d in result.detections if d.observer_id == 'sam')
+
+            with self.subTest(model=model):
+                self.assertAlmostEqual(run.seen_by['air']['sam'], first_launch if perceived_at_launch else detection)
+                self.assertLess(detection, first_launch)
 
     def test_ir_system_does_not_light_the_rwr(self):
         self.assertEqual(self._air_outcome('A-10C Thunderbolt II', '9K35-Strela-10', '9M37-SAM').unanswered_fraction, 1.0)

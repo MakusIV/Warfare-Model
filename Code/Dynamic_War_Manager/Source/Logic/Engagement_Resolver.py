@@ -81,10 +81,10 @@ di rottura B(t) della forza, con mediana `erosion` e parametri di `Context/Doctr
   **fuoco senza risposta** (perdite causate da tiratori non ancora rilevati: `loss_shooters`),
   **postura** (forza con tutti i tratti di rotta fermi);
 * percezione dei nemici: rilevamento dei propri sensori, oppure (forza aerea) RWR — un asset
-  AD che emette e rileva un aereo il cui RWR ne identifica la categoria SAM
-  (`Air_Defense_Efficacy.rwr_identifies`, dati in `Asset/Aircraft_Rwr_Data`) e' percepito dalla
-  forza dell'aereo dall'istante del rilevamento; conta nel rapporto e rende "con risposta" le
-  perdite che causa;
+  AD che emette e illumina un aereo il cui RWR ne riconosce la categoria SAM
+  (`Air_Defense_Efficacy.rwr_perception`, dati in `Asset/Aircraft_Rwr_Data`) e' percepito dalla
+  forza dell'aereo: dal rilevamento se l'RWR rileva la ricerca, dal lancio se rileva solo
+  tracciamento/guida (SPO-10); conta nel rapporto e rende "con risposta" le perdite che causa;
 * rho(t) per una forza AEREA (tutti gli asset impegnati sono aerei): aerei propri operativi /
   (air_force_ratio_scale x minaccia), con minaccia = somma di `Air_Defense_Efficacy.air_threat_weight`
   dei nemici percepiti (E(N) degli asset AD con la scorta di DOTAZIONE stimata, perche' chi
@@ -1452,7 +1452,7 @@ class _EngagementRun:
             # RWR (2026-09-29): il radar dell'osservatore illumina il bersaglio; se il bersaglio e'
             # un aereo il cui RWR identifica la categoria SAM dell'osservatore, la sua forza sa da
             # quell'istante chi la sta ingaggiando (percezione e fuoco senza risposta).
-            if ADE.rwr_identifies(target.asset, observer.asset):
+            if ADE.rwr_perception(target.asset, observer.asset) == ADE.PERCEIVED_AT_DETECTION:
                 self._perceive(target.force_id, observer.id, time)
 
             t_ready = time + self._profile(observer.id).total
@@ -1897,6 +1897,10 @@ class _EngagementRun:
         self._touch(time)
         self._push(salvo.t_impact, _IMPACT, target.force_id, salvo)
         self._schedule_next(shooter_id, next_time)
+
+        # RWR che rileva solo tracciamento/guida (SPO-10): la minaccia e' percepita al lancio.
+        if ADE.rwr_perception(target.asset, shooter.asset) == ADE.PERCEIVED_AT_LAUNCH:
+            self._perceive(target.force_id, shooter_id, time)
 
         if validate_class(shooter.asset, 'Aircraft') and not validate_class(target.asset, 'Aircraft'):
             self._register_launcher(time, shooter, target.force_id)
