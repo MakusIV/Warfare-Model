@@ -43,6 +43,13 @@ attraverso l'RNG di sessione passato dal chiamante.
    da un intercettore solo se il punto di lancio della salva e' fuori dal suo volume
    d'intercettazione V_I (`Mobile.air_defense_volume`, posizioni all'istante del lancio). Il
    lanciatore che spara da dentro la zona e' un bersaglio: i suoi colpi non si intercettano.
+   Dal 2026-09-30 (regola R-INT, Proposta_Intercettazione_Reazione.md) l'intercettore deve
+   anche avere una traccia del colpo e il tempo di reagire prima dell'impatto: se aveva gia'
+   rilevato il lanciatore vede il lancio e reagisce in VAL+COM+ATT, altrimenti scopre il colpo
+   quando entra nel suo raggio di rilevamento aereo (traiettoria rettilinea, deterministico:
+   nessuna estrazione) e reagisce in RIV+VAL+COM+ATT. Rilevamento per asset; tempo di volo
+   dell'intercettore e RCS del colpo non modellati. Un colpo con tempo di volo nullo non si
+   intercetta mai.
 5. **Danno per singolo colpo.** Ogni colpo superstite passa da
    `Damage_Model.build_damage_event` (che chiama `resolve_hit`), con un `draw` estratto
    qui dall'RNG iniettato. Nessuna reimplementazione del contratto del danno.
@@ -1228,6 +1235,11 @@ class _EngagementRun:
         self.launch_generation: Dict[str, int] = {}
         self.pending_decide: set = set()
         self.may_intercept_cache: Dict[Tuple[str, int], bool] = {}
+        # Regola R-INT (2026-09-30): istante di rilevamento per (osservatore, bersaglio), raggio
+        # di rilevamento aereo degli intercettori, esito del vincolo di tempo per (intercettore, salva).
+        self.detected_at: Optional[Dict[Tuple[str, str], float]] = None
+        self.air_range_cache: Dict[str, Optional[float]] = {}
+        self.in_time_cache: Dict[Tuple[str, int], bool] = {}
         self.reaction_profile_for = reaction_profile_for or RP.profile_for_asset
         self.detection_factor = detection_factor
         self.salvo_window = float(salvo_window)
@@ -2096,6 +2108,95 @@ class _EngagementRun:
 
         return self.may_intercept_cache[key]
 
+    def _detection_time_of(self, observer_id: str, target_id: str) -> Optional[float]:
+        """Istante in cui `observer_id` ha rilevato `target_id` (None = mai rilevato)."""
+        if self.detected_at is None:
+            self.detected_at = {(d.observer_id, d.target_id): d.time
+                                for d in self.detections if d.detected and d.time is not None}
+
+        return self.detected_at.get((observer_id, target_id))
+
+    def _air_detection_range(self, shadow: "_Shadow") -> Optional[float]:
+        """Raggio di rilevamento aereo dell'intercettore [m], memoizzato. None = non modellato."""
+        if shadow.id not in self.air_range_cache:
+            value = None
+            range_of = getattr(shadow.asset, 'detection_range', None)
+
+            if callable(range_of):
+                try:
+                    value = range_of('air')
+                except (TypeError, ValueError, AttributeError):
+                    value = None
+
+            ok = isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0
+            self.air_range_cache[shadow.id] = float(value) if ok else None
+
+        return self.air_range_cache[shadow.id]
+
+    def _round_track_time(self, shadow: "_Shadow", salvo: Salvo) -> Optional[float]:
+        """Istante in cui l'intercettore scopre dalla geometria un colpo di cui non ha visto il lancio.
+
+        Il colpo vola in linea retta a velocita' costante dal punto di lancio alla posizione del
+        bersaglio all'impatto; l'intercettore e' fermo nella posizione dell'istante di lancio.
+        Restituisce il primo istante in cui il colpo e' entro il suo raggio di rilevamento aereo,
+        None se non ci entra mai. Senza raggio o senza posizioni: t_launch (dato mancante = nessun
+        vincolo geometrico).
+        """
+        radius = self._air_detection_range(shadow)
+        start = self._position_at(self.shadows[salvo.shooter_id], salvo.t_launch)
+        end = self._position_at(self.shadows[salvo.target_id], salvo.t_impact)
+        here = self._position_at(shadow, salvo.t_launch)
+
+        if radius is None or start is None or end is None or here is None:
+            return salvo.t_launch
+
+        d = [e - a for a, e in zip(start, end)]
+        f = [a - q for a, q in zip(start, here)]
+        a = sum(x * x for x in d)
+        b = 2.0 * sum(x * y for x, y in zip(f, d))
+        c = sum(x * x for x in f) - radius * radius
+
+        if c <= 0.0:
+            return salvo.t_launch
+
+        disc = b * b - 4.0 * a * c
+
+        if a <= 0.0 or disc < 0.0:
+            return None
+
+        s = (-b - disc ** 0.5) / (2.0 * a)
+
+        if not 0.0 <= s <= 1.0:
+            return None
+
+        return salvo.t_launch + s * (salvo.t_impact - salvo.t_launch)
+
+    def _in_time(self, shadow: "_Shadow", salvo: Salvo) -> bool:
+        """Regola R-INT (2026-09-30, Proposta_Intercettazione_Reazione.md): l'intercettore ferma
+        i colpi della salva solo se ne ha una traccia e il tempo di reagire prima dell'impatto,
+        t_traccia + tau <= t_impact.
+
+        Lancio osservato (l'intercettore aveva gia' rilevato il lanciatore all'istante del lancio):
+        t_traccia = t_launch, tau = refire_interval (VAL+COM+ATT). Altrimenti il colpo e' una
+        traccia nuova, scoperta dalla geometria (`_round_track_time`): tau = total
+        (RIV+VAL+COM+ATT). Rilevamento per asset (nessun quadro condiviso fino alla Fase 0 C2) e
+        deterministico (nessuna estrazione: il flusso RNG non cambia).
+        """
+        key = (shadow.id, salvo.salvo_id)
+
+        if key not in self.in_time_cache:
+            profile = self._profile(shadow.id)
+            seen = self._detection_time_of(shadow.id, salvo.shooter_id)
+
+            if seen is not None and seen <= salvo.t_launch + TIME_EPS:
+                t_track, tau = salvo.t_launch, profile.refire_interval
+            else:
+                t_track, tau = self._round_track_time(shadow, salvo), profile.total
+
+            self.in_time_cache[key] = t_track is not None and t_track + tau <= salvo.t_impact + TIME_EPS
+
+        return self.in_time_cache[key]
+
     def _on_resolve(self, time: float, force_id: str) -> None:
         group = self.pending.pop(force_id, None)
 
@@ -2144,7 +2245,7 @@ class _EngagementRun:
 
                 free = available.get(shadow.id, 0) - used.get(shadow.id, 0)
 
-                if free <= 0 or not self._may_intercept(shadow, salvo):
+                if free <= 0 or not self._may_intercept(shadow, salvo) or not self._in_time(shadow, salvo):
                     continue
 
                 take = min(free, left)

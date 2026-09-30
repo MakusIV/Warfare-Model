@@ -261,6 +261,9 @@ righe e non introduce costanti. Si abbina a qualunque delle regole sopra.
    minimo 2 perdite. V. `Proposta_Soglia_Rottura_Stocastica.md`.
 4. **Intercettazione senza rilevamento**: né il colpo né il lanciatore devono essere stati rilevati
    dall'intercettore. Ne terrà conto la nebbia di guerra (C).
+   **Risolto 2026-09-30**: regola R-INT, traccia del colpo (lancio osservato o ingresso nel raggio
+   aereo) più tempo di reazione dell'intercettore prima dell'impatto. V.
+   `Proposta_Intercettazione_Reazione.md`.
 5. **Canali rigenerati per evento** (§2, punto 6): con `salvo_window = 0` il limite di canali non frena
    un flusso di salve piccole. È un comportamento voluto e testato, ma rende la scorta l'unico
    vincolo reale.

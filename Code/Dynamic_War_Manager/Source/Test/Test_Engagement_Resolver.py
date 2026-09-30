@@ -112,6 +112,12 @@ def _miss(**kwargs):
     return ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, **kwargs)
 
 
+# Tempo di volo sufficiente alla reazione di un intercettore col profilo di ripiego dei test
+# (totale 10 s): dal 2026-09-30 (regola R-INT) un colpo si intercetta solo se l'intercettore
+# ha il tempo di reagire prima dell'impatto.
+REACTION_TOF = 20.0
+
+
 def _always(spec):
     return lambda shooter, target: spec
 
@@ -371,7 +377,7 @@ class TestSalvoSaturation(unittest.TestCase):
                                      reaction_profile_for=profiles, salvo_window=salvo_window)
 
     def test_first_n_rounds_are_intercepted(self):
-        result = self._scenario(_miss(rounds=5, interceptable=True))
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF))
         resolution = result.resolutions[0]
 
         self.assertEqual(resolution.capacity, 3)
@@ -380,7 +386,7 @@ class TestSalvoSaturation(unittest.TestCase):
 
     def test_intercepted_rounds_never_reach_resolve_hit(self):
         with patch.object(DM, 'build_damage_event', wraps=DM.build_damage_event) as spy:
-            self._scenario(_miss(rounds=5, interceptable=True))
+            self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF))
         self.assertEqual(spy.call_count, 2)
 
     def test_saturation_is_not_a_per_round_probability(self):
@@ -390,7 +396,7 @@ class TestSalvoSaturation(unittest.TestCase):
             interceptor = _Asset('r2')
             red = _Force('red', 'Red', [_Asset('r1'), interceptor], interceptors=[(interceptor, 3)])
             result = ER.resolve_engagement(blue, red, [_window('b1', 'r1', t_end=2.9, range_b=None)],
-                                           _always(_miss(rounds=5, interceptable=True)),
+                                           _always(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)),
                                            random.Random(seed),
                                            reaction_profile_for=_profiles({'b1': (2.0, 1.0)}))
             self.assertEqual(result.resolutions[0].intercepted, 3)
@@ -402,14 +408,14 @@ class TestSalvoSaturation(unittest.TestCase):
         self.assertEqual(len(result.damage_events), 5)
 
     def test_interceptions_consume_the_interceptor_stock(self):
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10)
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), interceptor_stock=10)
 
         self.assertEqual([(e.asset_id, e.interceptions) for e in result.interception_events], [('r2', 3)])
         self.assertEqual(result.interceptions_consumed(), {'r2': 3})
 
     def test_interception_event_references_the_defended_force_and_salvos(self):
         """Tracciabilita': force_id e salvo_ids rimandano alla SalvoResolution intercettata."""
-        result = self._scenario(_miss(rounds=2, interceptable=True), shooters=('b1', 'b2'),
+        result = self._scenario(_miss(rounds=2, interceptable=True, time_of_flight=REACTION_TOF), shooters=('b1', 'b2'),
                                 interceptor_stock=10)
         event, = result.interception_events
         resolution, = result.resolutions
@@ -420,7 +426,7 @@ class TestSalvoSaturation(unittest.TestCase):
         self.assertEqual(event.salvo_ids, (0, 1))
 
     def test_capacity_is_capped_by_interceptor_stock(self):
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=1)
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), interceptor_stock=1)
 
         self.assertEqual(result.resolutions[0].capacity, 1)
         self.assertEqual(len(result.damage_events), 4)
@@ -432,18 +438,18 @@ class TestSalvoSaturation(unittest.TestCase):
         qualunque salva. Ora la capacita' e' limitata da interceptor_stock soltanto, e
         munizioni offensive a zero non la azzerano.
         """
-        rich = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=1,
+        rich = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), interceptor_stock=1,
                               interceptor_ammo=2000)
         self.assertEqual(rich.resolutions[0].capacity, 1)
         self.assertEqual(len(rich.damage_events), 4)
 
-        dry = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10,
+        dry = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), interceptor_stock=10,
                              interceptor_ammo=0)
         self.assertEqual(dry.resolutions[0].capacity, 3)
 
     def test_interception_and_salvo_events_have_distinct_types(self):
         """Il tiratore produce solo AmmunitionEvent (salva), il difensore solo InterceptionEvent."""
-        result = self._scenario(_miss(rounds=5, interceptable=True), interceptor_stock=10,
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), interceptor_stock=10,
                                 interceptor_ammo=4)
 
         self.assertEqual([(type(e), e.asset_id, e.rounds) for e in result.ammunition_events],
@@ -456,7 +462,7 @@ class TestSalvoSaturation(unittest.TestCase):
 
     def test_sam_interceptions_draw_on_its_missile_entry(self):
         """Scorta per arma: le intercettazioni consumano la voce del missile AD."""
-        result = self._scenario(_miss(rounds=5, interceptable=True), stores={'9M38-SAM': 2},
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), stores={'9M38-SAM': 2},
                                 interceptor_weapons={'9M38-SAM': False}, channels=3)
 
         self.assertEqual(result.resolutions[0].capacity, 2)
@@ -465,7 +471,7 @@ class TestSalvoSaturation(unittest.TestCase):
 
     def test_mixed_system_intercepts_with_guns_first_one_event_per_weapon(self):
         """Regola F: prima i cannoni (100 colpi l'uno), poi i missili; un evento per arma."""
-        result = self._scenario(_miss(rounds=5, interceptable=True), channels=3,
+        result = self._scenario(_miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF), channels=3,
                                 stores={'2A38M-30mm': 150, '9M311-SAM': 8},
                                 interceptor_weapons={'2A38M-30mm': True, '9M311-SAM': False})
 
@@ -487,7 +493,7 @@ class TestSalvoSaturation(unittest.TestCase):
         red = _Force('red', 'Red', [r2], interceptors=[(r2, 3)])
         specs = {'r2': ER.ShotSpec(accuracy=0.0, destroy_capacity=0.0, rounds=3, cycle_time=100.0,
                                    weapon='9M38-SAM'),
-                 'b1': _miss(rounds=5, interceptable=True, cycle_time=100.0)}
+                 'b1': _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF, cycle_time=100.0)}
         return ER.resolve_engagement(blue, red, [_window('b1', 'r2', t_end=2.9)],
                                      lambda shooter, target: specs[shooter.id], random.Random(0),
                                      reaction_profile_for=_profiles({'r2': (1.0, 1.0), 'b1': (2.0, 1.0)}))
@@ -511,7 +517,7 @@ class TestSalvoSaturation(unittest.TestCase):
 
     def test_simultaneous_salvos_share_the_capacity(self):
         """Due salve da 2 colpi nello stesso istante contro capacita' 3: ne passa 1."""
-        result = self._scenario(_miss(rounds=2, interceptable=True), shooters=('b1', 'b2'))
+        result = self._scenario(_miss(rounds=2, interceptable=True, time_of_flight=REACTION_TOF), shooters=('b1', 'b2'))
 
         self.assertEqual(len(result.resolutions), 1)
         self.assertEqual(result.resolutions[0].intercepted, 3)
@@ -519,14 +525,14 @@ class TestSalvoSaturation(unittest.TestCase):
 
     def test_capacity_refreshes_between_separate_salvo_events(self):
         """Salve a 0,5 s di distanza con salvo_window = 0: due eventi, tutto intercettato."""
-        result = self._scenario(_miss(rounds=2, interceptable=True), shooters=('b1', 'b2'),
+        result = self._scenario(_miss(rounds=2, interceptable=True, time_of_flight=REACTION_TOF), shooters=('b1', 'b2'),
                                 latencies={'b1': (2.0, 1.0), 'b2': (2.5, 1.0)})
 
         self.assertEqual(len(result.resolutions), 2)
         self.assertEqual(len(result.damage_events), 0)
 
     def test_salvo_window_groups_near_simultaneous_impacts(self):
-        result = self._scenario(_miss(rounds=2, interceptable=True), shooters=('b1', 'b2'),
+        result = self._scenario(_miss(rounds=2, interceptable=True, time_of_flight=REACTION_TOF), shooters=('b1', 'b2'),
                                 latencies={'b1': (2.0, 1.0), 'b2': (2.5, 1.0)}, salvo_window=1.0)
 
         self.assertEqual(len(result.resolutions), 1)
@@ -537,7 +543,7 @@ class TestSalvoSaturation(unittest.TestCase):
         blue = _Force('blue', 'Blue', [_Asset('b1')])
         red = _Force('red', 'Red', [_Asset('r1')])
         result = ER.resolve_engagement(blue, red, [_window('b1', 'r1', t_end=2.9, range_b=None)],
-                                       _always(_miss(rounds=3, interceptable=True)), random.Random(0),
+                                       _always(_miss(rounds=3, interceptable=True, time_of_flight=REACTION_TOF)), random.Random(0),
                                        reaction_profile_for=_profiles({'b1': (2.0, 1.0)}))
         self.assertEqual(result.resolutions[0].capacity, 0)
         self.assertEqual(len(result.damage_events), 3)
@@ -1449,11 +1455,12 @@ class TestMultiForceEngagement(unittest.TestCase):
     def test_interceptor_stock_is_shared_across_fronts_in_time_order(self):
         """X intercetta per entrambi i fronti con UNA scorta (3 colpi, 2 canali).
 
-        A lancia 2 colpi intercettabili a t = 3 e a t = 10, B lancia 2 colpi a t = 5.
-        Timeline congiunta: t=3 ne ferma 2 (scorta 1), t=5 — il colpo di B, nel mezzo
-        dell'ingaggio con A — ne ferma 1 (scorta 0), t=10 nessuno. Risolvendo prima (X,A)
-        per intero, la scorta sarebbe andata tutta ad A (t=3 e t=10) e B non sarebbe stato
-        intercettato affatto.
+        A lancia 2 colpi intercettabili a t = 3 e a t = 10, B lancia 2 colpi a t = 5, tutti
+        con 1 s di volo. Timeline congiunta: t=4 ne ferma 2 (scorta 1), t=6 — il colpo di B,
+        nel mezzo dell'ingaggio con A — ne ferma 1 (scorta 0), t=11 nessuno. Risolvendo prima
+        (X,A) per intero, la scorta sarebbe andata tutta ad A (t=4 e t=11) e B non sarebbe
+        stato intercettato affatto. X vede i lanci (lanciatori gia' rilevati): reagisce in
+        VAL+COM+ATT = 1 s, proprio il tempo di volo (regola R-INT).
         """
         interceptor = _Asset('x1', interceptor_stock=3)
         x = _Force('X', 'Blue', [interceptor], interceptors=[(interceptor, 2)])
@@ -1465,7 +1472,7 @@ class TestMultiForceEngagement(unittest.TestCase):
             if shooter.id == 'x1':
                 return None
             cycle = 7.0 if shooter.id == 'a1' else 100.0
-            return _miss(rounds=2, interceptable=True, cycle_time=cycle)
+            return _miss(rounds=2, interceptable=True, time_of_flight=1.0, cycle_time=cycle)
 
         result = ER.resolve_engagement(x, a, windows, fire, random.Random(0), extra_forces=[b],
                                        thresholds=_THREE_SIDES,
@@ -1475,9 +1482,9 @@ class TestMultiForceEngagement(unittest.TestCase):
         self.assertEqual([(s.t_launch, s.shooter_id) for s in result.salvos],
                          [(3.0, 'a1'), (5.0, 'b1'), (10.0, 'a1')])
         self.assertEqual([(r.time, r.intercepted) for r in result.resolutions],
-                         [(3.0, 2), (5.0, 1), (10.0, 0)])
+                         [(4.0, 2), (6.0, 1), (11.0, 0)])
         interceptions = [(e.time, e.interceptions) for e in result.interception_events]
-        self.assertEqual(interceptions, [(3.0, 2), (5.0, 1)])
+        self.assertEqual(interceptions, [(4.0, 2), (6.0, 1)])
         self.assertEqual(result.interceptions_consumed(), {'x1': 3})
         self.assertNotIn('x1', result.ammunition_consumed())
 
@@ -1663,7 +1670,7 @@ class TestLauncherInsideInterceptionZone(unittest.TestCase):
     """
 
     def _run(self, x, z=0.0, interceptors=None, spec=None):
-        spec = spec or _miss(rounds=5, interceptable=True)
+        spec = spec or _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)
         blue = _Force('blue', 'Blue', [_Asset('b1')])
         interceptors = interceptors or [_ZonedInterceptor('r2', (0.0, 0.0, 0.0), 12_000.0)]
         red = _Force('red', 'Red', [_Asset('r1')] + interceptors, interceptors=[(i, 3) for i in interceptors])
@@ -1716,6 +1723,105 @@ class TestLauncherInsideInterceptionZone(unittest.TestCase):
     def test_non_interceptable_rounds_are_unaffected(self):
         result = self._run(x=15_000.0, spec=_miss(rounds=5, interceptable=False))
         self.assertEqual(result.resolutions[0].intercepted, 0)
+
+
+class _TrackingInterceptor(_ZonedInterceptor):
+    """Intercettore senza V_I (regola L1 spenta) con raggio di rilevamento aereo (Mobile.detection_range)."""
+
+    def __init__(self, asset_id, position, air_range, **kwargs):
+        super().__init__(asset_id, position, None, **kwargs)
+        self._air_range = air_range
+
+    def detection_range(self, mode, sensor=None, range_type=None):
+        return self._air_range if mode == 'air' else None
+
+
+class TestInterceptionReaction(unittest.TestCase):
+    """Regola R-INT (2026-09-30, Proposta_Intercettazione_Reazione.md): un colpo si intercetta solo
+    se l'intercettore ne ha una traccia e il tempo di reagire prima dell'impatto,
+    t_traccia + tau <= t_impact. Lancio osservato (lanciatore gia' rilevato): t_traccia = lancio,
+    tau = VAL+COM+ATT; altrimenti traccia nuova dalla geometria, tau = RIV+VAL+COM+ATT.
+
+    Geometria: bersaglio r1 nell'origine, tiratore b1 fermo a (x, 0, 0), una salva di 5 colpi
+    intercettabili a t = 2 s; intercettore senza V_I, 3 canali; la difesa non spara.
+    """
+
+    def _run(self, tof, interceptors, x=15_000.0, profile=(5.0, 1.0), observed=()):
+        spec = _miss(rounds=5, interceptable=True, time_of_flight=tof)
+        blue = _Force('blue', 'Blue', [_Asset('b1')])
+        red = _Force('red', 'Red', [_Asset('r1')] + interceptors, interceptors=[(i, 3) for i in interceptors])
+        legs = {'b1': [Leg(0.0, 100.0, (x, 0.0, 0.0), (x, 0.0, 0.0))],
+                'r1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+        for i in interceptors:
+            p = (float(i.position.x), float(i.position.y), float(i.position.z))
+            legs[i.id] = [Leg(0.0, 100.0, p, p)]
+        windows = [ContactWindow('b1', 'r1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
+                                 range_a=50_000.0, range_b=None)]
+        windows += [ContactWindow(i, 'b1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x,
+                                  range_a=50_000.0, range_b=None) for i in observed]
+        profiles = _profiles({'b1': (2.0, 1.0)}, default=profile)
+
+        def fire(shooter, target):
+            return spec if shooter.id == 'b1' else None
+
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, fire, _ScriptedRng([0.0] * 20),
+                                         legs=legs, reaction_profile_for=profiles)
+
+    def _intercepted(self, *args, **kwargs):
+        return self._run(*args, **kwargs).resolutions[0].intercepted
+
+    def test_observed_launch_needs_only_the_refire_interval(self):
+        """Lanciatore in traccia dal t = 0: tau = VAL+COM+ATT = 1 s, non il totale di 5 s."""
+        r2 = [_TrackingInterceptor('r2', (0.0, 0.0, 0.0), 1_000.0)]
+        self.assertEqual(self._intercepted(1.0, r2, observed=('r2',)), 3)
+        self.assertEqual(self._intercepted(0.9, r2, observed=('r2',)), 0)
+
+    def test_unobserved_launch_needs_the_full_reaction_time(self):
+        """Lancio dentro il raggio ma lanciatore mai rilevato: traccia nuova, tau = 5 s."""
+        r2 = [_TrackingInterceptor('r2', (0.0, 0.0, 0.0), 50_000.0)]
+        self.assertEqual(self._intercepted(5.0, r2), 3)
+        self.assertEqual(self._intercepted(4.9, r2), 0)
+
+    def test_round_found_mid_flight(self):
+        """Lancio a 20 km, raggio 10 km, 20 s di volo: traccia a t = 12, impatto a t = 22."""
+        r2 = [_TrackingInterceptor('r2', (0.0, 0.0, 0.0), 10_000.0)]
+        self.assertEqual(self._intercepted(20.0, r2, x=20_000.0, profile=(10.0, 1.0)), 3)
+        self.assertEqual(self._intercepted(20.0, r2, x=20_000.0, profile=(10.5, 1.0)), 0)
+
+    def test_round_never_in_range_is_not_intercepted(self):
+        """L'intercettore e' a 50 km dalla traiettoria con 10 km di raggio: non vede il colpo."""
+        r2 = [_TrackingInterceptor('r2', (0.0, 50_000.0, 0.0), 10_000.0)]
+        result = self._run(60.0, r2)
+        self.assertEqual(result.resolutions[0].intercepted, 0)
+        self.assertEqual(result.interception_events, ())
+
+    def test_zero_time_of_flight_is_never_intercepted(self):
+        r2 = [_TrackingInterceptor('r2', (0.0, 0.0, 0.0), 50_000.0)]
+        self.assertEqual(self._intercepted(0.0, r2, observed=('r2',)), 0)
+
+    def test_without_sensor_data_only_the_time_constraint_applies(self):
+        """Dato mancante: senza raggio aereo nessun vincolo geometrico, resta tau = totale."""
+        r2 = [_TrackingInterceptor('r2', (0.0, 50_000.0, 0.0), None)]
+        self.assertEqual(self._intercepted(5.0, r2), 3)
+        self.assertEqual(self._intercepted(4.9, r2), 0)
+
+    def test_late_interceptor_passes_the_rounds_to_the_next(self):
+        """r2 (primo nell'ordine) non fa in tempo, r3 si': intercetta e paga solo r3."""
+        r2 = _TrackingInterceptor('r2', (0.0, 50_000.0, 0.0), 10_000.0)
+        r3 = _TrackingInterceptor('r3', (0.0, 300.0, 0.0), 50_000.0)
+        result = self._run(10.0, [r2, r3])
+        self.assertEqual(result.resolutions[0].intercepted, 3)
+        self.assertEqual(result.interceptions_consumed(), {'r3': 3})
+
+    def test_rule_draws_nothing_from_the_rng(self):
+        """Rilevamento del colpo deterministico (Q2): stesse estrazioni con e senza intercettazione."""
+        near = self._run(10.0, [_TrackingInterceptor('r2', (0.0, 0.0, 0.0), 50_000.0)])
+        far = self._run(10.0, [_TrackingInterceptor('r2', (0.0, 50_000.0, 0.0), 10_000.0)])
+        self.assertEqual((near.resolutions[0].intercepted, far.resolutions[0].intercepted), (3, 0))
+        self.assertEqual([(d.observer_id, d.target_id, d.draw) for d in near.detections],
+                         [(d.observer_id, d.target_id, d.draw) for d in far.detections])
+        self.assertFalse(any(d.observer_id == 'r2' for d in near.detections))
 
 
 class Aircraft(_Asset):
