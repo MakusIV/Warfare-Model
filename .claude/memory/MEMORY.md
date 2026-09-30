@@ -1,7 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Session 2026-09-30 (ProArt P16) — R-INT (a500fdf3) e R-CLS classi RWR (440a8823) FATTE, suite 3753 OK](project_session_2026_09_30_summary.md) — prossimo: attività 3 A4 filtro armi per missione, poi rotte→mappe, residui volumi, Fase 0 C2
+- [Session 2026-09-30 (ProArt P16) — CHIUSA, tutto pushato, suite 3753 OK: R-INT intercettazione con reazione (a500fdf3), R-CLS classi RWR (440a8823)](project_session_2026_09_30_summary.md) — ripresa su qualunque macchina con git pull; prossimo: A4 filtro armi per missione (6 decisioni missione), poi rotte→mappe, residui volumi, Fase 0 C2, D9 morale, bug noti, manuale DES
 - [Session 2026-09-29 (osboxes) — CHIUSA, tutto pushato, suite 3735 OK: soglia di rottura stocastica, efficacia antiaerea E(N), RWR per classi/modalità, classificazione SAM, overkill risolto](project_session_2026_09_29_summary.md) — prossima sessione su ProArt P16 (git pull); prossimo: §5.4 intercettazione senza tempo di reazione, poi settori/classi RWR, A4, rotte→mappe, Fase 0 C2
 - [Session 2026-09-28 (ProArt P16) — D4 KMGU-2 chiusa, 39 armi DCS inserite, A6 (D+F+L1+L2+L3) COMPLETA, suite 3668 OK](project_session_2026_09_28_summary.md) — aperti: disingaggio alla prima perdita (§5.3, più visibile in S1), overkill (§5.2), intercettazione senza reazione (§5.4), A4 con Mission, Fase 0 C2
 - [Session 2026-09-27 (ProArt P16) — Proposta B IMPLEMENTATA (Logic/Weapon_Delivery.py, AttackProfile, B6 bombe nel DES), suite 3645 OK; manuale DES aggiornato a 6754bf1c (fb914f0e)](project_session_2026_09_27_summary.md) — tutto committato e pushato; aperto: D4 KGBU, A4/A6, D-4b/c, D-5 opz.2, 6 decisioni missione, Fase 0 C2
