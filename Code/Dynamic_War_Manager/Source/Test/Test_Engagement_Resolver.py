@@ -2421,6 +2421,56 @@ class TestRwrPerception(unittest.TestCase):
         self.assertIsNotNone(self._air_outcome('A-10C Thunderbolt II', '9K37-Buk', '9M38-SAM').force_ratio)
 
 
+class TestRwrClassThreat(unittest.TestCase):
+    """R-CLS (2026-09-30): un emettitore percepito dalla sola RWR pesa con la E(N) media della classe
+    dell'RWR (la piu' fine della formazione); identificato dai sensori, con la propria."""
+
+    def _run(self, models, seen_by_sensors=False, catalogue=None):
+        aircraft = [_RwrAircraft(f'a{i}', model) for i, model in enumerate(models)]
+        ground = _Force('ground', 'Red', [_ADStub('sam', 'ZSU-23-4-Shilka', {})])
+        range_a = 1000.0 if seen_by_sensors else None
+        windows = [_window(a.id, 'sam', range_a=range_a) for a in aircraft]
+        run = ER._EngagementRun((_Force('air', 'Blue', aircraft), ground), windows,
+                                lambda shooter, target: None, random.Random(0), None, None, _doctrine(),
+                                _profiles({}), None, 0.0, DM.DERIVED, rwr_catalogue=catalogue)
+        run.run()
+        return run, run._air_threat(run.force_states['air'], run.shadows['sam'], 1e9, 4)
+
+    def test_coarse_rwr_weighs_the_class(self):
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        _, threat = self._run(['Su-25'])
+        self.assertAlmostEqual(threat, ADE.class_threat_weight(frozenset({'VSHORAD', 'SHORAD'}), ADE.GROUND, 4))
+
+    def test_finest_class_of_the_formation(self):
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        run, threat = self._run(['Su-25', 'A-10C Thunderbolt II'])
+        self.assertEqual(len(run.rwr_class['air']['sam']), 2)
+        self.assertAlmostEqual(threat, ADE.class_threat_weight(frozenset({'VSHORAD'}), ADE.GROUND, 4))
+
+    def test_sensor_detection_identifies_the_system(self):
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        run, threat = self._run(['Su-25'], seen_by_sensors=True)
+        self.assertAlmostEqual(threat, ADE.air_defense_efficacy(run.shadows['sam'].asset, 4))
+
+    def test_before_perception_time_the_class_does_not_apply(self):
+        run, _ = self._run(['Su-25'])
+        (t_seen, _), = run.rwr_class['air']['sam']
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        before = run._air_threat(run.force_states['air'], run.shadows['sam'], t_seen - 1.0, 4)
+        self.assertAlmostEqual(before, ADE.air_defense_efficacy(run.shadows['sam'].asset, 4))
+
+    def test_injected_catalogue_replaces_the_registry(self):
+        shilka = _ADStub('cat', 'ZSU-23-4-Shilka', {})
+        run, threat = self._run(['Su-25'], catalogue=[shilka])
+        from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
+
+        self.assertAlmostEqual(threat, ADE.air_defense_efficacy(shilka, 4))
+
+
 class TestFireDoctrine(unittest.TestCase):
     """Dottrina di tiro (2026-09-29, Proposta_Overkill_Tiro.md): saturazione del bersaglio per la
     forza e tetto "due missili, poi guarda" per tiratore; attesa del primo impatto."""

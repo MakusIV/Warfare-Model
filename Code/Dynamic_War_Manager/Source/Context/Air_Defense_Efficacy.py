@@ -52,7 +52,7 @@ con il processo ATCAL interno. Mai eccezioni per dati mancanti: modello ignoto o
 
 import math
 from dataclasses import dataclass
-from typing import Dict, Mapping, Optional, Tuple
+from typing import Dict, FrozenSet, Mapping, Optional, Sequence, Tuple
 
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
@@ -132,8 +132,11 @@ _PROFILE_CACHE: Dict[tuple, Optional[ADProfile]] = {}
 
 
 def clear_cache() -> None:
-    """Svuota la cache dei profili (test, registri modificati a runtime)."""
+    """Svuota le cache dei profili e del catalogo RWR (test, registri modificati a runtime)."""
+    global _DEFAULT_CATALOGUE
     _PROFILE_CACHE.clear()
+    _CLASS_WEIGHT_CACHE.clear()
+    _DEFAULT_CATALOGUE = None
 
 
 def _registry_entry(model: str):
@@ -486,7 +489,7 @@ def air_threat_weight(asset, n_aircraft: int, *,
 # Linebacker, ZSU-57-2, VADS: puntamento ottico o cercatore IR) non accende nessun RWR.
 
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Rwr_Data import (  # noqa: E402
-    GUIDANCE, LRSAM, MRSAM, SEARCH, SHORAD, TRACK, VSHORAD, rwr_categories, rwr_modes)
+    GUIDANCE, LRSAM, MRSAM, SEARCH, SHORAD, TRACK, VSHORAD, rwr_categories, rwr_classes, rwr_modes)
 
 SAM_CATEGORIES = (VSHORAD, SHORAD, MRSAM, LRSAM)
 
@@ -614,3 +617,109 @@ def rwr_perception(aircraft, emitter) -> Optional[str]:
         return PERCEIVED_AT_LAUNCH
 
     return None
+
+
+# ── CLASSE RWR E MINACCIA PERCEPITA (2026-09-30, regola R-CLS) ───────────────
+#
+# `Analysis/Document/Proposta_Uso_Classi_Settori_RWR.md`. Un emettitore percepito SOLO dall'RWR
+# e' noto per classe, non per sistema: lo SPO-15 mette lo Shilka e il Tunguska nella stessa classe,
+# lo SPO-10 vede un "SAM" generico. Il suo peso nel rapporto di forze e' la E(N) MEDIA (decisione
+# utente Q1) dei sistemi del catalogo che emettono, stanno nella classe e sono dello stesso dominio
+# dell'emettitore (terra o mare: il pilota sa se sorvola il mare, e le navi con E(N) ~ N
+# dominerebbero ogni classe). Catalogo di default: tutti i modelli dei registri veicoli e navi;
+# il chiamante puo' iniettarne uno ristretto all'inventario del nemico.
+
+SEA = 'sea'
+GROUND = 'ground'
+ALL_SAM_CLASS = frozenset(SAM_CATEGORIES)     # classe unica dello SPO-10 ("SAM" generico)
+
+_DEFAULT_CATALOGUE: Optional[Tuple[object, ...]] = None
+_CLASS_WEIGHT_CACHE: Dict[tuple, Optional[float]] = {}
+
+
+def emitter_domain(asset) -> Optional[str]:
+    """SEA per le navi, GROUND per i veicoli del registro, None se il modello non e' noto."""
+    model = getattr(asset, '_model', None)
+
+    if not isinstance(model, str):
+        return None
+
+    record, is_ship = _registry_entry(model)
+
+    return None if record is None else SEA if is_ship else GROUND
+
+
+def rwr_class_of(aircraft, emitter) -> Optional[FrozenSet[str]]:
+    """La classe dell'RWR di `aircraft` in cui cade `emitter`, o None se l'RWR non lo riconosce."""
+    if not rwr_identifies(aircraft, emitter):
+        return None
+
+    category = sam_category(emitter)
+
+    for rwr_class in rwr_classes(getattr(aircraft, '_model', None)):
+        if category in rwr_class:
+            return rwr_class
+
+    return None
+
+
+def _catalogue_asset(model: str, is_ship: bool):
+    """Asset leggero del catalogo: la sola identita' di modello, senza Block ne' posizione.
+    Canali, dotazione e categoria sono letti dal registro con i metodi della classe reale."""
+    from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
+    from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
+
+    cls = Ship if is_ship else Vehicle
+    asset = cls.__new__(cls)
+    asset._model = model
+
+    if not is_ship:
+        record, _ = _registry_entry(model)
+        asset._category = getattr(record, 'category', None)
+
+    return asset
+
+
+def default_rwr_catalogue() -> Tuple[object, ...]:
+    """Emettitori dei registri veicoli e navi con categoria SAM ed efficacia nota (in cache)."""
+    global _DEFAULT_CATALOGUE
+
+    if _DEFAULT_CATALOGUE is None:
+        from Code.Dynamic_War_Manager.Source.Asset.Ship_Data import Ship_Data as _ShipData
+        from Code.Dynamic_War_Manager.Source.Asset.Vehicle_Data import Vehicle_Data as _VehicleData
+
+        catalogue = []
+
+        for registry, is_ship in ((_VehicleData._registry, False), (_ShipData._registry, True)):
+            for model in sorted(registry):
+                asset = _catalogue_asset(model, is_ship)
+
+                if emits_radar(asset) and sam_category(asset) is not None \
+                        and air_defense_profile(asset) is not None:
+                    catalogue.append(asset)
+
+        _DEFAULT_CATALOGUE = tuple(catalogue)
+
+    return _DEFAULT_CATALOGUE
+
+
+def class_threat_weight(rwr_class: FrozenSet[str], domain: Optional[str], n_aircraft: int,
+                        catalogue: Optional[Sequence] = None) -> Optional[float]:
+    """E(N) media, contro `n_aircraft` aerei con la dotazione, degli emettitori del catalogo nella
+    classe e nel dominio dati. None se nessun sistema del catalogo vi rientra (il chiamante usa
+    allora il peso esatto: dato mancante = nessuna degradazione)."""
+    key = (frozenset(rwr_class), domain, n_aircraft) if catalogue is None else None
+
+    if key is not None and key in _CLASS_WEIGHT_CACHE:
+        return _CLASS_WEIGHT_CACHE[key]
+
+    members = default_rwr_catalogue() if catalogue is None else catalogue
+    weights = [air_defense_efficacy(asset, n_aircraft) for asset in members
+               if sam_category(asset) in rwr_class and emitter_domain(asset) == domain and emits_radar(asset)]
+    weights = [w for w in weights if w is not None]
+    value = sum(weights) / len(weights) if weights else None
+
+    if key is not None:
+        _CLASS_WEIGHT_CACHE[key] = value
+
+    return value

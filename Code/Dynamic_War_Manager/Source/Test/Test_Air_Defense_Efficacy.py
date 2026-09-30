@@ -267,6 +267,52 @@ class TestSamCategoryAndRwr(_Base, unittest.TestCase):
         self.assertIsNone(ADE.rwr_perception(mig19, buk))
 
 
+class TestRwrClassThreat(_Base, unittest.TestCase):
+    """R-CLS (2026-09-30): la minaccia percepita dalla sola RWR e' la E(N) media della classe."""
+
+    def aircraft(self, model):
+        blue = F.make_force('ADE-Test-Cls', 'Blue', F.AIR_UNIT)
+        return F.make_aircraft(blue, f'ADE-Test-Cls/{model}', model, (0.0, 0.0, 3000.0))
+
+    def mean_efficacy(self, models, n=4):
+        return sum(ADE.air_defense_efficacy(self.vehicle(m), n) for m in models) / len(models)
+
+    def test_class_of_the_emitter(self):
+        shilka, buk = self.vehicle('ZSU-23-4-Shilka'), self.vehicle('9K37-Buk')
+
+        self.assertEqual(ADE.rwr_class_of(self.aircraft('Su-25'), shilka), frozenset({'VSHORAD', 'SHORAD'}))
+        self.assertEqual(ADE.rwr_class_of(self.aircraft('A-10C Thunderbolt II'), shilka), frozenset({'VSHORAD'}))
+        self.assertEqual(ADE.rwr_class_of(self.aircraft('MiG-21bis'), buk), ADE.ALL_SAM_CLASS)
+        self.assertIsNone(ADE.rwr_class_of(self.aircraft('A-10C Thunderbolt II'), self.vehicle('9K35-Strela-10')))
+
+    def test_class_weight_is_the_mean_over_ground_emitters(self):
+        """Catalogo terrestre dei registri: solo chi emette (niente Strela, VADS, Linebacker)."""
+        vshorad = ('Flakpanzer-Gepard', 'ZSU-23-4-Shilka')
+        shorad = ('2K22-Tunguska', '9A33-Osa', '9K331-Tor', 'MIM-115-Roland')
+
+        self.assertAlmostEqual(ADE.class_threat_weight(frozenset({'VSHORAD'}), ADE.GROUND, 4),
+                               self.mean_efficacy(vshorad))
+        self.assertAlmostEqual(ADE.class_threat_weight(frozenset({'VSHORAD', 'SHORAD'}), ADE.GROUND, 4),
+                               self.mean_efficacy(vshorad + shorad))
+
+    def test_coarse_class_overestimates_a_weak_emitter(self):
+        """4 Su-25 e uno Shilka: lo SPO-15 non lo separa dal Tunguska."""
+        exact = ADE.air_defense_efficacy(self.vehicle('ZSU-23-4-Shilka'), 4)
+        self.assertGreater(ADE.class_threat_weight(frozenset({'VSHORAD', 'SHORAD'}), ADE.GROUND, 4), 2 * exact)
+
+    def test_domain_separates_ships(self):
+        ground = ADE.class_threat_weight(frozenset({'SHORAD'}), ADE.GROUND, 4)
+        sea = ADE.class_threat_weight(frozenset({'SHORAD'}), ADE.SEA, 4)
+        self.assertGreater(sea, ground)
+
+    def test_injected_catalogue(self):
+        shilka = self.vehicle('ZSU-23-4-Shilka')
+
+        self.assertAlmostEqual(ADE.class_threat_weight(frozenset({'VSHORAD', 'SHORAD'}), ADE.GROUND, 4, [shilka]),
+                               ADE.air_defense_efficacy(shilka, 4))
+        self.assertIsNone(ADE.class_threat_weight(frozenset({'LRSAM'}), ADE.GROUND, 4, [shilka]))
+
+
 class TestRwrTable(unittest.TestCase):
 
     def test_every_registry_aircraft_is_declared(self):

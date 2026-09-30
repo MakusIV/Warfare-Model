@@ -92,6 +92,8 @@ di rottura B(t) della forza, con mediana `erosion` e parametri di `Context/Doctr
   (`Air_Defense_Efficacy.rwr_perception`, dati in `Asset/Aircraft_Rwr_Data`) e' percepito dalla
   forza dell'aereo: dal rilevamento se l'RWR rileva la ricerca, dal lancio se rileva solo
   tracciamento/guida (SPO-10); conta nel rapporto e rende "con risposta" le perdite che causa;
+  finche' nessun sensore della forza lo rileva pesa con la E(N) media della sua CLASSE RWR
+  (regola R-CLS, 2026-09-30, Proposta_Uso_Classi_Settori_RWR.md), non con quella del sistema;
 * rho(t) per una forza AEREA (tutti gli asset impegnati sono aerei): aerei propri operativi /
   (air_force_ratio_scale x minaccia), con minaccia = somma di `Air_Defense_Efficacy.air_threat_weight`
   dei nemici percepiti (E(N) degli asset AD con la scorta di DOTAZIONE stimata, perche' chi
@@ -256,7 +258,7 @@ import math
 from collections import abc
 from statistics import NormalDist
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset import Weapon_Stores as WS
 from Code.Dynamic_War_Manager.Source.Context import Air_Defense_Efficacy as ADE
@@ -1216,8 +1218,10 @@ class _EngagementRun:
 
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance,
-                 breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None):
+                 breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
+                 rwr_catalogue=None):
         self.fire_control = fire_control
+        self.rwr_catalogue = rwr_catalogue
         self.fire_doctrine = fire_doctrine
         self.rng = rng
         self.breakpoint_rng = breakpoint_rng
@@ -1226,6 +1230,12 @@ class _EngagementRun:
         # Primo istante in cui ciascuna forza ha rilevato ciascun asset nemico (qualunque
         # suo osservatore): la base della percezione del nemico (soglia di rottura, D4/D5).
         self.seen_by: Dict[str, Dict[str, float]] = {}
+        # Regola R-CLS (2026-09-30): fonte della percezione. `identified_by`: primo rilevamento con
+        # i sensori della forza (sistema identificato); `rwr_class`: percezioni della sola RWR, come
+        # (istante, classe) per ogni aereo illuminato. Pesi di classe in cache per (classe, dominio, n).
+        self.identified_by: Dict[str, Dict[str, float]] = {}
+        self.rwr_class: Dict[str, Dict[str, List[Tuple[float, FrozenSet[str]]]]] = {}
+        self.class_weights: Dict[tuple, Optional[float]] = {}
         self.surface_weights: Dict[str, float] = {}
         self.legs = legs or {}
         self.zone_cache: Dict[str, Optional[Tuple[float, float, float]]] = {}
@@ -1469,12 +1479,14 @@ class _EngagementRun:
             radius = detection_radius(draw, own_range, factor)
             time = self._detection_time(window, observer.id, target.id, own_range, other_range, radius)
             self._perceive(observer.force_id, target.id, time)
+            identified = self.identified_by.setdefault(observer.force_id, {})
+            identified[target.id] = min(identified.get(target.id, time), time)
 
             # RWR (2026-09-29): il radar dell'osservatore illumina il bersaglio; se il bersaglio e'
             # un aereo il cui RWR identifica la categoria SAM dell'osservatore, la sua forza sa da
             # quell'istante chi la sta ingaggiando (percezione e fuoco senza risposta).
             if ADE.rwr_perception(target.asset, observer.asset) == ADE.PERCEIVED_AT_DETECTION:
-                self._perceive(target.force_id, observer.id, time)
+                self._perceive_rwr(target, observer, time)
 
             t_ready = time + self._profile(observer.id).total
 
@@ -1492,6 +1504,45 @@ class _EngagementRun:
         """La forza `force_id` percepisce l'asset nemico `asset_id` dall'istante `time`."""
         seen = self.seen_by.setdefault(force_id, {})
         seen[asset_id] = min(seen.get(asset_id, time), time)
+
+    def _perceive_rwr(self, aircraft: _Shadow, emitter: _Shadow, time: float) -> None:
+        """L'RWR di `aircraft` percepisce `emitter` all'istante `time`, nella propria classe (R-CLS)."""
+        self._perceive(aircraft.force_id, emitter.id, time)
+        rwr_class = ADE.rwr_class_of(aircraft.asset, emitter.asset)
+
+        if rwr_class is not None:
+            self.rwr_class.setdefault(aircraft.force_id, {}).setdefault(emitter.id, []).append((time, rwr_class))
+
+    def _air_threat(self, state: _ForceState, shadow: _Shadow, time: float, n_aircraft: int) -> float:
+        """Peso di un nemico percepito da una forza aerea (R-CLS, 2026-09-30).
+
+        Identificato dai sensori della forza entro `time`: E(N) del sistema. Percepito solo
+        dall'RWR: E(N) media della classe piu' fine fra quelle degli aerei illuminati entro `time`
+        (`Air_Defense_Efficacy.class_threat_weight`), nel dominio dell'emettitore; senza sistemi
+        del catalogo in quella classe, E(N) del sistema.
+        """
+        exact = lambda: ADE.air_threat_weight(shadow.asset, n_aircraft)
+        identified = self.identified_by.get(state.force_id, {}).get(shadow.id)
+
+        if identified is not None and identified <= time + TIME_EPS:
+            return exact()
+
+        classes = [c for t, c in self.rwr_class.get(state.force_id, {}).get(shadow.id, ())
+                   if t <= time + TIME_EPS]
+
+        if not classes:
+            return exact()
+
+        rwr_class = min(classes, key=lambda c: (len(c), sorted(c)))
+        key = (rwr_class, ADE.emitter_domain(shadow.asset), n_aircraft)
+
+        if key not in self.class_weights:
+            self.class_weights[key] = ADE.class_threat_weight(rwr_class, key[1], n_aircraft,
+                                                              self.rwr_catalogue)
+
+        weight = self.class_weights[key]
+
+        return exact() if weight is None else weight
 
     def _detection_time(self, window, observer_id: str, target_id: str, own_range: float,
                         other_range: Optional[float], radius: Optional[float]) -> float:
@@ -2018,7 +2069,7 @@ class _EngagementRun:
 
         # RWR che rileva solo tracciamento/guida (SPO-10): la minaccia e' percepita al lancio.
         if ADE.rwr_perception(target.asset, shooter.asset) == ADE.PERCEIVED_AT_LAUNCH:
-            self._perceive(target.force_id, shooter_id, time)
+            self._perceive_rwr(target, shooter, time)
 
         if validate_class(shooter.asset, 'Aircraft') and not validate_class(target.asset, 'Aircraft'):
             self._register_launcher(time, shooter, target.force_id)
@@ -2463,7 +2514,7 @@ class _EngagementRun:
             n_aircraft = len(own)
             # Scorta di DOTAZIONE (registro), non quella residua: chi osserva un sistema AD non sa
             # quanti missili gli restano, puo' solo presumere la dotazione (stima, non dato certo).
-            threat = sum(ADE.air_threat_weight(shadow.asset, n_aircraft) for shadow in enemies)
+            threat = sum(self._air_threat(state, shadow, time, n_aircraft) for shadow in enemies)
 
             if state.enemy_estimate is not None:
                 threat = max(threat, state.enemy_estimate)
@@ -2616,7 +2667,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        breakpoint_rng=None,
                        morale_for: Optional[Callable] = None,
                        enemy_estimate_for: Optional[Callable] = None,
-                       fire_doctrine: Optional[Dict] = None) -> Optional[EngagementResult]:
+                       fire_doctrine: Optional[Dict] = None,
+                       rwr_catalogue: Optional[Sequence] = None) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
@@ -2665,6 +2717,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             di superficie. La forza nemica percepita e' il massimo fra stima e rilevato.
         fire_doctrine: tabella al posto di `Doctrine.DEFAULT_FIRE_DOCTRINE` (saturazione del
             bersaglio e tetto "due missili, poi guarda", v. `_blocked`); `{}` = nessuna regola.
+        rwr_catalogue: emettitori al posto di `Air_Defense_Efficacy.default_rwr_catalogue()` per il
+            peso di classe di un nemico percepito dalla sola RWR (regola R-CLS), es. ristretto
+            all'inventario del nemico; None = catalogo dei registri.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -2702,7 +2757,7 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                          committed, thresholds, reaction_profile_for, detection_factor,
                          salvo_window, provenance, breakpoint_rng=breakpoint_rng,
                          morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
-                         fire_doctrine=fire_doctrine)
+                         fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue)
 
     if not run.usable:
         return None
