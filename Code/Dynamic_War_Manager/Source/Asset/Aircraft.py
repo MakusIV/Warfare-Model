@@ -392,7 +392,7 @@ class Aircraft(Mobile) :
         """Combat power aggregata dell'aereo, indipendente dal task aereo (v. set_combat_power).
 
         A differenza dei veicoli/navi, per gli aerei i task (CAP, Strike, SEAD, ...) sono ruoli di
-        missione, non posture tattiche mutuamente esclusive come Attack/Defense/Retrait: un aereo capace
+        missione, non posture tattiche mutuamente esclusive come Attack/Defense/Retreat: un aereo capace
         in CAP lo è anche in Intercept o Escort con lo stesso loadout aria-aria. Quindi qui c'è UN solo
         valore, calcolato dal punteggio di combattimento normalizzato del modello (il migliore loadout
         per ciascun task, sommato — v. Aircraft_Data.combat_aggregate/get_aircraft_combat_score) pesato

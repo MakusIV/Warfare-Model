@@ -200,7 +200,7 @@ def representative_combat_power(block: Military, force: Optional[str], action: O
 
     Per 'air': Aircraft.set_combat_power replica LO STESSO valore aggregato su tutti i task di
     ACTION_TASKS['air'] (i task aria — CAP, Strike, Intercept, ... — non sono posture tattiche
-    mutuamente esclusive come Attack/Defense/Maintain/Retrait, v. Context.AIR_COMBAT_EFFICACY, che è
+    mutuamente esclusive come Attack/Defense/Maintain/Retreat, v. Context.AIR_COMBAT_EFFICACY, che è
     piatta), quindi `action` è ignorato per costruzione: si prende un solo task.
     Per 'ground'/'sea': se `action` è specificato, ritorna la combat power per quel solo task
     (v. memoria di progetto feedback_combat_power_action_selection). Se `action` è None, comportamento

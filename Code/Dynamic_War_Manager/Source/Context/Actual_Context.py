@@ -843,7 +843,7 @@ REGION_ASSETS_STATUS = {
                             'success_count': 0,   # Contatore di missioni ANTI_SHIP riuscite
                             'total_count': 0      # Contatore totale di missioni ANTI_SHIP
                         },
-                        tsksea.RETRAIT.value: {
+                        tsksea.RETREAT.value: {
                             'success_count': 0,   # Contatore di missioni ANTI_SUB riuscite
                             'total_count': 0      # Contatore totale di missioni ANTI_SUB
                         },                            
@@ -1175,7 +1175,7 @@ REGION_ASSETS_STATUS = {
                             'success_count': 0,   # Contatore di missioni DEFENSE riuscite
                             'total_count': 0      # Contatore totale di missioni DEFENSE
                         },                            
-                        tskg.RETRAIT.value: {
+                        tskg.RETREAT.value: {
                             'success_count': 0,   # Contatore di missioni SUPPORT riuscite
                             'total_count': 0      # Contatore totale di missioni SUPPORT
                         },                            
@@ -1533,7 +1533,7 @@ def update_mission_count(region_name: str, base_name: str, mission_type: str, su
     Args:
         region_name (str): name of the Region
         base_name (str): name of the base (airbase, ground base or naval base)
-        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETRAIT)
+        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETREAT)
         success (bool): True if the mission was successful, False otherwise
     """
     update = False
@@ -1576,7 +1576,7 @@ def get_mission_success_rate(region_name: str, base_name: str, mission_type: str
     Args:
         region_name (str): name of the Region
         base_name (str): name of the base (airbase, ground base or naval base)
-        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETRAIT)
+        mission_type (str): type of the mission (e.g., ATTACK, SUPPORT, DEFENSE, RETREAT)
     Returns:
         float: success rate as a percentage (0.0 to 1.0), or -1.0 if the mission type is not found or if there are no missions recorded.
     """

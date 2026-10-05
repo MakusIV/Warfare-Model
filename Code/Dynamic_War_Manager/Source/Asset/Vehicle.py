@@ -311,7 +311,7 @@ class Vehicle(Mobile) :
         If actions is None, calculates the combat power for all actions defined in ACTION_TASKS["ground"].
 
         args:
-        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retrait'
+        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retreat'
 
         raises:
         TypeError - if action is not in ACTION_TASKS["ground"]
@@ -323,7 +323,7 @@ class Vehicle(Mobile) :
 
 
         args:
-        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retrait'
+        action - action from GROUND_ACTION: 'Attack', 'Defense', 'Maintain', 'Retreat'
 
         raises:
         TypeError - if action is not in ACTION_TASKS["ground"] 

@@ -63,7 +63,7 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
                                         corresponding values. Values > 1 indicate an advantage.
 
     Returns:
-    tuple: A string indicating the suggested action ('RETRAIT', 'DEFENSE', 'MAINTAIN', 'ATTACK') 
+    tuple: A string indicating the suggested action ('RETREAT', 'DEFENSE', 'MAINTAIN', 'ATTACK') 
            and a numeric value representing the action's strength.
     """
 
@@ -110,15 +110,15 @@ def evaluateGroundTacticalAction(ground_superiority, fight_load_ratio, dynamic_i
     cls['MS'] = fuzz.trapmf(cls.universe, [1, 2, 3, 5])
     cls['HS'] = fuzz.trapmf(cls.universe, [3, 5, 10, 10])
 
-    action.automf(names=['RETRAIT', 'DEFENSE', 'MAINTAIN', 'ATTACK'])
+    action.automf(names=['RETREAT', 'DEFENSE', 'MAINTAIN', 'ATTACK'])
 
     # Definizione delle regole
     rules = [
-        # RETRAIT
-        ctrl.Rule( ( gs['HI'] | gs['MI']) & ( flr['HI'] | flr['MI'] ), action['RETRAIT'] ),
-        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & ( dyn_inc['HI'] | dyn_inc['MI'] ), action['RETRAIT'] ),
-        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & dyn_inc['EQ'] & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
-        ctrl.Rule( ( gs['HI'] | gs['MI'] | gs['EQ'] ) & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETRAIT'] ),
+        # RETREAT
+        ctrl.Rule( ( gs['HI'] | gs['MI']) & ( flr['HI'] | flr['MI'] ), action['RETREAT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & ( dyn_inc['HI'] | dyn_inc['MI'] ), action['RETREAT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] ) & flr['EQ'] & dyn_inc['EQ'] & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETREAT'] ),
+        ctrl.Rule( ( gs['HI'] | gs['MI'] | gs['EQ'] ) & ( flr['HI'] | flr['MI']) & ( dyn_inc['HI'] | dyn_inc['MI'] ) & ( cls['EQ'] | cls['MI'] | cls['HI'] ), action['RETREAT'] ),
         # DEFENSE
         ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & ( dyn_inc['HS'] | dyn_inc['MS'] ), action['DEFENSE']),
         ctrl.Rule( (gs['HI'] | gs['MI']) & flr['EQ'] & dyn_inc['EQ'] & ( cls['MS'] | cls['HS'] ), action['DEFENSE']),
@@ -517,7 +517,7 @@ def evaluateCriticalityGroundEnemy(report_base: dict, report_enemy: dict) -> flo
         criticality[ "value" ] = int ( defense_superiority * 100 )
     
     else:
-        criticality["action"] = "retrait"
+        criticality["action"] = "retreat"
         criticality[ "value" ] = int ( defense_superiority * 100 )
     
     return criticality

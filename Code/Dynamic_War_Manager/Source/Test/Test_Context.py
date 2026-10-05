@@ -127,7 +127,7 @@ class TestEnumValues(unittest.TestCase):
 
     def test_ground_action_values(self):
         """Ground_Action has the 4 expected members."""
-        expected = {'ATTACK', 'DEFENSE', 'MAINTAIN', 'RETRAIT'}
+        expected = {'ATTACK', 'DEFENSE', 'MAINTAIN', 'RETREAT'}
         self.assertEqual({m.name for m in Ground_Action}, expected)
         self.assertEqual(Ground_Action.ATTACK.value, 'Attack')
         self.assertEqual(Ground_Action.MAINTAIN.value, 'Maintain')
@@ -147,7 +147,7 @@ class TestEnumValues(unittest.TestCase):
 
     def test_sea_task_values(self):
         """Sea_Task has the 3 expected members."""
-        expected = {'ATTACK', 'DEFENSE', 'RETRAIT'}
+        expected = {'ATTACK', 'DEFENSE', 'RETREAT'}
         self.assertEqual({m.name for m in Sea_Task}, expected)
 
     def test_target_class_name_military_values(self):

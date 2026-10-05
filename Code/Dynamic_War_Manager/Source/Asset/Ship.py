@@ -131,7 +131,7 @@ class Ship(Mobile) :
         If actions is None, calculates the combat power for all actions defined in ACTION_TASKS["sea"].
 
         args:
-        action - action from Sea_Task: 'Attack', 'Defense', 'Retrait'
+        action - action from Sea_Task: 'Attack', 'Defense', 'Retreat'
 
         raises:
         TypeError - if action is not in ACTION_TASKS["sea"]
@@ -142,7 +142,7 @@ class Ship(Mobile) :
         Se actions è None, calcola il combat_power per tutte le azioni definite in ACTION_TASKS["sea"].
 
         args:
-        action - action from Sea_Task: 'Attack', 'Defense', 'Retrait'
+        action - action from Sea_Task: 'Attack', 'Defense', 'Retreat'
 
         raises:
         TypeError - if action is not in ACTION_TASKS["sea"]

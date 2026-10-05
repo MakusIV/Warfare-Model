@@ -117,13 +117,13 @@ class Campaign_State:
                                                    
         self._global_success_mission_ratio =    {"Red": 
                                                     {"Air": {"Air_To_Air": None, "Air_To_Ground": None, "Air_To_Sea": None},
-                                                    "Ground": {ag.ATTACK.value: None, ag.DEFENSE.value: None,ag.MAINTAIN.value: None, ag.RETRAITE.value: None},   
-                                                    "Sea": {asea.ATTACK.value: None, asea.DEFENSE.value: None, asea.RETRAIT.value: None},
+                                                    "Ground": {ag.ATTACK.value: None, ag.DEFENSE.value: None,ag.MAINTAIN.value: None, ag.RETREATE.value: None},   
+                                                    "Sea": {asea.ATTACK.value: None, asea.DEFENSE.value: None, asea.RETREAT.value: None},
                                                     },
                                                 "Blue": 
                                                     {"Air_To_Air": None, "Air_To_Ground": None, "Air_To_Sea": None},
-                                                    "Ground": {ag.ATTACK.value: None, ag.DEFENSE.value: None,ag.MAINTAIN.value: None, ag.RETRAITE.value: None},   
-                                                    "Sea": {asea.ATTACK.value: None, asea.DEFENSE.value: None, asea.RETRAIT.value: None},
+                                                    "Ground": {ag.ATTACK.value: None, ag.DEFENSE.value: None,ag.MAINTAIN.value: None, ag.RETREATE.value: None},   
+                                                    "Sea": {asea.ATTACK.value: None, asea.DEFENSE.value: None, asea.RETREAT.value: None},
                                                 }                                            
         self._global_damaged_asset_ratio = {"Red": {"Air": None,"Ground": None, "Sea": None},
                                               "Blue": {"Air": None,"Ground": None, "Sea": None},}

@@ -357,7 +357,7 @@ class Ground_Action(Enum):
     ATTACK = 'Attack'
     DEFENSE = 'Defense'
     MAINTAIN = 'Maintain'
-    RETRAIT = 'Retrait'
+    RETREAT = 'Retreat'
 
 
 GROUND_ACTION = {task.value: task.value for task in Ground_Action}
@@ -418,7 +418,7 @@ AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
 class Sea_Task(Enum):
     ATTACK = 'Attack'
     DEFENSE = 'Defense'
-    RETRAIT = 'Retrait'
+    RETREAT = 'Retreat'
 
 SEA_TASK = {task.value: task.value for task in Sea_Task}
 
@@ -501,7 +501,7 @@ WEIGHT_FORCE_GROUND_ASSET = {
 # Fatto (?): è opportuno rivederlo nell'ottica di una valutazione più accurata: attribuire una efficacia nell'attacco di una forza tank superiore rispetto ad una armor potrebbe essere erroneo,
 # Fatto(?): Probabilmente è più opportuno valutare le capacità e prestazioni dello specifico veicolo in relazione all'azione da eseguire (attacco, difesa).         
 # Max value = 5, min value = 1
-# NOTA: Probabilmente dovrebbe essore più specifiche: Rapid_Retrait, Tactical_Retrait, , Fire_Saturation (per artillery, Tank)
+# NOTA: Probabilmente dovrebbe essore più specifiche: Rapid_Retreat, Tactical_Retreat, , Fire_Saturation (per artillery, Tank)
 #
 # ASSENZA INTENZIONALE DI SAM/AAA/EWR (decisione 2026-09-22, §9 di
 # Architettura_esecuzione_sessioni_virtuali_ANALISI.md). La tabella copre solo le 5 classi di
@@ -522,7 +522,7 @@ GROUND_COMBAT_EFFICACY = {
     GROUND_ACTION['Attack']: {'Tank': 5, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 4, 'Artillery_Fixed': 3},
     GROUND_ACTION['Defense']: {'Tank': 4, 'Armored': 3.5, 'Motorized': 2, 'Artillery_Semovent': 3, 'Artillery_Fixed': 5},
     GROUND_ACTION['Maintain']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 4, 'Artillery_Semovent': 2, 'Artillery_Fixed': 3},    
-    GROUND_ACTION['Retrait']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 2, 'Artillery_Fixed': 1},
+    GROUND_ACTION['Retreat']: {'Tank': 3, 'Armored': 3.7, 'Motorized': 3, 'Artillery_Semovent': 2, 'Artillery_Fixed': 1},
 }
 
 
@@ -585,7 +585,7 @@ def combat_power_from_score(
 SEA_COMBAT_EFFICACY = {
     SEA_TASK['Attack']: {'Carrier': 5, 'Cruiser': 4.5, 'Destroyer': 4, 'Submarine': 4.5, 'Frigate': 3, 'Corvette': 2.5, 'Amphibious_Assault_Ship': 1.5, 'Transport': 1, 'Civilian': 0},
     SEA_TASK['Defense']: {'Carrier': 3, 'Cruiser': 4.5, 'Destroyer': 5, 'Submarine': 2.5, 'Frigate': 4, 'Corvette': 3, 'Amphibious_Assault_Ship': 1.5, 'Transport': 1, 'Civilian': 0},
-    SEA_TASK['Retrait']: {'Carrier': 2, 'Cruiser': 3, 'Destroyer': 3.5, 'Submarine': 5, 'Frigate': 3.5, 'Corvette': 4, 'Amphibious_Assault_Ship': 2, 'Transport': 2, 'Civilian': 1},
+    SEA_TASK['Retreat']: {'Carrier': 2, 'Cruiser': 3, 'Destroyer': 3.5, 'Submarine': 5, 'Frigate': 3.5, 'Corvette': 4, 'Amphibious_Assault_Ship': 2, 'Transport': 2, 'Civilian': 1},
 }
 
 
@@ -606,7 +606,7 @@ AIRCRAFT_TYPE = {# necessario?
 # Efficacia di classe per ruolo aereo (Air_Asset_Type), usata da Aircraft.set_combat_power via
 # Context.combat_power_from_score. A differenza di GROUND_COMBAT_EFFICACY/SEA_COMBAT_EFFICACY NON e'
 # indicizzata per azione: per gli aerei i task (CAP, Strike, Intercept, ...) sono ruoli di missione, non
-# posture tattiche mutuamente esclusive come Attack/Defense/Retrait, quindi la combat power dell'aereo e'
+# posture tattiche mutuamente esclusive come Attack/Defense/Retreat, quindi la combat power dell'aereo e'
 # un unico aggregato (v. Aircraft_Data.combat_aggregate/get_aircraft_combat_score), non un valore per task.
 # Max value = 5, min value = 1.
 # - Fighter: superiorita' aerea, massima sopravvivenza in spazio conteso.

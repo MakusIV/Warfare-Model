@@ -236,16 +236,16 @@ class TestEvaluateGroundTacticalAction(unittest.TestCase):
         # cls > 1 -> vantaggio                      HI: 0.1, MI: 0.35, EQ: 1, MS: 2.5, HS: 5
 
         test_cases = [
-            # RETRAIT Cases
-            (0.1, 5, 5, 0.1, "RETRAIT", 0.1), # gs: HI, flr: HI, dyn_inc: HI, cls: HI
-            (1, 5, 5, 0.1, "RETRAIT", 0.1), #  gs: EQ, flr: HI, dyn_inc: HI, cls: HI
-            (0.5, 2.5, 2.5, 0.1, "RETRAIT", 0.15), # gs: MI, flr: MI, dyn_inc: HI, cls: HI
-            (0.1, 1, 1, 0.35, "RETRAIT", 0.2), # gs: HI, flr: EQ, dyn_inc: EQ, cls: MI
-            (1, 2.5, 2.5, 1, "RETRAIT", 0.2), # gs: EQ, flr: MI, dyn_inc: MI, cls: EQ
-            (0.5, 2.5, 2.5, 5, "RETRAIT", 0.2), # gs: MI, flr: MI, dyn_inc: MI, cls: HS
-            (0.5, 1, 1, 0.35, "RETRAIT", 0.2), # gs: MI, flr: EQ, dyn_inc: EQ, cls: MI           
-            (0.5, 2.5, 2.5, 0.35, "RETRAIT", 0.1), # gs: MI, flr: MI, dyn_inc: MI, cls: MI
-            (0.1, 2.5, 2.5, 0.1, "RETRAIT", 0.1), # gs: HI, flr: MI, dyn_inc: MI, cls: MI
+            # RETREAT Cases
+            (0.1, 5, 5, 0.1, "RETREAT", 0.1), # gs: HI, flr: HI, dyn_inc: HI, cls: HI
+            (1, 5, 5, 0.1, "RETREAT", 0.1), #  gs: EQ, flr: HI, dyn_inc: HI, cls: HI
+            (0.5, 2.5, 2.5, 0.1, "RETREAT", 0.15), # gs: MI, flr: MI, dyn_inc: HI, cls: HI
+            (0.1, 1, 1, 0.35, "RETREAT", 0.2), # gs: HI, flr: EQ, dyn_inc: EQ, cls: MI
+            (1, 2.5, 2.5, 1, "RETREAT", 0.2), # gs: EQ, flr: MI, dyn_inc: MI, cls: EQ
+            (0.5, 2.5, 2.5, 5, "RETREAT", 0.2), # gs: MI, flr: MI, dyn_inc: MI, cls: HS
+            (0.5, 1, 1, 0.35, "RETREAT", 0.2), # gs: MI, flr: EQ, dyn_inc: EQ, cls: MI           
+            (0.5, 2.5, 2.5, 0.35, "RETREAT", 0.1), # gs: MI, flr: MI, dyn_inc: MI, cls: MI
+            (0.1, 2.5, 2.5, 0.1, "RETREAT", 0.1), # gs: HI, flr: MI, dyn_inc: MI, cls: MI
             
             # DEFENSE Cases
             (1, 1, 1, 0.33, "DEFENSE", 0.35), # gs: EQ, flr: EQ, dyn_inc: EQ, cls: MI

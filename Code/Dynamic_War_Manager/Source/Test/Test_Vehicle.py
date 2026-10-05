@@ -504,7 +504,7 @@ class TestVehicle(unittest.TestCase):
         self.assertIsInstance(combat_power_result, dict)        
         self.assertIsInstance(combat_power_result['Attack'], (float, int))
         self.assertIsInstance(combat_power_result['Defense'], (float, int))
-        self.assertIsInstance(combat_power_result['Retrait'], (float, int))
+        self.assertIsInstance(combat_power_result['Retreat'], (float, int))
         self.assertIsInstance(combat_power_result['Maintain'], (float, int))
 
 
