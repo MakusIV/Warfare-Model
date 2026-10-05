@@ -1,6 +1,6 @@
 ---
 name: project-mission-structure-decisions
-description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0-F3 e F4a FATTE 2026-10-05 (suite 3929 OK); prossimi F4b e F4c"
+description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0-F3 e F4a FATTE 2026-10-05 (suite 3929 OK); prossimi F4b e F4c; manuale DES aggiornato a 533cd1f5"
 metadata:
   type: project
 ---
@@ -72,5 +72,4 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   rigenerata. F4a FATTA: regola A dell'utente (missione alla velocità del più lento, `check_mission_speed`); Blue-Armor e
   Blue-Mech fusi a 55 km/h; 90 esecuzioni cambiano, nessun esito di forza. DA FARE: F4b = missione come unità di
   ingaggio (vista MissionForce, mission_id negli id d'ingaggio/RNG); F4c = postura continua dei non in missione (D1.c).
-- In parallelo avviato l'aggiornamento del manuale DES a 533cd1f5 (agente des-manual-writer, legge una copia esportata):
-  verificare e committare i file in `Analysis/Document/Manuale_Motore_DES/` se completati.
+- Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
