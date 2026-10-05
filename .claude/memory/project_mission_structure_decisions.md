@@ -51,10 +51,12 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   esecuzioni). Confronto: `PYTHONPATH=$PWD/Code:$PWD <python> -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline
   --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json` (~210 s). Catturata su copia di
   HEAD via `git archive` con PYTHONPATH sovrascritto (aggira il problema dei worktree).
-- F1 `20b6de72`: `Command/Mission_Types.py` (90 test). `route_waypoints(route)` dà l'ordine di percorrenza
-  (Route.getWaypoints è un heap per nome). DA CONFERMARE con l'utente le prime stesure: ruoli per dominio,
-  formazioni, EMCON, default (ROE weapon_free in tutti i domini, evade_fire, allerta auto, partenza runway, bingo
-  True) e validazioni aggiunte (EndCriteria richiede last_waypoint o max_duration; POSITIONING richiede
-  bersaglio ZONE/POINT/AREA/GROUP, quindi Defense senza zona rifiutata).
+- F1 `20b6de72` + revisione `680dfcb6` (93 test): `Command/Mission_Types.py`. `route_waypoints(route)` dà l'ordine
+  di percorrenza (Route.getWaypoints è un heap per nome). Revisione su indicazione dell'utente: i RUOLI sono
+  posizioni nella formazione (aria lead/element_lead/wingman, terra lead/main/rear, mare lead/main/screen), mentre
+  strike/SEAD/scorta sono TIPI di missione; loadout e AttackProfile PER ASSET (asset di tipo diverso dello stesso
+  blocco nella stessa missione con loadout distinti); partenza aerea default dal parcheggio. Confermati formazioni,
+  default regole, validazioni (EndCriteria con last_waypoint o max_duration; POSITIONING richiede zona/punto/
+  area/gruppo). Regola utente: un blocco può avere più missioni nella stessa sessione, un asset una sola (in F3).
 - F2 `4e18d7d8`: tassonomia in Context + `AIR_COMBAT_TASK` (vecchio AIR_TASK); task di supporto a 0 in
   combat power ed esclusi dai punteggi; 13 loadout supporto con task, An-30M Recon lasciato vuoto.
