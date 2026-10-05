@@ -24,10 +24,11 @@ Solo id di dominio (stringhe), secondi dall'inizio della sessione, metri, km/h. 
 allerta, reazione alla minaccia, EMCON, formazione) sono valori di DOMINIO: un adapter li
 tradurra' nel proprio vocabolario (DCS e' stato solo uno spunto per gli elenchi).
 
-## Elenchi chiusi di PRIMA STESURA (da confermare dall'utente)
-`MISSION_ASSET_ROLES`, `FORMATIONS`, `EMCON_STATES`, `THREAT_REACTIONS` e i default di
-`DEFAULT_RULES`/`DEFAULT_START_MODE` sono stime di progetto, non dati tarati: lo dichiara il
-commento di ciascuno.
+## Elenchi chiusi
+Rivisti e confermati dall'utente il 2026-10-05: `MISSION_ASSET_ROLES` (ruoli = posizioni nella
+formazione, non tipi di missione), `FORMATIONS`, `DEFAULT_RULES`, `DEFAULT_START_MODE` (aria: dal
+parcheggio). Restano di PRIMA STESURA (stime di progetto, non dati tarati): `EMCON_STATES` e
+`THREAT_REACTIONS`. Loadout e profilo d'attacco sono per asset (`MissionAsset`).
 
 ## Cosa NON c'e' (di proposito)
   * Nessuna logica di calcolo (ETA derivate, posizioni di formazione, esito di un'Operazione):
@@ -187,13 +188,17 @@ class AssetEndReason(Enum):
 
 # ── ELENCHI CHIUSI PER DOMINIO ────────────────────────────────────────────────
 
-# Ruoli degli asset nella missione (D3.c). PRIMA STESURA, stima di progetto da confermare:
-# derivata dagli esempi della decisione (capo formazione e gregari; attacco e SEAD; testa, grosso
-# e retroguardia), non da una fonte dottrinale tarata.
+# Ruoli degli asset nella missione (D3.c): POSIZIONI nella formazione e nella catena di comando
+# della missione, NON tipi di missione (indicazione dell'utente, 2026-10-05: strike, SEAD, scorta...
+# sono tipi di missione, `Context.MISSION_TYPES`). Cio' che un asset fa nella missione dipende dal
+# tipo di missione e dal SUO loadout (`MissionAsset.loadout`).
+# Elenchi di prima stesura: aria = capo formazione, capo della seconda coppia, gregario; terra =
+# testa, grosso, retroguardia della colonna; mare = unita' guida, grosso, schermo (le unita' disposte
+# a protezione del grosso).
 MISSION_ASSET_ROLES: Mapping[str, Tuple[str, ...]] = MappingProxyType({
-    'air': ('lead', 'wingman', 'strike', 'sead', 'escort', 'support'),
-    'ground': ('lead', 'main', 'rear', 'support', 'fire_support'),
-    'sea': ('lead', 'main', 'escort', 'support'),
+    'air': ('lead', 'element_lead', 'wingman'),
+    'ground': ('lead', 'main', 'rear'),
+    'sea': ('lead', 'main', 'screen'),
 })
 
 # ROE (valori di dominio): aria a 5 livelli, terra/mare a 3.
@@ -234,14 +239,15 @@ DEFAULT_RULES: Mapping[str, Mapping[str, Optional[str]]] = MappingProxyType({
                              'emcon': 'free', 'formation': None}),
 })
 
-# Modi di partenza ammessi e di default per dominio. Default aria = da pista: STIMA DI PROGETTO.
+# Modi di partenza ammessi e di default per dominio. Default aria = dal parcheggio a motori spenti
+# (indicazione dell'utente, 2026-10-05: partenza dal parking point).
 START_MODES: Mapping[str, Tuple[StartMode, ...]] = MappingProxyType({
     'air': (StartMode.RUNWAY, StartMode.PARKING_COLD, StartMode.PARKING_HOT, StartMode.AIR, StartMode.GROUND),
     'ground': (StartMode.GROUND,),
     'sea': (StartMode.GROUND,),
 })
 DEFAULT_START_MODE: Mapping[str, StartMode] = MappingProxyType({
-    'air': StartMode.RUNWAY, 'ground': StartMode.GROUND, 'sea': StartMode.GROUND,
+    'air': StartMode.PARKING_COLD, 'ground': StartMode.GROUND, 'sea': StartMode.GROUND,
 })
 
 # `route_type` della rotta di riferimento ammessi per dominio (valori di `Context.ROUTE_TYPE`).
@@ -660,12 +666,20 @@ class MissionAsset:
             verifica che sia ammesso per il SUO dominio (`MISSION_ASSET_ROLES`).
         forward_m/right_m/up_m: offset di formazione rispetto al punto della rotta di riferimento,
             nella terna della direzione di marcia (avanti, destra, alto) [m]. 0,0,0 = sulla rotta.
+        loadout: id del loadout dell'asset (solo aria), facoltativo. E' PER ASSET: una missione di un
+            blocco puo' impiegare asset di tipo diverso, ciascuno col proprio loadout (es. fighter con
+            loadout aria-aria e fighter_bomber con loadout d'attacco sulla stessa rotta e con la
+            stessa partenza). La `Mission` verifica che il dominio sia l'aria.
+        attack_profile: `AttackProfile` dell'asset (solo aria), facoltativo: dipende dall'arma del
+            loadout, quindi e' per asset come il loadout.
     """
     asset_id: str
     role: str
     forward_m: float = 0.0
     right_m: float = 0.0
     up_m: float = 0.0
+    loadout: Optional[str] = None
+    attack_profile: Optional[AttackProfile] = None
 
     def __post_init__(self):
         _check_domain_id('asset_id', self.asset_id)
@@ -675,6 +689,11 @@ class MissionAsset:
 
         for label in ('forward_m', 'right_m', 'up_m'):
             object.__setattr__(self, label, _check_number(label, getattr(self, label)))
+
+        _check_optional_id('loadout', self.loadout)
+
+        if self.attack_profile is not None and not isinstance(self.attack_profile, AttackProfile):
+            raise TypeError(f"attack_profile must be an AttackProfile, got {type(self.attack_profile).__name__}")
 
 
 @dataclass(frozen=True)
@@ -803,9 +822,8 @@ class Mission:
         tot: Time On Target [s dall'inizio sessione], facoltativo.
         rules: None = default del dominio; conservate gia' risolte (`MissionRules.for_domain`).
         end_criteria: criteri di fine dichiarati.
-        loadout: id del loadout (solo aria), facoltativo.
         operation_id: Operazione di appartenenza, facoltativa.
-        attack_profile: `AttackProfile` (solo aria), facoltativo.
+    Loadout e profilo d'attacco sono PER ASSET (`MissionAsset`), non per missione.
     Vincoli temporali: almeno un istante bloccato (`start_time`, un waypoint con `eta_locked` o
     `tot`); ETA pianificate strettamente crescenti e non anteriori a `start_time`; `tot` non
     anteriore a `start_time`.
@@ -826,9 +844,7 @@ class Mission:
     tot: Optional[float] = None
     rules: Optional[MissionRules] = None
     end_criteria: EndCriteria = field(default_factory=EndCriteria)
-    loadout: Optional[str] = None
     operation_id: Optional[str] = None
-    attack_profile: Optional[AttackProfile] = None
 
     def __post_init__(self):
         _check_domain_id('mission_id', self.mission_id)
@@ -869,18 +885,7 @@ class Mission:
             raise ValueError(f"end_criteria.target_destroyed needs a destroyable target, "
                              f"not {self.target.kind.name}")
 
-        _check_optional_id('loadout', self.loadout)
         _check_optional_id('operation_id', self.operation_id)
-
-        if self.loadout is not None and domain != 'air':
-            raise ValueError(f"loadout applies only to air missions, not {domain!r}")
-
-        if self.attack_profile is not None:
-            if not isinstance(self.attack_profile, AttackProfile):
-                raise TypeError(f"attack_profile must be an AttackProfile, got {type(self.attack_profile).__name__}")
-
-            if domain != 'air':
-                raise ValueError(f"attack_profile applies only to air missions, not {domain!r}")
 
     # -- validazioni di dettaglio --
 
@@ -899,6 +904,10 @@ class Mission:
             if asset.role not in MISSION_ASSET_ROLES[domain]:
                 raise ValueError(f"asset {asset.asset_id!r}: role for {domain!r} must be one of "
                                  f"{MISSION_ASSET_ROLES[domain]}, got {asset.role!r}")
+
+            if domain != 'air' and (asset.loadout is not None or asset.attack_profile is not None):
+                raise ValueError(f"asset {asset.asset_id!r}: loadout and attack_profile apply only to air "
+                                 f"missions, not {domain!r}")
 
         object.__setattr__(self, 'assets', assets)
 

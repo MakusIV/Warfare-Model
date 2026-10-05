@@ -303,12 +303,24 @@ class TestMissionWaypoint(_LoggerMock, unittest.TestCase):
 class TestMissionAsset(_LoggerMock, unittest.TestCase):
 
     def test_valid(self):
-        asset = MT.MissionAsset('a1', 'escort', forward_m=-100, right_m=50, up_m=20)
+        asset = MT.MissionAsset('a1', 'element_lead', forward_m=-100, right_m=50, up_m=20)
         self.assertEqual((asset.forward_m, asset.right_m, asset.up_m), (-100.0, 50.0, 20.0))
 
     def test_unknown_role(self):
         with self.assertRaises(ValueError):
             MT.MissionAsset('a1', 'captain')
+
+    def test_mission_types_are_not_roles(self):
+        # Strike, SEAD, scorta... sono tipi di missione, non ruoli (indicazione dell'utente).
+        for role in ('strike', 'sead', 'escort', 'support', 'fire_support'):
+            with self.assertRaises(ValueError):
+                MT.MissionAsset('a1', role)
+
+    def test_loadout_and_profile_types(self):
+        self.assertEqual(MT.MissionAsset('a1', 'lead', loadout='cap_aim120').loadout, 'cap_aim120')
+
+        with self.assertRaises(TypeError):
+            MT.MissionAsset('a1', 'lead', attack_profile='profile')
 
     def test_bad_id_and_offset(self):
         with self.assertRaises(TypeError):
@@ -402,20 +414,28 @@ class TestMissionRules(_LoggerMock, unittest.TestCase):
 class TestMissionValid(_LoggerMock, unittest.TestCase):
 
     def test_air_strike(self):
-        mission = _air_mission(loadout='strike_mk82', operation_id='op_1',
+        mission = _air_mission(operation_id='op_1',
                                rules=MT.MissionRules(roe='only_designated', formation='finger_four'),
                                end_criteria=MT.EndCriteria(winchester=('BOMBS',), target_destroyed=True))
         self.assertIs(mission.category, Mission_Category.ATTACK)
-        self.assertIs(mission.start_mode, MT.StartMode.RUNWAY)
+        # Default della partenza aerea: dal parcheggio (indicazione dell'utente).
+        self.assertIs(mission.start_mode, MT.StartMode.PARKING_COLD)
         self.assertEqual(mission.rules.roe, 'only_designated')
         self.assertEqual(mission.rules.threat_reaction, 'evade_fire')
         self.assertEqual(mission.asset_ids, ('f16_1', 'f16_2'))
         self.assertIs(mission.waypoints[1].waypoint, MT.route_waypoints(mission.route)[1])
 
-    def test_air_with_attack_profile(self):
+    def test_air_mixed_asset_types_with_own_loadouts(self):
+        # Una missione di un blocco con asset di tipo diverso sulla stessa rotta, ciascuno col proprio
+        # loadout e il proprio profilo d'attacco (fighter + fighter_bomber dello stesso blocco).
         profile = AttackProfile(target_id='sam_1', target_point=Point3D(30000, 0, 0), weapon='Mk-82',
                                 feasible=True)
-        self.assertIs(_air_mission(attack_profile=profile).attack_profile, profile)
+        mission = _air_mission(assets=(
+            MT.MissionAsset('f4e_1', 'lead', loadout='strike_mk82', attack_profile=profile),
+            MT.MissionAsset('f15_1', 'wingman', right_m=200.0, loadout='cap_aim120')))
+        self.assertEqual([a.loadout for a in mission.assets], ['strike_mk82', 'cap_aim120'])
+        self.assertIs(mission.assets[0].attack_profile, profile)
+        self.assertIsNone(mission.assets[1].attack_profile)
 
     def test_air_start_in_air_without_departure(self):
         wps = [_wp('ENTRY', 0, 0, 5000), _wp('CAP', 50000, 0, 8000), _wp('HOME', 90000, 0)]
@@ -435,7 +455,7 @@ class TestMissionValid(_LoggerMock, unittest.TestCase):
                 MT.MissionWaypoint(waypoint=wps[1], role='station'),
                 MT.MissionWaypoint(waypoint=wps[2], role='land'))
         mission = MT.Mission(mission_id='awacs', block_id='wing_2', domain='air', mission_type='AWACS',
-                             assets=(MT.MissionAsset('e3_1', 'support'),), route=_route(wps), waypoints=plan,
+                             assets=(MT.MissionAsset('e3_1', 'lead'),), route=_route(wps), waypoints=plan,
                              start_time=0, start_mode=MT.StartMode.PARKING_COLD)
         self.assertIs(mission.category, Mission_Category.SUPPORT)
         self.assertIs(mission.target.kind, MT.TargetKind.NONE)
@@ -448,7 +468,7 @@ class TestMissionValid(_LoggerMock, unittest.TestCase):
 
     def test_ground_static_defense(self):
         mission = MT.Mission(mission_id='def', block_id='bde_1', domain='ground', mission_type='Defense',
-                             assets=(MT.MissionAsset('sa8_1', 'support'),), target=_zone(), start_time=0)
+                             assets=(MT.MissionAsset('sa8_1', 'lead'),), target=_zone(), start_time=0)
         self.assertEqual(mission.waypoints, ())
         self.assertIs(mission.category, Mission_Category.POSITIONING)
 
@@ -456,7 +476,7 @@ class TestMissionValid(_LoggerMock, unittest.TestCase):
         wps = [_wp('P0', 0, 0), _wp('P1', 100000, 0)]
         plan = tuple(MT.MissionWaypoint(waypoint=w, role='nav') for w in wps)
         mission = MT.Mission(mission_id='esc', block_id='fleet_1', domain='sea', mission_type='Escort',
-                             assets=(MT.MissionAsset('ffg_1', 'lead'), MT.MissionAsset('ffg_2', 'escort')),
+                             assets=(MT.MissionAsset('ffg_1', 'lead'), MT.MissionAsset('ffg_2', 'screen')),
                              target=MT.Target(kind='group', target_id='convoy_1', provenance='observed',
                                               observed_at=0),
                              route=_route(wps, route_type='water', path_type='water', speed=10.0),
@@ -628,15 +648,17 @@ class TestMissionInvalid(_LoggerMock, unittest.TestCase):
 
     def test_loadout_and_profile_only_air(self):
         with self.assertRaises(ValueError):
-            _ground_mission(loadout='x')
+            _ground_mission(assets=(MT.MissionAsset('t72_1', 'lead', loadout='x'),))
 
         profile = AttackProfile(target_id=None, target_point=Point3D(0, 0, 0), weapon='w', feasible=False)
 
         with self.assertRaises(ValueError):
-            _ground_mission(attack_profile=profile)
+            _ground_mission(assets=(MT.MissionAsset('t72_1', 'lead', attack_profile=profile),))
 
+    def test_no_mission_level_loadout(self):
+        # Loadout e profilo d'attacco sono per asset, non per missione.
         with self.assertRaises(TypeError):
-            _air_mission(attack_profile='profile')
+            _air_mission(loadout='strike_mk82')
 
     def test_priority(self):
         with self.assertRaises(ValueError):

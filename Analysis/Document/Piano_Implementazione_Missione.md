@@ -56,10 +56,10 @@ input il motore produce la stessa storia.
 | `Target` | forma: ASSET/GROUP, POINT/AREA (centro, raggio), ZONE, NONE; **provenienza**: OBSERVED (asset_id, istante dell'ultima osservazione) oppure ESTIMATED (posizione, istante, incertezza) | N3.d, N3.e |
 | `MissionAction` | genere: TASK, RULE, COMMAND, WAIT; parametri; priorità (0 = massima); condizione di avvio **pre-calcolabile** (all'arrivo, all'istante t, dopo una durata) | N2.c, N2.d |
 | `MissionWaypoint` | **contiene** un `DataType.Waypoint`; ruolo del punto (enum: DEPARTURE, JOIN, NAV, IP, ATTACK, EGRESS, SPLIT, LAND, STATION, ASSEMBLY, OBJECTIVE...); ETA pianificata; velocità del tratto in arrivo; riferimento di quota (MSL/AGL); azioni ordinate | N2.a = C, N2.b |
-| `MissionAsset` | asset_id, ruolo nella missione (elenco chiuso per dominio), offset di formazione | D3.b, D3.c |
+| `MissionAsset` | asset_id, ruolo = posizione nella formazione (aria lead/element_lead/wingman, terra lead/main/rear, mare lead/main/screen), offset di formazione, **loadout e profilo d'attacco per asset** (aria) | D3.b, D3.c, nota utente 2026-10-05 |
 | `EndCriteria` | criteri dichiarati: ultimo waypoint, durata o tempo sulla stazione, bingo (sì/no), winchester (per categoria d'arma), aborto per minaccia (sì/no), soglia di danno, bersaglio distrutto (sì/no) | D2.a, D2.b |
 | `MissionRules` | ROE, stato di allerta, reazione alla minaccia, EMCON, formazione | D3, sintesi §3.4 |
-| `Mission` | `mission_id`, `block_id`, dominio, `MissionCategory`, tipo di missione, `Target`, priorità, asset (`MissionAsset`), rotta di riferimento (`DataType.Route`) + `MissionWaypoint`, istante e modo di avvio, regole, `EndCriteria`, riferimento al loadout (aria), `operation_id` facoltativo, `AttackProfile` facoltativo | D3 |
+| `Mission` | `mission_id`, `block_id`, dominio, `MissionCategory`, tipo di missione, `Target`, priorità, asset (`MissionAsset`), rotta di riferimento (`DataType.Route`) + `MissionWaypoint`, istante e modo di avvio, regole, `EndCriteria`, `operation_id` facoltativo (loadout e `AttackProfile` sono per asset) | D3 |
 | `Operation` | `operation_id`, scopo, `mission_ids`, TOT comune facoltativo, regola d'esito | D3.a, D2.e |
 | `MissionOutcome` | esito: COMPLETED, ABORTED (+motivo), FAILED, DESTROYED; esiti per asset con motivo di fine; ETA effettive | D2.d, N2.b |
 
@@ -112,6 +112,10 @@ quelle ammesse).
 - `mission_id` reale nell'RNG (oggi `None`) [V: lo slot c'è in `Session_Rng`];
 - esito di missione nella prima forma: COMPLETED se almeno un asset raggiunge l'ultimo waypoint,
   DESTROYED se tutti persi.
+- validazione dell'ordine di sessione: **un asset in una sola missione per sessione**; un blocco può
+  invece avere **più missioni nella stessa sessione**. Esempio (indicazione dell'utente, 2026-10-05):
+  il blocco airbase_a con fighter e fighter_bomber può impiegarli nella stessa missione (stessa rotta
+  e stessa partenza, ciascuno con il proprio loadout) oppure in due missioni distinte, una per tipo.
 
 **Compatibilità**: i parametri `routes`/`starts`/`speeds` restano nella prima versione come strada
 interna ed equivalente. Gli scenari migrano uno per volta alle missioni (19 chiamate a `run_session`
