@@ -17,11 +17,18 @@ sintetico del core oggi, un adapter DCS domani. Quindi:
     `InterceptionEvent`/`EngagementResult` vengono da `Logic/Engagement_Resolver`, `DamageEvent` da `Logic/Damage_Model`,
     `FuelEvent` da `Logic/Fuel_Model`. Questo modulo definisce solo i contenitori.
 
+## Missioni alla porta (Fase 3 di `Analysis/Document/Piano_Implementazione_Missione.md`)
+`SessionOrder` porta le `Mission` e le `Operation` di `Command/Mission_Types` (la forma e' quella
+decisa in D1-D6/N1-N3): le missioni sono l'UNICA strada con cui un asset riceve rotta, partenza e
+velocita' in una sessione (`Logic/Mission_Adapter` le ricava, `Logic/Session_Simulator` le
+consuma). `SessionOutcome` porta l'esito di ogni missione (`MissionOutcome`, prima forma: v.
+`Session_Simulator`). Qui solo validazione strutturale dell'ordine (unicita', riferimenti):
+l'appartenenza degli asset al blocco si verifica con gli oggetti del modello, in `run_session`.
+
 ## Cosa NON c'e' (di proposito)
-  * Nessun campo per concetti che il codice non ha ancora: niente missioni strutturate
-    aria/terra/mare, rotte assegnate o obiettivi dentro `SessionOrder`. Quel livello nascera'
-    con l'orchestratore (`Logic/Session_Simulator`, Fase 6) e con `Theater_Session_Manager`;
-    aggiungerli ora vorrebbe dire inventarne la forma.
+  * Nessun concetto che il codice non ha ancora: obiettivi di campagna, finestre di sessione
+    di campagna (F8), re-scheduling. Quel livello nascera' con `Theater_Session_Manager`;
+    aggiungerlo ora vorrebbe dire inventarne la forma.
   * Nessuna scrittura in `Campaign_State` e nessuna applicazione agli asset:
     `assemble_session_outcome` e' una funzione pura. Applicare l'esito "in un'unica passata"
     e' responsabilita' di `Theater_Session_Manager` (wiki decisions/c2-hierarchy-design),
@@ -39,6 +46,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Dict, Iterable, Mapping, Optional, Tuple
 
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import Mission, MissionOutcome, Operation
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS
 from Code.Dynamic_War_Manager.Source.Logic.Damage_Model import DamageEvent
 from Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver import (
@@ -72,6 +80,43 @@ def _check_time(label: str, value) -> Optional[float]:
     return float(value)
 
 
+def _as_tuple(label: str, value, item_type) -> tuple:
+    if isinstance(value, (str, bytes)) or not hasattr(value, '__iter__'):
+        raise TypeError(f"{label} must be an iterable of {item_type.__name__}, got {value!r}")
+
+    items = tuple(value)
+
+    for item in items:
+        if not isinstance(item, item_type):
+            raise TypeError(f"{label} items must be {item_type.__name__}, got {type(item).__name__}")
+
+    return items
+
+
+def _check_mission_outcomes(value) -> Mapping[str, MissionOutcome]:
+    """`{mission_id: MissionOutcome}` reso immutabile; chiave = `mission_id` dell'esito."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"mission_outcomes must be a mapping mission_id -> MissionOutcome, "
+                        f"got {type(value).__name__}")
+
+    normalized: Dict[str, MissionOutcome] = {}
+
+    for mission_id, outcome in value.items():
+        _check_domain_id('mission_outcomes key', mission_id)
+
+        if not isinstance(outcome, MissionOutcome):
+            raise TypeError(f"mission_outcomes[{mission_id!r}] must be a MissionOutcome, "
+                            f"got {type(outcome).__name__}")
+
+        if outcome.mission_id != mission_id:
+            raise ValueError(f"mission_outcomes key {mission_id!r} differs from its mission_id "
+                             f"{outcome.mission_id!r}")
+
+        normalized[mission_id] = outcome
+
+    return MappingProxyType(normalized)
+
+
 def _check_interval(t_start: Optional[float], t_end: Optional[float]) -> None:
     if t_start is not None and t_end is not None and t_end < t_start - TIME_EPS:
         raise ValueError(f"t_end ({t_end}) precedes t_start ({t_start})")
@@ -101,6 +146,15 @@ class SessionOrder:
             Assente o forza non elencata = tutti gli asset operativi.
         salvo_window: secondi che raggruppano impatti successivi in un unico evento-salva,
             passato tale e quale a `resolve_engagement` (default 0.0, stesso default).
+        missions: le `Mission` della sessione (Fase 3 del piano della Missione), default
+            nessuna: gli asset senza missione restano fermi. Vincoli: `mission_id` unici; un
+            asset in AL PIU' una missione della sessione (un blocco puo' invece avere piu'
+            missioni nella stessa sessione, regola dell'utente 2026-10-05); `block_id` in
+            `force_ids` se `force_ids` non e' vuoto.
+        operations: le `Operation` della sessione, default nessuna. Vincoli: `operation_id`
+            unici; ogni `mission_ids` si riferisce a missioni di questo ordine; una missione
+            in al piu' un'operazione, e se dichiara `operation_id` deve essere quello
+            dell'operazione che la elenca (se quell'operazione e' nell'ordine).
     """
     session_id: str
     t_start: float = 0.0
@@ -108,6 +162,8 @@ class SessionOrder:
     force_ids: Tuple[str, ...] = ()
     committed: Optional[Mapping[str, Tuple[str, ...]]] = field(default=None, hash=False)
     salvo_window: float = 0.0
+    missions: Tuple[Mission, ...] = ()
+    operations: Tuple[Operation, ...] = ()
 
     def __post_init__(self):
         _check_domain_id('session_id', self.session_id)
@@ -158,6 +214,77 @@ class SessionOrder:
             raise ValueError(f"salvo_window must be a non-negative number, got {self.salvo_window!r}")
 
         object.__setattr__(self, 'salvo_window', float(self.salvo_window))
+        self._validate_missions(force_ids)
+        self._validate_operations()
+
+    def _validate_missions(self, force_ids: Tuple[str, ...]) -> None:
+        missions = _as_tuple('missions', self.missions, Mission)
+        seen_missions = set()
+        asset_mission: Dict[str, str] = {}
+
+        for mission in missions:
+            if mission.mission_id in seen_missions:
+                raise ValueError(f"mission_id {mission.mission_id!r} is repeated in the order")
+
+            seen_missions.add(mission.mission_id)
+
+            if force_ids and mission.block_id not in force_ids:
+                raise ValueError(f"mission {mission.mission_id!r}: block {mission.block_id!r} is not in "
+                                 f"force_ids {force_ids}")
+
+            for asset_id in mission.asset_ids:
+                if asset_id in asset_mission:
+                    raise ValueError(f"asset {asset_id!r} is in missions {asset_mission[asset_id]!r} and "
+                                     f"{mission.mission_id!r}: an asset takes part in at most one mission "
+                                     f"per session")
+
+                asset_mission[asset_id] = mission.mission_id
+
+        object.__setattr__(self, 'missions', missions)
+
+    def _validate_operations(self) -> None:
+        operations = _as_tuple('operations', self.operations, Operation)
+        missions = {mission.mission_id: mission for mission in self.missions}
+        seen_operations = set()
+        mission_operation: Dict[str, str] = {}
+
+        for operation in operations:
+            if operation.operation_id in seen_operations:
+                raise ValueError(f"operation_id {operation.operation_id!r} is repeated in the order")
+
+            seen_operations.add(operation.operation_id)
+
+            for mission_id in operation.mission_ids:
+                if mission_id not in missions:
+                    raise ValueError(f"operation {operation.operation_id!r} refers to mission {mission_id!r}, "
+                                     f"which is not in the order")
+
+                if mission_id in mission_operation:
+                    raise ValueError(f"mission {mission_id!r} is in operations {mission_operation[mission_id]!r} "
+                                     f"and {operation.operation_id!r}")
+
+                declared = missions[mission_id].operation_id
+
+                if declared is not None and declared != operation.operation_id:
+                    raise ValueError(f"mission {mission_id!r} declares operation {declared!r} but is listed "
+                                     f"by {operation.operation_id!r}")
+
+                mission_operation[mission_id] = operation.operation_id
+
+        for mission in self.missions:
+            if mission.operation_id in seen_operations and mission.mission_id not in mission_operation:
+                raise ValueError(f"mission {mission.mission_id!r} declares operation {mission.operation_id!r}, "
+                                 f"which does not list it")
+
+        object.__setattr__(self, 'operations', operations)
+
+    def mission(self, mission_id: str) -> Mission:
+        """La missione `mission_id` dell'ordine (KeyError se assente)."""
+        for mission in self.missions:
+            if mission.mission_id == mission_id:
+                return mission
+
+        raise KeyError(mission_id)
 
     def rng(self, mission_id=None, event_id=None, counter: int = 0) -> random.Random:
         """Il `random.Random` di questa sessione per la chiave data (v. `Session_Rng`)."""
@@ -187,6 +314,9 @@ class SessionOutcome:
             atomici, in ordine di tempo (v. `assemble_session_outcome` per il criterio
             esatto). `ammunition_events` sono le sole salve offensive, `interception_events`
             le intercettazioni (tipi distinti dal 2026-09-23).
+        mission_outcomes: `{mission_id: MissionOutcome}`, mapping immutabile, una voce per
+            missione dell'ordine (Fase 3 del piano della Missione; regola d'esito di prima
+            forma in `Logic/Session_Simulator`). Vuoto se l'ordine non ha missioni.
     """
     session_id: str
     t_start: Optional[float]
@@ -196,10 +326,12 @@ class SessionOutcome:
     ammunition_events: Tuple[AmmunitionEvent, ...] = ()
     fuel_events: Tuple[FuelEvent, ...] = ()
     interception_events: Tuple[InterceptionEvent, ...] = ()
+    mission_outcomes: Mapping[str, MissionOutcome] = field(default_factory=dict, hash=False)
 
     def __post_init__(self):
         _check_domain_id('session_id', self.session_id)
         _check_interval(_check_time('t_start', self.t_start), _check_time('t_end', self.t_end))
+        object.__setattr__(self, 'mission_outcomes', _check_mission_outcomes(self.mission_outcomes))
 
     @property
     def force_outcomes(self) -> Tuple[ForceOutcome, ...]:
@@ -273,7 +405,9 @@ def assemble_session_outcome(session_id: str,
                              engagement_results: Iterable[Optional[EngagementResult]],
                              fuel_events: Iterable[FuelEvent] = (),
                              t_start: Optional[float] = None,
-                             t_end: Optional[float] = None) -> SessionOutcome:
+                             t_end: Optional[float] = None,
+                             mission_outcomes: Optional[Mapping[str, MissionOutcome]] = None
+                             ) -> SessionOutcome:
     """Aggrega gli esiti di una sessione in un unico `SessionOutcome`. Funzione pura.
 
     Non tocca alcun asset, non scrive `Campaign_State`, non estrae numeri casuali.
@@ -288,6 +422,8 @@ def assemble_session_outcome(session_id: str,
         fuel_events: i `FuelEvent` dei movimenti della sessione (`Fuel_Model.build_fuel_event`).
         t_start/t_end: intervallo dichiarato [s]. Se None, e' ricavato dagli ingaggi e dagli
             eventi (min/max); se dichiarato, ogni ingaggio ed evento deve cadervi dentro.
+        mission_outcomes: `{mission_id: MissionOutcome}` gia' calcolati dall'esecutore,
+            riportati tali e quali (None = nessuna missione).
 
     Ordine degli eventi nel risultato: per ciascun tipo, ordinamento STABILE per `time`
     sulla concatenazione degli eventi nell'ordine degli ingaggi. Dentro un ingaggio gli eventi
@@ -359,7 +495,8 @@ def assemble_session_outcome(session_id: str,
                           damage_events=damage,
                           ammunition_events=ammunition,
                           interception_events=interceptions,
-                          fuel_events=fuel)
+                          fuel_events=fuel,
+                          mission_outcomes=mission_outcomes if mission_outcomes is not None else {})
 
 
 def _warn_shared_targets(session_id: str, results) -> None:

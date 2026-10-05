@@ -378,13 +378,16 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
         return [blue, cas], [red, cap], F.make_fire_control(roles=roles)
 
     @staticmethod
-    def _routes(forces_a, forces_b):
+    def _missions(forces_a, forces_b):
         blue, cas = forces_a
         _, cap = forces_b
-        routes = F.routes_for(blue, [(2_000.0, 0.0)])
-        routes.update(F.routes_for(cas, [(10_000.0, 0.0)]))
-        routes.update(F.routes_for(cap, [(-30_000.0, 0.0)]))
-        return routes
+        # Blue-Mech: M1A2 e M2 a velocita' diverse -> due missioni dello stesso blocco.
+        missions = F.missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack',
+                                  target=F.group_target('Red-Battalion'))
+        missions += F.missions_for(cas, [(10_000.0, 0.0)], mission_type='CAS', target=F.group_target('Red-Battalion'))
+        missions += F.missions_for(cap, [(-30_000.0, 0.0)], mission_type='CAP',
+                                   target=F.zone_target((-30_000.0, 0.0), 30_000.0))
+        return missions
 
     @staticmethod
     def _snapshot(forces):
@@ -441,15 +444,17 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
 
             # Sessione 1, "sintetica".
             order_1 = SessionOrder(f'{seed}-synthetic', t_start=0.0, t_end=cls.DURATION,
-                                   force_ids=tuple(sorted(f.id for f in forces)))
-            outcome_1 = SS.run_session(order_1, forces_a, forces_b, fire, routes=cls._routes(forces_a, forces_b))
+                                   force_ids=tuple(sorted(f.id for f in forces)),
+                                   missions=tuple(cls._missions(forces_a, forces_b)))
+            outcome_1 = SS.run_session(order_1, forces_a, forces_b, fire)
             after_1 = cls._snapshot(forces)
             operative_after_1 = {a for f in forces for a, asset in f.assets.items() if asset.is_operative()}
 
             # Sessione 2, "DCS": un SessionOrder nuovo, stesse istanze, stato gia' mutato.
             order_2 = SessionOrder(f'{seed}-dcs', t_start=outcome_1.t_end, t_end=outcome_1.t_end + cls.DURATION,
-                                   force_ids=tuple(sorted(f.id for f in forces)))
-            outcome_2 = SS.run_session(order_2, forces_a, forces_b, fire, routes=cls._routes(forces_a, forces_b))
+                                   force_ids=tuple(sorted(f.id for f in forces)),
+                                   missions=tuple(cls._missions(forces_a, forces_b)))
+            outcome_2 = SS.run_session(order_2, forces_a, forces_b, fire)
             after_2 = cls._snapshot(forces)
 
             cls.runs.append({'forces': forces, 'initial': initial, 'after_1': after_1, 'after_2': after_2,
@@ -668,9 +673,10 @@ class TestS12C2Decapitation(F.LoggerSilencer, unittest.TestCase):
                                                           prefix='sead', loadout='SEAD')],
                              mil_category=F.AIR_UNIT)
         roles = dict(_strike_roles(strike), **_strike_roles(sead, 'sead'))
-        routes = F.routes_for(strike, [(20_000.0, 0.0)])
-        routes.update(F.routes_for(sead, [(20_000.0, 2_000.0)]))
-        return [strike, sead], [c2, far], routes, F.make_fire_control(STRIKE_BOMB_TABLE, roles=roles)
+        missions = F.missions_for(strike, [(20_000.0, 0.0)], mission_type='Pinpoint_Strike',
+                                  target=F.group_target('Red-C2'))
+        missions += F.missions_for(sead, [(20_000.0, 2_000.0)], mission_type='SEAD', target=F.group_target('Red-C2'))
+        return [strike, sead], [c2, far], missions, F.make_fire_control(STRIKE_BOMB_TABLE, roles=roles)
 
     @classmethod
     def setUpClass(cls):
@@ -679,8 +685,8 @@ class TestS12C2Decapitation(F.LoggerSilencer, unittest.TestCase):
         cls.prolonged = []
 
         for session_id in cls.SEEDS:
-            blue, red, routes, fire = cls._build()
-            cls.runs.append((blue, red, F.run(session_id, blue, red, fire, duration=3_600.0, routes=routes)))
+            blue, red, missions, fire = cls._build()
+            cls.runs.append((blue, red, F.run(session_id, blue, red, fire, duration=3_600.0, missions=missions)))
             cls.prolonged.append(F.combined_arms_scenario().run(session_id, thresholds=BOTH_HOLD))
 
     @staticmethod
@@ -767,7 +773,8 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
                                                               origin=(-150_000.0, 0.0), step=(0.0, 500.0),
                                                               prefix='str', loadout='Strike')],
                                mil_category=F.AIR_UNIT)
-        return strike, farp, F.routes_for(strike, [(20_000.0, 0.0)])
+        return strike, farp, F.missions_for(strike, [(20_000.0, 0.0)], mission_type='Strike',
+                                            target=F.group_target('Red-FARP'))
 
     @classmethod
     def setUpClass(cls):
@@ -779,9 +786,9 @@ class TestS13ForwardFARPInterdiction(F.LoggerSilencer, unittest.TestCase):
         cls.runs = []
 
         for session_id in cls.SEEDS:
-            strike, farp, routes = cls._build()
+            strike, farp, missions = cls._build()
             fire = F.make_fire_control(STRIKE_BOMB_TABLE, roles=_strike_roles(strike))
-            outcome = F.run(session_id, [strike], [farp], fire, duration=3_600.0, routes=routes,
+            outcome = F.run(session_id, [strike], [farp], fire, duration=3_600.0, missions=missions,
                             thresholds=RED_HOLDS)
             cls.runs.append((farp, outcome))
 
@@ -877,7 +884,8 @@ class TestS14StrategicBombingOfProduction(F.LoggerSilencer, unittest.TestCase):
                                                                 origin=(-200_000.0, 0.0, 6_000.0), step=(0.0, 500.0),
                                                                 prefix='bmb', loadout='Iron Bomb Strike')],
                                 mil_category=F.AIR_UNIT)
-        return bombers, plant, F.routes_for(bombers, [(20_000.0, 0.0)]), \
+        return bombers, plant, F.missions_for(bombers, [(20_000.0, 0.0)], mission_type='Strike',
+                                              target=F.group_target('Red-Plant')), \
             F.make_fire_control(roles=_strike_roles(bombers))
 
     @classmethod
@@ -886,9 +894,9 @@ class TestS14StrategicBombingOfProduction(F.LoggerSilencer, unittest.TestCase):
         cls.runs = []
 
         for session_id in cls.SEEDS:
-            bombers, plant, routes, fire = cls._build()
+            bombers, plant, missions, fire = cls._build()
             cls.runs.append((bombers, plant, F.run(session_id, [bombers], [plant], fire, duration=3_600.0,
-                                                   routes=routes)))
+                                                   missions=missions)))
 
     def test_target_is_a_real_production_block_not_military(self):
         _, plant, _ = self.runs[0]
@@ -996,7 +1004,8 @@ class TestS15UrbanProximityROEContract(F.LoggerSilencer, unittest.TestCase):
                                                               origin=(-150_000.0, 0.0), step=(0.0, 500.0),
                                                               prefix='str', loadout='Strike')],
                                mil_category=F.AIR_UNIT)
-        return strike, stronghold, town, F.routes_for(strike, [(20_000.0, 0.0)])
+        return strike, stronghold, town, F.missions_for(strike, [(20_000.0, 0.0)], mission_type='Strike',
+                                                        target=F.group_target('Red-Stronghold'))
 
     @classmethod
     def setUpClass(cls):
@@ -1006,8 +1015,8 @@ class TestS15UrbanProximityROEContract(F.LoggerSilencer, unittest.TestCase):
         for session_id in cls.SEEDS:
             for bucket, fire in ((cls.roe, _roe_military_only(F.make_fire_control())),
                                  (cls.control, F.make_fire_control())):
-                strike, stronghold, town, routes = cls._build()
-                outcome = F.run(session_id, [strike], [stronghold, town], fire, duration=3_600.0, routes=routes,
+                strike, stronghold, town, missions = cls._build()
+                outcome = F.run(session_id, [strike], [stronghold, town], fire, duration=3_600.0, missions=missions,
                                 thresholds=RED_HOLDS)
                 bucket.append((stronghold, town, outcome))
 
@@ -1111,7 +1120,8 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
                                                                     step=(0.0, 800.0), prefix='fa',
                                                                     loadout='Anti-Ship')],
                                mil_category=F.AIR_UNIT)
-        return strike, port, F.routes_for(strike, [(10_000.0, 0.0)])
+        return strike, port, F.missions_for(strike, [(10_000.0, 0.0)], mission_type='Anti_Ship',
+                                            target=F.group_target('Red-Port'))
 
     @classmethod
     def setUpClass(cls):
@@ -1121,7 +1131,7 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
         original = ER.resolve_engagement
 
         for session_id in cls.SEEDS:
-            strike, port, routes = cls._build()
+            strike, port, missions = cls._build()
             positions = {a: asset.position for a, asset in port.assets.items()}
             blue_ids = frozenset(strike.assets)
             low_level = (lambda observer, target, ids=blue_ids: cls.LOW_LEVEL_FACTOR if target.id in ids else 1.0)
@@ -1135,7 +1145,7 @@ class TestS16NavalInstallation(F.LoggerSilencer, unittest.TestCase):
             # Si cattura l'EngagementResult (salve e risoluzioni) senza alterarlo, come S9.
             with patch.object(ER, 'resolve_engagement', side_effect=spy):
                 outcome = F.run(session_id, [strike], [port], F.make_fire_control(), duration=3_600.0,
-                                routes=routes, thresholds=BOTH_HOLD, detection_factor=low_level,
+                                missions=missions, thresholds=BOTH_HOLD, detection_factor=low_level,
                                 order_kwargs={'salvo_window': cls.SALVO_WINDOW})
 
             cls.runs.append((port, positions, outcome, [r for r in captured if r is not None]))
@@ -1289,7 +1299,9 @@ class TestS17HierarchicalScaleSweep(F.LoggerSilencer, unittest.TestCase):
             F.Unit('vehicle', 'ZSU-23-4-Shilka', k, origin=(1_000.0, 600.0), step=(0.0, 300.0), prefix='aaa'),
             F.Unit('vehicle', '9K35-Strela-10', k, origin=(1_000.0, -300.0), step=(0.0, 300.0), prefix='sam')],
             mil_category=mil_category)
-        return blue, red, F.routes_for(blue, [(2_000.0, 0.0)])
+        # M1A2 e M2 a velocita' diverse -> due missioni dello stesso blocco.
+        return blue, red, F.missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack',
+                                         target=F.group_target('Red-Line'))
 
     @classmethod
     def setUpClass(cls):
@@ -1297,14 +1309,14 @@ class TestS17HierarchicalScaleSweep(F.LoggerSilencer, unittest.TestCase):
         cls.results = {}
 
         for mil_category, k in cls.SCALE:
-            blue, red, routes = cls._build(mil_category, k)
-            windows = CS.schedule_contacts([blue], [red], 3_600.0, routes=routes)
+            blue, red, missions = cls._build(mil_category, k)
+            windows = CS.schedule_contacts([blue], [red], 3_600.0, routes=F.mission_routes(missions))
             runs = []
 
             for session_id in cls.SEEDS:
-                blue, red, routes = cls._build(mil_category, k)
+                blue, red, missions = cls._build(mil_category, k)
                 outcome, seconds = F.timed(F.run, session_id, [blue], [red], F.make_fire_control(),
-                                           duration=3_600.0, routes=routes)
+                                           duration=3_600.0, missions=missions)
                 runs.append((blue, red, outcome, seconds))
 
             cls.results[mil_category] = {'k': k, 'windows': len(windows), 'runs': runs}
@@ -1403,9 +1415,15 @@ class TestS18TransportNetworkInterdiction(F.LoggerSilencer, unittest.TestCase):
             F.Unit('aircraft', 'F-15C Eagle', 2, origin=(-148_000.0, 2_000.0), step=(0.0, 600.0), prefix='esc',
                    loadout='Eagle Escort')], mil_category=F.AIR_UNIT)
         roles = {a: ('strike' if '/str' in a else 'fighter') for a in package.assets}
-        routes = F.routes_for(package, [(80_000.0, 0.0)])
-        routes.update(F.routes_for(cap, [(-20_000.0, 0.0)]))
-        return package, [rail, grid, road, cap], routes, F.make_fire_control(roles=roles)
+        strikers = [a for a in package.assets if '/str' in a]
+        missions = F.missions_for(package, [(80_000.0, 0.0)], mission_type='Strike', only=strikers,
+                                  target=F.group_target('Red-Rail'))
+        missions += F.missions_for(package, [(80_000.0, 0.0)], mission_type='Escort',
+                                   only=[a for a in package.assets if a not in strikers],
+                                   target=F.group_target(missions[0].mission_id))
+        missions += F.missions_for(cap, [(-20_000.0, 0.0)], mission_type='CAP',
+                                   target=F.zone_target((-20_000.0, 0.0), 30_000.0))
+        return package, [rail, grid, road, cap], missions, F.make_fire_control(roles=roles)
 
     @classmethod
     def _build_far(cls):
@@ -1417,9 +1435,9 @@ class TestS18TransportNetworkInterdiction(F.LoggerSilencer, unittest.TestCase):
                                                           step=(0.0, 500.0), prefix='str', loadout='Strike')],
                              mil_category=F.AIR_UNIT)
         roles = dict(_strike_roles(west), **_strike_roles(east))
-        routes = F.routes_for(west, [(20_000.0, 0.0)])
-        routes.update(F.routes_for(east, [(620_000.0, 0.0)]))
-        return [west, east], [rail, road], routes, F.make_fire_control(roles=roles)
+        missions = F.missions_for(west, [(20_000.0, 0.0)], mission_type='Strike', target=F.group_target('Red-Rail'))
+        missions += F.missions_for(east, [(620_000.0, 0.0)], mission_type='Strike', target=F.group_target('Red-Road'))
+        return [west, east], [rail, road], missions, F.make_fire_control(roles=roles)
 
     @classmethod
     def setUpClass(cls):
@@ -1427,12 +1445,12 @@ class TestS18TransportNetworkInterdiction(F.LoggerSilencer, unittest.TestCase):
         cls.runs, cls.far_runs = [], []
 
         for session_id in cls.SEEDS:
-            package, reds, routes, fire = cls._build()
-            cls.runs.append((reds, F.run(session_id, [package], reds, fire, duration=3_600.0, routes=routes)))
+            package, reds, missions, fire = cls._build()
+            cls.runs.append((reds, F.run(session_id, [package], reds, fire, duration=3_600.0, missions=missions)))
 
         for session_id in cls.SEEDS[:2]:
-            blues, reds, routes, fire = cls._build_far()
-            cls.far_runs.append(F.run(session_id, blues, reds, fire, duration=3_600.0, routes=routes))
+            blues, reds, missions, fire = cls._build_far()
+            cls.far_runs.append(F.run(session_id, blues, reds, fire, duration=3_600.0, missions=missions))
 
     def test_nodes_are_distinct_real_transport_blocks(self):
         reds, _ = self.runs[0]

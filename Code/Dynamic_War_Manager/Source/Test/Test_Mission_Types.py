@@ -1,6 +1,7 @@
 """Tests per Command/Mission_Types — tipi di dominio della Missione (Fase 1 del piano Missione).
 
-Solo costruzione e validazione: nessun altro modulo usa ancora questi tipi. Waypoint, Edge e Route
+Solo costruzione e validazione (l'uso nel motore, dalla F3, e' coperto da Test_Mission_Adapter,
+Test_Session_Types e Test_Session_Simulator). Waypoint, Edge e Route
 sono oggetti reali (classi geometriche pure, nessun mock), come in Test_Route.
 """
 

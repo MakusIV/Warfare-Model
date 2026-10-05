@@ -14,6 +14,10 @@ Strategia di setup
   `Asset`/`Mobile`; sono imposti solo portata di rilevamento e autonomia (i registri sono
   coperti da Test_Mobile/Test_Aircraft), cosi' ogni numero e' calcolabile a mano.
 * Profili di reazione imposti, per non dipendere dai default di Reaction_Profile.
+* Dal 2026-10-05 (Fase 3 del piano della Missione) le rotte arrivano dalle `Mission` dell'ordine:
+  `_air_mission` costruisce una missione aerea su una rotta di test (partenza in volo, ultimo
+  punto LAND: semplificazione di scenario, rotta senza rientro, da completare con RTB in F5-F6).
+  Le coppie di aerei della stessa forza su rotte parallele sono UNA missione con offset laterale.
 """
 
 import unittest
@@ -24,6 +28,20 @@ from sympy import Point3D
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    AssetEndReason,
+    AssetState,
+    Mission,
+    MissionAsset,
+    MissionStatus,
+    MissionWaypoint,
+    StartMode,
+    Target,
+    TargetKind,
+    TargetProvenance,
+    WaypointRole,
+    route_waypoints,
+)
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import SessionOrder, SessionOutcome
 from Code.Dynamic_War_Manager.Source.Context.Context import MILITARY_CATEGORY
 from Code.Dynamic_War_Manager.Source.Context.Reaction_Profile import ReactionProfile
@@ -33,11 +51,13 @@ from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic import Session_Simulator as SS
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
+from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 
 _SOURCE = 'Code.Dynamic_War_Manager.Source.'
 _LOGGERS = [_SOURCE + name + '.logger' for name in (
     'Asset.Mobile', 'Asset.Asset', 'Logic.Engagement_Resolver', 'Logic.Contact_Scheduler',
-    'Logic.Fuel_Model', 'Logic.Session_Simulator', 'Command.Session_Types', 'Block.Military')]
+    'Logic.Fuel_Model', 'Logic.Session_Simulator', 'Command.Session_Types', 'Block.Military',
+    'Command.Mission_Types', 'Logic.Mission_Adapter')]
 
 # Autonomie imposte [m]: al regime di combattimento si consuma il doppio.
 AUTONOMY = {'nominal': 1_000_000.0, 'max': 500_000.0}
@@ -96,6 +116,24 @@ def _route(points, speed, name, z=0.0):
     return Route(route_type='air', edges=edges, name=name)
 
 
+def _air_mission(mission_id, force, route, assets, target_block='Red', start_time=0.0):
+    """Missione aerea di test sulla rotta `route` per `assets` = [(asset_id, right_m), ...].
+
+    Partenza in volo, ultimo punto LAND: semplificazione di scenario (rotta senza rientro, da
+    completare con RTB in F5-F6). Bersaglio GROUP osservato all'istante 0.
+    """
+    waypoints = route_waypoints(route)
+    roles = [WaypointRole.NAV] * (len(waypoints) - 1) + [WaypointRole.LAND]
+    members = tuple(MissionAsset(asset_id, 'lead' if index == 0 else 'wingman', right_m=right)
+                    for index, (asset_id, right) in enumerate(assets))
+    target = Target(kind=TargetKind.GROUP, target_id=target_block, provenance=TargetProvenance.OBSERVED,
+                    observed_at=0.0)
+    return Mission(mission_id=mission_id, block_id=force.id, domain='air', mission_type='CAS', assets=members,
+                   target=target, route=route,
+                   waypoints=tuple(MissionWaypoint(wp, role) for wp, role in zip(waypoints, roles)),
+                   start_time=start_time, start_mode=StartMode.AIR)
+
+
 def _profile(asset):
     return ReactionProfile(detection=4.0, evaluation=1.0, command=0.0, actuation=0.0, source='test')
 
@@ -133,21 +171,23 @@ class _Base(unittest.TestCase):
             _asset(Vehicle, 're1', 0, red_offset), _asset(Vehicle, 're2', 300, red_offset)])
         red_west = _force('Red-West', 'Red', [_asset(Vehicle, 'rw1', 100_000, red_offset)])
 
-        routes = {
-            'bn1': _route([(0, -20_000), (0, 20_000)], 200.0, 'r-bn1'),
-            'bn2': _route([(500, -20_000), (500, 20_000)], 200.0, 'r-bn2'),
-            'bs1': _route([(100_000, -20_000), (100_000, 20_000)], 200.0, 'r-bs1'),
-        }
+        # Blue-North: una missione, bn2 a 500 m sulla destra (est) di bn1 in rotta nord.
+        missions = (
+            _air_mission('M-north', blue_north, _route([(0, -20_000), (0, 20_000)], 200.0, 'r-bn1'),
+                         [('bn1', 0.0), ('bn2', 500.0)], target_block='Red-East'),
+            _air_mission('M-south', blue_south, _route([(100_000, -20_000), (100_000, 20_000)], 200.0, 'r-bs1'),
+                         [('bs1', 0.0)], target_block='Red-West'),
+        )
 
-        return [blue_north, blue_south], [red_east, red_west], routes
+        return [blue_north, blue_south], [red_east, red_west], missions
 
-    def _order(self, session_id='S-test', **kwargs):
+    def _order(self, session_id='S-test', missions=(), **kwargs):
         kwargs.setdefault('t_end', 3600.0)
-        return SessionOrder(session_id, t_start=0.0, **kwargs)
+        return SessionOrder(session_id, t_start=0.0, missions=tuple(missions), **kwargs)
 
     def _run(self, session_id='S-test', red_offset=0.0, fire=_fire, **kwargs):
-        blue, red, routes = self._scenario(red_offset)
-        outcome = SS.run_session(self._order(session_id), blue, red, fire, routes=routes,
+        blue, red, missions = self._scenario(red_offset)
+        outcome = SS.run_session(self._order(session_id, missions), blue, red, fire,
                                  reaction_profile_for=_profile, **kwargs)
         return outcome, blue, red
 
@@ -264,7 +304,8 @@ class TestSeedDiscipline(_Base):
         tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0)."""
         outcome, _, _ = self._run('S-gamma')
         # Scenario pulito (i due fronti non condividono forze), stesso ingaggio, stream documentato.
-        blue3, red3, routes = self._scenario()
+        blue3, red3, missions = self._scenario()
+        routes = MA.mission_routes(missions)
         order = self._order('S-gamma')
         windows = CS.schedule_contacts([blue3[1]], [red3[1]], 3600.0, routes=routes)
         legs = {'bs1': CS.clamp_legs(CS.route_legs(routes['bs1']), 0.0, 3600.0),
@@ -336,15 +377,16 @@ class TestTwoFronts(_Base):
                                             _asset(Aircraft, 'x2', -20_000, 300, speed=200.0)])
         red_a = _force('Red-A', 'Red', [_asset(Vehicle, 'ra1', 0, 0)])
         red_b = _force('Red-B', 'Red', [_asset(Vehicle, 'rb1', 30_000, 0)])
-        routes = {'x1': _route([(-20_000, 0), (50_000, 0)], 200.0, 'r-x1'),
-                  'x2': _route([(-20_000, 300), (50_000, 300)], 200.0, 'r-x2')}
-        return raider, red_a, red_b, routes
+        # Una missione: x2 300 m a sinistra (nord) di x1 in rotta est.
+        missions = (_air_mission('M-raid', raider, _route([(-20_000, 0), (50_000, 0)], 200.0, 'r-x1'),
+                                 [('x1', 0.0), ('x2', -300.0)], target_block='Red-A'),)
+        return raider, red_a, red_b, missions
 
     def _two_fronts(self, session_id, reverse_red=False):
-        raider, red_a, red_b, routes = self._forces()
+        raider, red_a, red_b, missions = self._forces()
         reds = [red_b, red_a] if reverse_red else [red_a, red_b]
-        outcome = SS.run_session(self._order(session_id), [raider], reds, _fire,
-                                 routes=routes, reaction_profile_for=_profile)
+        outcome = SS.run_session(self._order(session_id, missions), [raider], reds, _fire,
+                                 reaction_profile_for=_profile)
         return outcome, raider, red_a, red_b
 
     def test_connected_forces_are_one_engagement(self):
@@ -417,8 +459,9 @@ class TestTwoFronts(_Base):
                                side='Red', id=name)
                 red._assets = {f'{name}-1': _asset(Vehicle, f'{name}-1', x, 0)}
                 reds.append(red)
-            routes = {'x1': _route([(-20_000, 0), (50_000, 0)], 200.0, 'r-x1')}
-            return SS.run_session(self._order('S-stable'), [raider], reds, _fire, routes=routes,
+            missions = (_air_mission('M-stable', raider, _route([(-20_000, 0), (50_000, 0)], 200.0, 'r-x1'),
+                                     [('x1', 0.0)], target_block='red-a-stable'),)
+            return SS.run_session(self._order('S-stable', missions), [raider], reds, _fire,
                                   reaction_profile_for=_profile)
 
         first, second = build(), build()
@@ -457,21 +500,21 @@ class TestConnectedComponents(unittest.TestCase):
 class TestSessionInterval(_Base):
 
     def test_open_session_requires_horizon(self):
-        blue, red, routes = self._scenario()
-        order = SessionOrder('S-open', t_start=0.0)
+        blue, red, missions = self._scenario()
+        order = SessionOrder('S-open', t_start=0.0, missions=missions)
 
         with self.assertRaises(ValueError):
-            SS.run_session(order, blue, red, _fire, routes=routes)
+            SS.run_session(order, blue, red, _fire)
 
-        outcome = SS.run_session(order, blue, red, _fire, routes=routes, horizon=600.0,
+        outcome = SS.run_session(order, blue, red, _fire, horizon=600.0,
                                  reaction_profile_for=_profile)
         self.assertEqual(outcome.t_end, 600.0)
 
     def test_horizon_must_agree_with_the_order(self):
-        blue, red, routes = self._scenario()
+        blue, red, missions = self._scenario()
 
         with self.assertRaises(ValueError):
-            SS.run_session(self._order(), blue, red, _fire, routes=routes, horizon=10.0)
+            SS.run_session(self._order(missions=missions), blue, red, _fire, horizon=10.0)
 
     def test_salvos_in_flight_extend_the_outcome(self):
         """Impatti dopo la fine: l'esito e' esteso, non troncato (R4)."""
@@ -486,7 +529,8 @@ class TestFuelExhaustion(_Base):
     def test_exhaustion_is_reported_not_simulated(self):
         blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0, 0, fuel=0.01, speed=200.0)])]
         route = _route([(0, 0), (0, 40_000)], 200.0, 'r-b1')
-        outcome = SS.run_session(self._order(), blue, [], _fire, routes={'b1': route})
+        missions = (_air_mission('M-b1', blue[0], route, [('b1', 0.0)]),)
+        outcome = SS.run_session(self._order(missions=missions), blue, [], _fire)
 
         event, = outcome.fuel_events
         self.assertTrue(event.exhausted)
@@ -494,10 +538,113 @@ class TestFuelExhaustion(_Base):
         self.assertEqual(blue[0].assets['b1'].fuel, 0.0)
 
 
+class TestMissions(_Base):
+    """Porta delle missioni (Fase 3 del piano della Missione): validazione ed esito di prima forma."""
+
+    LETHAL = ER.ShotSpec(accuracy=1.0, destroy_capacity=1.0, rounds=1)
+
+    def _far(self, session_id='S-mission', t_end=3600.0, missions=None):
+        blue, red, default = self._scenario(red_offset=10_000_000.0)
+        order = self._order(session_id, default if missions is None else missions, t_end=t_end)
+        return SS.run_session(order, blue, red, _fire, reaction_profile_for=_profile), blue, red
+
+    def test_routes_parameters_are_gone(self):
+        blue, red, missions = self._scenario()
+
+        with self.assertRaises(TypeError):
+            SS.run_session(self._order(), blue, red, _fire, routes=MA.mission_routes(missions))
+
+    def test_one_outcome_per_mission(self):
+        outcome, _, _ = self._far()
+        self.assertEqual(sorted(outcome.mission_outcomes), ['M-north', 'M-south'])
+
+    def test_completed_mission(self):
+        outcome, _, _ = self._far()
+        north = outcome.mission_outcomes['M-north']
+        self.assertEqual(north.status, MissionStatus.COMPLETED)
+        self.assertEqual(north.actual_etas, (0.0, 200.0))
+
+        for asset_id in ('bn1', 'bn2'):
+            asset = north.asset_outcomes[asset_id]
+            self.assertEqual((asset.state, asset.end_reason), (AssetState.OPERATIONAL, AssetEndReason.ROUTE_COMPLETED))
+            self.assertAlmostEqual(asset.end_time, 200.0)
+
+    def test_route_cut_by_the_session_end_fails(self):
+        outcome, _, _ = self._far(t_end=100.0)
+        north = outcome.mission_outcomes['M-north']
+        self.assertEqual(north.status, MissionStatus.FAILED)
+        self.assertEqual(north.actual_etas, (0.0, None))
+        self.assertEqual({(o.end_reason, o.end_time) for o in north.asset_outcomes.values()},
+                         {(AssetEndReason.SESSION_END, 100.0)})
+
+    def test_late_start_shifts_the_arrival(self):
+        blue, red, missions = self._scenario(red_offset=10_000_000.0)
+        late = _air_mission('M-late', blue[1], missions[1].route, [('bs1', 0.0)], start_time=150.0)
+        order = self._order('S-late', (missions[0], late))
+        outcome = SS.run_session(order, blue, red, _fire)
+        self.assertEqual(outcome.mission_outcomes['M-late'].actual_etas, (150.0, 350.0))
+        fuel = {e.asset_id: e.time for e in outcome.fuel_events}
+        self.assertAlmostEqual(fuel['bs1'], 350.0)
+
+    def test_asset_without_mission_stays_still(self):
+        blue, red, missions = self._scenario(red_offset=10_000_000.0)
+        outcome = SS.run_session(self._order('S-still', missions[:1]), blue, red, _fire)
+        self.assertEqual(sorted(e.asset_id for e in outcome.fuel_events), ['bn1', 'bn2'])
+        self.assertEqual(sorted(outcome.mission_outcomes), ['M-north'])
+
+    def test_destroyed_mission(self):
+        def fire(shooter, target):
+            return self.LETHAL if type(target).__name__ == 'Aircraft' else None
+
+        blue, red, missions = self._scenario()
+        outcome = SS.run_session(self._order('S-kill', missions), blue, red, fire, reaction_profile_for=_profile)
+        killed = {e.target_id: e.time for e in outcome.damage_events if e.destroyed}
+        # Fronte est: un solo aereo, abbattuto -> missione DESTROYED.
+        self.assertIn('bs1', killed)
+        self.assertEqual(outcome.mission_outcomes['M-south'].status, MissionStatus.DESTROYED)
+
+        for mission_id in ('M-north', 'M-south'):
+            mission = outcome.mission_outcomes[mission_id]
+            all_killed = all(asset_id in killed for asset_id in mission.asset_outcomes)
+            self.assertEqual(mission.status is MissionStatus.DESTROYED, all_killed, mission_id)
+
+            for asset_id, asset in mission.asset_outcomes.items():
+                if asset_id in killed:
+                    self.assertEqual((asset.state, asset.end_reason), (AssetState.DESTROYED, AssetEndReason.DESTROYED))
+                    self.assertEqual(asset.end_time, killed[asset_id])
+                else:
+                    self.assertEqual(asset.end_reason, AssetEndReason.ROUTE_COMPLETED)
+
+            if not all_killed:
+                # Un superstite arriva all'ultimo punto (200 s, dentro la sessione): COMPLETED.
+                self.assertEqual(mission.status, MissionStatus.COMPLETED)
+
+    def test_mission_of_a_block_not_passed_raises(self):
+        blue, red, missions = self._scenario()
+
+        with self.assertRaises(ValueError):
+            SS.run_session(self._order('S', missions), blue[:1], red, _fire)
+
+    def test_mission_asset_of_another_block_raises(self):
+        blue, red, missions = self._scenario()
+        stolen = _air_mission('M-stolen', blue[1], missions[1].route, [('bs1', 0.0), ('bn1', 300.0)])
+
+        with self.assertRaises(ValueError):
+            SS.run_session(self._order('S', (stolen,)), blue, red, _fire)
+
+    def test_missions_do_not_change_the_draws(self):
+        """La missione e' ancora solo un contenitore (F3): l'RNG resta per forza, mission_id None."""
+        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=SessionOrder.rng) as spy:
+            self._run('S-rng')
+
+        self.assertTrue(spy.call_args_list)
+        self.assertTrue(all(call.kwargs.get('mission_id') is None for call in spy.call_args_list))
+
+
 class TestInputs(_Base):
 
     def test_force_outside_force_ids_raises(self):
-        blue, red, routes = self._scenario()
+        blue, red, _ = self._scenario()
         order = SessionOrder('S', t_start=0.0, t_end=60.0, force_ids=(blue[0].id,))
 
         with self.assertRaises(ValueError):

@@ -215,7 +215,8 @@ class TestS2PreliminarySEAD(F.LoggerSilencer, unittest.TestCase):
     def _strike(cls, session_id, strike, sam, target):
         fire = F.make_fire_control(roles={asset_id: 'strike' for asset_id in strike.assets})
         return F.run(session_id, [strike], [sam, target], fire, duration=3_600.0,
-                     routes=F.routes_for(strike, [(20_000.0, 0.0)]))
+                     missions=F.missions_for(strike, [(20_000.0, 0.0)], mission_type='Strike',
+                                             target=F.group_target('Red-Target')))
 
     @classmethod
     def setUpClass(cls):
@@ -230,7 +231,9 @@ class TestS2PreliminarySEAD(F.LoggerSilencer, unittest.TestCase):
             sead = cls._package('Blue-SEAD', 5_000.0, 'SEAD', 'sead')
             fire = F.make_fire_control(roles={asset_id: 'sead' for asset_id in sead.assets})
             cls.sead_runs.append((sam, F.run(f'{session_id}-sead', [sead], [sam], fire, duration=3_600.0,
-                                             routes=F.routes_for(sead, [(-20_000.0, 5_000.0)]))))
+                                             missions=F.missions_for(sead, [(-20_000.0, 5_000.0)],
+                                                                     mission_type='SEAD',
+                                                                     target=F.group_target('Red-SAM')))))
 
             strike = cls._package('Blue-Strike', 0.0, 'Strike', 'str')
             cls.after_sead.append((strike, cls._strike(session_id, strike, sam, target)))
@@ -291,9 +294,11 @@ class TestS3StealthVersusMass(F.LoggerSilencer, unittest.TestCase):
         red = F.build_force('Red-Mass', 'Red', [F.Unit('aircraft', 'F-15C Eagle', 8, origin=(100_000.0, 0.0),
                                                        step=(0.0, 1_000.0), prefix='f', loadout='Eagle Sweep')],
                             mil_category=F.AIR_UNIT)
-        routes = F.routes_for(blue, [(100_000.0, 0.0)])
-        routes.update(F.routes_for(red, [(-100_000.0, 0.0)]))
-        return blue, red, routes
+        missions = F.missions_for(blue, [(100_000.0, 0.0)], mission_type='Fighter_Sweep',
+                                  target=F.group_target('Red-Mass'))
+        missions += F.missions_for(red, [(-100_000.0, 0.0)], mission_type='Fighter_Sweep',
+                                   target=F.group_target('Blue-Stealth'))
+        return blue, red, missions
 
     @classmethod
     def setUpClass(cls):
@@ -302,12 +307,12 @@ class TestS3StealthVersusMass(F.LoggerSilencer, unittest.TestCase):
 
         for session_id in cls.SEEDS:
             for bucket, stealthy in ((cls.control, False), (cls.stealth, True)):
-                blue, red, routes = cls._build()
+                blue, red, missions = cls._build()
                 blue_ids = set(blue.assets)
                 factor = (lambda observer, target: cls.STEALTH_FACTOR if target.id in blue_ids else 1.0) \
                     if stealthy else None
                 bucket.append(F.run(session_id, [blue], [red], F.make_fire_control(), duration=3_600.0,
-                                    routes=routes, detection_factor=factor))
+                                    missions=missions, detection_factor=factor))
 
     @staticmethod
     def _totals(outcomes):
@@ -364,10 +369,10 @@ class TestS4SAMAsThirdComponent(F.LoggerSilencer, unittest.TestCase):
             red.append(F.build_force('Red-SAM', 'Red', [F.Unit('vehicle', '9K37-Buk', 2, origin=(-40_000.0, 5_000.0),
                                                                step=(0.0, 400.0), prefix='sam')]))
 
-        routes = F.routes_for(blue, [(-3_000.0, 0.0)])
-        routes.update(F.routes_for(cas, [(5_000.0, 0.0)]))
+        missions = F.missions_for(blue, [(-3_000.0, 0.0)], mission_type='Attack', target=F.group_target('Red-Armor'))
+        missions += F.missions_for(cas, [(5_000.0, 0.0)], mission_type='CAS', target=F.group_target('Red-Armor'))
         fire = F.make_fire_control(roles={asset_id: 'strike' for asset_id in cas.assets})
-        return [blue, cas], red, routes, fire
+        return [blue, cas], red, missions, fire
 
     @classmethod
     def setUpClass(cls):
@@ -376,8 +381,8 @@ class TestS4SAMAsThirdComponent(F.LoggerSilencer, unittest.TestCase):
 
         for session_id in cls.SEEDS:
             for with_sam in (False, True):
-                blue, red, routes, fire = cls._build(with_sam)
-                outcome = F.run(session_id, blue, red, fire, duration=3_600.0, routes=routes)
+                blue, red, missions, fire = cls._build(with_sam)
+                outcome = F.run(session_id, blue, red, fire, duration=3_600.0, missions=missions)
                 cls.runs[with_sam].append((blue, red, outcome))
 
     def _cas_damage_on_armor(self, with_sam):
@@ -456,9 +461,10 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
                 F.Unit('vehicle', 'BMP-2', 3, origin=(600_000.0, 0.0), step=(0.0, 200.0), prefix='tgt'),
                 F.Unit('vehicle', '2S19-Msta', 2, origin=(600_500.0, 0.0), step=(0.0, 200.0), prefix='art')]),
         ]
-        routes = F.routes_for(strike, [(650_000.0, 0.0)])
+        missions = F.missions_for(strike, [(650_000.0, 0.0)], mission_type='Strike',
+                                  target=F.group_target('Red-Target'))
         fire = F.make_fire_control(roles={asset_id: 'strike' for asset_id in strike.assets})
-        return strike, reds, routes, fire
+        return strike, reds, missions, fire
 
     @classmethod
     def setUpClass(cls):
@@ -467,8 +473,8 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
 
         for session_id in cls.SEEDS:
             for bucket, thresholds in ((cls.press_on, PRESS_ON), (cls.default, None)):
-                strike, reds, routes, fire = cls._build()
-                outcome = F.run(session_id, [strike], reds, fire, duration=7_200.0, routes=routes,
+                strike, reds, missions, fire = cls._build()
+                outcome = F.run(session_id, [strike], reds, fire, duration=7_200.0, missions=missions,
                                 thresholds=thresholds)
                 bucket.append((strike, reds, outcome))
 
@@ -569,21 +575,22 @@ class TestS6CarrierGroupVersusCoastalDefence(F.LoggerSilencer, unittest.TestCase
                                                                 origin=(0.0, 90_000.0), step=(5_000.0, 0.0),
                                                                 prefix='fsg')],
                                  mil_category=F.NAVAL_UNIT)
-        routes = F.routes_for(csg, [(-60_000.0, 0.0)])
-        routes.update(F.routes_for(wing, [(5_000.0, 0.0)]))
-        return [csg, wing], [coast, flotilla], routes
+        missions = F.missions_for(csg, [(-60_000.0, 0.0)], mission_type='Shore_Bombardment',
+                                  target=F.group_target('Red-Coast'))
+        missions += F.missions_for(wing, [(5_000.0, 0.0)], mission_type='Strike', target=F.group_target('Red-Coast'))
+        return [csg, wing], [coast, flotilla], missions
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        blue, red, routes = cls._build()
-        cls.windows = CS.schedule_contacts(blue, red, 7_200.0, routes=routes)
+        blue, red, missions = cls._build()
+        cls.windows = CS.schedule_contacts(blue, red, 7_200.0, routes=F.mission_routes(missions))
         cls.window_types = _type_of(blue + red)
         cls.runs = []
 
         for session_id in cls.SEEDS:
-            blue, red, routes = cls._build()
-            outcome = F.run(session_id, blue, red, F.make_fire_control(), duration=7_200.0, routes=routes,
+            blue, red, missions = cls._build()
+            outcome = F.run(session_id, blue, red, F.make_fire_control(), duration=7_200.0, missions=missions,
                             thresholds=PRESS_ON)
             cls.runs.append((_type_of(blue + red), outcome))
 
@@ -670,9 +677,15 @@ class TestS7LogisticInterdiction(F.LoggerSilencer, unittest.TestCase):
             F.Unit('aircraft', 'F-15C Eagle', 2, origin=(-148_000.0, 2_000.0), step=(0.0, 600.0),
                    prefix='esc', loadout='Eagle Escort')], mil_category=F.AIR_UNIT)
         roles = {a: ('strike' if '/str' in a else 'fighter') for a in package.assets}
-        routes = F.routes_for(package, [(20_000.0, 0.0)])
-        routes.update(F.routes_for(escort, [(-60_000.0, 0.0)]))
-        return package, depot, escort, routes, F.make_fire_control(roles=roles)
+        strikers = [a for a in package.assets if '/str' in a]
+        missions = F.missions_for(package, [(20_000.0, 0.0)], mission_type='Strike', only=strikers,
+                                  target=F.group_target('Red-Depot'))
+        missions += F.missions_for(package, [(20_000.0, 0.0)], mission_type='Escort',
+                                   only=[a for a in package.assets if a not in strikers],
+                                   target=F.group_target(missions[0].mission_id))
+        missions += F.missions_for(escort, [(-60_000.0, 0.0)], mission_type='CAP',
+                                   target=F.zone_target((-60_000.0, 0.0), 30_000.0))
+        return package, depot, escort, missions, F.make_fire_control(roles=roles)
 
     @classmethod
     def setUpClass(cls):
@@ -680,8 +693,8 @@ class TestS7LogisticInterdiction(F.LoggerSilencer, unittest.TestCase):
         cls.runs = []
 
         for session_id in cls.SEEDS:
-            package, depot, escort, routes, fire = cls._build()
-            outcome = F.run(session_id, [package], [depot, escort], fire, duration=3_600.0, routes=routes)
+            package, depot, escort, missions, fire = cls._build()
+            outcome = F.run(session_id, [package], [depot, escort], fire, duration=3_600.0, missions=missions)
             cls.runs.append((depot, outcome))
 
     def test_target_is_really_not_military(self):

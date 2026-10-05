@@ -32,8 +32,9 @@ parcheggio). Restano di PRIMA STESURA (stime di progetto, non dati tarati): `EMC
 
 ## Cosa NON c'e' (di proposito)
   * Nessuna logica di calcolo (ETA derivate, posizioni di formazione, esito di un'Operazione):
-    arrivano con le fasi successive del piano. Solo validazione strutturale.
-  * Nessun modulo li usa ancora: nessun cambio di comportamento del motore.
+    solo validazione strutturale. Dalla F3 la logica che ricava rotta, partenza e velocita' per
+    asset e' in `Logic/Mission_Adapter`, e `Command/Session_Types.SessionOrder` porta le missioni
+    fino a `Logic/Session_Simulator.run_session` (che produce i `MissionOutcome`).
   * Condizioni sullo stato e re-scheduling (N2.d opzione C, R4 seconda parte).
 
 Stile di `Command/Attack_Types.py` e `Command/Session_Types.py`: dataclass immutabili, validazione

@@ -68,13 +68,23 @@ def _build():
         F.Unit('vehicle', '9K35-Strela-10', 1, origin=(500.0, -300.0), prefix='shorad'),
         F.Unit('vehicle', 'ZSU-23-4-Shilka', 1, origin=(500.0, 600.0), prefix='aaa'),
         F.Unit('vehicle', 'BMP-2', 2, origin=(0.0, 0.0), step=(0.0, 300.0), prefix='ifv', sensors=VISUAL)])
-    routes = F.routes_for(blue, [(20_000.0, 0.0)])
-    return blue, red, routes
+    # Tre modelli a velocita' diverse -> tre missioni dello stesso blocco: CAS (A-10C), scorta
+    # (F-16C) e bombardamento (B-52H), tutte in transito sulla difesa rossa.
+    cas = [a for a in blue.assets if '/cas' in a]
+    escort = [a for a in blue.assets if '/ftr' in a]
+    missions = F.missions_for(blue, [(20_000.0, 0.0)], mission_type='CAS', only=cas,
+                              target=F.group_target('Red-AD'))
+    missions += F.missions_for(blue, [(20_000.0, 0.0)], mission_type='Escort', only=escort,
+                               target=F.group_target(missions[0].mission_id))
+    missions += F.missions_for(blue, [(20_000.0, 0.0)], mission_type='Strike',
+                               only=[a for a in blue.assets if a not in cas and a not in escort],
+                               target=F.group_target('Red-AD'))
+    return blue, red, missions
 
 
 def _run(session_id):
-    blue, red, routes = _build()
-    outcome = F.run(session_id, [blue], [red], FC.make_registry_fire_control(), duration=DURATION, routes=routes,
+    blue, red, missions = _build()
+    outcome = F.run(session_id, [blue], [red], FC.make_registry_fire_control(), duration=DURATION, missions=missions,
                     thresholds=BOTH_HOLD)
     return blue, red, outcome
 
@@ -141,7 +151,8 @@ class TestS19RegistryFireControl(F.LoggerSilencer, unittest.TestCase):
         fire_control = FC.make_registry_fire_control()
 
         for blue, red, outcome in self.runs:
-            _, _, routes = _build()
+            _, _, missions = _build()
+            routes = F.mission_routes(missions)
             checked = 0
 
             for event in F.damage_on(outcome, blue.assets):

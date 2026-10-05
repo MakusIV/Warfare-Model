@@ -29,6 +29,10 @@ tratta come modulo di test; le classi di supporto non ereditano da `unittest.Tes
 * **Rotte** — `straight_route` costruisce una `DataType.Route` reale su una spezzata, come
   gia' fanno Test_Contact_Scheduler/Test_Session_Simulator; `route_for` ne ricava la
   velocita' dal profilo del registro dell'asset.
+* **Missioni** (Fase 3 del piano della Missione) — `missions_for` trasforma le rotte di
+  `routes_for` in `Mission` (rotta di riferimento + offset di formazione): dal 2026-10-05 le
+  missioni sono l'unica strada con cui un asset si muove in `run_session`. V. "Migrazione alle
+  missioni" sotto.
 * **fire_control di riferimento** — `make_fire_control` (v. sotto).
 * **Esecuzione** — `run(...)`: `SessionOrder` + `run_session` in una chiamata;
   `Scenario` (forze + rotte + fire_control + durata, con `.run(session_id)`);
@@ -88,6 +92,28 @@ ricevono quindi l'id esplicito DOPO la costruzione tramite il setter `Asset.id`,
 gia' Test_Session_Simulator. Con gli stessi argomenti lo stesso scenario e' ricostruito
 identico, id compresi: e' la base del test di determinismo.
 
+## Migrazione alle missioni (F3, 2026-10-05)
+
+Ogni asset che prima riceveva una rotta in `routes` e' ora asset di una `Mission`; gli asset
+fermi (difese, siti SAM, blocchi in posizione) NON sono missioni (saranno la postura continua
+della F4). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
+  * una missione = asset di UN blocco con la stessa velocita' sugli archi (stesso profilo del
+    registro: in un blocco misto, es. carri M1A2 + M2 Bradley, i due modelli procedono a
+    velocita' diverse e diventano due missioni dello stesso blocco);
+  * dentro una missione la rotta di riferimento e' quella del primo asset (per id) e gli altri
+    hanno l'offset di formazione che riproduce la loro rotta traslata; l'offset e' accettato
+    solo se `Mission_Adapter.asset_route` ridà gli STESSI punti (confronto esatto), altrimenti
+    l'asset ha una missione propria (succede con rotte che cambiano direzione: una traslata
+    rigida non e' un offset nella terna di marcia, v. `Mission_Adapter`).
+In F4 la missione diventa l'unita' d'ingaggio: dove un blocco ha piu' missioni, queste
+disingaggeranno separatamente.
+
+**Semplificazione di scenario: rotta senza rientro, da completare con RTB in F5-F6.** Le
+rotte aeree degli scenari partono in volo (`start_mode` AIR) e finiscono sull'obiettivo o
+oltre, senza tornare in base; per non indebolire la validazione di `Mission` (D2.c: una
+missione aerea finisce con LAND) l'ultimo punto ha ruolo LAND. Vale per OGNI missione aerea
+costruita da `missions_for`.
+
 ## Cosa NON fa
 - Non sceglie armi dai registri, non calcola esiti, non campiona nulla: nessun RNG qui.
 - Nessun componente LLM, in nessuna forma.
@@ -113,12 +139,24 @@ from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
 from Code.Dynamic_War_Manager.Source.Asset.Ship import Ship
 from Code.Dynamic_War_Manager.Source.Asset.Vehicle import Vehicle
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import DEFAULT_DETECTION_RANGE_TYPE, DETECTION_MODES
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    Mission,
+    MissionAsset,
+    MissionWaypoint,
+    StartMode,
+    Target,
+    TargetKind,
+    TargetProvenance,
+    WaypointRole,
+    route_waypoints,
+)
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import SessionOrder, SessionOutcome
 from Code.Dynamic_War_Manager.Source.Context.Context import MILITARY_CATEGORY
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 from Code.Dynamic_War_Manager.Source.Logic import Session_Simulator as SS
 
 
@@ -134,7 +172,7 @@ LOGGER_TARGETS = tuple(_SOURCE + name + '.logger' for name in (
     'Block.Storage', 'Block.Urban', 'DataType.State', 'Logic.Air_Route_Manager',
     'Logic.Engagement_Resolver', 'Logic.Contact_Scheduler', 'Logic.Fuel_Model',
     'Logic.Damage_Model', 'Logic.Session_Simulator', 'Logic.Fire_Control', 'Logic.Weapon_Delivery',
-    'Command.Session_Types',
+    'Command.Session_Types', 'Command.Mission_Types', 'Logic.Mission_Adapter',
     'Context.Reaction_Profile', 'Context.Doctrine'))
 
 
@@ -522,6 +560,148 @@ def routes_for(force, points: Sequence[Sequence[float]], *, offset_with_position
     return routes
 
 
+# ── MISSIONI ──────────────────────────────────────────────────────────────────
+
+_DOMAIN_OF_CLASS = {'Aircraft': 'air', 'Ship': 'sea'}
+
+
+def domain_of(asset) -> str:
+    """Dominio di missione dell'asset: 'air' (Aircraft), 'sea' (Ship), 'ground' (il resto)."""
+    return _DOMAIN_OF_CLASS.get(type(asset).__name__, 'ground')
+
+
+def group_target(block_id: str, observed_at: float = 0.0) -> Target:
+    """Bersaglio GROUP (un blocco) osservato all'istante `observed_at` [s dall'inizio sessione]."""
+    return Target(kind=TargetKind.GROUP, target_id=block_id, provenance=TargetProvenance.OBSERVED,
+                  observed_at=observed_at)
+
+
+def zone_target(center: Sequence[float], radius_m: float) -> Target:
+    """Bersaglio ZONE dichiarato dal pianificatore (centro (x, y[, z]), raggio [m])."""
+    return Target(kind=TargetKind.ZONE, position=_point(center), radius_m=radius_m)
+
+
+def _mission_waypoints(route: Route, domain: str) -> Tuple[MissionWaypoint, ...]:
+    """Piano dei punti di una rotta di scenario: aria NAV ... LAND (semplificazione di scenario:
+    rotta senza rientro, v. docstring), terra/mare DEPARTURE ... OBJECTIVE."""
+    waypoints = route_waypoints(route)
+    first, last = ((WaypointRole.NAV, WaypointRole.LAND) if domain == 'air'
+                   else (WaypointRole.DEPARTURE, WaypointRole.OBJECTIVE))
+    roles = [first] + [WaypointRole.NAV] * (len(waypoints) - 2) + [last]
+    return tuple(MissionWaypoint(waypoint=wp, role=role) for wp, role in zip(waypoints, roles))
+
+
+def _asset_role(domain: str, index: int) -> str:
+    """Posizione in formazione (D3.c): il primo e' 'lead'; poi aria 'wingman'/'element_lead'
+    alternati, terra/mare 'main'."""
+    if index == 0:
+        return 'lead'
+
+    if domain == 'air':
+        return 'element_lead' if index % 2 == 0 else 'wingman'
+
+    return 'main'
+
+
+def _xyz_points(route: Route) -> List[Tuple[float, float, float]]:
+    return [(float(w.point.x), float(w.point.y), float(w.point.z)) for w in route_waypoints(route)]
+
+
+def _offset_of(reference: Route, route: Route) -> Tuple[float, float, float]:
+    """Offset (avanti, destra, alto) che porta il primo punto di `reference` sul primo di `route`,
+    nella terna del primo tratto di `reference` (stessa convenzione di Mission_Adapter)."""
+    ref, own = _xyz_points(reference), _xyz_points(route)
+    dx, dy, dz = own[0][0] - ref[0][0], own[0][1] - ref[0][1], own[0][2] - ref[0][2]
+
+    if dx == 0.0 and dy == 0.0:
+        return 0.0, 0.0, dz
+
+    hx, hy = ref[1][0] - ref[0][0], ref[1][1] - ref[0][1]
+    norm = (hx * hx + hy * hy) ** 0.5
+    hx, hy = hx / norm, hy / norm
+    return dx * hx + dy * hy, dx * hy - dy * hx, dz
+
+
+def _scenario_mission(mission_id: str, force, domain: str, mission_type: str, target: Target,
+                      reference: Route, assets: Sequence[MissionAsset]) -> Mission:
+    return Mission(mission_id=mission_id, block_id=force.id, domain=domain, mission_type=mission_type,
+                   target=target, assets=tuple(assets), route=reference,
+                   waypoints=_mission_waypoints(reference, domain), start_time=0.0,
+                   start_mode=StartMode.AIR if domain == 'air' else None)
+
+
+def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str, target: Target,
+                 name: Optional[str] = None, offset_with_position: bool = True,
+                 speed: Optional[float] = None, only: Optional[Iterable[str]] = None) -> List[Mission]:
+    """Le missioni che riproducono ESATTAMENTE `routes_for(force, points, ...)` (v. docstring).
+
+    Args:
+        force: il blocco (tutti i suoi asset ricevono una missione).
+        points/offset_with_position/speed: come `routes_for`.
+        mission_type/target: tipo di missione del dominio e bersaglio (non ancora usato dal
+            motore, F7).
+        name: radice degli id di missione (default `<force.id>:<mission_type>`); con piu'
+            missioni si aggiunge `-<n>`.
+        only: se dato, solo questi asset (es. la parte strike e la parte scorta di un pacchetto,
+            con tipi di missione diversi); gli offset restano quelli di `routes_for` sull'intera
+            forza, quindi la geometria non cambia.
+
+    Returns:
+        Lista di `Mission` (start_time 0, aria `start_mode` AIR), una o piu' per blocco.
+    """
+    routes = routes_for(force, points, offset_with_position=offset_with_position, speed=speed)
+
+    if only is not None:
+        wanted = set(only)
+        routes = {asset_id: route for asset_id, route in routes.items() if asset_id in wanted}
+
+    root = name or f'{force.id}:{mission_type}'
+    groups: List[Tuple[Route, List[Tuple[str, Tuple[float, float, float]]]]] = []
+
+    for asset_id in sorted(routes):
+        route = routes[asset_id]
+        domain = domain_of(force.assets[asset_id])
+        speeds = tuple(edge.speed for edge in route.edges.values())
+
+        for reference, members in groups:
+            if tuple(edge.speed for edge in reference.edges.values()) != speeds \
+                    or domain_of(force.assets[members[0][0]]) != domain:
+                continue
+
+            # L'offset e' accettato solo se l'adapter ridà ESATTAMENTE la rotta dell'asset.
+            offset = _offset_of(reference, route)
+            probe = _scenario_mission('probe', force, domain, mission_type, target, reference,
+                                      (MissionAsset(asset_id, 'lead', *offset),))
+            derived, _ = MA.asset_route(probe, probe.assets[0])
+
+            if _xyz_points(derived) == _xyz_points(route):
+                members.append((asset_id, offset))
+                break
+        else:
+            groups.append((route, [(asset_id, (0.0, 0.0, 0.0))]))
+
+    missions = []
+
+    for index, (reference, members) in enumerate(groups):
+        domain = domain_of(force.assets[members[0][0]])
+        assets = []
+
+        for position, (asset_id, offset) in enumerate(members):
+            loadout = getattr(force.assets[asset_id], 'assigned_loadout', None) if domain == 'air' else None
+            assets.append(MissionAsset(asset_id, _asset_role(domain, position), *offset,
+                                       loadout=loadout if isinstance(loadout, str) else None))
+
+        mission_id = root if len(groups) == 1 else f'{root}-{index + 1}'
+        missions.append(_scenario_mission(mission_id, force, domain, mission_type, target, reference, assets))
+
+    return missions
+
+
+def mission_routes(missions: Iterable[Mission], t0: float = 0.0) -> Dict[str, Route]:
+    """`{asset_id: Route}` delle missioni (per interrogare direttamente lo scheduler)."""
+    return MA.mission_routes(missions, t0)
+
+
 # ── FIRE CONTROL DI RIFERIMENTO ───────────────────────────────────────────────
 
 # ShotSpec DICHIARATE DI TEST (v. docstring): ordini di grandezza plausibili, non calibrati,
@@ -661,9 +841,11 @@ def make_order(session_id: str, duration: float, t_start: float = 0.0, **kwargs)
 
 
 def run(session_id: str, forces_a, forces_b, fire_control: Callable, *, duration: float,
-        t_start: float = 0.0, order_kwargs: Optional[Mapping] = None, **run_kwargs) -> SessionOutcome:
-    """`make_order` + `Session_Simulator.run_session`. `run_kwargs` passati tali e quali."""
-    order = make_order(session_id, duration, t_start, **dict(order_kwargs or {}))
+        t_start: float = 0.0, missions: Iterable[Mission] = (), order_kwargs: Optional[Mapping] = None,
+        **run_kwargs) -> SessionOutcome:
+    """`make_order` (con le `missions`) + `Session_Simulator.run_session`. `run_kwargs` passati
+    tali e quali."""
+    order = make_order(session_id, duration, t_start, missions=tuple(missions), **dict(order_kwargs or {}))
     return SS.run_session(order, list(forces_a), list(forces_b), fire_control, **run_kwargs)
 
 
@@ -678,7 +860,7 @@ def timed(function: Callable, *args, **kwargs):
 
 @dataclass
 class Scenario:
-    """Uno scenario pronto da eseguire: forze dei due lati, rotte, fire_control, durata.
+    """Uno scenario pronto da eseguire: forze dei due lati, missioni, fire_control, durata.
 
     `run(session_id, **kwargs)` chiama `run_session` (gli asset vengono MUTATI: per una
     replica si ricostruisce lo scenario, non lo si riesegue). `kwargs` vanno a
@@ -686,7 +868,7 @@ class Scenario:
     """
     forces_a: List
     forces_b: List
-    routes: Dict[str, Route]
+    missions: List[Mission]
     fire_control: Callable
     duration: float
     roles: Dict[str, str] = field(default_factory=dict)
@@ -694,6 +876,11 @@ class Scenario:
     @property
     def forces(self) -> List:
         return list(self.forces_a) + list(self.forces_b)
+
+    @property
+    def routes(self) -> Dict[str, Route]:
+        """Rotte per asset ricavate dalle missioni (sola lettura)."""
+        return mission_routes(self.missions)
 
     def force(self, force_id: str):
         for candidate in self.forces:
@@ -703,7 +890,7 @@ class Scenario:
 
     def run(self, session_id: str, **kwargs) -> SessionOutcome:
         return run(session_id, self.forces_a, self.forces_b, self.fire_control,
-                   duration=self.duration, routes=self.routes, **kwargs)
+                   duration=self.duration, missions=self.missions, **kwargs)
 
 
 def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_ifv: int = 2,
@@ -737,7 +924,8 @@ def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_i
         Unit('vehicle', '9K35-Strela-10', 1, origin=(1_000.0, -300.0), prefix='sam')])
 
     forces_a = [blue]
-    routes = routes_for(blue, [(2_000.0, 0.0)])
+    # Attacco terrestre sulla linea Red: M1A2 e M2 hanno velocita' diverse -> due missioni.
+    missions = missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack', target=group_target('Red-Line'))
     roles: Dict[str, str] = {}
 
     if with_cas:
@@ -745,10 +933,10 @@ def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_i
             Unit('aircraft', 'A-10C Thunderbolt II', 2, origin=(-60_000.0, 0.0, 3_000.0), step=(0.0, 500.0),
                  prefix='cas', loadout='Maverick/Gun CAS')], mil_category=AIR_UNIT)
         forces_a.append(cas)
-        routes.update(routes_for(cas, [(10_000.0, 0.0)]))
+        missions += missions_for(cas, [(10_000.0, 0.0)], mission_type='CAS', target=group_target('Red-Line'))
         roles.update({asset_id: 'strike' for asset_id in cas.assets})
 
-    return Scenario(forces_a=forces_a, forces_b=[red], routes=routes,
+    return Scenario(forces_a=forces_a, forces_b=[red], missions=missions,
                     fire_control=make_fire_control(roles=roles), duration=3_600.0, roles=roles)
 
 

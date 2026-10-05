@@ -25,10 +25,13 @@ rimozione" non ha quindi nulla da rimuovere. Per lo stato attuale del motore il 
 agnosticismo e' un test di **contratto**, in due parti:
 
 a. **Strutturale** — la catena delle porte (`SessionOrder`, `SessionOutcome`,
-   `ForceOutcome`, `DamageEvent`, `AmmunitionEvent`, `InterceptionEvent`, `FuelEvent`) ha
+   `ForceOutcome`, `DamageEvent`, `AmmunitionEvent`, `InterceptionEvent`, `FuelEvent` e, dalla
+   F3 del piano della Missione, `Operation`, `MissionOutcome`, `AssetMissionOutcome`) ha
    SOLO campi di tipo
-   dominio: id stringa, secondi float, frazioni/interi, booleani, tuple di altri tipi della
-   catena; nessun nome di campo del lessico del simulatore; i moduli del motore non
+   dominio: id stringa, secondi float, frazioni/interi, booleani, enum di dominio, tuple e
+   mapping di altri tipi della catena; la `Mission` e' un tipo di dominio composto (porta la
+   geometria `DataType.Route`), accettato come tale e coperto da Test_Mission_Types, ma anche
+   i nomi dei suoi campi sono controllati; nessun nome di campo del lessico del simulatore; i moduli del motore non
    importano nulla di legato al simulatore (lettori `.miz`/Lua, orologio del simulatore).
    E, sull'esito reale di uno scenario, ogni id presente e' un id di dominio costruito dal
    core (id di forza/asset/sessione), mai un id di missione del simulatore.
@@ -51,7 +54,10 @@ import typing
 import unittest
 from collections import abc
 
+from enum import Enum
+
 from Code.Dynamic_War_Manager.Source.Test import Scenario_Fixtures as F
+from Code.Dynamic_War_Manager.Source.Command import Mission_Types as MT
 from Code.Dynamic_War_Manager.Source.Command import Session_Types as ST
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
@@ -133,7 +139,16 @@ _ATOMIC = (str, float, int, bool, type(None))
 
 # Contenitori della catena delle porte: i soli tipi composti ammessi dentro un campo.
 _PORT_TYPES = (ST.SessionOrder, ST.SessionOutcome, ER.ForceOutcome, DM.DamageEvent,
-               ER.AmmunitionEvent, ER.InterceptionEvent, FM.FuelEvent)
+               ER.AmmunitionEvent, ER.InterceptionEvent, FM.FuelEvent,
+               MT.Operation, MT.MissionOutcome, MT.AssetMissionOutcome)
+
+# Tipi di dominio composti ammessi come foglie (non scomposti): la `Mission` porta la geometria
+# della rotta (`DataType.Route`, sympy) e il profilo d'attacco; la sua forma e' verificata da
+# Test_Mission_Types. I NOMI dei campi di tutti i tipi di Mission_Types sono comunque controllati.
+_DOMAIN_COMPOSITES = (MT.Mission,)
+_NAMED_TYPES = _PORT_TYPES + tuple(cls for cls in vars(MT).values()
+                                   if isinstance(cls, type) and dataclasses.is_dataclass(cls)
+                                   and cls.__module__ == MT.__name__)
 
 # Lessico del simulatore che non deve comparire in un nome di campo del contratto
 # (confronto su nome normalizzato: minuscolo, senza '_').
@@ -149,8 +164,11 @@ _FORBIDDEN_IMPORTS = ('lupa', 'zipfile', 'minizip')
 
 def _type_is_domain(tp) -> bool:
     """True se il tipo annotato e' composto solo di tipi atomici e tipi della catena."""
-    if tp in _ATOMIC or tp in _PORT_TYPES:
+    if tp in _ATOMIC or tp in _PORT_TYPES or tp in _DOMAIN_COMPOSITES:
         return True
+
+    if isinstance(tp, type) and issubclass(tp, Enum):
+        return True   # enum di dominio (valori stringa), es. MissionStatus
 
     origin = typing.get_origin(tp)
     args = typing.get_args(tp)
@@ -180,7 +198,7 @@ class TestAgnosticContractStructure(unittest.TestCase):
                                     f"{port.__name__}.{field.name}: {hints[field.name]!r}")
 
     def test_port_field_names_avoid_simulator_vocabulary(self):
-        for port in _PORT_TYPES:
+        for port in _NAMED_TYPES:
             for field in dataclasses.fields(port):
                 normalized = field.name.lower().replace('_', '')
 
@@ -229,6 +247,11 @@ class _OutcomeWalker:
         if dataclasses.is_dataclass(value) and not isinstance(value, type):
             for field in dataclasses.fields(value):
                 yield from cls.leaves(getattr(value, field.name), f'{path}.{field.name}')
+        elif isinstance(value, abc.Mapping):
+            for key, item in value.items():
+                yield from cls.leaves(item, f'{path}[{key!r}]')
+        elif isinstance(value, Enum):
+            yield path, value.value
         elif isinstance(value, (tuple, list)):
             for index, item in enumerate(value):
                 yield from cls.leaves(item, f'{path}[{index}]')
@@ -254,7 +277,7 @@ class TestAgnosticEndToEnd(F.LoggerSilencer, unittest.TestCase):
         cls.outcome = cls.scenario.run(cls.SESSIONS[0])
 
         # Mini-campagna: tre sessioni consecutive sulle STESSE forze (lo stato passa solo
-        # attraverso gli asset mutati), la seconda e la terza senza rotte (forze ferme).
+        # attraverso gli asset mutati), la seconda e la terza senza missioni (forze ferme).
         # NB: run_session non aggiorna `asset.position` a fine rotta (nessun movimento
         # fisico, v. il suo docstring): nelle sessioni 2-3 le forze ripartono dalle
         # posizioni iniziali. Qui non conta — si verifica la concatenazione dello stato di
@@ -264,10 +287,10 @@ class TestAgnosticEndToEnd(F.LoggerSilencer, unittest.TestCase):
         t_start = 0.0
 
         for index, session_id in enumerate(cls.SESSIONS):
-            routes = cls.campaign_scenario.routes if index == 0 else {}
+            missions = cls.campaign_scenario.missions if index == 0 else ()
             outcome = F.run(session_id, cls.campaign_scenario.forces_a, cls.campaign_scenario.forces_b,
                             cls.campaign_scenario.fire_control, duration=3_600.0, t_start=t_start,
-                            routes=routes)
+                            missions=missions)
             cls.campaign.append(outcome)
             t_start = outcome.t_end
 

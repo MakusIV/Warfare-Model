@@ -103,8 +103,11 @@ def run_variant(session_id: str, defence_model: str, defence_x: float, defence_y
     if targets_ifv_only:
         fire_control = ifv_only(fire_control)
 
-    outcome = F.run(session_id, [cas], [red], fire_control, duration=DURATION,
-                    routes=F.routes_for(cas, points), thresholds=BOTH_HOLD)
+    # Con la rotta di standoff (virata a x = -11 km e ritorno) la formazione TRASLATA di prima
+    # non e' un offset nella terna di marcia: ogni A-10C ha una missione propria.
+    missions = F.missions_for(cas, points, mission_type='CAS', target=F.group_target('Red-Line'))
+    outcome = F.run(session_id, [cas], [red], fire_control, duration=DURATION, missions=missions,
+                    thresholds=BOTH_HOLD)
     return red, cas, outcome
 
 

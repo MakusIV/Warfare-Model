@@ -8,7 +8,7 @@ di fuoco come funzione iniettata `fire_control(shooter, target) -> ShotSpec | Se
 (`Test/Scenario_Fixtures.py`). Questo modulo ne fornisce una che legge i registri veri:
 
     fire_control = make_registry_fire_control()
-    run_session(order, forces, routes, fire_control, ...)
+    run_session(order, forces_a, forces_b, fire_control, ...)   # rotte dalle missioni di `order`
 
 Dal 2026-09-26 (proposta A, `Analysis/Document/Proposta_Munizioni_Compatibili_e_Rotte_Attacco.md`)
 la fire control restituisce TUTTE le armi adatte, come tupla di `ShotSpec` in ordine di

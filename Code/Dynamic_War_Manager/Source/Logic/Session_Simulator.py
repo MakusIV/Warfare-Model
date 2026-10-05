@@ -29,6 +29,34 @@ Due tipi di evento di sessione, in un `heapq` con chiave `(t, tipo, id, sequenza
 - **MOVEMENT** — uno per asset con rotta schedulabile nella sessione; istante = fine del
   suo movimento dentro la sessione. Produce e applica il `FuelEvent` del tragitto.
 
+## Missioni (Fase 3 del piano della Missione)
+
+Dal 2026-10-05 le rotte arrivano SOLO dalle missioni dell'ordine (`SessionOrder.missions`):
+`Logic/Mission_Adapter.session_movements` ne ricava le mappe `routes`/`starts`/`speeds` per
+asset (rotta di riferimento + offset di formazione, partenza della missione, velocita' di
+missione), che il resto della fila consuma esattamente come prima. I parametri `routes`/
+`starts`/`speeds` di `run_session` sono stati RIMOSSI (decisione Q2 dell'utente: una sola
+strada). Gli asset senza missione restano fermi, come gli asset senza rotta di prima. Ogni
+missione deve riferirsi a un blocco passato fra le forze, e ogni suo asset deve appartenere a
+quel blocco (`Mission_Types.check_mission_assets`).
+
+La missione NON e' ancora l'unita' d'ingaggio (lo diventa in F4): ingaggi, RNG e disingaggio
+restano per forza (blocco), quindi a parita' di rotte l'esito e' identico a prima.
+
+**Esito di missione (prima forma)**, nel `SessionOutcome.mission_outcomes`. Per asset:
+  * DESTROYED (stato e motivo), all'istante del DamageEvent che lo distrugge (o a `t0` se era
+    gia' distrutto all'inizio);
+  * ROUTE_COMPLETED all'istante d'arrivo all'ultimo punto, se lo raggiunge dentro la sessione
+    (stato DAMAGED se la salute finale e' < 100, altrimenti OPERATIONAL);
+  * altrimenti SESSION_END alla fine della sessione: rotta tagliata dalla fine della sessione, o
+    missione senza rotta (sul posto), ancora in corso.
+Per missione: DESTROYED se tutti gli asset sono distrutti; COMPLETED se almeno un asset ha
+raggiunto l'ultimo punto PRIMA di un'eventuale distruzione; altrimenti FAILED ("non completata
+entro la sessione": manca uno stato "in corso", v. D4.e, che lo distinguerebbe da un
+fallimento vero). ETA effettive per punto: il primo passaggio fra gli asset non ancora
+distrutti, None se nessuno ci arriva dentro la sessione. Nessun criterio di stato (bingo,
+winchester, danno, minaccia): F6.
+
 A parita' d'istante ENGAGEMENT < MOVEMENT, poi l'id (stringa canonica, mai l'ordine di un
 dizionario Python). Le finestre di un asset mobile cadono tutte dentro lo span dei suoi
 tratti, quindi quando il suo MOVEMENT viene estratto ogni ingaggio che lo coinvolge e' gia'
@@ -72,9 +100,9 @@ per intervalli aggiungerebbe complessita' senza aggiungere correttezza.
 
 `SessionOrder.rng(mission_id=None, event_id=engagement_event_id(*forze), counter=0)`:
 
-- `mission_id=None`: `SessionOrder` non porta ancora missioni (v. il suo docstring, "Cosa
-  NON c'e'"); None e' il livello "di sessione" di `Session_Rng`. Quando nascera'
-  `Theater_Session_Manager` con le missioni, qui entrera' l'id di missione.
+- `mission_id=None`: None e' il livello "di sessione" di `Session_Rng`. Le missioni sono
+  nell'ordine dalla F3, ma l'ingaggio e' ancora fra FORZE (blocchi) e puo' coinvolgere piu'
+  missioni: l'id di missione entrera' nell'RNG in F4, con la missione come unita' d'ingaggio.
 - `event_id`: codifica JSON di `['engagement', id_1, id_2, ...]` con gli id della
   componente ORDINATI — funzione pura dell'INSIEME delle forze (id di dominio), mai
   dell'ordine di iterazione o di passaggio a `run_session`, e non ambigua anche con id che
@@ -108,9 +136,9 @@ selezione dell'arma dai registri resta fuori (rimandata dalla Fase 4).
 
 ## Carburante
 
-Per ogni asset con rotta in `routes` si prendono i tratti della rotta ritagliati alla
+Per ogni asset con rotta (dalle missioni) si prendono i tratti della rotta ritagliati alla
 sessione (stessa costruzione di `Contact_Scheduler.schedule_contacts`: `route_legs` +
-`clamp_legs`, partenza da `starts`, velocita' da `speeds`) e la distanza e' la somma delle
+`clamp_legs`, partenza e velocita' dalla missione) e la distanza e' la somma delle
 lunghezze dei tratti. Un solo `FuelEvent` per asset, all'istante di fine movimento.
 
 Regime (scelta dichiarata, la piu' semplice che distingua combattimento da crociera):
@@ -158,6 +186,14 @@ from math import sqrt
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import DEFAULT_DETECTION_RANGE_TYPE
+from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    AssetEndReason,
+    AssetMissionOutcome,
+    AssetState,
+    MissionOutcome,
+    MissionStatus,
+    check_mission_assets,
+)
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import (
     SessionOrder,
     SessionOutcome,
@@ -167,6 +203,7 @@ from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
 from Code.Dynamic_War_Manager.Source.Logic import Fuel_Model as FM
+from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 
 # LOGGING --
@@ -465,14 +502,96 @@ def _build_fuel(asset, distance: float, time: float, regime: str, provenance: st
     return event
 
 
+def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
+    """Ogni missione si riferisce a un blocco passato e i suoi asset gli appartengono."""
+    for mission in order.missions:
+        block = blocks.get(mission.block_id)
+
+        if block is None:
+            raise ValueError(f"mission {mission.mission_id!r}: block {mission.block_id!r} is not among the "
+                             f"forces passed ({sorted(blocks)})")
+
+        check_mission_assets(mission, block)
+
+
+def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict[str, float]:
+    """`{asset_id: istante di distruzione}`: primo DamageEvent `destroyed` della sessione, o `t0`
+    per un asset gia' distrutto all'inizio (nessun evento che lo distrugga in sessione)."""
+    destroyed: Dict[str, float] = {}
+
+    for result in results:
+        if result is None:
+            continue
+
+        for event in result.damage_events:
+            if event.destroyed and event.target_id is not None:
+                destroyed[event.target_id] = min(event.time, destroyed.get(event.target_id, event.time))
+
+    for asset_id, asset in assets.items():
+        if asset_id not in destroyed and getattr(asset, 'is_destroyed', lambda: False)():
+            destroyed[asset_id] = t0
+
+    return destroyed
+
+
+def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed: Mapping[str, float],
+                     session_end: float) -> MissionOutcome:
+    """Esito di missione di prima forma (regola nel docstring del modulo)."""
+    asset_outcomes = {}
+    reached = False
+    passages: List[Tuple[Tuple[float, ...], Optional[float]]] = []
+
+    for movement in movements:
+        asset_id = movement.asset_id
+        times = MA.waypoint_times(movement)
+        arrival = times[-1] if times else None
+        destroyed_at = destroyed.get(asset_id)
+        arrives = arrival is not None and arrival <= session_end + CS.TIME_EPS
+
+        if arrives and (destroyed_at is None or destroyed_at > arrival + CS.TIME_EPS):
+            reached = True
+
+        if destroyed_at is not None:
+            outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.DESTROYED, destroyed_at)
+        else:
+            asset = assets.get(asset_id)
+            health = getattr(asset, 'health', None)
+            state = AssetState.DAMAGED if isinstance(health, (int, float)) and health < 100 else AssetState.OPERATIONAL
+
+            if arrives:
+                outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.ROUTE_COMPLETED, arrival)
+            else:
+                outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.SESSION_END, session_end)
+
+        asset_outcomes[asset_id] = outcome
+        passages.append((times, destroyed_at))
+
+    if all(o.state is AssetState.DESTROYED for o in asset_outcomes.values()):
+        status = MissionStatus.DESTROYED
+    elif reached:
+        status = MissionStatus.COMPLETED
+    else:
+        status = MissionStatus.FAILED
+
+    # ETA effettive: per punto, il primo passaggio dentro la sessione fra gli asset non ancora
+    # distrutti. Con il percorso di riferimento i punti della rotta sono quelli della missione.
+    count = max((len(times) for times, _ in passages), default=0)
+    etas = []
+
+    for index in range(count):
+        candidates = [times[index] for times, destroyed_at in passages
+                      if index < len(times) and times[index] <= session_end + CS.TIME_EPS
+                      and (destroyed_at is None or destroyed_at > times[index] + CS.TIME_EPS)]
+        etas.append(min(candidates) if candidates else None)
+
+    return MissionOutcome(mission.mission_id, status, asset_outcomes=asset_outcomes, actual_etas=tuple(etas))
+
+
 # ── API PUBBLICA ──────────────────────────────────────────────────────────────
 
 def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 fire_control: Callable, *,
                 horizon: Optional[float] = None,
-                routes: Optional[Mapping[str, object]] = None,
-                starts: Optional[Mapping[str, float]] = None,
-                speeds: Optional[Mapping[str, float]] = None,
                 margin: float = 0.0,
                 range_type: str = DEFAULT_DETECTION_RANGE_TYPE,
                 thresholds: Optional[Dict] = None,
@@ -491,14 +610,13 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     Args:
         order: il `SessionOrder`. Ne vengono usati `session_id` (radice del seed),
             `t_start`, `t_end`, `force_ids` (se non vuoto: le forze passate devono esservi
-            elencate), `committed` e `salvo_window`, passati tali e quali al risolutore.
+            elencate), `committed` e `salvo_window`, passati tali e quali al risolutore, e
+            `missions`, da cui vengono rotta, partenza e velocita' di ogni asset
+            (`Mission_Adapter.session_movements`). Asset senza missione = fermo in posizione.
         forces_a/forces_b: `Military`/`Block`/`BlockItem` dei due schieramenti contrapposti.
             Si combatte solo fra A e B, mai dentro lo stesso lato.
         fire_control: `(shooter, target) -> ShotSpec | None`, v. `resolve_engagement`.
         horizon: durata [s]; obbligatoria se `order.t_end` e' None, altrimenti ricavata.
-        routes/starts/speeds: `{asset_id: DataType.Route}`, `{asset_id: partenza [s]}`,
-            `{asset_id: velocita' [m/s]}` — stessa semantica di `schedule_contacts`. Asset
-            senza rotta = fermo in posizione.
         margin/range_type: passati a `schedule_contacts` (range_type decide se le finestre
             sono "a vista" o "a tiro").
         thresholds/reaction_profile_for/detection_factor/provenance/morale_for/
@@ -507,12 +625,14 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio.
 
     Returns:
-        Il `SessionOutcome`; vuoto ma valido se nessuno si incontra e nessuno si muove.
+        Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine; vuoto ma valido
+        se nessuno si incontra e nessuno si muove.
 
     Raises:
         TypeError: `order` non e' un SessionOrder, `fire_control` non chiamabile.
         ValueError: durata mancante o incoerente, forze/asset duplicati o fuori
-            `order.force_ids`, e gli errori di dominio dei moduli chiamati.
+            `order.force_ids`, missione di un blocco non passato o con asset di altri blocchi,
+            e gli errori di dominio dei moduli chiamati.
     """
     if not isinstance(order, SessionOrder):
         raise TypeError(f"order must be a SessionOrder, got {type(order).__name__}")
@@ -526,11 +646,11 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     horizon = _session_horizon(order, horizon)
     t0 = order.t_start
     session_end = t0 + horizon
-    routes = routes or {}
-    starts = starts or {}
-    speeds = speeds or {}
 
     items_a, items_b, blocks, owner = _collect_forces(order, forces_a, forces_b)
+    _check_missions(order, blocks)
+    mission_movements = {mission.mission_id: MA.mission_movements(mission, t0) for mission in order.missions}
+    routes, starts, speeds = MA.session_movements(order.missions, t0)
 
     # ── strato 1: tutti i contatti della sessione ─────────────────────────────
     windows = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts,
@@ -541,6 +661,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # esatto di rilevamento, e i tratti di movimento al consumo di carburante.
     all_legs: Dict[str, List[CS.Leg]] = {}
     movements: List[Tuple[str, object, List[CS.Leg]]] = []
+    assets_by_id: Dict[str, object] = {}
 
     for force_id in sorted(blocks):
         for asset in (getattr(blocks[force_id], 'assets', None) or {}).values():
@@ -549,6 +670,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if asset_id is None:
                 continue
 
+            assets_by_id[asset_id] = asset
             moving = _movement_legs(asset_id, routes, starts, speeds, t0, horizon)
 
             if moving:
@@ -643,5 +765,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         logger.info(f"run_session: session {order.session_id!r} has activity up to t={latest} "
                     f"beyond its end t={session_end} (salvos in flight): outcome interval extended")
 
+    destroyed = _destruction_times(results, assets_by_id, t0)
+    mission_outcomes = {mission.mission_id: _mission_outcome(mission, mission_movements[mission.mission_id],
+                                                             assets_by_id, destroyed, session_end)
+                        for mission in order.missions}
+
     return assemble_session_outcome(order.session_id, results, fuel_events,
-                                    t_start=t0, t_end=latest)
+                                    t_start=t0, t_end=latest, mission_outcomes=mission_outcomes)

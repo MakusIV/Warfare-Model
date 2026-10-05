@@ -51,6 +51,15 @@ danni, distruzioni) e le liste complete degli eventi di danno, munizioni e inter
 ordine d'esito. I float sono arrotondati a `ROUND_DIGITS` decimali (-0.0 normalizzato), le
 chiavi sono ordinate: due catture dello stesso codice devono essere identiche byte per byte.
 
+## Parametri di chiamata dopo la F3 (porta delle missioni)
+
+Dalla F3 del piano della Missione `run_session` non ha piu' il parametro `routes`: le rotte
+arrivano dalle missioni dell'ordine. Perche' la fotografia della Fase 0 resti confrontabile, la
+voce `call.parameters.routes` e' RICOSTRUITA dalle missioni (`Mission_Adapter.mission_routes`:
+gli asset che ricevono una rotta), con lo stesso significato di prima; una lista vuota equivale
+all'assenza della voce (prima `routes={}` e nessun `routes` producevano due forme diverse dello
+stesso fatto, "nessuno si muove"), e il confronto la normalizza cosi' su entrambi i lati.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -244,9 +253,17 @@ def _asset_state(asset) -> Dict:
     }
 
 
-def _call_parameters(kwargs: Dict) -> Dict:
-    """Parametri di chiamata confrontabili (i callable/oggetti solo come presenza)."""
+def _call_parameters(kwargs: Dict, order=None) -> Dict:
+    """Parametri di chiamata confrontabili (i callable/oggetti solo come presenza).
+
+    `routes` e' ricostruito dalle missioni di `order` (v. docstring del modulo, F3).
+    """
     described = {}
+    missions = tuple(getattr(order, 'missions', ()) or ())
+
+    if missions and 'routes' not in kwargs:
+        from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
+        described['routes'] = sorted(MA.mission_routes(missions, order.t_start))
 
     for key in sorted(kwargs):
         value = kwargs[key]
@@ -303,7 +320,7 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
                     'salvo_window': getattr(order, 'salvo_window', None)},
         'call': {'forces_a': [f.id for f in _force_list(forces_a)],
                  'forces_b': [f.id for f in _force_list(forces_b)],
-                 'parameters': _call_parameters(kwargs)},
+                 'parameters': _call_parameters(kwargs, order)},
         'force_outcomes': force_outcomes,
         'engagements': engagements,
         'assets': {asset_id: _asset_state(asset)
@@ -469,6 +486,17 @@ def _flatten(value, prefix: str = '') -> 'OrderedDict[str, object]':
     return flat
 
 
+def _without_empty_routes(run: Dict) -> Dict:
+    """Copia del riassunto senza `call.parameters.routes` se vuoto (v. docstring del modulo, F3)."""
+    parameters = run.get('call', {}).get('parameters', {})
+
+    if parameters.get('routes', None) != []:
+        return run
+
+    parameters = {key: value for key, value in parameters.items() if key != 'routes'}
+    return {**run, 'call': {**run['call'], 'parameters': parameters}}
+
+
 def compare(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[str]:
     """Differenze fra due fotografie, per scenario e chiave. Lista vuota = identiche."""
     pattern = re.compile(only) if only else None
@@ -491,10 +519,12 @@ def compare(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[s
         lines.append(f'NEW {key}: in the current capture, not in the baseline')
 
     for key in sorted(set(base_runs) & set(cur_runs)):
-        if base_runs[key] == cur_runs[key]:
+        old_run, new_run = _without_empty_routes(base_runs[key]), _without_empty_routes(cur_runs[key])
+
+        if old_run == new_run:
             continue
 
-        old, new = _flatten(base_runs[key]), _flatten(cur_runs[key])
+        old, new = _flatten(old_run), _flatten(new_run)
         diffs = [path for path in sorted(set(old) | set(new)) if old.get(path, '<absent>') != new.get(path, '<absent>')]
         lines.append(f'DIFF {key}: {len(diffs)} values differ')
 
