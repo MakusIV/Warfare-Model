@@ -1,6 +1,6 @@
 ---
 name: project-mission-structure-decisions
-description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano di implementazione F0-F9 in Piano_Implementazione_Missione.md (proposta, domande Q1-Q4 aperte); implementato solo il rename Retrait->Retreat"
+description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0, F1, F2 FATTE 2026-10-05 (suite 3868 OK, scenari 292 identici); prossima F3"
 metadata:
   type: project
 ---
@@ -44,3 +44,17 @@ attività + carburante per tratto/tempo + bingo a priori · F7 filtro armi/bersa
 fire_control come `ifv_only`) + salva su area · F8 validatore sessione, prontezza, posizione persistente · F9 manuale.
 Domande aperte: Q1 fasi/ordine, Q2 rimuovere routes/starts/speeds da run_session, Q3 proposta separata salva su
 area, Q4 F0-F2 in parallelo con des-developer.
+
+**Avanzamento (2026-10-05)**: Q1-Q4 approvate (fermarsi a F8; rimuovere routes/starts/speeds da run_session a
+migrazione completa; proposta separata per la salva su area in F7; F0-F2 con agenti in parallelo).
+- F0 `d3af6980`: `Test/Scenario_Baseline.py` (fuori discovery) + `Test/baseline/scenario_baseline.json` (292
+  esecuzioni). Confronto: `PYTHONPATH=$PWD/Code:$PWD <python> -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline
+  --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json` (~210 s). Catturata su copia di
+  HEAD via `git archive` con PYTHONPATH sovrascritto (aggira il problema dei worktree).
+- F1 `20b6de72`: `Command/Mission_Types.py` (90 test). `route_waypoints(route)` dà l'ordine di percorrenza
+  (Route.getWaypoints è un heap per nome). DA CONFERMARE con l'utente le prime stesure: ruoli per dominio,
+  formazioni, EMCON, default (ROE weapon_free in tutti i domini, evade_fire, allerta auto, partenza runway, bingo
+  True) e validazioni aggiunte (EndCriteria richiede last_waypoint o max_duration; POSITIONING richiede
+  bersaglio ZONE/POINT/AREA/GROUP, quindi Defense senza zona rifiutata).
+- F2 `4e18d7d8`: tassonomia in Context + `AIR_COMBAT_TASK` (vecchio AIR_TASK); task di supporto a 0 in
+  combat power ed esclusi dai punteggi; 13 loadout supporto con task, An-30M Recon lasciato vuoto.
