@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-05-summary
-description: "Sessione 2026-10-05 (ProArt P16): avviata la struttura Mission (A4); ingestione documentazione missioni DCS e sintesi Analisi_Informazioni_Missione.md, committate (51c1cb06, non pushato); in attesa della missione di prova dell'utente con veicoli e navi"
+description: "Sessione 2026-10-05 (ProArt P16): avviata la struttura Mission (A4); ingestione documentazione missioni DCS e sintesi Analisi_Informazioni_Missione.md, committate (51c1cb06 + missione di prova terra/mare, non pushato); prossimo: 6 decisioni missione + N1-N3"
 metadata:
   node_type: memory
   type: project
@@ -25,11 +25,11 @@ dall'attività A4 (struttura di una missione), partendo dalla documentazione DCS
 ## Aperto
 - Decisione utente: committare SOLO `estratti/` e la sintesi; i documenti originali (PDF, foto, .miz,
   ~140 MB) restano non tracciati, i `*:Zone.Identifier` sono già ignorati da git.
-- **Punto contestato dall'utente**: secondo l'utente nel Mission Editor si possono assegnare bersagli ai
-  veicoli terrestri (incerto per le navi), contro quanto dedotto dal manuale 2020. Nella sintesi è
-  marcato DA VERIFICARE (§0 p.4, §5, §12). L'utente creerà una missione di prova con veicoli e navi e la
-  metterà in `documentazione missioni dcs/`: analizzarla (come `Struttura_File_MIZ.md`) e aggiornare la
-  sintesi. Uso delle info DCS: v. [[feedback-core-simulator-agnostic]] (precisazione 2026-10-05).
+- RISOLTO: l'utente aveva ragione, veicoli e navi ricevono bersagli espliciti (`AttackGroup` su gruppo,
+  `FireAtPoint` su punto; navi contro navi e contro terra). Verificato su `ground_sea_mission.miz`
+  (missione di prova dell'utente), estratto `Struttura_Missione_Terra_Mare.md`, sintesi aggiornata.
+  Lezione: il manuale DCS 2020 è superato su alcuni punti; quando l'utente contesta una deduzione
+  dal manuale, verificare su un `.miz` reale. Uso delle info DCS: v. [[feedback-core-simulator-agnostic]].
 - Prossimo passo: con la sintesi in mano, riproporre le 6 decisioni di `Analisi_Modello_Missione_Sessione.md`
   §6 più N1-N3, poi progettare l'entità `Mission`.
 
