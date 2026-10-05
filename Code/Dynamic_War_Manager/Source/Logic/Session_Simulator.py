@@ -38,7 +38,9 @@ missione), che il resto della fila consuma esattamente come prima. I parametri `
 `starts`/`speeds` di `run_session` sono stati RIMOSSI (decisione Q2 dell'utente: una sola
 strada). Gli asset senza missione restano fermi, come gli asset senza rotta di prima. Ogni
 missione deve riferirsi a un blocco passato fra le forze, e ogni suo asset deve appartenere a
-quel blocco (`Mission_Types.check_mission_assets`).
+quel blocco (`Mission_Types.check_mission_assets`). Regola A (F4a, decisione dell'utente): la
+missione si muove insieme, nessun tratto piu' veloce della velocita' massima del suo mezzo piu'
+lento (`Mission_Adapter.check_mission_speed`; asset senza il dato esclusi con un warning).
 
 La missione NON e' ancora l'unita' d'ingaggio (lo diventa in F4): ingaggi, RNG e disingaggio
 restano per forza (blocco), quindi a parita' di rotte l'esito e' identico a prima.
@@ -503,7 +505,8 @@ def _build_fuel(asset, distance: float, time: float, regime: str, provenance: st
 
 
 def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
-    """Ogni missione si riferisce a un blocco passato e i suoi asset gli appartengono."""
+    """Ogni missione si riferisce a un blocco passato, i suoi asset gli appartengono e nessun suo
+    tratto e' piu' veloce del mezzo piu' lento (regola A, `Mission_Adapter.check_mission_speed`)."""
     for mission in order.missions:
         block = blocks.get(mission.block_id)
 
@@ -512,6 +515,8 @@ def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
                              f"forces passed ({sorted(blocks)})")
 
         check_mission_assets(mission, block)
+        assets = {_domain_id(asset): asset for asset in (getattr(block, 'assets', None) or {}).values()}
+        MA.check_mission_speed(mission, assets, order.t_start)
 
 
 def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict[str, float]:

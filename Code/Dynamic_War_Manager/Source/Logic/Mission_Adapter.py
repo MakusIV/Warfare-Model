@@ -71,6 +71,23 @@ anteriore all'inizio della sessione e' un errore (le missioni fuori finestra sar
 validatore di sessione della F8; qui non si tagliano in silenzio). `Activation.ON_EVENT` e' solo
 dichiarabile: ValueError.
 
+## Regola A: la missione si muove insieme, alla velocita' del mezzo piu' lento (F4a)
+
+Decisione dell'utente (2026-10-05): una missione e' un gruppo (come un gruppo DCS) e si muove
+INSIEME; chi vuole velocita' diverse fa missioni separate, eventualmente coordinate da
+un'Operazione. `check_mission_speed` lo verifica dove gli asset sono noti (lo chiama
+`Session_Simulator` nella validazione delle missioni; `Command/Mission_Types` e' solo struttura e
+non conosce gli asset): la velocita' pianificata di ogni tratto (quella di missione, o in mancanza
+quella dell'arco) non puo' superare la velocita' MASSIMA (`asset.speed['max']`, m/s, dal
+registro, v. `Mobile.speed_profile_from_registry`) del mezzo piu' lento della missione.
+  * un asset senza velocita' massima nota (modello senza `speed_data`, asset non `Mobile`) e'
+    escluso dal confronto con un warning: non blocca la missione; se nessun asset ha il dato il
+    controllo non si fa;
+  * il limite e' il regime 'max' generico, NON quello per terreno (`speed['off_road']['max']`):
+    gli scenari pianificano oggi i mezzi terrestri al regime nominale su archi 'offroad', e il
+    vincolo per tipo d'arco va deciso con il modulo mappe (limite noto);
+  * tolleranza `SPEED_TOLERANCE` (rumore di conversione delle unita', non un margine fisico).
+
 ## Cosa NON fa
 - Nessuna attesa (WAIT), nessuna presenza prima della partenza o dopo la fine (F5).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F4-F7.
@@ -117,6 +134,10 @@ _REVERSAL_EPS = 1e-9
 # Tipo d'arco e tipo di rotta per una rotta costruita dai soli MissionWaypoint.
 _PATH_TYPE_BY_DOMAIN = {'air': 'air', 'ground': 'offroad', 'sea': 'water'}
 _ROUTE_TYPE_BY_DOMAIN = {'air': 'air', 'ground': 'ground', 'sea': 'water'}
+
+# Tolleranza [m/s] del controllo di velocita' della regola A: solo rumore di conversione delle
+# unita' (km/h, nodi, mph -> m/s), non un margine fisico.
+SPEED_TOLERANCE = 1e-6
 
 # Ruoli d'ancoraggio del TOT, in ordine di preferenza.
 _TOT_ANCHOR_ROLES = (WaypointRole.ATTACK, WaypointRole.OBJECTIVE)
@@ -476,6 +497,79 @@ def waypoint_times(movement: AssetMovement) -> Tuple[float, ...]:
         return ()
 
     return (legs[0].t_start,) + tuple(leg.t_end for leg in legs)
+
+
+def _max_speed(asset) -> Optional[float]:
+    """Velocita' massima [m/s] dell'asset dal profilo cinematico, None se non disponibile."""
+    profile = getattr(asset, 'speed', None)
+
+    if not isinstance(profile, Mapping):
+        return None
+
+    value = profile.get('max')
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0 else None
+
+
+def planned_speeds(movement: AssetMovement) -> Tuple[float, ...]:
+    """Velocita' pianificate [m/s] dei tratti dell'asset: quella di missione, o quella dell'arco."""
+    if movement.route is None:
+        return ()
+
+    if movement.speed is not None:
+        return tuple(float(movement.speed) for _ in movement.route.edges)
+
+    return tuple(float(edge.speed) for edge in movement.route.edges.values() if edge.speed is not None)
+
+
+def check_mission_speed(mission: Mission, assets: Mapping[str, object], t0: float = 0.0) -> Optional[float]:
+    """Regola A (v. docstring del modulo): nessun tratto piu' veloce del mezzo piu' lento.
+
+    Args:
+        mission: la missione.
+        assets: `{asset_id: asset}` che contiene almeno gli asset della missione (gli id di
+            dominio, come in `Mission.asset_ids`).
+        t0: inizio della sessione (serve solo a derivare i movimenti).
+
+    Returns:
+        Il limite applicato [m/s] (la velocita' massima del mezzo piu' lento con il dato), None
+        se nessun asset della missione ha la velocita' massima nota (controllo non fatto) o la
+        missione non si muove.
+
+    Raises:
+        ValueError: un tratto pianificato supera il limite.
+    """
+    movements = mission_movements(mission, t0)
+    planned = max((speed for movement in movements for speed in planned_speeds(movement)), default=None)
+
+    if planned is None:
+        return None
+
+    limits = {}
+
+    for asset_id in mission.asset_ids:
+        limit = _max_speed(assets.get(asset_id))
+
+        if limit is None:
+            logger.warning(f"check_mission_speed: mission {mission.mission_id!r}, asset {asset_id!r} has no "
+                           f"known max speed: excluded from the rule-A check")
+            continue
+
+        limits[asset_id] = limit
+
+    if not limits:
+        return None
+
+    slowest = min(limits, key=lambda asset_id: (limits[asset_id], asset_id))
+    limit = limits[slowest]
+
+    if planned > limit + SPEED_TOLERANCE:
+        raise ValueError(f"mission {mission.mission_id!r}: planned speed {planned:.3f} m/s exceeds the max speed "
+                         f"{limit:.3f} m/s of its slowest asset {slowest!r} (a mission moves together, at the "
+                         f"speed of its slowest asset)")
+
+    logger.debug(f"check_mission_speed: mission {mission.mission_id!r}, planned {planned:.3f} m/s <= "
+                 f"{limit:.3f} m/s ({slowest!r})")
+    return limit
 
 
 def mission_routes(missions: Iterable[Mission], t0: float = 0.0) -> Dict[str, Route]:

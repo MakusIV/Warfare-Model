@@ -97,9 +97,14 @@ identico, id compresi: e' la base del test di determinismo.
 Ogni asset che prima riceveva una rotta in `routes` e' ora asset di una `Mission`; gli asset
 fermi (difese, siti SAM, blocchi in posizione) NON sono missioni (saranno la postura continua
 della F4). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
-  * una missione = asset di UN blocco con la stessa velocita' sugli archi (stesso profilo del
-    registro: in un blocco misto, es. carri M1A2 + M2 Bradley, i due modelli procedono a
-    velocita' diverse e diventano due missioni dello stesso blocco);
+  * una missione = asset di UN blocco e di UN dominio sulla stessa geometria. In F3 la
+    velocita' sugli archi divideva anche le missioni (in un blocco misto, es. carri M1A2 + M2
+    Bradley, i due modelli diventavano due missioni dello stesso blocco); dalla F4a vale la
+    **regola A** (decisione dell'utente, 2026-10-05): la missione si muove INSIEME, alla
+    velocita' del mezzo piu' lento, come un gruppo DCS. `missions_for` riunisce quindi gli asset
+    che differiscono SOLO per velocita' in una missione la cui rotta di riferimento ha, tratto
+    per tratto, la velocita' minima fra quelle dei suoi asset (v. `_slowest_reference`). Chi
+    vuole velocita' diverse chiama `missions_for` piu' volte con `only` (missioni separate);
   * dentro una missione la rotta di riferimento e' quella del primo asset (per id) e gli altri
     hanno l'offset di formazione che riproduce la loro rotta traslata; l'offset e' accettato
     solo se `Mission_Adapter.asset_route` ridà gli STESSI punti (confronto esatto), altrimenti
@@ -107,6 +112,10 @@ della F4). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
     rigida non e' un offset nella terna di marcia, v. `Mission_Adapter`).
 In F4 la missione diventa l'unita' d'ingaggio: dove un blocco ha piu' missioni, queste
 disingaggeranno separatamente.
+
+**Effetto della regola A sulla geometria**: nessuno. Gli offset di formazione sono gli stessi di
+F3 (la velocita' non entra nell'offset); cambia solo la velocita' degli asset piu' veloci, che ora
+procedono al passo del piu' lento della loro missione.
 
 **Semplificazione di scenario: rotta senza rientro, da completare con RTB in F5-F6.** Le
 rotte aeree degli scenari partono in volo (`start_mode` AIR) e finiscono sull'obiettivo o
@@ -622,6 +631,23 @@ def _offset_of(reference: Route, route: Route) -> Tuple[float, float, float]:
     return dx * hx + dy * hy, dx * hy - dy * hx, dz
 
 
+def _slowest_reference(reference: Route, routes: Sequence[Route]) -> Route:
+    """Rotta di riferimento con, tratto per tratto, la velocita' minima fra le `routes` dei
+    membri della missione (regola A). La stessa `reference` se e' gia' la piu' lenta ovunque;
+    altrimenti una copia con gli stessi waypoint (stessi oggetti) e gli archi rallentati."""
+    edges = list(reference.edges.values())
+    slowest = [min(float(list(route.edges.values())[index].speed) for route in routes)
+               for index in range(len(edges))]
+
+    if all(float(edge.speed) == speed for edge, speed in zip(edges, slowest)):
+        return reference
+
+    slowed = {key: Edge(wpA=edge.wpA, wpB=edge.wpB, path_type=edge.path_type, danger_level=edge.danger_level,
+                        speed=speed, name=edge.name)
+              for (key, edge), speed in zip(reference.edges.items(), slowest)}
+    return Route(route_type=reference.route_type, edges=slowed, name=reference.name)
+
+
 def _scenario_mission(mission_id: str, force, domain: str, mission_type: str, target: Target,
                       reference: Route, assets: Sequence[MissionAsset]) -> Mission:
     return Mission(mission_id=mission_id, block_id=force.id, domain=domain, mission_type=mission_type,
@@ -633,7 +659,8 @@ def _scenario_mission(mission_id: str, force, domain: str, mission_type: str, ta
 def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str, target: Target,
                  name: Optional[str] = None, offset_with_position: bool = True,
                  speed: Optional[float] = None, only: Optional[Iterable[str]] = None) -> List[Mission]:
-    """Le missioni che riproducono ESATTAMENTE `routes_for(force, points, ...)` (v. docstring).
+    """Le missioni con ESATTAMENTE la geometria di `routes_for(force, points, ...)`, ciascuna alla
+    velocita' del suo mezzo piu' lento (regola A, F4a; v. docstring).
 
     Args:
         force: il blocco (tutti i suoi asset ricevono una missione).
@@ -647,7 +674,8 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
             forza, quindi la geometria non cambia.
 
     Returns:
-        Lista di `Mission` (start_time 0, aria `start_mode` AIR), una o piu' per blocco.
+        Lista di `Mission` (start_time 0, aria `start_mode` AIR), una o piu' per blocco (piu'
+        d'una solo per dominio diverso o per geometria non riducibile a un offset).
     """
     routes = routes_for(force, points, offset_with_position=offset_with_position, speed=speed)
 
@@ -661,11 +689,10 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
     for asset_id in sorted(routes):
         route = routes[asset_id]
         domain = domain_of(force.assets[asset_id])
-        speeds = tuple(edge.speed for edge in route.edges.values())
 
+        # Regola A (F4a): la velocita' non divide piu' le missioni, solo dominio e geometria.
         for reference, members in groups:
-            if tuple(edge.speed for edge in reference.edges.values()) != speeds \
-                    or domain_of(force.assets[members[0][0]]) != domain:
+            if domain_of(force.assets[members[0][0]]) != domain:
                 continue
 
             # L'offset e' accettato solo se l'adapter ridà ESATTAMENTE la rotta dell'asset.
@@ -683,6 +710,7 @@ def missions_for(force, points: Sequence[Sequence[float]], *, mission_type: str,
     missions = []
 
     for index, (reference, members) in enumerate(groups):
+        reference = _slowest_reference(reference, [routes[asset_id] for asset_id, _ in members])
         domain = domain_of(force.assets[members[0][0]])
         assets = []
 
@@ -924,7 +952,8 @@ def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_i
         Unit('vehicle', '9K35-Strela-10', 1, origin=(1_000.0, -300.0), prefix='sam')])
 
     forces_a = [blue]
-    # Attacco terrestre sulla linea Red: M1A2 e M2 hanno velocita' diverse -> due missioni.
+    # Attacco terrestre sulla linea Red: una missione M1A2 + M2 alla velocita' del piu' lento
+    # (regola A, F4a; in F3 le velocita' diverse ne facevano due).
     missions = missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack', target=group_target('Red-Line'))
     roles: Dict[str, str] = {}
 

@@ -632,6 +632,20 @@ class TestMissions(_Base):
         with self.assertRaises(ValueError):
             SS.run_session(self._order('S', (stolen,)), blue, red, _fire)
 
+    def test_mission_faster_than_its_slowest_asset_raises(self):
+        """Regola A (F4a): la missione si muove alla velocita' del suo mezzo piu' lento."""
+        blue, red, missions = self._scenario(red_offset=10_000_000.0)
+        blue[0].assets['bn2'].speed = {'nominal': 150.0, 'max': 180.0}   # archi a 200 m/s
+
+        with self.assertRaisesRegex(ValueError, "slowest asset 'bn2'"):
+            SS.run_session(self._order('S-fast', missions), blue, red, _fire)
+
+    def test_unknown_max_speed_does_not_block(self):
+        blue, red, missions = self._scenario(red_offset=10_000_000.0)
+        blue[0].assets['bn2'].speed = {'nominal': None, 'max': None}
+        outcome = SS.run_session(self._order('S-unknown', missions), blue, red, _fire)
+        self.assertEqual(outcome.mission_outcomes['M-north'].status, MissionStatus.COMPLETED)
+
     def test_missions_do_not_change_the_draws(self):
         """La missione e' ancora solo un contenitore (F3): l'RNG resta per forza, mission_id None."""
         with patch.object(SessionOrder, 'rng', autospec=True, side_effect=SessionOrder.rng) as spy:

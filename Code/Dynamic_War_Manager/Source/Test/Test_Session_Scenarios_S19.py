@@ -68,8 +68,10 @@ def _build():
         F.Unit('vehicle', '9K35-Strela-10', 1, origin=(500.0, -300.0), prefix='shorad'),
         F.Unit('vehicle', 'ZSU-23-4-Shilka', 1, origin=(500.0, 600.0), prefix='aaa'),
         F.Unit('vehicle', 'BMP-2', 2, origin=(0.0, 0.0), step=(0.0, 300.0), prefix='ifv', sensors=VISUAL)])
-    # Tre modelli a velocita' diverse -> tre missioni dello stesso blocco: CAS (A-10C), scorta
-    # (F-16C) e bombardamento (B-52H), tutte in transito sulla difesa rossa.
+    # Tre missioni dello stesso blocco, divise per TIPO di missione (non per velocita'): CAS
+    # (A-10C), scorta (F-16C) e bombardamento (B-52H), tutte in transito sulla difesa rossa;
+    # ognuna alla velocita' del proprio modello (regola A, F4a: chi vuole velocita' diverse fa
+    # missioni separate).
     cas = [a for a in blue.assets if '/cas' in a]
     escort = [a for a in blue.assets if '/ftr' in a]
     missions = F.missions_for(blue, [(20_000.0, 0.0)], mission_type='CAS', only=cas,

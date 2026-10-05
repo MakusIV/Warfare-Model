@@ -69,6 +69,8 @@ stesso fatto, "nessuno si muove"), e il confronto la normalizza cosi' su entramb
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <json> --only 'S19'
     # confronto fra due file gia' catturati, senza eseguire nulla:
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json>
+    # riepilogo leggibile per esecuzione (esiti, perdite, colpi, carburante per forza; F4a):
+    python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --summary
 
 Exit code: 0 se identiche, 1 se ci sono differenze (o errori di unita'), 2 per uso errato.
 """
@@ -537,6 +539,69 @@ def compare(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[s
     return lines
 
 
+# ── RIEPILOGO LEGGIBILE DELLE DIFFERENZE (--summary, F4a) ─────────────────────
+
+def _force_of(asset_id: str) -> str:
+    """Forza di un asset dall'id di scenario `<forza>/<asset>` (convenzione di Scenario_Fixtures)."""
+    return asset_id.split('/', 1)[0]
+
+
+def run_digest(run: Dict) -> 'OrderedDict[str, object]':
+    """Grandezze leggibili di un'esecuzione, per forza: esiti, perdite, colpi, intercettazioni,
+    carburante e fine del movimento; istanti del primo colpo e del primo danno. Solo letture del
+    riassunto gia' salvato: il formato della fotografia non cambia."""
+    digest: 'OrderedDict[str, object]' = OrderedDict()
+    forces = sorted(set(run.get('call', {}).get('forces_a', [])) | set(run.get('call', {}).get('forces_b', [])))
+
+    for force_id in forces:
+        digest[f'{force_id}.outcome'] = '/'.join(run.get('force_outcomes', {}).get(force_id, [])) or '-'
+
+    for force_id in forces:
+        assets = {a: state for a, state in run.get('assets', {}).items() if _force_of(a) == force_id}
+        digest[f'{force_id}.destroyed'] = sum(1 for state in assets.values() if state.get('destroyed'))
+        digest[f'{force_id}.rounds'] = sum(rounds for a, by_weapon in run.get('ammunition_consumed', {}).items()
+                                           if _force_of(a) == force_id for rounds in by_weapon.values())
+        digest[f'{force_id}.interceptions'] = sum(n for a, by_weapon in run.get('interceptions', {}).items()
+                                                  if _force_of(a) == force_id for n in by_weapon.values())
+        fuel = [event for a, events in run.get('fuel', {}).items() if _force_of(a) == force_id for event in events]
+        digest[f'{force_id}.fuel_used'] = round(sum(event['amount'] or 0.0 for event in fuel), 4) if fuel else '-'
+        digest[f'{force_id}.movement_end'] = round(max(event['time'] for event in fuel), 1) if fuel else '-'
+
+    ammunition = run.get('ammunition_events', [])
+    damage = run.get('damage_events', [])
+    digest['first_shot'] = ammunition[0][0] if ammunition else '-'
+    digest['first_damage'] = damage[0][0] if damage else '-'
+    digest['damage_events'] = len(damage)
+    return digest
+
+
+def summarize_differences(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[str]:
+    """Per ogni esecuzione che differisce: le sole grandezze di `run_digest` cambiate, `vecchio ->
+    nuovo`; poi l'elenco delle esecuzioni invariate. (Le differenze fini restano in `compare`.)"""
+    pattern = re.compile(only) if only else None
+    base_runs, cur_runs = baseline.get('runs', {}), current.get('runs', {})
+    lines, unchanged = [], []
+
+    for key in sorted(set(base_runs) & set(cur_runs)):
+        if pattern is not None and not pattern.search(key):
+            continue
+
+        old_run, new_run = _without_empty_routes(base_runs[key]), _without_empty_routes(cur_runs[key])
+
+        if old_run == new_run:
+            unchanged.append(key)
+            continue
+
+        old, new = run_digest(old_run), run_digest(new_run)
+        changed = [f'{name}: {old.get(name, "-")} -> {new.get(name, "-")}' for name in new
+                   if old.get(name, '-') != new.get(name, '-')]
+        lines.append(f'CHANGED {key}' + ('' if changed else ' (only fine-grained values, see --compare)'))
+        lines.extend(f'    {line}' for line in changed)
+
+    lines.append(f'UNCHANGED ({len(unchanged)}): ' + ', '.join(unchanged))
+    return lines
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -550,13 +615,15 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--only', metavar='REGEX',
                         help='only units whose name matches (capture), only matching keys (compare)')
     parser.add_argument('--quiet', action='store_true', help='no per-unit progress on stderr')
+    parser.add_argument('--summary', action='store_true',
+                        help='with --compare: readable per-run digest of what changed instead of the raw diff')
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
 
     if args.capture:
-        if args.against or args.save:
-            parser.error('--against/--save only with --compare')   # esce con 2
+        if args.against or args.save or args.summary:
+            parser.error('--against/--save/--summary only with --compare')   # esce con 2
 
         snapshot = capture(args.only, verbose=not args.quiet)
         dump(snapshot, args.capture)
@@ -576,7 +643,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     lines = compare(baseline, current, args.only)
 
-    for line in lines:
+    for line in (summarize_differences(baseline, current, args.only) if args.summary else lines):
         print(line)
 
     compared = len([k for k in current.get('runs', {})

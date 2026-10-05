@@ -293,3 +293,50 @@ class TestSessionMovements(_Base):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+# ── REGOLA A: LA MISSIONE SI MUOVE ALLA VELOCITA' DEL PIU' LENTO (F4a) ─────────
+
+class _Asset:
+    """Asset minimo con il solo profilo di velocita' (m/s), come `Mobile.speed`."""
+
+    def __init__(self, max_speed):
+        self.speed = {'nominal': None, 'max': max_speed}
+
+
+class TestRuleASlowestSpeed(_Base):
+
+    def _two_ship(self, **overrides):
+        return _mission(assets=(MT.MissionAsset('a1', 'lead'), MT.MissionAsset('a2', 'wingman', 0.0, 500.0, 0.0)),
+                        **overrides)
+
+    def test_planned_speed_within_the_slowest_max_is_accepted(self):
+        mission = self._two_ship()   # archi a 200 m/s
+        limit = MA.check_mission_speed(mission, {'a1': _Asset(300.0), 'a2': _Asset(200.0)})
+        self.assertEqual(limit, 200.0)
+
+    def test_leg_faster_than_the_slowest_max_is_rejected(self):
+        mission = self._two_ship()
+        with self.assertRaisesRegex(ValueError, "slowest asset 'a2'"):
+            MA.check_mission_speed(mission, {'a1': _Asset(300.0), 'a2': _Asset(150.0)})
+
+    def test_declared_mission_speed_is_the_one_checked(self):
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        mission = self._two_ship(route=route, waypoints=_plan(route, speeds=[None, 900.0]))   # 250 m/s
+        with self.assertRaises(ValueError):
+            MA.check_mission_speed(mission, {'a1': _Asset(300.0), 'a2': _Asset(240.0)})
+        self.assertEqual(MA.check_mission_speed(mission, {'a1': _Asset(300.0), 'a2': _Asset(260.0)}), 260.0)
+
+    def test_unknown_max_speed_is_logged_and_does_not_block(self):
+        mission = self._two_ship()
+        self.assertIsNone(MA.check_mission_speed(mission, {'a1': _Asset(None), 'a2': object()}))
+        MA.logger.warning.assert_called()
+        # Il solo asset con il dato fa da limite.
+        self.assertEqual(MA.check_mission_speed(mission, {'a1': _Asset(250.0), 'a2': _Asset(None)}), 250.0)
+
+    def test_mission_without_route_is_not_checked(self):
+        mission = MT.Mission(mission_id='m0', block_id='armor', domain='ground', mission_type='Maintain',
+                             assets=(MT.MissionAsset('a1', 'lead'),),
+                             target=MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=1_000.0),
+                             start_time=0.0)
+        self.assertIsNone(MA.check_mission_speed(mission, {'a1': _Asset(1.0)}))

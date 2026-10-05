@@ -381,7 +381,8 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
     def _missions(forces_a, forces_b):
         blue, cas = forces_a
         _, cap = forces_b
-        # Blue-Mech: M1A2 e M2 a velocita' diverse -> due missioni dello stesso blocco.
+        # Blue-Mech: M1A2 + M2 in UNA missione alla velocita' del piu' lento (regola A, F4a; in F3
+        # le velocita' diverse ne facevano due).
         missions = F.missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack',
                                   target=F.group_target('Red-Battalion'))
         missions += F.missions_for(cas, [(10_000.0, 0.0)], mission_type='CAS', target=F.group_target('Red-Battalion'))
@@ -1299,7 +1300,7 @@ class TestS17HierarchicalScaleSweep(F.LoggerSilencer, unittest.TestCase):
             F.Unit('vehicle', 'ZSU-23-4-Shilka', k, origin=(1_000.0, 600.0), step=(0.0, 300.0), prefix='aaa'),
             F.Unit('vehicle', '9K35-Strela-10', k, origin=(1_000.0, -300.0), step=(0.0, 300.0), prefix='sam')],
             mil_category=mil_category)
-        # M1A2 e M2 a velocita' diverse -> due missioni dello stesso blocco.
+        # M1A2 + M2 in UNA missione alla velocita' del piu' lento (regola A, F4a; in F3 due).
         return blue, red, F.missions_for(blue, [(2_000.0, 0.0)], mission_type='Attack',
                                          target=F.group_target('Red-Line'))
 
