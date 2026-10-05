@@ -1,6 +1,6 @@
 ---
 name: project-mission-structure-decisions
-description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) prese dall'utente il 2026-10-05 in Proposta_Struttura_Missione_Decisioni.md; aperta solo N3.f (posture vs tipi di missione); nulla ancora implementato salvo il rename Retrait->Retreat"
+description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano di implementazione F0-F9 in Piano_Implementazione_Missione.md (proposta, domande Q1-Q4 aperte); implementato solo il rename Retrait->Retreat"
 metadata:
   type: project
 ---
@@ -28,8 +28,19 @@ Tutte le raccomandazioni (R) applicate dall'utente, tranne **N2.a = C**. In sint
   anche terra/mare. **D5**: rifornimento in volo solo vincolo di pianificazione, consumo anche nel tempo,
   rifornimento terra/mare fra sessioni. **N1**: rimandata all'adapter.
 
-**Aperta N3.f** (emersa dalla nota dell'utente sulle tabelle di decisione): `Ground_Action`/`Sea_Task` sono
+**N3.f = B DECISO** (emersa dalla nota dell'utente sulle tabelle di decisione): `Ground_Action`/`Sea_Task` sono
 posture ORDINATE per aggressività (output fuzzy di `evaluateGroundTacticalAction`) e chiavi di combat power,
 efficacia, priorità di Region; i nuovi tipi non stanno su quella scala. Raccomandato B: due assi (postura
 invariata + tipo di missione) con tabella di compatibilità tipo -> posture. Per l'aria `AIR_TASK` è già tipo di
-missione. Dopo N3.f: piano di implementazione a fasi.
+missione.
+
+**Piano**: `Analysis/Document/Piano_Implementazione_Missione.md` (commit `96cbc5fa`, PROPOSTA). Fasi: F0 fotografia
+scenari S1-S19 (non regressione) · F1 `Command/Mission_Types.py` (Mission, MissionWaypoint contiene Waypoint,
+Target con provenienza, MissionAction, EndCriteria, Operation, MissionOutcome) · F2 tassonomia + tabella
+`MISSION_TYPE_POSTURES` + AIR_TASK AWACS/Tanker/Transport (14 loadout con tasks vuoto) · F3 Missione nella porta
+(`SessionOrder.missions`, mission_id nell'RNG) · F4 `MissionForce` come unità di ingaggio (resolve_engagement accetta
+qualunque oggetto con assets/side/name) + postura dei non impegnati · F5 presenza prima/dopo + WAIT · F6 fine di
+attività + carburante per tratto/tempo + bingo a priori · F7 filtro armi/bersagli per missione (involucro di
+fire_control come `ifv_only`) + salva su area · F8 validatore sessione, prontezza, posizione persistente · F9 manuale.
+Domande aperte: Q1 fasi/ordine, Q2 rimuovere routes/starts/speeds da run_session, Q3 proposta separata salva su
+area, Q4 F0-F2 in parallelo con des-developer.
