@@ -227,7 +227,7 @@ FORMATIONS: Mapping[str, Tuple[str, ...]] = MappingProxyType({
     'sea': ('column', 'line', 'diamond', 'screen'),
 })
 
-# Default delle regole per dominio. STIMA DI PROGETTO (dichiarata): weapon_free come default
+# Default delle regole per dominio, confermati dall'utente il 2026-10-05: weapon_free come default
 # d'ingaggio di una missione pianificata; reazione 'evade_fire' per l'aria; allerta 'auto' e
 # EMCON 'free'; formazione None = lasciata alla dottrina dell'esecutore.
 DEFAULT_RULES: Mapping[str, Mapping[str, Optional[str]]] = MappingProxyType({
@@ -707,7 +707,7 @@ class EndCriteria:
     Attributes:
         last_waypoint: la missione finisce all'ultimo waypoint (default True).
         max_duration_s: durata massima o tempo sulla stazione [s], None = nessun limite.
-        bingo: rientro al bingo (default True: STIMA DI PROGETTO, come la dottrina "RTB on bingo").
+        bingo: rientro al bingo (default True, confermato dall'utente il 2026-10-05, come la dottrina "RTB on bingo").
         winchester: categorie d'arma il cui esaurimento chiude l'attivita' (id di categoria del
             registro d'arma del dominio, es. 'MISSILES_AAM'); vuota = criterio non attivo.
         abort_on_threat: aborto per minaccia.

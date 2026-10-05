@@ -510,8 +510,8 @@ MISSION_TYPES = {
 }
 
 # Tipo di missione -> Mission_Category (valore). Copre tutti i tipi di MISSION_TYPES.
-# STIMA (prima stesura, Fase F2): assegnazione di progetto non tarata su dati; da rivedere quando il
-# pianificatore usera' la categoria per la forma dell'obiettivo e i criteri di fine (N3.a, D2).
+# Valori di progetto (non derivati da dati) CONFERMATI DALL'UTENTE il 2026-10-05 (N3.a). Rivederli
+# solo con una nuova decisione.
 MISSION_TYPE_CATEGORY = {
     'ground': {
         Ground_Mission_Type.ATTACK.value:       Mission_Category.ATTACK.value,
@@ -553,7 +553,7 @@ MISSION_TYPE_CATEGORY = {
 #   'admitted':  posture (valori di GROUND_ACTION / SEA_TASK) compatibili con il tipo di missione;
 #   'reference': postura la cui combat power rappresenta la forza impiegata nel tipo di missione
 #                (sempre fra le ammesse).
-# STIMA (prima stesura, Fase F2): valori di progetto non tarati su dati (esempi [I] di N3.f); es. Supply e
+# Valori di progetto (non derivati da dati) CONFERMATI DALL'UTENTE il 2026-10-05 (N3.f = B); es. Supply e
 # Recon non hanno postura offensiva e usano la combat power di autodifesa (Defense).
 MISSION_TYPE_POSTURES = {
     'ground': {
