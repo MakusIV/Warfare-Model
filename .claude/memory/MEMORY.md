@@ -1,7 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Struttura Missione: 9 decisioni prese 2026-10-05, N3.f=B; piano F0-F9 approvato, F0-F3 FATTE (suite 3922 OK)](project_mission_structure_decisions.md) — prossimo: F4 (missione = unità di ingaggio), prima decidere velocità per asset vs missioni separate
+- [Struttura Missione: 9 decisioni prese 2026-10-05, N3.f=B; piano F0-F9 approvato, F0-F3+F4a FATTE (suite 3929 OK)](project_mission_structure_decisions.md) — prossimo: F4b (missione = unità di ingaggio), F4c (postura dei non in missione); manuale DES in aggiornamento
 - [Session 2026-10-05 (ProArt P16) — avviata struttura Mission (A4): ingestione doc missioni DCS + sintesi `Analisi_Informazioni_Missione.md`, committati estratti+sintesi 51c1cb06](project_session_2026_10_05_summary.md) — verificati bersagli espliciti per veicoli e navi su missione di prova; prossimo: 6 decisioni missione + N1-N3, poi entità `Mission`
 - [Session 2026-09-30 (ProArt P16) — CHIUSA, tutto pushato, suite 3753 OK: R-INT intercettazione con reazione (a500fdf3), R-CLS classi RWR (440a8823)](project_session_2026_09_30_summary.md) — ripresa su qualunque macchina con git pull; prossimo: A4 filtro armi per missione (6 decisioni missione), poi rotte→mappe, residui volumi, Fase 0 C2, D9 morale, bug noti, manuale DES
 - [Session 2026-09-29 (osboxes) — CHIUSA, tutto pushato, suite 3735 OK: soglia di rottura stocastica, efficacia antiaerea E(N), RWR per classi/modalità, classificazione SAM, overkill risolto](project_session_2026_09_29_summary.md) — prossima sessione su ProArt P16 (git pull); prossimo: §5.4 intercettazione senza tempo di reazione, poi settori/classi RWR, A4, rotte→mappe, Fase 0 C2
