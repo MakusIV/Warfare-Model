@@ -1,6 +1,6 @@
 # Informazioni necessarie per definire una missione (aerea, terrestre, navale)
 
-**Stato**: ANALISI (2026-10-05, aggiornata con la missione di prova terra/mare), primo passo della struttura `Mission` (attività A4 / P1 di
+**Stato**: ANALISI (2026-10-05, aggiornata con la missione di prova terra/mare e con le decisioni di `Proposta_Struttura_Missione_Decisioni.md`), primo passo della struttura `Mission` (attività A4 / P1 di
 `Analisi_Modello_Missione_Sessione.md`). Nessun file di codice modificato.
 **Scopo**: stabilire quali dati compongono una missione nel modello di Warfare-Model. Il modello deve
 poterla eseguire nel motore DES sintetico e, in un secondo momento, esportarla verso DCS senza perdere
@@ -32,11 +32,14 @@ il motore.
    la nostra **Sessione**. Ciò che noi chiamiamo Missione corrisponde in DCS a un **gruppo** (1-4 aerei;
    1-99 veicoli o navi [M p.287]) con una rotta, un task e una lista di azioni. Un'operazione composta,
    come strike + scorta + SEAD sullo stesso bersaglio, è in DCE un **pack** di più gruppi coordinati
-   dallo stesso TOT [Z §7.2]. Il modello deve quindi distinguere tre livelli: **Sessione ⊃ Missione
-   (pacchetto, un obiettivo) ⊃ Elemento (gruppo o volo, una rotta)**.
+   dallo stesso TOT [Z §7.2]. Il modello distingue quindi tre livelli, con la terminologia del
+   documento originale dell'utente (decisione D3, `Proposta_Struttura_Missione_Decisioni.md`):
+   **Sessione ⊃ Operazione (facoltativa: missioni di blocchi diversi con uno scopo comune) ⊃
+   Missione (asset di un solo blocco, ruoli, direttive, una rotta di riferimento)**. La Missione
+   corrisponde al gruppo DCS, l'Operazione al pack DCE.
 2. **Struttura comune ai tre domini.** In tutti e tre i domini una missione si descrive con gli stessi
    cinque blocchi:
-   - **chi**: composizione dell'elemento;
+   - **chi**: composizione della missione;
    - **quando**: istante di inizio e modo di attivazione;
    - **dove**: rotta temporizzata;
    - **cosa fare e come**: azioni ai waypoint e regole di comportamento;
@@ -98,20 +101,21 @@ il motore.
 
 ---
 
-## 1. Modello concettuale proposto
+## 1. Modello concettuale (aggiornato con le decisioni D3 e N2 del 2026-10-05)
 
 ```
 Sessione (= file .miz in DCS)
  ├─ dati di sessione: finestra temporale, data/ora, meteo, coalizioni, zone, bullseye, obiettivi
  ├─ stato di mondo in ingresso: asset e posizioni, basi e magazzini, danni (da Campaign_State)
  ├─ Postura continua  (asset senza missione: SAM, EWR, depositi, statici)  -> §7
- └─ Missione  (un obiettivo, una finestra, un esito)
-     ├─ intestazione: id, dominio, tipo, obiettivo/bersaglio, priorità, TOT/finestra, criteri di fine
-     └─ Elemento [1..n]  (= gruppo DCS: un volo, una colonna, una formazione navale)
-         ├─ composizione: tipo asset, numero, asset_id, esperienza/skill
+ └─ Operazione [facoltativa]  (scopo comune, TOT comune, regola d'esito)
+     └─ Missione [1..n]  (asset di UN blocco; = gruppo DCS: un volo, una colonna, una formazione navale)
+         ├─ intestazione: id, dominio, tipo, obiettivo/bersaglio, priorità, TOT/finestra, criteri di fine
+         ├─ composizione: asset_id, tipo, ruolo per asset, offset di formazione, esperienza/skill
          ├─ avvio: istante, modo (pista/parcheggio freddo/caldo/in volo/a terra), attivazione
-         ├─ rotta temporizzata: waypoint con posizione, quota, velocità, ETA, ruolo del punto
-         ├─ azioni per waypoint: Task / Enroute / Comando / Opzione, con priorità e condizioni
+         ├─ rotta di riferimento (geometrica, DataType.Route) + MissionWaypoint per punto:
+         │    ETA pianificata, ruolo del punto, tipo di quota, azioni (anche "attendi")
+         ├─ azioni per waypoint: compito / regola / comando, con priorità e condizioni pre-calcolabili
          ├─ regole: ROE, reazione alla minaccia, EMCON, formazione, RTB bingo/winchester
          └─ carico (solo aria): arma per stazione, carburante %, contromisure
 ```
@@ -120,7 +124,7 @@ Corrispondenze con il codice esistente [C]:
 
 | Blocco | Già nel progetto | Cosa manca |
 |---|---|---|
-| Rotta | `DataType.Route/Edge/Waypoint` (rotta canonica); `Edge.path_type` = `onroad`/`offroad`/`air`/`water`, `Edge.speed` | ETA per waypoint, tipo di quota (MSL/AGL), **ruolo del punto** (decollo, IP, attacco, atterraggio...): `Waypoint` ha solo `point`, `name`, `reference` |
+| Rotta | `DataType.Route/Edge/Waypoint` (rotta canonica); `Edge.path_type` = `onroad`/`offroad`/`air`/`water`, `Edge.speed` | ETA per waypoint, tipo di quota (MSL/AGL), **ruolo del punto** (decollo, IP, attacco, atterraggio...): `Waypoint` ha solo `point`, `name`, `reference`. Decisione N2.a: nuovo tipo `MissionWaypoint` che contiene un `Waypoint` |
 | Profilo d'attacco | `Command/Attack_Types.AttackProfile` (IP, punto di sgancio, uscita, azimut, quota e velocità di sgancio, arma, quantità) | è già "un attributo della futura `Mission`" (docstring) |
 | Carico | `Aircraft.assigned_loadout`, `Weapon_Stores` (scorta per modello d'arma), `Fuel_Model` | carburante iniziale come scelta di missione; codici di stazione |
 | Tipo di missione | `Context.Air_To_Air_Task` / `Air_To_Ground_Task` (CAP, Fighter_Sweep, Intercept, Escort, Recon, CAS, Strike, Pinpoint_Strike, SEAD, Anti_Ship), `Ground_Action`, `Sea_Task` | supporto (AWACS, Tanker, Transport), compiti terrestri reali (§5) |
@@ -142,16 +146,16 @@ missione non è definita.
 | dominio | sì | aria, terra, mare | categoria del gruppo |
 | tipo di missione | sì | vincola carichi, azioni e criteri di fine | `task` del gruppo (filtro) [M p.221] |
 | obiettivo/bersaglio | sì, salvo trasferimenti | id di dominio: asset, gruppo, punto, zona o infrastruttura | parametro dei Perform Task (Attack Group/Unit/Map Object, Bombing...) [M parte 2] |
-| TOT o finestra sull'obiettivo | sì per attacco/supporto | sincronizza gli elementi del pacchetto | DCE: ETA del punto `Attack` più attesa `OrbitPosition(..., untilTime)` [Z §4.4] |
+| TOT o finestra sull'obiettivo | sì per attacco/supporto | sincronizza le missioni di un'Operazione | DCE: ETA del punto `Attack` più attesa `OrbitPosition(..., untilTime)` [Z §4.4] |
 | priorità | sì | serve a scegliere fra missioni e risorse | DCE: `target.priority` [Z §7.3] |
 | criteri di fine | sì | (a) geometrici: ultimo waypoint, atterraggio; (b) a tempo: durata, tempo sulla stazione; (c) di stato: bingo, winchester, bersaglio distrutto, aborto per minaccia o danno | Land waypoint; stop condition `DUR`/`LAST WPT`/flag; opzioni RTB [M parte 2-3] |
 | coalizione/lato | sì | | `country` → coalizione [M p.87] |
 
-### 2.2 Elemento (gruppo)
+### 2.2 Composizione della missione (gruppo)
 
 | Informazione | Obbl. | Note | In DCS |
 |---|---|---|---|
-| `element_id`, nome | sì | univoco nella sessione; deve restare stabile per ricondurre le perdite del debrief alle entità | `groupId`/`unitId`, `name` [Z §8.4 p.6] |
+| `mission_id` (gruppo), nome | sì | univoco nella sessione; deve restare stabile per ricondurre le perdite del debrief alle entità | `groupId`/`unitId`, `name` [Z §8.4 p.6] |
 | tipo di asset e numero | sì | aria 1-4 per gruppo; terra/mare 1-99 [M p.287] | `type` per unità |
 | asset_id delle unità | sì | collegamento a `Asset` e alle scorte | `unitId`, `name` |
 | esperienza (skill) | sì | Average/Good/High/Excellent/Random; "Veteran" e "Trained" appaiono nelle foto (moduli recenti) [F] | `skill` per unità |
@@ -424,9 +428,9 @@ non una decisione.
 |---|---|---|
 | 1 | Presenza a fine missione (P3) | DCS distingue già "inattivo ma presente": aerei `uncontrolled` sul parcheggio e statici. In DCE le unità terrestri restano ferme all'ultimo (unico) punto. Gli aerei dopo `Land` tornano al parcheggio [I: comportamento DCS non verificato sulle fonti; DCE ha l'opzione `CVN_despawnAfterLanding` solo per le portaerei]. Argomento a favore di "resta presente come bersaglio fermo". |
 | 2 | Criteri di fine missione (P2) | DCS li ha tutti: geometrici (Land, ultimo waypoint), a tempo (DUR, TIME MORE), di stato (bingo, winchester, aborto per minaccia, flag). Quelli a tempo e geometrici sono calcolabili prima; quelli di stato sono **regole dell'IA eseguite durante la sessione**. Per l'adapter DCS basta dichiararli; il DES sintetico li deve simulare (R4 seconda parte). |
-| 3 | Unità della missione (P6) | DCS e DCE separano **pacchetto** (pack: obiettivo e TOT comuni) e **gruppo** (rotta, task, fine). Proposta del §1: Missione = pacchetto, Elemento = gruppo. Fine e aborto per elemento, esito per missione. |
+| 3 | Unità della missione (P6) | DCS e DCE separano **pacchetto** (pack: obiettivo e TOT comuni) e **gruppo** (rotta, task, fine). **Deciso (D3)**: Operazione = pacchetto, Missione = gruppo di asset di un blocco; fine e aborto per missione, con eccezioni individuali. |
 | 4 | Durata e sovrapposizione delle sessioni (P5) | DCE: 5400 s di missione più 10800-14400 s di tempo morto, cioè finestre disgiunte; le rotte navali persistono fra sessioni come stato. È un riferimento concreto per la durata di una sessione virtuale. |
-| 5 | Rifornimento in volo (P4) | DCS: il tanker è un elemento con task `Tanker` (6 gruppi `Refueling` nel campione), il ricevente ha un Perform Task `Refueling`. È un evento interno alla missione che **dipende da un'altra missione** (dipendenza fra elementi). |
+| 5 | Rifornimento in volo (P4) | DCS: il tanker è una missione (gruppo) con task `Tanker` (6 gruppi `Refueling` nel campione), il ricevente ha un Perform Task `Refueling`. È un evento interno alla missione che **dipende da un'altra missione** (dipendenza fra missioni). |
 | 6 | Turnaround e numero di sortite | DCE tiene `aircraft_availability` per squadriglia: assegnati, disponibili, in manutenzione con istante di rientro in servizio. È un **pool di prontezza con tempi**; i magazzini DCS restano illimitati. Argomento a favore dell'opzione "pool di prontezza". |
 
 ### Decisioni nuove emerse da questa analisi
