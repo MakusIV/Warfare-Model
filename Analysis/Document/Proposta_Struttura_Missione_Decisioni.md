@@ -1,6 +1,6 @@
 # Struttura della Missione: le 9 decisioni (D1-D6, N1-N3)
 
-**Stato**: DECISO (2026-10-05), salvo **N3.f** (nuova questione, aperta). Decisioni dell'utente:
+**Stato**: DECISO (2026-10-05), compresa **N3.f = B** (due assi: postura e tipo di missione). Decisioni dell'utente:
 - tutte le raccomandazioni **(R)** applicate, **tranne N2.a = C**: un nuovo tipo `MissionWaypoint`
   che contiene un `Waypoint`, giudicato più pulito, manutenibile e leggibile di B;
 - N3.a-bis: aggiunto **Supporto** al livello comune;
@@ -243,7 +243,7 @@ pianificazione usa l'informazione disponibile in quel momento (nebbia di guerra 
 **Legame con A4**: il filtro armi per missione deriva da tipo di missione + ruolo (D3.c) + forma
 del bersaglio. È questo che sostituirà il filtro di test `ifv_only` di S19.
 
-### N3.f Posture tattiche e tipi di missione: un asse o due? (APERTA)
+### N3.f Posture tattiche e tipi di missione: un asse o due? (DECISO: B)
 
 **Cosa ho trovato** verificando le tabelle di decisione [V]:
 
@@ -569,7 +569,7 @@ Senza questo, una CAP in orbita o un'attesa (N2.c) non consumano.
 | N3.a | Livello comune Attacco / Trasporto / Posizionamento / Supporto |
 | N3.b | Aggiungere AWACS, Tanker, Transport |
 | N3.c | Terra: + Fire_Support, Movement, Recon, Supply; mare: + Patrol, Escort, Shore_Bombardment, Transport; rename `Retrait` → `Retreat` FATTO |
-| N3.f | APERTA. (R) Due assi: postura tattica (invariata) e tipo di missione, con tabella di compatibilità |
+| N3.f | **DECISO B**: due assi, postura tattica (invariata) e tipo di missione, con tabella di compatibilità |
 | N3.d | Bersaglio: asset/gruppo, punto/area, zona, nessuno |
 | N3.e | Provenienza del bersaglio (osservato con istante, o stimato) |
 | D2.a | Criteri pre-calcolabili + "fine di attività" senza cambio di rotta per quelli di stato |
