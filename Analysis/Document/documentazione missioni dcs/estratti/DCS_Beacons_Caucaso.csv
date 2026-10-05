@@ -1,0 +1,215 @@
+ID,Location,Position,Runway,Type,Frequency / Channel,Band,Callsign,Russian,Nation,Latitude,Longitude,Remarks / Status
+1,Kobuleti (UG5X),Runway,07,ILS LOC (Outer Marker),870.00 kHz,,KT,КТ,Georgia,"42° 55' 07"" N","41° 48' 10"" E",
+2,Kobuleti (UG5X),Runway,07,ILS LOC (Inner Marker),490.00 kHz,,T,Т,Georgia,"42° 55'' 28"" N","41° 50' 03"" E",
+3,Kobuleti (UG5X),Runway,07,ILS,111.50 MHz,,IKB,,Georgia,,,
+4,Kobuleti (UG5X),Airdrome,,TACAN,67x,,KBL,,Georgia,,,
+5,Kobuleti (UG5X),Tower,,Air Traffic Control,133.00 MHz,VHF,,,Georgia,,,
+6,Kobuleti (UG5X),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+7,Kobuleti (UG5X),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+8,Kobuleti (UG5X),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+9,Kobuleti (UG5X),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+10,Kobuleti (UG5X),Tower,,Ground Controlled Approach - Final,385.00 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+11,Gudauta (UG23),Runway,33,ILS LOC (Outer Marker),395.00 kHz,,ZC,ЗЦ,Abkhazia,"43° 05' 56"" N","40° 34' 43"" E",
+12,Gudauta (UG23),Tower,,Air Traffic Control,130.00 MHz,VHF,,,Abkhazia,,,
+13,Gudauta (UG23),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+14,Gudauta (UG23),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Abkhazia,,,Additional Combined Frequency
+15,Gudauta (UG23),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Abkhazia,,,Additional Combined Frequency
+16,Gudauta (UG23),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+17,Gudauta (UG23),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+18,Tbilisi - Soganlug (UG24),Tower,,Air Traffic Control,139.00 MHz,VHF,,,Georgia,,,
+19,Vaziani (UG27),Runway,14,ILS,108.75 MHz,,IVZ,,Georgia,,,
+20,Vaziani (UG27),Runway,32,ILS,108.75 MHz,,IVZ,,Georgia,,,
+21,Vaziani (UG27),Airdrome,,TACAN,22x,,VAS,,Georgia,,,
+22,Vaziani (UG27),Tower,,Air Traffic Control,140.00 MHz,VHF,,,Georgia,,,
+23,Vaziani (UG27),Tower,,Air Traffic Control,257.80 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+24,Vaziani (UG27),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+25,Vaziani (UG27),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+26,Vaziani (UG27),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+27,Vaziani (UG27),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+28,Kutaisi-Kopitnari (UGKO),Runway,08,ILS LOC (Outer Marker),477.00 kHz,,TIG,ТИГ,Georgia,"42° 10’ 27"" N","42° 27' 16"" E",
+29,Kutaisi-Kopitnari (UGKO),Runway,08,ILS,109.75 MHz,,IKS,,Georgia,,,
+30,Kutaisi-Kopitnari (UGKO),Airdrome,,VOR,113.60 MHz,,KTS,,Georgia,"42° 10’ 27"" N","42° 27' 19"" E",
+31,Kutaisi-Kopitnari (UGKO),Airdrome,,TACAN,44x,,KTS,,Georgia,,,
+32,Kutaisi-Kopitnari (UGKO),Tower,,Air Traffic Control,134.00 MHz,VHF,,,Georgia,,,
+33,Kutaisi-Kopitnari (UGKO),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+34,Kutaisi-Kopitnari (UGKO),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+35,Kutaisi-Kopitnari (UGKO),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+36,Kutaisi-Kopitnari (UGKO),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+37,Kutaisi-Kopitnari (UGKO),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+38,Senaki-Kolkhi (UGKS),Runway,09,ILS LOC (Outer Marker),156.00 kHz,,TI,ТИ,Georgia,"42° 14’ 58"" N","41° 59' 11"" E",
+39,Senaki-Kolkhi (UGKS),Runway,09,ILS LOC (Inner Marker),129.00 kHz,,I,И,Georgia,"42° 14’ 42"" N","42° 01' 05""E",
+40,Senaki-Kolkhi (UGKS),Runway,09,ILS,108.90 MHz,,ITS,,Georgia,,,
+41,Senaki-Kolkhi (UGKS),Airdrome,,TACAN,31x,,TSK,,Georgia,,,
+42,Senaki-Kolkhi (UGKS),Tower,,Air Traffic Control,132.00 MHz,VHF,,,Georgia,,,
+43,Senaki-Kolkhi (UGKS),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+44,Senaki-Kolkhi (UGKS),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+45,Senaki-Kolkhi (UGKS),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Georgia,,,Additional Combined Frequency
+46,Senaki-Kolkhi (UGKS),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+47,Senaki-Kolkhi (UGKS),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Georgia,,,Additional Combined Frequency
+48,Batumi (UGSB),Runway,13,ILS,110.30 MHz,,ILU,,Georgia,,,
+49,Batumi (UGSB),Airdrome,13,NDB,430.00 kHz,,LU,ЛУ,Georgia,"41° 36' 50"" N","41° 36' 24"" E",
+50,Batumi (UGSB),Airdrome,,TACAN,16x,,BTM,,Georgia,,,
+51,Batumi (UGSB),Tower,,Air Traffic Control,131.00 MHz,VHF,,,Georgia,,,
+52,Sukhumi - Babushara (UGSS),Runway,30,ILS LOC (Outer Marker),489.00 kHz,,AV,AЖ,Abkhazia,"42° 50' 00"" N","41°11' 04""E",
+53,Sukhumi - Babushara (UGSS),Runway,30,ILS LOC (Inner Marker),995.00 kHz,,A,A,Abkhazia,"42° 50' 47"" N","41° 09' 24"" E",
+54,Sukhumi - Babushara (UGSS),Tower,,Air Traffic Control,129.00 MHz,VHF,,,Abkhazia,,,
+55,Sukhumi - Babushara (UGSS),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+56,Sukhumi - Babushara (UGSS),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Abkhazia,,,Additional Combined Frequency
+57,Sukhumi - Babushara (UGSS),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Abkhazia,,,Additional Combined Frequency
+58,Sukhumi - Babushara (UGSS),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+59,Sukhumi - Babushara (UGSS),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Abkhazia,,,Additional Combined Frequency
+60,Tbilisi - Lochini (UGTB),Runway,13,ILS LOC (Outer Marker),342.00 kHz,,WP,ВП,Georgia,"41° 42' 12"" N","44° 54' 35"" E",Runway 13 not available
+61,Tbilisi - Lochini (UGTB),Runway,13,ILS LOC (Inner Marker),923.00 kHz,,W,В,Georgia,"41° 41'09"" N","44° 55' 55"" E",Runway 13 not available
+62,Tbilisi - Lochini (UGTB),Runway,13 R,ILS,110.30 MHz,,INA,,Georgia,,,Runway 13 not available
+63,Tbilisi - Lochini (UGTB),Runway,31,ILS LOC (Outer Marker),211.00 kHz,,NA,HA,Georgia,"41° 37' 59"" N","44° 59' 58"" E",
+64,Tbilisi - Lochini (UGTB),Runway,31,ILS LOC (Inner Marker),435.00 khz,,N,H,Georgia,"41° 39' 01"" N","44° 58' 38"" E",
+65,Tbilisi - Lochini (UGTB),Runway,31 L,ILS,108.90 MHz,,INA,,Georgia,,,
+66,Tbilisi - Lochini (UGTB),Airdrome,,VOR,113.70 MHz,,TBS,,Georgia,"41°40' 14"" N","44° 56' 49"" E",
+67,Tbilisi - Lochini (UGTB),Airdrome,,TACAN,25x,,GTB,,Georgia,,,
+68,Tbilisi - Lochini (UGTB),Tower,,Air Traffic Control,138.00 MHz,VHF,,,Georgia,,,
+69,Anapa (URKA),Runway,04,ILS LOC (Outer Marker),443.00 kHz,,AN,AH,Russia,"44° 58' 12"" N","37° 17' 24"" E",
+70,Anapa (URKA),Runway,04,ILS LOC (Inner Marker),215.00 kHz,,N,H,Russia,"44° 59' 14"" N","37° 19' 24"" E",
+71,Anapa (URKA),Runway,22,ILS LOC (Outer Marker),443.00 kHz,,AN,AH,Russia,"45° 02' 23"" N","37° 23' 46"" E",Runway 04 not available
+72,Anapa (URKA),Runway,22,ILS LOC (Inner Marker),215.00 kHz,,N,H,Russia,"45°01' 21""N","37° 22' 20"" E",Runway 04 not available
+73,Anapa (URKA),Tower,,Air Traffic Control,121.00 MHz,VHF,,,Russia,,,
+74,Anapa (URKA),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+75,Anapa (URKA),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+76,Anapa (URKA),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+77,Anapa (URKA),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+78,Anapa (URKA),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+79,Gelendzhik (URKG),Airdrome,,NDB,1000.00 kHz,,GN,TH,Russia,"44° 33' 52"" N","38° 00' 55"" E",
+80,Gelendzhik (URKG),Airdrome,,VOR,114.30 MHz,,GNV,,Russia,"44° 34' 21"" N","38° 00' 44"" E",
+81,Gelendzhik (URKG),Tower,,Air Traffic Control,126.00 MHz,VHF,,,Russia,,,
+82,Maykop - Khanskaya (URKH),Runway,04,ILS LOC (Outer Marker),288.00 kHz,,DG,ДГ,Russia,"44° 38' 44"" N","39° 59' 09"" E",Runway 04 not available
+83,Maykop - Khanskaya (URKH),Runway,04,ILS LOC (Inner Marker),591.00 kHz,,D,Д,Russia,"44° 39' 47"" N","40° 00' 36"" E",Runway 04 not available
+84,Maykop - Khanskaya (URKH),Runway,04,PRMG (VOR/DME),6,,MK,MK,Russia,,,Not tested
+85,Maykop - Khanskaya (URKH),Runway,22,ILS LOC (Outer Marker),288.00 kHz,,RK,РК,Russia,"44° 42' 02"" N","40° 05' 05"" E",
+86,Maykop - Khanskaya (URKH),Runway,22,ILS LOC (Inner Marker),591.00 kHz,,R,P,Russia,"44° 42' 00"" N","40° 03' 38"" E",
+87,Maykop - Khanskaya (URKH),Runway,22,PRMG (VOR/DME),6,,MK,MK,Russia,,,Not tested
+88,Maykop - Khanskaya (URKH),Airdrome,,RSBN (VOR/DME),1176.50 MHz,,DG,ДГ,Russia,,,Channel 34 / Not tested
+89,Maykop - Khanskaya (URKH),Tower,,Air Traffic Control,125.00 MHz,VHF,,,Russia,,,
+90,Maykop - Khanskaya (URKH),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+91,Maykop - Khanskaya (URKH),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+92,Maykop - Khanskaya (URKH),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+93,Maykop - Khanskaya (URKH),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+94,Maykop - Khanskaya (URKH),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+95,Krasnodar- Pashkovsky (URKK),Runway,05,ILS LOC (Outer Marker),493.00 kHz,,KR,KP,Russia,"45° 00' 25"" N","39° 07' 58"" E",
+96,Krasnodar- Pashkovsky (URKK),Runway,05,ILS LOC (Inner Marker),240.00 kHz,,K,K,Russia,"45° 01' 20"" N","39° 09' 34"" E",
+97,Krasnodar- Pashkovsky (URKK),Runway,23,ILS LOC (Outer Marker),493.00 kHz,,LD,ЛД,Russia,"45° 04' 08"" N","39° 14' 35"" E",Runway 23 not available
+98,Krasnodar- Pashkovsky (URKK),Runway,23,ILS LOC (Inner Marker),240.00 kHz,,L,Л,Russia,"45° 01' 20"" N","39° 09' 34"" E",Runway 23 not available
+99,Krasnodar- Pashkovsky (URKK),Airdrome,,VOR,115.80 MHz,,KRD,,Russia,"45° 01' 15"" N","39° 09' 50"" E",
+100,Krasnodar- Pashkovsky (URKK),Tower,,Air Traffic Control,128.00 MHz,VHF,,,Russia,,,
+101,Krasnodar - Center (URKI),Runway,09,ILS LOC (Outer Marker),625.00 kHz,,MB,МБ,Russia,"45° 05' 17"" N","38° 52' 24"" E",Runway 09 not available
+102,Krasnodar - Center (URKI),Runway,09,ILS LOC (Inner Marker),303.00 kHz,,M,M,Russia,"45° 05' 16"" N","38° 54' 27"" E",Runway 09 not available
+103,Krasnodar - Center (URKI),Runway,09,PRMG (VOR/DME),31,,KS,KC,Russia,,,Not tested
+104,Krasnodar - Center (URKI),Runway,27,ILS LOC (Outer Marker),625.00 kHz,,OQ,ОЧ,Russia,"45° 05' 08"" N","39° 00' 23"" E",
+105,Krasnodar - Center (URKI),Runway,27,ILS LOC (Inner Marker),303.00 kHz,,О,O,Russia,"45° 05' 11"" N","38° 58' 20"" E",
+106,Krasnodar - Center (URKI),Runway,27,PRMG (VOR/DME),31,,KS,KC,Russia,,,Not tested
+107,Krasnodar - Center (URKI),Airdrome,,RSBN (VOR/DME),1163.50 MHz,,MB,МБ,Russia,,,Channel 8 / Not tested
+108,Krasnodar - Center (URKI),Tower,,Air Traffic Control,122.00 MHz,VHF,,,Russia,,,
+109,Krasnodar - Center (URKI),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+110,Krasnodar - Center (URKI),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+111,Krasnodar - Center (URKI),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+112,Krasnodar - Center (URKI),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+113,Krasnodar - Center (URKI),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+114,Novorossiysk (URKN),Tower,,Air Traffic Control,123.00 MHz,VHF,,,Russia,,,
+115,Novorossiysk (URKN),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+116,Novorossiysk (URKN),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+117,Novorossiysk (URKN),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+118,Novorossiysk (URKN),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+119,Novorossiysk (URKN),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+120,Krymsk (URKW),Runway,04,ILS LOC (Outer Marker),408.00 kHz,,ЮО,ЮО,Russia,"44° 55' 59"" N","37° 56' 56"" E",Runway 04 not available / Not tested
+121,Krymsk (URKW),Runway,04,ILS LOC (Inner Marker),830.00 kHz,,O,O,Russia,"44° 57' 03"" N","37° 58' 19"" E",Runway 04 not available
+122,Krymsk (URKW),Runway,04,PRMG (VOR/DME),16,,KR,KP,Russia,,,Not tested
+123,Krymsk (URKW),Runway,22,ILS LOC (Outer Marker),408.00 kHz,,KW,KB,Russia,"45° 00' 10"" N","38° 02' 27"" E",
+124,Krymsk (URKW),Runway,22,ILS LOC (Inner Marker),830.00 kHz,,K,K,Russia,"44° 59' 05"" N","38° 01' 03""E",
+125,Krymsk (URKW),Runway,22,PRMG (VOR/DME),16,,KR,KP,Russia,,,Not tested
+126,Krymsk (URKW),Airdrome,,RSBN (VOR/DME),1173.50 MHz,,KW,KB,Russia,,,Channel 28 / Not tested
+127,Krymsk (URKW),Tower,,Air Traffic Control,124.00 MHz,VHF,,,Russia,,,
+128,Krymsk (URKW),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+129,Krymsk (URKW),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+130,Krymsk (URKW),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+131,Krymsk (URKW),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+132,Krymsk (URKW),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+133,Mineralnye Vody (URMM),Runway,12,ILS LOC (Outer Marker),583.00 kHz,,МД,МД,Russia,"44° 15' 27"" N","43° 01' 03"" E",Runway 12 not available
+134,Mineralnye Vody (URMM),Runway,12,ILS LOC (Inner Marker),283.00 kHz,,M,M,Russia,"44° 14' 40"" N","43° 02' 45"" E",Runway 12 not available
+135,Mineralnye Vody (URMM),Runway,12,ILS,111.70 Mhz,,IMD,,Russia,,,Runway 12 not available
+136,Mineralnye Vody (URMM),Runway,30,ILS LOC (Outer Marker),583.00 kHz,,NR,HP,Russia,"44°11' 54""N","43° 08' 39"" E",
+137,Mineralnye Vody (URMM),Runway,30,ILS LOC (Inner Marker),283.00 kHz,,N,H,Russia,"44° 12' 43"" N","43° 06' 56"" E",
+138,Mineralnye Vody (URMM),Runway,30,ILS,109.30 MHz,,IMW,,Russia,,,
+139,Mineralnye Vody (URMM),Airdrome,,RSBN (VOR/DME),1176.00 MHz,,MW,MB,Russia,,,Channel 33 / Not tested
+140,Mineralnye Vody (URMM),Airdrome,,VOR,1171.00 MHz,,MNV,,Russia,"44° 14' 22"" N","43° 03' 15"" E",
+141,Mineralnye Vody (URMM),Tower,,Air Traffic Control,135.00 MHz,VHF,,,Russia,,,
+142,Nalchik (URMN),Runway,24,ILS LOC (Outer Marker),718.00 kHz,,ML,МЛ,Russia,"43° 32' 05"" N","43° 411 34""E",
+143,Nalchik (URMN),Runway,24,ILS LOC (Inner Marker),350.00 kHz,,N,H,Russia,"43° 31' 26""N","43° 39' 48"" E",
+144,Nalchik (URMN),Runway,24,ILS,110.50 MHz,,INL,,Russia,,,
+145,Nalchik (URMN),Tower,,Air Traffic Control,136.00 MHz,VHF,,,Russia,,,
+146,Beslan (URMO),Runway,10,ILS LOC (Outer Marker),1050.00 kHz,,CH,ЦХ,Russia,"43° 12' 56"" N","44° 32' 23"" E",
+147,Beslan (URMO),Runway,10,ILS LOC (Inner Marker),250.00 kHz,,C,Ц,Russia,"43° 12' 39"" N","44° 34' 20"" E",
+148,Beslan (URMO),Runway,10,ILS,110.50 MHz,,ICH,,Russia,,,
+149,Beslan (URMO),Tower,,Air Traffic Control,141.00 MHz,VHF,,,Russia,,,
+150,Sochi - Adler (URSS),Runway,06,ILS LOC (Outer Marker),761.00 kHz,,SO,CO,Russia,"43° 26' 07"" N","39° 54' 39"" E",
+151,Sochi - Adler (URSS),Runway,06,ILS,111.10 MHz,,ISO,,Russia,,,
+152,Sochi - Adler (URSS),Tower,,Air Traffic Control,127.00 MHz,VHF,,,Russia,,,
+153,Sochi - Adler (URSS),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+154,Sochi - Adler (URSS),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+155,Sochi - Adler (URSS),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+156,Sochi - Adler (URSS),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+157,Sochi - Adler (URSS),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,Additional Combined Frequency
+158,Mozdok (XRMF),Runway,08,ILS LOC (Outer Marker),525.00 kHz,,DO,ДО,Russia,"43° 47' 34"" N","44° 31' 43"" E",
+159,Mozdok (XRMF),Runway,08,ILS LOC (Inner Marker),1064.00 kHz,,D,Д,Russia,"43° 47' 32"" N","44° 33' 43"" E",
+160,Mozdok (XRMF),Runway,08,PRMG (VOR/DME),24,,MZ,M3,Russia,,,Not tested
+161,Mozdok (XRMF),Runway,26,ILS LOC (Outer Marker),525.00 kHz,,RM,PM,Russia,"43° 47' 26"" N","44° 40' 14"" E",Runway 26 not available
+162,Mozdok (XRMF),Runway,26,ILS LOC (Inner Marker),1065.00 kHz,,R,P,Russia,"43° 47' 27"" N","44° 48' 14"" E",Runway 26 not available
+163,Mozdok (XRMF),Runway,26,PRMG (VOR/DME),24,,MZ,M3,Russia,,,Not tested
+164,Mozdok (XRMF),Tower,,Air Traffic Control,177.00 MHz,VHF,,,Russia,,,
+165,Mozdok (XRMF),Tower,,Air Traffic Control,257.80 MHz,UHF,,,Russia,,,Additional Combined Frequency
+166,Mozdok (XRMF),Tower,,Air Traffic Control,122.10 MHz,VHF,,,Russia,,,Additional Combined Frequency
+167,Mozdok (XRMF),Tower,,Ground Controlled Approach,123.30 MHz,VHF,,,Russia,,,Additional Combined Frequency
+168,Mozdok (XRMF),Tower,,Ground Controlled Approach - Search,344.00 MHz,UHF,,,Russia,,,Additional Combined Frequency
+169,Mozdok (XRMF),Tower,,Ground Controlled Approach - Final,385.40 MHz,UHF,,,Russia,,,
+220,Astrachan,,,NDB,745.00 kHz,,AD,АД,Russia,"46° 21' 13"" N","47° 53' 00"" E",
+221,Agoy,,,NDB,381.00 kHz,,AG,АГ,Russia,"44° 08' 08"" N","39° 02' 00"" E",
+223,Krasnodarskiy,,,NDB,300.50 kHz,,AN,АН,Russia,"45° 26' 27"" N","36° 51' 11"" E",
+224,Bagajewskaja,,,NDB,1175.00 kHz,,BA,БА,Russia,"47° 19' 14"" N","40° 21' 52""E",
+226,Kalaus,,,NDB,735.00 kHz,,BJ,БЙ,Russia,"43° 27' 52"" N","45° 12' 55"" E",
+228,Ali,,,NDB,353.00 kHz,,BT,БТ,Russia,"42° 05' 57"" N","43° 38' 39"" E",
+230,Gali,,,NDB,525.00 kHz,,DA,ДА,Abkhazia,"42° 36' 09"" N","41° 47' 02"" E",
+231,Dubrava,,,NDB,520.00 kHz,,DF,ДФ,Georgia,"41° 55' 12"" N","44° 34' 00"" E",
+234,Jegorlykskaja,,,NDB,435.00 kHz,,ER,ЕР,Russia,"46° 35' 07"" N","40° 39' 52"" E",
+242,Kropotkin,,,NDB,214.00 kHz,,KP,КП,Russia,"45° 27' 12"" N","40° 33' 56"" E",
+243,Krasnyy,,,NDB,1025.00 kHz,,KS,KC,Russia,"47° 12' 16"" N","40° 20' 54"" E",
+244,Shpakovskoye,,,NDB,730.00 kHz,,KT,KT,Russia,"45° 07' 37"" N","42° 10' 51"" E",
+245,Kislowodsk,,,NDB,995.00 kHz,,KW,KB,Russia,"43° 56' 43"" N","42° 38' 43"" E",
+246,Kisljar,,,NDB,455.00 kHz,,KZ,K3,Russia,"43° 50' 14"" N","46° 43' 00"" E",
+247,Lazarevskoye,,,NDB,307.00 kHz,,LA,HA,Russia,"43° 55' 16"" N","39° 20' 08"" E",
+250,Krasnolessje,,,NDB,395.00 kHz,,LE,ЛЕ,Russia,"47° 06' 06"" N","41° 20' 56"" E",
+253,Manychskiy,,,NDB,705.00 kHz,,MN,MH,Russia,"47° 03' 14"" N","40° 21' 53"" E",
+254,Bolshevik,,,NDB,507.00 kHz,,ND,НД,Russia,"45° 46' 10"" N","40° 13' 54"" E",
+257,"Rostow at Don, Center",,,NDB,515.00 kHz,,NV,НЖ,Russia,"47° 17' 12"" N","39° 37' 53"" E",
+258,Ust-Labinsk,,,NDB,330.00 kHz,,NZ,H3,Russia,"45° 13' 36"" N","39° 39' 14"" E",
+260,Gori,,,NDB,462.00 kHz,,ОЗ,ОЗ,Georgia,"42° 01' 12"" N","44° 07' 55"" E",
+262,Prikaspiyskiy,,,NDB,352.00 kHz,,PK,ПК,Russia,"46° 13' 45"" N","47° 12' 24"" E",
+263,Peredovaya,,,NDB,1210.00 kHz,,PR,ПР,Russia,"44° 07' 15"" N","39° 54' 59"" E",
+264,"Rostow at Don, East",,,NDB,320.00 kHz,,RN,PH,Russia,"47° 13' 44"" N","39° 46' 05"" E",
+265,Krasnodar,,,NDB,324.00 kHz,,RF,РФ,Russia,"45° 17' 10"" N","39° 54' 59"" E",
+266,Dzhubga,,,NDB,420.00 kHz,,RQ,РЩ,Russia,"41° 19' 16"" N","38° 42' 05"" E",
+267,Elista,,,NDB,311.00 kHz,,SA,CA,Russia,"46° 22' 31"" N","44° 19' 56"" E",
+270,Sukhoy,,,NDB,862.00 kHz,,SH,СХ,Russia,"47° 06' 06"" N","41° 20' 56"" E",
+272,Oblast Smolensk,,,NDB,662.00 kHz,,SM,СМ,Russia,"44° 47' 24"" N","38° 47' 34"" E",
+273,Sulbanskoye,,,NDB,866.00 kHz,,SN,CH,Russia,"44° 35' 39"" N","42° 40' 04"" E",
+274,Sarmakovo,,,NDB,907.00 kHz,,SR,CP,Russia,"41° 37' 58"" N","46° 01' 00"" E",
+275,Machatschkala,,,NDB,822.00 kHz,,TA,TA,Russia,"42° 58' 40"" N","47° 31' 09"" E",
+276,Tiraspol,,,NDB,515.00 kHz,,TH,TX,Russia,"47° 17' 13"" N","39° 37' 55"" E",
+277,Taganrog Center,,,NDB,470.00 kHz,,TN,TH,Russia,"47° 15' 08"" N","38° 49' 51"" E",
+278,Znori,,,NDB,342.00 kHz,,TO,TO,Georgia,"43° 45' 14"" N","43° 06' 45"" E",
+279,Belorechenskiy,,,NDB,1182.00 kHz,,TP,ТП,Russia,"44° 09' 34"" N","43° 31' 54""E",
+280,"Taganrog, Rostovskaya oblast",,,NDB,720.00 kHz,,UF,УФ,Russia,"47° 12' 09"" N","38° 50' 53"" E",
+281,Tichorezk,,,NDB,528.00 kHz,,UH,УХ,Russia,"45° 50' 03"" N","40° 05' 02"" E",
+282,Zenzeli,,,NDB,337.00 kHz,,UP,УП,Russia,"45° 56' 06"" N","47° 04' 02"" E",
+283,Vostochnyy,,,NDB,830.00 kHz,,WK,ВК,Russia,"43° 23' 11"" N","45° 41' 53"" E",
+284,Armavir Center,,,NDB,740.00 kHz,,WM,BM,Russia,"44° 58' 13"" N","41° 06' 56"" E",
+285,Veselyy,,,NDB,641.00 kHz,,WS,BC,Russia,"46° 07' 07"" N","40° 42' 54"" E",
+286,Ryazanskaya,,,NDB,312.00 kHz,,XT,ЬТ,Russia,"44° 58' 14"" N","39° 33' 52"" E",
+287,Бирючья Коса,,,NDB,722.00 kHz,,YO,ЫО,Russia,"45° 23' 08"" N","47° 35' 59"" E",
+288,Maikop,,,NDB,682.00 kHz,,MA,MA,Russia,"44° 37' 37"" N","40° 08' 35"" E",
