@@ -1,6 +1,6 @@
 ---
 name: project-mission-structure-decisions
-description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0, F1, F2 FATTE 2026-10-05 (suite 3868 OK, scenari 292 identici); prossima F3"
+description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0-F3 FATTE 2026-10-05 (suite 3922 OK, scenari 292 identici); prossima F4"
 metadata:
   type: project
 ---
@@ -60,3 +60,11 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   area/gruppo). Regola utente: un blocco può avere più missioni nella stessa sessione, un asset una sola (in F3).
 - F2 `4e18d7d8`: tassonomia in Context + `AIR_COMBAT_TASK` (vecchio AIR_TASK); task di supporto a 0 in
   combat power ed esclusi dai punteggi; 13 loadout supporto con task, An-30M Recon lasciato vuoto.
+- F3 `533cd1f5`: `SessionOrder.missions/operations`, `SessionOutcome.mission_outcomes`, `Logic/Mission_Adapter.py`
+  (offset di formazione che ruota con la rotta, MITER_LIMIT=2.0 stima), `run_session` SENZA routes/starts/speeds
+  (tutti gli scenari migrati). Modifica al piano: mission_id NON nell'RNG in F3 (le estrazioni sono per ingaggio
+  fra forze), entra in F4 con la missione come unità di ingaggio. Esito di prima forma COMPLETED/DESTROYED/FAILED
+  (manca "in corso"). Scenari: tutte le rotte aeree senza RTB (start air, ultimo punto LAND annotato come
+  semplificazione da completare in F5-F6); asset dello stesso blocco a velocità diverse = missioni separate
+  (Blue-Armor M2 / M1A2 in S1, S9, S9R, S11, S12, S17, VAL; S7/S18 strike+escort; S19; S19AD standoff 4 missioni)
+  -> in F4 disingaggeranno separatamente: domanda posta all'utente prima di F4.
