@@ -991,6 +991,30 @@ class TestCombatScore(unittest.TestCase):
         with self.assertRaises(ValueError):
             ac.combat_score("INVALID_TASK_XYZ", _FIGHTER_LOADOUT or "none")
 
+    def test_combat_score_support_task_is_zero(self):
+        """Fase F2: i task di supporto non hanno combat_score (0.0), anche per un aereo di supporto."""
+        ac = Aircraft_Data._registry["E-3A Sentry"]
+        self.assertEqual(ac.combat_score("AWACS", "AWACS Standard"), 0.0)
+        tanker = Aircraft_Data._registry["KC-135 Stratotanker"]
+        self.assertEqual(tanker.combat_score("Tanker", "Tanker Standard"), 0.0)
+
+    def test_combat_aggregate_ignores_support_tasks(self):
+        """combat_aggregate itera solo AIR_COMBAT_TASK: gli aerei di supporto restano a 0 e senza voci."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import get_aircraft_best_scores_per_task
+        from Code.Dynamic_War_Manager.Source.Context.Context import AIR_SUPPORT_TASK
+        for model in ("E-3A Sentry", "KC-135 Stratotanker", "C-130 Hercules", "KC-130"):
+            with self.subTest(model=model):
+                raw, best = Aircraft_Data._registry[model].combat_aggregate()
+                self.assertEqual(raw, 0.0)
+                self.assertEqual(best, {})
+                self.assertEqual(get_aircraft_best_scores_per_task(model), {})
+        for model, best in ((m, get_aircraft_best_scores_per_task(m)) for m in Aircraft_Data._registry):
+            self.assertFalse(set(best) & set(AIR_SUPPORT_TASK), model)
+
+    def test_combat_aggregate_against_target_default_tasks_exclude_support(self):
+        ac = Aircraft_Data._registry["E-3A Sentry"]
+        self.assertEqual(ac.combat_aggregate_against_target({"Soft": {"perc_type": 1.0, "perc_dimension": {"med": 1.0}}}), (0.0, {}))
+
     @unittest.skipIf(_ATTACKER_LOADOUT is None, "Nessun loadout disponibile per l'attacker di riferimento")
     def test_combat_score_target_effectiveness_returns_float(self):
         ac = Aircraft_Data._registry[_ATTACKER_MODEL]

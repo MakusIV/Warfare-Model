@@ -413,7 +413,26 @@ AIR_TO_GROUND_TASK = {
 } 
 """
 
-AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
+class Air_Support_Task(Enum):
+    # Task di supporto (N3.b, Proposta_Struttura_Missione_Decisioni.md): non sono task di combattimento.
+    # Non hanno combat_score (Aircraft_Data.combat_score_eval li tratta come task non da combattimento)
+    # e non contribuiscono alla combat power aggregata dell'aereo (v. AIR_COMBAT_TASK).
+    AWACS = 'AWACS'
+    TANKER = 'Tanker'
+    TRANSPORT = 'Transport'
+
+AIR_SUPPORT_TASK = {task.value: task.value for task in Air_Support_Task}
+
+# Task aerei da combattimento (aria-aria + aria-suolo): sono gli unici per i quali esiste un combat_score
+# e che entrano nella combat power aggregata dell'aereo (Aircraft_Data.combat_aggregate,
+# Aircraft.set_combat_power, Tactical_Evaluation). Coincide con l'AIR_TASK precedente l'aggiunta dei task
+# di supporto (Fase F2 del Piano_Implementazione_Missione.md): i chiamanti che calcolano potenza o priorita'
+# d'attacco iterano su AIR_COMBAT_TASK, non su AIR_TASK, cosi' i task di supporto non cambiano quei valori.
+AIR_COMBAT_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK
+
+# Tutti i task aerei, cioe' i tipi di missione aerea (combattimento + supporto). L'ordine di inserimento
+# conserva i task di combattimento in testa (Tactical_Analysis.representative_combat_power legge il primo).
+AIR_TASK = AIR_TO_AIR_TASK | AIR_TO_GROUND_TASK | AIR_SUPPORT_TASK
 
 class Sea_Task(Enum):
     ATTACK = 'Attack'
@@ -429,6 +448,180 @@ ACTION_TASKS = {
     'air': AIR_TASK,
     'sea': SEA_TASK
 }
+
+
+# =============================================================================
+# TIPI DI MISSIONE (N3 / N3.f = B, Proposta_Struttura_Missione_Decisioni.md; Fase F2 del
+# Piano_Implementazione_Missione.md)
+# =============================================================================
+# Il tipo di missione e' un asse SEPARATO dalla postura tattica (N3.f = B):
+#   - postura tattica: Ground_Action / Sea_Task, invariate; restano l'output del controllore fuzzy
+#     (Tactical_Evaluation.evaluateGroundTacticalAction) e la chiave della combat power e delle tabelle
+#     di efficacia (ACTION_TASKS, GROUND_COMBAT_EFFICACY, SEA_COMBAT_EFFICACY);
+#   - tipo di missione: attributo della Missione, sotto il livello comune Mission_Category (N3.a).
+# I due assi sono collegati dalla tabella MISSION_TYPE_POSTURES (tipo -> posture ammesse e postura di
+# riferimento per la combat power). Per gli aerei i task di AIR_TASK sono gia' tipi di missione (v. commento
+# di AIR_COMBAT_EFFICACY), quindi l'aria non ha posture e non compare in MISSION_TYPE_POSTURES.
+# Per ora sono solo dati: nessun modulo del motore li usa (il secondo stadio "postura -> tipi di missione"
+# andra' progettato con il pianificatore).
+
+class Mission_Category(Enum):
+    # Livello superiore comune ai tre domini (N3.a, con "Support" di N3.a-bis): decide la forma
+    # dell'obiettivo (blocco nemico, blocco amico, zona) e i criteri di fine di default.
+    ATTACK = 'Attack'
+    TRANSPORT = 'Transport'
+    POSITIONING = 'Positioning'
+    SUPPORT = 'Support'
+
+MISSION_CATEGORY = {category.value: category.value for category in Mission_Category}
+
+
+class Ground_Mission_Type(Enum):
+    # N3.c: le prime quattro coincidono per nome con le posture di Ground_Action, le altre no.
+    ATTACK = 'Attack'
+    DEFENSE = 'Defense'
+    MAINTAIN = 'Maintain'
+    RETREAT = 'Retreat'
+    FIRE_SUPPORT = 'Fire_Support'    # fuoco indiretto
+    MOVEMENT = 'Movement'            # trasferimento senza contatto previsto
+    RECON = 'Recon'
+    SUPPLY = 'Supply'                # colonna logistica
+
+GROUND_MISSION_TYPE = {mission_type.value: mission_type.value for mission_type in Ground_Mission_Type}
+
+
+class Sea_Mission_Type(Enum):
+    # N3.c: le prime tre coincidono per nome con le posture di Sea_Task, le altre no.
+    ATTACK = 'Attack'
+    DEFENSE = 'Defense'
+    RETREAT = 'Retreat'
+    PATROL = 'Patrol'
+    ESCORT = 'Escort'                        # scorta a convoglio
+    SHORE_BOMBARDMENT = 'Shore_Bombardment'  # fuoco contro terra
+    TRANSPORT = 'Transport'
+
+SEA_MISSION_TYPE = {mission_type.value: mission_type.value for mission_type in Sea_Mission_Type}
+
+# Tipi di missione per dominio. Per l'aria sono i task di AIR_TASK (combattimento + supporto).
+MISSION_TYPES = {
+    'ground': GROUND_MISSION_TYPE,
+    'air': AIR_TASK,
+    'sea': SEA_MISSION_TYPE,
+}
+
+# Tipo di missione -> Mission_Category (valore). Copre tutti i tipi di MISSION_TYPES.
+# STIMA (prima stesura, Fase F2): assegnazione di progetto non tarata su dati; da rivedere quando il
+# pianificatore usera' la categoria per la forma dell'obiettivo e i criteri di fine (N3.a, D2).
+MISSION_TYPE_CATEGORY = {
+    'ground': {
+        Ground_Mission_Type.ATTACK.value:       Mission_Category.ATTACK.value,
+        Ground_Mission_Type.DEFENSE.value:      Mission_Category.POSITIONING.value,
+        Ground_Mission_Type.MAINTAIN.value:     Mission_Category.POSITIONING.value,
+        Ground_Mission_Type.RETREAT.value:      Mission_Category.POSITIONING.value,
+        Ground_Mission_Type.FIRE_SUPPORT.value: Mission_Category.ATTACK.value,
+        Ground_Mission_Type.MOVEMENT.value:     Mission_Category.POSITIONING.value,
+        Ground_Mission_Type.RECON.value:        Mission_Category.SUPPORT.value,
+        Ground_Mission_Type.SUPPLY.value:       Mission_Category.TRANSPORT.value,
+    },
+    'air': {
+        Air_To_Air_Task.CAP.value:              Mission_Category.POSITIONING.value,
+        Air_To_Air_Task.FIGHTER_SWEEP.value:    Mission_Category.ATTACK.value,
+        Air_To_Air_Task.INTERCEPT.value:        Mission_Category.ATTACK.value,
+        Air_To_Air_Task.ESCORT.value:           Mission_Category.POSITIONING.value,
+        Air_To_Air_Task.RECON.value:            Mission_Category.SUPPORT.value,
+        Air_To_Ground_Task.CAS.value:           Mission_Category.ATTACK.value,
+        Air_To_Ground_Task.STRIKE.value:        Mission_Category.ATTACK.value,
+        Air_To_Ground_Task.PINPOINT_STRIKE.value: Mission_Category.ATTACK.value,
+        Air_To_Ground_Task.SEAD.value:          Mission_Category.ATTACK.value,
+        Air_To_Ground_Task.ANTI_SHIP.value:     Mission_Category.ATTACK.value,
+        Air_Support_Task.AWACS.value:           Mission_Category.SUPPORT.value,
+        Air_Support_Task.TANKER.value:          Mission_Category.SUPPORT.value,
+        Air_Support_Task.TRANSPORT.value:       Mission_Category.TRANSPORT.value,
+    },
+    'sea': {
+        Sea_Mission_Type.ATTACK.value:            Mission_Category.ATTACK.value,
+        Sea_Mission_Type.DEFENSE.value:           Mission_Category.POSITIONING.value,
+        Sea_Mission_Type.RETREAT.value:           Mission_Category.POSITIONING.value,
+        Sea_Mission_Type.PATROL.value:            Mission_Category.POSITIONING.value,
+        Sea_Mission_Type.ESCORT.value:            Mission_Category.POSITIONING.value,
+        Sea_Mission_Type.SHORE_BOMBARDMENT.value: Mission_Category.ATTACK.value,
+        Sea_Mission_Type.TRANSPORT.value:         Mission_Category.TRANSPORT.value,
+    },
+}
+
+# Tabella di compatibilita' tipo di missione -> posture tattiche (N3.f = B), solo terra e mare.
+#   'admitted':  posture (valori di GROUND_ACTION / SEA_TASK) compatibili con il tipo di missione;
+#   'reference': postura la cui combat power rappresenta la forza impiegata nel tipo di missione
+#                (sempre fra le ammesse).
+# STIMA (prima stesura, Fase F2): valori di progetto non tarati su dati (esempi [I] di N3.f); es. Supply e
+# Recon non hanno postura offensiva e usano la combat power di autodifesa (Defense).
+MISSION_TYPE_POSTURES = {
+    'ground': {
+        Ground_Mission_Type.ATTACK.value:       {'admitted': (Ground_Action.ATTACK.value,), 'reference': Ground_Action.ATTACK.value},
+        Ground_Mission_Type.DEFENSE.value:      {'admitted': (Ground_Action.DEFENSE.value,), 'reference': Ground_Action.DEFENSE.value},
+        Ground_Mission_Type.MAINTAIN.value:     {'admitted': (Ground_Action.MAINTAIN.value,), 'reference': Ground_Action.MAINTAIN.value},
+        Ground_Mission_Type.RETREAT.value:      {'admitted': (Ground_Action.RETREAT.value,), 'reference': Ground_Action.RETREAT.value},
+        Ground_Mission_Type.FIRE_SUPPORT.value: {'admitted': (Ground_Action.ATTACK.value, Ground_Action.DEFENSE.value), 'reference': Ground_Action.ATTACK.value},
+        Ground_Mission_Type.MOVEMENT.value:     {'admitted': (Ground_Action.MAINTAIN.value, Ground_Action.RETREAT.value), 'reference': Ground_Action.MAINTAIN.value},
+        Ground_Mission_Type.RECON.value:        {'admitted': (Ground_Action.DEFENSE.value, Ground_Action.MAINTAIN.value), 'reference': Ground_Action.DEFENSE.value},
+        Ground_Mission_Type.SUPPLY.value:       {'admitted': (Ground_Action.DEFENSE.value,), 'reference': Ground_Action.DEFENSE.value},
+    },
+    'sea': {
+        Sea_Mission_Type.ATTACK.value:            {'admitted': (Sea_Task.ATTACK.value,), 'reference': Sea_Task.ATTACK.value},
+        Sea_Mission_Type.DEFENSE.value:           {'admitted': (Sea_Task.DEFENSE.value,), 'reference': Sea_Task.DEFENSE.value},
+        Sea_Mission_Type.RETREAT.value:           {'admitted': (Sea_Task.RETREAT.value,), 'reference': Sea_Task.RETREAT.value},
+        Sea_Mission_Type.PATROL.value:            {'admitted': (Sea_Task.DEFENSE.value, Sea_Task.ATTACK.value), 'reference': Sea_Task.DEFENSE.value},
+        Sea_Mission_Type.ESCORT.value:            {'admitted': (Sea_Task.DEFENSE.value,), 'reference': Sea_Task.DEFENSE.value},
+        Sea_Mission_Type.SHORE_BOMBARDMENT.value: {'admitted': (Sea_Task.ATTACK.value,), 'reference': Sea_Task.ATTACK.value},
+        Sea_Mission_Type.TRANSPORT.value:         {'admitted': (Sea_Task.DEFENSE.value, Sea_Task.RETREAT.value), 'reference': Sea_Task.DEFENSE.value},
+    },
+}
+
+
+def _check_mission_type(domain: str, mission_type: str) -> None:
+    """Valida (domain, mission_type) contro MISSION_TYPES.
+
+    Raises:
+        TypeError: se domain o mission_type non sono stringhe.
+        ValueError: se domain non e' in MISSION_TYPES o mission_type non e' un tipo del dominio.
+    """
+    if not isinstance(domain, str):
+        raise TypeError(f"domain must be a str, got {type(domain).__name__}")
+    if not isinstance(mission_type, str):
+        raise TypeError(f"mission_type must be a str, got {type(mission_type).__name__}")
+    if domain not in MISSION_TYPES:
+        raise ValueError(f"domain must be one of {list(MISSION_TYPES)!r}, got {domain!r}")
+    if mission_type not in MISSION_TYPES[domain]:
+        raise ValueError(f"mission_type for domain {domain!r} must be one of {list(MISSION_TYPES[domain])!r}, got {mission_type!r}")
+
+
+def mission_category_of(domain: str, mission_type: str) -> str:
+    """Categoria comune (valore di Mission_Category) del tipo di missione `mission_type` del dominio `domain`.
+
+    Raises:
+        TypeError: se domain o mission_type non sono stringhe.
+        ValueError: se domain o mission_type non sono validi (v. MISSION_TYPES).
+    """
+    _check_mission_type(domain, mission_type)
+    return MISSION_TYPE_CATEGORY[domain][mission_type]
+
+
+def postures_for(domain: str, mission_type: str) -> Tuple[Tuple[str, ...], str]:
+    """Posture ammesse e postura di riferimento del tipo di missione (MISSION_TYPE_POSTURES).
+
+    Returns:
+        Tuple[Tuple[str, ...], str]: (posture ammesse, postura di riferimento).
+
+    Raises:
+        TypeError: se domain o mission_type non sono stringhe.
+        ValueError: se domain o mission_type non sono validi, o se il dominio non ha posture tattiche
+            ('air': i task aerei sono gia' tipi di missione, N3.f).
+    """
+    _check_mission_type(domain, mission_type)
+    if domain not in MISSION_TYPE_POSTURES:
+        raise ValueError(f"domain {domain!r} has no tactical postures: postures exist only for {list(MISSION_TYPE_POSTURES)!r}")
+    entry = MISSION_TYPE_POSTURES[domain][mission_type]
+    return tuple(entry['admitted']), entry['reference']
 
 BLOCK_CATEGORY = {
 

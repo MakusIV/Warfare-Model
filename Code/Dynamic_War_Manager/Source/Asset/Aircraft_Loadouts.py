@@ -16,7 +16,8 @@
 #
 # LOADOUT FIELDS:
 #   loadout_code          : unique string identifier
-#   tasks                 : list of AIR_TASK values this loadout supports
+#   tasks                 : list of AIR_TASK values this loadout supports (support aircraft use the
+#                           support tasks AWACS/Tanker/Transport, Context.AIR_SUPPORT_TASK)
 #   attributes            : list of custom target-matching strings (A/G only)
 #   Lock_Down_Shoot_Down  : bool, BVR/WVR lock-down capability (A/A tasks)
 #   self_escort_capability: bool, loadout retains A/A self-defence weapons
@@ -2228,7 +2229,7 @@ AIRCRAFT_LOADOUTS = {
 
         "Tanker Standard": {
             "loadout_code": "S3BTKR-STD-1",
-            "tasks": [],
+            "tasks": ["Tanker"],
             "attributes": ["Tanker", "Buddy refueling"],
             "Lock_Down_Shoot_Down": False,
             "self_escort_capability": False,
@@ -2267,7 +2268,7 @@ AIRCRAFT_LOADOUTS = {
 
         "AWACS Standard": {
             "loadout_code": "E2D-AWACS-1",
-            "tasks": [],
+            "tasks": ["AWACS"],
             "attributes": ["AWACS", "C2", "Early Warning"],
             "Lock_Down_Shoot_Down": False,
             "self_escort_capability": False,
@@ -2300,7 +2301,7 @@ AIRCRAFT_LOADOUTS = {
 
         "AWACS Standard": {
             "loadout_code": "E3A-AWACS-1",
-            "tasks": [],
+            "tasks": ["AWACS"],
             "attributes": ["AWACS", "C2", "Early Warning"],
             "Lock_Down_Shoot_Down": False,
             "self_escort_capability": False,
@@ -2463,7 +2464,7 @@ AIRCRAFT_LOADOUTS = {
 
     "C-130 Hercules": {
         "Standard Transport": {
-            "loadout_code": "C130-STD-1", "tasks": [], "attributes": ["Transport"],
+            "loadout_code": "C130-STD-1", "tasks": ["Transport"], "attributes": ["Transport"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 540, "reference_altitude": 6700, "altitude_max": 9000, "altitude_min": 100,
                        "range": {"fuel_25%": 450, "fuel_50%": 950, "fuel_75%": 1450, "fuel_100%": 1950}},
@@ -2479,7 +2480,7 @@ AIRCRAFT_LOADOUTS = {
 
     "C-17A Globemaster III": {
         "Standard Transport": {
-            "loadout_code": "C17A-STD-1", "tasks": [], "attributes": ["Transport", "Strategic"],
+            "loadout_code": "C17A-STD-1", "tasks": ["Transport"], "attributes": ["Transport", "Strategic"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 740, "reference_altitude": 10000, "altitude_max": 13100, "altitude_min": 100,
                        "range": {"fuel_25%": 700, "fuel_50%": 1500, "fuel_75%": 2200, "fuel_100%": 2950}},
@@ -2495,7 +2496,7 @@ AIRCRAFT_LOADOUTS = {
 
     "KC-130": {
         "Tanker/Transport": {
-            "loadout_code": "KC130-STD-1", "tasks": [], "attributes": ["Tanker", "Transport"],
+            "loadout_code": "KC130-STD-1", "tasks": ["Tanker", "Transport"], "attributes": ["Tanker", "Transport"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 540, "reference_altitude": 6700, "altitude_max": 9000, "altitude_min": 1000,
                        "range": {"fuel_25%": 430, "fuel_50%": 915, "fuel_75%": 1395, "fuel_100%": 1880}},
@@ -2511,7 +2512,7 @@ AIRCRAFT_LOADOUTS = {
 
     "KC-135 Stratotanker": {
         "Tanker Standard": {
-            "loadout_code": "KC135-STD-1", "tasks": [], "attributes": ["Tanker", "Strategic"],
+            "loadout_code": "KC135-STD-1", "tasks": ["Tanker"], "attributes": ["Tanker", "Strategic"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 850, "reference_altitude": 10700, "altitude_max": 13000, "altitude_min": 5000,
                        "range": {"fuel_25%": 800, "fuel_50%": 1700, "fuel_75%": 2600, "fuel_100%": 3500}},
@@ -2527,7 +2528,7 @@ AIRCRAFT_LOADOUTS = {
 
     "KC-135 MPRS": {
         "Tanker MPRS": {
-            "loadout_code": "KC135MPRS-STD-1", "tasks": [], "attributes": ["Tanker", "Multi-point"],
+            "loadout_code": "KC135MPRS-STD-1", "tasks": ["Tanker"], "attributes": ["Tanker", "Multi-point"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 850, "reference_altitude": 10700, "altitude_max": 13000, "altitude_min": 5000,
                        "range": {"fuel_25%": 800, "fuel_50%": 1700, "fuel_75%": 2600, "fuel_100%": 3500}},
@@ -3586,7 +3587,7 @@ AIRCRAFT_LOADOUTS = {
 
     "A-50": {
         "AWACS Standard": {
-            "loadout_code": "A50-AWACS-1", "tasks": [], "attributes": ["AWACS", "C2", "Early Warning"],
+            "loadout_code": "A50-AWACS-1", "tasks": ["AWACS"], "attributes": ["AWACS", "C2", "Early Warning"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 750, "reference_altitude": 9000, "altitude_max": 12000, "altitude_min": 5000,
                        "range": {"fuel_25%": 950, "fuel_50%": 2000, "fuel_75%": 3050, "fuel_100%": 4100}},
@@ -3602,7 +3603,7 @@ AIRCRAFT_LOADOUTS = {
 
     "An-26B": {
         "Transport Standard": {
-            "loadout_code": "AN26B-STD-1", "tasks": [], "attributes": ["Transport"],
+            "loadout_code": "AN26B-STD-1", "tasks": ["Transport"], "attributes": ["Transport"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 440, "reference_altitude": 6000, "altitude_max": 7500, "altitude_min": 100,
                        "range": {"fuel_25%": 400, "fuel_50%": 840, "fuel_75%": 1280, "fuel_100%": 1720}},
@@ -3617,6 +3618,9 @@ AIRCRAFT_LOADOUTS = {
     },
 
     "An-30M": {
+        # tasks volutamente vuoto (Fase F2, Piano_Implementazione_Missione.md): ricognizione fotografica, non
+        # supporto (AWACS/Tanker/Transport); "Recon" di AIR_TASK e' un task aria-aria con combat_score e lo
+        # farebbe entrare nella combat power aggregata (Aircraft_Data.combat_aggregate) cambiandone i valori.
         "Recon Standard": {
             "loadout_code": "AN30M-RECON-1", "tasks": [], "attributes": ["Recon", "Photo"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
@@ -3634,7 +3638,7 @@ AIRCRAFT_LOADOUTS = {
 
     "Il-76MD": {
         "Transport Standard": {
-            "loadout_code": "IL76MD-STD-1", "tasks": [], "attributes": ["Transport", "Strategic"],
+            "loadout_code": "IL76MD-STD-1", "tasks": ["Transport"], "attributes": ["Transport", "Strategic"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 780, "reference_altitude": 10000, "altitude_max": 12000, "altitude_min": 100,
                        "range": {"fuel_25%": 900, "fuel_50%": 1900, "fuel_75%": 2900, "fuel_100%": 3900}},
@@ -3650,7 +3654,7 @@ AIRCRAFT_LOADOUTS = {
 
     "Il-78M": {
         "Tanker Standard": {
-            "loadout_code": "IL78M-STD-1", "tasks": [], "attributes": ["Tanker", "Strategic"],
+            "loadout_code": "IL78M-STD-1", "tasks": ["Tanker"], "attributes": ["Tanker", "Strategic"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 800, "reference_altitude": 10000, "altitude_max": 12000, "altitude_min": 3000,
                        "range": {"fuel_25%": 950, "fuel_50%": 2000, "fuel_75%": 3050, "fuel_100%": 4100}},
@@ -3666,7 +3670,7 @@ AIRCRAFT_LOADOUTS = {
 
     "Yak-40": {
         "Transport Standard": {
-            "loadout_code": "YAK40-STD-1", "tasks": [], "attributes": ["Transport", "Light"],
+            "loadout_code": "YAK40-STD-1", "tasks": ["Transport"], "attributes": ["Transport", "Light"],
             "Lock_Down_Shoot_Down": False, "self_escort_capability": False,
             "cruise": {"speed": 500, "reference_altitude": 6000, "altitude_max": 8000, "altitude_min": 100,
                        "range": {"fuel_25%": 320, "fuel_50%": 670, "fuel_75%": 1020, "fuel_100%": 1370}},

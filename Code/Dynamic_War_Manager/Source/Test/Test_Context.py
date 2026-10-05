@@ -35,8 +35,22 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     AIR_TO_AIR_TASK,
     AIR_TO_GROUND_TASK,
     AIR_TASK,
+    AIR_SUPPORT_TASK,
+    AIR_COMBAT_TASK,
     SEA_TASK,
     ACTION_TASKS,
+    Mission_Category,
+    MISSION_CATEGORY,
+    Air_Support_Task,
+    Ground_Mission_Type,
+    Sea_Mission_Type,
+    GROUND_MISSION_TYPE,
+    SEA_MISSION_TYPE,
+    MISSION_TYPES,
+    MISSION_TYPE_CATEGORY,
+    MISSION_TYPE_POSTURES,
+    mission_category_of,
+    postures_for,
     BLOCK_CATEGORY,
     MILITARY_CATEGORY,
     MILITARY_FORCES,
@@ -324,9 +338,25 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(set(GROUND_ACTION.keys()), expected)
 
     def test_air_task_is_union(self):
-        """AIR_TASK is the union of AIR_TO_AIR_TASK and AIR_TO_GROUND_TASK."""
+        """AIR_TASK is the union of AIR_TO_AIR_TASK, AIR_TO_GROUND_TASK and AIR_SUPPORT_TASK."""
         self.assertEqual(set(AIR_TASK.keys()),
-                         set(AIR_TO_AIR_TASK.keys()) | set(AIR_TO_GROUND_TASK.keys()))
+                         set(AIR_TO_AIR_TASK.keys()) | set(AIR_TO_GROUND_TASK.keys()) | set(AIR_SUPPORT_TASK.keys()))
+
+    def test_air_support_task_values(self):
+        """AIR_SUPPORT_TASK = AWACS, Tanker, Transport (N3.b)."""
+        self.assertEqual(set(AIR_SUPPORT_TASK), {'AWACS', 'Tanker', 'Transport'})
+        self.assertEqual({m.value for m in Air_Support_Task}, set(AIR_SUPPORT_TASK))
+
+    def test_air_combat_task_excludes_support(self):
+        """AIR_COMBAT_TASK = A2A | A2G, disjoint from AIR_SUPPORT_TASK; together they make AIR_TASK."""
+        self.assertEqual(set(AIR_COMBAT_TASK), set(AIR_TO_AIR_TASK) | set(AIR_TO_GROUND_TASK))
+        self.assertFalse(set(AIR_COMBAT_TASK) & set(AIR_SUPPORT_TASK))
+        self.assertEqual(set(AIR_COMBAT_TASK) | set(AIR_SUPPORT_TASK), set(AIR_TASK))
+
+    def test_air_task_combat_tasks_first(self):
+        """The first AIR_TASK key is a combat task (Tactical_Analysis.representative_combat_power reads it)."""
+        self.assertEqual(next(iter(AIR_TASK)), 'CAP')
+        self.assertEqual(list(AIR_TASK)[:len(AIR_COMBAT_TASK)], list(AIR_COMBAT_TASK))
 
     def test_sea_task_dict_built_from_enum(self):
         """SEA_TASK keys match Sea_Task enum values."""
@@ -1291,6 +1321,117 @@ class TestGetAirTargetClass(unittest.TestCase):
             g([self.aat.FIGHTER], override='Tank')
         with self.assertRaises(TypeError):
             g([self.aat.ATTACKER], armored='yes')
+
+
+
+# ---------------------------------------------------------------------------
+# TestMissionTypes (Fase F2: tipi di missione e compatibilita' con le posture, N3 / N3.f = B)
+# ---------------------------------------------------------------------------
+
+class TestMissionTypes(unittest.TestCase):
+    """Mission_Category, tipi di missione per dominio, MISSION_TYPE_CATEGORY, MISSION_TYPE_POSTURES e helper."""
+
+    POSTURES = {'ground': GROUND_ACTION, 'sea': SEA_TASK}
+
+    def test_mission_category_values(self):
+        self.assertEqual({m.value for m in Mission_Category}, {'Attack', 'Transport', 'Positioning', 'Support'})
+        self.assertEqual(set(MISSION_CATEGORY), {m.value for m in Mission_Category})
+        for key, value in MISSION_CATEGORY.items():
+            self.assertEqual(key, value)
+
+    def test_ground_mission_type_values(self):
+        expected = {'Attack', 'Defense', 'Maintain', 'Retreat', 'Fire_Support', 'Movement', 'Recon', 'Supply'}
+        self.assertEqual({m.value for m in Ground_Mission_Type}, expected)
+        self.assertEqual(set(GROUND_MISSION_TYPE), expected)
+
+    def test_sea_mission_type_values(self):
+        expected = {'Attack', 'Defense', 'Retreat', 'Patrol', 'Escort', 'Shore_Bombardment', 'Transport'}
+        self.assertEqual({m.value for m in Sea_Mission_Type}, expected)
+        self.assertEqual(set(SEA_MISSION_TYPE), expected)
+
+    def test_mission_types_domains(self):
+        self.assertEqual(set(MISSION_TYPES), {'ground', 'air', 'sea'})
+        self.assertIs(MISSION_TYPES['ground'], GROUND_MISSION_TYPE)
+        self.assertIs(MISSION_TYPES['air'], AIR_TASK)
+        self.assertIs(MISSION_TYPES['sea'], SEA_MISSION_TYPE)
+
+    def test_postures_unchanged(self):
+        """N3.f = B: le posture tattiche restano invariate."""
+        self.assertEqual(set(GROUND_ACTION), {'Attack', 'Defense', 'Maintain', 'Retreat'})
+        self.assertEqual(set(SEA_TASK), {'Attack', 'Defense', 'Retreat'})
+        self.assertIs(ACTION_TASKS['ground'], GROUND_ACTION)
+        self.assertIs(ACTION_TASKS['sea'], SEA_TASK)
+
+    def test_mission_type_category_full_coverage(self):
+        """Ogni tipo di ogni dominio ha una categoria, e solo i tipi del dominio."""
+        self.assertEqual(set(MISSION_TYPE_CATEGORY), set(MISSION_TYPES))
+        for domain, types in MISSION_TYPES.items():
+            with self.subTest(domain=domain):
+                self.assertEqual(set(MISSION_TYPE_CATEGORY[domain]), set(types))
+                for mission_type, category in MISSION_TYPE_CATEGORY[domain].items():
+                    self.assertIn(category, MISSION_CATEGORY, (domain, mission_type))
+
+    def test_mission_type_category_selected_values(self):
+        self.assertEqual(MISSION_TYPE_CATEGORY['ground']['Supply'], 'Transport')
+        self.assertEqual(MISSION_TYPE_CATEGORY['ground']['Fire_Support'], 'Attack')
+        self.assertEqual(MISSION_TYPE_CATEGORY['air']['AWACS'], 'Support')
+        self.assertEqual(MISSION_TYPE_CATEGORY['air']['Transport'], 'Transport')
+        self.assertEqual(MISSION_TYPE_CATEGORY['sea']['Shore_Bombardment'], 'Attack')
+
+    def test_mission_type_postures_domains(self):
+        """Solo terra e mare hanno posture: gli AIR_TASK sono gia' tipi di missione."""
+        self.assertEqual(set(MISSION_TYPE_POSTURES), {'ground', 'sea'})
+
+    def test_mission_type_postures_coverage_and_consistency(self):
+        for domain, table in MISSION_TYPE_POSTURES.items():
+            self.assertEqual(set(table), set(MISSION_TYPES[domain]))
+            for mission_type, entry in table.items():
+                with self.subTest(domain=domain, mission_type=mission_type):
+                    self.assertEqual(set(entry), {'admitted', 'reference'})
+                    self.assertIsInstance(entry['admitted'], tuple)
+                    self.assertGreaterEqual(len(entry['admitted']), 1)
+                    self.assertEqual(len(set(entry['admitted'])), len(entry['admitted']))
+                    for posture in entry['admitted']:
+                        self.assertIn(posture, self.POSTURES[domain])
+                    self.assertIn(entry['reference'], entry['admitted'])
+
+    def test_same_name_types_map_to_same_posture(self):
+        """I tipi omonimi di una postura ammettono solo quella postura."""
+        for domain, table in MISSION_TYPE_POSTURES.items():
+            for posture in self.POSTURES[domain]:
+                with self.subTest(domain=domain, posture=posture):
+                    self.assertEqual(table[posture], {'admitted': (posture,), 'reference': posture})
+
+    def test_mission_category_of(self):
+        self.assertEqual(mission_category_of('ground', 'Recon'), 'Support')
+        self.assertEqual(mission_category_of('air', 'Tanker'), 'Support')
+        self.assertEqual(mission_category_of('air', 'CAP'), 'Positioning')
+        self.assertEqual(mission_category_of('sea', 'Escort'), 'Positioning')
+
+    def test_postures_for(self):
+        self.assertEqual(postures_for('ground', 'Fire_Support'), (('Attack', 'Defense'), 'Attack'))
+        self.assertEqual(postures_for('ground', 'Movement'), (('Maintain', 'Retreat'), 'Maintain'))
+        self.assertEqual(postures_for('sea', 'Patrol'), (('Defense', 'Attack'), 'Defense'))
+        self.assertEqual(postures_for('sea', 'Transport'), (('Defense', 'Retreat'), 'Defense'))
+
+    def test_helpers_invalid_input(self):
+        for helper in (mission_category_of, postures_for):
+            with self.subTest(helper=helper.__name__):
+                with self.assertRaises(TypeError):
+                    helper(None, 'Attack')
+                with self.assertRaises(TypeError):
+                    helper('ground', 3)
+                with self.assertRaises(ValueError):
+                    helper('space', 'Attack')
+                with self.assertRaises(ValueError):
+                    helper('ground', 'Patrol')       # tipo navale, non terrestre
+                with self.assertRaises(ValueError):
+                    helper('sea', 'Supply')          # tipo terrestre, non navale
+
+    def test_postures_for_air_raises(self):
+        """L'aria non ha posture tattiche: errore esplicito anche per un task valido."""
+        with self.assertRaises(ValueError):
+            postures_for('air', 'CAP')
 
 
 if __name__ == '__main__':

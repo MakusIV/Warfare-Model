@@ -429,6 +429,52 @@ class TestGetLoadoutTasks(unittest.TestCase):
             get_loadout_tasks("INVALID_AIRCRAFT_XYZ", _LOADOUT_CAP)
 
 
+class TestSupportTaskLoadouts(unittest.TestCase):
+    """Fase F2: task di supporto (AWACS, Tanker, Transport) assegnati ai loadout senza armamento."""
+
+    _EXPECTED = {
+        ("S-3B Viking Tanker", "Tanker Standard"): ["Tanker"],
+        ("E-2D Advanced Hawkeye", "AWACS Standard"): ["AWACS"],
+        ("E-3A Sentry", "AWACS Standard"): ["AWACS"],
+        ("A-50", "AWACS Standard"): ["AWACS"],
+        ("C-130 Hercules", "Standard Transport"): ["Transport"],
+        ("C-17A Globemaster III", "Standard Transport"): ["Transport"],
+        ("An-26B", "Transport Standard"): ["Transport"],
+        ("Il-76MD", "Transport Standard"): ["Transport"],
+        ("Yak-40", "Transport Standard"): ["Transport"],
+        ("KC-130", "Tanker/Transport"): ["Tanker", "Transport"],
+        ("KC-135 Stratotanker", "Tanker Standard"): ["Tanker"],
+        ("KC-135 MPRS", "Tanker MPRS"): ["Tanker"],
+        ("Il-78M", "Tanker Standard"): ["Tanker"],
+    }
+
+    def test_support_loadouts_tasks(self):
+        for (model, loadout), tasks in self._EXPECTED.items():
+            with self.subTest(model=model, loadout=loadout):
+                self.assertEqual(get_loadout_tasks(model, loadout), tasks)
+
+    def test_only_an30m_has_no_task(self):
+        """Solo l'An-30M (ricognizione fotografica) resta senza task."""
+        empty = {(m, n) for m, lds in AIRCRAFT_LOADOUTS.items() for n, cfg in lds.items() if not cfg.get("tasks")}
+        self.assertEqual(empty, {("An-30M", "Recon Standard")})
+
+    def test_all_loadout_tasks_are_air_tasks(self):
+        from Code.Dynamic_War_Manager.Source.Context.Context import AIR_TASK
+        for model, lds in AIRCRAFT_LOADOUTS.items():
+            for name, cfg in lds.items():
+                for task in cfg.get("tasks", []):
+                    self.assertIn(task, AIR_TASK, (model, name))
+
+    def test_support_tasks_not_mixed_with_combat_tasks(self):
+        """Nessun loadout mescola task di supporto e task di combattimento."""
+        from Code.Dynamic_War_Manager.Source.Context.Context import AIR_SUPPORT_TASK, AIR_COMBAT_TASK
+        for model, lds in AIRCRAFT_LOADOUTS.items():
+            for name, cfg in lds.items():
+                tasks = set(cfg.get("tasks", []))
+                with self.subTest(model=model, loadout=name):
+                    self.assertFalse(tasks & set(AIR_SUPPORT_TASK) and tasks & set(AIR_COMBAT_TASK))
+
+
 class TestGetLoadoutAttributes(unittest.TestCase):
     """Unit test per get_loadout_attributes()."""
 

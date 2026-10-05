@@ -631,7 +631,8 @@ def target_affinity(block: Military, target_block: Block) -> float:
             continue
 
         available_loadouts_by_task = {
-            task: block.get_available_loadouts(model, task=task) for task in Context.AIR_TASK
+            # Solo i task di combattimento: i task di supporto (AWACS/Tanker/Transport) non hanno combat_score.
+            task: block.get_available_loadouts(model, task=task) for task in Context.AIR_COMBAT_TASK
         }
         target_score, _ = aircraft_data.combat_aggregate_against_target(
             target_distribution, available_loadouts_by_task=available_loadouts_by_task

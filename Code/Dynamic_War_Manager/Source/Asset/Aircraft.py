@@ -9,6 +9,7 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     BLOCK_INFRASTRUCTURE_ASSET,
     AIR_COMBAT_EFFICACY,
     ACTION_TASKS,
+    AIR_SUPPORT_TASK,
     combat_power_from_score,
 )
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -411,9 +412,11 @@ class Aircraft(Mobile) :
         """
         Calculates and sets the combat power value for the specific aircraft.
         Unlike Vehicle/Ship, the value is the SAME single aggregate (air_combat_power()) replicated
-        across every task in `actions`, since air tasks aren't mutually-exclusive tactical postures
+        across every combat task in `actions`, since air tasks aren't mutually-exclusive tactical postures
         the way ground/sea actions are (see air_combat_power docstring). Callers that need the block's
-        total air combat power must read a single task, not sum across tasks (they'd all be equal).
+        total air combat power must read a single combat task, not sum across tasks (they'd all be equal).
+        Support tasks (Context.AIR_SUPPORT_TASK: AWACS, Tanker, Transport) get 0.0: they are not combat
+        tasks, so an AWACS or a tanker must not add combat power to them.
 
         args:
         actions - subset of ACTION_TASKS["air"] to populate. Defaults to all.
@@ -427,8 +430,10 @@ class Aircraft(Mobile) :
         A differenza di Vehicle/Ship, il valore è LO STESSO aggregato singolo (air_combat_power())
         replicato su ogni task di `actions`, perché i task aria non sono posture tattiche mutuamente
         esclusive come le azioni di veicoli/navi (v. docstring di air_combat_power). I chiamanti che
-        necessitano della combat power totale aerea del blocco devono leggere un solo task, non sommare
-        sui task (sarebbero tutti uguali).
+        necessitano della combat power totale aerea del blocco devono leggere un solo task di
+        combattimento, non sommare sui task (sarebbero tutti uguali).
+        I task di supporto (Context.AIR_SUPPORT_TASK: AWACS, Tanker, Transport) valgono 0.0: non sono
+        task di combattimento (Fase F2, Piano_Implementazione_Missione.md).
 
         args:
         actions - sottoinsieme di ACTION_TASKS["air"] da popolare. Default: tutti.
@@ -441,7 +446,7 @@ class Aircraft(Mobile) :
             raise TypeError(f"Unexpected action in actions: {actions}. Expected actions are: {ACTION_TASKS['air']}")
 
         cp = self.air_combat_power()
-        self.set_combat_power_value({"air": {act: cp for act in actions}})
+        self.set_combat_power_value({"air": {act: (0.0 if act in AIR_SUPPORT_TASK else cp) for act in actions}})
 
     @property
     def isFighter(self):

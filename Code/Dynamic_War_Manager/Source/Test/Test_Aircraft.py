@@ -11,6 +11,8 @@ from Code.Dynamic_War_Manager.Source.Context.Context import (
     SHAPE3D,
     AIR_COMBAT_EFFICACY,
     ACTION_TASKS,
+    AIR_COMBAT_TASK,
+    AIR_SUPPORT_TASK,
     Air_Asset_Type,
 )
 from sympy import Point2D
@@ -70,7 +72,8 @@ class TestAircraft(unittest.TestCase):
     @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
     @patch.object(Aircraft, 'efficiency', new_callable=PropertyMock, return_value=0.8)
     def test_set_combat_power_replicates_same_value_across_all_tasks(self, mock_efficiency, mock_get_aircraft_combat_score):
-        """set_combat_power populates every air task with the SAME aggregate value (not per-task)."""
+        """set_combat_power populates every air combat task with the SAME aggregate value (not per-task);
+        support tasks (AWACS, Tanker, Transport) get 0.0."""
         mock_get_aircraft_combat_score.return_value = 0.5
 
         aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.FIGHTER, model="F-15C Eagle")
@@ -78,9 +81,22 @@ class TestAircraft(unittest.TestCase):
         combat_power_result = aircraft.combat_power(force='air')
         self.assertIsInstance(combat_power_result, dict)
         self.assertEqual(set(combat_power_result.keys()), set(ACTION_TASKS['air']))
-        values = set(combat_power_result.values())
-        self.assertEqual(len(values), 1)  # all tasks carry the same value
+        values = {combat_power_result[task] for task in AIR_COMBAT_TASK}
+        self.assertEqual(len(values), 1)  # all combat tasks carry the same value
         self.assertGreater(values.pop(), 0.0)
+        for task in AIR_SUPPORT_TASK:
+            self.assertEqual(combat_power_result[task], 0.0, task)
+
+    @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
+    @patch.object(Aircraft, 'efficiency', new_callable=PropertyMock, return_value=0.8)
+    def test_set_combat_power_support_tasks_zero_for_awacs(self, mock_efficiency, mock_get_aircraft_combat_score):
+        """An AWACS does not get combat power on support tasks; combat tasks keep the aggregate."""
+        mock_get_aircraft_combat_score.return_value = 0.5
+
+        aircraft = Aircraft(block=self.mock_block, asset_type=Air_Asset_Type.AWACS, model="E-3A Sentry")
+
+        self.assertEqual(aircraft.combat_power(force='air', action='AWACS'), 0.0)
+        self.assertAlmostEqual(aircraft.combat_power(force='air', action='CAP'), aircraft.air_combat_power())
 
     @patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score')
     @patch.object(Aircraft, 'efficiency', new_callable=PropertyMock, return_value=0.8)

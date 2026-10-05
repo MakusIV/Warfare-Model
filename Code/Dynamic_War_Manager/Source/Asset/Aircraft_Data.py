@@ -18,7 +18,7 @@ NO:
 from functools import lru_cache
 from math import log1p
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Union, Tuple, Iterable
-from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , Air_Asset_Type, COALITIONS, AIR_TARGET_CLASSES, AIR_TARGET_CLASS_AIRCRAFT
+from Code.Dynamic_War_Manager.Source.Context.Context import AIR_MILITARY_CRAFT_ASSET, AIR_TASK , AIR_COMBAT_TASK, AIR_SUPPORT_TASK, Air_Asset_Type, COALITIONS, AIR_TARGET_CLASSES, AIR_TARGET_CLASS_AIRCRAFT
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import true_air_speed, indicated_air_speed, true_air_speed_at_new_altitude
 from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import loadout_eval, loadout_target_effectiveness, get_aircraft_loadouts, get_aircraft_loadouts_by_task, get_loadout, loadout_target_effectiveness_by_distribuition, get_weapon_efficiency, loadout_year_compatibility, get_aircrafts_quantity
@@ -800,7 +800,13 @@ class Aircraft_Data:
             raise TypeError ("task must be a string")
         if task not in AIR_TASK:
             raise ValueError(f"task must be a string with values: {AIR_TASK!r}, got {task!r}")
-        
+
+        # Task di supporto (AWACS, Tanker, Transport): non sono task di combattimento, il loro combat_score
+        # e' 0 per definizione (stesso valore che restituiva il ramo 'task non riconosciuto' qui sotto,
+        # senza il warning).
+        if task in AIR_SUPPORT_TASK:
+            return 0.0
+
         scores = {
             'engine':       0.0,
             'radar':        0.0,
@@ -898,7 +904,8 @@ class Aircraft_Data:
     def combat_aggregate(self) -> Tuple[float, Dict[str, float]]:
         """Aggregato non normalizzato della capacita' di combattimento del modello, indipendente dal task e dal target.
 
-        Per ogni task di AIR_TASK prende il combat_score() del loadout migliore disponibile per quel task
+        Per ogni task di AIR_COMBAT_TASK (i task di supporto AWACS/Tanker/Transport sono esclusi: non hanno
+        combat_score) prende il combat_score() del loadout migliore disponibile per quel task
         (get_loadouts(model, task) -> {} per i task non pertinenti al ruolo dell'aereo, quindi contribuiscono 0
         senza bisogno di una mappa ruolo->task scritta a mano: la pertinenza e' gia' codificata nel database
         dei loadout) e ne somma i massimi. Usa combat_score(), MAI combat_score_target_effectiveness(): il
@@ -909,7 +916,7 @@ class Aircraft_Data:
             best_per_task = {task: max combat_score} con una voce solo per i task che hanno almeno un loadout.
         """
         best_per_task: Dict[str, float] = {}
-        for task in AIR_TASK:
+        for task in AIR_COMBAT_TASK:
             loadouts = self.get_loadouts(self.model, task)
             if not loadouts:
                 continue
@@ -978,7 +985,8 @@ class Aircraft_Data:
             best_score è il massimo tra i task con almeno un loadout idoneo (0.0 se nessuno);
             best_per_task = {task: (nome, punteggio)} solo per i task con un candidato dopo il filtro.
         """
-        task_list = list(tasks) if tasks is not None else list(AIR_TASK)
+        # Default: solo i task di combattimento (v. combat_aggregate), non i task di supporto.
+        task_list = list(tasks) if tasks is not None else list(AIR_COMBAT_TASK)
         best_per_task: Dict[str, Tuple[Optional[str], float]] = {}
 
         for task in task_list:
