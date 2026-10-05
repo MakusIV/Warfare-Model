@@ -1,6 +1,6 @@
 # Informazioni necessarie per definire una missione (aerea, terrestre, navale)
 
-**Stato**: ANALISI (2026-10-05), primo passo della struttura `Mission` (attività A4 / P1 di
+**Stato**: ANALISI (2026-10-05, aggiornata con la missione di prova terra/mare), primo passo della struttura `Mission` (attività A4 / P1 di
 `Analisi_Modello_Missione_Sessione.md`). Nessun file di codice modificato.
 **Scopo**: stabilire quali dati compongono una missione nel modello di Warfare-Model. Il modello deve
 poterla eseguire nel motore DES sintetico e, in un secondo momento, esportarla verso DCS senza perdere
@@ -21,6 +21,7 @@ il motore.
 | **[Z]** | `1975 Georgian War_first.miz`: missione reale generata da DCE, analizzata con `lupa` | `Struttura_File_MIZ.md` |
 | **[R]** | `DCS_GND_Charts.pdf` (aeroporti) e `DCS World List of all available Beacons EN.pdf` (radioaiuti) | `DCS_GND_Charts.md` + `DCS_Aeroporti_Caucaso.csv`, `DCS World List of all available Beacons EN.md` + `DCS_Beacons_Caucaso.csv` |
 | **[C]** | codice del repository, verificato leggendolo | — |
+| **[T]** | `ground_sea_mission.miz`: missione di prova dell'utente con carri, artiglieria e navi che attaccano | `Struttura_Missione_Terra_Mare.md` |
 | **[I]** | mia inferenza o conoscenza generale, **non verificata** sulle fonti | — |
 
 ---
@@ -54,18 +55,18 @@ il motore.
    Ogni azione ha priorità, condizione di avvio e condizione di arresto. Si eseguono con le regole
    "Task prima di Enroute" e "un solo Task alla volta"; il Task sospeso va in pila [M parte 2 §6.1].
    Per il nostro modello: la Missione deve portare **azioni con condizioni**, non solo un tipo.
-4. **Aria e terra/mare differiscono profondamente.**
-   - **Aria**: compiti espliciti, cioè attacca *quel* bersaglio con *quell'*arma da *quella*
-     direzione e quota.
-   - **Terra e mare**, **secondo il manuale del 2020**: il combattimento è in gran parte
-     **emergente**. Il gruppo segue la rotta e ingaggia ciò che entra in portata secondo ROE e Alarm
-     State. I task espliciti documentati sono pochi: Fire at Point e Hold; Attack Group per le navi.
+4. **Bersagli espliciti in tutti e tre i domini** (verificato sulla missione di prova [T]).
+   - **Aria**: attacca *quel* bersaglio con *quell'*arma da *quella* direzione e quota.
+   - **Terra e mare**: un gruppo può ricevere un bersaglio esplicito. I tipi sono due:
+     - `AttackGroup` su un gruppo nemico (carri contro carri, navi contro navi), con gli stessi
+       parametri del task aereo;
+     - `FireAtPoint` su un punto o un'area (artiglieria, carri, navi contro un bersaglio a terra).
 
-   **DA VERIFICARE**: l'utente ritiene che il Mission Editor permetta di assegnare bersagli ai
-   veicoli terrestri (incerto per le navi). Il manuale del 2020 potrebbe essere superato su questo
-   punto. La verifica si farà su una missione con veicoli e navi che l'utente preparerà apposta.
-   Per il modello di dominio la conseguenza è prudente: la missione terrestre e navale deve poter
-   portare **sia** intenzione e regole **sia** bersagli espliciti (§5).
+     In assenza di bersaglio il gruppo ingaggia ciò che entra in portata, secondo ROE e Alarm State.
+
+   Il manuale del 2020 documentava per i veicoli solo Fire at Point e Hold: su questo punto è
+   superato. La supposizione dell'utente era corretta. Ne segue che la missione terrestre e navale
+   porta **sia** intenzione e regole **sia** bersagli espliciti opzionali (§4, §5).
 5. **Il campione DCE conferma il ricordo dell'utente, con una precisazione.** Nel `.miz` i 110 gruppi
    di veicoli hanno **un solo waypoint**: sono fermi e senza task di fuoco. Però solo il 79% delle unità
    è difesa aerea o supporto: il 10% è artiglieria ferma, il resto logistica e fanteria [Z §6, §8.4].
@@ -266,7 +267,7 @@ Oltre ai dati comuni (§2):
 |---|---|---|---|
 | tipo di missione | sì | i nostri `Sea_Task` sono Attack/Defense/Retrait; in DCS il gruppo navale non ha task di gruppo | [C], [M parte 4] |
 | rotta | sì | solo waypoint "Turning Point", velocità in km/h nel ME (m/s nel file); la velocità del gruppo è limitata dalla nave più lenta | [M parte 4 §A], [Z]: 2-7 punti, 5-8 m/s |
-| compito | no | Attack Group (con arma, REL QTY, MAX ATTACK QTY, DIRECTION FROM) e Fire at Point (punto, raggio, arma, colpi). Nessun Enroute Task | [M parte 4] |
+| compito | no | `AttackGroup` su un gruppo navale (verificato: 4 REZKY contro 3 Arleigh Burke, a 4,5 km) e `FireAtPoint` su un punto a terra (verificato: tiro a 8 km su un bersaglio fisso). Parametri: arma, quantità, numero di attacchi, direzione; punto, raggio, colpi. Nessun Enroute Task | [M parte 4], [T] |
 | ROE | sì | 3 livelli | [M parte 4] |
 | Alarm State | sì | Auto / Green / Red. Red = sensori e armi pronti; Green = basso profilo | [M parte 4] |
 | radioaiuti di bordo | portaerei | TACAN e ICLS (`ActivateBeacon`/`ActivateICLS`) | [Z §4.3] |
@@ -291,7 +292,8 @@ Oltre ai dati comuni (§2):
 | rotta | sì se in movimento | il **tipo di waypoint fonde movimento e formazione**: Off Road, On Road, Line Abreast, Cone, Vee, Diamond, Echelon L/R, Custom. Distanza minima di 500 m fra gruppi sulla stessa strada | [M parte 4] |
 | velocità per tratto | sì | km/h, limitata dal mezzo più lento; la quota non esiste | [M parte 4] |
 | rete stradale | se On Road | dato di mappa (modulo mappe futuro); `Edge.path_type` già distingue `onroad`/`offroad` | [C] |
-| compiti espliciti | no | Fire at Point (punto, raggio in m, arma, colpi), Hold, Go to Waypoint (cicli), Embark to Transport (solo fanteria, "work in progress"), FAC / FAC Engage Group (designazione) | [M parte 4] |
+| bersaglio esplicito | no | **`AttackGroup`** su un gruppo (verificato: 4 T-90M contro il gruppo carri blu) e **`FireAtPoint`** su un punto o un'area (verificato per artiglieria trainata e semovente e per i carri). Parametri di Fire at Point: punto, raggio in m, limite di colpi, arma, raggio di controbatteria (campo nuovo, non nel manuale 2020) | [T], [M parte 4] |
+| altri compiti | no | Hold, Go to Waypoint (cicli), Embark to Transport (solo fanteria, "work in progress"), FAC / FAC Engage Group (designazione) | [M parte 4] |
 | ROE | sì | 3 livelli | [M parte 4] |
 | Alarm State | sì | Auto / Green / Red | [M parte 4] |
 | reazione al fuoco | no | Disperse Under Fire (secondi; 600 s nell'esempio) | [M parte 4] |
@@ -299,16 +301,19 @@ Oltre ai dati comuni (§2):
 | schieramento | difesa aerea | template di unità complete (es. batteria Hawk) e "Stop and deploy to template" | [M parte 4], [M parte 1] |
 | rifornimento munizioni | no (regola di mondo) | supply vehicle entro 200 m = magazzino illimitato; tempi di ricarica per arma (es. S-300PS 7200 s, Patriot 3600 s, Shilka 20 s) | [M pp.316-325] |
 
-Osservazione: secondo il manuale del 2020, un "attacco" terrestre in DCS si ottiene con **rotta verso
-il nemico, formazione e ROE aperta**: il gruppo ingaggia da solo ciò che entra in portata. Il nostro
-DES fa già questo: contatti analitici più `Engagement_Resolver` con dottrina di tiro.
-
-**DA VERIFICARE** (v. §0 punto 4): l'utente ritiene che DCS permetta anche di assegnare bersagli ai
-veicoli; lo verificheremo sulla missione di prova. Indipendentemente da DCS, il modello di dominio deve
-prevedere per la missione terrestre:
-- intenzione e regole (avanzare, difendere, tenere, ritirarsi; ROE, allerta);
-- **bersagli espliciti opzionali**: gruppo, unità, posizione o area. Il fuoco indiretto (Fire at
-  Point) ne è già un caso.
+Osservazioni (dalla missione di prova [T], al livello di dominio):
+- La missione terrestre porta **intenzione e regole** (avanzare, difendere, tenere, ritirarsi; ROE,
+  allerta) e **bersagli espliciti opzionali** (gruppo, unità, punto o area). Senza bersaglio il
+  gruppo ingaggia ciò che entra in portata: il nostro DES lo fa già (contatti analitici più
+  `Engagement_Resolver` con dottrina di tiro).
+- Il compito è legato a un waypoint: **posizione di tiro** = waypoint, **istante** = sua ETA. Per il
+  fuoco indiretto è l'analogo dell'`AttackProfile` aereo e va verificato contro la gittata dell'arma.
+  Nel campione: 14,1 km per il 2S3, 9,9 km per l'M2A1-105.
+- Un **bersaglio di posizione invecchia**. L'artiglieria rossa colpisce il punto dove i blu erano
+  all'inizio, e in quell'istante i blu sono già a 1,4-4,6 km. La missione deve registrare **su quale
+  conoscenza** è stato scelto il bersaglio (asset osservato o posizione stimata, con istante), in
+  coerenza con la nebbia di guerra (C).
+- **L'ordine delle azioni** al waypoint è un dato: "tira e poi fermati", "fermati e poi attacca".
 
 ---
 
@@ -442,10 +447,9 @@ non una decisione.
 
 ## 12. Lacune e incertezze delle fonti
 
-- **Veicoli e navi con rotte e bersagli**: nessun esempio nel `.miz` (veicoli tutti a un punto).
-  L'utente preparerà una missione di prova nel Mission Editor con veicoli e navi, da mettere in
-  `documentazione missioni dcs/`. Servirà a verificare l'assegnazione di bersagli ai gruppi terrestri
-  e navali e la forma delle rotte terrestri.
+- **Veicoli e navi con rotte e bersagli**: RISOLTO con la missione di prova dell'utente [T]
+  (`Struttura_Missione_Terra_Mare.md`). Restano non decodificate le maschere `weaponType` di veicoli
+  e navi (52613349374, 805339120, 56908316670) e il significato di `counterbattaryRadius` [I].
 - **Discrepanze del manuale** (segnalate negli estratti):
   - velocità delle condizioni di trigger in m/s nel testo e km/h nelle figure;
   - descrizioni di Emission ON/OFF scambiate;
