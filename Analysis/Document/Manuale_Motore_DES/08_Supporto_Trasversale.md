@@ -32,52 +32,78 @@ sequenze diverse sotto la stessa etichetta.
 da `Session_Simulator.run_session` (capitolo 6, §6.4). Ogni chiamata restituisce un'istanza
 **nuova** posizionata all'inizio dello stream.
 
-## 7.2 `Context/Doctrine.py` — soglie di disingaggio (P1 + R2)
+## 7.2 `Context/Doctrine.py` — soglie di disingaggio (P1 + R2), soglia di rottura stocastica, dottrina di tiro
 
-Le soglie sono **dottrina di lato**, non una costante del risolutore, non un parametro di
-sessione, non una proprietà del singolo asset, valutata **per forza intera**
-(`Context/Doctrine.py:60-68`). Le due soglie, stessa grandezza, stesso denominatore (`:70-85`):
+`Context/Doctrine.py` (397 righe a `533cd1f5`, 271 modificate dal 2026-09-29) custodisce la **dottrina di
+lato**: parametri di bilanciamento, non una costante del risolutore, non un parametro di sessione, non una
+proprietà del singolo asset, valutati **per forza intera** (`Context/Doctrine.py:60-68`). Due blocchi,
+oltre ai pesi di priorità di targeting (`:13-57`, usati da `Tactical_Evaluation`, fuori dal motore).
 
-- `'erosion'` — frazione **cumulata** dell'organico impegnato non più operativo: la forza si
-  logora lentamente;
-- `'shock'` — frazione persa in **un singolo impulso** (una sola salva risolta): la forza si
-  rompe per un colpo improvviso anche se le perdite cumulate sono ancora sotto `erosion`.
+### Soglie di disingaggio: erosion e shock (`:60-85`)
 
-Entrambe sono frazioni dell'**organico impegnato all'inizio dell'ingaggio** (non della forza
-superstite): con lo stesso denominatore la perdita di una salva non può mai superare la perdita
-cumulata, quindi `shock <= erosion` è un vincolo di coerenza verificato
-(`validate_disengagement_thresholds`, `:112-155`) — altrimenti la soglia di shock non
-scatterebbe mai per prima e sarebbe un parametro morto.
+- `'erosion'` — frazione **cumulata** dell'organico impegnato non più operativo: la forza si logora
+  lentamente;
+- `'shock'` — frazione persa in **un singolo impulso** (una sola salva risolta): la forza si rompe per un
+  colpo improvviso anche se le perdite cumulate sono ancora sotto `erosion`.
 
-### Valori di default — **STIMA DI PARTENZA DICHIARATA, non dati validati** (`:87-100`)
+Entrambe sono frazioni dell'**organico impegnato all'inizio dell'ingaggio** (non della forza superstite):
+con lo stesso denominatore la perdita di una salva non può mai superare la perdita cumulata, quindi
+`shock <= erosion` è un vincolo di coerenza verificato (`validate_disengagement_thresholds`,
+`:231-278`) — altrimenti la soglia di shock non scatterebbe mai per prima e sarebbe un parametro morto.
 
-```python
-DEFAULT_DISENGAGEMENT_THRESHOLDS = {
-    "Blue":    {"erosion": 0.30, "shock": 0.20},
-    "Red":     {"erosion": 0.30, "shock": 0.20},
-    "Neutral": {"erosion": 0.30, "shock": 0.20},
-}
-```
+**Dal 2026-09-29 queste due chiavi non sono più soglie fisse ma la mediana** della soglia di rottura
+stocastica B(t) (decisioni D1-D9, `Analysis/Document/Proposta_Soglia_Rottura_Stocastica.md`; uso nel
+risolutore: capitolo 4 §4.7 e §4.21). I parametri aggiuntivi (`:87-131`, **tutti facoltativi**;
+`DISENGAGEMENT_OPTIONAL_KEYS`, `:158`):
 
-- `erosion = 0.30` — regola empirica diffusa nella letteratura militare per cui un'unità scesa
-  sotto ~70% dell'organico non è più pienamente efficace in combattimento: un ordine di
-  grandezza, non una misura.
-- `shock = 0.20` — nessuna fonte: scelto solo per essere strettamente minore di `erosion` e
-  abbastanza alto da non rompere una forza per la perdita di un singolo mezzo in un gruppo
-  piccolo (1 su 6 = 0.17 non basta).
-- I due lati hanno **di default** gli stessi valori: l'asimmetria dottrinale, se voluta, va
-  dichiarata esplicitamente dal chiamante (v. wiki `decisions/c2-hierarchy-design`), mai
-  introdotta di nascosto da un default.
+| Chiave | Default di lato (`_DEFAULT_SIDE_DOCTRINE`, `:160-172`) | Valore neutro (`DISENGAGEMENT_NEUTRAL`, `:147-157`) | Vincolo (`_validate_optional`, `:197-228`) |
+|---|---|---|---|
+| `erosion` (mediana) | 0.30 | — (obbligatoria) | (0, 1]; 1 = ad oltranza |
+| `shock` | 0.20 | — (obbligatoria) | (0, 1], `shock <= erosion` |
+| `dispersion` (σ logit-normale) | 0.5 | 0.0 | ≥ 0 |
+| `morale_weight` | 0.3 | 0.0 | [0, 1) |
+| `force_ratio_exponent` | 0.5 | 0.0 | ≥ 0 |
+| `force_ratio_bounds` | (0.6, 1.5) | (0.6, 1.5) | 0 < low ≤ 1 ≤ high |
+| `air_force_ratio_scale` | 2.0 | 2.0 | > 0 |
+| `unanswered_fire_weight` | 0.3 | 0.0 | [0, 1) |
+| `defensive_posture_factor` | 1.2 | 1.0 | > 0 |
+| `shock_min_losses` | 2 | 1 | intero ≥ 1 |
+| `median_bounds` | (0.05, 0.95) | (0.05, 0.95) | 0 < low ≤ high < 1 |
 
-Da ricalibrare con il processo **ATCAL interno** (risolutore fine fatto girare offline), mai con
-numeri da fonti non validate — in particolare **nessun coefficiente dei documenti Lanchester
-ingeriti** (`:87-89`, coerente con l'avvertimento metodologico permanente della wiki
-`decisions/virtual-session-engine-des`).
+Una tabella con le **sole** `erosion`/`shock` si comporta esattamente come le soglie fisse precedenti al
+2026-09-29 (modalità deterministica: test e scenari "ad oltranza", `:110-113`); la tabella di default
+(`DEFAULT_DISENGAGEMENT_THRESHOLDS`, `:174-178`) dichiara tutti i parametri, con **gli stessi valori per i
+tre lati** — l'asimmetria dottrinale, se voluta, va dichiarata esplicitamente dal chiamante (v. wiki
+`decisions/c2-hierarchy-design`), mai introdotta di nascosto da un default (`:128-131`).
 
-`get_disengagement_thresholds(side, thresholds=None) -> Optional[Dict[str, float]]`
-(`:158-178`) restituisce una **copia** delle soglie del lato, o `None` se il lato non ne
+### Valori di default — **STIMA DI PARTENZA DICHIARATA, non dati validati** (`:115-127`)
+
+- `erosion = 0.30` — regola empirica diffusa nella letteratura militare per cui un'unità scesa sotto
+  ~70% dell'organico non è più pienamente efficace in combattimento: un ordine di grandezza, non una
+  misura;
+- `shock = 0.20` — nessuna fonte: scelto solo per essere strettamente minore di `erosion`;
+- `dispersion = 0.5` — deviazione standard ~0.10 attorno a 0.30, 90% delle soglie fra 0.16 e 0.49: le
+  soglie di rottura storiche sono una distribuzione, non un valore (`:123-124`);
+- gli altri sono stime dichiarate della proposta, senza fonte.
+
+Da ricalibrare con il processo **ATCAL interno** (risolutore fine fatto girare offline), mai con numeri
+da fonti non validate — in particolare **nessun coefficiente dei documenti Lanchester ingeriti**
+(coerente con l'avvertimento metodologico permanente della wiki `decisions/virtual-session-engine-des`).
+
+`get_disengagement_thresholds(side, thresholds=None) -> Optional[Dict]` (`:281-301`) restituisce una
+**copia** della voce del lato (le chiavi facoltative assenti restano assenti), o `None` se il lato non ne
 dichiara — è `Engagement_Resolver` a decidere la propria politica su `None` (combatte fino
-all'annientamento, con un warning — tranne per i blocchi non-Military, v. capitolo 4, §4.7).
+all'annientamento, con un warning — tranne per i blocchi non-Military, v. capitolo 4 §4.7);
+`disengagement_parameter(entry, key)` (`:304-312`) restituisce il valore dichiarato o quello neutro.
+
+### Dottrina di tiro: saturazione e "due missili, poi guarda" (`:315-397`, 2026-09-29)
+
+`DEFAULT_FIRE_DOCTRINE` (`:341-345`): per lato `kill_probability_threshold = 0.9` (decisione O3 dell'utente)
+e `max_rounds_in_flight = 2` (la dottrina reale dei SAM *shoot-shoot-look*, decisione dell'utente); uso nel
+risolutore: capitolo 4 §4.25. Un lato assente dalla tabella, o una chiave `None`, non ha la regola;
+`validate_fire_doctrine` (`:348-383`) ammette soglia in (0, 1] e tetto intero ≥ 1; `get_fire_doctrine`
+(`:386-397`) restituisce una copia con entrambe le chiavi (un lato sconosciuto dà `{chiave: None}`: dato
+mancante, non errore).
 
 ## 7.3 `Context/Reaction_Profile.py` — RIV/VAL/COM/ATT
 
@@ -144,7 +170,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:248-249`, `:642-689`):
+legge di Pd (`Logic/Engagement_Resolver.py:289-301`, `:716-763`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
@@ -156,12 +182,12 @@ interno.
 
 `weather_detection_factor(conditions)` legge `conditions` nella forma di
 `Meteo_Analysis.get_meteo_conditions` (`{'day', 'night', 'adverse_weather'}`).
-`weather_detection_factor_fn(conditions)` produce la callable `(observer, target) -> float`
+`weather_detection_factor_fn(conditions)` (`:766-780`) produce la callable `(observer, target) -> float`
 richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor(region_name,
-date, time)` collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
+date, time)` (`:783-792`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
 placeholder deterministico: nessuna casualità entra da qui).
 
-**Limite noto, dichiarato** (`:654-659`): il fattore è **unico per ogni sensore**. La finestra di
+**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:291-298`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar e TVD (`Mobile.detection_range`, default =
 massimo dei due), e il risolutore non sa quale dei due l'ha prodotta: non può quindi risparmiare
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
@@ -169,7 +195,7 @@ compromesso fra i due sensori.
 
 ## 7.5 Le dimensioni militari di `Block/Military.py`
 
-### `air_defense_power() -> float` (`Block/Military.py:612-649`)
+### `air_defense_power() -> float` (`Block/Military.py:613-650`)
 
 È la dimensione che manca alla combat power: SAM, AAA e EWR valgono 0 nelle tabelle di efficacia
 (`Context.GROUND_COMBAT_EFFICACY`) **per definizione**, perché quella misura fuoco e manovra
@@ -179,15 +205,25 @@ natura diversa: `1 - Π(1 - danger_level_i)` sui `ThreatAA` costruiti dai volumi
 degli asset operativi ("almeno una delle difese è efficace"), saturante in [0,1], monotona nel
 numero di siti. **Non è una combat power** e non è confrontabile con quella.
 
-### `salvo_interceptors() -> List[Tuple[asset, canali]]` (`:618-663`)
+### `salvo_interceptors() -> List[Tuple[asset, canali]]` (`:652-715`)
 
-Elenco degli asset del blocco che possono intercettare colpi in arrivo (Vehicle/Ship operativi
-per cui esiste una `ThreatAA`), ciascuno con i propri canali (`engagement_channels('air')`, o
-`DEFAULT_INTERCEPTION_CHANNELS` se non dichiarato). Ordinato per id dell'asset — l'ordine di
-consumo delle scorte fa parte del contratto di riproducibilità. È la base consumata dal
+Elenco degli asset del blocco che possono intercettare colpi in arrivo, ciascuno con i propri canali
+(`engagement_channels('air')`, o `DEFAULT_INTERCEPTION_CHANNELS` se non dichiarato). È la base consumata dal
 risolutore d'ingaggio (capitolo 4, §4.5) per popolare `_ForceState.interceptors`.
 
-### `salvo_interception_capacity() -> int` (`:665-717`)
+**Dal 2026-09-28 (regole D e F della proposta SAM, capitolo 4 §4.24)**:
+
+- **Selezione**: `Vehicle` o `Ship` operativi con almeno un'arma **intercettrice** — il registro dichiara il
+  task `Anti_Missile` (`Mobile.interceptor_capability()`, `Asset/Mobile.py:1119-1131`). Uno Strela-10 o uno
+  Shilka pesano nella difesa aerea (`air_defense_power`, fuoco contro aerei) ma **non** intercettano
+  munizioni. Per un asset senza dato di registro (modello ignoto, stub, `capability() is None`) vale la
+  regola precedente: ogni asset per cui esiste una `ThreatAA`. Prima, "chi pesa nella difesa aerea" e "chi
+  intercetta" erano per costruzione lo stesso insieme; oggi il secondo è un sottoinsieme del primo.
+- **Ordine**: per `(rango F, id)`: prima gli intercettori a **soli cannoni** (scorta dedicata, si consuma per
+  prima), poi quelli con missili (`Weapon_Stores.interceptor_rank`, `Asset/Weapon_Stores.py:242-249`). L'ordine
+  di consumo delle scorte fa parte del contratto di riproducibilità.
+
+### `salvo_interception_capacity() -> int` (`:717-771`)
 
 ```
 capacita = Σ_i min(canali_i, scorta_i)
@@ -197,12 +233,13 @@ sugli asset di `salvo_interceptors()`. **STIMA DI PARTENZA DICHIARATA**: ogni ca
 **un** colpo per salva (Pk dell'intercettore = 1 per canale — ipotesi ottimistica per la difesa,
 primo candidato alla ricalibrazione). La formula non è cambiata dal 2026-09-26: cambia solo
 **cosa** legge `scorta_i` (`asset.interceptor_stock`), ora una vista sulla scorta per arma per
-chi la ha modellata (v. §7.6 e capitolo 4 §4.19). Nota: il risolutore d'ingaggio **non chiama
-direttamente**
-questo metodo per calcolare la capacità durante la run (ricalcola con `_capacity`, capitolo 4,
-§4.5, che replica la stessa formula sullo stato **ombra**, non sull'asset reale) — questo metodo
-resta la funzione di lettura pubblica per chi consulta lo stato reale fuori da un ingaggio in
-corso.
+chi la ha modellata (v. §7.6 e capitolo 4 §4.19). **Dal 2026-09-28 è un TETTO**, non il numero di colpi
+fermabili: il risolutore esclude, salva per salva, gli intercettori dentro il cui volume è partito il
+lancio (regola L1) e quelli senza traccia o tempo di reagire (R-INT), capitolo 4 §4.5. Nota: il
+risolutore d'ingaggio **non chiama direttamente** questo metodo per calcolare la capacità durante la run
+(ricalcola con `_capacity`, capitolo 4, §4.5, che replica la stessa formula sullo stato **ombra**, non
+sull'asset reale) — questo metodo resta la funzione di lettura pubblica per chi consulta lo stato reale
+fuori da un ingaggio in corso.
 
 ## 7.6 Munizioni e carburante su `Asset/Mobile.py` e `Asset/Aircraft.py`
 
@@ -216,18 +253,18 @@ Maverick a bordo ne lanciava 642, pagati dai colpi del cannone, v. capitolo 4 §
 dettaglio del difetto e della correzione).
 
 Lo stato primario è ora `Mobile._stores: Optional[Dict[str, int]]` = `{modello_arma: quantità}`
-(`Asset/Mobile.py:320`, valore iniziale dal registro del modello, `stores_from_registry`,
-`:833-868`); `ammunition`/`interceptor_stock` sono **viste calcolate** su di esso, con le regole
+(`Asset/Mobile.py:346`, valore iniziale dal registro del modello, `stores_from_registry`,
+`:859-903`); `ammunition`/`interceptor_stock` sono **viste calcolate** su di esso, con le regole
 di contabilità in un modulo a parte, `Asset/Weapon_Stores.py` (funzioni pure, senza stato: v.
 capitolo 4 §4.19 per il dettaglio delle "quattro forme della scorta" e della vista sugli
 intercettori), condiviso con lo stato ombra del risolutore (`_Shadow`, capitolo 4 §4.10) perché
 le due contabilità non possano divergere.
 
 Due contatori **distinti per scopo** dal 2026-09-23: `Mobile.ammunition` (munizioni offensive,
-proprietà a `:694-731`, setter `:699-757` che imposta un pool anonimo per chi forza la scorta a
-mano) e `Mobile.interceptor_stock` (intercettazioni ancora possibili, proprietà a `:920-951`).
+proprietà a `:750-757`, setter `:759-783` che imposta un pool anonimo per chi forza la scorta a
+mano) e `Mobile.interceptor_stock` (intercettazioni ancora possibili, proprietà a `:961-970`, setter `:972-987`).
 Per i cannoni AA, `ROUNDS_PER_GUN_INTERCEPT = 100` (**STIMA DICHIARATA**, da ricalibrare,
-definita in `Weapon_Stores.py` e re-esportata da `Mobile.py:183`) converte colpi fisici in
+definita in `Weapon_Stores.py` e re-esportata da `Mobile.py:182`) converte colpi fisici in
 intercettazioni (uno Shilka da 2000 colpi → 20 intercettazioni, non 2000). Dal 2026-09-26, per
 qualunque asset con armi AD modellate per arma, `interceptor_stock` è una **vista sulle voci AD**
 di `stores`: un missile antiaereo lanciato offensivamente e lo stesso missile usato per
@@ -235,17 +272,29 @@ intercettare scalano la stessa voce del dizionario, per costruzione. **La vecchi
 puro" (`Mobile.interceptor_shares_ammunition`, che condivideva un intero pool solo per gli asset
 a solo missile) è stata eliminata**: non serve più, perché la condivisione per arma copre già
 ogni caso (M6-Linebacker, Arleigh Burke, ecc. — v. capitolo 4 §4.19). Senza vista attiva (pool
-anonimo, o scorta impostata a mano col setter `interceptor_stock`, `:936-951`) resta il pool
+anonimo, o scorta impostata a mano col setter `interceptor_stock`, `:972-987`) resta il pool
 anonimo di intercettori, distinto dalle munizioni come prima del 2026-09-26.
 
-`Mobile.consume_ammunition(rounds, weapon=None)` (`:763-788`) e
-`Mobile.consume_interceptor_stock(amount, weapon=None)` (`:976-1009`) sono i due punti di
+`Mobile.consume_ammunition(rounds, weapon=None)` (`:789-814`) e
+`Mobile.consume_interceptor_stock(amount, weapon=None)` (`:1012-1045`) sono i due punti di
 applicazione consumati da `apply_engagement_result` (capitolo 4, §4.12): con `weapon` presente in
 `stores` scalano quella voce e solo quella; senza arma, o con un nome estraneo, l'aggregato
 (v. `drain_order`, capitolo 4 §4.19). Deterministico in entrambi i casi: nessuna estrazione
 casuale, mai sotto zero.
 
-### Carburante (`Asset/Mobile.py:220-262`)
+**Regola D e CIWS navali (2026-09-28, commit `37ca477e`)**. Le armi "intercettrici" di un asset
+(`Mobile.interceptor_weapons_from_registry`, `Asset/Mobile.py:1047-1117`) sono ora quelle AD di
+`air_defense_volume` che dichiarano il task `Mobile.INTERCEPTOR_TASK = 'Anti_Missile'` (`:196`), e
+`Mobile.interceptor_capability()` (`:1119-1131`) dice se un asset ne ha almeno una (`True`/`False`, o
+`None` se il registro non descrive armi del modello). I **CIWS navali** (Phalanx, AK-630, Type-730) sono
+inclusi come cannoni AD (`INTERCEPTOR_WEAPON_TYPES_SHIP = ('MISSILES_SAM', 'CIWS')`,
+`INTERCEPTOR_GUN_WEAPON_TYPES = ('AA_CANNONS', 'CIWS')`, `:187-189`) e, se l'arma dichiara
+`rounds_per_mount`, la loro scorta è `impianti × colpi per impianto` (`_mount_rounds`, `:204-216`;
+`stores_from_registry`, `:859-903`) invece di restare "non modellati" contati a unità: Phalanx 1550, AK-630
+2000, Type-730 1280 colpi per impianto (`Asset/Ship_Weapon_Data.py`). Un CIWS senza `rounds_per_mount`
+resta fra le armi non modellate (`unmodelled_weapons_from_registry`, `:905-921`).
+
+### Carburante (`Asset/Mobile.py:218-257`)
 
 **Unità: frazione del carico pieno, [0,1] (`FUEL_FULL = 1.0`), per tutti gli asset** — scelta
 motivata dai dati, non di comodo:
@@ -268,9 +317,9 @@ dato a non distinguere, non una semplificazione introdotta dal motore). `None` =
 modellato**: nessun vincolo di movimento (stessa semantica delle munizioni) — casi: modello
 ignoto, autonomia mancante, aereo senza loadout assegnato, propulsione nucleare
 (`NUCLEAR_ENGINE_TYPES`, l'autonomia dichiarata "convenzionalmente 20.000 nm" dal registro è
-trattata come segnaposto, non come dato, `:258-262`).
+trattata come segnaposto, non come dato, `:266-272`).
 
-### `Aircraft.assigned_loadout` (`Asset/Aircraft.py:169-213`)
+### `Aircraft.assigned_loadout` (`Asset/Aircraft.py:170-214`)
 
 La scorta di un aereo si ricava dal **loadout assegnato**, non dal modello (`Aircraft_Data` non
 ha un campo `weapons`): prima di questa proprietà non esisteva alcuno stato "loadout di questo
@@ -281,14 +330,14 @@ carburante via `load_fuel_from_registry()`, sovrascrivendo l'eventuale consumo p
 quindi un'operazione del ciclo di campagna/assemblaggio missione, **non** un canale di
 rifornimento durante l'ingaggio (il risolutore non la chiama mai).
 
-`Aircraft.stores_from_registry()` (`:215-278`, override di `Mobile.stores_from_registry`, v.
+`Aircraft.stores_from_registry()` (`:216-279`, override di `Mobile.stores_from_registry`, v.
 capitolo 4 §4.19) costruisce `{modello_arma: quantità}` dal loadout assegnato
 (`AIRCRAFT_LOADOUTS[model][loadout]['stores']['pylons']`): per ogni pilone la quantità, **solo**
 se il nome è un'arma reale di `AIR_WEAPONS` (`get_weapon(...)` non `None`) — serbatoi esterni e
 pod di rifornimento stanno anch'essi nei piloni e vanno esclusi; piloni con la stessa arma si
 sommano. **Dal 2026-09-26 (decisione A2, commit `8bd69727`, v. capitolo 4 §4.16bis)** il **cannone
 di bordo** ottiene la propria voce di scorta, `{modello_cannone: colpi}` da
-`get_aircraft_gun_rounds(model, stores['gun_rounds'])` (`Asset/Aircraft_Data.py:3737-3765`), MAI
+`get_aircraft_gun_rounds(model, stores['gun_rounds'])` (`Asset/Aircraft_Data.py:3745-3773`), MAI
 sommata a quella di un'arma dei piloni diversa: fino a questa data i colpi del cannone
 (`stores['gun_rounds']`) non entravano affatto nella scorta per arma e finivano nel contatore
 scalare aggregato (v. capitolo 4 §4.19), pagando i missili dello stesso asset — è il difetto
@@ -297,11 +346,10 @@ descritto in dettaglio al capitolo 4, §4.16bis. Il cannone è candidato della f
 piloni. Senza loadout assegnato, delega a `Mobile.stores_from_registry()`, che per un aereo
 restituisce `None` (non modellata).
 
-## 7.7 I punti di iniezione `fire_control` e `detection_factor`
+## 7.7 I punti di iniezione del motore
 
-Entrambi sono parametri **iniettati** in `resolve_engagement`/`run_session`, mai implementati dal
-motore stesso — è il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo
-10):
+Sono parametri **iniettati** in `resolve_engagement`/`run_session`, mai implementati dal motore stesso —
+il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9):
 
 - `fire_control: (shooter, target) -> ShotSpec | Sequence[ShotSpec] | None` — interrogata al
   momento dello scheduling del lancio (capitolo 4, §4.4). Dal 2026-09-26 può restituire una
@@ -309,7 +357,7 @@ motore stesso — è il punto di estensione esplicito verso ciò che il motore n
   quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
   `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
   per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
-  (`Logic/Session_Simulator.py:101-107`, capitolo 6). Una fabbrica che seleziona davvero l'arma
+  (`Logic/Session_Simulator.py:129-135`, capitolo 6). Una fabbrica che seleziona davvero l'arma
   dai registri, invece di una tabella di ruoli, esiste in
   `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16).
 - `detection_factor: (observer, target) -> float in [0,1]` — degradazione della Pd (§7.4);
@@ -317,6 +365,15 @@ motore stesso — è il punto di estensione esplicito verso ciò che il motore n
   `meteo_detection_factor`, §7.4), esistono fabbriche dello stesso fattore per la nebbia di guerra
   da ricognizione (`region_recon_detection_factor`, capitolo 4, §4.18) e per comporre più
   degradazioni insieme (`combine_detection_factors`).
+- **Dal 2026-09-29/30**, quattro punti di iniezione della soglia di rottura e della percezione:
+  `morale_for(force) -> [0, 1] | None` (morale della forza, default `None` = neutro),
+  `enemy_estimate_for(force) -> float ≥ 0 | None` (stima a priori della forza nemica nella stessa misura del
+  rapporto percepito), `fire_doctrine` (tabella al posto di `Doctrine.DEFAULT_FIRE_DOCTRINE`, `{}` = nessuna
+  regola) e `rwr_catalogue` (emettitori per il peso di classe della RWR); più il flusso `breakpoint_rng`
+  della tempra. Dettaglio in capitolo 4 §4.12, §4.21, §4.23, §4.25; `run_session` inoltra i primi tre,
+  `fire_doctrine` e costruisce `breakpoint_rng` (capitolo 6 §6.1, §6.4), ma **non** inoltra
+  `rwr_catalogue`. A `533cd1f5` nessun chiamante di produzione fornisce `morale_for` né
+  `enemy_estimate_for` (capitolo 9 §9.1).
 
 ## 7.8 Il pianificatore di rotta aerea: volumi di rilevamento e intercettazione distinti (`Logic/Air_Route_Manager.py`, decisioni D-1..D-7, 2026-09-26, commit `815dc35f`)
 
@@ -418,9 +475,9 @@ residuo d'intercettazione, poi la lunghezza (altre modalità: la chiave storica 
 
 ### `Block/Military.py`: le due liste per blocco
 
-`Military.air_defense_threats()` (`Block/Military.py:551-581`, preesistente, ora con
+`Military.air_defense_threats()` (`Block/Military.py:552-582`, preesistente, ora con
 `source_id` impostato — v. §7.9) e la nuova `Military.air_detection_threats(route_altitude)`
-(`:583-610`) restituiscono rispettivamente i `ThreatAA` e le `DetectionThreat` di tutti gli asset
+(`:584-611`) restituiscono rispettivamente i `ThreatAA` e le `DetectionThreat` di tutti gli asset
 Vehicle/Ship operativi del blocco con dati utilizzabili — la stessa selezione di asset, due volumi
 per sito. Nessuna delle due entra in `air_defense_power()` per la parte di rilevamento
 (`DetectionThreat.danger_level == 0.0` per costruzione).
@@ -599,3 +656,128 @@ flowchart TD
     F --> G["DES: Logic/Fire_Control.shot_spec_for (B6, cap.4 §4.20)<br/>max_range/time_of_flight dalla balistica"]
     F --> H["futuro adapter DCS: altitude/direction/weaponType/expend<br/>dei task AttackGroup/Bombing"]
 ```
+
+## 7.10 `Asset/Aircraft_Rwr_Data.py` — che cosa riconosce l'RWR di ogni aereo, e quando (2026-09-29, commit `4d225ffb`, `d261062c`)
+
+Dato di registro nuovo (191 righe), richiesto dall'utente per valutare il "fuoco senza risposta" di una forza
+aerea con l'RWR di ogni aereo illuminato (`Proposta_Soglia_Rottura_Stocastica.md` §5). Il registro
+`Aircraft_Data` nomina l'RWR solo per alcuni aerei (campo `avionics`); qui il dato è **completo**:
+`AIRCRAFT_RWR` (`Asset/Aircraft_Rwr_Data.py:90-162`) ha una voce per **ciascuno dei 65 modelli** del
+registro (verificato: l'insieme dei modelli coincide con `Aircraft_Data._registry`). Fonti: campo
+`avionics` del registro, decisioni dell'utente del 2026-09-29 e la ricerca
+`Analysis/Document/Ricerca_RWR_2026_09_29.md` (`:1-8`).
+
+### Schema di una voce (`:9-21`)
+
+| Campo | Significato |
+|---|---|
+| `rwr` | nome del sistema (`None` = nessun RWR) |
+| `classes` | le **classi** di minaccia SAM che il sistema distingue, ciascuna un insieme di categorie (`VSHORAD`, `SHORAD`, `MRSAM`, `LRSAM`); una classe con più categorie = il sistema non le separa; l'unione delle classi è l'insieme di categorie riconosciute come minaccia SAM; vuota = nessun riconoscimento |
+| `modes` | modalità del radar nemico che il sistema rileva: `search` (ricerca/acquisizione), `track` (tracciamento), `guidance` (guida del missile): decide **quando** la minaccia è percepita (capitolo 4 §4.23) |
+| `sectors` | settori di direzione (4, 8), `None` = direzione precisa |
+| `ewr` | se riconosce i radar di scoperta come classe a parte |
+| `confidence` | `alta` / `media` / `bassa` |
+
+### Le famiglie (decisioni dell'utente, 2026-09-29; costruttori `:54-81`)
+
+- **Sistemi digitali** (`_digital`: AN/ALR-46/56/67/69, ALQ-161, SERVAL/SPIRALE, L-150 Pastel/SPO-32, BKO-1
+  Baykal, ESM di bordo): ogni categoria separata, tutte le modalità, direzione precisa.
+- **SPO-15 Beryoza** (`_spo15`, anche L, LE, LM): direzione su 8 settori; **tre** classi SAM
+  (VSHORAD-SHORAD insieme, MRSAM, LRSAM); distingue ricerca, tracciamento e guida; rileva il radar dello Shilka
+  (verificato dall'utente in DCS con il Su-25).
+- **SPO-10 Sirena-3** (`_spo10`): direzione su 4 quadranti; **una sola** classe ("SAM" generico: riconoscimento a
+  due soli livelli, SAM o EWR); rileva solo il tracciamento.
+- **AN/ALR-45** (`_alr45`, F-14A, A-4E): riconosce la classe AAA ma non distingue i SAM fra loro: due classi,
+  VSHORAD e "SAM" generico.
+- **Solo allarme** (`_warning_only`: Sirena-2, radarvarnare del Viggen) e **nessun RWR** (`_none`):
+  nessun riconoscimento.
+
+Funzioni di lettura: `rwr_entry` (`:165-167`; un modello assente dalla tabella è trattato come senza RWR),
+`rwr_categories` (`:170-177`, unione delle classi), `rwr_modes` (`:180-184`), `rwr_classes` (`:187-191`).
+Uso: solo `Context/Air_Defense_Efficacy` (§7.11) e, per suo tramite, il risolutore (capitolo 4 §4.23).
+**Settori, `ewr` e `confidence` non sono consumati da nessun codice di produzione** (decisione dell'utente,
+2026-09-30: rimandati al modulo rotte/evasione e a un futuro SEAD, `Proposta_Uso_Classi_Settori_RWR.md` §3).
+Il campo `avionics` di Tu-95MS in `Aircraft_Data` è stato allineato a L-150 Pastel (commit `1c087a37`: il registro
+indicava SPO-15 Beryoza, in contrasto con la tabella RWR); cambia solo il nome del modello.
+
+## 7.11 `Context/Air_Defense_Efficacy.py` — struttura del modulo
+
+Descritto nel suo uso al capitolo 4 §4.22 (E(N)) e §4.23 (categorie SAM, RWR, regola R-CLS). Qui la mappa
+dei tipi e delle funzioni, per chi dovrà estenderlo:
+
+| Gruppo | Contenuto | Riga |
+|---|---|---|
+| Stime dichiarate | classe di riferimento `Aircraft_Attacker`/`med`, velocità 200 m/s, velocità di ripiego del proiettile 1000 m/s, `EFFICACY_CORRECTIONS` (vuota), `AD_TASKS`, tipi d'arma AD per veicoli e navi | `:64-90` |
+| Profilo statico | `ADWeaponProfile` (`weapon`, `p`, `director`, `channels`, `cycles`, `rounds_per_engagement`, `full_stock`), `ADProfile`, cache `_PROFILE_CACHE`, `clear_cache` | `:93-139` |
+| Costruzione | `_is_ad_weapon`, `_single_shot_p`, `_cycles`, `_channels`, `_director`, `_build_profile`, `air_defense_profile` | `:164-353` |
+| E(N) | `expected_kills`, `air_defense_efficacy` | `:356-413` |
+| Pesi di minaccia | `surface_threat_weight`, `air_threat_weight` | `:445-476` |
+| RWR e categorie | `SAM_WEAPON_CATEGORY`, `sam_category`, `emits_radar`, `rwr_identifies`, `rwr_perception` (`PERCEIVED_AT_DETECTION`/`PERCEIVED_AT_LAUNCH`) | `:479-619` |
+| Classe RWR (R-CLS) | `emitter_domain`, `rwr_class_of`, `default_rwr_catalogue`, `class_threat_weight` | `:622-725` |
+
+**Mai eccezioni per dato mancante**: modello ignoto o senza armi AD → `None` o peso di ripiego, con un log di
+debug (docstring `:48-50`). Gli import dei registri e dei moduli `Logic` sono locali alle funzioni; il dato RWR
+è importato a livello di modulo, a metà file (`:491-492`).
+
+*Diagramma D28 — `Air_Defense_Efficacy`: profili, dati RWR e funzioni pubbliche.*
+
+```mermaid
+classDiagram
+    class ADWeaponProfile {
+        +str weapon
+        +float p
+        +str director
+        +int channels
+        +int cycles
+        +int rounds_per_engagement
+        +int full_stock
+        +time_limited_engagements() int
+    }
+    class ADProfile {
+        +str model
+        +tuple weapons
+    }
+    class AircraftRwrEntry {
+        <<dato di registro>>
+        +str rwr
+        +tuple classes
+        +frozenset modes
+        +int sectors
+        +bool ewr
+        +str confidence
+    }
+    class Air_Defense_Efficacy {
+        <<modulo>>
+        +air_defense_efficacy(asset, n) float
+        +air_threat_weight(asset, n) float
+        +surface_threat_weight(asset) float
+        +rwr_perception(aircraft, emitter) str
+        +class_threat_weight(classe, dominio, n) float
+    }
+
+    ADProfile "1" *-- "1..*" ADWeaponProfile
+    Air_Defense_Efficacy ..> ADProfile : air_defense_profile
+    Air_Defense_Efficacy ..> AircraftRwrEntry : rwr_categories, rwr_modes, rwr_classes
+```
+
+## 7.12 Dati di registro aggiunti dopo `6754bf1c`
+
+Modifiche ai registri d'arma e d'aereo, senza codice consumatore nuovo ma con effetti sul motore:
+
+- **Armi DCS mancanti** (`0df5ddf9`, 2026-09-28): 4 AAM, 12 ASM e 23 bombe aggiunte a `AIR_WEAPONS`
+  (`Asset/Aircraft_Weapon_Data.py`), dall'elenco `Analysis/Document/bombe_missili_russi.pdf` (schermate del menu
+  armi DCS) con una ricerca a tre gruppi (fonte e confidenza per campo, in
+  `Analysis/Document/Ricerca_Armi_DCS_2026_09_28/`) poi **revisionata**: Kh-22 e Kh-58U non inseriti (alias di
+  Kh-22N e Kh-58), Kh-41 con testata 320 kg, KD-20 ricostruito (stima), classi `efficiency` mancanti
+  ereditate dalla voce del modello, LS-6 planante (standoff 10-60 km), Mk-84 AIR con drag selezionabile; le
+  varianti RBK sono voci separate (decisione dell'utente). A `533cd1f5` il registro conta 42 AAM, 44 ASM,
+  **54 bombe, tutte con il campo `release`**, 12 razzi, 15 cannoni, 2 mitragliatrici (verificato). Le 54
+  bombe con finestra di rilascio superano le 29 su 32 dell'aggiornamento precedente (capitolo 4 §4.20).
+- **KMGU-2** (`89f1aa34`, decisione D4, 2026-09-28): le tre voci KGBU-* si sono rivelate un dispenser mal
+  identificato; ora `KMGU-2AO` e `KMGU-2PTAB` (nomi DCS KMG-2F/2B; 525 kg; `'dispenser': True`: il dispenser
+  **resta sul pilone** ed espelle i blocchi BKF; rilascio solo livellato a 30-1000 m, 500-1100 km/h, drag
+  `high`, `Aircraft_Weapon_Data.py:7762-7771`, `:7830-7839`); la voce duplicata KGBU-96r è stata eliminata.
+  La decisione D4, sospesa il 2026-09-27, è chiusa: oggi **nessuna** bomba è senza dati di rilascio.
+- **Task `Anti_Missile`** su 6 armi terrestri e `rounds_per_mount` sui 3 CIWS navali (`37ca477e`, §7.6).
+- **Rename `Retrait` → `Retreat`** (`1d5dc863`) e nuovi task aerei di supporto (`4e18d7d8`): capitolo 2 §2.7.
+- **Tu-95MS**: campo `avionics` allineato a L-150 Pastel (`1c087a37`, §7.10).

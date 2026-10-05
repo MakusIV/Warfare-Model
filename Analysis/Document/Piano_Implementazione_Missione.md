@@ -1,6 +1,6 @@
 # Piano di implementazione dell'entità Missione
 
-**Stato**: PROPOSTA (2026-10-05), in attesa di approvazione. Nessun file di codice modificato.
+**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3 e F4a (v. §5 "Stato di avanzamento").
 **Base**: le decisioni D1-D6 e N1-N3 di `Proposta_Struttura_Missione_Decisioni.md` (tutte prese;
 N2.a = C, N3.f = B).
 **Convenzioni**:
@@ -259,3 +259,31 @@ su cui poggia la successiva.
   completata (consiglio: sì, una sola strada) o mantenuti come API di basso livello per i test?
 - **Q3**: per la F7 (salva su area), proposta di dettaglio separata all'inizio della fase. Va bene?
 - **Q4**: F0-F2 in parallelo con agenti `des-developer`, o in sequenza nella sessione principale?
+
+---
+
+## 5. Stato di avanzamento e deviazioni dal piano (aggiornato 2026-10-05)
+
+| Fase | Stato | Commit | Note |
+|---|---|---|---|
+| F0 | FATTA | `d3af6980` | fotografia di 292 esecuzioni (S1-S19, S19AD, VAL, ORC); `--summary` aggiunto in F4a |
+| F1 | FATTA | `20b6de72`, `680dfcb6`, `8f16cc3c` | ruoli = posizioni nella formazione; loadout e `AttackProfile` per asset; partenza aerea di default dal parcheggio |
+| F2 | FATTA | `4e18d7d8`, `8f16cc3c` | tabelle confermate dall'utente; `AIR_COMBAT_TASK` per escludere i task di supporto da combat power e punteggi; **13** loadout su 14 con task assegnati (An-30M Recon lasciato vuoto) |
+| F3 | FATTA | `533cd1f5` | fotografia identica; parametri `routes`/`starts`/`speeds` **già rimossi** (Q2) |
+| F4a | FATTA | `951b0ee2` | regola A dell'utente: una missione si muove alla velocità del mezzo più lento; 90 esecuzioni cambiate, nessun esito di forza (`F4_Differenze_Scenari.md`) |
+| F4b | DA FARE | | missione come unità di ingaggio (vista `MissionForce`), `mission_id` negli id d'ingaggio e quindi nell'RNG |
+| F4c | DA FARE | | postura continua degli asset senza missione (D1.c) |
+| F5-F9 | DA FARE | | come da §1 |
+
+**Deviazioni decise durante il lavoro**:
+1. `mission_id` **non** entra nell'RNG in F3 ma in F4b. Le estrazioni sono per ingaggio fra forze, e finché la forza è il blocco un ingaggio può coinvolgere più missioni. Così F3 è rimasta pura struttura, verificata con fotografia identica.
+2. F4 è divisa in tre passi (F4a, F4b, F4c), ognuno con commit, documento delle differenze e fotografia rigenerata, per attribuire ogni differenza alla sua causa.
+3. Regola A (decisione dell'utente prima della F4): asset di velocità diverse nella stessa missione vanno alla velocità del più lento (`Mission_Adapter.check_mission_speed`). Chi vuole velocità diverse usa missioni separate.
+4. La rotta aerea "da base a base" (D2.c) è verificata solo sui ruoli dei punti (`DEPARTURE` all'inizio, `LAND` alla fine), non sulla presenza di una base reale. Le rotte aeree degli scenari non hanno rientro e sono annotate come semplificazione da completare con l'RTB in F5-F6.
+
+**Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):
+- docstring obsoleti in `Session_Simulator` (dicono ancora che la selezione dell'arma resta fuori dall'orchestratore);
+- `run_session` non inoltra `rwr_catalogue` al risolutore;
+- nessun codice di produzione fornisce `morale_for` / `enemy_estimate_for` (solo i test);
+- una missione sul posto risulta `FAILED` perché manca uno stato "in corso" (D4.e);
+- ruoli, regole, bersaglio, criteri di fine e `Operation` sono validati ma non ancora letti da `Logic` (arrivano con F4-F7).

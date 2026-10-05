@@ -2,6 +2,12 @@
 
 Modulo: `Logic/Contact_Scheduler.py`.
 
+> **Verificato a `533cd1f5` (2026-10-05): il modulo e i suoi riferimenti `:riga` sono invariati** rispetto a
+> `6754bf1c` (`git diff` non tocca `Logic/Contact_Scheduler.py`). Cambia solo **chi produce** gli
+> argomenti `routes`/`starts`/`speeds` di `schedule_contacts` (§3.6): non più il chiamante di `run_session`
+> ma `Logic/Mission_Adapter.session_movements`, a partire dalle `Mission` dell'ordine (capitolo 6 §6.10).
+> Lo scheduler non conosce le missioni.
+
 ## 3.1 Scopo e confine
 
 Risponde a **quando** due forze si incontrano. Non risolve alcun ingaggio: non decide chi rileva
@@ -121,7 +127,10 @@ margin=0.0, range_type=..., skip_same_side=True)` (`:1197-1274`) mette insieme i
 nell'ordine che li rende trattabili: prima la potatura a livello blocco (C), poi il CPA solo
 sulle coppie di asset superstiti (B). Un asset senza rotta in `routes` non è ignorato: se ha una
 posizione, è trattato come **fermo** per tutta la finestra (`static_legs`, `:1211-1213`) — il
-caso più comune in campagna (un sito SAM, un deposito, una base).
+caso più comune in campagna (un sito SAM, un deposito, una base). Dal 2026-10-05 le tre mappe
+`routes`/`starts`/`speeds` arrivano a `schedule_contacts` da `Mission_Adapter.session_movements`
+(`Logic/Session_Simulator.py:652-657`): la firma dello scheduler non è cambiata, e un asset senza missione
+è "senza rotta", cioè fermo.
 
 Restituisce una lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)`:
 **l'ordine è parte del contratto**, è ciò che rende la sessione riproducibile a parità di seed,

@@ -1,5 +1,12 @@
 # Capitolo 1 — Scopo e motivazioni
 
+> **Aggiornato al commit `533cd1f5`** (2026-10-05). Rispetto alla stesura iniziale cambiano due cose a livello
+> d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è ora il
+> modo in cui un asset riceve rotta, partenza e velocità — la porta dello strato 0 la porta, un adattatore
+> la traduce nelle mappe dello scheduler —, e lo strato 2 ha acquisito la soglia di rottura stocastica, la
+> difesa dai missili, la dottrina di tiro e la percezione RWR (capitolo 4 §4.21-4.26). Le motivazioni di
+> questo capitolo (§1.1, §1.3, §1.5) non sono cambiate.
+
 ## 1.1 Il problema: simulare ore di combattimento in minuti di calcolo
 
 Il design C2 della campagna (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/c2-hierarchy-design.md`)
@@ -61,18 +68,23 @@ L'architettura è a quattro strati, in secondi assoluti dall'inizio della sessio
 0. **Contratto** — `SessionOrder`/`SessionOutcome`, solo tipi di dominio, più l'RNG di sessione
    seedato esplicitamente. È la "porta" a cui qualunque esecutore di sessione deve conformarsi:
    il risolutore sintetico del core oggi, un adapter DCS domani
-   (`Command/Session_Types.py:1-33`).
+   (`Command/Session_Types.py:1-40`). Dal 2026-10-05 la porta porta anche le **missioni**
+   (`Command/Mission_Types.py`, `SessionOrder.missions`/`operations`, `SessionOutcome.mission_outcomes`,
+   capitolo 2 §2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7).
 1. **Scheduler dei contatti** — risponde a **quando** (rotta↔volume di minaccia, CPA/TCPA,
    potatura gerarchica a livello `Block` prima delle coppie di asset).
 2. **Risolutore d'ingaggio** — risponde a **come finisce**: Pd → latenza di reazione → regole
-   d'ingaggio (`fire_control`) → salva e saturazione (Hughes) → danno per colpo → disingaggio.
+   d'ingaggio (`fire_control`, dottrina di tiro) → salva e saturazione (Hughes, con difesa dai missili per
+   salva e tempo di reazione) → danno per colpo → disingaggio (soglia di rottura stocastica).
 3. **Applicazione dello stato** — per-asset (danno, munizioni, carburante) → `SessionOutcome`,
-   in un'unica passata per componente connessa di forze (l'orchestratore, capitolo 6).
+   in un'unica passata per componente connessa di forze (l'orchestratore, capitolo 6). L'orchestratore
+   ricava prima rotta, partenza e velocità di ogni asset dalle missioni (`Logic/Mission_Adapter`).
 
 ```mermaid
 flowchart TD
     subgraph S0["Strato 0 — Contratto"]
         ST["Command/Session_Types.py<br/>SessionOrder, SessionOutcome"]
+        MT["Command/Mission_Types.py<br/>Mission, Operation, MissionOutcome"]
         RNG["Utility/Session_Rng.py<br/>seed = SHA-256(chiave canonica)"]
     end
 
@@ -83,7 +95,8 @@ flowchart TD
     subgraph S2["Strato 2 — COME FINISCE"]
         ER["Logic/Engagement_Resolver.py<br/>resolve_engagement"]
         RP["Context/Reaction_Profile.py<br/>RIV+VAL+COM+ATT"]
-        DOC["Context/Doctrine.py<br/>soglie disingaggio"]
+        DOC["Context/Doctrine.py<br/>soglia di rottura, dottrina di tiro"]
+        ADE["Context/Air_Defense_Efficacy.py<br/>E(N), RWR, classi SAM"]
     end
 
     subgraph S3["Strato 3 — APPLICAZIONE"]
@@ -93,13 +106,17 @@ flowchart TD
     end
 
     ORCH["Logic/Session_Simulator.py<br/>run_session (orchestratore)"]
+    MA["Logic/Mission_Adapter.py<br/>rotta, partenza, velocita' per asset"]
 
+    MT --> ST
     ST --> ORCH
+    ORCH --> MA
     RNG --> ST
     ORCH --> CS
     CS --> ER
     RP --> ER
     DOC --> ER
+    ADE --> ER
     ER --> DM
     ER --> FM
     DM --> AD
@@ -125,14 +142,14 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
    a parità di ordine delle chiamate (`Utility/Session_Rng.py:1-9`). Concretamente: le liste di
    `ContactWindow` sono sempre ordinate per tempo e, a parità di tempo, per identificativo di
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
-   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:118-123`); l'RNG di
+   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:219-224`, `:343-348`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:71-99`, `engagement_event_id`).
+   un dizionario Python (`Logic/Session_Simulator.py:252-273`, `engagement_event_id`; `:99-127`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze
    preesistente — resta un **fallback**, mai il risolutore primario
-   (`Logic/Engagement_Resolver.py:140`).
+   (`Logic/Engagement_Resolver.py:253`).
 4. **Budget di calcolo per sessione: fino a minuti.** Non verificato in questo manuale con
    misure a runtime; lo scenario S8 (capitolo 8) è quello dedicato esplicitamente a misurare il
    tempo di calcolo su una scala di decine di blocchi.
@@ -150,7 +167,9 @@ Concretamente, per il motore descritto in questo manuale, questo si traduce in:
 - le porte `SessionOrder`/`SessionOutcome` e tutti i tipi atomici che trasportano (`ForceOutcome`,
   `DamageEvent`, `AmmunitionEvent`, `InterceptionEvent`, `FuelEvent`) contengono **solo tipi di
   dominio**: stringhe (id di dominio, mai id del simulatore), secondi assoluti come float, interi,
-  frazioni, booleani — mai un concetto del simulatore (`Command/Session_Types.py:9-18`);
+  frazioni, booleani, enum di dominio — mai un concetto del simulatore (`Command/Session_Types.py:9-18`); lo
+  stesso vale dal 2026-10-05 per i tipi della Missione (`Mission`, `Operation`, `MissionOutcome`), con il test di
+  contratto esteso (capitolo 2 §2.9);
 - nessun modulo dello strato 0-3 importa alcunché legato a un simulatore specifico (lettori
   `.miz`/Lua, orologio del simulatore);
 - oggi (a questo commit) **non esiste alcun adapter DCS** nell'albero Python

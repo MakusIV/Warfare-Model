@@ -1,5 +1,13 @@
 # Capitolo 5 — Lo strato 3: applicazione dello stato
 
+> **Verificato a `533cd1f5` (2026-10-05): invariato** nei moduli `Logic/Damage_Model.py`,
+> `Asset/Asset.py`, `Logic/Fuel_Model.py` (nessuno è nel `git diff` da `6754bf1c`). Cambia solo il
+> contorno: `apply_engagement_result` ha nuove righe (`Logic/Engagement_Resolver.py:2780-2858`, v. §5.3); la
+> tempra e il suo flusso RNG separato non toccano questo strato (capitolo 4 §4.11, capitolo 6 §6.4); i
+> `FuelEvent` sono ancora uno per asset (il consumo per tratto e nel tempo è la fase F6 del piano della
+> Missione, capitolo 9 §9.5); l'esito di missione (`MissionOutcome`) non è un'applicazione di stato ma un
+> resoconto prodotto dall'orchestratore (capitolo 6 §6.11).
+
 Moduli: `Logic/Damage_Model.py`, `Asset/Asset.py` (`apply_damage`), `Logic/Fuel_Model.py`, più
 `Logic/Engagement_Resolver.apply_engagement_result` (già descritta in capitolo 4, §4.12, ripresa
 qui per completezza dello strato).
@@ -123,7 +131,7 @@ Stessa non-idempotenza dichiarata di `apply_damage_event`.
 
 ## 5.3 Applicazione unificata: `apply_engagement_result`
 
-Già descritta in dettaglio nel capitolo 4, §4.12 (`Logic/Engagement_Resolver.py:1438-1509`): è il
+Già descritta in dettaglio nel capitolo 4, §4.12 (`Logic/Engagement_Resolver.py:2780-2858`): è il
 passo che collega lo strato 2 allo strato 3 per un singolo ingaggio, applicando in sequenza
 `DamageEvent` (via `Damage_Model.apply_damage_event`), `AmmunitionEvent` (via
 `Mobile.consume_ammunition`) e `InterceptionEvent` (via `Mobile.consume_interceptor_stock`).
