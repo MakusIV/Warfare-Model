@@ -49,3 +49,12 @@ l'analisi DCS svolta finora è, per natura, materiale da adapter.
 Documento completo: `Analysis/Document/documentazione_dcs/ARCHITETTURA_CORE_AGNOSTICO.md`.
 Rileggere con questa lente [[project-dce-analysis]], in particolare la tabella di
 corrispondenze §7.2 di `ANALISI_DCE.md`, che accosta strutture DCS a moduli di dominio.
+
+**Precisazione dell'utente (2026-10-05), sull'uso della documentazione DCS:** le informazioni DCS
+(manuale del Mission Editor, `.miz`, foto) servono **solo come spunto** per individuare i dati
+necessari a definire le missioni, **indipendentemente dalla struttura DCS**. Saranno riusate per i
+moduli di conversione/interfaccia nucleo↔giochi (DCS per primo) solo **dopo** aver definito l'intera
+struttura del DES (territorio/mappe, sessioni, missioni) e completato il motore. Quindi: mai modellare
+un'entità di dominio sulla forma di un pannello o di una tabella DCS; quando DCS e il dominio
+divergono, vince il dominio (es. la missione terrestre deve poter avere bersagli espliciti a
+prescindere da cosa DCS permette).
