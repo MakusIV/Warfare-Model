@@ -1,6 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [Session 2026-10-08 (osboxes) — CHIUSA, tutto pushato, suite 3951 OK: F4b fatta (a4d8acf0, missione = unità di ingaggio), regola modelli/sforzi](project_session_2026_10_08_summary.md) — ripresa su ProArt P16 con git pull; prossimo: decisioni su ripartizione del fuoco fra missioni (overkill S19AD) e test S3/S5, poi F4c
 - [Session 2026-10-05 (ProArt P16) — CHIUSA, tutto pushato, suite 3929 OK: struttura Missione F0-F3+F4a, doc missioni DCS ingerita, manuale DES a 533cd1f5](project_session_2026_10_05_summary.md) — ripresa con git pull; prossimo: F4b (missione = unità di ingaggio), F4c, poi F5-F9
 - [Struttura Missione: decisioni D1-D6/N1-N3 + regola A, piano F0-F9 (F0-F3, F4a, F4b fatte; F4b a4d8acf0 2026-10-08)](project_mission_structure_decisions.md) — Operazione ⊃ Missione, MissionWaypoint contiene Waypoint, loadout per asset, postura e tipo di missione su due assi
 - [Session 2026-09-30 (ProArt P16) — CHIUSA, tutto pushato, suite 3753 OK: R-INT intercettazione con reazione (a500fdf3), R-CLS classi RWR (440a8823)](project_session_2026_09_30_summary.md) — ripresa su qualunque macchina con git pull; prossimo: A4 filtro armi per missione (6 decisioni missione), poi rotte→mappe, residui volumi, Fase 0 C2, D9 morale, bug noti, manuale DES
