@@ -275,7 +275,7 @@ su cui poggia la successiva.
 | F2 | FATTA | `4e18d7d8`, `8f16cc3c` | tabelle confermate dall'utente; `AIR_COMBAT_TASK` per escludere i task di supporto da combat power e punteggi; **13** loadout su 14 con task assegnati (An-30M Recon lasciato vuoto) |
 | F3 | FATTA | `533cd1f5` | fotografia identica; parametri `routes`/`starts`/`speeds` **già rimossi** (Q2) |
 | F4a | FATTA | `951b0ee2` | regola A dell'utente: una missione si muove alla velocità del mezzo più lento; 90 esecuzioni cambiate, nessun esito di forza (`F4_Differenze_Scenari.md`) |
-| F4b | FATTA | | missione come unità di ingaggio (vista `Mission_Adapter.MissionForce`), `mission_id` negli id d'ingaggio e quindi nell'RNG; esito del blocco = insieme degli esiti delle sue missioni (`SessionOutcome.outcomes_of_block`); nuovo scenario S20; differenze in `F4_Differenze_Scenari.md` |
+| F4b | FATTA | `a4d8acf0` | missione come unità di ingaggio (vista `Mission_Adapter.MissionForce`), `mission_id` negli id d'ingaggio e quindi nell'RNG; esito del blocco = insieme degli esiti delle sue missioni (`SessionOutcome.outcomes_of_block`); nuovo scenario S20; differenze in `F4_Differenze_Scenari.md` |
 | F4c | DA FARE | | postura continua degli asset senza missione (D1.c) |
 | F5-F9 | DA FARE | | come da §1 |
 

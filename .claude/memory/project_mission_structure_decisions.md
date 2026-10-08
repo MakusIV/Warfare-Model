@@ -1,6 +1,6 @@
 ---
 name: project-mission-structure-decisions
-description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0-F3 e F4a FATTE 2026-10-05 (suite 3929 OK); prossimi F4b e F4c; manuale DES aggiornato a 533cd1f5"
+description: "Struttura della Missione: 9 decisioni (D1-D6, N1-N3) + N3.f=B prese il 2026-10-05; piano F0-F9 APPROVATO (Q1-Q4 sì, Q4 = agenti in parallelo); F0-F3, F4a FATTE 2026-10-05, F4b FATTA 2026-10-08 (a4d8acf0, suite 3951 OK); prossimo F4c; manuale DES aggiornato a 533cd1f5"
 metadata:
   type: project
 ---
@@ -70,6 +70,16 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   -> in F4 disingaggeranno separatamente: domanda posta all'utente prima di F4.
 - F4 divisa in 3 passi, ognuno con commit, diff documentata in `Analysis/Document/F4_Differenze_Scenari.md` e fotografia
   rigenerata. F4a FATTA: regola A dell'utente (missione alla velocità del più lento, `check_mission_speed`); Blue-Armor e
-  Blue-Mech fusi a 55 km/h; 90 esecuzioni cambiano, nessun esito di forza. DA FARE: F4b = missione come unità di
-  ingaggio (vista MissionForce, mission_id negli id d'ingaggio/RNG); F4c = postura continua dei non in missione (D1.c).
+  Blue-Mech fusi a 55 km/h; 90 esecuzioni cambiano, nessun esito di forza. F4b FATTA 2026-10-08 (`a4d8acf0`, osboxes):
+  `Mission_Adapter.MissionForce` (vista per missione + vista residua `unassigned` con id del blocco per gli asset senza
+  missione); forze d'ingaggio = missioni, scheduler riceve ancora i blocchi; `mission_id` nell'RNG via
+  `engagement_event_id` (slot `mission_id` di `order.rng` resta None: l'ingaggio è fra più missioni);
+  `committed` resta chiavato per blocco e si interseca per missione; esito del blocco = insieme degli esiti
+  (`SessionOutcome.outcomes_of_block`, `ForceOutcome.block_id`), nessun esito sintetico; resolver: `can_disengage`
+  dichiarato. Decisione utente 2026-10-08: missioni dello stesso blocco ingaggiano/disingaggiano separatamente.
+  Fotografia 328 esecuzioni (S20 nuovo). APERTI dopo F4b (decisioni utente): (1) S3/S5 passano solo con più
+  repliche (S3 20, S5 8): test al limite statistico da riprogettare; (2) ripartizione del fuoco fra missioni dello
+  stesso blocco/lato assente -> overkill riaperto in S19AD standoff (Maverick 8-10 -> 16, Strela sopravvive):
+  scegliere per blocco, lato o Operazione; (3) nessuna condivisione dei rilevamenti fra missioni (limite noto D3.e).
+  DA FARE: F4c = postura continua dei non in missione (D1.c).
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
