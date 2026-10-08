@@ -133,3 +133,169 @@ stata modificata.
 
 Rigenerata dopo questo confronto (`--capture` nel percorso standard) sul codice di F4a; due catture
 consecutive identiche (determinismo).
+
+---
+
+## F4b: la missione e' l'unita' d'ingaggio
+
+**Base del confronto**: fotografia di F4a (`951b0ee2`, 292 esecuzioni).
+**Dopo**: motore con la missione come forza d'ingaggio (vista `Logic/Mission_Adapter.MissionForce`)
+e `mission_id` negli id d'ingaggio, quindi nell'RNG. Gli scenari NON cambiano, tranne il numero di
+repliche di S3 e S5 (v. "Test di scenario") e il nuovo S20.
+
+### Il cambio
+
+- **Forza d'ingaggio = missione** (D3.e). `Session_Simulator` raggruppa le finestre di contatto per
+  missione (`_engagement_forces`) e passa al risolutore una `MissionForce` per missione: asset della
+  missione (gli oggetti reali del blocco), lato del blocco, id e nome = `mission_id`,
+  `salvo_interceptors()` ristretto ai propri asset, blocco in `owner_block`. Lo scheduler riceve
+  ancora i blocchi: le finestre sono per coppia di asset, quindi sono le STESSE di prima.
+- **Disingaggio, soglia di rottura e `committed` per missione** (D3.d, D3.e): ogni missione ha la
+  propria tempra, la propria percezione del nemico, il proprio rapporto di forze (solo i suoi
+  asset) e rompe il contatto da sola. Decisione dell'utente (2026-10-08): missioni dello stesso
+  blocco ingaggiano e disingaggiano separatamente, nessuna Operazione le lega.
+  `SessionOrder.committed` resta chiavato per blocco e vale per intersezione su ogni missione.
+- **RNG**: `event_id` = `['engagement', id ordinati delle forze]` con gli id delle MISSIONI (e
+  `['temper', ...]` per la tempra): uno stream per ingaggio fra missioni. Lo slot `mission_id` di
+  `Session_Rng` resta None (un ingaggio e' fra piu' forze, nessuna ne possiede lo stream).
+- **Esito**: un `ForceOutcome` per missione (`force_id` = `mission_id`, nuovo campo `block_id`).
+  L'esito del blocco NON e' aggregato: e' l'insieme degli esiti delle sue missioni
+  (`SessionOutcome.outcomes_of_block`). La fotografia tiene `force_outcomes` per blocco (stessa
+  forma con una missione per blocco) e `--summary` mostra, per i blocchi con piu' missioni, l'esito
+  di ciascuna (`<mission_id>.mission_outcome`).
+- **Asset senza missione** (la postura e' della F4c): comportamento di prima. Un blocco senza
+  missioni entra nel risolutore com'e' (stesso id, stessa classe); asset non assegnati di un blocco
+  con missioni formerebbero la vista residua con l'id del blocco (nessuno scenario ne ha).
+- **Verifica del rischio del piano** (attributi della forza letti dal risolutore oltre a `assets`,
+  `side`, `id`/`name`): `salvo_interceptors()` (ristretto nella vista) e la CLASSE della forza
+  (`_can_disengage`: `Military` si', `Block` non militare no). Adattatore: la vista dichiara
+  `can_disengage` calcolato sul blocco, e il risolutore onora un `can_disengage` booleano
+  dichiarato. `morale_for`/`enemy_estimate_for` ricevono la vista (nessun chiamante di produzione).
+  Rilevamento, nebbia di guerra, RWR, carburante, danno e munizioni leggono gli asset: invariati.
+
+### Come si attribuiscono le differenze
+
+Due catture di controllo, oltre a quella del codice di F4b:
+1. **RNG riportato agli id di blocco** per i blocchi con UNA sola forza d'ingaggio (`event_id` e
+   ordine delle forze calcolati con l'id del blocco al posto del `mission_id`), poi normalizzata
+   (`force_id` di missione -> blocco, `block_id` tolto): **270 esecuzioni su 292 coincidono con F4a
+   byte per byte**. Per tutte le esecuzioni con una missione per blocco la F4b cambia quindi SOLO
+   gli stream casuali: stesso motore, altri numeri estratti.
+2. **RNG riportato agli id di blocco per TUTTE le missioni** (anche nei blocchi con piu' missioni):
+   le 22 esecuzioni restanti differiscono anche cosi'. Sono le differenze di comportamento.
+
+### Esecuzioni invariate (33)
+
+S10 (30: blocchi fermi senza missioni, stream invariato), S8 (blocchi fermi), ORC-fuel,
+ORC-nocontact (nessun ingaggio).
+
+### Esecuzioni cambiate per il solo stream RNG (237, una missione per blocco)
+
+Stesso motore, estrazioni diverse: cambiano perdite, colpi, istanti, e in 51 esecuzioni anche
+un'etichetta d'esito di forza. Non c'e' un effetto sistematico da spiegare (verifica 1 sopra): e'
+la variabilita' del modello stocastico, che i test di scenario verificano per tendenza su piu'
+seed. Per scenario (cambiate / con un esito di forza diverso / con distruzioni diverse):
+
+| Scenario | Cambiate | Esito diverso | Distruzioni diverse |
+|---|---|---|---|
+| S1 | 16 | 2 | 12 |
+| S2 | 24 | 9 | 19 |
+| S3 | 20 | 10 | 18 |
+| S4 | 16 | 6 | 12 |
+| S5 | 12 | 4 | 9 |
+| S6 | 4 | 3 | 4 |
+| S9 / S9R | 18 / 24 | 0 / 0 | 16 / 12 |
+| S11 | 6 | 0 | 5 |
+| S12 | 12 | 1 | 10 |
+| S13 / S14 | 6 / 6 | 0 / 0 | 4 / 6 |
+| S15 / S16 | 12 / 4 | 0 / 1 | 7 / 4 |
+| S17 | 15 | 3 | 13 |
+| S18 `far` (Blue-East, Blue-West: una missione ciascuno) | 2 | 0 | 2 |
+| S19AD (overflight, tor_rear, tor_forward: una missione) | 18 | 0 | 7 |
+| VAL-det / VAL-agn | 3 / 4 | 0 / 0 | 2 / 4 |
+| ORC-base / seed / interval / twofronts | 1 / 2 / 2 / 10 | 0 / 2 / 1 / 9 | 0 |
+
+Esempi: `S1/S1-6/without_cas` primo colpo da 185.1 a 162.2 s, Red-Line una distruzione in meno;
+`ORC-twofronts/S-det/*` Raider da DISENGAGED a HELD e Red-A, Red-B da HELD a DESTROYED;
+`S2/S2-1-sead` Red-SAM da DISENGAGED a DESTROYED.
+
+**S5 e la frequenza degli esiti rari.** Gli stream di F4a erano fortunati: con gli id di blocco
+nell'RNG la formazione "ad oltranza" arriva al terzo strato in 4 dei seed S5-0..5 ma solo in 2 dei
+seed S5-6..23 (6 su 24); con gli stream della F4b in 1 su 24 (S5-7), e con la dottrina di default 23
+formazioni su 24 si fermano al primo strato. Stesso motore (verifica 1), campione piccolo.
+
+### Esecuzioni cambiate anche nel comportamento (22, piu' missioni per blocco)
+
+In tutte: il blocco ha un `ForceOutcome` per missione invece di uno. Il resto, per scenario
+(confronto con l'RNG riportato al blocco, verifica 2, poi con gli stream della F4b):
+
+- **S7** (6; Blue-Interdiction = Strike F-16C + Escort F-15C) e **S18 `network`** (6;
+  Blue-Package = Strike + Escort): con gli stessi numeri casuali NESSUNA grandezza aggregata cambia
+  (esiti, perdite, colpi, distruzioni): il blocco si divide in due forze, ciascuna HELD. Con gli
+  stream della F4b cambiano perdite ed esiti come per lo stream (es. S7-0 Red-Escort da DISENGAGED a
+  DESTROYED) e si vede il disingaggio indipendente: in `S7/S7-3` la scorta rompe il contatto a 200.6
+  s (1 perdita) mentre lo strike resta HELD, in `S7/S7-4` la scorta e' distrutta (2 perdite) e lo
+  strike resta HELD, in `S18/S18-5/network` lo strike disingaggia a 270.4 s (1 perdita) e la scorta
+  resta HELD (prima l'intero Blue-Package era HELD).
+- **S19** (4; Blue-Transit = CAS 2 A-10C, Escort 2 F-16C, Strike 1 B-52H): una missione di un solo
+  aereo e' DESTROYED alla prima perdita. Con gli stessi numeri casuali `S19-2/run` passa da
+  Blue-Transit HELD a CAS HELD, Escort HELD (1 perdita), Strike DESTROYED a 262.0 s: la perdita del
+  B-52, che per il blocco di 5 aerei non bastava a rompere, distrugge la sua missione. Nelle altre
+  tre il blocco era gia' DESTROYED e lo sono tutte e tre le missioni. Con gli stream della F4b Blue
+  perde meno aerei (S19-0 da 4 a 2, S19-1 da 5 a 2): effetto dello stream (con l'RNG del blocco le
+  perdite sono quelle di F4a).
+- **S19AD `strela_standoff`** (6; Blue-CAS = 4 A-10C in 4 missioni per la geometria): **effetto di
+  comportamento robusto, uguale con entrambi gli RNG**. Maverick lanciati da 8-10 (4-5 salve) a 16 (8 salve), Red-Line da
+  DESTROYED (4 perdite) a HELD (3 perdite: lo Strela-10 sopravvive). Causa: la ripartizione del fuoco
+  e la dottrina di tiro (saturazione del bersaglio, `_engaged_shooters`, `_coverage`) sono PER
+  FORZA. In F4a i 4 A-10 erano una forza: lanciavano 2 Maverick ciascuno su bersagli diversi e
+  l'ultimo aspettava (cas3 a 169.8 s sullo Strela). In F4b ogni aereo e' una missione e non vede le
+  salve delle altre: tutti lanciano a 162.7 s e di nuovo a 164.2 s, si concentrano sugli stessi
+  bersagli (in S19-0 ifv0 e' colpito da cas0, cas2 e cas3) e lo Strela resta in piedi.
+
+### Nuove esecuzioni (36)
+
+- **S20** (12, `Test_Session_Scenarios_S20.py`): composizione di S1 senza CAS; Blue-Armor in due
+  missioni d'attacco sulla stessa rotta ('Blue-Armor:Tanks' 3 M1A2, 'Blue-Armor:IFV' 2 M2) e, per
+  confronto, in una ('Blue-Armor:Attack'), 6 seed. E' lo scenario del criterio "Fatto quando":
+  nella variante divisa le due missioni finiscono diversamente in 5 seed su 6 (es. S20-0:
+  Tanks DISENGAGED a 231.9 s, IFV continua a sparare fino a 318.7 s e disingaggia a 319.0 s; S20-5:
+  Tanks DISENGAGED a 294.4 s, IFV HELD e Red-Line rompe a 319.3 s), e in 4 seed gli asset di una
+  missione sparano dopo il disingaggio dell'altra; con una missione, dopo la rottura nessun asset
+  del blocco spara piu'.
+- **S3** seed S3-10..19 (20) e **S5** seed S5-6, S5-7 (4): repliche aggiunte (v. sotto).
+
+### Test di scenario
+
+Asserzioni sugli id di forza (S1, S4, S6, S7, S11, S12, S15, S16, S17, S18, test dell'orchestratore e
+di validazione): dalla F4b l'id di forza e' il `mission_id`. Le verifiche di struttura ("quali
+blocchi combattono nello stesso ingaggio") leggono ora i blocchi (`Scenario_Fixtures.engagement_blocks`,
+dal `block_id` degli esiti), con gli stessi valori attesi di prima; S7 verifica in piu' le due forze
+d'ingaggio dello stesso blocco nello stesso ingaggio. In `Test_Session_Simulator` le attese sugli id
+sono le missioni (`M-north`, `M-south`, `M-raid`, `M-stable`), e lo stream documentato si
+riproduce a mano con la vista della missione. In `Test_Session_Validation` i `mission_id` sono id di
+dominio ammessi nell'esito.
+
+Repliche (campione, non asserzioni): due verifiche statistiche su pochi seed erano al limite e lo
+cambio di stream le rovesciava.
+- **S3** da 10 a 20 seed: senza stealth Blue (4 F-15C) e Red (8 F-15C) perdono quasi lo stesso
+  NUMERO di aerei (su 30 seed 3.87 contro 3.73 per replica): con gli stream della F4b le 10 repliche
+  davano 38 contro 38 (F4a 37 contro 33). Con 20: 78 contro 74 senza stealth, 33 contro 79 con. La
+  verifica "senza stealth Blue perde lo scambio" resta al limite per costruzione.
+- **S5** da 6 a 8 seed: v. sopra; S5-7 e' il seed che contiene entrambi gli esiti rari.
+
+### Fotografia di riferimento
+
+Rigenerata dopo questo confronto (`--capture` nel percorso standard) sul codice di F4b: 328
+esecuzioni (292 + 36 nuove); due catture consecutive identiche (determinismo).
+
+### Limiti noti introdotti (da decidere)
+
+- **Nessuna ripartizione del fuoco fra missioni dello stesso blocco o lato**: la dottrina di tiro
+  (saturazione, tiratori impegnati) e' per forza, quindi per missione (S19AD standoff). Fra missioni
+  diverse riapre il problema dell'overkill risolto il 2026-09-29 dentro la forza
+  (`Proposta_Overkill_Tiro.md`): se la ripartizione debba valere per blocco, per lato o per
+  Operazione e' una decisione di modello, non presa qui.
+- **Nessuna condivisione dell'informazione fra missioni**: ognuna percepisce il nemico con i propri
+  sensori (`seen_by` per forza); la scorta non informa lo strike (data link/C2 non modellati).
+- Una missione di un solo asset e' DESTROYED alla prima perdita (S19 Strike).

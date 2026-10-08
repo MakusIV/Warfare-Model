@@ -134,7 +134,8 @@ def _seeds(prefix: str, count: int):
 
 
 def _engagement_ids(outcome):
-    return [tuple(o.force_id for o in e) for e in outcome.engagement_outcomes]
+    """Blocchi per ingaggio (dalla F4b le forze d'ingaggio sono le missioni, v. F.engagement_blocks)."""
+    return F.engagement_blocks(outcome)
 
 
 def _salvos_by(outcome, asset_ids):
@@ -611,7 +612,8 @@ class TestS11SessionBoundary(F.LoggerSilencer, unittest.TestCase):
     def test_committed_in_second_session_counts_only_survivors(self):
         for run in self.runs:
             for result in run['outcome_2'].force_outcomes:
-                force = next(f for f in run['forces'] if f.id == result.force_id)
+                # Dalla F4b la forza d'ingaggio e' la missione: qui una per blocco, con tutti i suoi asset.
+                force = next(f for f in run['forces'] if f.id == (result.block_id or result.force_id))
                 survivors = sum(1 for a in force.assets if a in run['operative_after_1'])
                 self.assertEqual(result.committed, survivors, result.force_id)
 

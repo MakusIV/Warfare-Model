@@ -88,10 +88,47 @@ registro, v. `Mobile.speed_profile_from_registry`) del mezzo piu' lento della mi
     vincolo per tipo d'arco va deciso con il modulo mappe (limite noto);
   * tolleranza `SPEED_TOLERANCE` (rumore di conversione delle unita', non un margine fisico).
 
+## La missione come forza d'ingaggio: `MissionForce` (F4b, D3.e)
+
+Dalla F4b l'unita' d'ingaggio del motore e' la MISSIONE, non il blocco: `Session_Simulator`
+passa allo scheduler i blocchi (le finestre sono per coppia di asset, la potatura per blocco resta
+quella di prima) ma raggruppa le finestre e chiama `Engagement_Resolver.resolve_engagement` sulle
+viste `MissionForce`. Disingaggio, soglia di rottura (tempra), percezione del nemico e
+`committed` valgono quindi per missione; il blocco resta l'unita' di appartenenza, rifornimento
+e comando (gli asset sono gli stessi oggetti, `asset.block` non cambia).
+
+Verifica fatta all'inizio della F4b: cosa legge il risolutore della forza, oltre agli asset.
+  * `id`/`name` (id di forza: chiave di `committed`, dei `ForceOutcome`, della percezione);
+  * `side` (dottrina di disingaggio e di tiro, amico/nemico nella percezione);
+  * `salvo_interceptors()` (difesa di salva, R1): la vista lo RESTRINGE ai propri asset (il
+    risolutore filtra comunque per forza, la restrizione rende la vista corretta anche da sola);
+  * la CLASSE della forza (`_can_disengage`: `Military` si', `Block` non militare no): una vista
+    non e' ne' l'una ne' l'altra, quindi dichiara `can_disengage` calcolato sul blocco con la
+    stessa regola (ADATTATORE: il risolutore onora un `can_disengage` booleano dichiarato);
+  * l'oggetto forza intero, passato tale e quale a `morale_for`/`enemy_estimate_for`: ricevono la
+    vista, che espone il blocco in `owner_block` (nessun chiamante di produzione li fornisce).
+  Rilevamento, nebbia di guerra (`recon_detection_factor_fn`), RWR, carburante, danno e munizioni
+  leggono gli ASSET (e `asset.block`), non la forza: invariati.
+
+Nessuna delega generica degli attributi al blocco (niente `__getattr__`): le grandezze aggregate
+del blocco (potenza di combattimento, volumi, ...) riguardano TUTTI i suoi asset e, lette sulla
+vista, sarebbero sbagliate in silenzio.
+
+Il riferimento al blocco si chiama `owner_block`, NON `block`: `Contact_Scheduler._as_block` e
+`Session_Simulator._as_block` scartano un `.block` (forma del `BlockItem`) e scambierebbero la
+vista per il suo blocco.
+
+**Asset del blocco senza missione** (F4b): la postura continua e' della F4c. Fino ad allora
+mantengono il comportamento di prima della F4b: fermi nella loro posizione e combattenti come
+membri del blocco. Un blocco senza missioni entra nel risolutore come prima (l'oggetto blocco,
+id del blocco); un blocco con missioni e anche asset non assegnati li raggruppa nella vista
+residua `MissionForce.unassigned`, con l'id DEL BLOCCO e `mission_id` None.
+
 ## Cosa NON fa
 - Nessuna attesa (WAIT), nessuna presenza prima della partenza o dopo la fine (F5).
-- Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F4-F7.
-- Nessun RNG, nessuna mutazione: funzioni pure.
+- Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F5-F7.
+- Nessuna postura per gli asset senza missione (F4c).
+- Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
 """
 
 import math
@@ -112,6 +149,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
+from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
 
 # LOGGING --
 logger = Logger(module_name=__name__, class_name='Mission_Adapter').logger
@@ -575,3 +613,107 @@ def check_mission_speed(mission: Mission, assets: Mapping[str, object], t0: floa
 def mission_routes(missions: Iterable[Mission], t0: float = 0.0) -> Dict[str, Route]:
     """Solo le rotte per asset di `session_movements` (comodita' per chi interroga lo scheduler)."""
     return session_movements(missions, t0)[0]
+
+
+# ── VISTA D'INGAGGIO (F4b) ────────────────────────────────────────────────────
+
+def _domain_id(obj) -> Optional[str]:
+    """Id di dominio (id, poi name): stesso criterio di `Engagement_Resolver`/`Session_Simulator`."""
+    for attribute in ('id', 'name'):
+        value = getattr(obj, attribute, None)
+
+        if isinstance(value, str) and value:
+            return value
+
+    return None
+
+
+class MissionForce:
+    """Una missione vista come FORZA d'ingaggio (v. "La missione come forza d'ingaggio").
+
+    Espone al risolutore solo cio' che legge della forza: `id`/`name`, `side`, `assets`,
+    `salvo_interceptors()` e `can_disengage`. Gli asset sono gli oggetti REALI del blocco (la vista
+    non li copia): danno, munizioni e carburante applicati dal motore arrivano al blocco.
+
+    Attributes:
+        id/name: `mission_id` (vista residua: id e nome del blocco).
+        mission_id: id della missione, None per la vista residua degli asset senza missione.
+        mission: la `Mission`, None per la vista residua.
+        owner_block: il blocco d'appartenenza (`Block`/`Military`), non `block` (v. docstring).
+        block_id: id di dominio del blocco.
+        side: lato del blocco.
+        assets: `{chiave: asset}` del blocco ristretto agli asset della vista, con le chiavi e
+            nell'ordine del blocco.
+        can_disengage: diritto a una politica di disingaggio, con la regola di
+            `Engagement_Resolver._can_disengage` applicata al BLOCCO (adattatore: la vista non e'
+            ne' `Military` ne' `Block`).
+    """
+
+    def __init__(self, block, asset_ids: Iterable[str], force_id: str, name: str,
+                 mission: Optional[Mission] = None):
+        block_id = _domain_id(block)
+
+        if block_id is None:
+            raise ValueError("the block of a MissionForce must have a domain id (id or name)")
+
+        wanted = set(asset_ids)
+        self.id = force_id
+        self.name = name
+        self.mission = mission
+        self.mission_id = mission.mission_id if mission is not None else None
+        self.owner_block = block
+        self.block_id = block_id
+        self.side = getattr(block, 'side', None)
+        self.assets = {key: asset for key, asset in (getattr(block, 'assets', None) or {}).items()
+                       if _domain_id(asset) in wanted}
+        self.can_disengage = validate_class(block, 'Military') or not validate_class(block, 'Block')
+        missing = sorted(wanted - {_domain_id(asset) for asset in self.assets.values()})
+
+        if missing:
+            raise ValueError(f"force {force_id!r}: assets {missing} do not belong to block {block_id!r}")
+
+    @classmethod
+    def of_mission(cls, mission: Mission, block) -> 'MissionForce':
+        """La vista della missione: i suoi asset, id e nome = `mission_id`.
+
+        Raises:
+            TypeError: `mission` non e' una `Mission`.
+            ValueError: blocco diverso da `mission.block_id` o asset che non gli appartengono.
+        """
+        if not isinstance(mission, Mission):
+            raise TypeError(f"mission must be a Mission, got {type(mission).__name__}")
+
+        if _domain_id(block) != mission.block_id:
+            raise ValueError(f"mission {mission.mission_id!r} belongs to block {mission.block_id!r}, "
+                             f"not to {_domain_id(block)!r}")
+
+        return cls(block, mission.asset_ids, mission.mission_id, mission.mission_id, mission)
+
+    @classmethod
+    def unassigned(cls, block, missions: Iterable[Mission]) -> Optional['MissionForce']:
+        """La vista residua degli asset del blocco in NESSUNA delle `missions`, con id e nome del
+        blocco; None se non ne restano (comportamento fino alla F4c, v. docstring del modulo)."""
+        assigned = {asset_id for mission in missions for asset_id in mission.asset_ids}
+        residual = [asset_id for asset_id in (_domain_id(asset) for asset in (getattr(block, 'assets', None) or {}).values())
+                    if asset_id is not None and asset_id not in assigned]
+
+        if not residual:
+            return None
+
+        name = getattr(block, 'name', None)
+        return cls(block, residual, _domain_id(block), name if isinstance(name, str) and name else _domain_id(block))
+
+    def salvo_interceptors(self) -> List[Tuple[object, int]]:
+        """`salvo_interceptors()` del blocco ristretto agli asset della vista (stesso ordine);
+        vuota se il blocco non lo espone."""
+        provider = getattr(self.owner_block, 'salvo_interceptors', None)
+
+        if not callable(provider):
+            return []
+
+        own = {_domain_id(asset) for asset in self.assets.values()}
+        return [(asset, channels) for asset, channels in (provider() or []) if _domain_id(asset) in own]
+
+    def __repr__(self) -> str:
+        return (f"MissionForce(id={self.id!r}, block={self.block_id!r}, side={self.side!r}, "
+                f"assets={len(self.assets)})")

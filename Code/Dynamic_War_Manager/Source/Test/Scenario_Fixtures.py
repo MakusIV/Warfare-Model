@@ -96,7 +96,7 @@ identico, id compresi: e' la base del test di determinismo.
 
 Ogni asset che prima riceveva una rotta in `routes` e' ora asset di una `Mission`; gli asset
 fermi (difese, siti SAM, blocchi in posizione) NON sono missioni (saranno la postura continua
-della F4). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
+della F4c; fino ad allora restano nella forza del loro blocco, ferme). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
   * una missione = asset di UN blocco e di UN dominio sulla stessa geometria. In F3 la
     velocita' sugli archi divideva anche le missioni (in un blocco misto, es. carri M1A2 + M2
     Bradley, i due modelli diventavano due missioni dello stesso blocco); dalla F4a vale la
@@ -972,9 +972,42 @@ def combined_arms_scenario(*, with_cas: bool = True, blue_tanks: int = 3, blue_i
 # ── LETTURE DELL'ESITO (solo letture, nessun ricalcolo) ───────────────────────
 
 def force_outcome(outcome: SessionOutcome, force_id: str) -> Optional[ER.ForceOutcome]:
-    """L'esito della forza nel suo (unico, per costruzione) ingaggio, None se non ha combattuto."""
+    """L'esito della forza nel suo (unico, per costruzione) ingaggio, None se non ha combattuto.
+
+    Dalla F4b la forza d'ingaggio e' la missione: `force_id` puo' essere un `mission_id` o l'id di
+    un blocco. Per un blocco con UNA sola forza d'ingaggio che ha combattuto (una missione, o nessuna
+    missione) si restituisce il suo esito; per un blocco con piu' missioni in combattimento
+    l'esito del blocco non e' unico (v. `SessionOutcome.outcomes_of_block`): ValueError, chiedere
+    l'esito della missione.
+    """
     found = outcome.outcomes_of(force_id)
+
+    if found:
+        return found[0]
+
+    found = outcome.outcomes_of_block(force_id)
+
+    if len(found) > 1:
+        raise ValueError(f"block {force_id!r} fought as {len(found)} engagement forces "
+                         f"{[o.force_id for o in found]}: ask for the outcome of one mission")
+
     return found[0] if found else None
+
+
+def engagement_blocks(outcome: SessionOutcome) -> List[Tuple[str, ...]]:
+    """Per ingaggio (nell'ordine di risoluzione), i BLOCCHI coinvolti, ordinati e senza ripetizioni.
+
+    Dalla F4b le forze d'ingaggio sono le missioni (`ForceOutcome.force_id` = `mission_id`): la
+    struttura "quali blocchi combattono insieme" si legge da `block_id` (o da `force_id` per un
+    blocco senza missioni). Con le forze = blocchi coincide con gli id di forza di prima della F4b.
+    """
+    return [tuple(sorted({o.block_id or o.force_id for o in engagement}))
+            for engagement in outcome.engagement_outcomes]
+
+
+def engagement_forces(outcome: SessionOutcome) -> List[Tuple[str, ...]]:
+    """Per ingaggio, gli id delle forze d'ingaggio (missioni dalla F4b), nell'ordine dell'esito."""
+    return [tuple(o.force_id for o in engagement) for engagement in outcome.engagement_outcomes]
 
 
 def losses_of(outcome: SessionOutcome, force_id: str) -> int:

@@ -42,8 +42,33 @@ quel blocco (`Mission_Types.check_mission_assets`). Regola A (F4a, decisione del
 missione si muove insieme, nessun tratto piu' veloce della velocita' massima del suo mezzo piu'
 lento (`Mission_Adapter.check_mission_speed`; asset senza il dato esclusi con un warning).
 
-La missione NON e' ancora l'unita' d'ingaggio (lo diventa in F4): ingaggi, RNG e disingaggio
-restano per forza (blocco), quindi a parita' di rotte l'esito e' identico a prima.
+## La missione come unita' d'ingaggio (F4b, D3.e)
+
+Dalla F4b la FORZA d'ingaggio e' la missione (`_engagement_forces`): ogni missione diventa una
+vista `Mission_Adapter.MissionForce` (asset della missione, lato del blocco, id e nome =
+`mission_id`), e le finestre sono raggruppate per missione. Disingaggio, soglia di rottura
+(tempra), percezione del nemico e `committed` valgono quindi per missione: due missioni dello
+stesso blocco ingaggiano e disingaggiano separatamente (decisione dell'utente, 2026-10-08: nessuna
+Operazione le lega). Lo scheduler riceve ancora i BLOCCHI: le finestre sono per coppia di asset e
+la potatura per blocco non dipende da come gli asset sono raggruppati in forze.
+
+Asset del blocco senza missione (la postura continua e' della F4c): comportamento di prima.
+  * blocco senza missioni: entra nel risolutore come prima, l'oggetto blocco con il suo id;
+  * blocco con missioni e asset non assegnati: questi formano la vista residua
+    `MissionForce.unassigned` con l'id DEL BLOCCO, fermi e combattenti come prima.
+Un `mission_id` non puo' coincidere con l'id di un blocco passato (sarebbero due forze con lo
+stesso id).
+
+`SessionOrder.committed` resta chiavato per BLOCCO (la lingua della porta): per ogni forza
+d'ingaggio vale la restrizione del suo blocco intersecata con i suoi asset
+(`_engagement_committed`).
+
+**Esito di forza**: un `ForceOutcome` per forza d'ingaggio, quindi per MISSIONE (`force_id` =
+`mission_id`, `block_id` = blocco; per la vista residua e per un blocco senza missioni `force_id` =
+id del blocco). L'esito del blocco NON e' aggregato in un `ForceOutcome` sintetico: e' l'insieme
+degli esiti delle sue forze (`SessionOutcome.outcomes_of_block`). Fondere erosione, perdite e
+stato di forze che hanno combattuto separatamente vorrebbe dire reinventarne la semantica, la
+stessa ragione per cui `SessionOutcome` non fonde gli esiti di ingaggi diversi.
 
 **Esito di missione (prima forma)**, nel `SessionOutcome.mission_outcomes`. Per asset:
   * DESTROYED (stato e motivo), all'istante del DamageEvent che lo distrugge (o a `t0` se era
@@ -102,9 +127,12 @@ per intervalli aggiungerebbe complessita' senza aggiungere correttezza.
 
 `SessionOrder.rng(mission_id=None, event_id=engagement_event_id(*forze), counter=0)`:
 
-- `mission_id=None`: None e' il livello "di sessione" di `Session_Rng`. Le missioni sono
-  nell'ordine dalla F3, ma l'ingaggio e' ancora fra FORZE (blocchi) e puo' coinvolgere piu'
-  missioni: l'id di missione entrera' nell'RNG in F4, con la missione come unita' d'ingaggio.
+- dalla F4b gli id delle forze sono i `mission_id` (o l'id del blocco per un blocco senza
+  missioni e per la vista residua): il `mission_id` entra nell'RNG ATTRAVERSO l'`event_id`, e
+  ogni ingaggio fra missioni ha il proprio stream. Lo slot `mission_id` di `Session_Rng` resta
+  None (livello "di sessione"): un ingaggio e' fra DUE O PIU' forze, tipicamente missioni di
+  entrambi i lati, e nessuna di esse ne possiede lo stream; lo slot resta per le estrazioni che
+  appartengono a una sola missione (nessuna, oggi).
 - `event_id`: codifica JSON di `['engagement', id_1, id_2, ...]` con gli id della
   componente ORDINATI — funzione pura dell'INSIEME delle forze (id di dominio), mai
   dell'ordine di iterazione o di passaggio a `run_session`, e non ambigua anche con id che
@@ -313,11 +341,12 @@ def _session_horizon(order: SessionOrder, horizon: Optional[float]) -> float:
 
 
 def _collect_forces(order: SessionOrder, forces_a: Iterable, forces_b: Iterable):
-    """Normalizza le forze dei due lati e costruisce la mappa asset -> forza.
+    """Normalizza le forze dei due lati e costruisce la mappa asset -> blocco.
 
     Returns:
         (items_a, items_b, blocks, owner): gli oggetti come passati (per lo scheduler), i
-        blocchi per id di forza, e `{asset_id: (lato, force_id)}` con lato 0 (A) o 1 (B).
+        blocchi per id, e `{asset_id: (lato, block_id)}` con lato 0 (A) o 1 (B). Le forze
+        d'ingaggio (missioni) le ricava `_engagement_forces`.
 
     Raises:
         ValueError: forza senza id, forza ripetuta o su entrambi i lati, forza non elencata
@@ -518,6 +547,79 @@ def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
         assets = {_domain_id(asset): asset for asset in (getattr(block, 'assets', None) or {}).values()}
         MA.check_mission_speed(mission, assets, order.t_start)
 
+        if mission.mission_id in blocks:
+            raise ValueError(f"mission {mission.mission_id!r}: its id is also the id of a block passed; "
+                             f"missions and blocks are both engagement forces, their ids must differ")
+
+
+def _engagement_forces(order: SessionOrder, blocks: Mapping[str, object],
+                       block_owner: Mapping[str, Tuple[int, str]]):
+    """Le forze d'ingaggio della sessione (F4b, v. "La missione come unita' d'ingaggio").
+
+    Per ogni blocco, in ordine di id: una `MissionForce` per missione (nell'ordine dell'ordine di
+    sessione) e, se restano asset senza missione, la vista residua con l'id del blocco; un blocco
+    senza missioni e' passato tale e quale.
+
+    Returns:
+        (forces, owner): `{force_id: forza}` e `{asset_id: (lato, force_id)}`.
+    """
+    by_block: Dict[str, List] = {}
+
+    for mission in order.missions:
+        by_block.setdefault(mission.block_id, []).append(mission)
+
+    forces: Dict[str, object] = {}
+
+    for block_id in sorted(blocks):
+        block = blocks[block_id]
+        missions = by_block.get(block_id, [])
+
+        if not missions:
+            forces[block_id] = block
+            continue
+
+        for mission in missions:
+            forces[mission.mission_id] = MA.MissionForce.of_mission(mission, block)
+
+        residual = MA.MissionForce.unassigned(block, missions)
+
+        if residual is not None:
+            forces[block_id] = residual
+
+    owner: Dict[str, Tuple[int, str]] = {}
+
+    for force_id, force in forces.items():
+        for asset in (getattr(force, 'assets', None) or {}).values():
+            asset_id = _domain_id(asset)
+
+            if asset_id is not None and asset_id in block_owner:
+                owner[asset_id] = (block_owner[asset_id][0], force_id)
+
+    return forces, owner
+
+
+def _engagement_committed(order: SessionOrder, forces: Mapping[str, object]
+                          ) -> Optional[Dict[str, Tuple[str, ...]]]:
+    """`committed` per forza d'ingaggio: la restrizione del blocco (`order.committed`, chiavato per
+    blocco) intersecata con gli asset della forza. None se l'ordine non restringe nulla."""
+    committed = order.committed_map()
+
+    if committed is None:
+        return None
+
+    translated: Dict[str, Tuple[str, ...]] = {}
+
+    for force_id, force in forces.items():
+        block_id = getattr(force, 'block_id', None) if isinstance(force, MA.MissionForce) else force_id
+
+        if block_id not in committed:
+            continue
+
+        own = {_domain_id(asset) for asset in (getattr(force, 'assets', None) or {}).values()}
+        translated[force_id] = tuple(asset_id for asset_id in committed[block_id] if asset_id in own)
+
+    return translated
+
 
 def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict[str, float]:
     """`{asset_id: istante di distruzione}`: primo DamageEvent `destroyed` della sessione, o `t0`
@@ -615,9 +717,11 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     Args:
         order: il `SessionOrder`. Ne vengono usati `session_id` (radice del seed),
             `t_start`, `t_end`, `force_ids` (se non vuoto: le forze passate devono esservi
-            elencate), `committed` e `salvo_window`, passati tali e quali al risolutore, e
+            elencate), `committed` (chiavato per blocco, tradotto per forza d'ingaggio da
+            `_engagement_committed`), `salvo_window`, passato tale e quale al risolutore, e
             `missions`, da cui vengono rotta, partenza e velocita' di ogni asset
-            (`Mission_Adapter.session_movements`). Asset senza missione = fermo in posizione.
+            (`Mission_Adapter.session_movements`) e le forze d'ingaggio (una per missione, F4b).
+            Asset senza missione = fermo in posizione, nella forza del suo blocco.
         forces_a/forces_b: `Military`/`Block`/`BlockItem` dei due schieramenti contrapposti.
             Si combatte solo fra A e B, mai dentro lo stesso lato.
         fire_control: `(shooter, target) -> ShotSpec | None`, v. `resolve_engagement`.
@@ -630,14 +734,15 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio.
 
     Returns:
-        Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine; vuoto ma valido
+        Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine e un `ForceOutcome`
+            per forza d'ingaggio (missione) che ha combattuto; vuoto ma valido
         se nessuno si incontra e nessuno si muove.
 
     Raises:
         TypeError: `order` non e' un SessionOrder, `fire_control` non chiamabile.
         ValueError: durata mancante o incoerente, forze/asset duplicati o fuori
             `order.force_ids`, missione di un blocco non passato o con asset di altri blocchi,
-            e gli errori di dominio dei moduli chiamati.
+            `mission_id` uguale all'id di un blocco, e gli errori di dominio dei moduli chiamati.
     """
     if not isinstance(order, SessionOrder):
         raise TypeError(f"order must be a SessionOrder, got {type(order).__name__}")
@@ -652,8 +757,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     t0 = order.t_start
     session_end = t0 + horizon
 
-    items_a, items_b, blocks, owner = _collect_forces(order, forces_a, forces_b)
+    items_a, items_b, blocks, block_owner = _collect_forces(order, forces_a, forces_b)
     _check_missions(order, blocks)
+    forces, owner = _engagement_forces(order, blocks, block_owner)
     mission_movements = {mission.mission_id: MA.mission_movements(mission, t0) for mission in order.missions}
     routes, starts, speeds = MA.session_movements(order.missions, t0)
 
@@ -688,7 +794,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     queue: List = []
     sequence = 0
 
-    # Un evento per COMPONENTE connessa di forze (v. "Forze impegnate su piu' fronti").
+    # Un evento per COMPONENTE connessa di forze d'ingaggio, cioe' di missioni (F4b).
     for force_ids, group in _connected_components(groups):
         event_id = engagement_event_id(*force_ids)
         sequence += 1
@@ -699,7 +805,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         sequence += 1
         heapq.heappush(queue, (legs[-1].t_end, MOVEMENT_EVENT, asset_id, sequence, (asset, legs)))
 
-    committed = order.committed_map()
+    committed = _engagement_committed(order, forces)
     results: List[Optional[ER.EngagementResult]] = []
     fuel_events: List[FM.FuelEvent] = []
     engaged: set = set()
@@ -709,7 +815,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
         if kind == ENGAGEMENT_EVENT:
             force_ids, group = payload
-            component = [blocks[force_id] for force_id in force_ids]
+            component = [forces[force_id] for force_id in force_ids]
             result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                            order.rng(mission_id=None, event_id=key, counter=0),
                                            extra_forces=component[2:],

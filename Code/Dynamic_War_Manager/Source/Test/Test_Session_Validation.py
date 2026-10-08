@@ -297,6 +297,8 @@ class TestAgnosticEndToEnd(F.LoggerSilencer, unittest.TestCase):
     def _domain_ids(self, scenario):
         ids = {force.id for force in scenario.forces}
         ids |= {asset_id for force in scenario.forces for asset_id in force.assets}
+        # Dalla F4b la forza d'ingaggio e' la missione: anche i mission_id sono id di dominio.
+        ids |= {mission.mission_id for mission in scenario.missions}
         return ids
 
     def test_no_simulator_module_was_loaded(self):
@@ -312,7 +314,7 @@ class TestAgnosticEndToEnd(F.LoggerSilencer, unittest.TestCase):
 
     def test_every_id_in_the_outcome_is_a_domain_id(self):
         known = self._domain_ids(self.scenario)
-        id_fields = ('target_id', 'source_id', 'asset_id', 'force_id')
+        id_fields = ('target_id', 'source_id', 'asset_id', 'force_id', 'block_id')
 
         for path, value in _OutcomeWalker.leaves(self.outcome):
             self.assertIsInstance(value, _ATOMIC, path)

@@ -20,6 +20,7 @@ Strategia di setup
   Le coppie di aerei della stessa forza su rotte parallele sono UNA missione con offset laterale.
 """
 
+import json
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -231,16 +232,19 @@ class TestEndToEnd(_Base):
         self.assets = {a.id: a for f in self.blue + self.red for a in f.assets.values()}
 
     def test_one_engagement_per_front(self):
+        """Dalla F4b la forza d'ingaggio blu e' la MISSIONE (id = mission_id), i rossi senza
+        missione restano il loro blocco."""
         self.assertIsInstance(self.outcome, SessionOutcome)
         pairs = {tuple(o.force_id for o in engagement) for engagement in self.outcome.engagement_outcomes}
-        self.assertEqual(pairs, {(self.blue[0].id, self.red[0].id), (self.blue[1].id, self.red[1].id)})
+        self.assertEqual(pairs, {('M-north', self.red[0].id), ('M-south', self.red[1].id)})
+        self.assertEqual([o.block_id for o in self.outcome.outcomes_of_block(self.blue[0].id)], [self.blue[0].id])
 
     def test_fronts_are_resolved_in_time_order(self):
         """Stesso istante di primo contatto: vale l'id canonico dell'evento (JSON)."""
         first = [engagement[0].force_id for engagement in self.outcome.engagement_outcomes]
-        expected = sorted([self.blue[0].id, self.blue[1].id],
+        expected = sorted(['M-north', 'M-south'],
                           key=lambda fid: SS.engagement_event_id(
-                              fid, self.red[0].id if fid == self.blue[0].id else self.red[1].id))
+                              fid, self.red[0].id if fid == 'M-north' else self.red[1].id))
         self.assertEqual(first, expected)
 
     def test_something_actually_happened(self):
@@ -301,20 +305,23 @@ class TestSeedDiscipline(_Base):
 
     def test_engagement_uses_the_documented_stream(self):
         """Ripetere a mano l'ingaggio del fronte est con order.rng(None, event_id, 0), e la
-        tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0)."""
+        tempra delle forze con il flusso separato order.rng(None, temper_event_id, 0).
+
+        Dalla F4b la forza blu e' la vista della missione 'M-south' e il suo id entra nell'event_id."""
         outcome, _, _ = self._run('S-gamma')
         # Scenario pulito (i due fronti non condividono forze), stesso ingaggio, stream documentato.
         blue3, red3, missions = self._scenario()
         routes = MA.mission_routes(missions)
         order = self._order('S-gamma')
+        south = MA.MissionForce.of_mission(missions[1], blue3[1])
         windows = CS.schedule_contacts([blue3[1]], [red3[1]], 3600.0, routes=routes)
         legs = {'bs1': CS.clamp_legs(CS.route_legs(routes['bs1']), 0.0, 3600.0),
                 'rw1': CS.static_legs(red3[1].assets['rw1'].position, 0.0, 3600.0)}
         manual = ER.resolve_engagement(
-            blue3[1], red3[1], windows, _fire,
-            order.rng(mission_id=None, event_id=SS.engagement_event_id(blue3[1].id, red3[1].id)),
+            south, red3[1], windows, _fire,
+            order.rng(mission_id=None, event_id=SS.engagement_event_id('M-south', red3[1].id)),
             legs=legs, reaction_profile_for=_profile,
-            breakpoint_rng=order.rng(mission_id=None, event_id=SS.temper_event_id(blue3[1].id, red3[1].id)))
+            breakpoint_rng=order.rng(mission_id=None, event_id=SS.temper_event_id('M-south', red3[1].id)))
         self.assertIn(manual.forces, outcome.engagement_outcomes)
         self.assertTrue(set(manual.damage_events) <= set(outcome.damage_events))
 
@@ -392,8 +399,9 @@ class TestTwoFronts(_Base):
     def test_connected_forces_are_one_engagement(self):
         outcome, raider, red_a, red_b = self._two_fronts('S-fronts')
         self.assertEqual([tuple(o.force_id for o in e) for e in outcome.engagement_outcomes],
-                         [(raider.id, red_a.id, red_b.id)])
-        self.assertEqual(len(outcome.outcomes_of(raider.id)), 1)
+                         [('M-raid', red_a.id, red_b.id)])
+        self.assertEqual(len(outcome.outcomes_of('M-raid')), 1)
+        self.assertEqual(len(outcome.outcomes_of_block(raider.id)), 1)
 
     def test_one_resolver_call_with_all_forces(self):
         with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as spy:
@@ -402,7 +410,7 @@ class TestTwoFronts(_Base):
         spy.assert_called_once()
         args, kwargs = spy.call_args
         self.assertEqual([f.id for f in (args[0], args[1], *kwargs['extra_forces'])],
-                         sorted([raider.id, red_a.id, red_b.id]))
+                         sorted(['M-raid', red_a.id, red_b.id]))
         # Le finestre di entrambi i fronti arrivano nella stessa chiamata.
         pairs = {(w.asset_a_id, w.asset_b_id) for w in args[2]}
         self.assertTrue({a for a, _ in pairs} <= {'x1', 'x2'})
@@ -414,7 +422,7 @@ class TestTwoFronts(_Base):
             outcome, raider, red_a, red_b = self._two_fronts('S-fronts')
 
         spy.assert_called_once()
-        self.assertEqual({f.id for f in spy.call_args[0][1:]}, {raider.id, red_a.id, red_b.id})
+        self.assertEqual({f.id for f in spy.call_args[0][1:]}, {'M-raid', red_a.id, red_b.id})
 
         final = {}
         for event in outcome.damage_events:
@@ -467,7 +475,7 @@ class TestTwoFronts(_Base):
         first, second = build(), build()
         self.assertEqual(first, second)
         self.assertEqual([tuple(o.force_id for o in e) for e in first.engagement_outcomes],
-                         [('raider-stable', 'red-a-stable', 'red-b-stable')])
+                         [('M-stable', 'red-a-stable', 'red-b-stable')])
 
     def test_disjoint_components_stay_separate(self):
         """Nessun legame fra i due fronti dello scenario base: due componenti, due chiamate."""
@@ -675,6 +683,83 @@ class TestInputs(_Base):
             SS.run_session('order', [], [], _fire)
         with self.assertRaises(TypeError):
             SS.run_session(self._order(), [], [], 'nope')
+
+
+class TestMissionAsEngagementUnit(_Base):
+    """F4b: la missione e' l'unita' d'ingaggio (vista `MissionForce`), e il suo id entra nell'RNG."""
+
+    def _north_route(self):
+        return _route([(0, -20_000), (0, 20_000)], 200.0, 'r-bn1')
+
+    def _split_north(self, blue_north, ids=('M-a', 'M-b')):
+        """Blue-North in DUE missioni sulla stessa rotta: bn1 da sola, bn2 a 500 m sulla destra."""
+        return (_air_mission(ids[0], blue_north, self._north_route(), [('bn1', 0.0)], target_block='Red-East'),
+                _air_mission(ids[1], blue_north, self._north_route(), [('bn2', 500.0)], target_block='Red-East'))
+
+    def test_rng_streams_are_keyed_by_mission_ids(self):
+        """Ogni stream d'ingaggio (e di tempra) ha nell'event_id gli id delle MISSIONI; lo slot
+        mission_id di Session_Rng resta None (un ingaggio e' fra piu' forze, v. docstring)."""
+        original = SessionOrder.rng
+
+        with patch.object(SessionOrder, 'rng', autospec=True, side_effect=original) as spy:
+            self._run('S-rng')
+
+        keys = {tuple(json.loads(call.kwargs['event_id'])) for call in spy.call_args_list}
+        self.assertEqual(keys, {('engagement', 'M-north', 'Red-East'), ('engagement', 'M-south', 'Red-West'),
+                                ('temper', 'M-north', 'Red-East'), ('temper', 'M-south', 'Red-West')})
+        self.assertTrue(all(call.kwargs['mission_id'] is None for call in spy.call_args_list))
+
+    def test_renaming_a_mission_changes_its_stream_only(self):
+        """Stesse rotte e stessi asset, mission_id diverso: cambia lo stream di quell'ingaggio
+        (tempre diverse), non quello dell'altro fronte."""
+        first, _, _ = self._run('S-rename')
+        blue, red, missions = self._scenario()
+        renamed = (_air_mission('M-north-bis', blue[0], self._north_route(), [('bn1', 0.0), ('bn2', 500.0)],
+                                target_block='Red-East'), missions[1])
+        second = SS.run_session(self._order('S-rename', renamed), blue, red, _fire, reaction_profile_for=_profile)
+        temper = lambda outcome, force_id: outcome.outcomes_of(force_id)[0].temper  # noqa: E731
+        self.assertNotEqual(temper(first, 'Red-East'), temper(second, 'Red-East'))
+        self.assertEqual(temper(first, 'Red-West'), temper(second, 'Red-West'))
+        self.assertEqual(first.outcomes_of('M-south'), second.outcomes_of('M-south'))
+
+    def test_two_missions_of_one_block_are_two_forces(self):
+        blue, red, missions = self._scenario()
+        split = self._split_north(blue[0]) + (missions[1],)
+        outcome = SS.run_session(self._order('S-split', split), blue, red, _fire, reaction_profile_for=_profile)
+        north = outcome.outcomes_of_block('Blue-North')
+        self.assertEqual(sorted(o.force_id for o in north), ['M-a', 'M-b'])
+        self.assertTrue(all(o.block_id == 'Blue-North' and o.committed == 1 for o in north))
+        self.assertIn(('M-a', 'M-b', 'Red-East'), [tuple(o.force_id for o in e) for e in outcome.engagement_outcomes])
+
+    def test_committed_is_keyed_by_block_and_applied_per_mission(self):
+        blue, red, missions = self._scenario()
+        order = self._order('S-committed', missions, force_ids=('Blue-North', 'Blue-South', 'Red-East', 'Red-West'),
+                            committed={'Blue-North': ('bn1',)})
+        outcome = SS.run_session(order, blue, red, _fire, reaction_profile_for=_profile)
+        self.assertEqual(outcome.outcomes_of('M-north')[0].committed, 1)
+        self.assertEqual(outcome.outcomes_of('M-south')[0].committed, 1)
+
+    def test_unassigned_assets_keep_the_block_identity(self):
+        """Fino alla F4c: asset senza missione nella vista residua con l'id del blocco; un blocco
+        senza missioni entra com'e'."""
+        blue, red, _ = self._scenario()
+        only_bn1 = (_air_mission('M-a', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
+        order = self._order('S-residual', only_bn1)
+        _, _, blocks, block_owner = SS._collect_forces(order, blue, red)
+        forces, owner = SS._engagement_forces(order, blocks, block_owner)
+        self.assertEqual(sorted(forces), ['Blue-North', 'Blue-South', 'M-a', 'Red-East', 'Red-West'])
+        self.assertIsInstance(forces['Blue-North'], MA.MissionForce)
+        self.assertIsNone(forces['Blue-North'].mission_id)
+        self.assertEqual([a.id for a in forces['Blue-North'].assets.values()], ['bn2'])
+        self.assertIs(forces['Blue-South'], blue[1])
+        self.assertIs(forces['Red-East'], red[0])
+        self.assertEqual((owner['bn1'], owner['bn2'], owner['re1']), ((0, 'M-a'), (0, 'Blue-North'), (1, 'Red-East')))
+
+    def test_mission_id_equal_to_a_block_id_is_rejected(self):
+        blue, red, _ = self._scenario()
+        clash = (_air_mission('Red-East', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
+        with self.assertRaisesRegex(ValueError, 'also the id of a block'):
+            SS.run_session(self._order('S-clash', clash), blue, red, _fire)
 
 
 if __name__ == '__main__':

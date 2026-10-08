@@ -1,6 +1,6 @@
 # Piano di implementazione dell'entità Missione
 
-**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3 e F4a (v. §5 "Stato di avanzamento").
+**Stato**: APPROVATO (2026-10-05, Q1-Q4 sì) e IN CORSO: fatte F0, F1, F2, F3, F4a e F4b (v. §5 "Stato di avanzamento").
 **Base**: le decisioni D1-D6 e N1-N3 di `Proposta_Struttura_Missione_Decisioni.md` (tutte prese;
 N2.a = C, N3.f = B).
 **Convenzioni**:
@@ -133,7 +133,11 @@ in 6 file [V]). Rimozione dei parametri a migrazione completa (**domanda Q2**).
   `mission_id`, `salvo_interceptors` ristretto agli asset della missione. `resolve_engagement`
   accetta già *"`Military` o qualunque oggetto con `assets`, `side`, `name`"* [V]. Da verificare
   [I]: `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` usano solo questi
-  attributi?
+  attributi? [V in F4b: oltre a `assets`/`side`/`id`-`name` e `salvo_interceptors()`, il risolutore
+  legge la CLASSE della forza (`_can_disengage`: `Military` sì, `Block` non militare no); la vista
+  dichiara `can_disengage` calcolato sul blocco (adattatore). `morale_for`/`enemy_estimate_for`
+  ricevono la vista (blocco in `owner_block`); rilevamento, nebbia di guerra, RWR, carburante,
+  danno e munizioni leggono gli asset.]
 - **Postura continua**: gli asset di un blocco **non** assegnati a nessuna missione formano una vista
   di postura del blocco, ferma per tutta la sessione e passiva o difensiva secondo la propria
   postura (D1.c).
@@ -262,7 +266,7 @@ su cui poggia la successiva.
 
 ---
 
-## 5. Stato di avanzamento e deviazioni dal piano (aggiornato 2026-10-05)
+## 5. Stato di avanzamento e deviazioni dal piano (aggiornato 2026-10-08)
 
 | Fase | Stato | Commit | Note |
 |---|---|---|---|
@@ -271,7 +275,7 @@ su cui poggia la successiva.
 | F2 | FATTA | `4e18d7d8`, `8f16cc3c` | tabelle confermate dall'utente; `AIR_COMBAT_TASK` per escludere i task di supporto da combat power e punteggi; **13** loadout su 14 con task assegnati (An-30M Recon lasciato vuoto) |
 | F3 | FATTA | `533cd1f5` | fotografia identica; parametri `routes`/`starts`/`speeds` **già rimossi** (Q2) |
 | F4a | FATTA | `951b0ee2` | regola A dell'utente: una missione si muove alla velocità del mezzo più lento; 90 esecuzioni cambiate, nessun esito di forza (`F4_Differenze_Scenari.md`) |
-| F4b | DA FARE | | missione come unità di ingaggio (vista `MissionForce`), `mission_id` negli id d'ingaggio e quindi nell'RNG |
+| F4b | FATTA | | missione come unità di ingaggio (vista `Mission_Adapter.MissionForce`), `mission_id` negli id d'ingaggio e quindi nell'RNG; esito del blocco = insieme degli esiti delle sue missioni (`SessionOutcome.outcomes_of_block`); nuovo scenario S20; differenze in `F4_Differenze_Scenari.md` |
 | F4c | DA FARE | | postura continua degli asset senza missione (D1.c) |
 | F5-F9 | DA FARE | | come da §1 |
 
@@ -279,7 +283,9 @@ su cui poggia la successiva.
 1. `mission_id` **non** entra nell'RNG in F3 ma in F4b. Le estrazioni sono per ingaggio fra forze, e finché la forza è il blocco un ingaggio può coinvolgere più missioni. Così F3 è rimasta pura struttura, verificata con fotografia identica.
 2. F4 è divisa in tre passi (F4a, F4b, F4c), ognuno con commit, documento delle differenze e fotografia rigenerata, per attribuire ogni differenza alla sua causa.
 3. Regola A (decisione dell'utente prima della F4): asset di velocità diverse nella stessa missione vanno alla velocità del più lento (`Mission_Adapter.check_mission_speed`). Chi vuole velocità diverse usa missioni separate.
-4. La rotta aerea "da base a base" (D2.c) è verificata solo sui ruoli dei punti (`DEPARTURE` all'inizio, `LAND` alla fine), non sulla presenza di una base reale. Le rotte aeree degli scenari non hanno rientro e sono annotate come semplificazione da completare con l'RTB in F5-F6.
+4. F4b (decisione dell'utente, 2026-10-08): missioni dello stesso blocco (S7, S18, S19, S19AD) ingaggiano e disingaggiano **separatamente**, senza un'Operazione che le leghi. Il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio; lo slot `mission_id` di `Session_Rng` resta None, perché un ingaggio è fra più forze (missioni di entrambi i lati) e nessuna ne possiede lo stream.
+5. F4b: gli asset di un blocco senza missione mantengono il comportamento di prima (fermi, combattenti) in attesa della postura continua della F4c: un blocco senza missioni entra nel risolutore com'è, gli asset non assegnati di un blocco con missioni formano una vista residua con l'id del blocco. `SessionOrder.committed` resta chiavato per blocco e si applica a ogni missione per intersezione.
+6. La rotta aerea "da base a base" (D2.c) è verificata solo sui ruoli dei punti (`DEPARTURE` all'inizio, `LAND` alla fine), non sulla presenza di una base reale. Le rotte aeree degli scenari non hanno rientro e sono annotate come semplificazione da completare con l'RTB in F5-F6.
 
 **Punti aperti rilevati dall'aggiornamento del manuale** (capitolo 10 §9.6 del manuale DES):
 - docstring obsoleti in `Session_Simulator` (dicono ancora che la selezione dell'arma resta fuori dall'orchestratore);

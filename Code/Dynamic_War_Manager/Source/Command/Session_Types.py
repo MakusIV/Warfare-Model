@@ -143,7 +143,9 @@ class SessionOrder:
             attraversare il confine verso un adapter esterno.
         committed: `{force_id: (asset_id, ...)}` per impegnare solo una parte di una forza;
             stessa forma e semantica del parametro `committed` di `resolve_engagement`.
-            Assente o forza non elencata = tutti gli asset operativi.
+            Assente o forza non elencata = tutti gli asset operativi. Chiavato per BLOCCO anche
+            dalla F4b: `Session_Simulator` lo traduce per forza d'ingaggio (missione),
+            intersecando la restrizione del blocco con gli asset di ciascuna missione.
         salvo_window: secondi che raggruppano impatti successivi in un unico evento-salva,
             passato tale e quale a `resolve_engagement` (default 0.0, stesso default).
         missions: le `Mission` della sessione (Fase 3 del piano della Missione), default
@@ -310,6 +312,7 @@ class SessionOutcome:
             `ForceOutcome` e' relativo al SUO ingaggio (committed/lost/erosion si riferiscono
             agli asset impegnati li'): fonderli fra ingaggi diversi richiederebbe di
             reinventare quella semantica. Una forza impegnata in due ingaggi compare due volte.
+            Dalla F4b la forza e' la missione (v. `outcomes_of_block` per gli esiti di un blocco).
         damage_events/ammunition_events/interception_events/fuel_events: gli eventi
             atomici, in ordine di tempo (v. `assemble_session_outcome` per il criterio
             esatto). `ammunition_events` sono le sole salve offensive, `interception_events`
@@ -341,6 +344,17 @@ class SessionOutcome:
     def outcomes_of(self, force_id: str) -> Tuple[ForceOutcome, ...]:
         """Gli esiti della forza `force_id`, uno per ingaggio a cui ha partecipato."""
         return tuple(outcome for outcome in self.force_outcomes if outcome.force_id == force_id)
+
+    def outcomes_of_block(self, block_id: str) -> Tuple[ForceOutcome, ...]:
+        """Gli esiti delle forze d'ingaggio del blocco `block_id`, nell'ordine degli ingaggi.
+
+        Dalla F4b del piano della Missione la forza d'ingaggio e' la missione (`ForceOutcome.force_id`
+        = `mission_id`, `block_id` = blocco); un blocco senza missioni, o la vista residua dei suoi
+        asset senza missione, ha `force_id` = id del blocco. L'esito del blocco e' questo INSIEME, non
+        un esito sintetico: le sue missioni hanno combattuto e disingaggiato separatamente.
+        """
+        return tuple(outcome for outcome in self.force_outcomes
+                     if outcome.block_id == block_id or (outcome.block_id is None and outcome.force_id == block_id))
 
     def ammunition_consumed(self) -> Dict[str, int]:
         """Unita' di scorta spese OFFENSIVAMENTE per asset nell'intera sessione (solo salve).

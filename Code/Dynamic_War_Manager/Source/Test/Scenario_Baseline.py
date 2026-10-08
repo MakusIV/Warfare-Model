@@ -12,7 +12,7 @@ Il nome del file NON comincia con `Test_`: `unittest discover -p "Test_*.py"` no
 
 Gli scenari NON sono ricostruiti qui. Lo strumento esegue le stesse "unita'" dei test:
 
-* per le classi di scenario (S1-S19, validazione) il loro `setUpClass`, che costruisce le
+* per le classi di scenario (S1-S20, validazione) il loro `setUpClass`, che costruisce le
   forze con `Scenario_Fixtures` ed esegue tutte le repliche/varianti usate dai test;
 * per `Test_Session_Simulator` (test dell'orchestratore, nessun `setUpClass`) un elenco
   scelto di METODI di test, eseguiti con `TestCase.run` (setUp/tearDown compresi).
@@ -59,6 +59,15 @@ voce `call.parameters.routes` e' RICOSTRUITA dalle missioni (`Mission_Adapter.mi
 gli asset che ricevono una rotta), con lo stesso significato di prima; una lista vuota equivale
 all'assenza della voce (prima `routes={}` e nessun `routes` producevano due forme diverse dello
 stesso fatto, "nessuno si muove"), e il confronto la normalizza cosi' su entrambi i lati.
+
+## Esiti di forza dopo la F4b (la missione e' l'unita' d'ingaggio)
+
+Dalla F4b `ForceOutcome.force_id` e' il `mission_id` (o l'id del blocco per un blocco senza
+missioni) e `ForceOutcome.block_id` il blocco. Nella fotografia: ogni voce di `engagements` ha
+`force_id` = forza d'ingaggio e, solo se valorizzato, `block_id`; `force_outcomes` resta chiavato
+per BLOCCO (gli esiti delle sue forze d'ingaggio, nell'ordine degli ingaggi), cosi' con una
+missione per blocco ha la forma di prima. Il riepilogo `--summary` aggiunge, per i blocchi con
+piu' forze d'ingaggio, l'esito di ciascuna (`<mission_id>.mission_outcome`).
 
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
@@ -164,6 +173,8 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S19', 'Test_Session_Scenarios_S19', 'TestS19RegistryFireControl', None, _by_occurrence('run', 'replay')),
     ('S19AD', 'Test_Session_Scenarios_S19_Air_Defence', 'TestS19AirDefenceAllocation', None,
      _by_occurrence('strela_overflight_ifv_only', 'strela_standoff', 'tor_rear', 'tor_forward_ifv_only')),
+    # ── S20 (F4b: due missioni dello stesso blocco) ──
+    ('S20', 'Test_Session_Scenarios_S20', 'TestS20TwoMissionsOfOneBlock', None, _by_occurrence('split', 'single')),
     # ── Validazione (composizione di S1: determinismo e mini-campagna di agnosticismo) ──
     ('VAL-det', 'Test_Session_Validation', 'TestDeterminism', None, _by_occurrence('first', 'second')),
     ('VAL-agn', 'Test_Session_Validation', 'TestAgnosticEndToEnd', None, _by_occurrence('single', 'campaign')),
@@ -288,17 +299,27 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
 
     engagements = []
     for engagement in outcome.engagement_outcomes:
-        engagements.append([{
-            'force_id': fo.force_id, 'side': fo.side, 'outcome': fo.outcome, 'time': fo.time,
-            'triggers': list(fo.triggers), 'committed': fo.committed, 'lost': fo.lost,
-            'erosion': fo.erosion, 'max_shock': fo.max_shock, 'temper': fo.temper,
-            'breakpoint': fo.breakpoint, 'morale': fo.morale, 'force_ratio': fo.force_ratio,
-            'unanswered_fraction': fo.unanswered_fraction} for fo in engagement])
+        entries = []
+        for fo in engagement:
+            entry = {
+                'force_id': fo.force_id, 'side': fo.side, 'outcome': fo.outcome, 'time': fo.time,
+                'triggers': list(fo.triggers), 'committed': fo.committed, 'lost': fo.lost,
+                'erosion': fo.erosion, 'max_shock': fo.max_shock, 'temper': fo.temper,
+                'breakpoint': fo.breakpoint, 'morale': fo.morale, 'force_ratio': fo.force_ratio,
+                'unanswered_fraction': fo.unanswered_fraction}
+            # F4b: blocco della forza d'ingaggio (missione); registrato solo se c'e', cosi' gli
+            # ingaggi fra blocchi senza missioni hanno la forma di prima.
+            if fo.block_id is not None:
+                entry['block_id'] = fo.block_id
+            entries.append(entry)
+        engagements.append(entries)
 
+    # Esiti per BLOCCO (dalla F4b, gli esiti delle sue forze d'ingaggio nell'ordine degli ingaggi):
+    # con una missione per blocco la voce ha la stessa forma di prima della F4b.
     force_outcomes: Dict[str, List[str]] = {}
     for engagement in outcome.engagement_outcomes:
         for fo in engagement:
-            force_outcomes.setdefault(fo.force_id, []).append(fo.outcome)
+            force_outcomes.setdefault(fo.block_id or fo.force_id, []).append(fo.outcome)
 
     interceptions_by_weapon: Dict[str, Dict[str, int]] = {}
     for event in outcome.interception_events:
@@ -555,6 +576,18 @@ def run_digest(run: Dict) -> 'OrderedDict[str, object]':
 
     for force_id in forces:
         digest[f'{force_id}.outcome'] = '/'.join(run.get('force_outcomes', {}).get(force_id, [])) or '-'
+
+    # F4b: per un blocco con PIU' forze d'ingaggio (missioni), anche l'esito di ciascuna.
+    by_block: Dict[str, List[Dict]] = {}
+    for engagement in run.get('engagements', []):
+        for entry in engagement:
+            by_block.setdefault(entry.get('block_id') or entry['force_id'], []).append(entry)
+
+    for block_id in sorted(by_block):
+        if len(by_block[block_id]) > 1:
+            for entry in by_block[block_id]:
+                when = '' if entry.get('time') is None else f"@{round(entry['time'], 1)}"
+                digest[f"{entry['force_id']}.mission_outcome"] = f"{entry['outcome']}{when} lost={entry['lost']}"
 
     for force_id in forces:
         assets = {a: state for a, state in run.get('assets', {}).items() if _force_of(a) == force_id}

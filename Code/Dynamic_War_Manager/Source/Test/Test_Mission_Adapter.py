@@ -340,3 +340,109 @@ class TestRuleASlowestSpeed(_Base):
                              target=MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=1_000.0),
                              start_time=0.0)
         self.assertIsNone(MA.check_mission_speed(mission, {'a1': _Asset(1.0)}))
+
+
+# ── VISTA D'INGAGGIO: MissionForce (F4b) ──────────────────────────────────────
+
+# Classi di stub con i NOMI della gerarchia reale: `validate_class` confronta i nomi nella MRO, e
+# la regola di `can_disengage` (Military si', Block non militare no) dipende solo da quelli.
+class Block:
+    def __init__(self, block_id, side, asset_ids, interceptors=()):
+        self.id = block_id
+        self.name = f'{block_id}-name'
+        self.side = side
+        self.assets = {f'key-{asset_id}': _ForceAsset(asset_id) for asset_id in asset_ids}
+        self._interceptors = tuple(interceptors)
+
+    def salvo_interceptors(self):
+        by_id = {asset.id: asset for asset in self.assets.values()}
+        return [(by_id[asset_id], channels) for asset_id, channels in self._interceptors]
+
+
+class Military(Block):
+    pass
+
+
+class _ForceAsset:
+    def __init__(self, asset_id):
+        self.id = asset_id
+
+
+class _Plain:
+    """Forza duck-typed che non e' un Block: combattente per il risolutore."""
+
+    def __init__(self):
+        self.id = 'plain'
+        self.side = 'Blue'
+        self.assets = {'p1': _ForceAsset('p1')}
+
+
+class TestMissionForce(_Base):
+
+    def setUp(self):
+        super().setUp()
+        self.wing = Military('wing', 'Blue', ['a1', 'a2', 'a3'], interceptors=[('a3', 2), ('a1', 1)])
+
+    def _two_ship(self, mission_id='m1'):
+        return _mission(mission_id=mission_id,
+                        assets=(MT.MissionAsset('a1', 'lead'), MT.MissionAsset('a2', 'wingman', 0.0, 500.0, 0.0)))
+
+    def test_identity_side_and_owner(self):
+        view = MA.MissionForce.of_mission(self._two_ship(), self.wing)
+        self.assertEqual((view.id, view.name, view.mission_id), ('m1', 'm1', 'm1'))
+        self.assertEqual((view.block_id, view.side), ('wing', 'Blue'))
+        self.assertIs(view.owner_block, self.wing)
+        self.assertEqual(view.mission.mission_id, 'm1')
+
+    def test_assets_are_the_real_ones_restricted_to_the_mission(self):
+        view = MA.MissionForce.of_mission(self._two_ship(), self.wing)
+        self.assertEqual(list(view.assets), ['key-a1', 'key-a2'])
+        self.assertIs(view.assets['key-a1'], self.wing.assets['key-a1'])
+
+    def test_salvo_interceptors_restricted_to_the_mission(self):
+        view = MA.MissionForce.of_mission(self._two_ship(), self.wing)
+        self.assertEqual([(asset.id, channels) for asset, channels in view.salvo_interceptors()], [('a1', 1)])
+
+    def test_salvo_interceptors_empty_if_the_block_has_none(self):
+        block = Military('wing', 'Blue', ['a1', 'a2'])
+        del block._interceptors
+        block.salvo_interceptors = None
+        self.assertEqual(MA.MissionForce.of_mission(self._two_ship(), block).salvo_interceptors(), [])
+
+    def test_no_block_attribute_so_it_is_not_unwrapped(self):
+        """`_as_block` (scheduler, simulatore) scarta un `.block`: la vista non deve averlo."""
+        view = MA.MissionForce.of_mission(self._two_ship(), self.wing)
+        self.assertIs(getattr(view, 'block', view), view)
+
+    def test_wrong_block_or_foreign_asset_rejected(self):
+        with self.assertRaisesRegex(ValueError, "belongs to block 'wing'"):
+            MA.MissionForce.of_mission(self._two_ship(), Military('other', 'Blue', ['a1', 'a2']))
+        with self.assertRaisesRegex(ValueError, r"\['a2'\] do not belong"):
+            MA.MissionForce.of_mission(self._two_ship(), Military('wing', 'Blue', ['a1']))
+        with self.assertRaises(TypeError):
+            MA.MissionForce.of_mission('m1', self.wing)
+
+    def test_unassigned_view_has_the_block_identity(self):
+        residual = MA.MissionForce.unassigned(self.wing, [self._two_ship()])
+        self.assertEqual((residual.id, residual.name, residual.mission_id), ('wing', 'wing-name', None))
+        self.assertEqual(list(residual.assets), ['key-a3'])
+        self.assertEqual([(asset.id, channels) for asset, channels in residual.salvo_interceptors()], [('a3', 2)])
+
+    def test_unassigned_view_is_none_when_every_asset_has_a_mission(self):
+        other = _mission(mission_id='m2', assets=(MT.MissionAsset('a3', 'lead'),))
+        self.assertIsNone(MA.MissionForce.unassigned(self.wing, [self._two_ship(), other]))
+
+    def test_can_disengage_follows_the_block_class(self):
+        self.assertTrue(MA.MissionForce.of_mission(self._two_ship(), self.wing).can_disengage)
+        depot = Block('wing', 'Blue', ['a1', 'a2'])
+        self.assertFalse(MA.MissionForce.of_mission(self._two_ship(), depot).can_disengage)
+
+    def test_resolver_honours_the_declared_can_disengage(self):
+        """Adattatore: la vista non e' ne' Military ne' Block, il risolutore legge il dichiarato."""
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+
+        depot_view = MA.MissionForce.of_mission(self._two_ship(), Block('wing', 'Blue', ['a1', 'a2']))
+        self.assertFalse(ER._can_disengage(depot_view))
+        self.assertTrue(ER._can_disengage(MA.MissionForce.of_mission(self._two_ship(), self.wing)))
+        self.assertTrue(ER._can_disengage(_Plain()))
+        self.assertFalse(ER._can_disengage(Block('depot', 'Blue', [])))

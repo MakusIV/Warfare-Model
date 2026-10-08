@@ -166,6 +166,12 @@ uniforme. Chi puo' combattere contro chi lo dicono solo le finestre di contatto 
 (ogni finestra fra asset di due forze diverse genera le due direzioni di rilevamento); il
 lato (`side`) serve solo a leggere la dottrina, e piu' forze possono condividerlo.
 
+Dalla F4b del piano della Missione `Session_Simulator` passa come forze le MISSIONI (viste
+`Mission_Adapter.MissionForce`): due missioni dello stesso blocco sono due forze dello stesso
+lato, ciascuna con la propria percezione del nemico (`seen_by`), il proprio rapporto di forze
+(conta solo i propri asset), la propria tempra e il proprio disingaggio. Non si scambiano
+rilevamenti: la condivisione dell'informazione fra missioni (data link, C2) non e' modellata.
+
 Perche' serve (caso che ha originato la generalizzazione, 2026-09-23): la forza X e' in
 contatto con A e con B in finestre sovrapposte. Risolvendo (X,A) e (X,B) con due chiamate
 separate, la prima veniva svolta fino in fondo e applicata, e la seconda leggeva uno stato
@@ -559,6 +565,9 @@ class ForceOutcome:
         force_ratio: rapporto di forze percepito rho all'ultima valutazione (None: non
             definito, neutro).
         unanswered_fraction: quota delle perdite causate da tiratori non rilevati.
+        block_id: blocco d'appartenenza della forza se la forza e' una vista di missione
+            (`Mission_Adapter.MissionForce`, F4b: `force_id` = `mission_id`, o l'id del blocco per
+            la vista residua degli asset senza missione); None se la forza e' il blocco stesso.
     """
     force_id: str
     side: Optional[str]
@@ -574,6 +583,7 @@ class ForceOutcome:
     morale: Optional[float] = None
     force_ratio: Optional[float] = None
     unanswered_fraction: float = 0.0
+    block_id: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -1135,6 +1145,8 @@ class _ForceState:
     unanswered_fraction: float = 0.0
     # Dottrina di tiro (2026-09-29): soglia di saturazione e tetto "due missili, poi guarda".
     fire: Dict[str, Optional[float]] = field(default_factory=dict)
+    # Blocco d'appartenenza di una vista di missione (F4b), None se la forza e' il blocco.
+    block_id: Optional[str] = None
 
 
 @dataclass
@@ -1161,7 +1173,16 @@ def _can_disengage(force) -> bool:
     puo' rompere il contatto, combatte/subisce fino alla fine. Un oggetto che non e' un
     `Block` (stub duck-typed, adapter) e' trattato come forza combattente, come prima di
     questa regola: il risolutore non impone la gerarchia di classe ai suoi input.
+
+    Una forza che DICHIARA `can_disengage` booleano (la vista di missione
+    `Mission_Adapter.MissionForce`, F4b: non e' ne' `Military` ne' `Block`, e lo calcola sul suo
+    blocco con questa stessa regola) e' presa in parola.
     """
+    declared = getattr(force, 'can_disengage', None)
+
+    if isinstance(declared, bool):
+        return declared
+
     if validate_class(force, 'Military'):
         return True
 
@@ -1357,9 +1378,11 @@ class _EngagementRun:
                     logger.warning(f"resolve_engagement: no disengagement doctrine for side {side!r} "
                                    f"(force {force_id!r}): it will fight until annihilation")
 
+            block_id = getattr(force, 'block_id', None)
             state = _ForceState(force_id=force_id, side=side, committed=tuple(committed_ids),
                                 thresholds=side_thresholds, force=force,
-                                fire=Doctrine.get_fire_doctrine(side, self.fire_doctrine))
+                                fire=Doctrine.get_fire_doctrine(side, self.fire_doctrine),
+                                block_id=block_id if isinstance(block_id, str) and block_id else None)
             state.interceptors = self._interceptors_of(force, force_id)
             self.force_states[force_id] = state
             self.force_order.append(force_id)
@@ -2642,7 +2665,8 @@ class _EngagementRun:
                                          max_shock=state.max_shock, temper=state.temper,
                                          breakpoint=state.breakpoint, morale=state.morale,
                                          force_ratio=state.force_ratio,
-                                         unanswered_fraction=state.unanswered_fraction))
+                                         unanswered_fraction=state.unanswered_fraction,
+                                         block_id=state.block_id))
 
         return EngagementResult(t_start=self.t_start,
                                 t_end=self.t_end if self.t_end is not None else self.t_start,
@@ -2674,7 +2698,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
     Args:
         force_a/force_b: due delle forze — `Military` o qualunque oggetto con `assets`
             (dict di asset), `side`, `name`; se espongono `salvo_interceptors()` la loro
-            difesa satura le salve in arrivo (R1).
+            difesa satura le salve in arrivo (R1); se dichiarano `can_disengage` booleano
+            vale quello (v. `_can_disengage`), e un `block_id` stringa e' riportato nel
+            `ForceOutcome` (vista di missione `Mission_Adapter.MissionForce`, F4b).
         extra_forces: altre forze della stessa run, oltre alle prime due (default nessuna:
             ingaggio a due, comportamento invariato). Le forze della run sono
             `(force_a, force_b, *extra_forces)`, tutte trattate allo stesso modo: nessuna
