@@ -69,6 +69,7 @@
 - [UML generation workflow](project_uml_generation.md) — PlantUML tool, folder structure, diagram types already documented
 
 ## Feedback (how to work in this repo)
+- [Modelli e sforzi: principale Opus high, regola di delega ai sub-agenti](feedback_model_effort_delegation.md) — proporre in una riga agente/modello/sforzo prima di delegare, attendere conferma
 - [Parallel agents + verification before commit](feedback_parallel_agents_verification.md) — multiple des-developer agents on non-overlapping files works well; always verify git status/stash-list/suite yourself before committing, don't just trust the report
 - [Test base class pattern](feedback_test_base_class.md) — test base classes must NOT inherit from unittest.TestCase
 - [Circular import workaround](feedback_circular_import_workaround.md) — stub-class and sys.modules pre-injection patterns for Aircraft/Vehicle/Ship
