@@ -448,6 +448,81 @@ class TestMissionForce(_Base):
         self.assertFalse(ER._can_disengage(Block('depot', 'Blue', [])))
 
 
+# ── POSTURA CONTINUA (F4c, D1.c) ──────────────────────────────────────────────
+
+class Aircraft(_ForceAsset):
+    """Stub con il NOME di classe che `continuous_posture` riconosce (validate_class)."""
+
+
+class Ship(_ForceAsset):
+    pass
+
+
+class Vehicle(_ForceAsset):
+    pass
+
+
+def _airbase(*assets):
+    """Military 'base' (lato Red) con gli asset dati, chiavi = id."""
+    block = Military('base', 'Red', [])
+    block.assets = {asset.id: asset for asset in assets}
+    return block
+
+
+class TestContinuousPosture(_Base):
+    """Decisioni dell'utente 2026-10-11: aereo senza missione a terra, superficie in difesa."""
+
+    def test_posture_by_class(self):
+        self.assertEqual(MA.continuous_posture(Aircraft('a')), MA.PARKED_POSTURE)
+        self.assertEqual(MA.continuous_posture(Ship('s')), MA.SEA_DEFENSE_POSTURE)
+        self.assertEqual(MA.continuous_posture(Vehicle('v')), MA.GROUND_DEFENSE_POSTURE)
+        self.assertEqual(MA.continuous_posture(_ForceAsset('x')), MA.GROUND_DEFENSE_POSTURE)
+
+    def test_labels_are_the_existing_context_values(self):
+        from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Sea_Task
+        self.assertEqual(MA.GROUND_DEFENSE_POSTURE, Ground_Action.DEFENSE.value)
+        self.assertEqual(MA.SEA_DEFENSE_POSTURE, Sea_Task.DEFENSE.value)
+        self.assertEqual(MA.PARKED_POSTURE, MT.StartMode.PARKING_COLD.value)
+
+    def test_residual_view_of_a_mixed_block_marks_the_aircraft_grounded(self):
+        """Blocco misto: un aereo in missione, uno parcheggiato, una difesa terrestre e una nave."""
+        base = _airbase(Aircraft('a1'), Aircraft('a2'), Vehicle('sam'), Ship('patrol'))
+        mission = _mission(block_id='base', assets=(MT.MissionAsset('a1', 'lead'),))
+        residual = MA.MissionForce.unassigned(base, [mission])
+        self.assertEqual(residual.grounded, frozenset({'a2'}))
+        self.assertEqual(residual.postures, {'a2': MA.PARKED_POSTURE, 'sam': MA.GROUND_DEFENSE_POSTURE,
+                                             'patrol': MA.SEA_DEFENSE_POSTURE})
+
+    def test_mission_view_has_no_posture(self):
+        """Gli aerei di una missione NON sono a terra (la presenza prima della partenza e' F5)."""
+        base = _airbase(Aircraft('a1'), Aircraft('a2'))
+        view = MA.MissionForce.of_mission(_mission(block_id='base', assets=(MT.MissionAsset('a1', 'lead'),)), base)
+        self.assertEqual((view.postures, view.grounded), ({}, frozenset()))
+
+    def test_grounded_assets_over_the_engagement_forces(self):
+        """Vista residua, blocco senza missioni (passato tale e quale) e vista di missione."""
+        base = _airbase(Aircraft('a1'), Aircraft('a2'), Vehicle('sam'))
+        apron = Military('apron', 'Red', [])
+        apron.assets = {'p1': Aircraft('p1'), 'p2': Aircraft('p2')}
+        mission = _mission(block_id='base', assets=(MT.MissionAsset('a1', 'lead'),))
+        forces = {'m1': MA.MissionForce.of_mission(mission, base),
+                  'base': MA.MissionForce.unassigned(base, [mission]),
+                  'apron': apron}
+        self.assertEqual(MA.grounded_assets(forces), frozenset({'a2', 'p1', 'p2'}))
+
+    def test_no_aircraft_without_mission_means_an_empty_set(self):
+        base = _airbase(Aircraft('a1'), Vehicle('sam'))
+        mission = _mission(block_id='base', assets=(MT.MissionAsset('a1', 'lead'),))
+        forces = {'m1': MA.MissionForce.of_mission(mission, base), 'base': MA.MissionForce.unassigned(base, [mission])}
+        self.assertEqual(MA.grounded_assets(forces), frozenset())
+
+    def test_no_mutation_of_the_assets(self):
+        aircraft = Aircraft('a2')
+        before = dict(vars(aircraft))
+        MA.MissionForce.unassigned(_airbase(aircraft), [])
+        self.assertEqual(vars(aircraft), before)
+
+
 # ── DOMINIO DI COORDINAMENTO (2026-10-11, decisioni 6 e 7) ────────────────────
 
 class TestCoordinationDomains(_Base):

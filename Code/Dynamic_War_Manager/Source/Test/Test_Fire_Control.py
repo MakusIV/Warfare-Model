@@ -611,5 +611,73 @@ class TestFireControlBombRelease(_FireControlFixture, unittest.TestCase):
         self.assertEqual(spec.time_of_flight, FC.DEFAULT_TIME_OF_FLIGHT_S['bomb'])
 
 
+class TestFireControlGroundedAircraft(_FireControlFixture, unittest.TestCase):
+    """F4c: un aereo a terra (`target_grounded=True`) e' un bersaglio di SUPERFICIE ('Soft', la
+    classificazione esistente degli aerei parcheggiati), mai un bersaglio aereo."""
+
+    MIG29 = 'MiG-29S'
+
+    def parked(self, model=None, z=0.0):
+        return self.aircraft(model or self.MIG29, z, loadout='CAP')
+
+    def test_target_key_is_the_parked_surface_class(self):
+        mig = self.parked()
+        keys, dimension, is_air = FC.target_key(mig, grounded=True)
+        self.assertEqual((keys, is_air), (('Soft',), False))
+        self.assertEqual(dimension, C.classify_asset_dimension(mig))
+        self.assertTrue(FC.target_key(mig)[2])   # senza la keyword: aereo, come prima
+
+    def test_every_air_type_maps_to_an_existing_parked_type(self):
+        for air_type in C.Air_Asset_Type:
+            with self.subTest(air_type=air_type.value):
+                parked = FC.PARKED_TYPE_BY_AIR_TYPE[air_type.value]
+                self.assertIn(parked, {p.value for p in C.Parked_Asset_Type})
+                self.assertEqual(C.get_target_classification(parked), 'Soft')
+
+    def test_sams_never_engage_a_grounded_aircraft(self):
+        """SAM (task solo antiaerei): mai. Un cannone AA a doppio impiego puo' invece sparare a un
+        bersaglio di superficie, come contro un camion (filtro di superficie di sempre)."""
+        mig = self.parked()
+        for model in (BUK, STRELA10):
+            with self.subTest(model=model):
+                shooter = self.vehicle(model)
+                self.assertIsNone(self.ranked(shooter, mig, target_grounded=True))
+                self.assertIsNotNone(self.ranked(shooter, self.parked(z=3_000.0)))   # in volo si'
+
+    def test_air_to_air_missiles_never_engage_a_grounded_aircraft(self):
+        f16 = self.aircraft(F16, 5_000.0, loadout='CAP', force=self.blue)
+        airborne = [spec.weapon for spec in self.ranked(f16, self.parked(z=5_000.0))]
+        grounded = [spec.weapon for spec in self.ranked(f16, self.parked(), target_grounded=True) or ()]
+        self.assertTrue(set(airborne) & set(AWD.AIR_WEAPONS['MISSILES_AAM']))
+        self.assertFalse(set(grounded) & set(AWD.AIR_WEAPONS['MISSILES_AAM']))
+        self.assertEqual(grounded, ['M61A1'])   # resta il cannone di bordo, come contro un carro
+
+    def test_cas_weapons_use_the_soft_row(self):
+        a10 = self.aircraft(A10, 3_000.0, loadout='Maverick/Gun CAS', force=self.blue)
+        mig = self.parked()
+        specs = self.ranked(a10, mig, target_grounded=True)
+        self.assertTrue(specs)
+        dimension = C.classify_asset_dimension(mig)
+        weapons = {weapon: data for db in AWD.AIR_WEAPONS.values() for weapon, data in db.items()}
+        self.assertNotIn('AIM-9M', [spec.weapon for spec in specs])
+        self.assertIn('AGM-65D', [spec.weapon for spec in specs])
+
+        for spec in specs:
+            with self.subTest(weapon=spec.weapon):
+                self.assertEqual((spec.accuracy, spec.destroy_capacity),
+                                 _cell(weapons[spec.weapon]['efficiency'], 'Soft', dimension))
+
+    def test_bomb_range_uses_the_real_target_altitude(self):
+        """Gittata della bomba dalla quota REALE: tiratore a 3000 m, aereo a terra a 0 m."""
+        f16 = self.aircraft(F16, 3_000.0, loadout='Strike', force=self.blue)
+        bomb = next(s for s in self.ranked(f16, self.parked(), target_grounded=True) if s.weapon == 'Mk-83')
+        self.assertAlmostEqual(bomb.max_range, WD.bomb_engagement_estimate('Mk-83', 3_000.0, 850.0).slant_range_m)
+
+    def test_registry_fire_control_declares_the_extension(self):
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+        self.assertTrue(ER.accepts_target_grounded(FC.make_registry_fire_control()))
+        self.assertTrue(ER.accepts_target_grounded(F.make_fire_control()))
+
+
 if __name__ == '__main__':
     unittest.main()

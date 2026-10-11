@@ -108,6 +108,10 @@ DETECTION_MODE_BY_CLASS = {
     'Aircraft': 'air',
 }
 
+# Modo con cui si interroga un aereo A TERRA (F4c, postura continua degli asset senza missione):
+# e' un bersaglio di superficie sul piazzale, quindi lo si cerca come un veicolo o una struttura.
+GROUNDED_DETECTION_MODE = 'ground'
+
 
 # ── TIPI DI SCAMBIO ───────────────────────────────────────────────────────────
 
@@ -850,7 +854,8 @@ def detection_mode_for(asset) -> Optional[str]:
 
 
 def mutual_detection_ranges(asset_a, asset_b,
-                            range_type: str = DEFAULT_DETECTION_RANGE_TYPE
+                            range_type: str = DEFAULT_DETECTION_RANGE_TYPE, *,
+                            grounded_a: bool = False, grounded_b: bool = False
                             ) -> Tuple[Optional[float], Optional[float]]:
     """Portate [m] con cui A vede B e B vede A.
 
@@ -858,14 +863,24 @@ def mutual_detection_ranges(asset_a, asset_b,
     bersagli del modo di B, e viceversa. Le due portate sono di norma diverse, ed e' proprio
     questa asimmetria a decidere chi vede per primo.
 
+    Aereo a terra (F4c, postura continua degli asset senza missione, v.
+    `Mission_Adapter.continuous_posture`): `grounded_a`/`grounded_b` dicono che l'asset e' un
+    aereo parcheggiato. Come BERSAGLIO e' interrogato nel modo 'ground' (e' un bersaglio di
+    superficie, non aereo); come OSSERVATORE non ha portata (None: sensori spenti, passivo). Con
+    entrambi False (default) il comportamento e' quello di prima.
+
     Returns:
         `(range_a, range_b)`; un elemento e' None quando l'asset non espone
-        `detection_range`, quando la classe dell'altro non e' classificabile, o quando il
-        modello non dichiara sensori utili su quel modo. Mai un'eccezione: e' un dato
-        mancante (stessa politica di `Mobile.detection_range`).
+        `detection_range`, quando la classe dell'altro non e' classificabile, quando il
+        modello non dichiara sensori utili su quel modo, o quando l'osservatore e' un aereo a
+        terra. Mai un'eccezione: e' un dato mancante (stessa politica di
+        `Mobile.detection_range`).
     """
-    def _range(observer, target) -> Optional[float]:
-        mode = detection_mode_for(target)
+    def _range(observer, target, observer_grounded: bool, target_grounded: bool) -> Optional[float]:
+        if observer_grounded:
+            return None
+
+        mode = GROUNDED_DETECTION_MODE if target_grounded else detection_mode_for(target)
 
         if mode is None:
             logger.debug(f"mutual_detection_ranges: target class "
@@ -886,12 +901,13 @@ def mutual_detection_ranges(asset_a, asset_b,
 
         return float(value) if isinstance(value, (int, float)) else None
 
-    return (_range(asset_a, asset_b), _range(asset_b, asset_a))
+    return (_range(asset_a, asset_b, grounded_a, grounded_b), _range(asset_b, asset_a, grounded_b, grounded_a))
 
 
 def contact_windows(asset_a, legs_a: Sequence[Leg], asset_b, legs_b: Sequence[Leg],
                     range_a: Optional[float] = None, range_b: Optional[float] = None,
-                    range_type: str = DEFAULT_DETECTION_RANGE_TYPE) -> List[ContactWindow]:
+                    range_type: str = DEFAULT_DETECTION_RANGE_TYPE, *,
+                    grounded_a: bool = False, grounded_b: bool = False) -> List[ContactWindow]:
     """Finestre in cui due asset sono a portata di rilevamento l'uno dell'altro.
 
     E' l'uscita principale del modulo verso la Fase 4. Per ogni finestra si dice quando
@@ -908,6 +924,8 @@ def contact_windows(asset_a, legs_a: Sequence[Leg], asset_b, legs_b: Sequence[Le
         range_type: 'acquisition_range' (default), 'tracking_range' o 'engagement_range'.
                     Con 'engagement_range' questa stessa funzione risponde alla domanda
                     "quando sono a tiro" invece che "quando si vedono".
+        grounded_a/grounded_b: aereo a terra (F4c), v. `mutual_detection_ranges`; valgono solo
+                    per le portate derivate (una portata imposta dal chiamante resta quella).
 
     Returns:
         Lista di `ContactWindow` ordinate per `t_start`; vuota se non c'e' sovrapposizione
@@ -919,7 +937,8 @@ def contact_windows(asset_a, legs_a: Sequence[Leg], asset_b, legs_b: Sequence[Le
         return []
 
     if range_a is None or range_b is None:
-        derived_a, derived_b = mutual_detection_ranges(asset_a, asset_b, range_type=range_type)
+        derived_a, derived_b = mutual_detection_ranges(asset_a, asset_b, range_type=range_type,
+                                                       grounded_a=grounded_a, grounded_b=grounded_b)
         range_a = derived_a if range_a is None else range_a
         range_b = derived_b if range_b is None else range_b
 
@@ -1202,7 +1221,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                       t0: float = 0.0,
                       margin: float = 0.0,
                       range_type: str = DEFAULT_DETECTION_RANGE_TYPE,
-                      skip_same_side: bool = True) -> List[ContactWindow]:
+                      skip_same_side: bool = True,
+                      grounded: Optional[Iterable[str]] = None) -> List[ContactWindow]:
     """Tutte le finestre di contatto fra due insiemi di blocchi, in `[t0, t0 + horizon]`.
 
     Mette insieme i tre meccanismi nell'ordine che li rende trattabili: prima la potatura a
@@ -1221,6 +1241,11 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
         speeds: `{asset_id: velocita' [m/s]}` che sovrascrive quella degli archi.
         t0: istante assoluto di inizio della finestra.
         margin/range_type/skip_same_side: v. `block_pair_candidates` e `contact_windows`.
+        grounded: id degli aerei A TERRA (F4c, calcolati dalla sessione:
+                  `Mission_Adapter.grounded_assets`): bersagli di superficie, senza sensori (v.
+                  `mutual_detection_ranges`). None o vuoto = comportamento di prima. La potatura
+                  per blocco non cambia (resta conservativa: un aereo a terra conta ancora con la
+                  propria velocita' e portata nell'inviluppo del blocco).
 
     Returns:
         Lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)`. **L'ordine
@@ -1233,6 +1258,7 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
     routes = routes or {}
     starts = starts or {}
     speeds = speeds or {}
+    grounded = frozenset(grounded or ())
 
     pairs = block_pair_candidates(blocks_a, blocks_b, horizon=horizon, margin=margin,
                                   skip_same_side=skip_same_side)
@@ -1268,7 +1294,9 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                     continue
 
                 windows.extend(contact_windows(asset_a, legs_a, asset_b, legs_b,
-                                               range_type=range_type))
+                                               range_type=range_type,
+                                               grounded_a=_asset_id(asset_a) in grounded,
+                                               grounded_b=_asset_id(asset_b) in grounded))
 
     windows.sort(key=lambda w: (w.t_start, str(w.asset_a_id), str(w.asset_b_id)))
 

@@ -121,11 +121,33 @@ Il riferimento al blocco si chiama `owner_block`, NON `block`: `Contact_Schedule
 `Session_Simulator._as_block` scartano un `.block` (forma del `BlockItem`) e scambierebbero la
 vista per il suo blocco.
 
-**Asset del blocco senza missione** (F4b): la postura continua e' della F4c. Fino ad allora
-mantengono il comportamento di prima della F4b: fermi nella loro posizione e combattenti come
-membri del blocco. Un blocco senza missioni entra nel risolutore come prima (l'oggetto blocco,
-id del blocco); un blocco con missioni e anche asset non assegnati li raggruppa nella vista
-residua `MissionForce.unassigned`, con l'id DEL BLOCCO e `mission_id` None.
+**Asset del blocco senza missione**: fermi nella loro posizione per tutta la sessione. Un blocco
+senza missioni entra nel risolutore come prima della F4b (l'oggetto blocco, id del blocco); un
+blocco con missioni e anche asset non assegnati li raggruppa nella vista residua
+`MissionForce.unassigned`, con l'id DEL BLOCCO e `mission_id` None. La loro postura e' quella
+continua della F4c (sotto).
+
+## Postura continua degli asset senza missione (F4c, D1.c)
+
+Decisioni dell'utente (2026-10-11), `continuous_posture`:
+  * **aereo senza missione = a terra** (`PARKED_POSTURE`): bersaglio di SUPERFICIE passivo.
+    Colpibile da bombe, razzi, cannoni e missili aria-suolo come un'unita' di superficie, mai
+    ingaggiato da SAM/AAA/caccia come minaccia aerea, non spara mai e non osserva (sensori
+    spenti). Si riconosce dall'appartenere alla vista residua (o a un blocco senza missioni):
+    nessuno stato nuovo nell'`Aircraft`, nessuna mutazione degli asset. L'insieme degli id a terra
+    (`grounded_assets`) e' calcolato dalla sessione e passato a scheduler (portate) e risolutore
+    (rilevamento, tiro, peso di minaccia, disingaggio);
+  * **unita' terrestri e navali senza missione**: postura `Defense` DICHIARATA
+    (`Context.Ground_Action.DEFENSE` / `Sea_Task.DEFENSE`, stessa stringa), tiro INVARIATO:
+    sparano a cio' che rilevano a portata, come prima. Nessun ROE "hold fire". La postura e'
+    solo un dato della vista (`MissionForce.postures`): non cambia estrazioni ne' esiti.
+La postura vale per asset, non per forza: una vista residua mista (aerei parcheggiati e difese
+della base) ha aerei a terra e unita' in difesa.
+
+Predisposizione per la F5 (presenza prima della partenza, NON implementata): anche un aereo con
+missione non ancora partito sara' a terra. Il criterio e' quindi un INSIEME di asset a terra
+passato al motore, non una proprieta' della forza: la F5 lo estendera' (con la finestra temporale
+del parcheggio) senza toccare la vista ne' il protocollo di fire control.
 
 ## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7)
 
@@ -152,13 +174,13 @@ nel dominio delle missioni del blocco.
 ## Cosa NON fa
 - Nessuna attesa (WAIT), nessuna presenza prima della partenza o dopo la fine (F5).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F5-F7.
-- Nessuna postura per gli asset senza missione (F4c).
+- Nessuna postura per gli asset CON missione (arriva con la postura di fine missione, F5).
 - Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
 """
 
 import math
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from sympy import Point3D
 
@@ -167,9 +189,11 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     Mission,
     MissionAsset,
     Operation,
+    StartMode,
     WaypointRole,
     route_waypoints,
 )
+from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Sea_Task
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
@@ -205,6 +229,13 @@ SPEED_TOLERANCE = 1e-6
 
 # Ruoli d'ancoraggio del TOT, in ordine di preferenza.
 _TOT_ANCHOR_ROLES = (WaypointRole.ATTACK, WaypointRole.OBJECTIVE)
+
+# Postura continua (F4c, v. docstring). Etichette, non grandezze: l'aereo a terra e' l'aereo sul
+# parcheggio a motori spenti (lo stato `uncontrolled` di DCS, stessa etichetta di
+# `StartMode.PARKING_COLD`); le unita' di superficie sono in difesa.
+PARKED_POSTURE = StartMode.PARKING_COLD.value
+GROUND_DEFENSE_POSTURE = Ground_Action.DEFENSE.value
+SEA_DEFENSE_POSTURE = Sea_Task.DEFENSE.value
 
 
 def kmh_to_ms(speed_kmh: float) -> float:
@@ -654,6 +685,62 @@ def _domain_id(obj) -> Optional[str]:
     return None
 
 
+# ── POSTURA CONTINUA (F4c, D1.c) ──────────────────────────────────────────────
+
+def continuous_posture(asset) -> str:
+    """Postura continua di un asset SENZA missione (v. "Postura continua" nel docstring).
+
+    Aereo (`Aircraft` nella gerarchia di classe) -> `PARKED_POSTURE` (a terra, bersaglio di
+    superficie passivo); nave -> `SEA_DEFENSE_POSTURE`; ogni altro asset (veicolo, struttura,
+    stub) -> `GROUND_DEFENSE_POSTURE`. Funzione pura: non legge ne' muta lo stato dell'asset.
+    """
+    if validate_class(asset, 'Aircraft'):
+        return PARKED_POSTURE
+
+    if validate_class(asset, 'Ship'):
+        return SEA_DEFENSE_POSTURE
+
+    return GROUND_DEFENSE_POSTURE
+
+
+def unassigned_postures(assets: Iterable) -> Dict[str, str]:
+    """`{asset_id: postura continua}` di asset senza missione (gli asset senza id sono saltati)."""
+    postures: Dict[str, str] = {}
+
+    for asset in assets:
+        asset_id = _domain_id(asset)
+
+        if asset_id is not None:
+            postures[asset_id] = continuous_posture(asset)
+
+    return postures
+
+
+def grounded_assets(forces: Mapping[str, object]) -> FrozenSet[str]:
+    """Id degli aerei A TERRA fra le forze d'ingaggio della sessione (F4c).
+
+    Args:
+        forces: `{force_id: forza}` come le costruisce `Session_Simulator._engagement_forces`. A
+            terra sono gli aerei della vista residua (`MissionForce.grounded`) e di un blocco
+            senza missioni (passato tale e quale: stessa regola, `continuous_posture`); gli aerei
+            di una vista di missione no (la presenza prima della partenza e' della F5).
+
+    Returns:
+        Insieme (vuoto se non ce ne sono: comportamento identico a prima della F4c).
+    """
+    grounded = set()
+
+    for force in forces.values():
+        if isinstance(force, MissionForce):
+            grounded |= force.grounded
+            continue
+
+        postures = unassigned_postures((getattr(force, 'assets', None) or {}).values())
+        grounded |= {asset_id for asset_id, posture in postures.items() if posture == PARKED_POSTURE}
+
+    return frozenset(grounded)
+
+
 class MissionForce:
     """Una missione vista come FORZA d'ingaggio (v. "La missione come forza d'ingaggio").
 
@@ -673,6 +760,10 @@ class MissionForce:
         can_disengage: diritto a una politica di disingaggio, con la regola di
             `Engagement_Resolver._can_disengage` applicata al BLOCCO (adattatore: la vista non e'
             ne' `Military` ne' `Block`).
+        postures: `{asset_id: postura continua}` degli asset della vista residua (F4c,
+            `continuous_posture`); vuota per una vista di missione.
+        grounded: id degli aerei a terra della vista (postura `PARKED_POSTURE`); vuoto per una
+            vista di missione.
     """
 
     def __init__(self, block, asset_ids: Iterable[str], force_id: str, name: str,
@@ -698,6 +789,11 @@ class MissionForce:
         if missing:
             raise ValueError(f"force {force_id!r}: assets {missing} do not belong to block {block_id!r}")
 
+        # Postura continua (F4c): solo per la vista residua; una missione non ne ha (F5).
+        self.postures: Dict[str, str] = unassigned_postures(self.assets.values()) if mission is None else {}
+        self.grounded: FrozenSet[str] = frozenset(asset_id for asset_id, posture in self.postures.items()
+                                                  if posture == PARKED_POSTURE)
+
     @classmethod
     def of_mission(cls, mission: Mission, block) -> 'MissionForce':
         """La vista della missione: i suoi asset, id e nome = `mission_id`.
@@ -718,7 +814,7 @@ class MissionForce:
     @classmethod
     def unassigned(cls, block, missions: Iterable[Mission]) -> Optional['MissionForce']:
         """La vista residua degli asset del blocco in NESSUNA delle `missions`, con id e nome del
-        blocco; None se non ne restano (comportamento fino alla F4c, v. docstring del modulo)."""
+        blocco e la postura continua dei suoi asset (F4c); None se non ne restano."""
         assigned = {asset_id for mission in missions for asset_id in mission.asset_ids}
         residual = [asset_id for asset_id in (_domain_id(asset) for asset in (getattr(block, 'assets', None) or {}).values())
                     if asset_id is not None and asset_id not in assigned]

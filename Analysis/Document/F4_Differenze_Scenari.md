@@ -497,3 +497,142 @@ PRESS_ON arriva al terzo strato 1 volta su 24. Nuova struttura (SEEDS da 8 a 12)
 **Fotografia.** Prima: 328 esecuzioni IDENTICHE. Dopo: nessuna esecuzione esistente cambiata, 20
 nuove (S5-8..11 default e PRESS_ON, S5-0..11 resistant); 348 esecuzioni; due catture consecutive
 identiche byte per byte.
+
+---
+
+## F4c: postura continua degli asset senza missione (D1.c, decisioni dell'utente 2026-10-11)
+
+**Base del confronto**: fotografia della riprogettazione S3/S5 (`3d7b1fe5`, 348 esecuzioni;
+ricontrollata IDENTICA al codice di partenza prima delle modifiche).
+**Dopo**: motore con la postura continua. **346 esecuzioni identiche, 2 cambiate** (sotto),
+nessuna nuova esecuzione cambiata da altro. Decisione dell'utente (2026-10-11): cambio ACCETTATO,
+fotografia rigenerata (370 esecuzioni = 348 + 22 nuove; due catture identiche byte per byte).
+
+### Il cambio
+
+Decisioni dell'utente:
+1. **aereo senza missione = a terra**: bersaglio di SUPERFICIE passivo, colpibile da bombe, razzi,
+   cannoni e missili aria-suolo, mai ingaggiato da SAM/AAA/caccia come minaccia aerea, non spara mai;
+2. **unita' terrestri e navali senza missione**: postura `Defense` dichiarata, tiro invariato.
+
+Dove vive "a terra": un INSIEME di id (`grounded`) calcolato dalla sessione, mai uno stato
+dell'`Aircraft` (nessuna mutazione degli asset).
+- `Mission_Adapter.continuous_posture` (aereo -> `PARKED_POSTURE` = `StartMode.PARKING_COLD`;
+  nave -> `Sea_Task.DEFENSE`; il resto -> `Ground_Action.DEFENSE`); la vista residua porta
+  `postures` e `grounded`; `grounded_assets(forces)` raccoglie gli aerei della vista residua e dei
+  blocchi senza missioni (passati tali e quali). Gli aerei di una missione non sono a terra (F5).
+- `Session_Simulator.run_session` passa l'insieme a `schedule_contacts(grounded=...)` e a ogni
+  `resolve_engagement(grounded=...)`. Insieme vuoto = comportamento di prima, percorso per percorso.
+- **Rilevamento** (`Contact_Scheduler.mutual_detection_ranges`): un aereo a terra come bersaglio e'
+  interrogato nel modo 'ground' (`GROUNDED_DETECTION_MODE`), come osservatore non ha portata
+  (sensori spenti). Il risolutore ripete la regola per le finestre costruite dal chiamante (nessuna
+  estrazione come osservatore) e spegne l'RWR del parcheggiato.
+- **Fire control**: estensione facoltativa del protocollo, keyword `target_grounded=True` passata
+  SOLO per un bersaglio a terra e solo se la fire control la dichiara (`**kwargs` compreso,
+  `Engagement_Resolver.accepts_target_grounded`, introspezione della firma); altrimenti la chiamata
+  di sempre con un warning per run. `Fire_Control.make_registry_fire_control` e la fixture di
+  scenario la dichiarano. Nei registri l'aereo a terra usa la classificazione ESISTENTE di un aereo
+  parcheggiato (`Context.Parked_Asset_Type`, `get_target_classification` -> 'Soft'; tabella
+  `PARKED_TYPE_BY_AIR_TYPE`, nessuna costante numerica nuova): SAM e AAM esclusi dal filtro di
+  superficie, bombe/razzi/cannoni/ASM con la riga 'Soft', gittata delle bombe dalla quota reale.
+  Nella fixture il ruolo 'parked' e' un bersaglio di superficie della tabella di riferimento.
+- **Tiro**: un aereo a terra non e' mai tiratore ne' intercettore. Chi lo attacca e' un lanciatore
+  aria-superficie per L2/L3 (la difesa della base lo prioritizza).
+- **Peso di minaccia**: nullo da entrambe le parti nel rapporto percepito (`_perceived_ratio`):
+  escluso dai nemici percepiti e dalla forza propria. La forza "aerea" si decide sugli asset non a
+  terra (una base con difese e aerei parcheggiati e' di superficie).
+- **Disingaggio**: forza di soli aerei a terra senza dottrina (HELD, poi DESTROYED, come un blocco
+  non militare); forza mista: erosione e shock della dottrina contano solo chi puo' ritirarsi,
+  senza combattenti operativi nessun disingaggio, l'annientamento conta tutti; se la forza
+  disingaggia gli aerei a terra restano bersagli (`_gone`). `ForceOutcome` e `SalvoResolution`
+  contano tutti gli asset.
+- **Danno**: `Damage_Model` e' indipendente dalla classe dell'asset; un `Aircraft` colpito da armi
+  di superficie e' danneggiato e distrutto come ogni altro asset (verificato in S21/S21R), nessun
+  adeguamento.
+- **Domini di coordinamento**: invariati (la vista residua resta nel dominio del suo blocco).
+
+### Esecuzioni cambiate (2 su 348): DA DECIDERE
+
+`VAL-agn/S7-agn-2` e `VAL-agn/S7-agn-3` (mini-campagna di agnosticismo, `Test_Session_Validation.
+TestAgnosticEndToEnd`): la seconda e la terza sessione sono SENZA missioni, quindi i 2 A-10C di
+Blue-CAS, che prima restavano fermi IN VOLO nella posizione iniziale (x = -60 km, 3000 m) e
+sparavano, ora sono a terra (decisione 1) e non sparano piu':
+- S7-agn-2: Blue-CAS da 2 colpi a 0, nessun danno (prima 2 eventi), Red-Line da DISENGAGED a HELD;
+- S7-agn-3: Blue-CAS da 2 colpi a 0, nessun danno, Red-Line 2 asset distrutti invece di 3.
+Sonda sulla fotografia (solo misura): sono le UNICHE esecuzioni con aerei fuori missione. E'
+l'effetto voluto della decisione 1, ma il piano chiedeva una fotografia identica. L'utente ha scelto
+il 2026-10-11 di ACCETTARE il cambio (l'alternativa era dare a Blue-CAS una missione nelle sessioni
+2-3, che avrebbe snaturato il test «senza missioni, forze ferme»). I test di `Test_Session_Validation`
+verificano la concatenazione dello stato, non gli esiti, e passano.
+
+### Scenario nuovo S21 / S21R (`Test_Session_Scenarios_S21.py`)
+
+**S21** (tabella a ruoli, 8 seed, varianti 'parked' e 'control'): Red-Airbase (Military
+'Airbase' senza missioni, MISTA: 4 MiG-29S sul piazzale con loadout 'CAP', Strela-10, Shilka)
+attaccata da Blue-Strike (4 F-16C 'Strike', missione Strike in sorvolo a 3000 m). Controllo: la
+stessa base senza aerei.
+
+| Seed | MiG-29S distrutti | colpi Blue | colpi difese | Blue persi | Red-Airbase | controllo: colpi Blue / Blue persi |
+|---|---|---|---|---|---|---|
+| S21-0 | 3/4 | 8 | 13 | 2 | HELD (4 persi su 6) | 0 / 2 |
+| S21-1 | 2/4 | 8 | 9 | 2 | HELD (4/6) | 0 / 3 |
+| S21-2 | 3/4 | 9 | 10 | 2 | HELD (4/6) | 0 / 2 |
+| S21-3 | 3/4 | 6 | 2 | 1 | HELD (4/6) | 0 / 0 |
+| S21-4 | 3/4 | 4 | 13 | 2 | HELD (4/6) | 0 / 2 |
+| S21-5 | 3/4 | 7 | 3 | 0 | HELD (4/6) | 0 / 0 |
+| S21-6 | 1/4 | 5 | 7 | 1 | HELD (4/6) | 0 / 0 |
+| S21-7 | 3/4 | 6 | 3 | 2 | HELD (4/6) | 0 / 1 |
+
+Totale 21/32 distrutti (0,66). In ogni seed: i MiG-29S non sparano, non intercettano, non
+infliggono danno; sono colpiti solo dall'arma aria-suolo dello strike ('test:agm'); le difese
+colpiscono solo gli F-16C; la base perde 4 asset su 6 ma resta HELD (prima della F4c l'erosione
+4/6 l'avrebbe fatta disingaggiare e gli aerei sarebbero diventati irraggiungibili). Controllo: lo
+strike non spara mai (nessun bersaglio di superficie che il ruolo 'strike' possa ingaggiare).
+
+**S21R** (fire control dei registri, 6 seed): Red-Apron (4 MiG-29S, blocco di soli aerei a terra)
++ Red-AD (Strela-10 + Shilka), Blue-CAS 2 A-10C 'Maverick/Gun CAS'. MiG-29S distrutti 4, 4, 4, 4,
+3, 4 (23/24); armi sui parcheggiati: AGM-65D e Mk-82AIR (riga 'Soft'), mai l'AIM-9M; Red-Apron
+DESTROYED in 5 seed, HELD in 1 (mai DISENGAGED); Red-AD distrutto in tutti i seed (la fire control
+dei registri non ha ruoli: gli A-10C attaccano anche le difese); Blue-CAS perde 0-2 aerei.
+
+Asserzioni (robuste, invarianti per replica + una frazione aggregata): nessun colpo, intercettazione
+o danno dai parcheggiati; frazione distrutta aggregata >= `MIN_DESTROYED_FRACTION` = 0,5 (soglia di
+test dichiarata, non tarata, circa due deviazioni standard sotto la misura); bersagli delle difese
+solo Blue; danni sui parcheggiati solo da 'test:agm' dello strike (S21) o da armi non AAM (S21R);
+Red-Airbase/Red-Apron mai DISENGAGED; controllo S21 senza colpi Blue, variante 'parked' con colpi
+Blue in ogni seed.
+
+Fotografia: 22 esecuzioni nuove in coda (`S21/<seed>/parked|control`, `S21R/<seed>`), catturate nella
+rigenerazione.
+
+### Test
+
+- `Test_Contact_Scheduler.TestGroundedAircraftRanges`: modo 'ground' per il bersaglio a terra,
+  nessuna portata come osservatore, default invariato, `schedule_contacts(grounded=...)`.
+- `Test_Engagement_Resolver.TestGroundedAircraft` (non spara ne' osserva, colpito solo da armi di
+  superficie, il SAM non lo ingaggia, keyword solo per i bersagli a terra, fire control ignara con
+  warning, `accepts_target_grounded`, una estrazione in meno per finestra, insieme vuoto = identico),
+  `TestGroundedForceDisengagement` (soli parcheggiati: DESTROYED senza disingaggio; mista: dottrina
+  sui soli combattenti, aerei ancora colpiti dopo il disingaggio; nessun combattente operativo:
+  nessun disingaggio), `TestGroundedTargetIsASurfaceLauncherTarget` (L2/L3 con bersaglio a terra).
+- `Test_Fire_Control.TestFireControlGroundedAircraft`: chiave 'Soft', tabella dei tipi
+  parcheggiati, SAM e AAM esclusi, righe 'Soft' delle armi CAS, gittata della bomba dalla quota
+  reale, fire control dei registri e della fixture dichiarano l'estensione.
+- `Test_Mission_Adapter.TestContinuousPosture`: postura per classe, etichette = valori di Context,
+  vista residua mista, vista di missione senza postura, `grounded_assets`, nessuna mutazione.
+- `Test_Session_Simulator`: insieme passato a scheduler e risolutore, postura della vista residua
+  mista, insieme vuoto senza aerei fuori missione.
+
+### Limiti noti
+
+- Un aereo senza missione e' a terra nella sua posizione registrata, anche se la quota e' di volo
+  (caso VAL-agn): la posizione non persiste fra sessioni (D1.d, F8) e il motore non lo porta a terra.
+- Gli aerei a terra non hanno sensori ne' RWR: non contribuiscono alla percezione della base.
+- Una fire control che non dichiara `target_grounded` li classifica come gli altri aerei (warning).
+- Nessuna protezione di shelter/hangar: un aereo parcheggiato e' 'Soft' come all'aperto.
+- La postura `Defense` delle unita' di superficie e' solo dichiarata (nessun effetto: tiro e
+  rilevamento invariati per decisione); non entra nel `ForceOutcome`.
+- La potatura per blocco dello scheduler conta ancora velocita' e portata degli aerei a terra
+  (conservativa: piu' coppie esaminate, nessun contatto perso).
+- La presenza prima della partenza (aerei con missione ancora a terra) e' della F5: l'insieme
+  `grounded` e' per l'intera sessione; la F5 dovra' renderlo dipendente dal tempo.

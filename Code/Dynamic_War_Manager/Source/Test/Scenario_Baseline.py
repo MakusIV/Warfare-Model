@@ -192,6 +192,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      ('test_open_session_requires_horizon', 'test_salvos_in_flight_extend_the_outcome'), _single_or_index),
     ('ORC-fuel', 'Test_Session_Simulator', 'TestFuelExhaustion',
      ('test_exhaustion_is_reported_not_simulated',), _single_or_index),
+    # ── S21 (F4c: postura continua, aerei parcheggiati colpibili) — in coda, nomi stabili ──
+    ('S21', 'Test_Session_Scenarios_S21', 'TestS21ParkedAircraftStrike', None, _by_occurrence('parked', 'control')),
+    ('S21R', 'Test_Session_Scenarios_S21', 'TestS21RParkedAircraftRegistry', None, _single_or_index),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

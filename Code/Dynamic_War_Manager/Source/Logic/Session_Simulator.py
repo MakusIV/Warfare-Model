@@ -66,12 +66,25 @@ nella STESSA componente connessa anche quando non hanno nemici in comune
 run, come lo era il blocco prima della F4b. Effetto sull'RNG: la componente unita ha l'`event_id`
 delle sue forze riunite (v. "RNG: uno stream per ingaggio").
 
-Asset del blocco senza missione (la postura continua e' della F4c): comportamento di prima.
+Asset del blocco senza missione: fermi per tutta la sessione, nella forza del blocco.
   * blocco senza missioni: entra nel risolutore come prima, l'oggetto blocco con il suo id;
   * blocco con missioni e asset non assegnati: questi formano la vista residua
-    `MissionForce.unassigned` con l'id DEL BLOCCO, fermi e combattenti come prima.
+    `MissionForce.unassigned` con l'id DEL BLOCCO.
 Un `mission_id` non puo' coincidere con l'id di un blocco passato (sarebbero due forze con lo
 stesso id).
+
+## Postura continua degli asset senza missione (F4c, D1.c)
+
+Decisioni dell'utente (2026-10-11), v. `Mission_Adapter.continuous_posture`: un AEREO senza
+missione e' a terra (bersaglio di superficie passivo, non osserva e non spara mai); un'unita'
+terrestre o navale senza missione e' in postura `Defense` dichiarata, con il tiro di prima. La
+sessione calcola l'insieme degli aerei a terra (`Mission_Adapter.grounded_assets`, sugli asset dei
+blocchi senza missioni e delle viste residue) e lo passa allo scheduler (`grounded`: bersaglio in
+modo 'ground', nessun sensore) e a ogni ingaggio (`grounded` di `resolve_engagement`: niente
+rilevamento ne' tiro, classificazione di superficie verso la fire control, peso di minaccia nullo,
+nessun disingaggio per loro). Nessuno stato nuovo nell'asset, nessuna mutazione: l'insieme e'
+della sessione. Gli aerei di una missione NON sono a terra (la presenza prima della partenza e'
+della F5). Senza aerei fuori missione l'insieme e' vuoto e la sessione e' identica a prima.
 
 `SessionOrder.committed` resta chiavato per BLOCCO (la lingua della porta): per ogni forza
 d'ingaggio vale la restrizione del suo blocco intersecata con i suoi asset
@@ -176,7 +189,9 @@ diverso.
 `resolve_engagement`, passata tale e quale a ogni ingaggio. Non una per lato: la callable
 riceve gli asset REALI e puo' distinguere lato, blocco o modello da se', quindi una mappa
 per lato non aggiungerebbe capacita' ma solo una seconda forma dello stesso contratto. La
-selezione dell'arma dai registri resta fuori (rimandata dalla Fase 4).
+selezione dell'arma dai registri resta fuori (rimandata dalla Fase 4). Dalla F4c una fire control
+che dichiara la keyword `target_grounded` la riceve per i bersagli a terra (v.
+`resolve_engagement`).
 
 ## Carburante
 
@@ -749,7 +764,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             `_engagement_committed`), `salvo_window`, passato tale e quale al risolutore, e
             `missions`, da cui vengono rotta, partenza e velocita' di ogni asset
             (`Mission_Adapter.session_movements`) e le forze d'ingaggio (una per missione, F4b).
-            Asset senza missione = fermo in posizione, nella forza del suo blocco.
+            Asset senza missione = fermo in posizione, nella forza del suo blocco, con la postura
+            continua della F4c (aereo a terra, unita' di superficie in difesa).
         forces_a/forces_b: `Military`/`Block`/`BlockItem` dei due schieramenti contrapposti.
             Si combatte solo fra A e B, mai dentro lo stesso lato.
         fire_control: `(shooter, target) -> ShotSpec | None`, v. `resolve_engagement`.
@@ -791,12 +807,15 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     _check_missions(order, blocks)
     forces, owner = _engagement_forces(order, blocks, block_owner)
     coordination = MA.coordination_domains(forces, order.operations)
+    # Aerei a terra (F4c, postura continua degli asset senza missione): v. docstring del modulo.
+    grounded = MA.grounded_assets(forces)
     mission_movements = {mission.mission_id: MA.mission_movements(mission, t0) for mission in order.missions}
     routes, starts, speeds = MA.session_movements(order.missions, t0)
 
     # ── strato 1: tutti i contatti della sessione ─────────────────────────────
     windows = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts,
-                                   speeds=speeds, t0=t0, margin=margin, range_type=range_type)
+                                   speeds=speeds, t0=t0, margin=margin, range_type=range_type,
+                                   grounded=grounded)
     groups = _group_windows(windows, owner)
 
     # Tratti di ogni asset (movimento o posizione fissa): servono al risolutore per l'istante
@@ -862,7 +881,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                            morale_for=morale_for,
                                            enemy_estimate_for=enemy_estimate_for,
                                            fire_doctrine=fire_doctrine,
-                                           coordination_of=coordination)
+                                           coordination_of=coordination,
+                                           grounded=grounded)
             results.append(result)
 
             if result is not None:

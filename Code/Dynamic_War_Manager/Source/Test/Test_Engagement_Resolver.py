@@ -2838,5 +2838,206 @@ class TestCoordinationDomainSalvoDefence(unittest.TestCase):
         self.assertTrue(all(item == seen[0] for item in seen[1:]))
 
 
+# ── AEREI A TERRA (F4c, postura continua degli asset senza missione) ──────────
+
+BOMB = _kill(rounds=1, weapon='bomb')
+AAM = _kill(rounds=1, weapon='aam')
+SAM = _kill(rounds=1, weapon='sam')
+
+
+def _grounded_aware(calls=None):
+    """Fire control che dichiara `target_grounded` (F4c): l'attaccante usa la bomba sui bersagli di
+    superficie (aerei a terra compresi) e l'AAM sugli aerei in volo; il SAM ingaggia solo aerei in
+    volo; ogni altro asset (anche un aereo parcheggiato, se interrogato) l'AAM."""
+    def fire_control(shooter, target, target_grounded=False):
+        if calls is not None:
+            calls.append((shooter.id, target.id, target_grounded))
+
+        airborne = isinstance(target, Aircraft) and not target_grounded
+
+        if shooter.id.startswith('b_atk'):
+            return AAM if airborne else BOMB
+
+        if shooter.id.startswith('b_sam'):
+            return SAM if airborne else None
+
+        return AAM
+
+    return fire_control
+
+
+class TestGroundedAircraft(unittest.TestCase):
+    """F4c: un aereo a terra e' un bersaglio di SUPERFICIE passivo (decisione dell'utente 2026-10-11).
+
+    Blue: l'attaccante 'b_atk' (aereo) e il SAM 'b_sam'; Red: l'aereo parcheggiato 'r_park' (con
+    un'arma che userebbe se potesse). Rilevamento certo (distanza 0), colpi certi.
+    """
+
+    def _run(self, grounded=('r_park',), fire_control=None, rng=None, red_assets=None):
+        blue = _Force('blue', 'Blue', [Aircraft('b_atk'), _Asset('b_sam')])
+        red = _Force('red', 'Red', red_assets or [Aircraft('r_park')])
+        windows = [_window(b, r.id, t_end=100.0) for b in ('b_atk', 'b_sam') for r in red.assets.values()]
+
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, fire_control or _grounded_aware(), rng or random.Random(0),
+                                         reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                         thresholds=_LOOSE_DOCTRINE, grounded=grounded)
+
+    def test_grounded_aircraft_never_fires_nor_observes(self):
+        result = self._run()
+        self.assertEqual([s for s in result.salvos if s.shooter_id == 'r_park'], [])
+        self.assertEqual([e for e in result.ammunition_events if e.asset_id == 'r_park'], [])
+        self.assertEqual({d.observer_id for d in result.detections}, {'b_atk', 'b_sam'})
+
+    def test_control_airborne_aircraft_fires_and_observes(self):
+        """Controllo: lo stesso aereo NON a terra osserva e spara (comportamento di prima)."""
+        result = self._run(grounded=())
+        self.assertIn('r_park', {d.observer_id for d in result.detections})
+        self.assertIn('r_park', {s.shooter_id for s in result.salvos})
+
+    def test_grounded_aircraft_is_hit_by_surface_weapons_only(self):
+        result = self._run()
+        on_parked = [s for s in result.salvos if s.target_id == 'r_park']
+        self.assertTrue(on_parked)
+        self.assertEqual({(s.shooter_id, s.spec.weapon) for s in on_parked}, {('b_atk', 'bomb')})
+        self.assertTrue(any(e.target_id == 'r_park' and e.destroyed for e in result.damage_events))
+
+    def test_sam_never_engages_a_grounded_aircraft(self):
+        """Solo il SAM spara (l'attaccante tace): contro l'aereo a terra mai, in volo si'."""
+        sam_only = lambda shooter, target, target_grounded=False: (
+            SAM if shooter.id == 'b_sam' and isinstance(target, Aircraft) and not target_grounded else None)
+        self.assertEqual(self._run(fire_control=sam_only).salvos, ())
+        control = self._run(grounded=(), fire_control=sam_only)
+        self.assertIn(('b_sam', 'r_park', 'sam'), {(s.shooter_id, s.target_id, s.spec.weapon) for s in control.salvos})
+
+    def test_fire_control_receives_the_keyword_only_for_grounded_targets(self):
+        calls = []
+        self._run(fire_control=_grounded_aware(calls))
+        self.assertTrue(calls)
+        self.assertTrue(all(grounded is (target == 'r_park') for _, target, grounded in calls))
+
+    def test_unaware_fire_control_gets_the_usual_call_and_a_warning(self):
+        calls = []
+        blue = _Force('blue', 'Blue', [Aircraft('b_atk')])
+        red = _Force('red', 'Red', [Aircraft('r_park')])
+
+        def legacy(shooter, target):
+            calls.append((shooter.id, target.id))
+            return BOMB
+
+        with patch(_ER_LOGGER) as mock_logger:
+            result = ER.resolve_engagement(blue, red, [_window('b_atk', 'r_park', t_end=100.0)], legacy,
+                                           random.Random(0), reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                           grounded={'r_park'})
+
+        self.assertIn(('b_atk', 'r_park'), calls)
+        self.assertTrue(any(s.target_id == 'r_park' for s in result.salvos))
+        self.assertTrue(any('target_grounded' in str(c) for c in mock_logger.warning.call_args_list))
+
+    def test_accepts_target_grounded(self):
+        self.assertTrue(ER.accepts_target_grounded(lambda s, t, target_grounded=False: None))
+        self.assertTrue(ER.accepts_target_grounded(lambda s, t, *, target_grounded=False: None))
+        self.assertTrue(ER.accepts_target_grounded(lambda s, t, **kwargs: None))
+        self.assertFalse(ER.accepts_target_grounded(lambda s, t: None))
+        self.assertFalse(ER.accepts_target_grounded(len))   # firma builtin: chiamata di sempre
+
+    def test_grounded_observer_draws_nothing(self):
+        """La direzione aereo a terra -> nemico non estrae: una estrazione in meno per finestra."""
+        grounded_rng, control_rng = _ScriptedRng([0.0] * 50), _ScriptedRng([0.0] * 50)
+        silent = lambda shooter, target, target_grounded=False: None
+        self._run(fire_control=silent, rng=grounded_rng)
+        self._run(grounded=(), fire_control=silent, rng=control_rng)
+        self.assertEqual(control_rng.calls - grounded_rng.calls, 2)   # due finestre con r_park
+
+    def test_empty_grounded_set_is_the_previous_behaviour(self):
+        reference = self._run(grounded=None)
+        self.assertEqual(self._run(grounded=()), reference)
+        self.assertEqual(self._run(grounded={'someone_else'}), reference)
+
+
+class TestGroundedForceDisengagement(unittest.TestCase):
+    """F4c: chi non puo' ritirarsi non disingaggia; gli aerei a terra restano bersagli.
+
+    Un tiratore certo, una salva al secondo (v. `_one_shooter_vs_ten`), dottrina di default
+    (erosione 0.3, shock 0.2).
+    """
+
+    @staticmethod
+    def _run(red_assets, grounded):
+        shooter = _Asset('s0')
+        attackers = _Force('attackers', 'Blue', [shooter])
+        defenders = _Force('defenders', 'Red', red_assets)
+        windows = [_window('s0', asset.id, range_b=None) for asset in red_assets]
+        result = ER.resolve_engagement(attackers, defenders, windows, _always(_kill()), random.Random(0),
+                                       reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                       grounded=grounded)
+        return result, result.outcome_of('defenders')
+
+    def test_only_grounded_aircraft_never_disengage(self):
+        parked = [Aircraft(f'p{i:02d}') for i in range(10)]
+        _, outcome = self._run(parked, {a.id for a in parked})
+        self.assertEqual((outcome.outcome, outcome.lost, outcome.triggers), (ER.DESTROYED, 10, (ER.TRIGGER_ANNIHILATION,)))
+
+    def test_control_same_aircraft_airborne_disengage(self):
+        _, outcome = self._run([Aircraft(f'p{i:02d}') for i in range(10)], ())
+        self.assertEqual((outcome.outcome, outcome.lost), (ER.DISENGAGED, 3))
+
+    def test_mixed_force_doctrine_counts_only_who_can_withdraw(self):
+        """2 difese + 8 aerei a terra: la prima difesa persa e' meta' di chi puo' ritirarsi
+        (erosione 0.5): la forza disingaggia SUBITO, ma gli aerei restano sul piazzale e sono
+        colpiti tutti. Controllo (aerei non a terra): perdita 1/10, disingaggio alla terza."""
+        assets = [_Asset('c0'), _Asset('c1')] + [Aircraft(f'p{i}') for i in range(8)]
+        result, outcome = self._run(assets, {f'p{i}' for i in range(8)})
+        self.assertEqual(outcome.outcome, ER.DISENGAGED)
+        self.assertAlmostEqual(outcome.time, 2.0)
+        destroyed = {e.target_id for e in result.damage_events if e.destroyed}
+        self.assertEqual(destroyed, {'c0'} | {f'p{i}' for i in range(8)})
+        self.assertTrue(all(s.target_id.startswith('p') for s in result.salvos if s.t_launch > outcome.time))
+        # Esito di forza: conta tutti gli asset impegnati.
+        self.assertEqual((outcome.committed, outcome.lost), (10, 9))
+
+        control_assets = [_Asset('c0'), _Asset('c1')] + [Aircraft(f'p{i}') for i in range(8)]
+        _, control = self._run(control_assets, ())
+        self.assertEqual((control.outcome, control.lost), (ER.DISENGAGED, 3))
+
+    def test_no_withdrawal_without_operative_fighters(self):
+        """1 difesa + 3 aerei a terra: persa la difesa nessuno puo' ritirarsi, si arriva a DESTROYED."""
+        assets = [_Asset('c0')] + [Aircraft(f'p{i}') for i in range(3)]
+        _, outcome = self._run(assets, {'p0', 'p1', 'p2'})
+        self.assertEqual((outcome.outcome, outcome.lost), (ER.DESTROYED, 4))
+
+
+class TestGroundedTargetIsASurfaceLauncherTarget(TestLauncherPriority):
+    """L2/L3 con un aereo a terra come bersaglio dell'attacco (F4c): chi lo attacca e' un lanciatore
+    aria-superficie e la difesa del suo dominio lo prioritizza (stesse geometrie di
+    `TestLauncherPriority`, con r1 aereo parcheggiato)."""
+
+    def _run(self, ad_ids=('r_ad',), attackers=('b_atk',), ad_profile=(5.0, 1.0), grounded=True):
+        blue_assets = [Aircraft('a_esc')] + [Aircraft(a) for a in attackers]
+        blue = _Force('blue', 'Blue', blue_assets)
+        red = _Force('red', 'Red', [Aircraft('r1')] + [_Asset(a) for a in ad_ids])
+        windows = [_window(a, 'r1', t_end=30.0, range_b=None) for a in attackers]
+        windows += [_window(ad, b.id, t_end=30.0, range_b=None) for ad in ad_ids for b in blue_assets]
+
+        def fire_control(shooter, target, target_grounded=False):
+            if shooter.id.startswith('r_ad') and isinstance(target, Aircraft) and not target_grounded:
+                return self.AD_SPEC
+            if shooter.id in attackers and target.id == 'r1':
+                return self.ATTACK_SPEC
+            return None
+
+        profiles = {a: (2.0, 2.0) for a in attackers}
+        profiles.update({ad: ad_profile for ad in ad_ids})
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, fire_control, _ScriptedRng([0.0] * 200),
+                                         reaction_profile_for=_profiles(profiles, default=(2.0, 1.0)),
+                                         grounded={'r1'} if grounded else None)
+
+    def test_control_airborne_target_is_not_a_surface_attack(self):
+        """Controllo: con r1 in volo l'attacco e' aria-aria, nessuna prelazione: la difesa resta
+        sulla scorta (id minore)."""
+        self.assertEqual(self._targets_of(self._run(grounded=False), 'r_ad')[0], 'a_esc')
+
+
 if __name__ == '__main__':
     unittest.main()

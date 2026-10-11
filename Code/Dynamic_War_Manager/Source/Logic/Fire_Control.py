@@ -34,6 +34,9 @@ un elemento), quindi le fire control a tabella non cambiano.
      modello piu' i campi `ground_fire_armored`/`air_target_class` del registro) e, se
      l'arma non ha quella riga, il fallback `'Aircraft'` (che e' anche l'unica riga delle
      tabelle aria-aria);
+   * aereo A TERRA (F4c, keyword `target_grounded=True` passata dal risolutore, v. "Aerei a
+     terra" sotto): bersaglio di superficie, con la classificazione esistente di un aereo
+     parcheggiato (`parked_target_class`);
    * ogni altro bersaglio: `get_weapon_target_class(get_target_classification(asset_type))`,
      la stessa catena degli scorer di pianificazione. Nessuna classificazione -> None;
    * dimensione: `Context.classify_asset_dimension`; se non determinabile,
@@ -86,6 +89,23 @@ costante coincide con la quota di volo. Unita' dei registri, verificate:
 Se la posizione del tiratore o del bersaglio non e' disponibile il filtro NON viene
 applicato (dichiarato: meglio un'arma forse fuori inviluppo che un asset reso inerme per
 mancanza di dato, stessa politica "None = non modellato" di munizioni e carburante).
+
+## Aerei a terra (F4c, decisione dell'utente 2026-10-11)
+
+Un aereo senza missione e' a terra: un bersaglio di SUPERFICIE passivo (v.
+`Mission_Adapter.continuous_posture`). Il risolutore lo dice alla fire control con la keyword
+facoltativa `target_grounded=True` (estensione del protocollo rilevata per introspezione,
+`Engagement_Resolver.accepts_target_grounded`; per ogni altro bersaglio la chiamata resta
+`(shooter, target)`). La chiave del bersaglio diventa quella di superficie di un aereo
+PARCHEGGIATO, gia' presente nelle tabelle del progetto: `Context.Parked_Asset_Type` (gli aerei
+parcheggiati di una base, `BLOCK_INFRASTRUCTURE_ASSET['Military']['Airbase']`) classificati da
+`get_target_classification` -> 'Soft' (v. `parked_target_class`; nessuna classe e nessuna
+costante nuove). Conseguenze, tutte dalla catena esistente:
+  * SAM e AAM (task solo antiaerei) non sono mai candidati: filtro di superficie;
+  * bombe, razzi, cannoni e missili aria-suolo si', con la riga 'Soft' del loro template;
+  * nessun filtro di quota (bersaglio di superficie); per un tiratore aereo la gittata delle
+    bombe usa la quota REALE del bersaglio (`position.z`), come per ogni bersaglio di superficie;
+  * la dimensione resta quella della cellula (`classify_asset_dimension`).
 
 ## Campi derivati della ShotSpec (costanti STIMATE, dichiarate qui sotto)
 
@@ -229,6 +249,24 @@ SPEED_OF_SOUND_MS = 340.3
 
 # Nodo -> m/s (definizione): la velocita' dei siluri di Ship_Weapon_Data e' in nodi.
 KNOT_MS = 1852.0 / 3600.0
+
+# Aerei a terra (F4c): tipo d'aereo (Context.Air_Asset_Type) -> tipo PARCHEGGIATO corrispondente
+# (Context.Parked_Asset_Type), la classificazione gia' esistente degli aerei sul piazzale di una
+# base. Corrispondenza per ruolo della cellula, nessuna classe nuova: attacker, AWACS e ricognitori
+# non hanno un tipo parcheggiato proprio e prendono il piu' vicino (cacciabombardiere, trasporto).
+PARKED_TYPE_BY_AIR_TYPE: Dict[str, str] = {
+    Context.Air_Asset_Type.FIGHTER.value: Context.Parked_Asset_Type.Aircraft_Fighter.value,
+    Context.Air_Asset_Type.FIGHTER_BOMBER.value: Context.Parked_Asset_Type.Aircraft_Fighter_Bomber.value,
+    Context.Air_Asset_Type.ATTACKER.value: Context.Parked_Asset_Type.Aircraft_Fighter_Bomber.value,
+    Context.Air_Asset_Type.BOMBER.value: Context.Parked_Asset_Type.Aircraft_Bomber.value,
+    Context.Air_Asset_Type.HEAVY_BOMBER.value: Context.Parked_Asset_Type.Aircraft_Bomber.value,
+    Context.Air_Asset_Type.AWACS.value: Context.Parked_Asset_Type.Transport_Aircraft_Big.value,
+    Context.Air_Asset_Type.RECON.value: Context.Parked_Asset_Type.Transport_Aircraft.value,
+    Context.Air_Asset_Type.TRANSPORT.value: Context.Parked_Asset_Type.Transport_Aircraft.value,
+    Context.Air_Asset_Type.HELICOPTER.value: Context.Parked_Asset_Type.Helicopter.value,
+}
+# Tipo parcheggiato per un aereo di tipo sconosciuto (v. parked_target_class).
+PARKED_FALLBACK_TYPE = Context.Parked_Asset_Type.Aircraft_Fighter.value
 
 # Categoria balistica di ogni tipo d'arma dei registri, per dominio del tiratore.
 _KIND_BY_TYPE = {
@@ -431,11 +469,26 @@ def air_target_class_of(target) -> str:
                                         override=getattr(record, 'air_target_class', None))
 
 
-def target_key(target) -> Optional[Tuple[Tuple[str, ...], str, bool]]:
+def parked_target_class(target) -> str:
+    """Classe d'efficacia (di superficie) di un aereo A TERRA (F4c, v. "Aerei a terra").
+
+    Il tipo d'aereo (`asset_type`, `Context.Air_Asset_Type`) e' tradotto nel tipo parcheggiato
+    corrispondente (`PARKED_TYPE_BY_AIR_TYPE`), poi nella classificazione esistente
+    (`get_target_classification` -> `get_weapon_target_class`). Un tipo sconosciuto ripiega su
+    `PARKED_FALLBACK_TYPE`: oggi TUTTI i tipi parcheggiati d'aereo sono 'Soft', quindi il
+    ripiego non cambia la chiave.
+    """
+    parked = PARKED_TYPE_BY_AIR_TYPE.get(getattr(target, 'asset_type', None), PARKED_FALLBACK_TYPE)
+    return Context.get_weapon_target_class(Context.get_target_classification(parked))
+
+
+def target_key(target, grounded: bool = False) -> Optional[Tuple[Tuple[str, ...], str, bool]]:
     """(chiavi di efficacia in ordine di ricerca, dimensione, e' aereo) del bersaglio.
 
     None se il bersaglio non ha una classificazione (non si spara a cio' che non si sa
     classificare: stessa semantica ROE di una fire control che restituisce None).
+    `grounded` (F4c): il bersaglio e' un aereo a terra, chiave di superficie
+    (`parked_target_class`); ignorato per ogni altro bersaglio.
     """
     try:
         dimension = Context.classify_asset_dimension(target)
@@ -448,6 +501,9 @@ def target_key(target) -> Optional[Tuple[Tuple[str, ...], str, bool]]:
         dimension = FALLBACK_DIMENSION
 
     if type(target).__name__ == 'Aircraft':
+        if grounded:
+            return (parked_target_class(target),), dimension, False
+
         air_class = air_target_class_of(target)
         keys = (air_class,) if air_class == Context.AIR_TARGET_CLASS_AIRCRAFT \
             else (air_class, Context.AIR_TARGET_CLASS_AIRCRAFT)
@@ -661,6 +717,8 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
 
     Restituisce le ShotSpec di TUTTE le armi adatte in ordine di preferenza (v.
     `rank_weapons`), o None se nessuna e' adatta: il risolutore usa la prima con scorta.
+    Accetta l'estensione `target_grounded` (F4c, default False): il bersaglio e' un aereo a
+    terra, classificato come bersaglio di superficie (v. "Aerei a terra").
 
     Args:
         altitude_filter (bool): applica il filtro d'inviluppo di quota ai bersagli aerei.
@@ -686,7 +744,7 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
 
         return candidates_cache[key]
 
-    def fire_control(shooter, target) -> Optional[Tuple[ShotSpec, ...]]:
+    def fire_control(shooter, target, target_grounded: bool = False) -> Optional[Tuple[ShotSpec, ...]]:
         shooter_key = _shooter_key(shooter)
 
         if shooter_key is None:
@@ -697,7 +755,7 @@ def make_registry_fire_control(altitude_filter: bool = True, memoize: bool = Tru
         if not weapons:
             return None
 
-        t_key = target_key(target)
+        t_key = target_key(target, grounded=target_grounded)
 
         if t_key is None:
             return None

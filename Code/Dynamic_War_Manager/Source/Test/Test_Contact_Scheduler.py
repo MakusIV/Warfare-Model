@@ -560,6 +560,57 @@ class TestMutualDetectionRanges(unittest.TestCase):
         self.assertAlmostEqual(range_a, 80000.0)   # l'aereo guarda un bersaglio 'ground'
 
 
+class TestGroundedAircraftRanges(unittest.TestCase):
+    """F4c: un aereo a terra e' cercato come bersaglio di SUPERFICIE e non osserva."""
+
+    def setUp(self):
+        self.sam = Vehicle(asset_id='sam', ranges={'air': 12000.0, 'ground': 3000.0})
+        self.striker = Aircraft(asset_id='striker', ranges={'air': 60000.0, 'ground': 80000.0})
+        self.parked = Aircraft(asset_id='parked', ranges={'air': 70000.0, 'ground': 90000.0})
+
+    def test_grounded_target_is_queried_in_ground_mode(self):
+        range_sam, _ = CS.mutual_detection_ranges(self.sam, self.parked, grounded_b=True)
+        range_striker, _ = CS.mutual_detection_ranges(self.striker, self.parked, grounded_b=True)
+        self.assertAlmostEqual(range_sam, 3000.0)        # non piu' 12 km (modo 'air')
+        self.assertAlmostEqual(range_striker, 80000.0)   # non piu' 60 km (modo 'air')
+
+    def test_grounded_observer_has_no_range(self):
+        _, range_parked = CS.mutual_detection_ranges(self.striker, self.parked, grounded_b=True)
+        range_parked_a, _ = CS.mutual_detection_ranges(self.parked, self.striker, grounded_a=True)
+        self.assertIsNone(range_parked)
+        self.assertIsNone(range_parked_a)
+
+    def test_default_is_the_previous_behaviour(self):
+        self.assertEqual(CS.mutual_detection_ranges(self.striker, self.parked),
+                         CS.mutual_detection_ranges(self.striker, self.parked, grounded_a=False, grounded_b=False))
+        self.assertEqual(CS.mutual_detection_ranges(self.striker, self.parked), (60000.0, 70000.0))
+
+    def test_schedule_contacts_applies_the_grounded_set(self):
+        """Lo stesso aereo fermo: in volo e' visto dal SAM a 12 km e lo vede; a terra no."""
+        parked = Aircraft(asset_id='parked', position=Point3D(0, 0, 0), ranges={'ground': 70000.0})
+        sam = Vehicle(asset_id='sam', position=Point3D(5000, 0, 0), ranges={'air': 12000.0})
+        blue = [_BlockStub('blue', 'blue', Point3D(5000, 0, 0), [sam], detection={'air': 12000.0})]
+        red = [_BlockStub('red', 'red', Point3D(0, 0, 0), [parked], detection={'ground': 70000.0})]
+
+        airborne = CS.schedule_contacts(blue, red, horizon=10.0)
+        self.assertEqual([(w.range_a, w.range_b) for w in airborne], [(12000.0, 70000.0)])
+
+        with patch(_SCHEDULER_LOGGER):
+            grounded = CS.schedule_contacts(blue, red, horizon=10.0, grounded={'parked'})
+
+        # Il SAM non ha portata 'ground' e l'aereo a terra non osserva: nessuna finestra.
+        self.assertEqual(grounded, [])
+
+    def test_schedule_contacts_grounded_window_against_an_attacker(self):
+        parked = Aircraft(asset_id='parked', position=Point3D(0, 0, 0), ranges={'air': 70000.0})
+        blue = [_BlockStub('blue', 'blue', Point3D(5000, 0, 0), [self.striker], detection={'ground': 80000.0})]
+        self.striker._position = Point3D(5000, 0, 3000)
+        red = [_BlockStub('red', 'red', Point3D(0, 0, 0), [parked], detection={'air': 70000.0})]
+        windows = CS.schedule_contacts(blue, red, horizon=10.0, grounded=['parked'])
+        self.assertEqual([(w.asset_a_id, w.asset_b_id, w.range_a, w.range_b) for w in windows],
+                         [('striker', 'parked', 80000.0, None)])
+
+
 class TestContactWindows(unittest.TestCase):
     """Chi vede per primo, da quando, e da quando si vedono entrambi.
 

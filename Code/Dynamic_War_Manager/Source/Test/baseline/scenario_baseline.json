@@ -100301,6 +100301,9453 @@
     "t_start": 0.0
    }
   },
+  "S21/S21-0/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 5
+    }
+   },
+   "ammunition_events": [
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1995,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1995
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 5,
+    "destroyed_events": 2,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 5,
+    "salvos": 5
+   },
+   "damage_events": [
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.220849,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.29713,
+      "time": 184.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.106291,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-0",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-0/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 3
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 2
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 11
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     157.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     197.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     198.661501,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     202.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     207.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     210.661501,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     212.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 520,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 510,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 60,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1989,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1989
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 6,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 6
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 19,
+    "destroyed_events": 5,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 21,
+    "salvos": 21
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     41.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     159.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     184.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     189.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     194.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     199.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     204.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     209.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     213.661501,
+     "Blue-Strike/str0",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     214.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.220849,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.29713,
+      "time": 213.661501,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.153005,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.106291,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-0",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-1/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 9
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 1
+    }
+   },
+   "ammunition_events": [
+    [
+     157.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     196.829296,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     197.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     202.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1991,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1991
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 7,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 7
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 10,
+    "destroyed_events": 3,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 10,
+    "salvos": 10
+   },
+   "damage_events": [
+    [
+     159.858694,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     169.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     179.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     189.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     194.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     199.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     204.858694,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     60,
+     0,
+     true
+    ],
+    [
+     211.829296,
+     "Blue-Strike/str1",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.234057,
+      "committed": 4,
+      "erosion": 0.75,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 3,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.351113,
+      "time": 204.858694,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.032041,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-1",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-1/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 2
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 8
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 1
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     158.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     163.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     168.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     173.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     178.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     183.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     188.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     196.720974,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     198.244477,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1992,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1992
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 7,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 7
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 17,
+    "destroyed_events": 4,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 17,
+    "salvos": 17
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     41.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     41.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str3",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     160.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     165.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     170.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     175.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     180.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     185.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     190.244477,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ],
+    [
+     200.244477,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     211.720974,
+     "Blue-Strike/str0",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.234057,
+      "committed": 4,
+      "erosion": 0.75,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 3,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.351113,
+      "time": 200.244477,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.117764,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.032041,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-1",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-2/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 10
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     159.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     164.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     169.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     174.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     184.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     189.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     194.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     196.720974,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     199.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     204.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     208.720974,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     209.202935,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1990,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1990
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 6,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 6
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 11,
+    "destroyed_events": 2,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 12,
+    "salvos": 12
+   },
+   "damage_events": [
+    [
+     161.202935,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     166.202935,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     171.202935,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     176.202935,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ],
+    [
+     186.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     191.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     196.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     201.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     206.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     211.202935,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     60,
+     0,
+     true
+    ],
+    [
+     211.720974,
+     "Blue-Strike/str0",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.290103,
+      "committed": 4,
+      "erosion": 0.75,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 3,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.578869,
+      "time": 211.202935,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.357234,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-2",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-2/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 3
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 2
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 9
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 1
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     31.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     31.72218,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     196.829296,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     197.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     202.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 520,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 510,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1991,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1991
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 7,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 7
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 16,
+    "destroyed_events": 5,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 19,
+    "salvos": 19
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str2",
+     "test:agm",
+     "damage",
+     40,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str3",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     41.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ],
+    [
+     194.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     199.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     204.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     211.829296,
+     "Blue-Strike/str1",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.290103,
+      "committed": 4,
+      "erosion": 0.75,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 3,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.578869,
+      "time": 204.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.219102,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.357234,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-2",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-3/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 7
+    }
+   },
+   "ammunition_events": [
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1993,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1993
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 7,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 7,
+    "salvos": 7
+   },
+   "damage_events": [
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     189.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.154533,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.028585,
+      "time": 189.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.777559,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-3",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-3/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 1
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1998,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1998
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 8,
+    "destroyed_events": 4,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 8,
+    "salvos": 8
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.154533,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.028585,
+      "time": 164.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.330486,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.777559,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-3",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-4/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 11
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     197.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     199.87085,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     202.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     207.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     211.87085,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     212.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1989,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1989
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 6,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 6
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 12,
+    "destroyed_events": 2,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 13,
+    "salvos": 13
+   },
+   "damage_events": [
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     189.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     194.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     199.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     204.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     209.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     214.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     214.87085,
+     "Blue-Strike/str3",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.363788,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.808083,
+      "time": 214.87085,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.993674,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-4",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-4/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 1
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 11
+    },
+    "Red-Airbase/sam0": {
+     "test:sam": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     197.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     199.314904,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     202.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     207.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     211.314904,
+     "Red-Airbase/sam0",
+     "test:sam",
+     1
+    ],
+    [
+     212.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 60,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 522,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 522,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1989,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1989
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 6,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 6
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 16,
+    "destroyed_events": 5,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 17,
+    "salvos": 17
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str1",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str2",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     189.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     194.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     199.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     204.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     209.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     214.314904,
+     "Blue-Strike/str1",
+     "Red-Airbase/sam0",
+     "test:sam",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     214.825498,
+     "Blue-Strike/str0",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.363788,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.808083,
+      "time": 214.314904,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.539603,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.993674,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-4",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-5/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 8
+    }
+   },
+   "ammunition_events": [
+    [
+     157.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1992,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1992
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 8,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 8,
+    "salvos": 8
+   },
+   "damage_events": [
+    [
+     159.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     174.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     179.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     184.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     189.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     194.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.232153,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.185278,
+      "time": 194.839723,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.746624,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-5",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-5/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 1
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 3
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     157.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.858694,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1997,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1997
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 10,
+    "destroyed_events": 3,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 10,
+    "salvos": 10
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     159.858694,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.858694,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     169.858694,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.232153,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.185278,
+      "time": 169.858694,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.319511,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.746624,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-5",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-6/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 4
+    }
+   },
+   "ammunition_events": [
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1996,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1996
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 4,
+    "destroyed_events": 0,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 4,
+    "salvos": 4
+   },
+   "damage_events": [
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.136032,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.013891,
+      "time": 174.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.994736,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-6",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-6/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 1
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 7
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 522,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1993,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1993
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 12,
+    "destroyed_events": 2,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 12,
+    "salvos": 12
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str2",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str3",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     179.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     184.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     189.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     60,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.136032,
+      "committed": 4,
+      "erosion": 0.25,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 1.145992,
+      "lost": 1,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.013891,
+      "time": 189.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.547613,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.994736,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-6",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-7/control": {
+   "ammunition_consumed": {
+    "Red-Airbase/aaa0": {
+     "test:aaa": 7
+    }
+   },
+   "ammunition_events": [
+    [
+     157.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     162.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     177.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     182.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     187.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     192.839723,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.949045,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 523,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 20,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 523,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 2,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1993,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1993
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 7,
+    "destroyed_events": 1,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 7,
+    "salvos": 7
+   },
+   "damage_events": [
+    [
+     159.839723,
+     "Blue-Strike/str1",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     164.839723,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     174.839723,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     100,
+     60,
+     false
+    ],
+    [
+     179.839723,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     184.839723,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     189.839723,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     60,
+     60,
+     false
+    ],
+    [
+     194.839723,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "damage",
+     60,
+     20,
+     false
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.239494,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.373674,
+      "time": 194.839723,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 2,
+      "erosion": 0.0,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 0,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.820055,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.050955,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.949045,
+      "fuel_before": 1.0,
+      "regime": "nominal",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-7",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21/S21-7/parked": {
+   "ammunition_consumed": {
+    "Blue-Strike/str0": {
+     "test:agm": 1
+    },
+    "Blue-Strike/str1": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str2": {
+     "test:agm": 2
+    },
+    "Blue-Strike/str3": {
+     "test:agm": 1
+    },
+    "Red-Airbase/aaa0": {
+     "test:aaa": 3
+    }
+   },
+   "ammunition_events": [
+    [
+     1.5,
+     "Blue-Strike/str0",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     1.5,
+     "Blue-Strike/str3",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str1",
+     "test:agm",
+     1
+    ],
+    [
+     16.5,
+     "Blue-Strike/str2",
+     "test:agm",
+     1
+    ],
+    [
+     157.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     167.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ],
+    [
+     172.825498,
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     1
+    ]
+   ],
+   "assets": {
+    "Blue-Strike/str0": {
+     "ammunition": 522,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str1": {
+     "ammunition": 521,
+     "destroyed": false,
+     "fuel": 0.929825,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str2": {
+     "ammunition": 521,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 0,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Blue-Strike/str3": {
+     "ammunition": 522,
+     "destroyed": true,
+     "fuel": 0.929825,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AIM-9M": 1,
+      "M61A1": 511,
+      "Mk-82": 6,
+      "Mk-83": 4
+     }
+    },
+    "Red-Airbase/aaa0": {
+     "ammunition": 1997,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AZP-23-23mm": 1997
+     }
+    },
+    "Red-Airbase/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/mig3": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 40,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Airbase/sam0": {
+     "ammunition": 8,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "9M37-SAM": 8
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-Strike"
+    ],
+    "forces_b": [
+     "Red-Airbase"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-Strike/str0",
+      "Blue-Strike/str1",
+      "Blue-Strike/str2",
+      "Blue-Strike/str3"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 9,
+    "destroyed_events": 5,
+    "engagements": 1,
+    "fuel_events": 4,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 9,
+    "salvos": 9
+   },
+   "damage_events": [
+    [
+     11.5,
+     "Red-Airbase/mig0",
+     "Blue-Strike/str0",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str2",
+     "test:agm",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     11.5,
+     "Red-Airbase/mig2",
+     "Blue-Strike/str3",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig1",
+     "Blue-Strike/str1",
+     "test:agm",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     26.5,
+     "Red-Airbase/mig3",
+     "Blue-Strike/str2",
+     "test:agm",
+     "damage",
+     100,
+     40,
+     false
+    ],
+    [
+     159.825498,
+     "Blue-Strike/str2",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     169.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     174.825498,
+     "Blue-Strike/str3",
+     "Red-Airbase/aaa0",
+     "test:aaa",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-Strike",
+      "breakpoint": 0.239494,
+      "committed": 4,
+      "erosion": 0.5,
+      "force_id": "Blue-Strike:Strike",
+      "force_ratio": 0.81028,
+      "lost": 2,
+      "max_shock": 0.25,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.373674,
+      "time": 174.825498,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.347468,
+      "committed": 6,
+      "erosion": 0.666667,
+      "force_id": "Red-Airbase",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": 0.820055,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 1.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-Strike": [
+     "disengaged"
+    ],
+    "Red-Airbase": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-Strike/str0": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str1": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str2": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ],
+    "Blue-Strike/str3": [
+     {
+      "amount": 0.070175,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.929825,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 300.0
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21-7",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-0": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 6
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.286709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     370.258553,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     374.982548,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": false,
+     "fuel": 0.9375,
+     "health": 44,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": false,
+     "fuel": 0.9375,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 2,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 2
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 15,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 14,
+    "destroyed_events": 6,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 22,
+    "salvos": 11
+   },
+   "damage_events": [
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "damage",
+     100,
+     72,
+     false
+    ],
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     72,
+     72,
+     false
+    ],
+    [
+     375.094143,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "damage",
+     72,
+     44,
+     false
+    ],
+    [
+     375.094143,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     44,
+     44,
+     false
+    ],
+    [
+     379.818138,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     379.818138,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "damage",
+     100,
+     15,
+     true
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/sam0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.435048,
+      "committed": 2,
+      "erosion": 0.5,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 1,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.984399,
+      "time": 375.094143,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.300915,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.29627,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 1.0,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": null,
+      "time": 390.129505,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "disengaged"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "destroyed"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-0",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-1": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 4
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.286709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     366.387709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": false,
+     "fuel": 0.9375,
+     "health": 44,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 4,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 4
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 9,
+    "destroyed_events": 7,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 20,
+    "salvos": 10
+   },
+   "damage_events": [
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "damage",
+     100,
+     72,
+     false
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "damage",
+     72,
+     44,
+     false
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     389.097294,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/sam0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.112395,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Blue",
+      "temper": 0.072705,
+      "time": 371.223299,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.349329,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.462851,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 1.0,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": null,
+      "time": 389.097294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "destroyed"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "destroyed"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-1",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-2": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 4
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.286709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     366.387709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 4,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 4
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 15,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 15,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 10,
+    "destroyed_events": 8,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 20,
+    "salvos": 10
+   },
+   "damage_events": [
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "damage",
+     100,
+     15,
+     true
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "damage",
+     100,
+     15,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/sam0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.225081,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Blue",
+      "temper": 0.581007,
+      "time": 371.223299,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.332848,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.405191,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 1.0,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": null,
+      "time": 390.129505,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "destroyed"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "destroyed"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-2",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-3": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 8
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.286709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     366.387709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     370.258553,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     373.359553,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 0,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 0
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 15,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 13,
+    "destroyed_events": 8,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 24,
+    "salvos": 12
+   },
+   "damage_events": [
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "damage",
+     100,
+     72,
+     false
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     72,
+     72,
+     false
+    ],
+    [
+     375.094143,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     375.094143,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     378.195143,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     72,
+     0,
+     true
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "damage",
+     100,
+     15,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/sam0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.161,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Blue",
+      "temper": 0.266136,
+      "time": 378.195143,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.382118,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.575184,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 1.0,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": null,
+      "time": 390.129505,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "destroyed"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "destroyed"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-3",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-4": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 4
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.286709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     366.387709,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 4,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 4
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": false,
+     "fuel": 1.0,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 10,
+    "destroyed_events": 7,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 20,
+    "salvos": 10
+   },
+   "damage_events": [
+    [
+     368.122299,
+     "Blue-CAS/cas0",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     371.223299,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/sam0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.234822,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Blue",
+      "temper": 0.623433,
+      "time": 371.223299,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.25611,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.163089,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 0.75,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 3,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "held",
+      "side": "Red",
+      "temper": null,
+      "time": null,
+      "triggers": [],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "destroyed"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "held"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-4",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
+  "S21R/S21R-5": {
+   "ammunition_consumed": {
+    "Blue-CAS/cas0": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Blue-CAS/cas1": {
+     "AGM-65D": 4,
+     "Mk-82AIR": 4
+    },
+    "Red-AD/sam0": {
+     "9M37-SAM": 2
+    }
+   },
+   "ammunition_events": [
+    [
+     362.657553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     362.659794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     363.73382,
+     "Red-AD/sam0",
+     "9M37-SAM",
+     2
+    ],
+    [
+     364.157553,
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     364.159794,
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     2
+    ],
+    [
+     365.657553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     365.659794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.157553,
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     2
+    ],
+    [
+     367.159794,
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     2
+    ]
+   ],
+   "assets": {
+    "Blue-CAS/cas0": {
+     "ammunition": 1175,
+     "destroyed": false,
+     "fuel": 0.9375,
+     "health": 100,
+     "interceptor_stock": null,
+     "operative": true,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Blue-CAS/cas1": {
+     "ammunition": 1175,
+     "destroyed": true,
+     "fuel": 0.9375,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AGM-65D": 0,
+      "AIM-9M": 1,
+      "GAU-8/A": 1174,
+      "Mk-82AIR": 0
+     }
+    },
+    "Red-AD/aaa0": {
+     "ammunition": 2000,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "AZP-23-23mm": 2000
+     }
+    },
+    "Red-AD/sam0": {
+     "ammunition": 6,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "9M37-SAM": 6
+     }
+    },
+    "Red-Apron/mig0": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig1": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig2": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    },
+    "Red-Apron/mig3": {
+     "ammunition": 156,
+     "destroyed": true,
+     "fuel": 1.0,
+     "health": 0,
+     "interceptor_stock": null,
+     "operative": false,
+     "stores": {
+      "GSh-30-1": 150,
+      "R-27ER": 2,
+      "R-73": 4
+     }
+    }
+   },
+   "call": {
+    "forces_a": [
+     "Blue-CAS"
+    ],
+    "forces_b": [
+     "Red-Apron",
+     "Red-AD"
+    ],
+    "parameters": {
+     "routes": [
+      "Blue-CAS/cas0",
+      "Blue-CAS/cas1"
+     ]
+    }
+   },
+   "counts": {
+    "damage_events": 7,
+    "destroyed_events": 7,
+    "engagements": 1,
+    "fuel_events": 2,
+    "fuel_exhausted": 0,
+    "interception_events": 0,
+    "interceptions": 0,
+    "rounds": 18,
+    "salvos": 9
+   },
+   "damage_events": [
+    [
+     368.56941,
+     "Blue-CAS/cas1",
+     "Red-AD/sam0",
+     "9M37-SAM",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.629505,
+     "Red-Apron/mig0",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     388.631745,
+     "Red-Apron/mig3",
+     "Blue-CAS/cas1",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     389.095053,
+     "Red-Apron/mig2",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.129505,
+     "Red-Apron/mig1",
+     "Blue-CAS/cas0",
+     "Mk-82AIR",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.595053,
+     "Red-AD/aaa0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     390.597294,
+     "Red-AD/sam0",
+     "Blue-CAS/cas1",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ]
+   ],
+   "engagements": [
+    [
+     {
+      "block_id": "Blue-CAS",
+      "breakpoint": 0.191921,
+      "committed": 2,
+      "erosion": 0.5,
+      "force_id": "Blue-CAS:CAS",
+      "force_ratio": 0.479562,
+      "lost": 1,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "disengaged",
+      "side": "Blue",
+      "temper": 0.421488,
+      "time": 368.56941,
+      "triggers": [
+       "erosion"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": 0.314294,
+      "committed": 2,
+      "erosion": 1.0,
+      "force_id": "Red-AD",
+      "force_ratio": null,
+      "lost": 2,
+      "max_shock": 0.5,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": 0.341082,
+      "time": 390.597294,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     },
+     {
+      "breakpoint": null,
+      "committed": 4,
+      "erosion": 1.0,
+      "force_id": "Red-Apron",
+      "force_ratio": null,
+      "lost": 4,
+      "max_shock": 0.0,
+      "morale": null,
+      "outcome": "destroyed",
+      "side": "Red",
+      "temper": null,
+      "time": 390.129505,
+      "triggers": [
+       "annihilation"
+      ],
+      "unanswered_fraction": 0.0
+     }
+    ]
+   ],
+   "force_outcomes": {
+    "Blue-CAS": [
+     "disengaged"
+    ],
+    "Red-AD": [
+     "destroyed"
+    ],
+    "Red-Apron": [
+     "destroyed"
+    ]
+   },
+   "fuel": {
+    "Blue-CAS/cas0": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ],
+    "Blue-CAS/cas1": [
+     {
+      "amount": 0.0625,
+      "distance": 80000.0,
+      "distance_covered": 80000.0,
+      "exhausted": false,
+      "fuel_after": 0.9375,
+      "fuel_before": 1.0,
+      "regime": "max",
+      "time": 514.285714
+     }
+    ]
+   },
+   "interception_events": [],
+   "interceptions": {},
+   "session": {
+    "order_t_end": 1800.0,
+    "order_t_start": 0.0,
+    "salvo_window": 0.0,
+    "session_id": "S21R-5",
+    "t_end": 1800.0,
+    "t_start": 0.0
+   }
+  },
   "S3/S3-0/control": {
    "ammunition_consumed": {
     "Blue-Stealth/f0": {
@@ -185675,28 +195122,8 @@
    }
   },
   "VAL-agn/S7-agn-2/single": {
-   "ammunition_consumed": {
-    "Blue-CAS/cas0": {
-     "test:agm": 1
-    },
-    "Blue-CAS/cas1": {
-     "test:agm": 1
-    }
-   },
-   "ammunition_events": [
-    [
-     3601.5,
-     "Blue-CAS/cas0",
-     "test:agm",
-     1
-    ],
-    [
-     3601.5,
-     "Blue-CAS/cas1",
-     "test:agm",
-     1
-    ]
-   ],
+   "ammunition_consumed": {},
+   "ammunition_events": [],
    "assets": {
     "Blue-Armor/ifv0": {
      "ammunition": 902,
@@ -185756,28 +195183,28 @@
      }
     },
     "Blue-CAS/cas0": {
-     "ammunition": 1181,
+     "ammunition": 1182,
      "destroyed": false,
      "fuel": 0.945312,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 2,
+      "AGM-65D": 3,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1181,
+     "ammunition": 1182,
      "destroyed": false,
      "fuel": 0.945312,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 2,
+      "AGM-65D": 3,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -185821,9 +195248,9 @@
      "ammunition": 504,
      "destroyed": false,
      "fuel": 1.0,
-     "health": 40,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "2A42-30mm": 500,
       "9M113-Konkurs": 4
@@ -185864,38 +195291,17 @@
     "parameters": {}
    },
    "counts": {
-    "damage_events": 2,
+    "damage_events": 0,
     "destroyed_events": 0,
     "engagements": 1,
     "fuel_events": 0,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 2,
-    "salvos": 2
+    "rounds": 0,
+    "salvos": 0
    },
-   "damage_events": [
-    [
-     3611.5,
-     "Red-Line/ifv1",
-     "Blue-CAS/cas0",
-     "test:agm",
-     "damage",
-     100,
-     40,
-     false
-    ],
-    [
-     3611.5,
-     "Red-Line/ifv2",
-     "Blue-CAS/cas1",
-     "test:agm",
-     "miss",
-     100,
-     100,
-     false
-    ]
-   ],
+   "damage_events": [],
    "engagements": [
     [
      {
@@ -185909,44 +195315,26 @@
       "morale": null,
       "outcome": "held",
       "side": "Blue",
-      "temper": 0.147188,
+      "temper": 0.712423,
       "time": null,
       "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "breakpoint": null,
-      "committed": 2,
+      "committed": 4,
       "erosion": 0.0,
-      "force_id": "Blue-CAS",
+      "force_id": "Red-Line",
       "force_ratio": null,
       "lost": 0,
       "max_shock": 0.0,
       "morale": null,
       "outcome": "held",
-      "side": "Blue",
-      "temper": 0.141949,
+      "side": "Red",
+      "temper": 0.577638,
       "time": null,
       "triggers": [],
       "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": 0.176378,
-      "committed": 4,
-      "erosion": 0.25,
-      "force_id": "Red-Line",
-      "force_ratio": 0.4,
-      "lost": 1,
-      "max_shock": 0.25,
-      "morale": null,
-      "outcome": "disengaged",
-      "side": "Red",
-      "temper": 0.596208,
-      "time": 3611.5,
-      "triggers": [
-       "erosion"
-      ],
-      "unanswered_fraction": 1.0
      }
     ]
    ],
@@ -185954,11 +195342,8 @@
     "Blue-Armor": [
      "held"
     ],
-    "Blue-CAS": [
-     "held"
-    ],
     "Red-Line": [
-     "disengaged"
+     "held"
     ]
    },
    "fuel": {},
@@ -185974,28 +195359,8 @@
    }
   },
   "VAL-agn/S7-agn-3/single": {
-   "ammunition_consumed": {
-    "Blue-CAS/cas0": {
-     "test:agm": 1
-    },
-    "Blue-CAS/cas1": {
-     "test:agm": 1
-    }
-   },
-   "ammunition_events": [
-    [
-     7201.5,
-     "Blue-CAS/cas0",
-     "test:agm",
-     1
-    ],
-    [
-     7201.5,
-     "Blue-CAS/cas1",
-     "test:agm",
-     1
-    ]
-   ],
+   "ammunition_consumed": {},
+   "ammunition_events": [],
    "assets": {
     "Blue-Armor/ifv0": {
      "ammunition": 902,
@@ -186055,28 +195420,28 @@
      }
     },
     "Blue-CAS/cas0": {
-     "ammunition": 1180,
+     "ammunition": 1182,
      "destroyed": false,
      "fuel": 0.945312,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 1,
+      "AGM-65D": 3,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1180,
+     "ammunition": 1182,
      "destroyed": false,
      "fuel": 0.945312,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 1,
+      "AGM-65D": 3,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -186120,9 +195485,9 @@
      "ammunition": 504,
      "destroyed": false,
      "fuel": 1.0,
-     "health": 40,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "2A42-30mm": 500,
       "9M113-Konkurs": 4
@@ -186130,11 +195495,11 @@
     },
     "Red-Line/ifv2": {
      "ammunition": 504,
-     "destroyed": true,
+     "destroyed": false,
      "fuel": 1.0,
-     "health": 0,
+     "health": 100,
      "interceptor_stock": null,
-     "operative": false,
+     "operative": true,
      "stores": {
       "2A42-30mm": 500,
       "9M113-Konkurs": 4
@@ -186163,38 +195528,17 @@
     "parameters": {}
    },
    "counts": {
-    "damage_events": 2,
-    "destroyed_events": 1,
+    "damage_events": 0,
+    "destroyed_events": 0,
     "engagements": 1,
     "fuel_events": 0,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 2,
-    "salvos": 2
+    "rounds": 0,
+    "salvos": 0
    },
-   "damage_events": [
-    [
-     7211.5,
-     "Red-Line/ifv2",
-     "Blue-CAS/cas0",
-     "test:agm",
-     "damage",
-     100,
-     40,
-     false
-    ],
-    [
-     7211.5,
-     "Red-Line/ifv2",
-     "Blue-CAS/cas1",
-     "test:agm",
-     "kill",
-     40,
-     0,
-     true
-    ]
-   ],
+   "damage_events": [],
    "engagements": [
     [
      {
@@ -186208,50 +195552,31 @@
       "morale": null,
       "outcome": "held",
       "side": "Blue",
-      "temper": 0.793014,
+      "temper": 0.615535,
       "time": null,
       "triggers": [],
       "unanswered_fraction": 0.0
      },
      {
       "breakpoint": null,
-      "committed": 2,
+      "committed": 4,
       "erosion": 0.0,
-      "force_id": "Blue-CAS",
+      "force_id": "Red-Line",
       "force_ratio": null,
       "lost": 0,
       "max_shock": 0.0,
       "morale": null,
       "outcome": "held",
-      "side": "Blue",
-      "temper": 0.140979,
+      "side": "Red",
+      "temper": 0.490886,
       "time": null,
       "triggers": [],
       "unanswered_fraction": 0.0
-     },
-     {
-      "breakpoint": 0.417109,
-      "committed": 3,
-      "erosion": 0.333333,
-      "force_id": "Red-Line",
-      "force_ratio": 0.5,
-      "lost": 1,
-      "max_shock": 0.333333,
-      "morale": null,
-      "outcome": "held",
-      "side": "Red",
-      "temper": 0.99153,
-      "time": null,
-      "triggers": [],
-      "unanswered_fraction": 1.0
      }
     ]
    ],
    "force_outcomes": {
     "Blue-Armor": [
-     "held"
-    ],
-    "Blue-CAS": [
      "held"
     ],
     "Red-Line": [

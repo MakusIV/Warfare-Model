@@ -70,6 +70,10 @@ una tabella `(ruolo tiratore, ruolo bersaglio) -> ShotSpec | None`.
   'structure' (una `Structure` di un blocco NON logistico: bunker C2 di una `Military`,
   edificio di un `Urban` civile). Nella tabella di riferimento 'structure' e' un bersaglio
   di superficie come gli altri e non spara mai (non e' mai un tiratore).
+* Ruolo 'parked' (F4c): un aereo A TERRA (senza missione), che il risolutore segnala alla fire
+  control con `target_grounded=True`. E' un bersaglio di superficie come 'structure' (lo
+  colpiscono 'ground', 'artillery', 'air' e 'strike'; mai 'sam', 'aaa', 'fighter', 'sead') e non
+  spara mai (il risolutore non lo interroga come tiratore).
 * Ruoli di missione imposti per id (`roles={asset_id: ruolo}`), per distinguere cio' che
   il tipo non dice: 'fighter' (solo aria-aria), 'strike' (solo aria-suolo non-AD), 'sead'
   (solo contro sam/aaa). Valgono SOLO per il tiratore: come bersaglio ogni asset resta
@@ -95,8 +99,9 @@ identico, id compresi: e' la base del test di determinismo.
 ## Migrazione alle missioni (F3, 2026-10-05)
 
 Ogni asset che prima riceveva una rotta in `routes` e' ora asset di una `Mission`; gli asset
-fermi (difese, siti SAM, blocchi in posizione) NON sono missioni (saranno la postura continua
-della F4c; fino ad allora restano nella forza del loro blocco, ferme). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
+fermi (difese, siti SAM, blocchi in posizione) NON sono missioni: restano nella forza del loro
+blocco, fermi, con la postura continua della F4c (unita' di superficie in difesa, tiro invariato;
+un AEREO senza missione e' a terra, v. il ruolo 'parked'). `missions_for` riproduce ESATTAMENTE la geometria di `routes_for`:
   * una missione = asset di UN blocco e di UN dominio sulla stessa geometria. In F3 la
     velocita' sugli archi divideva anche le missioni (in un blocco misto, es. carri M1A2 + M2
     Bradley, i due modelli diventavano due missioni dello stesso blocco); dalla F4a vale la
@@ -761,7 +766,7 @@ SHOTS: Dict[str, ER.ShotSpec] = {
                                time_of_flight=25.0, interceptable=False, cycle_time=20.0),
 }
 
-_SURFACE = ('ground', 'artillery', 'sam', 'aaa', 'logistic', 'structure')
+_SURFACE = ('ground', 'artillery', 'sam', 'aaa', 'logistic', 'structure', 'parked')
 
 # Tabella di riferimento (ruolo tiratore, ruolo bersaglio) -> ShotSpec. Assente = None.
 REFERENCE_FIRE_TABLE: Dict[Tuple[str, str], ER.ShotSpec] = {
@@ -777,15 +782,23 @@ REFERENCE_FIRE_TABLE: Dict[Tuple[str, str], ER.ShotSpec] = {
     ('air', 'sea'): SHOTS['asm'],
     # Ruoli di missione (imposti per id con `roles=`).
     ('fighter', 'air'): SHOTS['aam'],
-    **{('strike', target): SHOTS['agm'] for target in ('ground', 'artillery', 'logistic', 'structure')},
+    **{('strike', target): SHOTS['agm'] for target in ('ground', 'artillery', 'logistic', 'structure', 'parked')},
     ('strike', 'sea'): SHOTS['asm'],
     ('sead', 'sam'): SHOTS['arm'],
     ('sead', 'aaa'): SHOTS['arm'],
 }
 
 
-def role_of(asset, roles: Optional[Mapping[str, str]] = None) -> Optional[str]:
-    """Ruolo di un asset reale per la tabella di fuoco (v. docstring del modulo)."""
+PARKED_ROLE = 'parked'
+
+
+def role_of(asset, roles: Optional[Mapping[str, str]] = None, grounded: bool = False) -> Optional[str]:
+    """Ruolo di un asset reale per la tabella di fuoco (v. docstring del modulo).
+
+    `grounded` (F4c): l'asset e' un aereo a terra -> 'parked' (bersaglio di superficie)."""
+    if grounded and type(asset).__name__ == 'Aircraft':
+        return PARKED_ROLE
+
     if roles:
         imposed = roles.get(getattr(asset, 'id', None))
 
@@ -846,11 +859,11 @@ def make_fire_control(table: Optional[Mapping[Tuple[str, str], Optional[ER.ShotS
     roles = dict(roles or {})
     overrides = {key: dict(value) for key, value in (overrides or {}).items()}
 
-    def fire_control(shooter, target):
+    def fire_control(shooter, target, target_grounded=False):
         # I ruoli di missione descrivono cosa un asset FA quando spara, non cosa E' come
         # bersaglio: il bersaglio e' sempre classificato per dominio (un 'strike' e' un
-        # 'air' per un SAM).
-        target_role = role_of(target)
+        # 'air' per un SAM; un aereo a terra, F4c, e' 'parked').
+        target_role = role_of(target, grounded=target_grounded)
         by_shooter = overrides.get(getattr(shooter, 'id', None))
 
         if by_shooter is not None and target_role in by_shooter:

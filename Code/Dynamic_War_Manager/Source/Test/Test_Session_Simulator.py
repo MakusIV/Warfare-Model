@@ -748,8 +748,8 @@ class TestMissionAsEngagementUnit(_Base):
         self.assertEqual(outcome.outcomes_of('M-south')[0].committed, 1)
 
     def test_unassigned_assets_keep_the_block_identity(self):
-        """Fino alla F4c: asset senza missione nella vista residua con l'id del blocco; un blocco
-        senza missioni entra com'e'."""
+        """Asset senza missione nella vista residua con l'id del blocco; un blocco senza missioni
+        entra com'e' (la postura continua della F4c non cambia le forze d'ingaggio)."""
         blue, red, _ = self._scenario()
         only_bn1 = (_air_mission('M-a', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
         order = self._order('S-residual', only_bn1)
@@ -788,6 +788,39 @@ class TestMissionAsEngagementUnit(_Base):
                          {'M-north': 'M-north', 'M-south': 'M-north', 'Red-East': 'Red-East', 'Red-West': 'Red-West'})
         self.assertEqual([tuple(o.force_id for o in e) for e in outcome.engagement_outcomes],
                          [('M-north', 'M-south', 'Red-East', 'Red-West')])
+
+    def test_aircraft_without_mission_are_grounded_for_scheduler_and_resolver(self):
+        """F4c: bn2 (vista residua di Blue-North) e bs1 (Blue-South, blocco senza missioni) sono a
+        terra; l'insieme arriva allo scheduler e a ogni ingaggio. I veicoli Red non lo sono."""
+        blue, red, _ = self._scenario()
+        only_bn1 = (_air_mission('M-a', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
+
+        with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler, \
+                patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
+            SS.run_session(self._order('S-grounded', only_bn1), blue, red, _fire, reaction_profile_for=_profile)
+
+        self.assertEqual(scheduler.call_args.kwargs['grounded'], frozenset({'bn2', 'bs1'}))
+        self.assertTrue(resolver.call_args_list)
+        self.assertTrue(all(call.kwargs['grounded'] == frozenset({'bn2', 'bs1'}) for call in resolver.call_args_list))
+
+    def test_residual_view_carries_the_continuous_posture(self):
+        """Vista residua mista (aereo + veicolo dello stesso blocco): aereo a terra, veicolo in difesa."""
+        blue, red, _ = self._scenario()
+        blue[0]._assets['bv1'] = _asset(Vehicle, 'bv1', 0, -21_000)
+        only_bn1 = (_air_mission('M-a', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
+        order = self._order('S-posture', only_bn1)
+        _, _, blocks, block_owner = SS._collect_forces(order, blue, red)
+        forces, _ = SS._engagement_forces(order, blocks, block_owner)
+        self.assertEqual(forces['Blue-North'].postures, {'bn2': MA.PARKED_POSTURE, 'bv1': MA.GROUND_DEFENSE_POSTURE})
+        self.assertEqual(forces['Blue-North'].grounded, frozenset({'bn2'}))
+        self.assertEqual(forces['M-a'].postures, {})
+
+    def test_every_aircraft_in_a_mission_means_nobody_is_grounded(self):
+        """Senza aerei fuori missione l'insieme e' vuoto: la sessione e' quella di prima della F4c."""
+        with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
+            self._run('S-nobody-grounded')
+
+        self.assertTrue(all(call.kwargs['grounded'] == frozenset() for call in resolver.call_args_list))
 
     def test_mission_id_equal_to_a_block_id_is_rejected(self):
         blue, red, _ = self._scenario()
