@@ -10,7 +10,11 @@ metadata:
 
 **Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. Python: `.direnv/python-3.12/bin/python3`
 (v. [[feedback-venv]]); suite completa ~8 min (4039 test), confronto fotografia ~6 min, mai in parallelo.
-**Alla ripresa, su qualunque macchina: `git pull` prima di tutto.**
+**Ripresa prevista sulla STESSA macchina (ProArt P16), checkout `/home/marco/Sviluppo/Warfare-Model`**: il branch
+attuale e' `analysis/dce-dcs-persistence` (pulito, allineato a origin); fare comunque `git fetch` all'inizio. Il
+lavoro non verificato di F5-A sta sul branch `wip/f5-a-grounded-nel-tempo` (v. sotto). Scratchpad di log e script di
+misura della sessione: `/tmp/claude-1000/-home-marco-Sviluppo-Warfare-Model/*/scratchpad/` (temporanei, non
+necessari).
 
 ## LAVORO SVOLTO (v. [[project-mission-structure-decisions]] per le decisioni complete)
 1. **Revisione dello stato** all'inizio: l'utente aveva ragione che parte dell'elenco era già trattata (le 6 decisioni
@@ -46,6 +50,26 @@ dal brief: Piano §5 dev. 12-13 + decisioni D1/N2 (il brief di delega integrale 
 da questi). Poi F5-B (postura nell'esito + presenza prima/dopo + scenari E1/E3/aerei) e F5-C (WAIT, ETA, CAP in orbita).
 Decisione dell'utente: aereo a terra dopo la fine della rotta SOLO su una base vera (LAND su base), altrimenti esce
 dalla scena come oggi finche' F6 non porta il rientro.
+
+## PRIMO PASSO ALLA RIPRESA (checklist)
+1. `git fetch`; `git switch wip/f5-a-grounded-nel-tempo`; suite completa (~8 min) e confronto fotografia
+   (`PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline
+   --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`, ~6 min), mai in parallelo;
+   usare nomi di log nuovi.
+2. Se IDENTICA su 370 e suite verde: sezione «F5 passo (a)» in `F4_Differenze_Scenari.md`, riga F5-A nel Piano §5,
+   merge in `analysis/dce-dcs-persistence`, push, poi si puo' eliminare il branch wip.
+3. Poi F5-B e F5-C con `des-developer` (Opus medium; modelli/sforzi: v. [[feedback-model-effort-delegation]]), un
+   passo alla volta, con commit dedicato e verifica mia di suite + fotografia prima di ogni commit. L'utente ha
+   chiesto di scomporre F5 in sessioni piu' piccole per i limiti di utilizzo di 5 ore: non lanciare piu' agenti
+   lunghi in coda a una sessione gia' avanzata.
+4. Contenuto di F5-B: postura nell'esito di forza (forma minimale, per asset, anche per i blocchi senza missioni);
+   presenza prima della partenza e dopo la fine (terra/mare `Defense`, aerei con start non AIR a terra fino al
+   decollo, aerei a terra dopo la fine SOLO se l'ultimo punto LAND e' su una base vera: riferimento del waypoint a
+   un asset/blocco Airbase o posizione nell'area di una base); scenari E1 (carro fermo a 4 km resta ingaggiabile),
+   E3 (partenza ritardata, presente prima), aerei (parcheggiato colpibile finche' e' a terra); fotografia
+   rigenerata UNA volta con ogni differenza attribuita alla causa (usare interruttori o `--only`).
+   Contenuto di F5-C: azione WAIT (`hold` sosta, `orbit` orbita come presenza ferma nel punto con approssimazione
+   dichiarata) con durata o fino a t, ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita.
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
