@@ -289,13 +289,118 @@ cambio di stream le rovesciava.
 Rigenerata dopo questo confronto (`--capture` nel percorso standard) sul codice di F4b: 328
 esecuzioni (292 + 36 nuove); due catture consecutive identiche (determinismo).
 
-### Limiti noti introdotti (da decidere)
+### Limiti noti introdotti
 
-- **Nessuna ripartizione del fuoco fra missioni dello stesso blocco o lato**: la dottrina di tiro
-  (saturazione, tiratori impegnati) e' per forza, quindi per missione (S19AD standoff). Fra missioni
-  diverse riapre il problema dell'overkill risolto il 2026-09-29 dentro la forza
-  (`Proposta_Overkill_Tiro.md`): se la ripartizione debba valere per blocco, per lato o per
-  Operazione e' una decisione di modello, non presa qui.
-- **Nessuna condivisione dell'informazione fra missioni**: ognuna percepisce il nemico con i propri
-  sensori (`seen_by` per forza); la scorta non informa lo strike (data link/C2 non modellati).
+- ~~Nessuna ripartizione del fuoco fra missioni dello stesso blocco o lato~~ e ~~nessuna
+  condivisione dell'informazione fra missioni~~: risolti con il dominio di coordinamento
+  (decisioni dell'utente 6 e 7 del 2026-10-11, v. la sezione seguente).
+- Una missione di un solo asset e' DESTROYED alla prima perdita (S19 Strike).
+
+---
+
+## Dominio di coordinamento: fuoco e rilevamenti condivisi fra missioni (decisioni 6 e 7)
+
+**Base del confronto**: fotografia di F4b (`a4d8acf0`, 328 esecuzioni; ricontrollata IDENTICA al
+codice di partenza `ed14aadf` prima delle modifiche).
+**Dopo**: motore con il dominio di coordinamento. Gli scenari NON cambiano.
+
+### Il cambio
+
+- **Dominio di coordinamento** (`Logic/Mission_Adapter.coordination_domains`): due forze
+  d'ingaggio dello stesso lato sono nello stesso dominio se hanno lo stesso blocco OPPURE
+  appartengono alla stessa Operazione (`SessionOrder.operations` / `Mission.operation_id`), con
+  unione transitiva (union-find). La vista residua e un blocco senza missioni hanno l'id del blocco
+  e quindi stanno nel dominio delle missioni del blocco. Chiave = id di forza minore del dominio
+  (senza legami: l'id della forza, comportamento di prima). Un'Operazione con missioni di lati
+  diversi lega solo le missioni dello stesso lato (un dominio per lato, warning); il risolutore
+  verifica comunque che un dominio non stia a cavallo di due lati (ValueError).
+- **Decisione 6, fuoco** (`Engagement_Resolver`, parametro `coordination_of` di
+  `resolve_engagement`, default None = la forza e' il proprio dominio): `_engaged_shooters`,
+  `_force_shots_on` e quindi `_coverage`, `_blocked` e `_wait` contano le salve, in volo o
+  schedulate, di tutte le forze del dominio. Invariati il tetto "due missili, poi guarda" (per
+  tiratore e bersaglio), la soglia P_des (dottrina del lato) e le estrazioni RNG. Anche i
+  lanciatori prioritari (L2/L3, `launchers_against`) sono registrati contro il dominio: un aereo
+  che attacca una missione e' prioritario (ed esente dalla saturazione) per i tiratori delle altre
+  missioni del dominio che lo hanno fra i PROPRI candidati, com'era per il blocco prima della F4b.
+- **Decisione 7, percezione (opzione B)**: `seen_by`, `identified_by` e le classi RWR sono chiavati
+  per dominio; un rilevamento vale per tutte le forze del dominio dall'istante del rilevamento.
+  Rapporto percepito, fuoco senza risposta e peso R-CLS li leggono dal dominio, la forza propria
+  resta quella della missione. **Nessun cueing**: i candidati di tiro restano per osservatore.
+- Condivisione **istantanea**, senza latenza ne' perdite del canale: approssimazione dichiarata nei
+  docstring.
+- **Componenti** (`Session_Simulator._connected_components`): le forze di uno stesso dominio
+  sono messe nella stessa run anche senza nemici in comune (la condivisione vale dentro una run),
+  come lo era il blocco prima della F4b; la componente unita ha l'`event_id` delle forze riunite.
+
+### Come si attribuiscono le differenze
+
+Tre catture di controllo su copie del codice con un interruttore ciascuna (solo misura, non nel
+repository), ristrette agli scenari con piu' missioni per blocco (S7, S18, S19, S19AD, S20):
+1. percezione per forza (decisione 7 spenta): restano solo le differenze di S19AD, identiche
+   byte per byte a quelle del codice completo -> S19AD e' la decisione 6, S20 la decisione 7;
+2. componenti non unite per dominio: stesse differenze del codice completo -> nessun effetto
+   negli scenari (nessuno ha missioni di un dominio su fronti disgiunti);
+3. lanciatori L2 per forza: stesse differenze -> nessun effetto negli scenari.
+
+### Esecuzioni cambiate (8 su 328)
+
+| Scenario | Cambiate | Causa | Effetto |
+|---|---|---|---|
+| S19AD `strela_standoff` | 6 su 6 | decisione 6 (fuoco) | Maverick lanciati da 16 a 8-10, Red-Line da HELD (3 perdite) a DESTROYED (4 perdite: lo Strela-10 e' distrutto) |
+| S20 `split` | 2 su 6 (S20-1, S20-3) | decisione 7 (percezione) | solo grandezze fini della missione 'Blue-Armor:IFV': rapporto percepito e soglia di rottura all'ultima valutazione |
+
+- **S19AD standoff** (Blue-CAS = 4 A-10C in 4 missioni dello stesso blocco): torna nell'ordine
+  di F4a, come atteso dalla decisione 6. Per seed (Maverick, perdite Red-Line): S19-0 10/4,
+  S19-1 10/4, S19-2 8/4, S19-3 8/4, S19-4 8/4, S19-5 8/4 (F4b: 16/3 ovunque). Le salve degli altri
+  aerei contano nella saturazione e nella ripartizione, quindi gli A-10C non sommano piu' le salve
+  sugli stessi bersagli (meccanismo descritto nella F4b). Nuovo test
+  `test_standoff_missions_share_the_fire` (6 seed): 8-10 Maverick, Red-Line DESTROYED, Strela
+  distrutto.
+- **S20 split** (Blue-Armor:Tanks + Blue-Armor:IFV, stesso blocco): in S20-1 l'IFV, che non aveva
+  rilevato nessuno all'istante della sua ultima valutazione, percepisce i nemici rilevati dai carri:
+  rapporto da indefinito a 0.67, soglia registrata da 0.249 a 0.201; in S20-3 da indefinito a 0.33,
+  soglia da 0.145 a 0.084. Gli esiti non cambiano (S20-1: IFV HELD senza perdite; S20-3: l'IFV
+  disingaggia comunque a 271.9 s con 1 perdita su 2, erosione 0.5 sopra entrambe le soglie).
+
+### Esecuzioni invariate (320), con le attese della deviazione 7
+
+Il piano si attendeva che la percezione condivisa riducesse le differenze di disingaggio di S7,
+S18 e S19 rispetto a F4a. **Non succede: S7, S18 e S19 sono invariati.** Misura (sonda sulle
+valutazioni della soglia di rottura, insieme dei nemici percepiti entro t dal dominio contro quello
+della sola missione): in S7 (17 valutazioni) e S19 (19) ogni missione aveva gia' rilevato da se' gli
+stessi nemici a ogni valutazione; in S18 2 valutazioni su 14 (scorta di Blue-Package) percepiscono
+in piu' due infrastrutture (ponte e scambio di Red-Rail), che non cambiano ne' il rapporto
+percepito ne' la soglia registrati (fotografia identica). Le differenze di S7/S18/S19 rispetto a F4a restano quindi quelle dello stream RNG e del
+disingaggio per missione documentate nella F4b. Neanche la ripartizione del fuoco le tocca: in quegli
+scenari le missioni dello stesso blocco non sparano agli stessi bersagli (fotografia identica).
+
+S3 e S5 sono invariati: i test da riprogettare (deviazione 8) non sono toccati da questo passo.
+
+### Test
+
+- `Test_Engagement_Resolver`: `TestCoordinationDomainFire` (saturazione dall'altra forza, attesa
+  dell'impatto altrui, ripartizione round-robin sul dominio, tetto per tiratore, mappa identita' =
+  nessuna mappa, nessuna estrazione in piu', lanciatori registrati sul dominio, lati, tipi) e
+  `TestCoordinationDomainPerception` (fuoco con risposta e rapporto percepito da un rilevamento
+  della missione gemella, stesse estrazioni, nessun cueing).
+- `Test_Mission_Adapter.TestCoordinationDomains`: stesso blocco, stessa Operazione (anche solo
+  elencata dall'ordine), transitivita' (A-blocco1, B-blocco1+Op, C-blocco2+Op -> un dominio),
+  vista residua, lati separati, determinismo, accettazione da parte del risolutore.
+- `Test_Session_Simulator`: componenti unite per dominio, mappa passata a ogni ingaggio,
+  Operazione fra blocchi diversi -> una run.
+- `Test_Session_Scenarios_S19_Air_Defence.test_standoff_missions_share_the_fire`.
+
+### Fotografia di riferimento
+
+Rigenerata dopo questo confronto (`--capture` nel percorso standard): 328 esecuzioni; due catture
+consecutive identiche (determinismo).
+
+### Limiti noti
+
+- **Nessun cueing del tiro**: un tiratore spara solo ai bersagli che ha rilevato lui; EWR->SAM,
+  AWACS->caccia, scorta->strike restano una funzionalita' futura (Fase 0 C2).
+- Condivisione istantanea, senza latenza ne' perdite del canale.
+- La difesa di salva (`salvo_interceptors`, R1) resta per missione: gli intercettori di una
+  missione non difendono gli asset di un'altra missione dello stesso dominio (prima della F4b, per
+  il blocco, si'). Nessuno scenario lo esercita oggi; non era nel perimetro delle decisioni 6 e 7.
 - Una missione di un solo asset e' DESTROYED alla prima perdita (S19 Strike).

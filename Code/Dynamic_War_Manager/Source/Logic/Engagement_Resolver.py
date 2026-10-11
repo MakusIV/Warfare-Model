@@ -168,9 +168,41 @@ lato (`side`) serve solo a leggere la dottrina, e piu' forze possono condividerl
 
 Dalla F4b del piano della Missione `Session_Simulator` passa come forze le MISSIONI (viste
 `Mission_Adapter.MissionForce`): due missioni dello stesso blocco sono due forze dello stesso
-lato, ciascuna con la propria percezione del nemico (`seen_by`), il proprio rapporto di forze
-(conta solo i propri asset), la propria tempra e il proprio disingaggio. Non si scambiano
-rilevamenti: la condivisione dell'informazione fra missioni (data link, C2) non e' modellata.
+lato, ciascuna con il proprio rapporto di forze (conta solo i propri asset), la propria tempra e
+il proprio disingaggio. Ripartizione del fuoco e percezione del nemico sono invece condivise nel
+loro dominio di coordinamento (v. sotto).
+
+## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7 del piano della Missione)
+
+`Analysis/Document/Piano_Implementazione_Missione.md` §5. Con la missione come forza (F4b) la
+dottrina di tiro e la percezione, scritte per forza, erano diventate per missione: missioni dello
+stesso blocco si concentravano sugli stessi bersagli senza vedere le salve l'una dell'altra (S19AD
+standoff) e non si scambiavano rilevamenti. `coordination_of` (`{force_id: chiave}`) assegna a
+ogni forza un DOMINIO; senza mappa, o per una forza assente, il dominio e' la forza stessa e il
+comportamento e' quello precedente. In sessione la chiave la calcola
+`Mission_Adapter.coordination_domains`: stesso blocco OPPURE stessa Operazione, per unione
+transitiva, mai a cavallo di due lati (qui verificato: ValueError).
+
+* **Ripartizione del fuoco** (decisione 6): `_engaged_shooters`, la copertura `_coverage` (quindi
+  la saturazione di `_blocked`) e l'attesa `_wait` contano le salve, schedulate o in volo, di TUTTE
+  le forze del dominio. Invariati: tetto "due missili, poi guarda" per tiratore e bersaglio,
+  soglia di saturazione (dottrina del lato del tiratore), estrazioni RNG (la condivisione non ne
+  aggiunge e non ne toglie: cambia solo chi spara a chi).
+* **Lanciatori prioritari** (L2/L3): un aereo che lancia armi aria-superficie contro una forza e'
+  registrato contro il suo DOMINIO, ed e' prioritario (ed esente dalla saturazione) per i tiratori
+  di tutte le forze del dominio che lo hanno fra i propri candidati.
+* **Percezione condivisa** (decisione 7, opzione B): `seen_by`, `identified_by` e le classi RWR
+  sono chiavati per dominio; un rilevamento (o una percezione RWR) di una forza vale per tutte le
+  forze del dominio dall'istante del rilevamento. Ne dipendono rapporto di forze percepito, fuoco
+  senza risposta e peso di classe R-CLS; ogni forza confronta la percezione con i PROPRI asset.
+* **Nessun cueing del tiro**: i candidati di tiro restano per osservatore (`candidates`), un
+  tiratore spara solo ai bersagli che ha rilevato lui. L'assegnazione di bersagli da un sensore a
+  un tiratore (EWR->SAM, AWACS->caccia, scorta->strike) e' fuori perimetro, rimandata alla Fase 0
+  C2.
+
+Approssimazione dichiarata: la condivisione e' ISTANTANEA, senza latenza di comunicazione ne'
+perdite del canale (data link, voce, C2 non modellati). Il dominio vale dentro la run: e'
+`Session_Simulator` a mettere nella stessa run le forze di uno stesso dominio.
 
 Perche' serve (caso che ha originato la generalizzazione, 2026-09-23): la forza X e' in
 contatto con A e con B in finestre sovrapposte. Risolvendo (X,A) e (X,B) con due chiamate
@@ -254,8 +286,8 @@ eventi finisce sempre e solo quando la coda si svuota.
   costruita su un'istantanea di ricognizione presa PRIMA della sessione e combinabile col
   meteo (`combine_detection_factors`). Nessuna nebbia dinamica: la ricognizione non
   evolve durante l'ingaggio e il fattore non consuma l'RNG.
-- Ripartisce il fuoco fra i tiratori di una forza solo con una regola greedy locale
-  (round-robin, v. `_EngagementRun._schedule_next`), non con un'assegnazione ottima.
+- Ripartisce il fuoco fra i tiratori di un dominio di coordinamento solo con una regola greedy
+  locale (round-robin, v. `_EngagementRun._schedule_next`), non con un'assegnazione ottima.
 - Non tocca `Logic/Tactical_Evaluation.calcFightResult` (fallback aggregato, invariato).
 """
 
@@ -1240,7 +1272,7 @@ class _EngagementRun:
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance,
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
-                 rwr_catalogue=None):
+                 rwr_catalogue=None, coordination_of=None):
         self.fire_control = fire_control
         self.rwr_catalogue = rwr_catalogue
         self.fire_doctrine = fire_doctrine
@@ -1248,12 +1280,17 @@ class _EngagementRun:
         self.breakpoint_rng = breakpoint_rng
         self.morale_for = morale_for
         self.enemy_estimate_for = enemy_estimate_for
-        # Primo istante in cui ciascuna forza ha rilevato ciascun asset nemico (qualunque
-        # suo osservatore): la base della percezione del nemico (soglia di rottura, D4/D5).
+        # Dominio di coordinamento di ogni forza (2026-10-11, v. "Dominio di coordinamento" nel
+        # docstring del modulo): calcolato in _build_forces, default = la forza stessa.
+        self.domain_of: Dict[str, str] = {}
+        # Primo istante in cui ciascun DOMINIO ha rilevato ciascun asset nemico (qualunque
+        # osservatore di una sua forza): la base della percezione del nemico (soglia di rottura,
+        # D4/D5). Chiavato per dominio, che senza `coordination_of` coincide con la forza.
         self.seen_by: Dict[str, Dict[str, float]] = {}
         # Regola R-CLS (2026-09-30): fonte della percezione. `identified_by`: primo rilevamento con
-        # i sensori della forza (sistema identificato); `rwr_class`: percezioni della sola RWR, come
-        # (istante, classe) per ogni aereo illuminato. Pesi di classe in cache per (classe, dominio, n).
+        # i sensori del dominio (sistema identificato); `rwr_class`: percezioni della sola RWR, come
+        # (istante, classe) per ogni aereo illuminato. Pesi di classe in cache per (classe, dominio
+        # dell'emettitore, n). Entrambi chiavati per dominio di coordinamento, come `seen_by`.
         self.identified_by: Dict[str, Dict[str, float]] = {}
         self.rwr_class: Dict[str, Dict[str, List[Tuple[float, FrozenSet[str]]]]] = {}
         self.class_weights: Dict[tuple, Optional[float]] = {}
@@ -1313,6 +1350,7 @@ class _EngagementRun:
         self.interception_events: List[InterceptionEvent] = []
 
         self.usable = self._build_forces(forces, committed, thresholds)
+        self._build_domains(coordination_of)
 
         if self.usable:
             self._init_breakpoints()
@@ -1403,6 +1441,44 @@ class _EngagementRun:
         logger.warning(f"resolve_engagement: forces {empty} have no committed operative asset, "
                        f"they take no part in the engagement")
         return True
+
+    def _build_domains(self, coordination_of) -> None:
+        """Dominio di coordinamento di ogni forza della run (v. "Dominio di coordinamento").
+
+        `coordination_of` None = ogni forza e' il proprio dominio (comportamento precedente al
+        2026-10-11). Una forza assente dalla mappa e' il proprio dominio. Le forze di uno stesso
+        dominio devono avere lo stesso `side` (un dominio non sta mai a cavallo di due lati).
+
+        Raises:
+            TypeError: `coordination_of` non e' una mappa o ha chiavi/valori non stringa.
+            ValueError: due forze di lati diversi nello stesso dominio.
+        """
+        if coordination_of is not None:
+            if not isinstance(coordination_of, abc.Mapping):
+                raise TypeError(f"coordination_of must be a mapping force_id -> domain key, "
+                                f"got {type(coordination_of).__name__}")
+
+            for force_id, key in coordination_of.items():
+                if not isinstance(force_id, str) or not isinstance(key, str) or not key:
+                    raise TypeError(f"coordination_of must map force ids to non-empty string keys, "
+                                    f"got {force_id!r} -> {key!r}")
+
+        sides: Dict[str, Tuple[str, Optional[str]]] = {}
+
+        for force_id in self.force_order:
+            key = coordination_of.get(force_id, force_id) if coordination_of is not None else force_id
+            side = self.force_states[force_id].side
+
+            if key in sides and sides[key][1] != side:
+                raise ValueError(f"forces {sides[key][0]!r} (side {sides[key][1]!r}) and {force_id!r} "
+                                 f"(side {side!r}) share the coordination domain {key!r}: a domain "
+                                 f"never spans two sides")
+
+            sides.setdefault(key, (force_id, side))
+            self.domain_of[force_id] = key
+
+    def _same_domain(self, force_a: str, force_b: str) -> bool:
+        return self.domain_of[force_a] == self.domain_of[force_b]
 
     @staticmethod
     def _shadow_of(asset_id: str, asset, force_id: str, health: int) -> _Shadow:
@@ -1502,7 +1578,7 @@ class _EngagementRun:
             radius = detection_radius(draw, own_range, factor)
             time = self._detection_time(window, observer.id, target.id, own_range, other_range, radius)
             self._perceive(observer.force_id, target.id, time)
-            identified = self.identified_by.setdefault(observer.force_id, {})
+            identified = self.identified_by.setdefault(self.domain_of[observer.force_id], {})
             identified[target.id] = min(identified.get(target.id, time), time)
 
             # RWR (2026-09-29): il radar dell'osservatore illumina il bersaglio; se il bersaglio e'
@@ -1524,8 +1600,9 @@ class _EngagementRun:
                                          time=time))
 
     def _perceive(self, force_id: str, asset_id: str, time: float) -> None:
-        """La forza `force_id` percepisce l'asset nemico `asset_id` dall'istante `time`."""
-        seen = self.seen_by.setdefault(force_id, {})
+        """La forza `force_id` percepisce l'asset nemico `asset_id` dall'istante `time`, e con lei
+        tutte le forze del suo dominio di coordinamento (percezione condivisa, 2026-10-11)."""
+        seen = self.seen_by.setdefault(self.domain_of[force_id], {})
         seen[asset_id] = min(seen.get(asset_id, time), time)
 
     def _perceive_rwr(self, aircraft: _Shadow, emitter: _Shadow, time: float) -> None:
@@ -1534,23 +1611,26 @@ class _EngagementRun:
         rwr_class = ADE.rwr_class_of(aircraft.asset, emitter.asset)
 
         if rwr_class is not None:
-            self.rwr_class.setdefault(aircraft.force_id, {}).setdefault(emitter.id, []).append((time, rwr_class))
+            self.rwr_class.setdefault(self.domain_of[aircraft.force_id], {}).setdefault(
+                emitter.id, []).append((time, rwr_class))
 
     def _air_threat(self, state: _ForceState, shadow: _Shadow, time: float, n_aircraft: int) -> float:
         """Peso di un nemico percepito da una forza aerea (R-CLS, 2026-09-30).
 
-        Identificato dai sensori della forza entro `time`: E(N) del sistema. Percepito solo
-        dall'RWR: E(N) media della classe piu' fine fra quelle degli aerei illuminati entro `time`
+        Identificato dai sensori del dominio di coordinamento della forza entro `time`: E(N) del
+        sistema. Percepito solo dall'RWR (di un aereo del dominio): E(N) media della classe piu'
+        fine fra quelle degli aerei illuminati entro `time`
         (`Air_Defense_Efficacy.class_threat_weight`), nel dominio dell'emettitore; senza sistemi
         del catalogo in quella classe, E(N) del sistema.
         """
         exact = lambda: ADE.air_threat_weight(shadow.asset, n_aircraft)
-        identified = self.identified_by.get(state.force_id, {}).get(shadow.id)
+        domain = self.domain_of[state.force_id]
+        identified = self.identified_by.get(domain, {}).get(shadow.id)
 
         if identified is not None and identified <= time + TIME_EPS:
             return exact()
 
-        classes = [c for t, c in self.rwr_class.get(state.force_id, {}).get(shadow.id, ())
+        classes = [c for t, c in self.rwr_class.get(domain, {}).get(shadow.id, ())
                    if t <= time + TIME_EPS]
 
         if not classes:
@@ -1615,7 +1695,8 @@ class _EngagementRun:
     # ── fase 2: scelta del bersaglio e lancio ─────────────────────────────────
 
     def _engaged_shooters(self, target_id: str, force_id: str, exclude: str) -> int:
-        """Quanti ALTRI tiratori della forza `force_id` sono impegnati ora su `target_id`.
+        """Quanti ALTRI tiratori del dominio di coordinamento della forza `force_id` sono
+        impegnati ora su `target_id` (senza `coordination_of`: della forza stessa).
 
         Un tiratore e' "impegnato" su un bersaglio se ha un lancio gia' schedulato contro
         di esso e non ancora eseguito (`self.assigned`) oppure una salva gia' lanciata
@@ -1632,7 +1713,7 @@ class _EngagementRun:
                         if salvo.target_id == target_id)
         shooters.discard(exclude)
 
-        return sum(1 for shooter_id in shooters if self.shadows[shooter_id].force_id == force_id)
+        return sum(1 for shooter_id in shooters if self._same_domain(self.shadows[shooter_id].force_id, force_id))
 
     def _schedule_next(self, shooter_id: str, t_earliest: float) -> None:
         """Decide il prossimo lancio del tiratore e lo mette in coda con payload congelato.
@@ -1656,8 +1737,9 @@ class _EngagementRun:
            la ripartizione cambia solo CONTRO CHI si spara. (Scelta conservativa su un punto
            che il briefing non chiudeva: "meno coperto prima, poi il piu' vicino nel tempo"
            letto alla lettera potrebbe tenere fermo un tiratore anche a lungo.)
-        2. **Copertura:** fra questi, quello con meno ALTRI tiratori della stessa forza gia'
-           impegnati (v. `_engaged_shooters`: lancio schedulato o salva in volo).
+        2. **Copertura:** fra questi, quello con meno ALTRI tiratori dello stesso dominio di
+           coordinamento gia' impegnati (v. `_engaged_shooters`: lancio schedulato o salva in
+           volo; senza `coordination_of` il dominio e' la forza).
         3. **Criterio precedente:** a parita', `t_ready` minore (il primo rilevato), poi l'id
            del bersaglio, poi l'ordine di rilevamento.
 
@@ -1679,9 +1761,10 @@ class _EngagementRun:
 
         ## Dottrina di tiro (2026-09-29, Proposta_Overkill_Tiro.md)
 
-        Prima della scelta si escludono i bersagli bloccati (`_blocked`): SATURI per la forza —
-        la probabilita' che le salve gia' dirette contro di essi dalla forza (in volo o
-        schedulate) li distruggano raggiunge `kill_probability_threshold` (0.9) — oppure su cui
+        Prima della scelta si escludono i bersagli bloccati (`_blocked`): SATURI per il dominio
+        di coordinamento — la probabilita' che le salve gia' dirette contro di essi dalle forze
+        del dominio (in volo o schedulate) li distruggano raggiunge `kill_probability_threshold`
+        (0.9) — oppure su cui
         il tiratore ha gia' in volo `max_rounds_in_flight` colpi (2: "due missili, poi
         guarda"). I lanciatori prioritari (L2) sono esenti dalla saturazione, non dal tetto. Se
         tutti i bersagli sono bloccati il tiratore aspetta il primo impatto previsto su uno di
@@ -1743,7 +1826,7 @@ class _EngagementRun:
                         if self._is_launcher_against(item[2].target_id, shooter.force_id)
                         and self._in_range_at(shooter, item[1], item[2], item[0])]
 
-            # Dottrina di tiro (2026-09-29): fuori i bersagli saturi per la forza (i lanciatori
+            # Dottrina di tiro (2026-09-29): fuori i bersagli saturi per il dominio (i lanciatori
             # prioritari ne sono esenti) e quelli su cui il tiratore ha gia' in volo il tetto di
             # colpi; se non resta nulla il tiratore aspetta il primo impatto e ridecide.
             pool = priority or viable
@@ -1804,16 +1887,18 @@ class _EngagementRun:
     # ── dottrina di tiro: saturazione e "due missili, poi guarda" (2026-09-29) ──
 
     def _force_shots_on(self, target_id: str, force_id: str):
-        """(ShotSpec, colpi, istante di arrivo) delle salve della forza dirette a `target_id`:
-        in volo (non ancora risolte) o schedulate e non ancora lanciate."""
+        """(ShotSpec, colpi, istante di arrivo) delle salve del dominio di coordinamento della
+        forza (senza `coordination_of`: della forza stessa) dirette a `target_id`: in volo (non
+        ancora risolte) o schedulate e non ancora lanciate."""
         for salvo in self.in_flight.values():
-            if salvo.target_id == target_id and self.shadows[salvo.shooter_id].force_id == force_id:
+            if salvo.target_id == target_id and self._same_domain(self.shadows[salvo.shooter_id].force_id, force_id):
                 yield salvo.spec, salvo.rounds, salvo.t_impact, salvo.shooter_id
 
         for other_id, assigned in self.assigned.items():
             shot = self.assigned_shot.get(other_id)
 
-            if assigned == target_id and shot is not None and self.shadows[other_id].force_id == force_id:
+            if assigned == target_id and shot is not None \
+                    and self._same_domain(self.shadows[other_id].force_id, force_id):
                 spec, rounds, t_fire = shot
 
                 if t_fire < self.now - TIME_EPS:
@@ -1822,7 +1907,7 @@ class _EngagementRun:
                 yield spec, rounds, t_fire + float(spec.time_of_flight), other_id
 
     def _coverage(self, target_id: str, force_id: str) -> float:
-        """P_cov: probabilita' che le salve gia' dirette dalla forza distruggano il bersaglio.
+        """P_cov: probabilita' che le salve gia' dirette dal dominio della forza distruggano il bersaglio.
 
         Esito KILL del modello di danno (accuracy x destroy_capacity per colpo), colpi
         indipendenti; intercettazioni ignorate (decisione O5).
@@ -1876,7 +1961,8 @@ class _EngagementRun:
         return True
 
     def _is_launcher_against(self, asset_id: str, force_id: str) -> bool:
-        return asset_id in self.launchers_against.get(force_id, ())
+        """`asset_id` ha lanciato armi aria-superficie contro il dominio di `force_id` (L2)."""
+        return asset_id in self.launchers_against.get(self.domain_of[force_id], ())
 
     def _in_range_at(self, shooter: "_Shadow", index: int, candidate: "_Candidate", t_fire: float) -> bool:
         """Il bersaglio del candidato e' ingaggiabile (arma con scorta, entro portata) a t_fire?
@@ -1908,8 +1994,13 @@ class _EngagementRun:
         riassegnare il lavoro (decisione Q3/Q4), senza costanti nuove. La decisione e' presa
         ALLA FINE di quel tempo (evento _DECIDE) con cio' che si sa allora: piu' lanciatori
         comparsi nel frattempo vengono ripartiti fra le difese (copertura, L2).
+
+        Dal 2026-10-11 il lanciatore e' registrato contro il DOMINIO di coordinamento della forza
+        colpita (senza `coordination_of`: la forza stessa): il lancio e' un'informazione
+        condivisa come i rilevamenti, e reagiscono i tiratori di tutte le forze del dominio che
+        lo hanno fra i PROPRI candidati (nessun cueing: chi non l'ha rilevato non lo ingaggia).
         """
-        launchers = self.launchers_against.setdefault(target_force_id, set())
+        launchers = self.launchers_against.setdefault(self.domain_of[target_force_id], set())
 
         if launcher.id in launchers:
             return
@@ -1919,7 +2010,7 @@ class _EngagementRun:
         for shooter_id in sorted(self.candidates):
             shooter = self.shadows[shooter_id]
 
-            if shooter.force_id != target_force_id or not shooter.operative \
+            if not self._same_domain(shooter.force_id, target_force_id) or not shooter.operative \
                     or shooter.force_id in self.broken_forces:
                 continue
 
@@ -2526,8 +2617,12 @@ class _EngagementRun:
         return state.side is None or other is None or other != state.side
 
     def _perceived_ratio(self, time: float, state: _ForceState) -> Optional[float]:
-        """rho(t): forza propria / forza nemica percepita (D4a-D4e), None se non definito."""
-        seen = self.seen_by.get(state.force_id, {})
+        """rho(t): forza propria / forza nemica percepita (D4a-D4e), None se non definito.
+
+        Nemico percepito = rilevato dal dominio di coordinamento della forza (percezione
+        condivisa, 2026-10-11); forza propria = i soli asset della forza.
+        """
+        seen = self.seen_by.get(self.domain_of[state.force_id], {})
         enemies = [self.shadows[asset_id] for asset_id, t_seen in seen.items()
                    if t_seen <= time + TIME_EPS and self._is_enemy(state, self.shadows[asset_id])
                    and not self.shadows[asset_id].destroyed]
@@ -2571,11 +2666,11 @@ class _EngagementRun:
         return weight
 
     def _unanswered_fraction(self, state: _ForceState) -> float:
-        """Quota delle perdite causate da tiratori che la forza non aveva rilevato (D5)."""
+        """Quota delle perdite causate da tiratori che il dominio della forza non aveva rilevato (D5)."""
         if not state.loss_shooters:
             return 0.0
 
-        seen = self.seen_by.get(state.force_id, {})
+        seen = self.seen_by.get(self.domain_of[state.force_id], {})
         unanswered = sum(1 for shooter_id, t_loss in state.loss_shooters.values()
                          if seen.get(shooter_id, float('inf')) > t_loss + TIME_EPS)
 
@@ -2692,7 +2787,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        morale_for: Optional[Callable] = None,
                        enemy_estimate_for: Optional[Callable] = None,
                        fire_doctrine: Optional[Dict] = None,
-                       rwr_catalogue: Optional[Sequence] = None) -> Optional[EngagementResult]:
+                       rwr_catalogue: Optional[Sequence] = None,
+                       coordination_of: Optional[Mapping[str, str]] = None) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
@@ -2746,6 +2842,12 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         rwr_catalogue: emettitori al posto di `Air_Defense_Efficacy.default_rwr_catalogue()` per il
             peso di classe di un nemico percepito dalla sola RWR (regola R-CLS), es. ristretto
             all'inventario del nemico; None = catalogo dei registri.
+        coordination_of: `{force_id: chiave di dominio}`, il dominio di coordinamento di ogni
+            forza (v. "Dominio di coordinamento" nel docstring del modulo): ripartizione del
+            fuoco, saturazione e percezione del nemico sono condivise fra le forze con la stessa
+            chiave. None (default) o una forza assente dalla mappa = la forza e' il proprio
+            dominio, comportamento precedente al 2026-10-11. In sessione la costruisce
+            `Mission_Adapter.coordination_domains` (blocco oppure Operazione).
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -2754,9 +2856,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
 
     Raises:
         TypeError: `rng` senza `.random()`, `fire_control` non chiamabile o che non
-            restituisce una ShotSpec, una sequenza di ShotSpec o None.
+            restituisce una ShotSpec, una sequenza di ShotSpec o None, `coordination_of` che
+            non e' una mappa di stringhe.
         ValueError: `salvo_window` negativo, provenance sconosciuta, forze ripetute o
-            con asset in comune.
+            con asset in comune, forze di lati diversi nello stesso dominio di coordinamento.
     """
     if not callable(getattr(rng, 'random', None)):
         raise TypeError("rng must expose a random() method returning a float in [0, 1)")
@@ -2783,7 +2886,8 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                          committed, thresholds, reaction_profile_for, detection_factor,
                          salvo_window, provenance, breakpoint_rng=breakpoint_rng,
                          morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
-                         fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue)
+                         fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue,
+                         coordination_of=coordination_of)
 
     if not run.usable:
         return None

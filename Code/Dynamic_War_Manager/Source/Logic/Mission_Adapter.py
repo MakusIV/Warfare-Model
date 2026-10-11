@@ -93,9 +93,10 @@ registro, v. `Mobile.speed_profile_from_registry`) del mezzo piu' lento della mi
 Dalla F4b l'unita' d'ingaggio del motore e' la MISSIONE, non il blocco: `Session_Simulator`
 passa allo scheduler i blocchi (le finestre sono per coppia di asset, la potatura per blocco resta
 quella di prima) ma raggruppa le finestre e chiama `Engagement_Resolver.resolve_engagement` sulle
-viste `MissionForce`. Disingaggio, soglia di rottura (tempra), percezione del nemico e
-`committed` valgono quindi per missione; il blocco resta l'unita' di appartenenza, rifornimento
-e comando (gli asset sono gli stessi oggetti, `asset.block` non cambia).
+viste `MissionForce`. Disingaggio, soglia di rottura (tempra) e `committed` valgono quindi per
+missione (ripartizione del fuoco e percezione del nemico, dal 2026-10-11, per dominio di
+coordinamento: v. sotto); il blocco resta l'unita' di appartenenza, rifornimento e comando (gli
+asset sono gli stessi oggetti, `asset.block` non cambia).
 
 Verifica fatta all'inizio della F4b: cosa legge il risolutore della forza, oltre agli asset.
   * `id`/`name` (id di forza: chiave di `committed`, dei `ForceOutcome`, della percezione);
@@ -124,6 +125,28 @@ membri del blocco. Un blocco senza missioni entra nel risolutore come prima (l'o
 id del blocco); un blocco con missioni e anche asset non assegnati li raggruppa nella vista
 residua `MissionForce.unassigned`, con l'id DEL BLOCCO e `mission_id` None.
 
+## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7)
+
+`coordination_domains` assegna a ogni forza d'ingaggio la chiave del suo DOMINIO di
+coordinamento, che `Engagement_Resolver.resolve_engagement` riceve come `coordination_of`: dentro
+un dominio ripartizione del fuoco, saturazione e percezione del nemico sono condivise (v. il
+docstring del risolutore). Regola dell'utente: due forze dello stesso lato sono nello stesso
+dominio se hanno lo stesso blocco OPPURE appartengono alla stessa Operazione, con unione
+TRANSITIVA (union-find: A e B dello stesso blocco, B e C della stessa Operazione -> A, B, C in un
+solo dominio). La vista residua e un blocco senza missioni hanno l'id del blocco, quindi entrano
+nel dominio delle missioni del blocco.
+  * **Lati**: un dominio non sta mai a cavallo di due lati. Un'Operazione che elenca missioni di
+    lati diversi (`SessionOrder` non conosce i blocchi e non puo' vietarlo) lega solo le missioni
+    dello stesso lato: un dominio per lato, con un warning. Scelta la via che non rifiuta l'ordine
+    perche' l'Operazione e' un raggruppamento di scopo, non di comando; il risolutore verifica
+    comunque l'invariante (ValueError se due lati condividono una chiave).
+  * **Chiave**: l'id di forza minore (ordine delle stringhe) fra i membri del dominio. E' l'id di
+    una delle sue forze, quindi non puo' coincidere con la chiave di un altro dominio, e senza
+    legami la chiave di una forza e' il suo id (comportamento precedente).
+  * L'appartenenza all'Operazione e' letta da `Operation.mission_ids` e da `Mission.operation_id`
+    della missione della vista (`SessionOrder` ne garantisce la coerenza): le missioni arrivano
+    con le viste, non serve passarle a parte.
+
 ## Cosa NON fa
 - Nessuna attesa (WAIT), nessuna presenza prima della partenza o dopo la fine (F5).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F5-F7.
@@ -141,6 +164,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     Activation,
     Mission,
     MissionAsset,
+    Operation,
     WaypointRole,
     route_waypoints,
 )
@@ -717,3 +741,88 @@ class MissionForce:
     def __repr__(self) -> str:
         return (f"MissionForce(id={self.id!r}, block={self.block_id!r}, side={self.side!r}, "
                 f"assets={len(self.assets)})")
+
+
+# ── DOMINIO DI COORDINAMENTO (2026-10-11) ─────────────────────────────────────
+
+def coordination_domains(forces: Mapping[str, object], operations: Iterable[Operation] = ()) -> Dict[str, str]:
+    """`{force_id: chiave di dominio}` per le forze d'ingaggio (v. "Dominio di coordinamento").
+
+    Args:
+        forces: `{force_id: forza}` come le costruisce `Session_Simulator._engagement_forces`:
+            `MissionForce` (di missione o residua) o blocchi senza missioni (id = id del blocco).
+        operations: le `Operation` della sessione (`SessionOrder.operations`).
+
+    Returns:
+        Una voce per forza, chiave = id di forza minore del dominio. Funzione pura e
+        deterministica (nessuna dipendenza dall'ordine dei dizionari).
+
+    Raises:
+        TypeError: `forces` non e' una mappa, `operations` contiene altro che `Operation`.
+    """
+    if not isinstance(forces, Mapping):
+        raise TypeError(f"forces must be a mapping force_id -> force, got {type(forces).__name__}")
+
+    operation_of: Dict[str, str] = {}
+
+    for operation in operations or ():
+        if not isinstance(operation, Operation):
+            raise TypeError(f"operations must contain Operation, got {type(operation).__name__}")
+
+        for mission_id in operation.mission_ids:
+            operation_of.setdefault(mission_id, operation.operation_id)
+
+    parent: Dict[tuple, tuple] = {}
+
+    def find(node: tuple) -> tuple:
+        parent.setdefault(node, node)
+
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+
+        return node
+
+    def union(a: tuple, b: tuple) -> None:
+        root_a, root_b = find(a), find(b)
+
+        if root_a != root_b:
+            parent[max(root_a, root_b)] = min(root_a, root_b)
+
+    operation_sides: Dict[str, set] = {}
+
+    for force_id in sorted(forces):
+        force = forces[force_id]
+        side = getattr(force, 'side', None)
+        side_key = side if isinstance(side, str) else repr(side)
+        node = ('force', force_id)
+        find(node)
+
+        if isinstance(force, MissionForce):
+            block_id = force.block_id
+            mission = force.mission
+        else:
+            block_id = _domain_id(force) or force_id
+            mission = None
+
+        union(node, ('block', side_key, block_id))
+
+        if mission is not None:
+            operation_id = operation_of.get(mission.mission_id, mission.operation_id)
+
+            if operation_id is not None:
+                union(node, ('operation', side_key, operation_id))
+                operation_sides.setdefault(operation_id, set()).add(side_key)
+
+    for operation_id in sorted(operation_sides):
+        if len(operation_sides[operation_id]) > 1:
+            logger.warning(f"coordination_domains: operation {operation_id!r} has missions of sides "
+                           f"{sorted(operation_sides[operation_id])}: it links only the missions of the "
+                           f"same side, one coordination domain per side")
+
+    members: Dict[tuple, List[str]] = {}
+
+    for force_id in sorted(forces):
+        members.setdefault(find(('force', force_id)), []).append(force_id)
+
+    return {force_id: min(group) for group in members.values() for force_id in group}

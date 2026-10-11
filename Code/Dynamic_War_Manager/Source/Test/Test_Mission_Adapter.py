@@ -446,3 +446,92 @@ class TestMissionForce(_Base):
         self.assertTrue(ER._can_disengage(MA.MissionForce.of_mission(self._two_ship(), self.wing)))
         self.assertTrue(ER._can_disengage(_Plain()))
         self.assertFalse(ER._can_disengage(Block('depot', 'Blue', [])))
+
+
+# ── DOMINIO DI COORDINAMENTO (2026-10-11, decisioni 6 e 7) ────────────────────
+
+class TestCoordinationDomains(_Base):
+    """Stesso blocco OPPURE stessa Operazione, unione transitiva, mai a cavallo dei lati."""
+
+    def setUp(self):
+        super().setUp()
+        self.blocks = {'b1': Military('b1', 'Blue', ['a1', 'a2', 'a3']),
+                       'b2': Military('b2', 'Blue', ['c1']),
+                       'b3': Military('b3', 'Blue', ['d1']),
+                       'r1': Military('r1', 'Red', ['e1'])}
+
+    def _view(self, mission_id, block_id, asset_id, operation_id=None):
+        mission = _mission(mission_id=mission_id, block_id=block_id, operation_id=operation_id,
+                           assets=(MT.MissionAsset(asset_id, 'lead'),))
+        return MA.MissionForce.of_mission(mission, self.blocks[block_id])
+
+    def _forces(self, *views):
+        return {view.id: view for view in views}
+
+    def test_without_links_every_force_is_its_own_domain(self):
+        forces = self._forces(self._view('mA', 'b1', 'a1'), self._view('mC', 'b2', 'c1'))
+        self.assertEqual(MA.coordination_domains(forces), {'mA': 'mA', 'mC': 'mC'})
+
+    def test_same_block(self):
+        forces = self._forces(self._view('mB', 'b1', 'a1'), self._view('mA', 'b1', 'a2'),
+                              self._view('mC', 'b2', 'c1'))
+        self.assertEqual(MA.coordination_domains(forces), {'mA': 'mA', 'mB': 'mA', 'mC': 'mC'})
+
+    def test_same_operation_across_blocks(self):
+        forces = self._forces(self._view('mA', 'b1', 'a1', 'op'), self._view('mC', 'b2', 'c1', 'op'))
+        operation = MT.Operation(operation_id='op', purpose='strike', mission_ids=('mA', 'mC'))
+        self.assertEqual(MA.coordination_domains(forces, [operation]), {'mA': 'mA', 'mC': 'mA'})
+
+    def test_operation_listed_only_by_the_order(self):
+        """Missioni senza `operation_id` ma elencate da un'Operazione: legate lo stesso."""
+        forces = self._forces(self._view('mA', 'b1', 'a1'), self._view('mC', 'b2', 'c1'))
+        operation = MT.Operation(operation_id='op', purpose='strike', mission_ids=('mA', 'mC'))
+        self.assertEqual(MA.coordination_domains(forces), {'mA': 'mA', 'mC': 'mC'})
+        self.assertEqual(MA.coordination_domains(forces, [operation])['mC'], 'mA')
+
+    def test_transitive_union(self):
+        """A-blocco1, B-blocco1+Op, C-blocco2+Op -> un solo dominio; D-blocco3 resta fuori."""
+        forces = self._forces(self._view('A', 'b1', 'a1'), self._view('B', 'b1', 'a2', 'op'),
+                              self._view('C', 'b2', 'c1', 'op'), self._view('D', 'b3', 'd1'))
+        domains = MA.coordination_domains(forces, [MT.Operation('op', 'strike', ('B', 'C'))])
+        self.assertEqual(domains, {'A': 'A', 'B': 'A', 'C': 'A', 'D': 'D'})
+
+    def test_residual_view_joins_the_missions_of_its_block(self):
+        mission = _mission(mission_id='m1', block_id='b1', assets=(MT.MissionAsset('a1', 'lead'),))
+        forces = {'m1': MA.MissionForce.of_mission(mission, self.blocks['b1']),
+                  'b1': MA.MissionForce.unassigned(self.blocks['b1'], [mission]),
+                  'b2': self.blocks['b2']}
+        self.assertEqual(MA.coordination_domains(forces), {'m1': 'b1', 'b1': 'b1', 'b2': 'b2'})
+
+    def test_operation_never_spans_two_sides(self):
+        forces = self._forces(self._view('mA', 'b1', 'a1', 'op'), self._view('mB', 'b2', 'c1', 'op'),
+                              self._view('mR', 'r1', 'e1', 'op'))
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Mission_Adapter.logger') as mock_logger:
+            domains = MA.coordination_domains(forces, [MT.Operation('op', 'mixed', ('mA', 'mB', 'mR'))])
+
+        self.assertEqual(domains, {'mA': 'mA', 'mB': 'mA', 'mR': 'mR'})
+        mock_logger.warning.assert_called_once()
+
+    def test_deterministic_and_independent_of_the_mapping_order(self):
+        views = [self._view('B', 'b1', 'a2', 'op'), self._view('C', 'b2', 'c1', 'op'), self._view('A', 'b1', 'a1')]
+        operation = MT.Operation('op', 'strike', ('B', 'C'))
+        self.assertEqual(MA.coordination_domains(self._forces(*views), [operation]),
+                         MA.coordination_domains(self._forces(*reversed(views)), [operation]))
+
+    def test_the_resolver_accepts_the_map(self):
+        """Le chiavi sono quelle che `resolve_engagement` accetta come `coordination_of`."""
+        from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+
+        forces = self._forces(self._view('mA', 'b1', 'a1'), self._view('mB', 'b1', 'a2'), self._view('mR', 'r1', 'e1'))
+        for view in forces.values():
+            for asset in view.assets.values():
+                asset.health = 100
+        run = ER._EngagementRun(tuple(forces.values()), [], lambda s, t: None, None, None, None, None, None,
+                                None, 0.0, 'derived', coordination_of=MA.coordination_domains(forces))
+        self.assertEqual(run.domain_of, {'mA': 'mA', 'mB': 'mA', 'mR': 'mR'})
+
+    def test_bad_arguments(self):
+        with self.assertRaises(TypeError):
+            MA.coordination_domains([self._view('mA', 'b1', 'a1')])
+        with self.assertRaises(TypeError):
+            MA.coordination_domains(self._forces(self._view('mA', 'b1', 'a1')), ['op'])

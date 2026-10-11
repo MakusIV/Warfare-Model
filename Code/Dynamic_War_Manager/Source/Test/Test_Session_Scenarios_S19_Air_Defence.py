@@ -187,6 +187,18 @@ class TestS19AirDefenceAllocation(F.LoggerSilencer, unittest.TestCase):
                 strela = red.assets[self.AD]
                 self.assertEqual(strela.stock_of('9M37-SAM'), strela.stores_from_registry()['9M37-SAM'])
 
+    def test_standoff_missions_share_the_fire(self):
+        """Dominio di coordinamento (decisione 6 dell'utente, 2026-10-11): i 4 A-10C sono 4 missioni
+        dello STESSO blocco, quindi la saturazione e la ripartizione contano le salve di tutte. Come
+        in F4a (forza = blocco): 8-10 Maverick e la linea Red distrutta con lo Strela. In F4b, senza dominio, se ne lanciavano 16 e lo Strela restava."""
+        for red, outcome in self.strela_standoff:
+            with self.subTest(session=outcome.session_id if hasattr(outcome, 'session_id') else None):
+                launched = sum(e.rounds for e in outcome.ammunition_events if e.weapon == MAVERICK)
+                self.assertGreaterEqual(launched, 8)
+                self.assertLessEqual(launched, 10)
+                self.assertEqual(F.force_outcome(outcome, 'Red-Line').outcome, 'destroyed')
+                self.assertTrue(red.assets[self.AD].is_destroyed())
+
     def test_rear_tor_intercepts_standoff_launches(self):
         """Tor arretrato: i Maverick partono fuori dai suoi 12 km, sono bersagli legittimi (L1)."""
         self.assertGreater(sum(_interceptions(o, self.AD) for _, _, o in self.tor_rear), 0)

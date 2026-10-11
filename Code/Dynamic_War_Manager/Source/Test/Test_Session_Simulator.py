@@ -36,6 +36,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     MissionAsset,
     MissionStatus,
     MissionWaypoint,
+    Operation,
     StartMode,
     Target,
     TargetKind,
@@ -504,6 +505,13 @@ class TestConnectedComponents(unittest.TestCase):
     def test_empty(self):
         self.assertEqual(SS._connected_components({}), [])
 
+    def test_forces_of_one_coordination_domain_share_the_component(self):
+        """Dal 2026-10-11: due fronti disgiunti, ma a1 e a2 nello stesso dominio -> una run."""
+        groups = {('a2', 'b2'): ['w2'], ('a1', 'b1'): ['w1']}
+        domains = {'a1': 'a1', 'a2': 'a1', 'b1': 'b1', 'b2': 'b2'}
+        self.assertEqual(SS._connected_components(groups, domains), [(('a1', 'a2', 'b1', 'b2'), ['w1', 'w2'])])
+        self.assertEqual(SS._connected_components(groups, {'a1': 'a1'}), SS._connected_components(groups))
+
 
 class TestSessionInterval(_Base):
 
@@ -754,6 +762,32 @@ class TestMissionAsEngagementUnit(_Base):
         self.assertIs(forces['Blue-South'], blue[1])
         self.assertIs(forces['Red-East'], red[0])
         self.assertEqual((owner['bn1'], owner['bn2'], owner['re1']), ((0, 'M-a'), (0, 'Blue-North'), (1, 'Red-East')))
+
+    def test_coordination_domains_are_passed_to_every_engagement(self):
+        """Senza Operazioni: ogni missione e' il proprio dominio (blocchi diversi), due run."""
+        with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as spy:
+            self._run('S-domains')
+
+        self.assertEqual(spy.call_count, 2)
+        for call in spy.call_args_list:
+            self.assertEqual(call.kwargs['coordination_of'],
+                             {'M-north': 'M-north', 'M-south': 'M-south', 'Red-East': 'Red-East', 'Red-West': 'Red-West'})
+
+    def test_an_operation_joins_the_fronts_in_one_coordinated_run(self):
+        """M-north e M-south (blocchi diversi) nella stessa Operazione: un dominio, quindi una run
+        con entrambi i fronti (la condivisione vale dentro la run); i Red restano separati."""
+        blue, red, missions = self._scenario()
+        order = self._order('S-operation', missions,
+                            operations=(Operation('op-strike', 'strike', ('M-north', 'M-south')),))
+
+        with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as spy:
+            outcome = SS.run_session(order, blue, red, _fire, reaction_profile_for=_profile)
+
+        spy.assert_called_once()
+        self.assertEqual(spy.call_args.kwargs['coordination_of'],
+                         {'M-north': 'M-north', 'M-south': 'M-north', 'Red-East': 'Red-East', 'Red-West': 'Red-West'})
+        self.assertEqual([tuple(o.force_id for o in e) for e in outcome.engagement_outcomes],
+                         [('M-north', 'M-south', 'Red-East', 'Red-West')])
 
     def test_mission_id_equal_to_a_block_id_is_rejected(self):
         blue, red, _ = self._scenario()

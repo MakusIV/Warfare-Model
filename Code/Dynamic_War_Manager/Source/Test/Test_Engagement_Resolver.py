@@ -2537,5 +2537,161 @@ class TestFireDoctrine(unittest.TestCase):
             self._one_target(1, _kill(), fire_doctrine={'Blue': {'kill_probability_threshold': 1.5}})
 
 
+
+# ── DOMINIO DI COORDINAMENTO (2026-10-11, decisioni 6 e 7) ────────────────────
+
+_LOOSE_DOCTRINE = {'Blue': {'erosion': 1.0, 'shock': 1.0}, 'Red': {'erosion': 1.0, 'shock': 1.0}}
+_SHARED = {'m1': 'm1', 'm2': 'm1'}
+
+
+class TestCoordinationDomainFire(unittest.TestCase):
+    """Decisione 6: saturazione, ripartizione e attesa contano le salve di tutte le forze del dominio.
+
+    Due forze Blue di un tiratore ciascuna ('m1': s0, 'm2': s1), pronte entrambe a t=2; i bersagli
+    Red non vedono nessuno. Senza `coordination_of` ogni forza e' il proprio dominio (regressione).
+    """
+
+    @staticmethod
+    def _run(spec, targets=('t00',), coordination_of=None, rng=None, t_end=1000.0):
+        m1 = _Force('m1', 'Blue', [_Asset('s0')])
+        m2 = _Force('m2', 'Blue', [_Asset('s1')])
+        red = _Force('red', 'Red', [_Asset(t) for t in targets])
+        windows = [_window(s, t, t_end=t_end, range_b=None) for s in ('s0', 's1') for t in targets]
+        return ER.resolve_engagement(m1, m2, windows, _always(spec), rng or random.Random(0), extra_forces=(red,),
+                                     reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                     thresholds=_LOOSE_DOCTRINE, coordination_of=coordination_of)
+
+    def test_target_saturated_by_the_other_force_gets_no_salvo(self):
+        shared = self._run(_kill(time_of_flight=10.0), coordination_of=_SHARED)
+        separate = self._run(_kill(time_of_flight=10.0))
+
+        self.assertEqual([(s.t_launch, s.shooter_id) for s in shared.salvos], [(2.0, 's0')])
+        self.assertEqual([(s.t_launch, s.shooter_id) for s in separate.salvos], [(2.0, 's0'), (2.0, 's1')])
+
+    def test_identity_map_is_the_behaviour_without_map(self):
+        spec = ER.ShotSpec(accuracy=0.6, destroy_capacity=0.5, time_of_flight=5.0)
+        identity = {'m1': 'm1', 'm2': 'm2', 'red': 'red'}
+
+        for seed in range(3):
+            with self.subTest(seed=seed):
+                self.assertEqual(self._run(spec, ('t00', 't01'), None, random.Random(seed)),
+                                 self._run(spec, ('t00', 't01'), identity, random.Random(seed)))
+
+    def test_waiting_on_the_other_force(self):
+        """P_kill 0.95 >= 0.9: s1 aspetta l'impatto della salva di s0 (t=12) e ridecide; il colpo
+        di s0 manca (estrazione 0.99), quindi il bersaglio e' ancora vivo e si spara di nuovo a 12."""
+        spec = ER.ShotSpec(accuracy=0.95, destroy_capacity=1.0, time_of_flight=10.0)
+        shared = self._run(spec, coordination_of=_SHARED, rng=_ScriptedRng([0.0, 0.0, 0.99, 0.0]))
+        launches = [(s.t_launch, s.shooter_id) for s in shared.salvos]
+
+        self.assertEqual(launches[0], (2.0, 's0'))
+        self.assertEqual([t for t, _ in launches], [2.0, 12.0])
+        self.assertTrue(shared.damage_events[-1].destroyed)
+
+    def test_the_two_rounds_cap_stays_per_shooter(self):
+        """Colpi a vuoto (mai saturo): ciascun tiratore resta a 2 colpi in volo, come da solo."""
+        shared = self._run(_miss(time_of_flight=10.0), coordination_of=_SHARED, t_end=4.0)
+
+        for shooter in ('s0', 's1'):
+            with self.subTest(shooter=shooter):
+                self.assertEqual([s.t_launch for s in shared.salvos if s.shooter_id == shooter], [2.0, 3.0])
+
+    def test_shooters_of_the_domain_spread_over_targets(self):
+        """Round-robin (`_engaged_shooters`) sul dominio: s1 va su t01 perche' s0 e' su t00."""
+        spec = _miss(cycle_time=100.0)
+        shared = self._run(spec, ('t00', 't01'), coordination_of=_SHARED)
+        separate = self._run(spec, ('t00', 't01'))
+
+        self.assertEqual({s.shooter_id: s.target_id for s in shared.salvos}, {'s0': 't00', 's1': 't01'})
+        self.assertEqual({s.shooter_id: s.target_id for s in separate.salvos}, {'s0': 't00', 's1': 't00'})
+
+    def test_the_sharing_draws_no_extra_numbers(self):
+        """Stesso bersaglio, colpi a vuoto: stesse salve con e senza dominio, stesse estrazioni."""
+        rng_shared, rng_separate = _ScriptedRng([0.0] * 50), _ScriptedRng([0.0] * 50)
+        self._run(_miss(time_of_flight=10.0), coordination_of=_SHARED, rng=rng_shared, t_end=4.0)
+        self._run(_miss(time_of_flight=10.0), rng=rng_separate, t_end=4.0)
+
+        self.assertEqual(rng_shared.calls, rng_separate.calls)
+
+    def test_launchers_are_registered_against_the_domain(self):
+        forces = (_Force('m1', 'Blue', [_Asset('g1')]), _Force('m2', 'Blue', [_Asset('g2')]),
+                  _Force('air', 'Red', [_Asset('a1')]))
+
+        for coordination_of, expected in ((_SHARED, True), (None, False)):
+            run = ER._EngagementRun(forces, [], _always(_kill()), random.Random(0), None, None, None, None, None,
+                                    0.0, DM.DERIVED, coordination_of=coordination_of)
+            run._register_launcher(0.0, run.shadows['a1'], 'm1')
+
+            with self.subTest(shared=coordination_of is not None):
+                self.assertTrue(run._is_launcher_against('a1', 'm1'))
+                self.assertEqual(run._is_launcher_against('a1', 'm2'), expected)
+
+    def test_a_domain_never_spans_two_sides(self):
+        with self.assertRaisesRegex(ValueError, 'never spans two sides'):
+            self._run(_kill(), coordination_of={'m1': 'x', 'red': 'x'})
+
+    def test_bad_map_raises(self):
+        for bad in (['m1'], {'m1': 3}, {'m1': ''}):
+            with self.subTest(bad=bad):
+                with self.assertRaises(TypeError):
+                    self._run(_kill(), coordination_of=bad)
+
+
+class TestCoordinationDomainPerception(unittest.TestCase):
+    """Decisione 7 (opzione B): rilevamenti condivisi nel dominio, nessun cueing del tiro.
+
+    'm2' = 10 bersagli Blue che non vedono il tiratore Red s0; 'm1' = un osservatore Blue o1 che
+    lo vede (e non e' visto). Solo s0 (Red) spara, un bersaglio al secondo.
+    """
+
+    @staticmethod
+    def _run(doctrine, coordination_of=None, rng=None, fire=_only_shooters):
+        attackers, defenders, windows = _one_shooter_vs_ten(shooter_side='Red', target_side='Blue')
+        m2 = _Force('m2', 'Blue', list(defenders.assets.values()))
+        m1 = _Force('m1', 'Blue', [_Asset('o1')])
+        windows = list(windows) + [_window('o1', 's0', range_b=None)]
+        return ER.resolve_engagement(attackers, m2, windows, fire, rng or random.Random(0), extra_forces=(m1,),
+                                     reaction_profile_for=_profiles({}, default=(2.0, 1.0)), thresholds=doctrine,
+                                     coordination_of=coordination_of)
+
+    def test_detection_of_a_domain_mate_answers_the_fire(self):
+        doctrine = _doctrine(erosion=0.4, unanswered_fire_weight=0.3)
+        shared = self._run(doctrine, _SHARED).outcome_of('m2')
+        separate = self._run(doctrine).outcome_of('m2')
+
+        self.assertEqual((shared.unanswered_fraction, shared.lost), (0.0, 4))      # 0.40
+        self.assertEqual((separate.unanswered_fraction, separate.lost), (1.0, 3))  # 0.28
+
+    def test_detection_of_a_domain_mate_enters_the_force_ratio(self):
+        """La percezione e' condivisa, la forza propria resta della sola 'm2' (10 asset)."""
+        doctrine = _doctrine(force_ratio_exponent=0.5)
+        shared = self._run(doctrine, _SHARED).outcome_of('m2')
+        separate = self._run(doctrine).outcome_of('m2')
+
+        self.assertIsNone(separate.force_ratio)
+        self.assertAlmostEqual(shared.force_ratio, shared.committed - shared.lost)   # rapporto vs 1 tiratore
+        self.assertEqual(shared.lost, 5)                                              # 0.45, come se la vedesse
+
+    def test_same_detection_draws(self):
+        doctrine = _doctrine(erosion=0.4)
+        shared, separate = self._run(doctrine, _SHARED), self._run(doctrine)
+
+        self.assertEqual([d.draw for d in shared.detections], [d.draw for d in separate.detections])
+
+    def test_no_cueing(self):
+        """o1 (m1) rileva s0, i bersagli di m2 no: con il dominio m2 lo percepisce ma non gli spara."""
+        fire = lambda shooter, target: _kill() if shooter.id.startswith(('s', 't')) else None
+        attackers, defenders, windows = _one_shooter_vs_ten(shooter_side='Red', target_side='Blue')
+        m2 = _Force('m2', 'Blue', list(defenders.assets.values()))
+        run = ER._EngagementRun((attackers, m2, _Force('m1', 'Blue', [_Asset('o1')])),
+                                list(windows) + [_window('o1', 's0', range_b=None)], fire, random.Random(0),
+                                None, None, _doctrine(erosion=1.0, shock=1.0), _profiles({}, default=(2.0, 1.0)),
+                                None, 0.0, DM.DERIVED, coordination_of=_SHARED)
+        result = run.run()
+
+        self.assertIn('s0', run.seen_by['m1'])
+        self.assertEqual({s.shooter_id for s in result.salvos}, {'s0'})
+
+
 if __name__ == '__main__':
     unittest.main()

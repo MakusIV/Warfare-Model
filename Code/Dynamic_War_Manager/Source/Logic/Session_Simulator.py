@@ -47,10 +47,24 @@ lento (`Mission_Adapter.check_mission_speed`; asset senza il dato esclusi con un
 Dalla F4b la FORZA d'ingaggio e' la missione (`_engagement_forces`): ogni missione diventa una
 vista `Mission_Adapter.MissionForce` (asset della missione, lato del blocco, id e nome =
 `mission_id`), e le finestre sono raggruppate per missione. Disingaggio, soglia di rottura
-(tempra), percezione del nemico e `committed` valgono quindi per missione: due missioni dello
-stesso blocco ingaggiano e disingaggiano separatamente (decisione dell'utente, 2026-10-08: nessuna
-Operazione le lega). Lo scheduler riceve ancora i BLOCCHI: le finestre sono per coppia di asset e
-la potatura per blocco non dipende da come gli asset sono raggruppati in forze.
+(tempra) e `committed` valgono quindi per missione: due missioni dello stesso blocco ingaggiano e
+disingaggiano separatamente (decisione dell'utente, 2026-10-08). Lo scheduler riceve ancora i
+BLOCCHI: le finestre sono per coppia di asset e la potatura per blocco non dipende da come gli
+asset sono raggruppati in forze.
+
+## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7 del piano della Missione)
+
+Ripartizione del fuoco (saturazione, tiratori impegnati, lanciatori prioritari) e percezione del
+nemico NON sono per missione ma per dominio di coordinamento: missioni dello stesso blocco OPPURE
+della stessa Operazione (`SessionOrder.operations`), per unione transitiva, mai a cavallo dei lati
+(`Mission_Adapter.coordination_domains`; la vista residua e un blocco senza missioni hanno l'id del
+blocco e quindi stanno nel dominio delle missioni del blocco). La mappa e' passata a ogni ingaggio
+(`coordination_of` di `resolve_engagement`), condivisione istantanea senza latenza (dichiarato),
+nessun cueing del tiro. Perche' la condivisione valga, le forze di uno stesso dominio sono messe
+nella STESSA componente connessa anche quando non hanno nemici in comune
+(`_connected_components`): due missioni dello stesso blocco su fronti disgiunti sono risolte in una
+run, come lo era il blocco prima della F4b. Effetto sull'RNG: la componente unita ha l'`event_id`
+delle sue forze riunite (v. "RNG: uno stream per ingaggio").
 
 Asset del blocco senza missione (la postura continua e' della F4c): comportamento di prima.
   * blocco senza missioni: entra nel risolutore come prima, l'oggetto blocco con il suo id;
@@ -449,13 +463,16 @@ def _group_windows(windows, owner) -> Dict[Tuple[str, str], List[CS.ContactWindo
     return groups
 
 
-def _connected_components(groups: Mapping[Tuple[str, str], List[CS.ContactWindow]]
+def _connected_components(groups: Mapping[Tuple[str, str], List[CS.ContactWindow]],
+                          domain_of: Optional[Mapping[str, str]] = None
                           ) -> List[Tuple[Tuple[str, ...], List[CS.ContactWindow]]]:
     """Componenti connesse del grafo delle forze, con le finestre di ciascuna.
 
     Nodi: le forze che compaiono in almeno una coppia di `groups`; archi: le coppie con
-    almeno una finestra. Visita in ampiezza deterministica: si parte dalle forze in ordine
-    di id e i vicini sono visitati in ordine di id — mai l'ordine di un dizionario.
+    almeno una finestra e (dal 2026-10-11, con `domain_of`) le coppie di forze dello stesso
+    dominio di coordinamento, perche' la condivisione del dominio vale dentro una run (v.
+    "Dominio di coordinamento"). Visita in ampiezza deterministica: si parte dalle forze in
+    ordine di id e i vicini sono visitati in ordine di id — mai l'ordine di un dizionario.
 
     Returns:
         `[(force_ids ordinati, finestre), ...]`, componenti ordinate per id minimo. Le
@@ -468,6 +485,17 @@ def _connected_components(groups: Mapping[Tuple[str, str], List[CS.ContactWindow
     for force_a, force_b in groups:
         neighbours.setdefault(force_a, set()).add(force_b)
         neighbours.setdefault(force_b, set()).add(force_a)
+
+    if domain_of:
+        by_domain: Dict[str, List[str]] = {}
+
+        for force_id in sorted(neighbours):
+            by_domain.setdefault(domain_of.get(force_id, force_id), []).append(force_id)
+
+        for same in by_domain.values():
+            for force_a, force_b in zip(same, same[1:]):
+                neighbours[force_a].add(force_b)
+                neighbours[force_b].add(force_a)
 
     component_of: Dict[str, int] = {}
     members: List[List[str]] = []
@@ -731,7 +759,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         thresholds/reaction_profile_for/detection_factor/provenance/morale_for/
             enemy_estimate_for/fire_doctrine: passati a `resolve_engagement`; `provenance` vale anche per i
             FuelEvent. La tempra delle forze (soglia di rottura) e' estratta dal flusso
-            `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio.
+            `order.rng(event_id=temper_event_id(*forze))`, separato da quello dell'ingaggio. Il
+            dominio di coordinamento (`coordination_of`) e' ricavato dalle missioni e da
+            `order.operations` (v. "Dominio di coordinamento").
 
     Returns:
         Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine e un `ForceOutcome`
@@ -760,6 +790,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     items_a, items_b, blocks, block_owner = _collect_forces(order, forces_a, forces_b)
     _check_missions(order, blocks)
     forces, owner = _engagement_forces(order, blocks, block_owner)
+    coordination = MA.coordination_domains(forces, order.operations)
     mission_movements = {mission.mission_id: MA.mission_movements(mission, t0) for mission in order.missions}
     routes, starts, speeds = MA.session_movements(order.missions, t0)
 
@@ -795,7 +826,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     sequence = 0
 
     # Un evento per COMPONENTE connessa di forze d'ingaggio, cioe' di missioni (F4b).
-    for force_ids, group in _connected_components(groups):
+    for force_ids, group in _connected_components(groups, coordination):
         event_id = engagement_event_id(*force_ids)
         sequence += 1
         heapq.heappush(queue, (min(w.t_start for w in group), ENGAGEMENT_EVENT, event_id,
@@ -830,7 +861,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                                                     counter=0),
                                            morale_for=morale_for,
                                            enemy_estimate_for=enemy_estimate_for,
-                                           fire_doctrine=fire_doctrine)
+                                           fire_doctrine=fire_doctrine,
+                                           coordination_of=coordination)
             results.append(result)
 
             if result is not None:

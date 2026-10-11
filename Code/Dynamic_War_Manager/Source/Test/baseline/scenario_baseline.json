@@ -76977,13 +76977,13 @@
      "AGM-65D": 4
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -77000,38 +77000,20 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
     ],
     [
-     164.162538,
+     186.100038,
      "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
-     "Blue-CAS/cas3",
      "AGM-65D",
      2
     ]
@@ -77052,42 +77034,42 @@
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -77095,11 +77077,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -77169,14 +77151,14 @@
    },
    "counts": {
     "damage_events": 8,
-    "destroyed_events": 3,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 10,
+    "salvos": 5
    },
    "damage_events": [
     [
@@ -77210,9 +77192,9 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
      "AGM-65D",
      "kill",
      100,
@@ -77220,28 +77202,8 @@
      true
     ],
     [
-     187.635038,
-     "Red-Line/ifv0",
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
-     187.635038,
-     "Red-Line/ifv0",
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     "miss",
-     100,
-     100,
-     false
-    ],
-    [
-     187.777355,
-     "Red-Line/ifv0",
+     193.23989,
+     "Red-Line/ad0",
      "Blue-CAS/cas3",
      "AGM-65D",
      "miss",
@@ -77250,9 +77212,29 @@
      false
     ],
     [
-     187.777355,
-     "Red-Line/ifv0",
+     193.23989,
+     "Red-Line/ad0",
      "Blue-CAS/cas3",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     209.537538,
+     "Red-Line/ifv0",
+     "Blue-CAS/cas0",
+     "AGM-65D",
+     "miss",
+     100,
+     100,
+     false
+    ],
+    [
+     209.537538,
+     "Red-Line/ifv0",
+     "Blue-CAS/cas0",
      "AGM-65D",
      "kill",
      100,
@@ -77333,17 +77315,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 209.537538,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -77356,7 +77340,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -78647,13 +78631,13 @@
      "AGM-65D": 4
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -78670,38 +78654,20 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
     ],
     [
-     164.162538,
+     186.100038,
      "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
-     "Blue-CAS/cas3",
      "AGM-65D",
      2
     ]
@@ -78722,42 +78688,42 @@
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -78765,11 +78731,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -78838,15 +78804,15 @@
     }
    },
    "counts": {
-    "damage_events": 5,
-    "destroyed_events": 3,
+    "damage_events": 6,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 10,
+    "salvos": 5
    },
    "damage_events": [
     [
@@ -78880,9 +78846,9 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
      "AGM-65D",
      "kill",
      100,
@@ -78890,9 +78856,19 @@
      true
     ],
     [
-     187.602226,
+     193.23989,
+     "Red-Line/ad0",
+     "Blue-CAS/cas3",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     209.537538,
      "Red-Line/ifv0",
-     "Blue-CAS/cas1",
+     "Blue-CAS/cas0",
      "AGM-65D",
      "kill",
      100,
@@ -78973,17 +78949,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 209.537538,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -78996,7 +78974,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -80274,16 +80252,16 @@
   "S19AD/S19-2/strela_standoff": {
    "ammunition_consumed": {
     "Blue-CAS/cas0": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -80300,37 +80278,13 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
-     "Blue-CAS/cas3",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.162538,
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
@@ -80338,56 +80292,56 @@
    ],
    "assets": {
     "Blue-CAS/cas0": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -80395,11 +80349,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -80468,15 +80422,15 @@
     }
    },
    "counts": {
-    "damage_events": 3,
-    "destroyed_events": 3,
+    "damage_events": 4,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 8,
+    "salvos": 4
    },
    "damage_events": [
     [
@@ -80500,9 +80454,19 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     193.23989,
+     "Red-Line/ad0",
+     "Blue-CAS/cas3",
      "AGM-65D",
      "kill",
      100,
@@ -80583,17 +80547,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 193.23989,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -80606,7 +80572,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -81870,16 +81836,16 @@
   "S19AD/S19-3/strela_standoff": {
    "ammunition_consumed": {
     "Blue-CAS/cas0": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -81896,37 +81862,13 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
-     "Blue-CAS/cas3",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.162538,
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
@@ -81934,56 +81876,56 @@
    ],
    "assets": {
     "Blue-CAS/cas0": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -81991,11 +81933,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -82064,15 +82006,15 @@
     }
    },
    "counts": {
-    "damage_events": 4,
-    "destroyed_events": 3,
+    "damage_events": 5,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 8,
+    "salvos": 4
    },
    "damage_events": [
     [
@@ -82106,9 +82048,19 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     193.23989,
+     "Red-Line/ad0",
+     "Blue-CAS/cas3",
      "AGM-65D",
      "kill",
      100,
@@ -82189,17 +82141,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 193.23989,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -82212,7 +82166,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -83457,16 +83411,16 @@
   "S19AD/S19-4/strela_standoff": {
    "ammunition_consumed": {
     "Blue-CAS/cas0": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -83483,37 +83437,13 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
-     "Blue-CAS/cas3",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.162538,
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
@@ -83521,56 +83451,56 @@
    ],
    "assets": {
     "Blue-CAS/cas0": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -83578,11 +83508,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -83651,15 +83581,15 @@
     }
    },
    "counts": {
-    "damage_events": 3,
-    "destroyed_events": 3,
+    "damage_events": 4,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 8,
+    "salvos": 4
    },
    "damage_events": [
     [
@@ -83683,9 +83613,19 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     193.23989,
+     "Red-Line/ad0",
+     "Blue-CAS/cas3",
      "AGM-65D",
      "kill",
      100,
@@ -83766,17 +83706,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 193.23989,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -83789,7 +83731,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -85077,16 +85019,16 @@
   "S19AD/S19-5/strela_standoff": {
    "ammunition_consumed": {
     "Blue-CAS/cas0": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas1": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas2": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     },
     "Blue-CAS/cas3": {
-     "AGM-65D": 4
+     "AGM-65D": 2
     }
    },
    "ammunition_events": [
@@ -85103,37 +85045,13 @@
      2
     ],
     [
-     162.697538,
+     162.769765,
      "Blue-CAS/cas2",
      "AGM-65D",
      2
     ],
     [
-     162.839855,
-     "Blue-CAS/cas3",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.162538,
-     "Blue-CAS/cas0",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.164726,
-     "Blue-CAS/cas1",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.197538,
-     "Blue-CAS/cas2",
-     "AGM-65D",
-     2
-    ],
-    [
-     164.339855,
+     169.80239,
      "Blue-CAS/cas3",
      "AGM-65D",
      2
@@ -85141,56 +85059,56 @@
    ],
    "assets": {
     "Blue-CAS/cas0": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas1": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas2": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
      }
     },
     "Blue-CAS/cas3": {
-     "ammunition": 1179,
+     "ammunition": 1181,
      "destroyed": false,
      "fuel": 0.954688,
      "health": 100,
      "interceptor_stock": null,
      "operative": true,
      "stores": {
-      "AGM-65D": 0,
+      "AGM-65D": 2,
       "AIM-9M": 1,
       "GAU-8/A": 1174,
       "Mk-82AIR": 4
@@ -85198,11 +85116,11 @@
     },
     "Red-Line/ad0": {
      "ammunition": 8,
-     "destroyed": false,
+     "destroyed": true,
      "fuel": 1.0,
-     "health": 100,
+     "health": 0,
      "interceptor_stock": null,
-     "operative": true,
+     "operative": false,
      "stores": {
       "9M37-SAM": 8
      }
@@ -85271,15 +85189,15 @@
     }
    },
    "counts": {
-    "damage_events": 4,
-    "destroyed_events": 3,
+    "damage_events": 5,
+    "destroyed_events": 4,
     "engagements": 1,
     "fuel_events": 4,
     "fuel_exhausted": 0,
     "interception_events": 0,
     "interceptions": 0,
-    "rounds": 16,
-    "salvos": 8
+    "rounds": 8,
+    "salvos": 4
    },
    "damage_events": [
     [
@@ -85303,9 +85221,9 @@
      true
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
      "AGM-65D",
      "miss",
      100,
@@ -85313,9 +85231,19 @@
      false
     ],
     [
-     187.600038,
+     186.207265,
      "Red-Line/ifv1",
-     "Blue-CAS/cas0",
+     "Blue-CAS/cas2",
+     "AGM-65D",
+     "kill",
+     100,
+     0,
+     true
+    ],
+    [
+     193.23989,
+     "Red-Line/ad0",
+     "Blue-CAS/cas3",
      "AGM-65D",
      "kill",
      100,
@@ -85396,17 +85324,19 @@
      {
       "breakpoint": 1.0,
       "committed": 4,
-      "erosion": 0.75,
+      "erosion": 1.0,
       "force_id": "Red-Line",
       "force_ratio": null,
-      "lost": 3,
+      "lost": 4,
       "max_shock": 0.25,
       "morale": null,
-      "outcome": "held",
+      "outcome": "destroyed",
       "side": "Red",
       "temper": null,
-      "time": null,
-      "triggers": [],
+      "time": 193.23989,
+      "triggers": [
+       "annihilation"
+      ],
       "unanswered_fraction": 0.0
      }
     ]
@@ -85419,7 +85349,7 @@
      "held"
     ],
     "Red-Line": [
-     "held"
+     "destroyed"
     ]
    },
    "fuel": {
@@ -96618,11 +96548,11 @@
     [
      {
       "block_id": "Blue-Armor",
-      "breakpoint": 0.249392,
+      "breakpoint": 0.200961,
       "committed": 2,
       "erosion": 0.0,
       "force_id": "Blue-Armor:IFV",
-      "force_ratio": null,
+      "force_ratio": 0.666667,
       "lost": 0,
       "max_shock": 0.0,
       "morale": null,
@@ -98266,11 +98196,11 @@
     [
      {
       "block_id": "Blue-Armor",
-      "breakpoint": 0.145183,
+      "breakpoint": 0.084342,
       "committed": 2,
       "erosion": 0.5,
       "force_id": "Blue-Armor:IFV",
-      "force_ratio": null,
+      "force_ratio": 0.333333,
       "lost": 1,
       "max_shock": 0.5,
       "morale": null,
