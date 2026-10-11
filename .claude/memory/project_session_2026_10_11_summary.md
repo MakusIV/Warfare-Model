@@ -34,6 +34,14 @@ Piano Missione: F0-F3, F4a, F4b, F4b+/++, F4c e riprogettazione S3/S5 FATTE; F5-
 regressione: 370 esecuzioni (`Test/baseline/scenario_baseline.json`, comando `--compare` nel docstring di
 `Test/Scenario_Baseline.py`). Suite 4039 OK (7 skipped).
 
+## F5 IN CORSO (scomposta per limite di utilizzo)
+F5-A (grounded dipendente dal tempo, fotografia identica) delegata a `des-developer`: se `git status` mostra modifiche
+non committate a Contact_Scheduler/Engagement_Resolver/Mission_Adapter/Session_Types/Session_Simulator, sono il lavoro
+dell'agente (verificare con suite + confronto prima di committare; se l'albero e' incoerente, riprendere l'agente con
+SendMessage o rifare dal brief). Poi F5-B (postura nell'esito + presenza prima/dopo + scenari) e F5-C (WAIT, ETA).
+Decisione dell'utente: aereo a terra dopo la fine della rotta SOLO su una base vera (LAND su base), altrimenti esce
+dalla scena come oggi finche' F6 non porta il rientro. Dettagli: Piano §5 deviazioni 12-13.
+
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
    postura di fine missione, azione WAIT, ETA effettive nel `MissionOutcome`. Include per decisione dell'utente
