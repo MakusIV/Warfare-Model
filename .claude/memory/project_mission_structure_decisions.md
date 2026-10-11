@@ -102,7 +102,8 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   missione = a terra, bersaglio di SUPERFICIE passivo (insieme `grounded` della sessione, keyword facoltativa
   `target_grounded` verso la fire control, classe 'Soft' via Parked_Asset_Type), non osserva/spara/disingaggia;
   terra e mare senza missione = `Defense` dichiarata, tiro invariato (nessun hold fire). Limiti: `grounded` vale per
-  tutta la sessione (F5 lo renderà dipendente dal tempo), nessuno shelter. Prossimo: F5-F9 (presenza e attese,
+  tutta la sessione (F5 lo renderà dipendente dal tempo), nessuno shelter. **Decisione 2026-10-11: la postura entra
+  nell'esito di forza con la F5** (Piano §5 dev. 12), non prima. Prossimo: F5-F9 (presenza e attese,
   fine missione e carburante, filtro armi A4 + salva su area, sessione e campagna, manuale); manuale DES da
   aggiornare a F4a-F4c. Al 2026-10-11 NON pushato (8 commit avanti a origin: verificare con git status).
   DA FARE: F4c = postura continua dei non in missione (D1.c).
