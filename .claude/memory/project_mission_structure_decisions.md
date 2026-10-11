@@ -97,7 +97,13 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   **F4b++ FATTA (`e6f59d21`, suite 3986)**: difesa di salva per dominio (canali condivisi solo fra forze risolte nello
   stesso istante: limite noto). **Test S3/S5 riprogettati FATTI (`8bf7b11f`, suite 3987, fotografia 348 = 328 + 20
   nuove)**: S3 frazione persa + z>=3 a coppie; S5 default = maggioranza + invarianti, variante erosione 0,65 su 12 seed,
-  terzo strato solo informativo. TUTTO l'arretrato dopo F4b e' chiuso; prossimo: F4c (postura continua dei non in
-  missione, D1.c), poi F5-F9; non ancora pushato al 2026-10-11 (verificare con git status).
+  terzo strato solo informativo. **F4c FATTA 2026-10-11 (`af2efbe6`, suite 4039 OK, fotografia 370 = 346 invariate +
+  2 cambiate accettate (VAL-agn S7-agn-2/3, CAS fuori missione ora a terra) + 22 nuove S21/S21R)**: aereo senza
+  missione = a terra, bersaglio di SUPERFICIE passivo (insieme `grounded` della sessione, keyword facoltativa
+  `target_grounded` verso la fire control, classe 'Soft' via Parked_Asset_Type), non osserva/spara/disingaggia;
+  terra e mare senza missione = `Defense` dichiarata, tiro invariato (nessun hold fire). Limiti: `grounded` vale per
+  tutta la sessione (F5 lo renderà dipendente dal tempo), nessuno shelter. Prossimo: F5-F9 (presenza e attese,
+  fine missione e carburante, filtro armi A4 + salva su area, sessione e campagna, manuale); manuale DES da
+  aggiornare a F4a-F4c. Al 2026-10-11 NON pushato (8 commit avanti a origin: verificare con git status).
   DA FARE: F4c = postura continua dei non in missione (D1.c).
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
