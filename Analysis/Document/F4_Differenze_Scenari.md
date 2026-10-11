@@ -276,13 +276,9 @@ sono le missioni (`M-north`, `M-south`, `M-raid`, `M-stable`), e lo stream docum
 riproduce a mano con la vista della missione. In `Test_Session_Validation` i `mission_id` sono id di
 dominio ammessi nell'esito.
 
-Repliche (campione, non asserzioni): due verifiche statistiche su pochi seed erano al limite e lo
-cambio di stream le rovesciava.
-- **S3** da 10 a 20 seed: senza stealth Blue (4 F-15C) e Red (8 F-15C) perdono quasi lo stesso
-  NUMERO di aerei (su 30 seed 3.87 contro 3.73 per replica): con gli stream della F4b le 10 repliche
-  davano 38 contro 38 (F4a 37 contro 33). Con 20: 78 contro 74 senza stealth, 33 contro 79 con. La
-  verifica "senza stealth Blue perde lo scambio" resta al limite per costruzione.
-- **S5** da 6 a 8 seed: v. sopra; S5-7 e' il seed che contiene entrambi gli esiti rari.
+Repliche: le due verifiche statistiche al limite (S3, S5) sono state riprogettate il 2026-10-11
+(v. «Riprogettazione dei test S3/S5» in fondo al documento); il campione di questo passo (S3 a 20
+seed, S5 a 8) e' superato.
 
 ### Fotografia di riferimento
 
@@ -465,3 +461,39 @@ scenario: il caso e' coperto con stub nel risolutore.
   dominio colpite a istanti diversi ma ravvicinati (meno di `salvo_window`) ricevono i canali pieni
   ciascuna, come una forza sola che subisce due eventi-salva distinti.
 - Nessuno scenario esercita il caso (v. sopra).
+
+## Riprogettazione dei test S3/S5 (deviazione 9, 2026-10-11)
+
+Solo test e docstring (`Test_Session_Scenarios.py`; in `Scenario_Baseline.py` solo il nome della
+nuova variante S5): il motore non e' toccato. Motivazione: dalla F4b i due test passavano solo
+aumentando le repliche, perche' misuravano una metrica sbagliata (S3) o un evento raro (S5).
+
+**S3** (stealth contro massa, 4 contro 8 F-15C, 20 repliche). Su 40 seed: senza stealth perdite
+assolute Blue 3,90 / Red 3,68 (z = -1,4), frazione persa 97,5 % / 46 % (Blue peggio in 40 seed su
+40); con stealth Blue 1,85 / Red 3,80, frazione 46 % / 47,5 %, differenza assoluta Red - Blue a
+coppie +1,95 (sd 1,22, z = 10), rapporto di scambio 2,05-2,4 contro 0,94-1,0. Nuove verifiche:
+(1) senza stealth la frazione persa da Blue supera quella di Red (aggregato e differenza a coppie
+per seed >= 3 errori standard; sui 20 seed di test z = 16,4); (2) con stealth Red perde piu' aerei
+assoluti di Blue (differenza media a coppie >= 3 errori standard; sui 20 seed media 2,3, z = 12,8);
+(3) il rapporto di scambio migliora con stealth e Blue perde meno aerei (invariato). Helper
+`_paired_z` nella classe; soglia `MIN_Z` = 3 dichiarata, non tarata. Con stealth il vantaggio e' nel
+rapporto di scambio, non nella frazione persa.
+
+**S5** (3 strati, 4 F-15E). Su 24 seed: default 23 su 24 si fermano al primo strato (prosegue S5-7);
+PRESS_ON arriva al terzo strato 1 volta su 24. Nuova struttura (SEEDS da 8 a 12):
+- default: maggioranza (stopped > went_on + held; sui 12 seed 11 contro 1) + invarianti per replica
+  (strati in ordine geometrico, nessun lancio rosso dopo la rottura, fermata al primo strato =>
+  nemmeno il terzo ha sparato);
+- nuova variante «formazione resistente»: dottrina Blue di default con `RESISTANT_EROSION` = 0,65
+  (costante di scenario, stima, non calibrata). Frequenza di «prosegue oltre il primo strato»: 0,5 ->
+  4/24; 0,6 -> 7/24; 0,75 -> 18/24 (24 seed); 0,65 -> 23/40 (57,5 %); 0,7 -> 28/40 (70 %). Con 12 seed
+  la probabilita' di non vedere un esito e' 0,12 %. Sui 12 seed di test: 7 proseguono, 5 si fermano.
+  Asserzione «entrambi gli esiti compaiono» + le stesse invarianti;
+- PRESS_ON: via `assertIn(3, fired)`; resta «almeno due strati in ogni replica» e l'ordine geometrico.
+  Varianti per numero di aerei misurate su 24 seed (terzo strato): 4 -> 1/24, 5 -> 19/24, 6 -> 24/24,
+  8 -> 24/24: nessuna fra il 30 % e il 70 %, quindi nessuna asserzione sul terzo strato (1/24 e' solo
+  informazione nel docstring).
+
+**Fotografia.** Prima: 328 esecuzioni IDENTICHE. Dopo: nessuna esecuzione esistente cambiata, 20
+nuove (S5-8..11 default e PRESS_ON, S5-0..11 resistant); 348 esecuzioni; due catture consecutive
+identiche byte per byte.

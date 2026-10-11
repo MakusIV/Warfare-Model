@@ -32,6 +32,8 @@ dottrinale esplicita) passata a `run_session(thresholds=...)`, non con un ritocc
 motore.
 """
 
+import math
+import statistics
 import unittest
 from collections import Counter
 from unittest.mock import patch
@@ -279,27 +281,43 @@ class TestS3StealthVersusMass(F.LoggerSilencer, unittest.TestCase):
     stesso modello isola il meccanismo dal resto.
 
     Domanda: il rapporto di scambio riflette il vantaggio di rilevamento, non solo il
-    numero. Senza stealth, 4 contro 8 perde lo scambio; con stealth lo vince, pur essendo
-    la meta'. Aggregati su 20 repliche.
+    numero. Aggregati su 20 repliche.
 
-    Cambio della F4b (2026-10-08, piano della Missione): con gli stream RNG per missione (stesso
-    motore, v. S5) le 10 repliche davano 38 perdite blu contro 38 rosse senza stealth (in F4a 37
-    contro 33): in valore assoluto i due lati perdono quasi lo stesso numero di aerei (su 30 seed
-    3.87 contro 3.73 per replica; Blue perde il 97% dei suoi 4, Red il 47% dei suoi 8), quindi la
-    verifica "senza stealth Blue perde lo scambio" e' al limite per costruzione. Repliche portate a
-    20 (78 contro 74 senza stealth, 33 contro 79 con stealth): restano verifiche di tendenza su un
-    campione piccolo, da rivedere se lo scenario va reso robusto (stima, non taratura).
+    Perche' la FRAZIONE e non il numero assoluto (riprogettazione del 2026-10-11, Piano della
+    Missione §5, deviazione 9). Misurato su 40 seed, i due lati hanno forze di taglia diversa
+    (4 contro 8), quindi confrontare le perdite assolute e' sbagliato in due modi:
+      * senza stealth le perdite assolute sono indistinguibili (Blue 3.90 contro Red 3.68 per
+        replica, z = -1.4), perche' Red ha il doppio degli aerei da perdere; la frazione persa
+        e' invece nettamente a sfavore di Blue (97.5 % contro 46 %, Blue peggio di Red in 40
+        seed su 40): la domanda "perde lo scambio chi e' in minoranza" si pone sulla frazione;
+      * con stealth la frazione persa e' la stessa (46 % contro 47.5 %): Red perde in media 3.80
+        aerei su 8 e Blue 1.85 su 4, cioe' Blue perde meta' degli aerei ma Red ne perde il doppio
+        in valore assoluto. Il vantaggio dello stealth sta quindi nel RAPPORTO DI SCAMBIO (2.05-2.4
+        contro 0.94-1.0 senza stealth), non nella frazione persa: "Blue vince" in frazione non e'
+        vero e non lo si asserisce.
+    Con stealth la differenza assoluta Red - Blue, a coppie per seed, ha media +1.95 e sd 1.22
+    (z = 10 su 40 seed): l'asserzione e' una soglia statistica (media a coppie >= 3 errori
+    standard della media, v. `_paired_z`), non un confronto fra due somme. La stessa forma e'
+    usata senza stealth sulla differenza di frazione (Blue - Red) a coppie. Le soglie (3 errori
+    standard) sono dichiarate, non tarate sul risultato.
+
+    Storia: nella F4a e nella F4b (stream RNG per missione) le verifiche confrontavano somme
+    assolute, al limite per costruzione senza stealth (10 repliche: 38 perdite contro 38; 20
+    repliche: 78 contro 74) e dipendenti dal campione; sono state portate a 20 repliche e poi
+    riscritte come sopra.
     """
 
     SEEDS = _seeds('S3', 20)
     STEALTH_FACTOR = 0.15   # costante di scenario dichiarata, non calibrata
+    BLUE_COUNT, RED_COUNT = 4, 8   # aerei per lato (composizione dello scenario)
+    MIN_Z = 3.0   # soglia statistica dichiarata (errori standard della media a coppie), non calibrata
 
     @staticmethod
     def _build():
-        blue = F.build_force('Blue-Stealth', 'Blue', [F.Unit('aircraft', 'F-15C Eagle', 4, origin=(-100_000.0, 0.0),
+        blue = F.build_force('Blue-Stealth', 'Blue', [F.Unit('aircraft', 'F-15C Eagle', TestS3StealthVersusMass.BLUE_COUNT, origin=(-100_000.0, 0.0),
                                                              step=(0.0, 1_000.0), prefix='f', loadout='Eagle Sweep')],
                              mil_category=F.AIR_UNIT)
-        red = F.build_force('Red-Mass', 'Red', [F.Unit('aircraft', 'F-15C Eagle', 8, origin=(100_000.0, 0.0),
+        red = F.build_force('Red-Mass', 'Red', [F.Unit('aircraft', 'F-15C Eagle', TestS3StealthVersusMass.RED_COUNT, origin=(100_000.0, 0.0),
                                                        step=(0.0, 1_000.0), prefix='f', loadout='Eagle Sweep')],
                             mil_category=F.AIR_UNIT)
         missions = F.missions_for(blue, [(100_000.0, 0.0)], mission_type='Fighter_Sweep',
@@ -327,13 +345,40 @@ class TestS3StealthVersusMass(F.LoggerSilencer, unittest.TestCase):
         return (sum(F.losses_of(o, 'Blue-Stealth') for o in outcomes),
                 sum(F.losses_of(o, 'Red-Mass') for o in outcomes))
 
-    def test_without_stealth_numbers_win(self):
-        blue_lost, red_lost = self._totals(self.control)
-        self.assertGreater(blue_lost, red_lost)
+    @staticmethod
+    def _paired_z(differences):
+        """`(media, errore standard, z)` di una serie di differenze a coppie (una per seed).
 
-    def test_with_stealth_detection_advantage_wins(self):
-        blue_lost, red_lost = self._totals(self.stealth)
-        self.assertGreater(red_lost, blue_lost)
+        Errore standard della media = sd campionaria / sqrt(n); z = media / errore standard
+        (infinito se la serie e' costante e non nulla, 0 se e' costantemente nulla)."""
+        count = len(differences)
+        mean = statistics.fmean(differences)
+        error = statistics.stdev(differences) / math.sqrt(count)
+
+        if error == 0.0:
+            return mean, error, math.copysign(math.inf, mean) if mean else 0.0
+
+        return mean, error, mean / error
+
+    def _fractions(self, outcomes):
+        """`[(frazione Blue persa, frazione Red persa)]`, una per replica."""
+        return [(F.losses_of(o, 'Blue-Stealth') / self.BLUE_COUNT, F.losses_of(o, 'Red-Mass') / self.RED_COUNT)
+                for o in outcomes]
+
+    def test_without_stealth_the_minority_loses_the_larger_fraction(self):
+        # Frazioni, non somme assolute (v. docstring): aggregato e differenza a coppie per seed.
+        blue_lost, red_lost = self._totals(self.control)
+        count = len(self.control)
+        self.assertGreater(blue_lost / (self.BLUE_COUNT * count), red_lost / (self.RED_COUNT * count))
+        mean, error, z = self._paired_z([blue - red for blue, red in self._fractions(self.control)])
+        self.assertGreaterEqual(z, self.MIN_Z, (mean, error))
+
+    def test_with_stealth_red_loses_more_aircraft_than_blue(self):
+        # Vantaggio nel valore assoluto (Red ne ha il doppio, ma ne perde molti di piu'), con soglia statistica.
+        differences = [F.losses_of(o, 'Red-Mass') - F.losses_of(o, 'Blue-Stealth') for o in self.stealth]
+        mean, error, z = self._paired_z(differences)
+        self.assertGreater(mean, 0.0)
+        self.assertGreaterEqual(z, self.MIN_Z, (mean, error))
 
     def test_stealth_improves_the_exchange_ratio(self):
         control_blue, control_red = self._totals(self.control)
@@ -431,33 +476,53 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
       * Red-Target    — 3 BMP-2 + 2 2S19-Msta (bersaglio composito), a x = 600 km.
 
     Domanda: la missione subisce ingaggi a piu' livelli prima di raggiungere il bersaglio,
-    oppure viene fermata prima. Due varianti:
+    oppure viene fermata prima. Tre varianti, sugli stessi seed:
       * dottrina "ad oltranza" (PRESS_ON): gli strati ingaggiano nell'ordine geometrico, e la
         missione o arriva al bersaglio o viene distrutta;
       * dottrina di default: la formazione rompe il contatto quando le perdite superano la
         sua soglia di rottura, e da quel momento nessuno strato successivo la puo' piu'
-        ingaggiare (forza rotta, v. "Forze rotte" in Engagement_Resolver).
+        ingaggiare (forza rotta, v. "Forze rotte" in Engagement_Resolver);
+      * "formazione resistente": dottrina Blue con soglia di erosione piu' alta
+        (`RESISTANT_EROSION`), la sola variante in cui "si ferma al primo strato" e "prosegue"
+        sono entrambi esiti frequenti.
 
-    Cambio del 2026-09-29 (soglia di rottura stocastica, Proposta_Soglia_Rottura_Stocastica.md):
-    fino ad allora 1 perdita su 4 (0,25) superava sempre lo shock fisso (0,20) e la
-    formazione si fermava SEMPRE al primo strato. Ora lo shock richiede 2 perdite nella
-    stessa salva e la soglia dipende da tempra, minaccia percepita e fuoco senza risposta
-    (gli F-15E non rilevano quasi mai i SAM, i loro sensori non hanno il modo 'ground'):
-    misurato su 6 repliche, 4 formazioni si fermano al primo strato con 1-2 perdite e 2
-    proseguono fino al Buk. La verifica diventa una distribuzione: entrambi gli esiti
-    compaiono, e dopo la rottura nessuno sparava piu'.
+    Storia (2026-09-29, soglia di rottura stocastica, Proposta_Soglia_Rottura_Stocastica.md):
+    prima 1 perdita su 4 (0,25) superava sempre lo shock fisso (0,20) e la formazione si fermava
+    SEMPRE al primo strato; ora lo shock richiede 2 perdite nella stessa salva e la soglia dipende
+    da tempra, minaccia percepita e fuoco senza risposta (gli F-15E non rilevano quasi mai i SAM,
+    i loro sensori non hanno il modo 'ground'). Con la F4b (2026-10-08) la forza d'ingaggio e' la
+    missione e il suo id entra nell'RNG: gli stream sono altri (stesso motore).
 
-    Cambio della F4b (2026-10-08, piano della Missione): la forza d'ingaggio e' la missione e il
-    suo id entra nell'RNG, quindi gli stream sono altri (stesso motore: con gli id di blocco
-    nell'RNG la fotografia F4a si riproduce identica). Le frequenze erano state misurate su 6 seed
-    fortunati: con gli id di blocco, su 24 seed, la formazione "ad oltranza" arriva al terzo strato
-    6 volte (4 nei primi 6); con gli stream della F4b 1 volta su 24 (seed S5-7), e con la dottrina
-    di default 23 formazioni su 24 si fermano al primo strato (prosegue la S5-7). Le repliche
-    passano da 6 a 8, il minimo che contiene entrambi gli esiti: la verifica resta "entrambi gli
-    esiti compaiono", ma l'esito raro e' raro davvero (stima su 24 seed, non una taratura).
+    Riprogettazione del 2026-10-11 (Piano della Missione §5, deviazione 9). Dopo la F4b le
+    verifiche "entrambi gli esiti compaiono" (default) e `assertIn(3, fired)` (PRESS_ON)
+    passavano solo aumentando le repliche, perche' dipendevano da un evento raro (un solo seed,
+    S5-7, su 24). Misurato su 24 seed:
+      * dottrina di default (erosione Blue 0,30): 23 formazioni su 24 si fermano al primo strato
+        (tutte 'disengaged', 1-3 perdite), 1 prosegue (S5-7). La verifica diventa di MAGGIORANZA
+        (la maggioranza delle formazioni con perdite si ferma al primo strato, con ampio margine)
+        piu' invarianti per replica deterministici: dopo la rottura nessuna forza rossa lancia
+        piu' contro la formazione, e gli strati sparano in ordine geometrico (se L3 ha sparato,
+        L2 ha sparato; se L2 non ha sparato la formazione si e' fermata al primo strato);
+      * PRESS_ON: il terzo strato e' ingaggiato 1 volta su 24 (S5-7), in tutte le altre repliche
+        la formazione e' distrutta fra primo e secondo strato. Non e' un esito asseribile con
+        4 aerei: e' riportato qui come INFORMAZIONE (1/24), non come asserzione. In ogni replica si
+        verifica che la missione sia ingaggiata ad almeno 2 strati e che l'ordine sia geometrico.
+        Varianti per numero di aerei misurate su 24 seed (frequenza del terzo strato): 4 aerei
+        1/24, 5 aerei 19/24, 6 e 8 aerei 24/24; nessuna cade fra il 30 % e il 70 %, quindi nessuna
+        asserzione "almeno una replica arriva al terzo strato" e' stata aggiunta (il passaggio e'
+        una soglia netta fra 4 e 5 aerei, non una probabilita' intermedia);
+      * formazione resistente: la soglia di erosione Blue si alza (con lo shock invariato, che
+        deve restare <= erosione). Misurato su 24 seed la frequenza di "prosegue oltre il primo
+        strato" e': erosione 0,5 -> 4/24; 0,6 -> 7/24; 0,75 -> 18/24; su 40 seed: 0,65 -> 23/40
+        (57,5 %), 0,7 -> 28/40 (70 %). `RESISTANT_EROSION` = 0,65 e' una costante di scenario
+        DICHIARATA (non calibrata sul risultato dei test: scelta nell'intervallo 0,6-0,75 per
+        avere i due esiti in proporzioni non estreme, stima su 40 seed). Con p = 0,575 e 12
+        repliche la probabilita' di non vedere uno dei due esiti e' p^12 + (1-p)^12 = 0,12 %
+        (< 2 %), quindi la verifica "entrambi gli esiti compaiono" non dipende dal campione.
     """
 
-    SEEDS = _seeds('S5', 8)
+    SEEDS = _seeds('S5', 12)
+    RESISTANT_EROSION = 0.65   # costante di scenario dichiarata (stima su 40 seed), non calibrata
     LAYERS = ('Red-L1-Long', 'Red-L2-Medium', 'Red-L3-Point')
 
     @staticmethod
@@ -485,20 +550,53 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.press_on, cls.default = [], []
+        cls.press_on, cls.default, cls.resistant = [], [], []
 
         for session_id in cls.SEEDS:
-            for bucket, thresholds in ((cls.press_on, PRESS_ON), (cls.default, None)):
+            for bucket, thresholds in ((cls.press_on, PRESS_ON), (cls.default, None),
+                                       (cls.resistant, cls._resistant_doctrine())):
                 strike, reds, missions, fire = cls._build()
                 outcome = F.run(session_id, [strike], reds, fire, duration=7_200.0, missions=missions,
                                 thresholds=thresholds)
                 bucket.append((strike, reds, outcome))
+
+    @classmethod
+    def _resistant_doctrine(cls):
+        """Default Blue con la sola soglia di erosione alzata (lo shock resta quello di default, <= erosione)."""
+        blue = dict(Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Blue'])
+        blue[Doctrine.DISENGAGEMENT_EROSION] = cls.RESISTANT_EROSION
+        return {'Blue': blue, 'Red': dict(Doctrine.DEFAULT_DISENGAGEMENT_THRESHOLDS['Red'])}
 
     def _layer_first_shots(self, reds, outcome):
         first = F.salvo_shooters(outcome)
         by_force = {force.id: force for force in reds}
         return {layer: min((first[a] for a in by_force[layer].assets if a in first), default=None)
                 for layer in self.LAYERS}
+
+    def _check_break_invariants(self, reds, outcome):
+        """Invarianti per replica, validi per ogni dottrina. Restituisce `'held'` se la formazione
+        non ha perso nulla, altrimenti `'stopped'` (nessun tiro dal secondo strato) o `'went_on'`."""
+        result = F.force_outcome(outcome, 'Blue-Deep')
+
+        if result.outcome == ER.HELD:
+            return 'held'   # nessuna perdita: nulla da verificare
+
+        shots = self._layer_first_shots(reds, outcome)
+        fired = [shots[layer] is not None for layer in self.LAYERS]
+
+        # Gli strati sparano in ordine geometrico: se uno strato ha sparato, anche i precedenti.
+        self.assertEqual(fired, sorted(fired, reverse=True), shots)
+
+        # Dopo la rottura nessuna forza rossa lancia piu' contro la formazione.
+        red_ids = {a for force in reds for a in force.assets}
+        late = [e for e in outcome.ammunition_events if e.asset_id in red_ids and e.time > result.time]
+        self.assertEqual(late, [])
+
+        if shots['Red-L2-Medium'] is None:
+            self.assertIsNone(shots['Red-L3-Point'])   # fermata al primo strato: il secondo non ha mai sparato
+            return 'stopped'
+
+        return 'went_on'
 
     def test_layers_engage_in_geometric_order(self):
         for _, reds, outcome in self.press_on:
@@ -507,10 +605,10 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
             self.assertGreaterEqual(len(times), 1)
 
     def test_mission_is_engaged_at_several_layers(self):
+        # Il terzo strato (1 replica su 24 con 4 aerei) e' informazione nel docstring, non asserzione.
         fired = [sum(t is not None for t in self._layer_first_shots(reds, o).values())
                  for _, reds, o in self.press_on]
         self.assertTrue(all(count >= 2 for count in fired), fired)
-        self.assertIn(3, fired)
 
     def test_mission_reaches_the_target_or_is_stopped(self):
         for strike, _, outcome in self.press_on:
@@ -518,29 +616,15 @@ class TestS5DeepInterdictionThreeLayers(F.LoggerSilencer, unittest.TestCase):
             reached = any(e.asset_id in strike.assets for e in outcome.ammunition_events)
             self.assertTrue(reached or result.outcome in (ER.DESTROYED, ER.DISENGAGED))
 
-    def test_default_doctrine_break_point_varies_between_replicas(self):
-        stopped_at_first, went_on = 0, 0
+    def test_default_doctrine_mostly_stops_at_the_first_layer(self):
+        verdicts = Counter(self._check_break_invariants(reds, outcome) for _, reds, outcome in self.default)
+        # Misurato 23/24: la maggioranza delle formazioni con perdite si ferma al primo strato.
+        self.assertGreater(verdicts['stopped'], verdicts['went_on'] + verdicts['held'], verdicts)
 
-        for _, reds, outcome in self.default:
-            result = F.force_outcome(outcome, 'Blue-Deep')
-            shots = self._layer_first_shots(reds, outcome)
-
-            if result.outcome == ER.HELD:
-                continue   # nessuna perdita: nulla da verificare
-
-            if shots['Red-L2-Medium'] is None:
-                stopped_at_first += 1
-            else:
-                went_on += 1
-
-            # Dopo la rottura nessuna forza rossa lancia piu' contro la formazione.
-            red_ids = {a for force in reds for a in force.assets}
-            late = [e for e in outcome.ammunition_events
-                    if e.asset_id in red_ids and e.time > result.time]
-            self.assertEqual(late, [])
-
-        self.assertGreater(stopped_at_first, 0)
-        self.assertGreater(went_on, 0)
+    def test_resistant_formation_break_point_varies_between_replicas(self):
+        verdicts = Counter(self._check_break_invariants(reds, outcome) for _, reds, outcome in self.resistant)
+        self.assertGreater(verdicts['stopped'], 0, verdicts)
+        self.assertGreater(verdicts['went_on'], 0, verdicts)
 
 
 # ── S6 — GRUPPO NAVALE CONTRO DIFESA COSTIERA ─────────────────────────────────

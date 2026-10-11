@@ -152,7 +152,7 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     ('S2', 'Test_Session_Scenarios', 'TestS2PreliminarySEAD', None, _s2_label),
     ('S3', 'Test_Session_Scenarios', 'TestS3StealthVersusMass', None, _by_occurrence('control', 'stealth')),
     ('S4', 'Test_Session_Scenarios', 'TestS4SAMAsThirdComponent', None, _by_occurrence('no_sam', 'with_sam')),
-    ('S5', 'Test_Session_Scenarios', 'TestS5DeepInterdictionThreeLayers', None, _by_occurrence('press_on', 'default')),
+    ('S5', 'Test_Session_Scenarios', 'TestS5DeepInterdictionThreeLayers', None, _by_occurrence('press_on', 'default', 'resistant')),
     ('S6', 'Test_Session_Scenarios', 'TestS6CarrierGroupVersusCoastalDefence', None, _single_or_index),
     ('S7', 'Test_Session_Scenarios', 'TestS7LogisticInterdiction', None, _single_or_index),
     ('S8', 'Test_Session_Scenarios', 'TestS8MultiFrontScale', None, _single_or_index),
