@@ -94,6 +94,10 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   `Mission_Adapter.coordination_domains`, `resolve_engagement(coordination_of=)`; confermati dall'utente L2/L3 per
   dominio e unione delle componenti nella stessa run; la difesa di salva va ESTESA al dominio (task dedicato, DA
   FARE, prima di S3/S5). S7/S18/S19 invariati (le missioni avevano già rilevato da sé gli stessi nemici).
-  Ordine ora: intercettori di dominio -> test S3/S5 -> F4c.
+  **F4b++ FATTA (`e6f59d21`, suite 3986)**: difesa di salva per dominio (canali condivisi solo fra forze risolte nello
+  stesso istante: limite noto). **Test S3/S5 riprogettati FATTI (`8bf7b11f`, suite 3987, fotografia 348 = 328 + 20
+  nuove)**: S3 frazione persa + z>=3 a coppie; S5 default = maggioranza + invarianti, variante erosione 0,65 su 12 seed,
+  terzo strato solo informativo. TUTTO l'arretrato dopo F4b e' chiuso; prossimo: F4c (postura continua dei non in
+  missione, D1.c), poi F5-F9; non ancora pushato al 2026-10-11 (verificare con git status).
   DA FARE: F4c = postura continua dei non in missione (D1.c).
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
