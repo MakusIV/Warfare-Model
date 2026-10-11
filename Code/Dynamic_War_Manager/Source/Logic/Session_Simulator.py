@@ -54,8 +54,8 @@ asset sono raggruppati in forze.
 
 ## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7 del piano della Missione)
 
-Ripartizione del fuoco (saturazione, tiratori impegnati, lanciatori prioritari) e percezione del
-nemico NON sono per missione ma per dominio di coordinamento: missioni dello stesso blocco OPPURE
+Ripartizione del fuoco (saturazione, tiratori impegnati, lanciatori prioritari), percezione del
+nemico e (F4b++) difesa di salva NON sono per missione ma per dominio di coordinamento: missioni dello stesso blocco OPPURE
 della stessa Operazione (`SessionOrder.operations`), per unione transitiva, mai a cavallo dei lati
 (`Mission_Adapter.coordination_domains`; la vista residua e un blocco senza missioni hanno l'id del
 blocco e quindi stanno nel dominio delle missioni del blocco). La mappa e' passata a ogni ingaggio

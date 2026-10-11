@@ -102,7 +102,9 @@ Verifica fatta all'inizio della F4b: cosa legge il risolutore della forza, oltre
   * `id`/`name` (id di forza: chiave di `committed`, dei `ForceOutcome`, della percezione);
   * `side` (dottrina di disingaggio e di tiro, amico/nemico nella percezione);
   * `salvo_interceptors()` (difesa di salva, R1): la vista lo RESTRINGE ai propri asset (il
-    risolutore filtra comunque per forza, la restrizione rende la vista corretta anche da sola);
+    risolutore filtra comunque per forza, la restrizione rende la vista corretta anche da sola;
+    dalla F4b++ il risolutore riunisce poi gli intercettori delle forze di uno stesso dominio di
+    coordinamento, v. `coordination_domains`);
   * la CLASSE della forza (`_can_disengage`: `Military` si', `Block` non militare no): una vista
     non e' ne' l'una ne' l'altra, quindi dichiara `can_disengage` calcolato sul blocco con la
     stessa regola (ADATTATORE: il risolutore onora un `can_disengage` booleano dichiarato);

@@ -2693,5 +2693,150 @@ class TestCoordinationDomainPerception(unittest.TestCase):
         self.assertEqual({s.shooter_id for s in result.salvos}, {'s0'})
 
 
+class _ConsumingAsset(_Asset):
+    """Intercettore stub che registra le chiamate di apply_engagement_result."""
+
+    def __init__(self, asset_id, **kwargs):
+        super().__init__(asset_id, **kwargs)
+        self.consumed = []
+
+    def consume_interceptor_stock(self, amount, weapon=None):
+        self.consumed.append((amount, weapon))
+
+
+class TestCoordinationDomainSalvoDefence(unittest.TestCase):
+    """F4b++ (deviazione 8c): la difesa di salva e' per dominio di coordinamento.
+
+    Scorta 'm1' (e1, 3 canali) e trasporto 'm2' (t1, nessun intercettore), entrambi Blue; il
+    tiratore Red a1 lancia a t = 2 una salva antinave di 5 colpi intercettabili su t1. Solo a1
+    spara; t1 non vede a1. Senza `coordination_of` ogni forza e' il proprio dominio (regressione:
+    la scorta non difende il trasporto).
+    """
+
+    @staticmethod
+    def _run(coordination_of=None, escort=None, channels=3, spec=None, legs=None, x=None):
+        spec = spec or _miss(rounds=5, interceptable=True, time_of_flight=REACTION_TOF)
+        escort = escort or _Asset('e1')
+        m1 = _Force('m1', 'Blue', [escort], interceptors=[(escort, channels)])
+        m2, red = _Force('m2', 'Blue', [_Asset('t1')]), _Force('red', 'Red', [_Asset('a1')])
+
+        def fire(shooter, target):
+            return spec if shooter.id == 'a1' else None
+
+        # Con i tratti di rotta la portata della finestra conta: 50 km, come in TestLauncherInsideInterceptionZone.
+        window = _window('a1', 't1', t_end=2.9, range_b=None) if x is None else \
+            ContactWindow('a1', 't1', t_start=0.0, t_end=2.9, t_cpa=2.9, distance_cpa=x, range_a=50_000.0, range_b=None)
+
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(m1, m2, [window], fire, random.Random(0), extra_forces=(red,), legs=legs,
+                                         reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                         thresholds=_LOOSE_DOCTRINE, coordination_of=coordination_of)
+
+    def test_escort_of_the_domain_defends_the_transport(self):
+        shared, separate = self._run(_SHARED), self._run()
+
+        self.assertEqual((shared.resolutions[0].capacity, shared.resolutions[0].intercepted), (3, 3))
+        self.assertEqual(len(shared.damage_events), 2)
+        self.assertEqual([(e.asset_id, e.interceptions, e.force_id) for e in shared.interception_events],
+                         [('e1', 3, 'm2')])
+        # Regressione: senza dominio la scorta di un'altra forza non intercetta.
+        self.assertEqual((separate.resolutions[0].capacity, separate.resolutions[0].intercepted), (0, 0))
+        self.assertEqual(separate.interception_events, ())
+        self.assertEqual(len(separate.damage_events), 5)
+
+    def test_identity_map_is_the_behaviour_without_map(self):
+        identity = {'m1': 'm1', 'm2': 'm2', 'red': 'red'}
+        self.assertEqual(self._run(identity), self._run())
+
+    def test_escort_of_another_domain_does_not_intercept(self):
+        result = self._run({'m1': 'd1', 'm2': 'd2'})
+        self.assertEqual(result.resolutions[0].intercepted, 0)
+        self.assertEqual(result.interception_events, ())
+
+    def test_launch_inside_the_escort_zone_is_not_intercepted(self):
+        """Regola L1 invariata: a1 lancia da 8 km, dentro i 12 km del V_I della scorta."""
+        for x, expected in ((8_000.0, 0), (15_000.0, 3)):
+            escort = _ZonedInterceptor('e1', (0.0, 0.0, 0.0), 12_000.0)
+            legs = {'a1': [Leg(0.0, 100.0, (x, 0.0, 0.0), (x, 0.0, 0.0))],
+                    't1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))],
+                    'e1': [Leg(0.0, 100.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0))]}
+
+            with self.subTest(x=x):
+                self.assertEqual(self._run(_SHARED, escort=escort, legs=legs, x=x).resolutions[0].intercepted, expected)
+
+    def test_escort_without_time_to_react_does_not_intercept(self):
+        """Regola R-INT invariata: lancio non osservato, tau = 2 s, volo di 1 s."""
+        spec = _miss(rounds=5, interceptable=True, time_of_flight=1.0)
+        self.assertEqual(self._run(_SHARED, spec=spec).resolutions[0].intercepted, 0)
+
+    def test_stock_is_charged_to_the_escort(self):
+        escort = _ConsumingAsset('e1', stores={'9M38-SAM': 2}, interceptor_weapons={'9M38-SAM': False})
+        result = self._run(_SHARED, escort=escort)
+
+        self.assertEqual(result.resolutions[0].capacity, 2)
+        self.assertEqual([(e.asset_id, e.weapon, e.interceptions, e.force_id) for e in result.interception_events],
+                         [('e1', '9M38-SAM', 2, 'm2')])
+        self.assertEqual(result.interceptions_consumed(), {'e1': 2})
+
+        summary = ER.apply_engagement_result(result, _Force('m1', 'Blue', [escort]))
+        self.assertEqual(escort.consumed, [(2, '9M38-SAM')])
+        self.assertEqual(summary['interception_events'], 1)
+
+    def test_channels_are_not_counted_twice_in_the_same_instant(self):
+        """Due trasporti del dominio ('m2', 'm3') colpiti nello stesso istante (impatto a t = 22,
+        finestra di salva nulla): i 3 canali della scorta valgono una volta sola."""
+        escort = _Asset('e1')
+        m1 = _Force('m1', 'Blue', [escort], interceptors=[(escort, 3)])
+        m2, m3 = _Force('m2', 'Blue', [_Asset('t1')]), _Force('m3', 'Blue', [_Asset('t2')])
+        red = _Force('red', 'Red', [_Asset('a1'), _Asset('a2')])
+        windows = [_window('a1', 't1', t_end=2.9, range_b=None), _window('a2', 't2', t_end=2.9, range_b=None)]
+        spec = _miss(rounds=3, interceptable=True, time_of_flight=REACTION_TOF)
+        fire = lambda shooter, target: spec if shooter.id in ('a1', 'a2') else None
+
+        for coordination_of, expected in (({'m1': 'd', 'm2': 'd', 'm3': 'd'}, 3), (None, 0)):
+            with patch(_ER_LOGGER):
+                result = ER.resolve_engagement(m1, m2, windows, fire, random.Random(0), extra_forces=(m3, red),
+                                               reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                               thresholds=_LOOSE_DOCTRINE, coordination_of=coordination_of)
+
+            with self.subTest(shared=coordination_of is not None):
+                self.assertEqual([r.time for r in result.resolutions], [22.0, 22.0])
+                self.assertEqual(sum(r.intercepted for r in result.resolutions), expected)
+                self.assertEqual(result.interceptions_consumed(), {'e1': expected} if expected else {})
+
+                if expected:
+                    self.assertEqual(sorted((r.capacity, r.intercepted) for r in result.resolutions),
+                                     [(0, 0), (3, 3)])
+
+    def test_order_of_the_forces_does_not_matter(self):
+        """Ordine globale della regola F nel dominio: e1 ('m3') prima di e2 ('m1') per id,
+        qualunque sia l'ordine di passaggio delle forze; 2 canali ciascuno, 3 colpi."""
+        spec = _miss(rounds=3, interceptable=True, time_of_flight=REACTION_TOF)
+        domain = {'m1': 'd', 'm2': 'd', 'm3': 'd'}
+        seen = []
+
+        for order in (('m1', 'm2', 'm3', 'red'), ('red', 'm3', 'm2', 'm1'), ('m2', 'red', 'm1', 'm3')):
+            e1, e2 = _Asset('e1'), _Asset('e2')
+            forces = {'m1': _Force('m1', 'Blue', [e2], interceptors=[(e2, 2)]),
+                      'm2': _Force('m2', 'Blue', [_Asset('t1')]),
+                      'm3': _Force('m3', 'Blue', [e1], interceptors=[(e1, 2)]),
+                      'red': _Force('red', 'Red', [_Asset('a1')])}
+            first, second, *others = [forces[name] for name in order]
+
+            with patch(_ER_LOGGER):
+                result = ER.resolve_engagement(first, second, [_window('a1', 't1', t_end=2.9, range_b=None)],
+                                               lambda s, t: spec if s.id == 'a1' else None, random.Random(0),
+                                               extra_forces=others,
+                                               reaction_profile_for=_profiles({}, default=(2.0, 1.0)),
+                                               thresholds=_LOOSE_DOCTRINE, coordination_of=domain)
+            seen.append((result.resolutions, result.interception_events, result.damage_events))
+
+        self.assertEqual(seen[0][1], (ER.InterceptionEvent(time=22.0, asset_id='e1', interceptions=2, force_id='m2',
+                                                           salvo_ids=(0,)),
+                                      ER.InterceptionEvent(time=22.0, asset_id='e2', interceptions=1, force_id='m2',
+                                                           salvo_ids=(0,))))
+        self.assertTrue(all(item == seen[0] for item in seen[1:]))
+
+
 if __name__ == '__main__':
     unittest.main()

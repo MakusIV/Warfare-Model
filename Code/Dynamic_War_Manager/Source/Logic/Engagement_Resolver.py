@@ -195,6 +195,15 @@ transitiva, mai a cavallo di due lati (qui verificato: ValueError).
   sono chiavati per dominio; un rilevamento (o una percezione RWR) di una forza vale per tutte le
   forze del dominio dall'istante del rilevamento. Ne dipendono rapporto di forze percepito, fuoco
   senza risposta e peso di classe R-CLS; ogni forza confronta la percezione con i PROPRI asset.
+* **Difesa di salva** (F4b++, deviazione 8c): una salva diretta a un asset di una forza e'
+  intercettata dagli intercettori (`salvo_interceptors`) di QUALUNQUE forza del dominio del
+  bersaglio, tutti nell'ordine globale della regola F (rank, poi id: non conta l'ordine delle
+  forze). Invariati i vincoli per intercettore: geometria L1 (`_may_intercept`), tempi R-INT
+  (`_in_time`, sul rilevamento del SINGOLO intercettore, non sulla percezione condivisa), canali
+  per evento, scorta di intercettori (R3). Due forze del dominio risolte nello stesso istante
+  condividono i canali (`instant_interceptions`). L'`InterceptionEvent` porta l'intercettore
+  (anche di un'altra forza) e la forza difesa. Come prima della F4b la scorta di un gruppo navale
+  difende i trasporti dello stesso blocco anche se sono missioni distinte.
 * **Nessun cueing del tiro**: i candidati di tiro restano per osservatore (`candidates`), un
   tiratore spara solo ai bersagli che ha rilevato lui. L'assegnazione di bersagli da un sensore a
   un tiratore (EWR->SAM, AWACS->caccia, scorta->strike) e' fuori perimetro, rimandata alla Fase 0
@@ -553,7 +562,8 @@ class InterceptionEvent:
     `Mobile.consume_interceptor_stock`.
 
     `asset_id` e' l'INTERCETTORE (chi consuma la scorta), non chi ha sparato la salva
-    intercettata. L'unita' e' l'intercettazione, non il colpo: per un cannone AA una
+    intercettata; con un dominio di coordinamento (F4b++) puo' appartenere a una forza del
+    dominio diversa da `force_id`, che resta la forza DIFESA. L'unita' e' l'intercettazione, non il colpo: per un cannone AA una
     intercettazione costa ~ROUNDS_PER_GUN_INTERCEPT colpi, gia' conteggiati nella scorta
     (v. Mobile.ROUNDS_PER_GUN_INTERCEPT) — per questo il campo non si chiama `rounds`.
     `weapon` (2026-09-26) e' l'arma AD che ha intercettato, dalla scorta per arma
@@ -1283,6 +1293,11 @@ class _EngagementRun:
         # Dominio di coordinamento di ogni forza (2026-10-11, v. "Dominio di coordinamento" nel
         # docstring del modulo): calcolato in _build_forces, default = la forza stessa.
         self.domain_of: Dict[str, str] = {}
+        # Difesa di salva per dominio (F4b++, 2026-10-11): intercettori di tutte le forze di ogni
+        # dominio nell'ordine della regola F (rank, poi id), e intercettazioni gia' allocate nello
+        # stesso istante per (dominio) -> (istante, {forza colpita: {intercettore: canali}}).
+        self.domain_interceptors: Dict[str, List[Tuple[_Shadow, int]]] = {}
+        self.instant_interceptions: Dict[str, Tuple[float, Dict[str, Dict[str, int]]]] = {}
         # Primo istante in cui ciascun DOMINIO ha rilevato ciascun asset nemico (qualunque
         # osservatore di una sua forza): la base della percezione del nemico (soglia di rottura,
         # D4/D5). Chiavato per dominio, che senza `coordination_of` coincide con la forza.
@@ -1476,6 +1491,12 @@ class _EngagementRun:
 
             sides.setdefault(key, (force_id, side))
             self.domain_of[force_id] = key
+            self.domain_interceptors.setdefault(key, []).extend(self.force_states[force_id].interceptors)
+
+        # Ordine globale della regola F nel dominio, indipendente dall'ordine delle forze; con un
+        # dominio di una sola forza e' l'ordine di `_interceptors_of` (stessa chiave, ids unici).
+        for interceptors in self.domain_interceptors.values():
+            interceptors.sort(key=lambda item: (WS.interceptor_rank(item[0].interceptor_weapons), item[0].id))
 
     def _same_domain(self, force_a: str, force_b: str) -> bool:
         return self.domain_of[force_a] == self.domain_of[force_b]
@@ -2200,19 +2221,6 @@ class _EngagementRun:
 
         group.salvos.append(salvo)
 
-    def _capacity(self, state: _ForceState) -> int:
-        """Capacita' di intercettazione attuale: stessa formula di Military.salvo_interception_capacity."""
-        capacity = 0
-
-        for shadow, channels in state.interceptors:
-            if not shadow.operative:
-                continue
-
-            stock = shadow.interceptor_stock
-            capacity += channels if stock is None else min(channels, stock)
-
-        return capacity
-
     def _position_at(self, shadow: "_Shadow", t: float) -> Optional[Tuple[float, float, float]]:
         """Posizione (x, y, z) all'istante t: dai tratti di rotta se ci sono, altrimenti la
         posizione dell'asset (ferma). None se non nota."""
@@ -2378,7 +2386,28 @@ class _EngagementRun:
 
         rounds = sum(s.rounds for s in ordered)
         interceptable = sum(s.rounds for s in ordered if s.spec.interceptable)
-        capacity = self._capacity(state)
+
+        # Difesa di salva per DOMINIO (F4b++, 2026-10-11, deviazione 8c del piano della Missione):
+        # intercettano gli asset di TUTTE le forze del dominio della forza colpita (senza
+        # `coordination_of`: della forza stessa), con gli stessi vincoli. I canali sono per
+        # evento-salva; due forze dello stesso dominio risolte nello STESSO istante sono servite
+        # dagli stessi canali, quindi quelli gia' spesi per le ALTRE forze del dominio in
+        # quell'istante si sottraggono (la scorta e' gia' scalata dal loro consumo). Le
+        # risoluzioni successive di una stessa forza restano a canali pieni, come prima.
+        domain = self.domain_of[force_id]
+        interceptors = self.domain_interceptors.get(domain, [])
+        instant = self.instant_interceptions.get(domain)
+
+        if instant is None or abs(instant[0] - time) > TIME_EPS:
+            instant = (time, {})
+            self.instant_interceptions[domain] = instant
+
+        spent: Dict[str, int] = {}
+
+        for other_id, by_interceptor in instant[1].items():
+            if other_id != force_id:
+                for interceptor_id, count in by_interceptor.items():
+                    spent[interceptor_id] = spent.get(interceptor_id, 0) + count
 
         # Allocazione PER SALVA (regola L1, 2026-09-28, Proposta_Regole_Allocazione_SAM.md §7):
         # un colpo intercettabile e' fermato solo da un intercettore per cui il punto di lancio
@@ -2388,13 +2417,17 @@ class _EngagementRun:
         # intercettore fino a min(canali, scorta) per evento. Senza vincoli geometrici (nessun
         # dato di volume o di posizione) il risultato coincide con l'allocazione sul totale usata
         # fino al 2026-09-28: stessi consumi per intercettore, stesse salve fermate.
+        # La capacita' registrata e' la somma delle disponibilita' (stessa formula di
+        # Military.salvo_interception_capacity, sugli intercettori del dominio).
         available = {}
 
-        for shadow, channels in state.interceptors:
+        for shadow, channels in interceptors:
             if shadow.operative:
                 stock = shadow.interceptor_stock
+                channels = max(0, channels - spent.get(shadow.id, 0))
                 available[shadow.id] = channels if stock is None else min(channels, stock)
 
+        capacity = sum(available.values())
         used: Dict[str, int] = {}
         stopped: Dict[int, int] = {}
 
@@ -2404,7 +2437,7 @@ class _EngagementRun:
 
             left = salvo.rounds
 
-            for shadow, _ in state.interceptors:
+            for shadow, _ in interceptors:
                 if left <= 0:
                     break
 
@@ -2425,10 +2458,15 @@ class _EngagementRun:
         # Ogni intercettazione consuma la scorta di INTERCETTORI del difensore (R3,
         # ricalibrazione 2026-09-23) — dal 2026-09-26 le voci AD della sua scorta per arma,
         # cannoni prima e poi missili (v. _Shadow) — ed e' un InterceptionEvent (uno per
-        # arma), mai un AmmunitionEvent: consumo esplicito, asset nell'ordine F.
+        # arma), mai un AmmunitionEvent: consumo esplicito, asset nell'ordine F. L'evento porta
+        # l'intercettore (che puo' essere di un'altra forza del dominio) e la forza DIFESA.
         salvo_ids = tuple(s.salvo_id for s in ordered)
+        mine = instant[1].setdefault(force_id, {})
 
-        for shadow, _ in state.interceptors:
+        for interceptor_id, count in used.items():
+            mine[interceptor_id] = mine.get(interceptor_id, 0) + count
+
+        for shadow, _ in interceptors:
             count_used = used.get(shadow.id, 0)
 
             if count_used <= 0:

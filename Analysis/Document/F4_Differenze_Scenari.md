@@ -400,7 +400,68 @@ consecutive identiche (determinismo).
 - **Nessun cueing del tiro**: un tiratore spara solo ai bersagli che ha rilevato lui; EWR->SAM,
   AWACS->caccia, scorta->strike restano una funzionalita' futura (Fase 0 C2).
 - Condivisione istantanea, senza latenza ne' perdite del canale.
-- La difesa di salva (`salvo_interceptors`, R1) resta per missione: gli intercettori di una
-  missione non difendono gli asset di un'altra missione dello stesso dominio (prima della F4b, per
-  il blocco, si'). Nessuno scenario lo esercita oggi; non era nel perimetro delle decisioni 6 e 7.
 - Una missione di un solo asset e' DESTROYED alla prima perdita (S19 Strike).
+- Difesa di salva per missione: superato dalla F4b++ (sezione seguente).
+
+---
+
+## F4b++: intercettori di dominio (deviazione 8c)
+
+**Base del confronto**: fotografia di F4b+ (`098671d7`, 328 esecuzioni; ricontrollata IDENTICA al
+codice di partenza `5c1c297a` prima delle modifiche).
+**Dopo**: motore con la difesa di salva per dominio. **Fotografia IDENTICA (328 su 328)**: nessuno
+scenario esercita il caso, la fotografia non e' stata rigenerata.
+
+### Il cambio
+
+- Una salva diretta a un asset della forza X e' intercettata dagli intercettori
+  (`salvo_interceptors`) di QUALUNQUE forza del dominio di coordinamento di X
+  (`_EngagementRun.domain_interceptors`), non piu' solo da quelli di X. Prima della F4b, con la
+  forza = blocco, la scorta di un gruppo navale difendeva i trasporti dello stesso blocco; con
+  scorta e trasporti in missioni distinte non piu': ora di nuovo si'.
+- Invariati, per intercettore: geometria L1 (`_may_intercept`), tempi R-INT (`_in_time`, sul
+  rilevamento del singolo intercettore: la percezione condivisa della decisione 7 non anticipa la
+  traccia), canali per evento-salva, scorta di intercettori (R3, `consume_interceptions`).
+- Ordine: quello globale della regola F (rank, poi id) sugli intercettori del dominio, indipendente
+  dall'ordine di passaggio delle forze.
+- Canali: due forze dello stesso dominio risolte nello STESSO istante sono servite dagli stessi
+  canali (`instant_interceptions`: si sottraggono quelli gia' spesi per le altre forze del dominio
+  in quell'istante; la scorta e' gia' scalata dal loro consumo). Le risoluzioni di una stessa forza
+  restano a canali pieni, come prima.
+- `SalvoResolution.capacity` e' la somma delle disponibilita' degli intercettori del dominio;
+  l'`InterceptionEvent` porta l'intercettore (anche di un'altra forza) e la forza DIFESA
+  (`force_id`); `apply_engagement_result` cerca gli asset fra tutte le forze passate, invariato.
+- Senza `coordination_of` ogni dominio ha una sola forza: stessi intercettori, stesso ordine,
+  nessuna sottrazione di canali, comportamento identico (test e fotografia).
+- Nessun cueing, nessuna costante nuova.
+
+### Perche' la fotografia non cambia
+
+Il cambio agisce solo se un dominio ha piu' forze e una di esse e' colpita da colpi intercettabili
+mentre un'ALTRA ha intercettori che soddisfano L1 e R-INT. Le forze divise in missioni sono quelle
+di S7, S18, S19, S19AD e S20; la fotografia identica dice che in nessuna loro esecuzione questo
+accade (verificato sul risultato, non analizzato scenario per scenario); i blocchi con intercettori
+di S6 e S16 sono una sola forza. Prova fatta (solo misura, non nel repository) su una variante di S16 con le
+corvette in una missione propria e il resto del porto nella vista residua: la capacita' delle
+risoluzioni sulla vista residua sale da 0 ai canali delle corvette (il dominio funziona), ma le
+corvette non intercettano per la regola R-INT (non hanno il tempo di reagire ai colpi diretti
+alle strutture); con R-INT spenta intercettano. Per questo non e' stato aggiunto un test di
+scenario: il caso e' coperto con stub nel risolutore.
+
+### Test
+
+- `Test_Engagement_Resolver.TestCoordinationDomainSalvoDefence`: la scorta (missione 'm1')
+  intercetta la salva diretta al trasporto ('m2') con il dominio condiviso e non senza mappa
+  (regressione); mappa identita' = nessuna mappa; scorta di un dominio diverso; lancio dentro il V_I
+  della scorta (L1) e scorta senza tempo di reagire (R-INT) non intercettano; scorta per arma
+  scalata alla scorta e applicata da `apply_engagement_result`; canali non contati due volte con
+  due trasporti del dominio colpiti nello stesso istante (verificato anche per mutazione: senza il
+  contabile per istante le intercettazioni salgono da 3 a 6); ordine deterministico con tre
+  permutazioni delle forze.
+
+### Limiti noti
+
+- La condivisione dei canali e' per ISTANTE di risoluzione (entro `TIME_EPS`): due forze del
+  dominio colpite a istanti diversi ma ravvicinati (meno di `salvo_window`) ricevono i canali pieni
+  ciascuna, come una forza sola che subisce due eventi-salva distinti.
+- Nessuno scenario esercita il caso (v. sopra).
