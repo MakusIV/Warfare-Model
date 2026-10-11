@@ -5,23 +5,61 @@ discreti (DES, *discrete event simulation*) che risolve le **sessioni virtuali**
 cioè i turni sintetici eseguiti senza un giocatore DCS (e, per costruzione, anche quelli con un
 giocatore: il core non distingue i due casi, v. capitolo 1).
 
-> **Aggiornato al commit `533cd1f5`** (2026-10-05, "F3: la Missione attraversa la porta di sessione"),
-> branch `analysis/dce-dcs-persistence`. Suite di test a quel commit: **3922 OK (skipped=7)**.
-> Il manuale descrive **lo stato di `533cd1f5`**: le fasi F4-F9 del piano di implementazione della
-> Missione (F4 la missione come unità d'ingaggio, F5 presenza e attese, F6 fine missione e carburante nel
-> tempo, F7 bersagli e filtro armi, F8 sessione e campagna, F9 documentazione) sono **in corso o da fare** e
-> non sono descritte come codice (capitolo 9 §9.5). Il checkout principale può contenere lavoro in corso
-> sulla F4: **non** è oggetto di questo manuale, che è stato scritto sulla copia esportata di `533cd1f5`.
+> **Aggiornato al commit `84a47670`** (2026-10-11, "Memoria: F4c completata, prossimo F5"), branch
+> `analysis/dce-dcs-persistence`. Il codice del motore a quel commit è identico a quello di `af2efbe6` ("F4c:
+> postura continua degli asset senza missione"; `84a47670` aggiunge solo la memoria di progetto). Suite di test a
+> `af2efbe6`: **4039 OK** (messaggio del commit). Il manuale descrive **lo stato di `84a47670`**, cioè dopo le
+> fasi F0-F4 del piano di implementazione della Missione (F4 = F4a regola A, F4b la missione è l'unità
+> d'ingaggio, F4b+ dominio di coordinamento, F4b++ difesa di salva per dominio, F4c postura continua); le fasi
+> F5-F9 (F5 presenza e attese, F6 fine missione e carburante nel tempo, F7 bersagli e filtro armi, F8 sessione e
+> campagna, F9 documentazione) sono **da fare** e non sono descritte come codice (capitolo 9 §9.5).
 
 **Stato del codice descritto, storia degli aggiornamenti.** Stesura iniziale al commit `f61aa2b7`
 (2026-09-23); aggiornamenti a `1d0c1127` (2026-09-26), `6754bf1c` (2026-09-27; manuale committato in
-`fb914f0e`) e, ora, a `533cd1f5`. Il motore è **completo** nelle sue 7 fasi originali (wiki
+`fb914f0e`), `533cd1f5` (2026-10-05; manuale committato in `004d26e8`) e, ora, a `84a47670`. Il motore è
+**completo** nelle sue 7 fasi originali (wiki
 `Analysis/WIKI_LLM_SIMULATION/wiki/decisions/virtual-session-engine-des.md`); tutto ciò che è venuto dopo è
 estensione: fino al 2026-09-27 sui moduli satellite che lo alimentano dall'esterno (selezione dell'arma,
 nebbia di guerra, scorta per arma, cannone di bordo, volumi di rilevamento/intercettazione, pianificatore
-d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**.
+d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**, e dal 2026-10-05 nella
+**definizione di "forza d'ingaggio"**.
 
-**Aggiornamento 2026-09-28 → 2026-10-05 (da `6754bf1c` a `533cd1f5`)**, in ordine di capitolo:
+**Aggiornamento 2026-10-05 → 2026-10-11 (da `533cd1f5` a `84a47670`, fase F4 della Missione)**, in ordine di
+capitolo. Il codice toccato è `Command/Session_Types.py`, `Logic/Contact_Scheduler.py`,
+`Logic/Engagement_Resolver.py`, `Logic/Fire_Control.py`, `Logic/Mission_Adapter.py`, `Logic/Session_Simulator.py`
+(più test, fixture e fotografia); nessun altro modulo di supporto è cambiato.
+
+1. **Strato 0, porte** (capitolo 2 §2.2-2.3, §2.8): le porte non cambiano di forma, cambia il significato di
+   `force_id` negli esiti (ora il `mission_id`); `ForceOutcome.block_id` e `SessionOutcome.outcomes_of_block`
+   (l'esito di un blocco è un *insieme* di esiti di missione, non un esito sintetico); `SessionOrder.committed`
+   resta per blocco; il `mission_id` entra nell'RNG attraverso l'`event_id`.
+2. **Scheduler** (capitolo 3 §3.5-3.6): il parametro `grounded` di `schedule_contacts` e i flag
+   `grounded_a`/`grounded_b` di `mutual_detection_ranges`/`contact_windows` (un aereo a terra come bersaglio è
+   interrogato nel modo `'ground'`, come osservatore non ha portata); la potatura per blocco è invariata e
+   conservativa.
+3. **Risolutore** (capitolo 4 §4.1, §4.4-4.5, §4.7-4.8, §4.10-4.15, §4.23-4.26, nuove §4.27-4.30): la forza è la
+   missione (`can_disengage` dichiarato, `block_id`, §4.27); il **dominio di coordinamento** (`coordination_of`:
+   ripartizione del fuoco, saturazione, lanciatori prioritari e percezione condivisi, §4.28); la **difesa di
+   salva per dominio** (`domain_interceptors`, `instant_interceptions`; `_capacity` rimossa, §4.29); gli **aerei a
+   terra** (`grounded`, keyword `target_grounded` verso la fire control, classe `'Soft'`, peso di minaccia nullo,
+   nessun disingaggio, §4.30).
+4. **Orchestratore** (capitolo 6 §6.1-6.4, §6.7-6.14): la validazione con la regola A
+   (`Mission_Adapter.check_mission_speed`); `_engagement_forces` e la vista `MissionForce` (§6.12);
+   `coordination_domains` (§6.13); `continuous_posture` e `grounded_assets` (§6.14); componenti connesse anche
+   per dominio.
+5. **Supporto trasversale** (capitolo 7 §7.7): l'estensione facoltativa `target_grounded` del protocollo di
+   `fire_control`; `coordination_of` e `grounded` come ingressi ricavati dalle missioni.
+6. **Validazione** (capitolo 8 §8.1, §8.4, §8.6-8.9): regola A negli scenari (`_slowest_reference`), ruolo
+   `'parked'`, letture per forza d'ingaggio; scenari **S20**, **S21**, **S21R**; test S3 e S5 riprogettati; la
+   fotografia di non regressione a **370 esecuzioni** con `--summary` e il processo di non regressione.
+7. **Limiti** (capitolo 9): superati «l'unità d'ingaggio è il blocco», «il `mission_id` non entra nell'RNG»,
+   «nessuna condivisione dei rilevamenti»; nuovi i limiti della F4 (nessun cueing, condivisione istantanea,
+   canali condivisi solo nello stesso istante, `grounded` per tutta la sessione, nessuno shelter, postura
+   `Defense` solo dichiarata, missione di un solo asset `DESTROYED` alla prima perdita, potatura conservativa);
+   stato del piano (§9.5) e incoerenze documenti/codice (§9.6, rivista voce per voce).
+
+**Aggiornamento 2026-09-28 → 2026-10-05 (da `6754bf1c` a `533cd1f5`)** (testo conservato per riferimento; i
+numeri di riga e di esecuzioni citati qui sono quelli di allora), in ordine di capitolo:
 
 1. **Strato 0, la Missione** (capitolo 2 §2.2-2.9): `Command/Mission_Types.py` (tipi di dominio di Missione,
    Operazione, esiti), la tassonomia dei tipi di missione in `Context/Context.py` (`Mission_Category`, tipi per
@@ -44,8 +82,10 @@ d'attacco), dal 2026-09-28 **anche nel risolutore e nella porta di sessione**.
 6. **Limiti** (capitolo 9): limiti nuovi e superati, stato del piano della Missione (§9.5) e le incoerenze
    trovate fra documenti di progetto e codice (§9.6).
 
-I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati e risultano invariati**
-(`Logic/Contact_Scheduler.py`, `Logic/Damage_Model.py`, `Logic/Fuel_Model.py` non cambiano da `6754bf1c`).
+A `533cd1f5` i capitoli 3 (scheduler) e 5 (applicazione dello stato) risultavano **invariati**
+(`Logic/Contact_Scheduler.py`, `Logic/Damage_Model.py`, `Logic/Fuel_Model.py` non cambiavano da `6754bf1c`); a
+`84a47670` il capitolo 5 è ancora invariato nei moduli, mentre lo scheduler (capitolo 3) ha acquisito il
+parametro `grounded`.
 
 **Storia degli aggiornamenti precedenti** (testo conservato per riferimento):
 
@@ -63,9 +103,9 @@ I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati 
 ## Convenzioni di questo manuale
 
 - Ogni affermazione su codice è verificata leggendo il file, con riferimento `percorso:riga`
-  valido per `533cd1f5`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
-  `Logic/Engagement_Resolver.py:2251` sta per
-  `Code/Dynamic_War_Manager/Source/Logic/Engagement_Resolver.py:2251`); dentro una sezione una forma breve
+  valido per `84a47670`. I percorsi sono dati **relativi a `Code/Dynamic_War_Manager/Source/`** (es.
+  `Logic/Engagement_Resolver.py:2474` sta per
+  `Code/Dynamic_War_Manager/Source/Logic/Engagement_Resolver.py:2474`); dentro una sezione una forma breve
   `` `:riga` `` si riferisce al file nominato nell'intestazione del capitolo o della sezione. I documenti di
   progetto sono citati con il percorso sotto `Analysis/Document/`.
 - I diagrammi sono in blocchi ```mermaid```, tenuti piccoli e leggibili: dove un diagramma
@@ -77,8 +117,8 @@ I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati 
   presentarle come dati misurati.
 - Dove il manuale e la wiki di progetto (`Analysis/WIKI_LLM_SIMULATION/wiki/decisions/`)
   divergono, prevale il codice; le divergenze trovate sono raccolte nel capitolo 9 (§9.2 per la wiki,
-  §9.6 per i documenti di progetto della Missione e delle regole SAM).
-- I diagrammi hanno un numero progressivo `D1`-`D29` (elenco in fondo); le didascalie sono nel capitolo
+  §9.6 per i documenti di progetto della Missione e delle regole SAM, con lo stato di ciascuna voce).
+- I diagrammi hanno un numero progressivo `D1`-`D36` (elenco in fondo); le didascalie sono nel capitolo
   che li contiene.
 
 ## Indice dei capitoli
@@ -88,10 +128,12 @@ I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati 
 2. [Lo strato 0: il contratto delle porte](03_Strato0_Contratto_Porte.md) —
    `Command/Session_Types.py`: `SessionOrder`, `SessionOutcome`, `assemble_session_outcome`; dal
    2026-10-05 le missioni alla porta (`SessionOrder.missions`/`operations`, `mission_outcomes`),
-   `Command/Mission_Types.py` (§2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7).
+   `Command/Mission_Types.py` (§2.6) e la tassonomia dei tipi di missione di `Context/Context.py` (§2.7); dal
+   2026-10-08 `ForceOutcome.block_id` e `SessionOutcome.outcomes_of_block` (§2.3), il `mission_id` nell'RNG
+   (§2.8).
 3. [Lo strato 1: lo scheduler dei contatti](04_Strato1_Scheduler_Contatti.md) —
    `Logic/Contact_Scheduler.py`: rotta↔cilindro, CPA/TCPA, potatura gerarchica,
-   `ContactWindow`.
+   `ContactWindow`; dal 2026-10-11 il parametro `grounded` per gli aerei a terra (§3.5-3.6).
 4. [Lo strato 2: il risolutore d'ingaggio](05_Strato2_Risolutore_Ingaggio.md) —
    `Logic/Engagement_Resolver.py`: rilevamento, latenze di reazione, salva di Hughes,
    saturazione, disingaggio, ingaggi a N forze; `Logic/Fire_Control.py` (selezione dell'arma dai
@@ -101,30 +143,34 @@ I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati 
    `Weapon_Delivery`, §4.20; **dal 2026-09-28**: soglia di rottura stocastica (§4.7, §4.21), efficacia
    antiaerea E(N) (§4.22), RWR e classi SAM con regola R-CLS (§4.23), difesa dai missili A6 con regole
    D/F/L1/L2/L3 (§4.24), dottrina di tiro contro l'overkill (§4.25), intercettazione con tempo di reazione
-   R-INT (§4.26).
+   R-INT (§4.26); **dal 2026-10-08 (fase F4 della Missione)**: la forza d'ingaggio è la missione (§4.27), il
+   dominio di coordinamento per fuoco e percezione (§4.28), la difesa di salva per dominio (§4.29), gli aerei a
+   terra e la postura continua (§4.30).
 5. [Lo strato 3: applicazione dello stato](06_Strato3_Applicazione_Stato.md) —
    `Logic/Damage_Model.py`, `Asset.apply_damage`, `Logic/Fuel_Model.py`,
-   `apply_engagement_result` (verificato a `533cd1f5`: invariato).
+   `apply_engagement_result` (verificato a `84a47670`: invariato).
 6. [L'orchestratore: `Session_Simulator.run_session`](07_Orchestratore_Session_Simulator.md) —
-   componenti connesse, coda eventi di sessione, carburante, sessione aperta; la nuova firma senza
-   `routes`/`starts`/`speeds`, `Logic/Mission_Adapter.py` (§6.10) e l'esito di missione di prima forma
-   (§6.11).
+   componenti connesse (anche per dominio), coda eventi di sessione, carburante, sessione aperta; la firma senza
+   `routes`/`starts`/`speeds`, `Logic/Mission_Adapter.py` (§6.10, con la regola A) e l'esito di missione di
+   prima forma (§6.11); le forze d'ingaggio e la vista `MissionForce` (§6.12), il dominio di coordinamento
+   (§6.13), la postura continua e gli aerei a terra (§6.14).
 7. [Moduli di supporto trasversali](08_Supporto_Trasversale.md) — `Session_Rng`, `Doctrine`,
    `Reaction_Profile`, le dimensioni militari di `Military`, munizioni/carburante su
    `Mobile`/`Aircraft`, i punti di iniezione meteo (`detection_factor`) e arma
-   (`fire_control`) e della soglia di rottura (`morale_for`, `enemy_estimate_for`, `fire_doctrine`,
-   `rwr_catalogue`); `Doctrine` con parametri della soglia e dottrina di tiro (§7.2);
-   `Asset/Aircraft_Rwr_Data.py` (§7.10), `Context/Air_Defense_Efficacy.py` (§7.11), dati di registro
+   (`fire_control`, con l'estensione facoltativa `target_grounded`) e della soglia di rottura (`morale_for`,
+   `enemy_estimate_for`, `fire_doctrine`, `rwr_catalogue`); `Doctrine` con parametri della soglia e dottrina di
+   tiro (§7.2); `Asset/Aircraft_Rwr_Data.py` (§7.10), `Context/Air_Defense_Efficacy.py` (§7.11), dati di registro
    aggiunti (§7.12); il pianificatore di rotta aerea con volumi di rilevamento e
    intercettazione distinti (§7.8, `Logic/Air_Route_Manager.py`) e il pianificatore d'attacco
    a monte del motore (§7.9, `Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`).
 8. [Validazione](09_Validazione.md) — determinismo, test di agnosticismo come test di
-   contratto (esteso alle porte della Missione), la batteria di scenari S1-S19 (S19, S19AD), la migrazione
-   alle missioni, lo strumento di non regressione `Test/Scenario_Baseline.py` (§8.7), i test aggiunti
-   (§8.8).
+   contratto (esteso alle porte della Missione), la batteria di scenari S1-S21 (S19, S19AD, S20, S21, S21R), la
+   migrazione alle missioni e la regola A negli scenari, lo strumento di non regressione
+   `Test/Scenario_Baseline.py` con il processo di non regressione (§8.7), i test aggiunti (§8.8), gli scenari
+   della fase F4 e la riprogettazione dei test S3 e S5 (§8.9).
 9. [Limiti noti, punti di estensione e divergenze codice/wiki](10_Limiti_Estensioni_Divergenze.md) —
-   limiti nuovi e superati, stato del piano della Missione F0-F9 (§9.5), incoerenze trovate fra documenti di
-   progetto e codice (§9.6).
+   limiti nuovi e superati (compresi quelli introdotti dalla fase F4), stato del piano della Missione F0-F9
+   (§9.5), incoerenze trovate fra documenti di progetto e codice (§9.6, con lo stato di ciascuna voce).
 
 ## Elenco dei diagrammi
 
@@ -153,13 +199,23 @@ I capitoli 3 (scheduler) e 5 (applicazione dello stato) sono stati **verificati 
 | D21 | Offset di formazione ai cambi di direzione | `flowchart TD` | 6 |
 | D22 | Composizione della soglia di rottura B(t) | `flowchart TD` | 4 |
 | D23 | Minaccia percepita: sistema esatto o classe RWR (R-CLS) | `flowchart TD` | 4 |
-| D24 | Allocazione delle intercettazioni per salva (ordine F, L1, R-INT) | `flowchart TD` | 4 |
-| D25 | Priorità ai lanciatori: prelazione L3 | `sequenceDiagram` | 4 |
-| D26 | Dottrina di tiro: bersagli bloccati, attesa, round-robin | `flowchart TD` | 4 |
+| D24 | Allocazione delle intercettazioni per salva (ordine F, L1, R-INT; intercettori del dominio) | `flowchart TD` | 4 |
+| D25 | Priorità ai lanciatori: prelazione L3 (registrata sul dominio) | `sequenceDiagram` | 4 |
+| D26 | Dottrina di tiro: bersagli bloccati, attesa, round-robin (saturazione per dominio) | `flowchart TD` | 4 |
 | D27 | Regola R-INT: traccia del colpo e tempo di reazione | `flowchart TD` | 4 |
 | D28 | `Air_Defense_Efficacy`: profili, dati RWR, funzioni | `classDiagram` | 7 |
 | D29 | Fasi F0-F9 del piano della Missione | `flowchart LR` | 9 |
+| D30 | La vista di missione `MissionForce` e ciò che il risolutore ne legge | `classDiagram` | 6 |
+| D31 | Come `_engagement_forces` costruisce le forze di un blocco | `flowchart TD` | 6 |
+| D32 | Che cosa condivide un dominio di coordinamento e che cosa resta per forza | `flowchart LR` | 4 |
+| D33 | Difesa di salva per dominio e canali condivisi nello stesso istante | `flowchart TD` | 4 |
+| D34 | Come l'insieme `grounded` attraversa scheduler, risolutore e fire control | `flowchart TD` | 4 |
+| D35 | Regole di unione di `coordination_domains` | `flowchart TD` | 6 |
+| D36 | Postura continua di un asset senza missione | `flowchart TD` | 6 |
 
-I diagrammi D1, D2, D4, D5, D6, D8 e D9 sono stati **aggiornati** a `533cd1f5` (nuovi tipi, campi e passi);
-il D3 (scheduler) e il D7 (stati di salute) sono invariati.
-
+I diagrammi D1, D2, D4, D5, D6, D8 e D9 erano già stati **aggiornati** a `533cd1f5` e lo sono stati di nuovo
+a `84a47670` (nuovi campi, passi e stati della fase F4), così come D29 (stato del piano); a `84a47670` sono stati
+aggiornati anche D10, D20, D23, D24, D25 e D26 (aereo a terra, regola A, percezione, intercettori e saturazione
+per dominio). I diagrammi D30-D36 sono **nuovi** e numerati in
+coda. Il D3 (scheduler: tipi) e il D7 (stati di salute) sono invariati; il D6 cambia solo nella nota sulle forze
+che non possono ritirarsi.

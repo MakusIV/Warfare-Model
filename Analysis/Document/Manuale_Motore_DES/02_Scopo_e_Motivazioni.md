@@ -1,11 +1,14 @@
 # Capitolo 1 — Scopo e motivazioni
 
-> **Aggiornato al commit `533cd1f5`** (2026-10-05). Rispetto alla stesura iniziale cambiano due cose a livello
-> d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è ora il
-> modo in cui un asset riceve rotta, partenza e velocità — la porta dello strato 0 la porta, un adattatore
-> la traduce nelle mappe dello scheduler —, e lo strato 2 ha acquisito la soglia di rottura stocastica, la
-> difesa dai missili, la dottrina di tiro e la percezione RWR (capitolo 4 §4.21-4.26). Le motivazioni di
-> questo capitolo (§1.1, §1.3, §1.5) non sono cambiate.
+> **Aggiornato al commit `84a47670`** (2026-10-11). Rispetto alla stesura iniziale cambiano tre cose a
+> livello d'architettura: la **Missione** (fasi F0-F3 del piano, capitolo 2 §2.6-2.7 e capitolo 6 §6.10) è il
+> modo in cui un asset riceve rotta, partenza e velocità; dalla fase **F4** (2026-10-05/11) la missione è
+> anche l'**unità d'ingaggio** (capitolo 6 §6.12-6.14, capitolo 4 §4.27), con un **dominio di coordinamento**
+> che condivide fuoco, percezione e difesa di salva fra le missioni dello stesso blocco o della stessa
+> Operazione (capitolo 4 §4.28-4.29) e con la **postura continua** degli asset senza missione (un aereo senza
+> missione è a terra, bersaglio di superficie passivo: capitolo 4 §4.30); lo strato 2 ha inoltre acquisito la
+> soglia di rottura stocastica, la difesa dai missili, la dottrina di tiro e la percezione RWR (capitolo 4
+> §4.21-4.26). Le motivazioni di questo capitolo (§1.1, §1.3, §1.5) non sono cambiate.
 
 ## 1.1 Il problema: simulare ore di combattimento in minuti di calcolo
 
@@ -78,7 +81,9 @@ L'architettura è a quattro strati, in secondi assoluti dall'inizio della sessio
    salva e tempo di reazione) → danno per colpo → disingaggio (soglia di rottura stocastica).
 3. **Applicazione dello stato** — per-asset (danno, munizioni, carburante) → `SessionOutcome`,
    in un'unica passata per componente connessa di forze (l'orchestratore, capitolo 6). L'orchestratore
-   ricava prima rotta, partenza e velocità di ogni asset dalle missioni (`Logic/Mission_Adapter`).
+   ricava prima rotta, partenza e velocità di ogni asset dalle missioni (`Logic/Mission_Adapter`) e
+   costruisce le **forze d'ingaggio**: una vista per missione, il dominio di coordinamento di ciascuna e
+   l'insieme degli aerei a terra (capitolo 6 §6.12-6.14).
 
 ```mermaid
 flowchart TD
@@ -111,6 +116,7 @@ flowchart TD
     MT --> ST
     ST --> ORCH
     ORCH --> MA
+    MA -.->|MissionForce, coordination_of, grounded| ER
     RNG --> ST
     ORCH --> CS
     CS --> ER
@@ -125,7 +131,10 @@ flowchart TD
 
 *Nota sul diagramma D1*: la freccia da `ORCH` a `ST` rappresenta l'uscita
 (`assemble_session_outcome`, che produce il `SessionOutcome`), non una dipendenza a tempo di
-import.
+import. La freccia tratteggiata da `MA` a `ER` non è un import: `Mission_Adapter` produce le viste di
+missione (`MissionForce`), la mappa dei domini di coordinamento (`coordination_of`) e l'insieme degli aerei
+a terra (`grounded`) che l'orchestratore passa a `resolve_engagement` (capitolo 6 §6.12-6.14); il
+risolutore non importa `Mission_Adapter`.
 
 ## 1.3 I vincoli di progetto, non negoziabili
 
@@ -135,21 +144,21 @@ dell'utente registrati"), e si ritrovano nel codice come regole verificabili:
 
 1. **10.000 asset è un limite superiore teorico**, non un caso tipico da ottimizzare al centro
    della distribuzione. La potatura gerarchica a livello `Block`
-   (`Logic/Contact_Scheduler.py:1096-1193`, meccanismo C) esiste proprio per rendere quel limite
+   (`Logic/Contact_Scheduler.py:1115-1212`, meccanismo C) esiste proprio per rendere quel limite
    trattabile senza un confronto O(N²) di tutte le coppie di asset.
 2. **Riproducibilità da seed**, e l'**ordine di risoluzione degli eventi fa parte del
    contratto**: salvare solo il seed non basta, perché un PRNG riproduce la stessa sequenza solo
    a parità di ordine delle chiamate (`Utility/Session_Rng.py:1-9`). Concretamente: le liste di
    `ContactWindow` sono sempre ordinate per tempo e, a parità di tempo, per identificativo di
    dominio (`Logic/Contact_Scheduler.py:58-60`); la coda eventi del risolutore usa un tie-break
-   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:219-224`, `:343-348`); l'RNG di
+   deterministico `(t, tipo, id, sequenza)` (`Logic/Engagement_Resolver.py:289-294`, `:414-419`); l'RNG di
    ogni ingaggio è derivato da una chiave canonica che non dipende dall'ordine di iterazione di
-   un dizionario Python (`Logic/Session_Simulator.py:252-273`, `engagement_event_id`; `:99-127`).
+   un dizionario Python (`Logic/Session_Simulator.py:311-332`, `engagement_event_id`; `:153-184`).
 3. **Perdite e danni per singolo asset**, mai aggregati. È il motivo per cui esiste
    `Logic/Damage_Model.py` (un `DamageEvent` per colpo risolto, non un delta di forza) e per cui
    `Logic/Tactical_Evaluation.calcFightResult` — il modello aggregato a rapporto di forze
    preesistente — resta un **fallback**, mai il risolutore primario
-   (`Logic/Engagement_Resolver.py:253`).
+   (`Logic/Engagement_Resolver.py:323`).
 4. **Budget di calcolo per sessione: fino a minuti.** Non verificato in questo manuale con
    misure a runtime; lo scenario S8 (capitolo 8) è quello dedicato esplicitamente a misurare il
    tempo di calcolo su una scala di decine di blocchi.

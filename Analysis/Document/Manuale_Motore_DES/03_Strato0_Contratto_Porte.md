@@ -4,6 +4,14 @@ Moduli: `Command/Session_Types.py` (le due porte) e, dalla fase F3 del piano del
 (`533cd1f5`), `Command/Mission_Types.py` (i tipi di dominio della Missione che attraversano la porta,
 §2.6) con la tassonomia dei tipi di missione di `Context/Context.py` (§2.7).
 
+> **Aggiornamento a `84a47670` (fase F4 della Missione, 2026-10-05/11).** Le porte non cambiano di forma
+> (stessi campi di `SessionOrder` e `SessionOutcome`), cambia il **significato di `force_id`** negli esiti:
+> dalla F4b la forza d'ingaggio è la **missione**, quindi `ForceOutcome.force_id` è il `mission_id` e
+> `ForceOutcome` ha un campo nuovo, `block_id` (§2.3); `SessionOutcome` ha un metodo nuovo,
+> `outcomes_of_block` (§2.3); `SessionOrder.committed` resta chiavato per blocco ma è applicato per
+> missione (§2.2); il `mission_id` entra nell'RNG di sessione attraverso l'`event_id` (§2.8). I riferimenti
+> `:riga` di questo capitolo sono ricalcolati su `84a47670` (`Command/Session_Types.py` ha 526 righe).
+
 ## 2.1 Scopo
 
 Definisce le due "porte" di dominio a cui qualunque esecutore di sessione deve conformarsi: il
@@ -29,7 +37,7 @@ livello superiore nascerà con il futuro `Theater_Session_Manager`); nessuna scr
 
 ## 2.2 `SessionOrder` — porta di ingresso
 
-`Command/Session_Types.py:127-295`. Dataclass frozen. Campi (`:159-166`):
+`Command/Session_Types.py:127-297`. Dataclass frozen. Campi (`:161-168`):
 
 | Campo | Tipo | Significato |
 |---|---|---|
@@ -37,18 +45,18 @@ livello superiore nascerà con il futuro `Theater_Session_Manager`); nessuna scr
 | `t_start` | `float` | Inizio sessione, secondi assoluti. |
 | `t_end` | `Optional[float]` | Fine dichiarata; `None` = sessione aperta, la durata la decide l'esecutore (v. capitolo 6, §6.6). |
 | `force_ids` | `Tuple[str, ...]` | Id di dominio delle forze coinvolte (i `Military.name`). |
-| `committed` | `Optional[Mapping[str, Tuple[str, ...]]]` | `{force_id: (asset_id, ...)}` per impegnare solo una parte di una forza; stessa forma di `resolve_engagement(committed=...)`. |
+| `committed` | `Optional[Mapping[str, Tuple[str, ...]]]` | `{force_id: (asset_id, ...)}` per impegnare solo una parte di una forza; stessa forma di `resolve_engagement(committed=...)`. **Chiavato per BLOCCO** (i `force_ids` della porta sono blocchi) anche dopo la F4b: `Session_Simulator` lo traduce per forza d'ingaggio, intersecando la restrizione del blocco con gli asset di ciascuna missione (`_engagement_committed`, capitolo 6 §6.12). |
 | `salvo_window` | `float` | Secondi che raggruppano impatti successivi in un unico evento-salva, passato tale e quale a `resolve_engagement` (default 0.0). |
 | `missions` | `Tuple[Mission, ...]` | Le missioni della sessione (F3), default nessuna: gli asset senza missione restano fermi. |
 | `operations` | `Tuple[Operation, ...]` | Le operazioni della sessione (F3), default nessuna. |
 
-Metodi: `rng(mission_id=None, event_id=None, counter=0)` (`Command/Session_Types.py:289-291`)
+Metodi: `rng(mission_id=None, event_id=None, counter=0)` (`Command/Session_Types.py:291-293`)
 restituisce il `random.Random` di questa sessione per la chiave data; `committed_map()`
-(`:293-295`) converte `committed` in un dict ordinario per `resolve_engagement`;
-`mission(mission_id)` (`:281-287`) restituisce la missione dell'ordine o solleva `KeyError`.
+(`:295-297`) converte `committed` in un dict ordinario per `resolve_engagement`;
+`mission(mission_id)` (`:283-289`) restituisce la missione dell'ordine o solleva `KeyError`.
 
-**Validazione di `missions` e `operations`** (`_validate_missions`, `:220-243`;
-`_validate_operations`, `:245-279`; solo validazione strutturale, l'appartenenza degli asset al
+**Validazione di `missions` e `operations`** (`_validate_missions`, `:222-245`;
+`_validate_operations`, `:247-281`; solo validazione strutturale, l'appartenenza degli asset al
 blocco si verifica con gli oggetti del modello in `run_session`, capitolo 6 §6.1):
 
 - `mission_id` unici nell'ordine;
@@ -62,7 +70,7 @@ blocco si verifica con gli oggetti del modello in `run_session`, capitolo 6 §6.
 
 ## 2.3 `SessionOutcome` — porta di uscita
 
-`Command/Session_Types.py:300-392`. Dataclass frozen, immutabile.
+`Command/Session_Types.py:302-406`. Dataclass frozen, immutabile.
 
 | Campo | Tipo | Significato |
 |---|---|---|
@@ -81,13 +89,28 @@ da `Logic/Damage_Model.py`, `FuelEvent` da `Logic/Fuel_Model.py`, `MissionOutcom
 contenitori.
 
 Metodi di lettura (nessuna mutazione, nessun ricalcolo): `force_outcomes`
-(`:336-339`, appiattisce tutti gli esiti di forza), `outcomes_of(force_id)` (`:341-343`),
-`ammunition_consumed()` (`:345-359`, colpi sparati offensivamente per asset),
-`ammunition_consumed_by_weapon()` (`:361-374`, `{asset: {arma | None: unità}}`: la scorta per arma
+(`:339-342`, appiattisce tutti gli esiti di forza), `outcomes_of(force_id)` (`:344-346`),
+`outcomes_of_block(block_id)` (`:348-357`, nuovo dalla F4b, v. sotto),
+`ammunition_consumed()` (`:359-373`, colpi sparati offensivamente per asset),
+`ammunition_consumed_by_weapon()` (`:375-388`, `{asset: {arma | None: unità}}`: la scorta per arma
 non va appiattita all'uscita, è la forma che la porta verso il simulatore riceverà dall'altro lato),
-`interceptions_consumed()` (`:376-383`), `fuel_consumed()` (`:385-392`).
+`interceptions_consumed()` (`:390-397`), `fuel_consumed()` (`:399-406`).
 
-Nota sul conteggio munizioni (`Command/Session_Types.py:346-352`): fino al 2026-09-23
+**L'esito di un blocco è un insieme di esiti, non un esito** (F4b, `outcomes_of_block`,
+`Command/Session_Types.py:348-357`). Dalla F4b `ForceOutcome.force_id` è l'id della **forza d'ingaggio**,
+cioè il `mission_id` di una missione; il nuovo campo `ForceOutcome.block_id` dice a quale blocco appartiene
+la missione (`Logic/Engagement_Resolver.py:616-653`, campo a `:652`). Per la **vista residua** degli asset
+senza missione (capitolo 6 §6.12) `force_id` è l'id del blocco e `block_id` è l'id del blocco; per un
+**blocco senza missioni** (passato al risolutore com'è) `force_id` è l'id del blocco e `block_id` è `None`.
+`outcomes_of_block(block_id)` restituisce gli esiti delle forze d'ingaggio del blocco nell'ordine degli
+ingaggi: quelli con `block_id` uguale, più quelli con `block_id` assente e `force_id` uguale all'id del
+blocco. **Non esiste un `ForceOutcome` sintetico per il blocco**: due missioni dello stesso blocco hanno
+combattuto e disingaggiato separatamente (capitolo 4 §4.27), e fondere erosione, perdite e stato di forze
+che hanno combattuto separatamente vorrebbe dire reinventarne la semantica (stessa ragione per cui
+`SessionOutcome` non fonde gli esiti di ingaggi diversi, `Logic/Session_Simulator.py:93-98`). Una missione
+è dunque `DESTROYED`, `DISENGAGED` o `HELD` a prescindere dal destino delle altre missioni del suo blocco.
+
+Nota sul conteggio munizioni (`Command/Session_Types.py:360-366`): fino al 2026-09-23
 `ammunition_consumed()` sommava anche le intercettazioni; ora sono due contatori distinti per
 scopo — fuoco offensivo e intercettazione restano due eventi diversi anche quando è la stessa
 arma a farli entrambi (v. capitolo 4, §4.4). **Aggiornamento 2026-09-26** (v. capitolo 4, §4.19):
@@ -100,7 +123,7 @@ scorta per arma.
 
 ## 2.4 `assemble_session_outcome` — la funzione pura di aggregazione
 
-`Command/Session_Types.py:404-499`. Firma:
+`Command/Session_Types.py:418-513`. Firma:
 
 ```python
 assemble_session_outcome(session_id, engagement_results, fuel_events=(),
@@ -109,23 +132,23 @@ assemble_session_outcome(session_id, engagement_results, fuel_events=(),
 
 Aggrega gli esiti di più chiamate a `resolve_engagement` (una per componente connessa di forze,
 v. capitolo 6) in un unico `SessionOutcome`. È una **funzione pura**: non tocca alcun asset, non
-scrive `Campaign_State`, non estrae numeri casuali (`:411-413`). `mission_outcomes` (F3) sono
+scrive `Campaign_State`, non estrae numeri casuali (`:425-427`). `mission_outcomes` (F3) sono
 riportati **tali e quali** (`None` = nessuna missione): sono già calcolati dall'esecutore, la funzione
-non li ricalcola (`:425-426`, `:499`).
+non li ricalcola (`:439-440`, `:513`).
 
 Regole rilevanti:
 
 - I risultati `None` (che `resolve_engagement` restituisce quando un ingaggio non è risolvibile,
-  v. capitolo 4) sono saltati con un log di debug, non un errore (`:454-458`).
+  v. capitolo 4) sono saltati con un log di debug, non un errore (`:468-472`).
 - **Ordine degli eventi nel risultato**: per ciascun tipo, ordinamento **stabile** per `time`
-  sulla concatenazione degli eventi nell'ordine degli ingaggi (`:428-432`, `:474-478`). Dentro un
+  sulla concatenazione degli eventi nell'ordine degli ingaggi (`:442-446`, `:488-492`). Dentro un
   ingaggio gli eventi sono già in ordine di tempo non decrescente (la coda del risolutore); a
   parità di istante fra ingaggi diversi vale l'ordine degli ingaggi. Stesso input → stesso
   output.
 - Se `t_start`/`t_end` sono dichiarati, ogni ingaggio ed evento deve caderci dentro, altrimenti
-  `ValueError` (`:485-489`); se non dichiarati, sono ricavati come min/max delle attività
-  (`:480-483`, `:492-493`).
-- **Limite noto, dichiarato** (`:434-438`, `_warn_shared_targets` a `:502-512`): se due ingaggi
+  `ValueError` (`:499-503`); se non dichiarati, sono ricavati come min/max delle attività
+  (`:494-497`, `:506-507`).
+- **Limite noto, dichiarato** (`:448-452`, `_warn_shared_targets` a `:516-526`): se due ingaggi
   della stessa sessione coinvolgono lo stesso asset e sono stati risolti **senza** applicare il
   primo esito prima di risolvere il secondo, i campi `health_before`/`health_after` dei loro
   `DamageEvent` non sono concatenabili (ogni ingaggio ha letto la salute di partenza). I delta
@@ -164,6 +187,7 @@ classDiagram
         +dict mission_outcomes
         +force_outcomes() tuple
         +outcomes_of(force_id) tuple
+        +outcomes_of_block(block_id) tuple
         +ammunition_consumed() dict
         +interceptions_consumed() dict
         +fuel_consumed() dict
@@ -180,6 +204,7 @@ classDiagram
         +int lost
         +float erosion
         +float max_shock
+        +str block_id
     }
 
     class DamageEvent {
@@ -218,6 +243,8 @@ I tipi con lo stereotipo `<<da ...>>` sono definiti nel loro modulo di origine (
 per `Mission`/`Operation`/`MissionOutcome`, §2.6) e solo riesposti come contenuto delle porte:
 `Session_Types.py` non li ridefinisce (v. §2.1). `mission_outcomes` è in realtà un mapping
 `{mission_id: MissionOutcome}`: il diagramma lo mostra come composizione per leggibilità.
+`ForceOutcome` è mostrato con i soli campi che interessano la porta (i campi della soglia di rottura sono nel
+diagramma D4, capitolo 4); `block_id` e `outcomes_of_block` sono dalla F4b (§2.3).
 Il campo `engagement_outcomes` è in realtà una tupla **di tuple** di `ForceOutcome`
 (una tupla interna per ogni ingaggio, v. §2.3): il diagramma lo mostra semplificato a `tuple` per
 restare leggibile in sintassi mermaid; la relazione di composizione con `ForceOutcome` sotto
@@ -227,7 +254,7 @@ resta corretta nella cardinalità "molti".
 
 Modulo nuovo (1189 righe) con i tipi di dominio della **Missione**, dalle decisioni D1-D6 e N1-N3 di
 `Analysis/Document/Proposta_Struttura_Missione_Decisioni.md` e dal piano
-`Analysis/Document/Piano_Implementazione_Missione.md` (fasi F0-F9; a `533cd1f5` sono fatte F0-F3, v.
+`Analysis/Document/Piano_Implementazione_Missione.md` (fasi F0-F9; a `84a47670` sono fatte F0-F4, cioè F4a, F4b, F4b+, F4b++ e F4c, v.
 capitolo 9 §9.5). Stile di `Command/Attack_Types.py` e `Command/Session_Types.py`: dataclass immutabili,
 validazione in `__post_init__`, mapping resi immutabili con `MappingProxyType`; dipendenze `sympy`,
 `Context`, `DataType` e `Command.Attack_Types`, **nessun** modulo di `Logic` (nessun ciclo d'import,
@@ -503,17 +530,26 @@ flowchart LR
 ## 2.8 La Missione attraversa la porta: cosa fa la porta e cosa fa l'esecutore
 
 La porta (`Session_Types`) fa solo **validazione strutturale** dell'ordine (§2.2: unicità e riferimenti).
-Tre cose restano all'esecutore, `Logic/Session_Simulator.run_session` (capitolo 6):
+Quattro cose restano all'esecutore, `Logic/Session_Simulator.run_session` (capitolo 6):
 
-1. verificare che ogni missione si riferisca a un blocco passato fra le forze e che i suoi asset gli
-   appartengano (`_check_missions`, `check_mission_assets`);
+1. verificare che ogni missione si riferisca a un blocco passato fra le forze, che i suoi asset gli
+   appartengano e che nessun tratto superi la velocità massima del mezzo più lento (regola A: `_check_missions`,
+   `check_mission_assets`, `Mission_Adapter.check_mission_speed`, capitolo 6 §6.1 e §6.10);
 2. ricavare da ogni missione rotta, partenza e velocità di ogni asset (`Logic/Mission_Adapter`);
-3. produrre il `MissionOutcome` di ogni missione, nella **prima forma** (completata, distrutta o non
+3. **dalla F4b** costruire le **forze d'ingaggio** (una vista per missione, capitolo 6 §6.12) e il loro dominio
+   di coordinamento (capitolo 6 §6.13): ciò che la porta chiama `force_id` negli esiti è il `mission_id`;
+4. produrre il `MissionOutcome` di ogni missione, nella **prima forma** (completata, distrutta o non
    completata entro la sessione, nessun criterio di stato: capitolo 6 §6.11), che
    `assemble_session_outcome` riporta in `SessionOutcome.mission_outcomes`.
 
-Il `mission_id` **non** entra ancora nell'RNG di sessione (`order.rng(mission_id=None, ...)`): l'ingaggio
-è ancora fra forze (blocchi), non fra missioni; entrerà con la fase F4 (capitolo 6 §6.4, capitolo 9 §9.5).
+Il **`mission_id` entra nell'RNG di sessione dalla F4b, ma attraverso l'`event_id` dell'ingaggio**, non
+attraverso lo slot `mission_id` di `order.rng(...)`: l'ingaggio è fra più forze (missioni di entrambi i lati) e
+nessuna ne possiede lo stream, quindi `run_session` chiama ancora `order.rng(mission_id=None, event_id=...)`
+(`Logic/Session_Simulator.py:870`, `:878-880`), ma l'`event_id` è `['engagement', id ordinati delle forze]` con
+gli id delle **missioni** (capitolo 6 §6.4). Lo slot `mission_id` di `Session_Rng` resta libero per le
+estrazioni che appartengono a una sola missione (nessuna, oggi). Alla F3 il `mission_id` non entrava affatto
+(fotografia identica, capitolo 8 §8.7); l'ingresso nell'RNG ha cambiato le estrazioni, e per questo la fotografia
+è stata rigenerata in F4b (capitolo 8 §8.7).
 
 ## 2.9 Test di contratto esteso alle porte della Missione
 

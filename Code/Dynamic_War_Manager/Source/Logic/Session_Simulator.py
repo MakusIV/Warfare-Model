@@ -189,7 +189,8 @@ diverso.
 `resolve_engagement`, passata tale e quale a ogni ingaggio. Non una per lato: la callable
 riceve gli asset REALI e puo' distinguere lato, blocco o modello da se', quindi una mappa
 per lato non aggiungerebbe capacita' ma solo una seconda forma dello stesso contratto. La
-selezione dell'arma dai registri resta fuori (rimandata dalla Fase 4). Dalla F4c una fire control
+selezione dell'arma dai registri non sta nell'orchestratore: la fa la callable iniettata
+(`Fire_Control.make_registry_fire_control`). Dalla F4c una fire control
 che dichiara la keyword `target_grounded` la riceve per i bersagli a terra (v.
 `resolve_engagement`).
 
@@ -234,7 +235,7 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 
 ## Cosa NON fa
 - Non costruisce `Theater_Session_Manager`, non legge/scrive `Campaign_State`.
-- Non seleziona l'arma, non rifornisce (munizioni o carburante), non ri-instrada le forze
+- Non seleziona l'arma (lo fa la fire control iniettata), non rifornisce (munizioni o carburante), non ri-instrada le forze
   che si disingaggiano (restano solo segnalate nell'esito).
 - Nessun componente LLM, in nessuna forma.
 """

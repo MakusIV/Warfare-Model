@@ -1,12 +1,18 @@
 # Capitolo 5 — Lo strato 3: applicazione dello stato
 
-> **Verificato a `533cd1f5` (2026-10-05): invariato** nei moduli `Logic/Damage_Model.py`,
-> `Asset/Asset.py`, `Logic/Fuel_Model.py` (nessuno è nel `git diff` da `6754bf1c`). Cambia solo il
-> contorno: `apply_engagement_result` ha nuove righe (`Logic/Engagement_Resolver.py:2780-2858`, v. §5.3); la
-> tempra e il suo flusso RNG separato non toccano questo strato (capitolo 4 §4.11, capitolo 6 §6.4); i
-> `FuelEvent` sono ancora uno per asset (il consumo per tratto e nel tempo è la fase F6 del piano della
-> Missione, capitolo 9 §9.5); l'esito di missione (`MissionOutcome`) non è un'applicazione di stato ma un
-> resoconto prodotto dall'orchestratore (capitolo 6 §6.11).
+> **Verificato a `84a47670` (2026-10-11): invariato** nei moduli `Logic/Damage_Model.py`,
+> `Asset/Asset.py`, `Logic/Fuel_Model.py` (nessuno è nel `git diff` da `533cd1f5`, che a sua volta non li
+> toccava rispetto a `6754bf1c`) **e in `apply_engagement_result`** (nessuna riga cambiata: i riferimenti sono
+> ricalcolati su `Logic/Engagement_Resolver.py:3082-3160`, v. §5.3). Cambia il contorno: (1) dalla F4b la
+> funzione riceve le forze della run come **viste di missione** (`MissionForce`) invece di blocchi, ma legge
+> solo `assets` e quindi non se ne accorge; (2) dalla F4b++ un `InterceptionEvent` può avere come intercettore
+> un asset di un'altra forza del dominio: `apply_engagement_result` costruisce la mappa degli asset
+> sull'unione di tutte le forze passate (capitolo 4 §4.12, §4.29) e lo applica correttamente; (3) un aereo a
+> terra (F4c, capitolo 4 §4.30) è danneggiato e distrutto da `Damage_Model` come ogni altro asset, senza
+> adeguamenti (il modello è indipendente dalla classe dell'asset); (4) i `FuelEvent` sono ancora uno per asset
+> (il consumo per tratto e nel tempo è la fase F6 del piano della Missione, capitolo 9 §9.5); (5) l'esito di
+> missione (`MissionOutcome`) non è un'applicazione di stato ma un resoconto prodotto dall'orchestratore
+> (capitolo 6 §6.11).
 
 Moduli: `Logic/Damage_Model.py`, `Asset/Asset.py` (`apply_damage`), `Logic/Fuel_Model.py`, più
 `Logic/Engagement_Resolver.apply_engagement_result` (già descritta in capitolo 4, §4.12, ripresa
@@ -131,11 +137,13 @@ Stessa non-idempotenza dichiarata di `apply_damage_event`.
 
 ## 5.3 Applicazione unificata: `apply_engagement_result`
 
-Già descritta in dettaglio nel capitolo 4, §4.12 (`Logic/Engagement_Resolver.py:2780-2858`): è il
+Già descritta in dettaglio nel capitolo 4, §4.12 (`Logic/Engagement_Resolver.py:3082-3160`): è il
 passo che collega lo strato 2 allo strato 3 per un singolo ingaggio, applicando in sequenza
 `DamageEvent` (via `Damage_Model.apply_damage_event`), `AmmunitionEvent` (via
 `Mobile.consume_ammunition`) e `InterceptionEvent` (via `Mobile.consume_interceptor_stock`).
-L'orchestratore (capitolo 6) la chiama **subito** dopo ogni componente connessa risolta.
+L'orchestratore (capitolo 6) la chiama **subito** dopo ogni componente connessa risolta, passando **tutte** le
+forze della componente (`ER.apply_engagement_result(result, *component)`, `Logic/Session_Simulator.py:891`):
+è la condizione perché gli asset di un intercettore di dominio (capitolo 4 §4.29) vengano trovati.
 
 ## 5.4 Diagramma D7 — stati operativi di un asset (salute)
 

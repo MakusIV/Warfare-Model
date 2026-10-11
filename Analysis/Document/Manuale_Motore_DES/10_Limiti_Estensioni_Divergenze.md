@@ -1,12 +1,16 @@
 # Capitolo 9 — Limiti noti, punti di estensione, divergenze codice/wiki
 
-> **Stato descritto: commit `533cd1f5` (2026-10-05).** Il manuale descrive il motore a quel commit, cioè
-> **dopo le fasi F0-F3** del piano di implementazione della Missione
-> (`Analysis/Document/Piano_Implementazione_Missione.md`). Le fasi **F4-F9** sono **in corso o da fare**
-> e non sono descritte come codice: F4 la missione come unità d'ingaggio, F5 presenza e attese, F6 fine
-> missione e carburante nel tempo, F7 bersagli e filtro armi, F8 sessione e campagna, F9 documentazione
-> (questo stesso aggiornamento ne è parte). Il loro stato è in §9.5. Tutto ciò che il capitolo elenca come
-> "limite" va letto rispetto a quel commit: parte dei limiti è proprio ciò che quelle fasi risolvono.
+> **Stato descritto: commit `84a47670` (2026-10-11).** Il manuale descrive il motore a quel commit, cioè
+> **dopo le fasi F0-F4** del piano di implementazione della Missione
+> (`Analysis/Document/Piano_Implementazione_Missione.md`): la fase F4 è chiusa con i suoi sotto-passi F4a
+> (regola A), F4b (la missione è l'unità d'ingaggio), F4b+ (dominio di coordinamento), F4b++ (difesa di salva
+> per dominio) e F4c (postura continua). Le fasi **F5-F9** sono **da fare** e non sono descritte come codice: F5
+> presenza e attese, F6 fine missione e carburante nel tempo, F7 bersagli e filtro armi, F8 sessione e campagna,
+> F9 documentazione (questo stesso aggiornamento ne è parte). Il loro stato è in §9.5. Tutto ciò che il capitolo
+> elenca come "limite" va letto rispetto a quel commit: parte dei limiti è proprio ciò che quelle fasi
+> risolvono. Dall'aggiornamento a `533cd1f5` sono **superati** i limiti «l'unità d'ingaggio è ancora il blocco»,
+> «il `mission_id` non entra nell'RNG» e «nessuna condivisione dei rilevamenti fra missioni» (F4b, F4b+); sono
+> **nuovi** quelli della sezione «Limiti introdotti dalla fase F4» più sotto.
 
 ## 9.1 Limiti noti (dichiarati nel codice, non difetti nascosti)
 
@@ -24,7 +28,7 @@ un'implementazione che seleziona davvero l'arma dai registri
 ruoli. Dal 2026-09-26 (decisione A5) non seleziona più solo l'arma a Pk massima: restituisce
 **tutte** le armi adatte in ordine di preferenza Pk/costo (`rank_weapons`, capitolo 4, §4.16), e
 il risolutore prova le opzioni in ordine, sparando con la prima che ha ancora scorta (v. sotto).
-Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:135-144`): la modulazione
+Resta da fare, dichiarato nel modulo stesso (`Logic/Fire_Control.py:155-164`): la modulazione
 della Pk con la posizione nell'inviluppo (distanza, aspetto) — i valori restano quelli di
 template, indipendenti da dove avviene realmente il tiro nella finestra; e il filtro per tipo di
 missione/bersaglio (ROE) non esiste (decisione A4 rimandata). **Aggiornamento a `533cd1f5`**: l'entità
@@ -32,7 +36,9 @@ missione/bersaglio (ROE) non esiste (decisione A4 rimandata). **Aggiornamento a 
 risolutore né la `fire_control` la consultano**: il filtro delle armi per tipo di missione, ruolo
 dell'asset e categoria d'arma è la fase F7 — un caccia intercettore sceglierebbe oggi le stesse armi in
 missione CAP o in missione strike. Gli scenari lo simulano con stand-in di test (`ifv_only`,
-`maverick_only_fire_control` di S19AD, capitolo 8 §8.6).
+`maverick_only_fire_control` di S19AD, capitolo 8 §8.6). **Aggiornamento a `84a47670`**: la `Mission` è anche la
+forza d'ingaggio (F4b), ma il risolutore ne legge solo l'identità e gli asset (capitolo 4 §4.27): niente tipo di
+missione, ruoli, bersaglio o regole; resta valido tutto quanto scritto qui sopra.
 
 **Risolto rispetto alla stesura precedente di questo manuale — il cannone di bordo è ora candidato**
 (decisione A2, 2026-09-26, commit `8bd69727`, v. capitolo 4 §4.16bis): campo `gun` di
@@ -143,7 +149,7 @@ memoria di progetto `project_session_2026_09_25_summary.md`).
 Se un asset cambia rotta durante una finestra di contatto già calcolata dallo scheduler (Fase 3),
 la finestra andrebbe invalidata e ricalcolata: questo meccanismo **non esiste**, perché finora
 nessun consumatore modifica una rotta dopo che le finestre sono state prodotte
-(`Logic/Engagement_Resolver.py:209-211`, R4 seconda parte). Concretamente, una forza che si
+(`Logic/Engagement_Resolver.py:279-281`, R4 seconda parte). Concretamente, una forza che si
 disingaggia è solo **segnalata** nell'esito (`ForceOutcome.outcome = DISENGAGED`); il nuovo
 instradamento e il ricalcolo delle finestre spettano a un livello superiore (C2/campagna), non
 ancora costruito. V. §9.2 per la divergenza fra questo comportamento e il testo originale della
@@ -153,21 +159,22 @@ decisione che lo ha proposto.
 
 `weather_detection_factor` applica un fattore di degradazione **unico** a qualunque sensore
 abbia prodotto la portata della finestra di contatto, perché la finestra stessa non porta
-l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:289-301`, `:716-763`). Un radar non dovrebbe
+l'informazione "quale sensore" (`Logic/Engagement_Resolver.py:360-372`, `:792-839`). Un radar non dovrebbe
 subire la stessa degradazione notturna di un sensore ottico, ma oggi la subisce comunque, con un
 compromesso pesato verso il radar. La discriminazione per tipo di sensore richiede che la
 finestra di contatto porti anche il sensore che l'ha prodotta — un cambiamento nello strato 1.
 
 ### Altri limiti dichiarati, minori
 
-- **Ripartizione del fuoco**: round-robin locale per tiratore (`_schedule_next`,
-  `Logic/Engagement_Resolver.py:1614-1779`), non un'assegnazione ottima arma-bersaglio (nessun
+- **Ripartizione del fuoco**: round-robin locale per tiratore, sul **dominio di coordinamento** dalla F4b+
+  (`_schedule_next`,
+  `Logic/Engagement_Resolver.py:1804-1972`), non un'assegnazione ottima arma-bersaglio (nessun
   WTA, nessun peso per valore del bersaglio; la Pk della coppia entra solo nella saturazione della
   dottrina di tiro, §4.25). Dal 2026-09-28/29 il round-robin è preceduto dalla priorità ai lanciatori
   (L2/L3, §4.24) e dal filtro dei bersagli bloccati (§4.25).
 - **`salvo_window` di default 0.0**: solo impatti simultanei formano un evento-salva; la finestra
   giusta per raggruppare impatti ravvicinati è un punto aperto di modello, da decidere con la
-  taratura (`Logic/Engagement_Resolver.py:2665`, `:2703-2705`).
+  taratura (`Logic/Engagement_Resolver.py:2949`, `:2994-2996`).
 - **Nessun movimento fisico fra sessioni**: `run_session` non aggiorna `asset.position` a fine
   rotta; una campagna che concatena sessioni vede le forze ripartire dalle posizioni iniziali a
   ogni sessione, a meno che il chiamante non aggiorni le posizioni da sé
@@ -230,21 +237,21 @@ non si intercettano mai (Q2); il lanciatore deve essere già rilevato dal tirato
 traiettoria rettilinea, rilevamento per asset e non per forza (tutte semplificazioni ottimistiche per la
 difesa, dichiarate nella proposta §4).
 
-### Limiti della Missione a `533cd1f5` (fasi F0-F3 fatte, F4-F9 no)
+### Limiti della Missione a `84a47670` (fasi F0-F4 fatte, F5-F9 no)
 
 Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per la mappa fase per fase.
 
-- **Il motore non consulta la Missione tranne per la geometria**: ruoli degli asset, regole (ROE, allerta,
-  EMCON, reazione alla minaccia, formazione), bersaglio, criteri di fine, `Operation` e `OutcomeRule` sono
-  validati e portati dalla porta ma **non letti** da alcun modulo di `Logic` (ricerca sull'albero: nessun
-  consumatore fuori da `Mission_Types`, `Session_Types` e `Mission_Adapter`). Solo rotta, partenza,
-  velocità e offset di formazione hanno effetto (capitolo 6 §6.10).
-- **L'unità d'ingaggio è ancora la forza (blocco)**, non la missione: due missioni dello stesso blocco
-  condividono disingaggio, soglia di rottura e `committed` (F4).
-- **Il `mission_id` non entra nell'RNG** (`order.rng(mission_id=None, ...)`): v. §9.6.
-- **Nessuna presenza prima della partenza né dopo la fine**: un asset senza movimento o con missione
-  conclusa non esiste per lo scheduler fuori dai suoi tratti di rotta (F5); nessun `WAIT` (sosta, orbita);
-  gli scenari aerei finiscono sull'obiettivo senza rientro (capitolo 8 §8.1).
+- **Il motore consulta della Missione la geometria e l'identità, non il resto**: rotta, partenza, velocità e
+  offset di formazione (capitolo 6 §6.10); dalla F4b l'identità della forza d'ingaggio (id, blocco, asset,
+  capitolo 4 §4.27); dalla F4b+ l'appartenenza a un'Operazione, **solo** per il dominio di coordinamento
+  (`Operation.mission_ids` e `Mission.operation_id`, capitolo 6 §6.13). Ruoli degli asset, regole (ROE, allerta,
+  EMCON, reazione alla minaccia, formazione), bersaglio, criteri di fine, `OutcomeRule`, TOT comune e missione
+  principale dell'Operazione sono validati e portati dalla porta ma **non letti** da alcun modulo di `Logic`
+  (verificato con una ricerca sul modulo del risolutore e dell'orchestratore: il risolutore non legge `mission`).
+- **Nessuna presenza prima della partenza né dopo la fine**: un asset con missione, fuori dai suoi tratti di
+  rotta, non esiste per lo scheduler (F5); nessun `WAIT` (sosta, orbita); gli scenari aerei finiscono
+  sull'obiettivo senza rientro (capitolo 8 §8.1). Gli aerei *senza* missione, invece, sono a terra per tutta la
+  sessione (F4c, sotto).
 - **Esito di missione di prima forma**: solo `COMPLETED`/`FAILED`/`DESTROYED`; nessun `ABORTED`, nessun
   criterio di stato (bingo, winchester, danno, minaccia: F6); una missione **senza rotta** con asset
   sopravvissuti risulta `FAILED` perché manca lo stato "in corso" (capitolo 6 §6.11); l'esito di
@@ -260,8 +267,68 @@ Ciò che segue è **atteso** dal piano e non un difetto nascosto; v. §9.5 per l
 - **Elenchi di prima stesura**: `EMCON_STATES`, `THREAT_REACTIONS`, `FORMATIONS` come nomi generici, e
   `MITER_LIMIT = 2.0` dell'offset di formazione sono stime di progetto (capitolo 2 §2.6, capitolo 6 §6.10);
   la tabella `MISSION_TYPE_POSTURES` è solo un dato, il secondo stadio "postura → tipi di missione" non esiste.
-- **Aircraft**: 13 loadout hanno un task di supporto; ne resta **1 con `tasks` vuoto** (il piano ne
-  ipotizzava 14 da assegnare).
+- **Aircraft**: 13 loadout hanno un task di supporto; ne resta **1 con `tasks` vuoto** (An-30M Recon, volutamente: ricognizione fotografica, `Asset/Aircraft_Loadouts.py:3620-3625`;
+  il piano ne ipotizzava 14 da assegnare).
+- **Regola A: il limite di velocità è il regime `'max'` generico**, non quello per terreno
+  (`speed['off_road']['max']`): gli scenari pianificano oggi i mezzi terrestri al regime nominale su archi
+  'offroad'; il vincolo per tipo d'arco va deciso con il modulo mappe. Un asset senza velocità massima nota è
+  escluso dal controllo con un warning, non lo blocca (capitolo 6 §6.10).
+
+### Limiti introdotti dalla fase F4 (2026-10-05/11, dichiarati nei docstring e in `F4_Differenze_Scenari.md`)
+
+Sono limiti del **modello** scelti consapevolmente, ciascuno con la fase o la decisione che li riprenderà.
+
+**Dominio di coordinamento (F4b+, F4b++)** — capitolo 4 §4.28-4.29:
+
+- **Nessun cueing del tiro**: un tiratore spara solo ai bersagli che ha rilevato *lui* (i candidati di tiro sono
+  per osservatore). Assegnare un bersaglio da un sensore a un tiratore — EWR→SAM, AWACS→caccia,
+  scorta→strike — è una funzionalità futura, da proporre a parte con la Fase 0 C2. Anche i tempi R-INT restano
+  per intercettore: la percezione condivisa non anticipa la traccia del colpo.
+- **Condivisione istantanea, senza latenza né perdite del canale**: un rilevamento, una salva in volo o un
+  lanciatore noto a una forza del dominio valgono per tutte dall'istante in cui avvengono. Approssimazione
+  dichiarata nei docstring di `Engagement_Resolver` e `Session_Simulator`; data link, voce e C2 non sono
+  modellati.
+- **Canali di intercettazione condivisi solo nello stesso istante**: due forze del dominio colpite a istanti
+  diversi ma ravvicinati (meno di `salvo_window`) ricevono ciascuna i canali pieni, come una forza sola che
+  subisce due eventi-salva distinti (`instant_interceptions`, capitolo 4 §4.29).
+- **Nessuno scenario esercita la difesa di salva per dominio**: la fotografia è identica (328 su 328) con e senza
+  la F4b++; il caso è coperto da stub nel risolutore. Nella prova fuori repository su una variante di S16 le
+  corvette non intercettano per la regola R-INT.
+- **Un'Operazione con missioni di lati diversi lega solo quelle dello stesso lato** (un dominio per lato, con
+  un warning): scelta dichiarata, perché `SessionOrder` non conosce i blocchi e quindi non può vietarla, e
+  l'Operazione è un raggruppamento di scopo, non di comando.
+
+**Missione come unità d'ingaggio (F4b)** — capitolo 4 §4.27:
+
+- **Una missione di un solo asset è `DESTROYED` alla prima perdita** (S19, la missione di Strike di un B-52H):
+  conseguenza diretta di avere il disingaggio e la distruzione per missione; la stessa perdita non basta a
+  rompere il blocco di 5 aerei.
+- **Nessun legame fra il disingaggio di una missione e quello della gemella**: il dominio condivide fuoco e
+  percezione, non il destino di disingaggio. Un'Operazione non produce un esito comune (nessuno calcola la
+  `OutcomeRule`).
+- **`SessionOrder.committed` resta chiavato per blocco**: non si può impegnare una parte di *una* missione
+  indipendentemente dal blocco; vale la restrizione del blocco intersecata con gli asset di ciascuna missione.
+- **`morale_for` e `enemy_estimate_for` ricevono la vista di missione** (con `owner_block`), ma nessun chiamante
+  di produzione li fornisce.
+
+**Postura continua e aerei a terra (F4c)** — capitolo 4 §4.30, capitolo 6 §6.14:
+
+- **`grounded` vale per tutta la sessione**: la presenza prima della partenza — un aereo *con* missione non
+  ancora partita è a terra — è della F5, che dovrà rendere l'insieme dipendente dal tempo senza toccare la
+  vista né il protocollo di fire control.
+- **Un aereo a terra resta nella posizione registrata** anche se la quota è di volo (caso `VAL-agn`, sessioni 2-3:
+  i 2 A-10C a 3000 m ora non sparano): la posizione non persiste fra sessioni (D1.d, F8) e il motore non porta
+  l'aereo a terra.
+- **Nessuno shelter/hangar**: un aereo parcheggiato è `'Soft'` come all'aperto.
+- **Gli aerei a terra non hanno sensori né RWR**: non contribuiscono alla percezione della base.
+- **Una fire control che non dichiara `target_grounded`** classifica gli aerei a terra come gli altri aerei
+  (con un warning per run).
+- **La postura `Defense` delle unità di superficie senza missione è solo dichiarata**: sta in
+  `MissionForce.postures` e non cambia tiro né rilevamento (decisione dell'utente: nessun ROE "hold fire"), e
+  **non entra nell'esito di forza** (`ForceOutcome` non ha un campo postura): l'utente ha deciso che entrerà con
+  la F5.
+- **La potatura per blocco dello scheduler conta ancora velocità e portata degli aerei a terra**: è
+  conservativa (più coppie di blocchi esaminate, nessun contatto perso), un costo e non un errore (capitolo 3 §3.6).
 
 ### Limiti del pianificatore di rotta e del pianificatore d'attacco (2026-09-26/27, commit `815dc35f`/`6754bf1c`)
 
@@ -314,8 +381,8 @@ disingaggio come esito di ingaggio di prima classe") dice testualmente: *"al sup
 l'ingaggio termina con esito `DISENGAGED` distinto da `DESTROYED`, e **la forza che si
 disingaggia rientra nello scheduler dei contatti con una nuova rotta** (non sparisce)"*.
 
-Il codice implementato non fa questo: `Logic/Engagement_Resolver.py:160-162` dichiara
-esplicitamente che il "re-scheduling dopo spostamento fisico" (di cui il rientro nello scheduler
+Il codice implementato non fa questo: `Logic/Engagement_Resolver.py:279-281` dichiara
+esplicitamente che il **re-scheduling delle finestre** (di cui il rientro nello scheduler
 con una nuova rotta è un caso) è la **seconda parte di R4, rimandata** — non Fase 4. Una forza
 `DISENGAGED` è oggi **solo segnalata** nel `ForceOutcome`: nessun codice la re-instrada né
 ricalcola le finestre di contatto per lei. Questo non è un'incoerenza nascosta: il blocco di
@@ -349,15 +416,17 @@ Riassunto operativo per chi estenderà il motore, con il punto esatto del codice
 | Fog-of-war reale | **Fatto** (`region_recon_detection_factor`/`recon_detection_factor_fn`, capitolo 4 §4.18, composto con il meteo tramite `combine_detection_factors`); resta da fare: un criterio di "non visto" più stringente (es. `position is None` nel report) per una nebbia meno "debole" (v. §9.1), e la correzione del bug di `Region.get_blocks_by_criteria(category='Military')` (`Context/Region.py:291-301`, v. §9.1) che la sessione di lavoro ha trovato ma non corretto. |
 | Volumi di rilevamento e intercettazione nel pianificatore di rotta | **Fatto** (`Logic/Air_Route_Manager.py`, `ThreatAA`/`DetectionThreat`, `ThreatMode.AVOID_DETECTION`, capitolo 7 §7.8); resta da fare: dati EWR/sensore visivo per ZSU-57-2/M163 (D-4b/c), reti di sensori/cueing EWR→SAM (D-7), attraversamento a corda limitata del solo rilevamento (D-5 opzione 2), cambio di quota per aggirare un volume di rilevamento (ricostruzione alla nuova quota, proposta §3.6 Attività D). |
 | Pianificatore d'attacco (quota e profilo di sgancio) | **Fatto** (`Logic/Weapon_Delivery.py`, `Command/Attack_Types.py`, capitolo 7 §7.9, alimenta il DES via §4.20); resta da fare: collegare `MissionAsset.attack_profile` (campo già presente, capitolo 2 §2.6) al motore (fase F7), missili aria-superficie (fuori scope dichiarato), geometria di picchiata/cabrata nel tratto d'esposizione (v. §9.1). |
-| Missione come unità d'ingaggio | Fase F4: una vista di forza per missione (`name` = `mission_id`, `salvo_interceptors` ristretto agli asset della missione) da passare a `resolve_engagement`, che accetta già "qualunque oggetto con `assets`, `side`, `name`" (`Logic/Engagement_Resolver.py:2675-2677`); il `mission_id` entra nell'RNG (`Logic/Session_Simulator.py:709`); da verificare che `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` usino solo quegli attributi. |
-| Presenza, attese, fine missione | Fasi F5-F6: tratti fermi prima/dopo la rotta in `Contact_Scheduler._asset_legs`; azione `WAIT`; criteri di fine di `EndCriteria` come "fine di attività" senza cambio di rotta nel risolutore; `Fuel_Model` per tratto; `MissionOutcome` completo (`ABORTED`). |
+| Missione come unità d'ingaggio | **Fatta** (F4b, `a4d8acf0`): vista di forza per missione `Mission_Adapter.MissionForce` (`:744-841`) passata a `resolve_engagement`, che accetta "qualunque oggetto con `assets`, `side`, `name`" (docstring `:2961-2965`); il `mission_id` entra nell'RNG attraverso l'`event_id` dell'ingaggio (`Logic/Session_Simulator.py:870`); la verifica su `morale_for`, `enemy_estimate_for`, soglia di rottura e `committed` è fatta (capitolo 4 §4.27). Resta da fare: usare ruoli, regole e bersaglio della missione (F5-F7). |
+| Dominio di coordinamento: cueing e latenza | **Fatto** il dominio (fuoco, percezione, difesa di salva: F4b+/F4b++, capitolo 4 §4.28-4.29). Resta da fare: il **cueing** del tiro (un sensore che assegna un bersaglio a un tiratore: EWR→SAM, AWACS→caccia, scorta→strike) e una **latenza/perdita** della condivisione, entrambi con la Fase 0 C2; i candidati di tiro per osservatore (`candidates`) sono il punto d'aggancio. |
+| Postura continua: dipendente dal tempo e nell'esito | **Fatta** la postura continua (F4c, capitolo 6 §6.14). Resta da fare, con la F5: rendere `grounded` dipendente dal tempo (aerei con missione non ancora partita, finestra del parcheggio), far entrare la postura nell'esito di forza (decisione dell'utente), shelter/hangar per gli aerei parcheggiati. |
+| Presenza, attese, fine missione | Fasi F5-F6: tratti fermi prima/dopo la rotta in `Contact_Scheduler._asset_legs` (`:1317-1332`);  azione `WAIT`; criteri di fine di `EndCriteria` come "fine di attività" senza cambio di rotta nel risolutore; `Fuel_Model` per tratto; `MissionOutcome` completo (`ABORTED`). |
 | Filtro armi e bersagli espliciti | Fase F7: involucro di `fire_control` per missione (stesso schema di `ifv_only` di S19AD) e bersaglio di posizione stimata (salva su area, da progettare). |
 | Alimentazione di morale e stima del nemico | Fornire `morale_for`/`enemy_estimate_for` a `run_session` da `Block.morale` corretto (decisione D9) e dalla ricognizione/C2 (capitolo 4 §4.21). |
 | Settori RWR, `ewr`, `confidence` | Consumo nel modulo rotte/evasione e in un futuro SEAD (`Asset/Aircraft_Rwr_Data.py`, capitolo 7 §7.10). |
 | Legame C2 fra unità di difesa | Fase 0 della gerarchia C2: tracce condivise per R-INT (§4.26), assegnazione più rapida per L3 (§4.24). |
 | Re-scheduling dopo disingaggio | Livello C2/campagna: leggere `ForceOutcome.outcome == DISENGAGED` dal `SessionOutcome`, decidere una nuova rotta, e far ripartire `Contact_Scheduler.schedule_contacts` per quella forza in una sessione successiva (non dentro `resolve_engagement`, che è a stato ombra e non muta rotte). |
-| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:188-223`, `Logic/Engagement_Resolver.py:716-763`). |
-| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:1614-1779`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
+| Pd per tipo di sensore | La finestra di contatto (`ContactWindow`) dovrebbe portare il sensore che l'ha prodotta, non solo la portata; `detection_factor` potrebbe allora distinguere radar da ottico (`Logic/Contact_Scheduler.py:192-227`, `Logic/Engagement_Resolver.py:792-839`). |
+| Assegnazione ottima arma-bersaglio | Sostituire la regola greedy round-robin di `_schedule_next` (`Logic/Engagement_Resolver.py:1804-1972`) con un algoritmo di weapon-target assignment, mantenendo l'invariante del payload congelato (R4 prima parte). |
 | Movimento fisico persistente fra sessioni | Far scrivere a `run_session` (o a un futuro `Theater_Session_Manager`) la posizione finale di ogni asset mobile a fine sessione, oggi non aggiornata (`Logic/Session_Simulator.py`, v. capitolo 6 §6.5 e capitolo 8 §8.3). |
 | Rifornimento (munizioni/carburante) | Materia esplicitamente del ciclo di campagna, non del motore DES: da costruire come passo separato che precede una nuova `SessionOrder`, consumando `Mobile.load_stores_from_registry`/`load_fuel_from_registry` o equivalenti. |
 
@@ -388,6 +457,15 @@ sul lato dati le armi DCS mancanti (`0df5ddf9`), il KMGU-2 (`89f1aa34`) e il ren
 estensioni di settembre, le ultime sono **modifiche al risolutore e alla porta**, non solo ai moduli
 satellite. La suite è a **3922 test, OK (skipped=7)**.
 
+**Aggiornamento 2026-10-05 → 2026-10-11 e fase F4 della Missione (a `84a47670`)**: in ordine, la regola A
+(una missione si muove alla velocità del mezzo più lento, `951b0ee2`); la missione come unità d'ingaggio con la
+vista `MissionForce` (`a4d8acf0`); il dominio di coordinamento per fuoco e percezione (`098671d7`); la difesa di
+salva per dominio (`e6f59d21`); la riprogettazione dei test S3 e S5 (`8bf7b11f`, solo test e docstring); la
+postura continua degli asset senza missione, con gli aerei a terra (`af2efbe6`). Sono **di nuovo modifiche al
+risolutore, all'orchestratore e allo scheduler** (capitolo 2 §2.3, capitolo 3 §3.5-3.6, capitolo 4
+§4.27-4.30, capitolo 6 §6.12-6.14), più tre scenari nuovi (S20, S21, S21R). La suite è a **4039 test, OK**
+(messaggio del commit `af2efbe6`), la fotografia di non regressione a **370 esecuzioni** (capitolo 8 §8.7).
+
 **Aggiornamento 2026-09-26/27**: quattro estensioni ulteriori, tutte sui moduli satellite che
 alimentano il motore dall'esterno, non sul motore in sé: (1) le finestre di rilascio di 29 bombe
 su 32 (commit `4ddbb089`, dato di registro, prerequisito delle altre); (2) il cannone di bordo come
@@ -399,8 +477,9 @@ sgancio, che alimenta il DES con una gittata e un tempo di caduta reali per le b
 **3645 test, OK (skipped=5)** attraverso queste sette estensioni (capitolo 8).
 
 I seguiti possibili restano quelli di §9.3: i limiti "minori ma non corretti" già presenti (bug di
-`get_blocks_by_criteria`; le tre KGBU senza dati di rilascio) più quelli appena aggiunti (filtro
-missione/bersaglio assente — decisione A4, manca l'entità `Mission`; scelta per scorta che precede
+`get_blocks_by_criteria`; ~~le tre KGBU senza dati di rilascio~~, risolte il 2026-09-28) più quelli aggiunti
+(filtro missione/bersaglio assente — decisione A4, fase F7: la `Mission` esiste e dalla F4b è la forza
+d'ingaggio, ma il motore ne usa solo identità e asset; scelta per scorta che precede
 il controllo di portata; modulazione della Pk con la posizione nell'inviluppo; un criterio di "non
 visto" più stringente; geometria di picchiata/cabrata isolata dalla balistica nel pianificatore
 d'attacco; dati EWR/sensore visivo mancanti per alcuni asset AD; reti di sensori/cueing EWR→SAM;
@@ -408,23 +487,27 @@ d'attacco; dati EWR/sensore visivo mancanti per alcuni asset AD; reti di sensori
 (assegnazione ottima arma-bersaglio, movimento persistente fra sessioni, rifornimento, Pd per tipo
 di sensore).
 
-## 9.5 Stato del piano della Missione (F0-F9) a `533cd1f5`
+## 9.5 Stato del piano della Missione (F0-F9) a `84a47670`
 
-Fonte: `Analysis/Document/Piano_Implementazione_Missione.md`. **Il manuale descrive lo stato di `533cd1f5`**:
-le fasi F4 e successive non sono descritte come codice. Nel checkout principale la fase F4 è in lavorazione
-(modifiche non committate a `Logic/Mission_Adapter.py`, `Logic/Session_Simulator.py`, fixture e test di
-scenario): non è oggetto di questo aggiornamento.
+Fonte: `Analysis/Document/Piano_Implementazione_Missione.md` (§5, tabella di avanzamento e deviazioni 1-11) e
+`Analysis/Document/F4_Differenze_Scenari.md`. **Il manuale descrive lo stato di `84a47670`**: le fasi F5 e
+successive non sono descritte come codice.
 
-| Fase | Contenuto | Stato a `533cd1f5` | Dove nel manuale |
+| Fase | Contenuto | Stato a `84a47670` | Dove nel manuale |
 |---|---|---|---|
 | F0 | fotografia di non regressione degli scenari | **fatta** (`d3af6980`) | cap. 8 §8.7 |
 | F1 | tipi di dominio della Missione (`Mission_Types`) | **fatta** (`20b6de72`, `680dfcb6`) | cap. 2 §2.6 |
 | F2 | tassonomia dei tipi di missione, tabella tipo → posture | **fatta** (`4e18d7d8`, `8f16cc3c`) | cap. 2 §2.7 |
 | F3 | la Missione attraversa la porta di sessione; `Mission_Adapter`; esito di prima forma | **fatta** (`533cd1f5`) | cap. 2 §2.2-2.3, cap. 6 §6.10-6.11 |
-| F4 | missione come unità d'ingaggio, postura continua, `mission_id` nell'RNG | **in corso / da fare** | §6.3, §9.1 |
-| F5 | presenza prima/dopo la rotta, `WAIT`, ETA effettive | da fare | §9.1 |
+| F4a | regola A: una missione si muove alla velocità del mezzo più lento | **fatta** (`951b0ee2`) | cap. 6 §6.10, cap. 8 §8.1 |
+| F4b | la missione è l'unità d'ingaggio (`MissionForce`), `mission_id` nell'RNG, esito del blocco = insieme degli esiti | **fatta** (`a4d8acf0`) | cap. 2 §2.3, cap. 4 §4.27, cap. 6 §6.12 |
+| F4b+ | dominio di coordinamento: fuoco e percezione condivisi (deviazioni 6 e 7) | **fatta** (`098671d7`) | cap. 4 §4.28, cap. 6 §6.13 |
+| F4b++ | difesa di salva per dominio (deviazione 8c) | **fatta** (`e6f59d21`) | cap. 4 §4.29 |
+| test S3/S5 | riprogettazione dei test al limite statistico (deviazione 9) | **fatta** (`8bf7b11f`) | cap. 8 §8.9 |
+| F4c | postura continua: aerei a terra, unità di superficie in difesa (D1.c, deviazione 11) | **fatta** (`af2efbe6`) | cap. 4 §4.30, cap. 6 §6.14 |
+| F5 | presenza prima/dopo la rotta, `WAIT`, ETA effettive; `grounded` dipendente dal tempo, postura nell'esito | **da fare** (prossima) | §9.1 |
 | F6 | fine missione (bingo, winchester, danno, minaccia), carburante nel tempo, `ABORTED` | da fare | §9.1 |
-| F7 | bersagli espliciti e filtro armi per missione (A4); salva su area | da fare | §4.4, §9.1 |
+| F7 | bersagli espliciti e filtro armi per missione (A4); salva su area | da fare | cap. 4 §4.4, §9.1 |
 | F8 | validatore di sessione e campagna (durata, prontezza, posizione persistente) | da fare | §9.1 |
 | F9 | documentazione | questo aggiornamento + sintesi/proposta da allineare | — |
 
@@ -433,53 +516,101 @@ volo simulato, condizioni sullo stato e re-scheduling, adapter DCS, secondo stad
 missione nel pianificatore, `Theater_Session_Manager`. Domande ancora aperte nel piano: Q3 (salva su area,
 proposta di dettaglio all'inizio della F7).
 
-*Diagramma D29 — fasi F0-F9 del piano della Missione e loro stato a `533cd1f5`.*
+*Diagramma D29 — fasi F0-F9 del piano della Missione e loro stato a `84a47670`.*
 
 ```mermaid
 flowchart LR
     F0["F0 fotografia<br/>FATTA"] --> F3["F3 porta di sessione<br/>FATTA"]
     F1["F1 tipi Mission<br/>FATTA"] --> F3
     F2["F2 tassonomia<br/>FATTA"] --> F3
-    F3 --> F4["F4 unita' d'ingaggio<br/>in corso"]
-    F4 --> F5["F5 presenza e attese"]
+    F3 --> F4A["F4a regola A<br/>FATTA"]
+    F4A --> F4B["F4b missione = forza<br/>FATTA"]
+    F4B --> F4P["F4b+ e F4b++ dominio<br/>FATTE"]
+    F4P --> F4C["F4c postura continua<br/>FATTA"]
+    F4C --> F5["F5 presenza e attese<br/>prossima"]
     F5 --> F6["F6 fine missione, carburante"]
     F6 --> F7["F7 bersagli, filtro armi"]
     F7 --> F8["F8 sessione e campagna"]
     F8 --> F9["F9 documentazione"]
 ```
 
-## 9.6 Incoerenze trovate fra documenti di progetto e codice a `533cd1f5`
+## 9.6 Incoerenze trovate fra documenti di progetto e codice a `84a47670`
 
 Il codice prevale; qui sono **riportate, non corrette**. Letti: `Piano_Implementazione_Missione.md`,
-`Proposta_Struttura_Missione_Decisioni.md`, `Proposta_Regole_Allocazione_SAM.md`,
-`Proposta_Soglia_Rottura_Stocastica.md`, `Proposta_Uso_Classi_Settori_RWR.md`, `Proposta_Intercettazione_Reazione.md`.
+`F4_Differenze_Scenari.md`, `Proposta_Struttura_Missione_Decisioni.md`, `Proposta_Regole_Allocazione_SAM.md`,
+`Proposta_Soglia_Rottura_Stocastica.md`, `Proposta_Uso_Classi_Settori_RWR.md`, `Proposta_Intercettazione_Reazione.md`
+e i docstring dei moduli. Le voci 1-10 sono quelle del manuale a `533cd1f5`, **ricontrollate una per una sul
+codice a `84a47670`**; le voci 11-14 sono nuove.
 
-1. **`mission_id` nell'RNG**: il piano (F3) prevede il `mission_id` reale nell'RNG e la rigenerazione della
-   fotografia in un commit dedicato; il codice lo rimanda a F4 (`Logic/Session_Simulator.py:99-105`, `:709`: ancora
-   `mission_id=None`) e la fotografia resta identica a `18a772d6` (messaggio del commit `533cd1f5`).
-2. **Parametri `routes`/`starts`/`speeds`**: il piano (F3) li mantiene "come strada interna ed equivalente"
-   fino alla migrazione (domanda Q2); il codice li ha **rimossi** (Q2 decisa dall'utente: una sola strada,
-   `Logic/Session_Simulator.py:34-41`).
-3. **Rotta aerea "da base a base"** (piano F1, validazione D2.c): `Mission` controlla solo i **ruoli**
-   (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:938-965`), non che i punti siano
-   basi.
-4. **Loadout con task vuoto** (piano F2): il piano parla di 14 loadout da assegnare; ne sono stati
-   assegnati 13 a task di supporto e ne resta 1 con `tasks` vuoto (verificato su `AIRCRAFT_LOADOUTS`).
-5. **`Salvo.launch_position`** (proposta SAM §7.5): il campo opzionale non esiste in `Salvo`
-   (`Logic/Engagement_Resolver.py:435-454`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
-   (`_position_at`, `:2102-2115`).
-6. **Regola L2 come "primo elemento della chiave"** (proposta SAM §7.7 Q3): nel codice è una selezione di pool
-   (`priority or viable`, `:1719-1727`) che ignora anche la restrizione al primo istante utile
-   (`:1740`); equivalente nello spirito, non nella forma.
-7. **Esito di una missione sul posto**: il piano la descrive "ancora in corso"; `MissionStatus` non ha quello
-   stato e l'esito è `FAILED` (capitolo 6 §6.11).
-8. **Docstring di `Session_Simulator` obsolete**: `:129-135` ("la selezione dell'arma dai registri resta
-   fuori, rimandata dalla Fase 4") e `:177-179` ("non seleziona l'arma") non riflettono
-   `Fire_Control.make_registry_fire_control`, esistente dal 2026-09-24 (la `fire_control` resta comunque
-   iniettata).
-9. **`rwr_catalogue`** (proposta R-CLS §2, "aggancio per il futuro"): è un parametro di `resolve_engagement`
-   ma `run_session` non lo inoltra: per usarlo bisogna chiamare il risolutore direttamente.
-10. **Morale e stima del nemico**: la proposta li descrive come ingressi del risolutore; nel codice di
-    produzione nessuno li fornisce (`morale_for`/`enemy_estimate_for` sono usati solo dai test), quindi
-    l'effetto descritto in proposta §3.2-3.3 non si manifesta oltre i test.
+**Voci della stesura a `533cd1f5`: stato a `84a47670`**
 
+1. **`mission_id` nell'RNG** — **CHIUSA**. Il piano (F3) lo prevedeva reale nell'RNG; a `533cd1f5` il codice lo
+   rimandava a F4. Dalla F4b (`a4d8acf0`) il `mission_id` entra nell'RNG *attraverso l'`event_id`*
+   (`engagement_event_id`, `Logic/Session_Simulator.py:311-332`, `:870`), con lo slot `mission_id` di
+   `Session_Rng` ancora `None`; il piano (deviazioni 1 e 4 di §5) documenta l'una e l'altra scelta. La
+   fotografia è stata rigenerata (capitolo 8 §8.7).
+2. **Parametri `routes`/`starts`/`speeds`** — **APERTA, solo nel testo del piano**. Il codice li ha rimossi (Q2:
+   una sola strada, `run_session` non li ha più); la riga F3 della tabella di §5 del piano lo dice («già
+   rimossi (Q2)»), ma il corpo della Fase 3 (§1, «Compatibilità») dice ancora che «restano nella prima versione
+   come strada interna ed equivalente».
+3. **Rotta aerea "da base a base"** (piano F1, validazione D2.c) — **CHIUSA**: `Mission` controlla solo i
+   **ruoli** (`DEPARTURE` all'inizio, `LAND` alla fine, `Command/Mission_Types.py:938-965`), non che i punti
+   siano basi; il piano lo registra ora come deviazione 10 (§5), con le rotte aeree degli scenari senza rientro
+   da completare in F5-F6.
+4. **Loadout con task vuoto** (piano F2) — **CHIUSA**: il piano ne ipotizzava 14; ne sono stati assegnati 13 e
+   resta l'An-30M Recon con `tasks` vuoto (`Asset/Aircraft_Loadouts.py:3620-3625`); la riga F2 della tabella di §5
+   del piano riporta ora «13 loadout su 14 (An-30M Recon lasciato vuoto)».
+5. **`Salvo.launch_position`** (proposta SAM §7.5) — **APERTA**: il campo opzionale non esiste in `Salvo`
+   (`Logic/Engagement_Resolver.py:506-525`); L1 ricava le posizioni all'istante del lancio dai tratti di rotta
+   (`_position_at`, `:2325-2338`).
+6. **Regola L2 come "primo elemento della chiave"** (proposta SAM §7.7 Q3) — **APERTA**: nel codice è una
+   selezione di pool (`priority or viable`, `:1919`) che ignora anche la restrizione al primo istante utile
+   (`not priority and t_fire > t_first`, `:1933`); equivalente nello spirito, non nella forma.
+7. **Esito di una missione sul posto** — **APERTA**: il piano la descrive "ancora in corso"; `MissionStatus` non
+   ha quello stato e l'esito è `FAILED` (capitolo 6 §6.11). Il piano la elenca ancora fra i suoi punti aperti.
+8. **Docstring di `Session_Simulator` obsolete** — **CHIUSA parzialmente** dopo `84a47670`: le due frasi sulla
+   selezione dell'arma (in «`fire_control`: una sola callable» e in «Cosa NON fa») sono state corrette e
+   rimandano a `Fire_Control.make_registry_fire_control` (la `fire_control` resta comunque iniettata). Resta
+   la firma descritta come `ShotSpec | None` che non cita la sequenza di opzioni: imprecisione minore.
+9. **`rwr_catalogue`** (proposta R-CLS §2, "aggancio per il futuro") — **APERTA**: è un parametro di
+   `resolve_engagement` ma `run_session` non lo inoltra (nessuna occorrenza in `Session_Simulator.py`): per
+   usarlo bisogna chiamare il risolutore direttamente.
+10. **Morale e stima del nemico** — **APERTA**: la proposta li descrive come ingressi del risolutore; nel codice
+    di produzione nessuno li fornisce (`morale_for`/`enemy_estimate_for` sono inoltrati da `run_session` e
+    consumati dal risolutore, ma usati solo dai test), quindi l'effetto descritto in proposta §3.2-3.3 non si
+    manifesta oltre i test. Dalla F4b ricevono la vista di missione, non il blocco.
+
+**Voci nuove**
+
+11. **Piano: intestazione e tabella di avanzamento non allineate** — **APERTA**. L'intestazione (riga 3) dice
+    «fatte F0, F1, F2, F3, F4a e F4b», mentre la tabella di §5 dà FATTE anche F4b+, F4b++, il test S3/S5 e F4c. La
+    riga F4c dice «fotografia 346 identiche, 2 cambiate: rigenerazione in attesa della decisione dell'utente», ma
+    `F4_Differenze_Scenari.md` (sezione F4c) registra il cambio come **ACCETTATO** e la fotografia come
+    **rigenerata** (370 esecuzioni = 348 + 22 nuove, due catture identiche), e il file in repository ha 370
+    esecuzioni (verificato). Nella tabella le righe F4b+, F4b++, test S3/S5 e F4c hanno la colonna «Commit» vuota
+    (i commit sono `098671d7`, `e6f59d21`, `8bf7b11f`, `af2efbe6`).
+12. **Piano: elenco dei «punti aperti rilevati dall'aggiornamento del manuale»** — **APERTA**. L'ultima riga
+    dice che «ruoli, regole, bersaglio, criteri di fine e `Operation` sono validati ma non ancora letti da
+    `Logic`»: dalla F4b+ l'`Operation` **è letta** (`Mission_Adapter.coordination_domains` legge
+    `Operation.mission_ids` e `Mission.operation_id` per il dominio di coordinamento); restano non letti ruoli,
+    regole, bersaglio, criteri di fine, `OutcomeRule`, TOT comune e missione principale.
+13. **Manuale a `533cd1f5`: riferimento stantio (corretto qui)** — il §9.2 D1 citava
+    `Logic/Engagement_Resolver.py:160-162` per il «re-scheduling delle finestre» (seconda parte di R4,
+    rimandato); a `533cd1f5` quelle righe erano il titolo «Ingaggi a N forze» e il testo vero stava a `:209-211`
+    (oggi `:279-281`). Corretto in questo aggiornamento.
+14. **Commento del risolutore: `domain_of`** — **APERTA, minore**. Il commento di `_EngagementRun.__init__`
+    (`Logic/Engagement_Resolver.py:1347-1348`) dice che `domain_of` è «calcolato in `_build_forces`»; lo
+    calcola `_build_domains` (`:1518-1557`), chiamato subito dopo `_build_forces` (`:1421-1422`).
+
+**Limiti nuovi dichiarati nella documentazione di progetto** (non sono incoerenze: sono limiti di modello
+dichiarati in `F4_Differenze_Scenari.md` e nei docstring, e verificati sul codice; il dettaglio è in §9.1, sezione
+«Limiti introdotti dalla fase F4»): nessun cueing del tiro (EWR→SAM, AWACS→caccia, scorta→strike); condivisione
+istantanea senza latenza né perdite del canale; canali di intercettazione condivisi solo nello stesso istante;
+`grounded` per tutta la sessione (la F5 lo renderà dipendente dal tempo); nessuno shelter o hangar; postura
+`Defense` solo dichiarata sulla vista e **non** nell'esito di forza (entrerà con la F5); una missione di un solo
+asset è `DESTROYED` alla prima perdita; potatura per blocco dello scheduler conservativa per gli aerei a terra.
+
+*Altre osservazioni (non incoerenze, solo cose da sapere)*: i docstring di `Mission_Adapter` e `Session_Simulator`
+descrivono la F5 come «predisposta» (l'insieme `grounded` è per tutta la sessione); `Session_Types.SessionOrder`
+dichiara ancora che gli asset senza missione «restano fermi», vero ma ora incompleto (sono a terra o in difesa,
+capitolo 6 §6.14).

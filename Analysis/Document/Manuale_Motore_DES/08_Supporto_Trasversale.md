@@ -1,5 +1,14 @@
 # Capitolo 7 — Moduli di supporto trasversali
 
+> **Verificato a `84a47670` (2026-10-11).** Dei moduli di questo capitolo (`Utility/Session_Rng.py`,
+> `Context/Doctrine.py`, `Context/Reaction_Profile.py`, `Block/Military.py`, `Asset/Mobile.py`,
+> `Asset/Aircraft.py`, `Asset/Weapon_Stores.py`, `Context/Air_Defense_Efficacy.py`, `Asset/Aircraft_Rwr_Data.py`,
+> `Logic/Air_Route_Manager.py`, `Logic/Weapon_Delivery.py`) **nessuno è cambiato** dalla fase F4 (`git diff` da
+> `533cd1f5` non li tocca): i loro riferimenti `:riga` sono quelli di prima. Cambiano solo i riferimenti a
+> `Logic/Engagement_Resolver.py` e a `Logic/Session_Simulator.py` (ricalcolati) e il §7.7, perché la F4 ha
+> aggiunto un'estensione facoltativa al protocollo di `fire_control` (`target_grounded`) e due ingressi del
+> risolutore che la sessione ricava dalle missioni (`coordination_of`, `grounded`).
+
 ## 7.1 `Utility/Session_Rng.py` — l'unica sorgente di casualità
 
 Disciplina trasversale a tutto il motore (`Utility/Session_Rng.py:1-9`): "RNG di sessione
@@ -170,7 +179,7 @@ documenta latenze navali.
 ## 7.4 Degradazione ambientale della Pd (meteo/notte)
 
 Vive in `Logic/Engagement_Resolver.py` (non in `Reaction_Profile`), perché è un parametro della
-legge di Pd (`Logic/Engagement_Resolver.py:289-301`, `:716-763`):
+legge di Pd (`Logic/Engagement_Resolver.py:360-372`, `:792-839`):
 
 ```
 factor = (NIGHT_DETECTION_FACTOR se notte) * (ADVERSE_WEATHER_DETECTION_FACTOR se avverso)
@@ -182,12 +191,12 @@ interno.
 
 `weather_detection_factor(conditions)` legge `conditions` nella forma di
 `Meteo_Analysis.get_meteo_conditions` (`{'day', 'night', 'adverse_weather'}`).
-`weather_detection_factor_fn(conditions)` (`:766-780`) produce la callable `(observer, target) -> float`
+`weather_detection_factor_fn(conditions)` (`:842-856`) produce la callable `(observer, target) -> float`
 richiesta da `resolve_engagement(detection_factor=...)`. `meteo_detection_factor(region_name,
-date, time)` (`:783-792`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
+date, time)` (`:859-868`) collega le due funzioni a `Logic/Meteo_Analysis.get_meteo_conditions` (oggi un
 placeholder deterministico: nessuna casualità entra da qui).
 
-**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:291-298`): il fattore è **unico per ogni sensore**. La finestra di
+**Limite noto, dichiarato** (`Logic/Engagement_Resolver.py:362-369`): il fattore è **unico per ogni sensore**. La finestra di
 contatto porta solo la portata migliore fra radar e TVD (`Mobile.detection_range`, default =
 massimo dei due), e il risolutore non sa quale dei due l'ha prodotta: non può quindi risparmiare
 al radar la degradazione notturna che fisicamente non subisce. Il valore notturno è un
@@ -357,9 +366,13 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   quel modello d'arma (capitolo 4, §4.19); una `ShotSpec` singola resta un valore valido.
   `Session_Simulator.run_session` ne passa **una sola** a ogni ingaggio della sessione, non una
   per lato: la callable riceve gli asset reali e può distinguere lato/blocco/modello da sé
-  (`Logic/Session_Simulator.py:129-135`, capitolo 6). Una fabbrica che seleziona davvero l'arma
+  (`Logic/Session_Simulator.py:186-194`, capitolo 6). Una fabbrica che seleziona davvero l'arma
   dai registri, invece di una tabella di ruoli, esiste in
-  `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16).
+  `Logic/Fire_Control.make_registry_fire_control` (capitolo 4, §4.16). **Dal 2026-10-11 (F4c)** il protocollo ha
+  un'estensione **facoltativa**: se la callable dichiara il parametro keyword `target_grounded` (o `**kwargs`) il
+  risolutore lo passa a `True` quando il bersaglio è un aereo a terra (capitolo 4 §4.4, §4.30); una fire control
+  che non lo dichiara riceve la chiamata di sempre, con un warning per run se il bersaglio è a terra. La fire
+  control di registro e quella di riferimento degli scenari lo dichiarano.
 - `detection_factor: (observer, target) -> float in [0,1]` — degradazione della Pd (§7.4);
   default nessuna degradazione (`factor=1.0`). Oltre al meteo (`weather_detection_factor_fn`/
   `meteo_detection_factor`, §7.4), esistono fabbriche dello stesso fattore per la nebbia di guerra
@@ -372,8 +385,13 @@ il punto di estensione esplicito verso ciò che il motore non fa (v. capitolo 9)
   regola) e `rwr_catalogue` (emettitori per il peso di classe della RWR); più il flusso `breakpoint_rng`
   della tempra. Dettaglio in capitolo 4 §4.12, §4.21, §4.23, §4.25; `run_session` inoltra i primi tre,
   `fire_doctrine` e costruisce `breakpoint_rng` (capitolo 6 §6.1, §6.4), ma **non** inoltra
-  `rwr_catalogue`. A `533cd1f5` nessun chiamante di produzione fornisce `morale_for` né
-  `enemy_estimate_for` (capitolo 9 §9.1).
+  `rwr_catalogue`. A `84a47670` nessun chiamante di produzione fornisce `morale_for` né
+  `enemy_estimate_for` (capitolo 9 §9.1, §9.6).
+- **Non sono punti di iniezione del chiamante finale, ma ingressi di `resolve_engagement` che `run_session`
+  ricava dalle missioni**: `coordination_of` (dominio di coordinamento, calcolato da
+  `Mission_Adapter.coordination_domains`, capitolo 4 §4.28, capitolo 6 §6.13) e `grounded` (aerei a terra,
+  `Mission_Adapter.grounded_assets`, capitolo 4 §4.30, capitolo 6 §6.14). Chi chiama il risolutore direttamente
+  può passarli a mano; senza, il comportamento è quello precedente alla F4b+/F4c.
 
 ## 7.8 Il pianificatore di rotta aerea: volumi di rilevamento e intercettazione distinti (`Logic/Air_Route_Manager.py`, decisioni D-1..D-7, 2026-09-26, commit `815dc35f`)
 
