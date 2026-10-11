@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-11-summary
-description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, tutto committato e pushato, suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
+description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A in WIP su un branch a parte), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
 metadata:
   node_type: memory
   type: project
@@ -34,13 +34,18 @@ Piano Missione: F0-F3, F4a, F4b, F4b+/++, F4c e riprogettazione S3/S5 FATTE; F5-
 regressione: 370 esecuzioni (`Test/baseline/scenario_baseline.json`, comando `--compare` nel docstring di
 `Test/Scenario_Baseline.py`). Suite 4039 OK (7 skipped).
 
-## F5 IN CORSO (scomposta per limite di utilizzo)
-F5-A (grounded dipendente dal tempo, fotografia identica) delegata a `des-developer`: se `git status` mostra modifiche
-non committate a Contact_Scheduler/Engagement_Resolver/Mission_Adapter/Session_Types/Session_Simulator, sono il lavoro
-dell'agente (verificare con suite + confronto prima di committare; se l'albero e' incoerente, riprendere l'agente con
-SendMessage o rifare dal brief). Poi F5-B (postura nell'esito + presenza prima/dopo + scenari) e F5-C (WAIT, ETA).
+## F5 IN CORSO (scomposta per limite di utilizzo; agente fermato a meta' il 2026-10-11)
+Il lavoro dell'agente su F5-A (grounded dipendente dal tempo, insieme costante equivalente, fotografia attesa
+IDENTICA su 370) e' salvato NON VERIFICATO sul branch **`wip/f5-a-grounded-nel-tempo`** (commit `94859d8a`, pushato;
+7 file: Session_Types, Contact_Scheduler, Engagement_Resolver, Mission_Adapter + test). `analysis/dce-dcs-persistence`
+resta pulito e verificato (suite 4039 OK, fotografia 370).
+**Ripresa**: `git pull`, poi `git switch wip/f5-a-grounded-nel-tempo`; lanciare suite completa + `--compare` della
+fotografia (atteso IDENTICO); se verdi, scrivere la sezione «F5 passo (a)» in `F4_Differenze_Scenari.md` e la riga
+«F5-A» nel Piano §5, poi merge (o cherry-pick) in `analysis/dce-dcs-persistence`. Se l'albero e' incoerente, ripartire
+dal brief: Piano §5 dev. 12-13 + decisioni D1/N2 (il brief di delega integrale non e' salvato in un file: ricostruibile
+da questi). Poi F5-B (postura nell'esito + presenza prima/dopo + scenari E1/E3/aerei) e F5-C (WAIT, ETA, CAP in orbita).
 Decisione dell'utente: aereo a terra dopo la fine della rotta SOLO su una base vera (LAND su base), altrimenti esce
-dalla scena come oggi finche' F6 non porta il rientro. Dettagli: Piano §5 deviazioni 12-13.
+dalla scena come oggi finche' F6 non porta il rientro.
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
