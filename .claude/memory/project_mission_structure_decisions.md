@@ -81,5 +81,15 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   repliche (S3 20, S5 8): test al limite statistico da riprogettare; (2) ripartizione del fuoco fra missioni dello
   stesso blocco/lato assente -> overkill riaperto in S19AD standoff (Maverick 8-10 -> 16, Strela sopravvive):
   scegliere per blocco, lato o Operazione; (3) nessuna condivisione dei rilevamenti fra missioni (limite noto D3.e).
+  **DECISO 2026-10-11 (punto 2)**: ripartizione del fuoco = dominio di coordinamento blocco OPPURE Operazione
+  (unione transitiva, residuo incluso; opzione D), saturazione/ripartizione contano le salve del dominio,
+  tetto per tiratore e L2 invariati, condivisione istantanea; DA IMPLEMENTARE (des-developer Opus medium),
+  v. Piano §5 dev. 6. **DECISO 2026-10-11 (punto 3)**: rilevamenti condivisi = opzione B: `seen_by`+`identified_by` condivisi nello
+  stesso dominio (blocco o Operazione), istantanei, NIENTE cueing del tiro (futuro, con Fase 0 C2/AWACS); si
+  implementa insieme al punto 2.
+  **DECISO 2026-10-11 (S3/S5)**: test riprogettati (Piano §5 dev. 8): S3 frazione persa senza stealth e rapporto di
+  scambio con soglia statistica con stealth; S5 default = maggioranza al 1° strato + invarianti, variante a erosione
+  dichiarata con 12 seed, terzo strato da variante o declassato. Da eseguire dopo l'implementazione dei punti 2-3.
+  Tutte le decisioni aperte dopo F4b sono ora CHIUSE: restano da implementare (2+3 insieme, poi S3/S5, poi F4c).
   DA FARE: F4c = postura continua dei non in missione (D1.c).
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
