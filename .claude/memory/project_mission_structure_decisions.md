@@ -90,6 +90,10 @@ migrazione completa; proposta separata per la salva su area in F7; F0-F2 con age
   **DECISO 2026-10-11 (S3/S5)**: test riprogettati (Piano §5 dev. 8): S3 frazione persa senza stealth e rapporto di
   scambio con soglia statistica con stealth; S5 default = maggioranza al 1° strato + invarianti, variante a erosione
   dichiarata con 12 seed, terzo strato da variante o declassato. Da eseguire dopo l'implementazione dei punti 2-3.
-  Tutte le decisioni aperte dopo F4b sono ora CHIUSE: restano da implementare (2+3 insieme, poi S3/S5, poi F4c).
+  **F4b+ FATTA 2026-10-11 (`098671d7`, suite 3978 OK, fotografia 328, 8 cambiate: S19AD standoff + 2 S20)**:
+  `Mission_Adapter.coordination_domains`, `resolve_engagement(coordination_of=)`; confermati dall'utente L2/L3 per
+  dominio e unione delle componenti nella stessa run; la difesa di salva va ESTESA al dominio (task dedicato, DA
+  FARE, prima di S3/S5). S7/S18/S19 invariati (le missioni avevano già rilevato da sé gli stessi nemici).
+  Ordine ora: intercettori di dominio -> test S3/S5 -> F4c.
   DA FARE: F4c = postura continua dei non in missione (D1.c).
 - Manuale DES aggiornato a 533cd1f5 (F3) e committato; F4a non ancora nel manuale.
