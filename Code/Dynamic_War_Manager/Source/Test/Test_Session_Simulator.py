@@ -1014,7 +1014,7 @@ def _strike_mission(mission_id, force, asset_id, x0, y0, start_time=0.0, tot=Non
 
 
 class TestWaitsAndEtas(_Base):
-    """F5-C: attese WAIT, TOT comune dell'Operazione ed ETA effettive cablati in sessione."""
+    """F5-C: attese WAIT, TOT per missione ed ETA effettive cablati in sessione."""
 
     def _hold_run(self, session_id='S-hold'):
         armor = _force('Blue-Armor', 'Blue', [_asset(Vehicle, 'bv1', -12_000, 0, speed=10.0)])
@@ -1055,34 +1055,37 @@ class TestWaitsAndEtas(_Base):
 
         self.assertEqual(outcome.mission_outcomes['M-armor'].actual_etas, (0.0, 800.0, 1_600.0))
 
-    def _tot_run(self, operation_tot=900.0, near_tot=None):
-        """M-near (bn1, 20 km dall'ATTACK) e M-far (bs1, 40 km) partono a 0 nell'Operazione 'Op'."""
+    def _tot_run(self, near_tot=780.0, far_tot=900.0):
+        """M-near (bn1, 20 km dall'ATTACK) e M-far (bs1, 40 km) partono a 0 nell'Operazione 'Op'
+        (senza TOT comune), ciascuna con il PROPRIO TOT: M-near anticipa M-far di 120 s."""
         blue = _force('Blue', 'Blue', [_asset(Aircraft, 'bn1', 0, -20_000, speed=200.0),
                                        _asset(Aircraft, 'bs2', 100_000, -40_000, speed=200.0)])
         red = _force('Red', 'Red', [_asset(Vehicle, 'rv1', 50_000, 0)])
         missions = (_strike_mission('M-near', blue, 'bn1', 0, -20_000, tot=near_tot, operation_id='Op'),
-                    _strike_mission('M-far', blue, 'bs2', 100_000, -40_000, operation_id='Op'))
-        order = self._order('S-tot', missions,
-                            operations=(Operation('Op', 'strike', ('M-near', 'M-far'), tot=operation_tot),))
+                    _strike_mission('M-far', blue, 'bs2', 100_000, -40_000, tot=far_tot, operation_id='Op'))
+        order = self._order('S-tot', missions, operations=(Operation('Op', 'strike', ('M-near', 'M-far')),))
         return SS.run_session(order, [blue], [red], _fire, reaction_profile_for=_profile)
 
-    def test_common_tot_of_an_operation(self):
-        """Partenza a 0 per entrambe: ciascuna attende al punto di partenza quanto basta per essere
-        sull'ATTACK all'istante comune (100 s e 200 s di volo)."""
+    def test_missions_of_one_operation_reach_each_its_own_tot(self):
+        """Il TOT e' di ogni missione (decisione dell'utente del 2026-10-12): partenza a 0 per
+        entrambe, ciascuna attende al punto di partenza quanto basta per essere sul proprio ATTACK al
+        PROPRIO TOT (680 s e 700 s di attesa, 100 s e 200 s di volo)."""
         outcome = self._tot_run()
-        self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 900.0, 1_000.0))
+        self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 780.0, 880.0))
         self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 900.0, 1_000.0))
 
-    def test_without_waits_the_operation_tot_is_ignored(self):
+    def test_a_mission_without_tot_does_not_inherit_one(self):
+        """Nessun TOT d'Operazione: la missione senza TOT non attende."""
+        outcome = self._tot_run(near_tot=None)
+        self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 100.0, 200.0))
+        self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 900.0, 1_000.0))
+
+    def test_without_waits_the_tots_are_not_waited(self):
         with patch.object(MA, 'F5_WAITS', False):
             outcome = self._tot_run()
 
         self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 100.0, 200.0))
         self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 200.0, 300.0))
-
-    def test_mission_tot_different_from_the_operation_tot_raises(self):
-        with self.assertRaises(ValueError):
-            self._tot_run(near_tot=800.0)
 
 
 if __name__ == '__main__':

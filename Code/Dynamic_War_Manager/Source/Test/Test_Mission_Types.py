@@ -5,6 +5,7 @@ Test_Session_Types e Test_Session_Simulator). Waypoint, Edge e Route
 sono oggetti reali (classi geometriche pure, nessun mock), come in Test_Route.
 """
 
+import dataclasses
 import unittest
 from types import MappingProxyType
 from unittest.mock import MagicMock, patch
@@ -729,7 +730,7 @@ class TestCheckMissionAssets(_LoggerMock, unittest.TestCase):
 class TestOperation(_LoggerMock, unittest.TestCase):
 
     def test_main_mission(self):
-        op = MT.Operation('op_1', 'Strike on SAM site', ['m_sead', 'm_strike'], tot=1800,
+        op = MT.Operation('op_1', 'Strike on SAM site', ['m_sead', 'm_strike'],
                           outcome_rule='main_mission', main_mission_id='m_strike')
         self.assertEqual(op.mission_ids, ('m_sead', 'm_strike'))
         self.assertIs(op.outcome_rule, MT.OutcomeRule.MAIN_MISSION)
@@ -756,8 +757,13 @@ class TestOperation(_LoggerMock, unittest.TestCase):
         with self.assertRaises(TypeError):
             MT.Operation('op', '', ('m1',))
 
-        with self.assertRaises(ValueError):
-            MT.Operation('op', 'p', ('m1',), tot=-5)
+    def test_no_common_tot(self):
+        """Il TOT e' di ogni missione, non dell'Operazione (decisione dell'utente del 2026-10-12): il
+        campo `tot` non esiste piu'."""
+        self.assertNotIn('tot', {f.name for f in dataclasses.fields(MT.Operation)})
+
+        with self.assertRaises(TypeError):
+            MT.Operation('op', 'p', ('m1',), tot=1800)
 
 
 # ── Esiti ─────────────────────────────────────────────────────────────────────

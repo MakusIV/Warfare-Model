@@ -1,11 +1,11 @@
-"""Scenario S23 del motore di sessioni virtuali: attese, ETA bloccate e TOT comune (F5 passi (c)-(d)).
+"""Scenario S23 del motore di sessioni virtuali: attese, ETA bloccate e TOT per missione (F5 passi (c)-(d)).
 
 Prosegue `Test_Session_Scenarios.py` (S1-S9), `Test_Session_Scenarios_S10_S18.py`, gli S19-S22 con la
 stessa disciplina: si verifica un comportamento QUALITATIVO o STRUTTURALE, mai un numero calibrato.
 
 Criterio "Fatto quando" della Fase 5 di `Analysis/Document/Piano_Implementazione_Missione.md`: *una CAP
 in orbita ha finestre di contatto per tutta la durata dell'attesa*, piu' l'azione WAIT (sosta e
-orbita), il TOT comune di un'Operazione e le ETA effettive nell'esito (N2.b/N2.c, deviazione 13). V.
+orbita), il TOT di ogni missione e le ETA effettive nell'esito (N2.b/N2.c, deviazione 13). V.
 `Logic/Mission_Adapter`, "Attese, ETA bloccate e TOT": un'attesa e' un tratto FERMO nel punto (anche
 l'orbita: approssimazione dichiarata, nessun circuito geometrico), le attese entrano nei tratti dati a
 scheduler e risolutore, e il `MissionOutcome.actual_etas` riporta gli istanti d'arrivo ai punti dai
@@ -42,18 +42,23 @@ Il carro fermo nella sosta e' un bersaglio (colpi Red durante la sosta), poi rip
 Il tiro Red e' DICHIARATO senza effetto (precisione 0, `SUPPRESSIVE_SHOT`): si misura quando il carro
 e' ingaggiato, e la distruzione non taglia la sosta.
 
-## S23-TOT: TOT comune di un'Operazione (`TestS23CommonTot`)
+## S23-TOT: TOT per missione nella stessa Operazione (`TestS23TotPerMission`)
 
-Red-Depot: 3 depositi (`Structure` 'Oil_Tank') intorno a (0, 0), nessuna difesa. Blue-Near (2 F-16C
-'Strike' a x = -60 km) e Blue-Far (2 F-16C 'Strike' a x = -120 km), ruolo 'strike' con lanci DICHIARATI
-senza effetto (`MARKER_SHOT`) e sensore 'ground' dichiarato di 10 km, ciascuno con una
-missione rettilinea NAV -> ATTACK (x = -15 km) -> LAND (x = +40 km, esce di scena) a 250 m/s. Le due
-missioni formano l'Operazione 'Op-Strike'. Varianti:
-  * 'operation': partenza a t = 0 e `Operation.tot` = `TOT`: la missione vicina attende nel punto di
-    partenza (in volo) quanto basta, e i due ATTACK sono raggiunti entrambi a `TOT`;
-  * 'own_tot': nessuna partenza dichiarata, `tot` = `TOT` per ciascuna missione: partenze derivate
-    all'indietro (anticipo proporzionale alla distanza, dalla F3), stessi arrivi;
-  * 'waits_off': 'operation' con `F5_WAITS` spento: nessuna attesa, arrivi a 180 s e 420 s.
+Il TOT e' SPECIFICO DI OGNI MISSIONE, anche fra le missioni della stessa Operazione (decisione
+dell'utente del 2026-10-12, che ha rimosso il TOT comune `Operation.tot`). Il caso dell'utente: una
+Fighter Sweep sulla zona che anticipa l'arrivo dei bombardieri di un'altra missione sulla stessa zona.
+Red-Depot: 3 depositi (`Structure` 'Oil_Tank') intorno a (0, 0), nessuna difesa. Blue-Sweep (2 F-16C
+'CAP' a x = -60 km, ruolo 'unarmed': non spara, non ci sono aerei nemici) con una missione
+'Fighter_Sweep', e Blue-Strike (2 F-16C 'Strike' a x = -120 km, ruolo 'strike' con lanci DICHIARATI
+senza effetto (`MARKER_SHOT`) e sensore 'ground' dichiarato di 10 km) con una missione 'Strike':
+entrambe rettilinee NAV -> ATTACK (x = -15 km) -> LAND (x = +40 km, esce di scena) a 250 m/s, nella
+stessa Operazione 'Op-Strike' (senza TOT). TOT dello strike `STRIKE_TOT` = 600 s, dello sweep
+`STRIKE_TOT - SWEEP_LEAD` = 480 s. Varianti:
+  * 'own_tot': partenza a t = 0 per entrambe: ciascuna attende nel punto di partenza (in volo) quanto
+    basta per essere sul proprio ATTACK al PROPRIO TOT (sweep 300 s, strike 180 s);
+  * 'derived': nessuna partenza dichiarata: partenze derivate all'indietro dal proprio TOT (sweep a
+    300 s, strike a 180 s), stessi arrivi;
+  * 'waits_off': 'own_tot' con `F5_WAITS` spento: nessuna attesa, arrivi a 180 s e 420 s.
 
 ## ETA effettive (tutti gli scenari)
 
@@ -130,17 +135,23 @@ SUPPRESSIVE_SHOT = dataclasses.replace(F.SHOTS['direct_fire'], accuracy=0.0, wea
 
 # ── Costanti di S23-TOT, dichiarate di test ─────────────────────────────────────
 DEPOT = 'Red-Depot'
-NEAR, FAR = 'Blue-Near', 'Blue-Far'
+SWEEP, STRIKE = 'Blue-Sweep', 'Blue-Strike'
+MISSION_TYPE = {SWEEP: 'Fighter_Sweep', STRIKE: 'Strike'}
+LOADOUT = {SWEEP: 'CAP', STRIKE: 'Strike'}
 OPERATION = 'Op-Strike'
-TOT = 600.0
-STRIKE_START_X = {NEAR: -60_000.0, FAR: -120_000.0}
-STRIKE_Y = {NEAR: 0.0, FAR: 2_000.0}
+STRIKE_TOT = 600.0
+# Anticipo del TOT dello sweep su quello dello strike [s]: STIMA DI TEST (ordine di grandezza di
+# "qualche minuto" del caso dell'utente), non un dato dottrinale tarato.
+SWEEP_LEAD = 120.0
+TOTS = {SWEEP: STRIKE_TOT - SWEEP_LEAD, STRIKE: STRIKE_TOT}
+STRIKE_START_X = {SWEEP: -60_000.0, STRIKE: -120_000.0}
+STRIKE_Y = {SWEEP: 0.0, STRIKE: 2_000.0}
 ATTACK_X = -15_000.0
 EXIT_X = 40_000.0
 STRIKE_ALTITUDE = 5_000.0
-# Sensore 'ground' dichiarato degli F-16C: valore DI TEST (non dal registro), sotto la distanza fra il
-# punto ATTACK e i depositi (15 km), cosi' che ogni missione lanci solo dopo l'ATTACK e mai dal punto
-# d'attesa (con il registro gli F-16C vedevano i depositi gia' da 60 km).
+# Sensore 'ground' dichiarato degli F-16C dello strike: valore DI TEST (non dal registro), sotto la
+# distanza fra il punto ATTACK e i depositi (15 km), cosi' che lo strike lanci solo dopo l'ATTACK e
+# mai dal punto d'attesa (con il registro gli F-16C vedevano i depositi gia' da 60 km).
 STRIKE_SENSOR_RANGE = 10_000.0
 # Lancio DICHIARATO DI TEST: l''agm' di riferimento con precisione 0 (nessun colpo a segno).
 MARKER_SHOT = dataclasses.replace(F.SHOTS['agm'], accuracy=0.0, weapon='test:marker')
@@ -151,11 +162,9 @@ MARKER_SHOT = dataclasses.replace(F.SHOTS['agm'], accuracy=0.0, weapon='test:mar
 #     regola, non l'eccezione".
 #   * S23-HOLD 'hold', repliche in cui Red spara DURANTE la sosta: stessa stima di S22 (tre
 #     osservatori, Pd ~0,59 ciascuno, attesa ~0,93), soglia 0,5.
-#   * S23-TOT: distanza media fra i primi lanci delle due missioni con il TOT comune al massimo la
-#     META' di quella senza attese (`TOT_SPREAD_RATIO`): senza attese gli arrivi distano 240 s, con il
-#     TOT 0 s; il margine assorbe il ritardo di rilevamento e reazione, che e' casuale.
+#   * S23-TOT, repliche in cui lo strike lancia: nessuna difesa, depositi entro il sensore dopo
+#     l'ATTACK per ogni replica; 0,5 come sopra (il lancio e' la regola).
 MIN_FIRING_FRACTION = 0.5
-TOT_SPREAD_RATIO = 0.5
 
 
 def _seeds(prefix: str, count: int = SEEDS_PER_SCENARIO):
@@ -181,10 +190,10 @@ def _replan(mission: Mission, roles=None, actions=None, **overrides) -> Mission:
     return dataclasses.replace(mission, waypoints=tuple(waypoints), **overrides)
 
 
-def _expected_etas(mission: Mission, tot=None, session_end: float = DURATION):
+def _expected_etas(mission: Mission, session_end: float = DURATION):
     """ETA effettive attese dai TRATTI (la regola di `Session_Simulator._mission_outcome`, senza
     distruzioni): per punto il primo arrivo fra gli asset, None oltre la fine della sessione."""
-    times = [MA.waypoint_times(movement) for movement in MA.mission_movements(mission, 0.0, (), tot)]
+    times = [MA.waypoint_times(movement) for movement in MA.mission_movements(mission, 0.0, ())]
     count = max((len(t) for t in times), default=0)
     etas = []
 
@@ -269,8 +278,7 @@ def _run_variant(cls, builder, variant: str, session_id: str):
 
     with _waits(variant != 'waits_off'):
         outcome = scenario.run(session_id, **cls.run_kwargs(scenario))
-        tots = MA.operation_tots(scenario.missions, cls.operations(variant))
-        expected = {m.mission_id: _expected_etas(m, tots.get(m.mission_id)) for m in scenario.missions}
+        expected = {m.mission_id: _expected_etas(m) for m in scenario.missions}
 
     return scenario, outcome, expected
 
@@ -284,10 +292,6 @@ class TestS23CapOrbit(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
     @staticmethod
     def run_kwargs(scenario):
         return {}
-
-    @staticmethod
-    def operations(variant):
-        return ()
 
     @classmethod
     def setUpClass(cls):
@@ -391,7 +395,6 @@ class TestS23GroundHold(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
     VARIANTS = ('hold', 'no_hold', 'waits_off')
 
     run_kwargs = staticmethod(TestS23CapOrbit.run_kwargs)
-    operations = staticmethod(TestS23CapOrbit.operations)
 
     @classmethod
     def setUpClass(cls):
@@ -440,14 +443,20 @@ class TestS23GroundHold(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
                     self.assertAlmostEqual(etas[1], HOLD_ARRIVAL, delta=1e-6)
 
 
-# ── S23-TOT: TOT comune di un'Operazione ──────────────────────────────────────
+# ── S23-TOT: TOT per missione nella stessa Operazione ─────────────────────────
 
-def _strike_mission(force, variant: str) -> Mission:
+def _mission_id(force_id: str) -> str:
+    return f'{force_id}:{MISSION_TYPE[force_id]}'
+
+
+def _tot_mission(force, variant: str) -> Mission:
+    """NAV -> ATTACK -> LAND con il TOT della forza; partenza a 0, o derivata ('derived')."""
+    target = F.group_target(DEPOT) if force.id == STRIKE else F.zone_target((0.0, 0.0), -ATTACK_X)
     mission, = F.missions_for(force, [(ATTACK_X, STRIKE_Y[force.id]), (EXIT_X, STRIKE_Y[force.id])],
-                              mission_type='Strike', target=F.group_target(DEPOT), speed=AIR_SPEED)
+                              mission_type=MISSION_TYPE[force.id], target=target, speed=AIR_SPEED)
     roles = [WaypointRole.NAV, WaypointRole.ATTACK, WaypointRole.LAND]
-    timing = dict(start_time=None, tot=TOT) if variant == 'own_tot' else {}
-    return _replan(mission, roles=roles, operation_id=OPERATION, **timing)
+    timing = dict(start_time=None) if variant == 'derived' else {}
+    return _replan(mission, roles=roles, operation_id=OPERATION, tot=TOTS[force.id], **timing)
 
 
 def _tot_scenario(variant: str) -> F.Scenario:
@@ -455,44 +464,40 @@ def _tot_scenario(variant: str) -> F.Scenario:
     F.add_assets(depot, [F.make_structure(depot, f'{DEPOT}/tank{index}', (0.0, 400.0 * (index - 1)), category='Farp',
                                           asset_type='Oil_Tank')
                          for index in range(3)])
-    strikes = [F.build_force(force_id, 'Blue', [F.Unit('aircraft', 'F-16C Block 52d', 2,
-                                                       origin=(STRIKE_START_X[force_id], STRIKE_Y[force_id], STRIKE_ALTITUDE),
-                                                       step=(0.0, 500.0), prefix='str', loadout='Strike',
-                                                       sensors={'ground': STRIKE_SENSOR_RANGE})],
-                             mil_category=F.AIR_UNIT)
-               for force_id in (NEAR, FAR)]
-    roles = {asset_id: 'strike' for force in strikes for asset_id in force.assets}
-    # Lanci SENZA effetto (precisione 0): si misura quando ciascuna missione arriva sui depositi, e la
-    # distruzione da parte della prima non toglie i bersagli alla seconda.
-    overrides = {asset_id: {'structure': MARKER_SHOT} for asset_id in roles}
-    return F.Scenario(forces_a=strikes, forces_b=[depot], missions=[_strike_mission(f, variant) for f in strikes],
+    sensors = {SWEEP: None, STRIKE: {'ground': STRIKE_SENSOR_RANGE}}
+    blue = [F.build_force(force_id, 'Blue', [F.Unit('aircraft', 'F-16C Block 52d', 2,
+                                                    origin=(STRIKE_START_X[force_id], STRIKE_Y[force_id], STRIKE_ALTITUDE),
+                                                    step=(0.0, 500.0), prefix='str', loadout=LOADOUT[force_id],
+                                                    sensors=sensors[force_id])],
+                          mil_category=F.AIR_UNIT)
+            for force_id in (SWEEP, STRIKE)]
+    roles = {asset_id: ('strike' if force.id == STRIKE else 'unarmed') for force in blue for asset_id in force.assets}
+    # Lanci dello strike SENZA effetto (precisione 0): si misura QUANDO lo strike arriva sui depositi.
+    overrides = {asset_id: {'structure': MARKER_SHOT} for asset_id in blue[1].assets}
+    return F.Scenario(forces_a=blue, forces_b=[depot], missions=[_tot_mission(f, variant) for f in blue],
                       fire_control=F.make_fire_control(roles=roles, overrides=overrides), duration=DURATION,
                       roles=roles)
 
 
-def _operation(variant: str):
-    tot = None if variant == 'own_tot' else TOT
-    return (Operation(OPERATION, 'strike', (f'{NEAR}:Strike', f'{FAR}:Strike'), tot=tot),)
+def _operation():
+    """L'Operazione delle due missioni: scopo e appartenenza, NESSUN TOT comune."""
+    return (Operation(OPERATION, 'sweep and strike', (_mission_id(SWEEP), _mission_id(STRIKE))),)
 
 
 def _travel(force_id: str) -> float:
     return (ATTACK_X - STRIKE_START_X[force_id]) / AIR_SPEED
 
 
-class TestS23CommonTot(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
-    """S23-TOT: due missioni di un'Operazione raggiungono il punto ATTACK allo stesso istante (F5-C)."""
+class TestS23TotPerMission(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
+    """S23-TOT: due missioni della stessa Operazione raggiungono la zona ciascuna al PROPRIO TOT, lo
+    sweep `SWEEP_LEAD` prima dello strike (F5-C, TOT per missione dal 2026-10-12)."""
 
     SEEDS = _seeds('S23-TOT')
-    VARIANTS = ('operation', 'own_tot', 'waits_off')
+    VARIANTS = ('own_tot', 'derived', 'waits_off')
 
     @staticmethod
     def run_kwargs(scenario):
-        variant = 'own_tot' if scenario.missions[0].tot is not None else 'operation'
-        return {'order_kwargs': {'operations': _operation(variant)}}
-
-    @staticmethod
-    def operations(variant):
-        return _operation(variant)
+        return {'order_kwargs': {'operations': _operation()}}
 
     @classmethod
     def setUpClass(cls):
@@ -503,48 +508,60 @@ class TestS23CommonTot(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
             for variant in cls.VARIANTS:
                 cls.runs[variant].append(_run_variant(cls, _tot_scenario, variant, session_id))
 
-    def test_attack_points_are_reached_at_the_common_tot(self):
-        """(c) Con il TOT comune (dell'Operazione o di ogni missione) le ETA effettive dei due ATTACK
-        coincidono con il TOT; con le attese spente differiscono della differenza di percorrenza."""
-        for variant in ('operation', 'own_tot'):
+    def _attack_eta(self, outcome, force_id):
+        return outcome.mission_outcomes[_mission_id(force_id)].actual_etas[1]
+
+    def test_each_mission_reaches_its_own_tot(self):
+        """(c) Le ETA effettive dei due ATTACK coincidono ciascuna con il PROPRIO TOT (partenza comune
+        o derivata); con le attese spente sono le percorrenze."""
+        for variant in ('own_tot', 'derived'):
             for _, outcome, _ in self.runs[variant]:
-                for force_id in (NEAR, FAR):
-                    self.assertAlmostEqual(outcome.mission_outcomes[f'{force_id}:Strike'].actual_etas[1], TOT,
-                                           delta=1e-6, msg=(variant, outcome.session_id, force_id))
+                for force_id in (SWEEP, STRIKE):
+                    self.assertAlmostEqual(self._attack_eta(outcome, force_id), TOTS[force_id], delta=1e-6,
+                                           msg=(variant, outcome.session_id, force_id))
 
         for _, outcome, _ in self.runs['waits_off']:
-            for force_id in (NEAR, FAR):
-                self.assertAlmostEqual(outcome.mission_outcomes[f'{force_id}:Strike'].actual_etas[1],
-                                       _travel(force_id), delta=1e-6)
+            for force_id in (SWEEP, STRIKE):
+                self.assertAlmostEqual(self._attack_eta(outcome, force_id), _travel(force_id), delta=1e-6)
+
+    def test_the_sweep_precedes_the_strike_by_the_declared_lead(self):
+        """Lo sweep e' sulla zona esattamente `SWEEP_LEAD` prima dello strike; con le attese spente lo
+        scarto e' la differenza di percorrenza (240 s), non quello pianificato."""
+        for variant, lead in (('own_tot', SWEEP_LEAD), ('derived', SWEEP_LEAD),
+                              ('waits_off', _travel(STRIKE) - _travel(SWEEP))):
+            for _, outcome, _ in self.runs[variant]:
+                self.assertAlmostEqual(self._attack_eta(outcome, STRIKE) - self._attack_eta(outcome, SWEEP), lead,
+                                       delta=1e-6, msg=(variant, outcome.session_id))
 
     def test_departures(self):
-        """'operation': partenza a 0 per entrambe, la vicina attende nel punto di partenza (ETA del
-        punto 0 = 0); 'own_tot': partenze derivate all'indietro (TOT - percorrenza)."""
-        for variant, starts in (('operation', {NEAR: 0.0, FAR: 0.0}),
-                                ('own_tot', {force_id: TOT - _travel(force_id) for force_id in (NEAR, FAR)})):
+        """'own_tot' e 'waits_off': partenza a 0 per entrambe (ETA del punto 0 = 0); 'derived':
+        partenze derivate all'indietro dal proprio TOT (TOT - percorrenza: 300 s e 180 s)."""
+        derived = {force_id: TOTS[force_id] - _travel(force_id) for force_id in (SWEEP, STRIKE)}
+
+        for variant, starts in (('own_tot', {SWEEP: 0.0, STRIKE: 0.0}), ('waits_off', {SWEEP: 0.0, STRIKE: 0.0}),
+                                ('derived', derived)):
             for _, outcome, _ in self.runs[variant]:
                 for force_id, start in starts.items():
-                    self.assertAlmostEqual(outcome.mission_outcomes[f'{force_id}:Strike'].actual_etas[0], start,
+                    self.assertAlmostEqual(outcome.mission_outcomes[_mission_id(force_id)].actual_etas[0], start,
                                            delta=1e-6, msg=(variant, force_id))
 
-    def test_the_strikes_arrive_together(self):
-        """Con il TOT comune i primi lanci delle due missioni sono vicini nel tempo: distanza media al
-        massimo `TOT_SPREAD_RATIO` di quella con le attese spente (soglia dichiarata)."""
-        def spread(entries):
-            gaps = []
+    def test_the_strike_fires_only_after_its_own_tot(self):
+        """Lo sweep non lancia mai; ogni lancio dello strike e' dopo il suo ATTACK (sensore dichiarato
+        sotto la distanza ATTACK-depositi), quindi dopo il TOT dello strike e `SWEEP_LEAD` dopo
+        l'arrivo dello sweep; lo strike lancia nella maggior parte delle repliche (soglia dichiarata)."""
+        for variant, entries in self.runs.items():
+            firing = 0
 
             for _, outcome, _ in entries:
-                firsts = [min((e.time for e in _shots_by(outcome, force_id)), default=None) for force_id in (NEAR, FAR)]
+                self.assertEqual(_shots_by(outcome, SWEEP), [], (variant, outcome.session_id))
+                shots = _shots_by(outcome, STRIKE)
+                firing += bool(shots)
 
-                if None not in firsts:
-                    gaps.append(abs(firsts[0] - firsts[1]))
+                for event in shots:
+                    self.assertGreaterEqual(event.time, self._attack_eta(outcome, STRIKE) - 1e-6,
+                                            (variant, outcome.session_id, event.time))
 
-            return sum(gaps) / len(gaps) if gaps else None
-
-        common, off = spread(self.runs['operation']), spread(self.runs['waits_off'])
-        self.assertIsNotNone(common)
-        self.assertIsNotNone(off)
-        self.assertLessEqual(common, TOT_SPREAD_RATIO * off, (common, off))
+            self.assertGreaterEqual(firing / len(entries), MIN_FIRING_FRACTION, (variant, firing))
 
 
 if __name__ == '__main__':

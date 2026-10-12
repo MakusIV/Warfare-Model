@@ -219,13 +219,15 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('late', 'not_departed')),
     ('S22-AIR', 'Test_Session_Scenarios_S22', 'TestS22AircraftOnTheGround', None,
      _by_occurrence('parked', 'airborne', 'landed', 'no_base', 'base_area')),
-    # ── S23 (F5-C: attese WAIT, CAP in orbita, sosta a terra, TOT comune, ETA effettive) ──
+    # ── S23 (F5-C: attese WAIT, CAP in orbita, sosta a terra, TOT per missione, ETA effettive) ──
+    # S23-TOT rifatto il 2026-10-12 (TOT per missione, decisione dell'utente): via 'operation'
+    # (TOT d'Operazione rimosso), 'own_tot'/'waits_off' con TOT diversi sweep/strike, nuova 'derived'.
     ('S23-CAP', 'Test_Session_Scenarios_S23', 'TestS23CapOrbit', None,
      _by_occurrence('during', 'after', 'no_wait', 'waits_off')),
     ('S23-HOLD', 'Test_Session_Scenarios_S23', 'TestS23GroundHold', None,
      _by_occurrence('hold', 'no_hold', 'waits_off')),
-    ('S23-TOT', 'Test_Session_Scenarios_S23', 'TestS23CommonTot', None,
-     _by_occurrence('operation', 'own_tot', 'waits_off')),
+    ('S23-TOT', 'Test_Session_Scenarios_S23', 'TestS23TotPerMission', None,
+     _by_occurrence('own_tot', 'derived', 'waits_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

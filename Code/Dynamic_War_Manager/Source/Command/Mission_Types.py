@@ -8,7 +8,9 @@ dalle decisioni D1-D6 e N1-N3 di `Analysis/Document/Proposta_Struttura_Missione_
   * **Missione**: azioni di attacco, trasporto, posizionamento o supporto svolte da asset di UN
     solo blocco, con un bersaglio (o nessuno), una rotta di riferimento e le direttive (ROE, ...).
   * **Operazione**: insieme facoltativo di missioni (anche di blocchi diversi) per uno stesso
-    scopo, con TOT comune facoltativo e una regola d'esito (D2.e).
+    scopo, con una regola d'esito (D2.e). Nessun TOT comune: il TOT e' di ogni missione
+    (`Mission.tot`), anche nella stessa Operazione (es. uno sweep che anticipa lo strike sulla
+    stessa zona), decisione dell'utente del 2026-10-12.
 
 ## Forma
   * La rotta resta GEOMETRICA (`DataType.Route`, N2.a = C): tempi, ruoli e azioni dei punti
@@ -1052,13 +1054,11 @@ class Operation:
         operation_id: id di dominio.
         purpose: scopo dichiarato (testo libero di dominio).
         mission_ids: tupla non vuota di id di missione distinti.
-        tot: TOT comune [s dall'inizio sessione], facoltativo.
         outcome_rule: regola d'esito (D2.e); MAIN_MISSION richiede `main_mission_id` fra `mission_ids`.
     """
     operation_id: str
     purpose: str
     mission_ids: Tuple[str, ...]
-    tot: Optional[float] = None
     outcome_rule: OutcomeRule = OutcomeRule.ALL
     main_mission_id: Optional[str] = None
 
@@ -1077,7 +1077,6 @@ class Operation:
             raise ValueError(f"mission_ids must be distinct, got {mission_ids}")
 
         object.__setattr__(self, 'mission_ids', mission_ids)
-        object.__setattr__(self, 'tot', _check_time('tot', self.tot))
         rule = _coerce_enum('outcome_rule', OutcomeRule, self.outcome_rule)
         object.__setattr__(self, 'outcome_rule', rule)
         _check_optional_id('main_mission_id', self.main_mission_id)

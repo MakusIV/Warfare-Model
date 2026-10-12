@@ -728,8 +728,8 @@ class TestHoldsAndEffectiveEtas(_F5Active):
         mock_logger.warning.assert_called_once()
 
     def test_common_tot_of_two_missions(self):
-        """Due missioni a distanze diverse, stessa partenza e stesso TOT sul punto ATTACK: l'attesa
-        prima del punto le sincronizza (N2.c, TOT comune)."""
+        """Due missioni a distanze diverse, stessa partenza e lo stesso TOT dichiarato da ciascuna sul
+        punto ATTACK: l'attesa prima del punto le sincronizza (N2.c; il TOT e' della missione)."""
         roles = [MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND]
         near, far = _three_points(), _route([(0, 0, 3000), (40_000, 0, 3000), (80_000, 0, 3000)], name='far')
         times = [MA.waypoint_times(MA.mission_movements(_mission(mission_id=mid, route=r, waypoints=_plan(r, roles=roles),
@@ -910,50 +910,52 @@ class TestF5Switches(_Base):
             self.assertEqual(MA.mission_start(mission), 0.0)
 
 
-class TestOperationTot(_Base):
-    """F5-C: TOT comune di un'Operazione (`operation_tots`) e attese prima dell'ancoraggio."""
+class TestTotPerMission(_Base):
+    """Il TOT e' di ogni missione, anche nella stessa Operazione (decisione dell'utente del
+    2026-10-12, che ha rimosso il TOT comune dell'Operazione): attese prima dell'ancoraggio."""
 
     ROLES = [MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND]
 
-    def _missions(self, near_tot=None):
+    def _missions(self, near_tot, far_tot, start_time=0.0):
+        """'near' (100 s di volo fino all'ATTACK) e 'far' (200 s), stessa Operazione 'op'."""
         near, far = _three_points(), _route([(0, 0, 3000), (40_000, 0, 3000), (80_000, 0, 3000)], name='far')
-        return (_mission(mission_id='near', route=near, waypoints=_plan(near, roles=self.ROLES), tot=near_tot),
-                _mission(mission_id='far', route=far, waypoints=_plan(far, roles=self.ROLES)))
+        return (_mission(mission_id='near', route=near, waypoints=_plan(near, roles=self.ROLES), tot=near_tot,
+                         start_time=start_time, operation_id='op'),
+                _mission(mission_id='far', route=far, waypoints=_plan(far, roles=self.ROLES), tot=far_tot,
+                         start_time=start_time, operation_id='op'))
 
-    def test_common_tot_applies_to_missions_without_their_own(self):
-        missions = self._missions()
-        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
-        tots = MA.operation_tots(missions, (operation,))
-        self.assertEqual(tots, {'near': 900.0, 'far': 900.0})
-        times = [MA.waypoint_times(MA.mission_movements(m, tot=tots[m.mission_id])[0]) for m in missions]
-        self.assertEqual(times, [(0.0, 900.0, 1_000.0), (0.0, 900.0, 1_100.0)])
+    def test_missions_of_one_operation_reach_each_its_own_tot(self):
+        """Caso dell'utente: uno sweep ('near') sulla zona 120 s prima dello strike ('far'), stessa
+        partenza: ciascuna missione e' sul proprio ATTACK al PROPRIO TOT."""
+        missions = self._missions(near_tot=780.0, far_tot=900.0)
+        MT.Operation('op', 'sweep and strike', ('near', 'far'))   # nessun TOT d'Operazione
+        times = [MA.waypoint_times(MA.mission_movements(m)[0]) for m in missions]
+        self.assertEqual(times, [(0.0, 780.0, 880.0), (0.0, 900.0, 1_100.0)])
+        self.assertEqual([MA.mission_movements(m)[0].holds for m in missions], [((0, 680.0),), ((0, 700.0),)])
 
-    def test_operation_without_tot_and_missions_outside_operations(self):
-        missions = self._missions()
-        self.assertEqual(MA.operation_tots(missions, (MT.Operation('op', 'strike', ('near',)),)), {})
-        self.assertEqual(MA.operation_tots(missions), {})
+    def test_different_tots_with_derived_departures(self):
+        """Senza `start_time` ogni partenza e' derivata dal proprio TOT."""
+        missions = self._missions(near_tot=780.0, far_tot=900.0, start_time=None)
+        self.assertEqual([MA.mission_start(m) for m in missions], [680.0, 700.0])
+        self.assertEqual([MA.waypoint_times(MA.mission_movements(m)[0])[1] for m in missions], [780.0, 900.0])
 
-    def test_same_own_tot_is_accepted_a_different_one_raises(self):
-        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
-        self.assertEqual(MA.operation_tots(self._missions(near_tot=900.0), (operation,))['near'], 900.0)
-
-        with self.assertRaises(ValueError):
-            MA.operation_tots(self._missions(near_tot=800.0), (operation,))
-
-    def test_waits_off_ignores_the_common_tot(self):
-        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
-
-        with patch.object(MA, 'F5_WAITS', False):
-            self.assertEqual(MA.operation_tots(self._missions(), (operation,)), {})
+    def test_a_mission_without_tot_does_not_wait(self):
+        """Nessun TOT ereditato: una missione senza TOT nella stessa Operazione non attende."""
+        near, far = self._missions(near_tot=None, far_tot=900.0)
+        self.assertEqual(MA.mission_movements(near)[0].holds, ())
+        self.assertEqual(MA.waypoint_times(MA.mission_movements(near)[0]), (0.0, 100.0, 200.0))
 
     def test_tot_without_an_anchor_is_ignored_with_a_warning(self):
         route = _three_points()
 
         with patch('Code.Dynamic_War_Manager.Source.Logic.Mission_Adapter.logger') as mock_logger:
-            movement, = MA.mission_movements(_mission(route=route), tot=900.0)
+            movement, = MA.mission_movements(_mission(route=route, tot=900.0))
 
         self.assertEqual(movement.holds, ())
         mock_logger.warning.assert_called_once()
+
+    def test_the_adapter_has_no_operation_tot(self):
+        self.assertFalse(hasattr(MA, 'operation_tots'))
 
 
 class _BaseBlock:

@@ -116,8 +116,8 @@ postura e' riportata comunque).
 
 Interruttore `Mission_Adapter.F5_WAITS` (attivo dalla F5-C): le azioni WAIT ('hold' e 'orbit',
 entrambe presenza FERMA nel punto per la durata: l'orbita senza circuito geometrico e'
-un'approssimazione dichiarata), le ETA bloccate e il TOT (della missione o quello comune
-dell'Operazione, `Mission_Adapter.operation_tots` su `SessionOrder.operations`) entrano nel
+un'approssimazione dichiarata), le ETA bloccate e il TOT della missione (`Mission.tot`: il TOT e'
+di ogni missione, anche nella stessa Operazione, decisione dell'utente del 2026-10-12) entrano nel
 movimento di ogni asset come tratti fermi (`AssetMovement.holds`). Arrivano cosi' allo scheduler
 (`legs`) e al risolutore con gli stessi tratti della presenza: una CAP in orbita ha finestre di
 contatto per tutta l'attesa. Il carburante NON cambia: un tratto fermo ha lunghezza nulla e il
@@ -837,12 +837,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     air_bases = {side: MA.air_base_points(blocks.values(), side)
                  for side in {getattr(blocks[mission.block_id], 'side', None) for mission in order.missions
                               if mission.domain == 'air'}}
-    # TOT comune delle Operazioni (F5-C): attese prima del punto d'ancoraggio delle missioni che non
-    # dichiarano un TOT proprio (v. `Mission_Adapter`, "Attese, ETA bloccate e TOT").
-    tots = MA.operation_tots(order.missions, order.operations)
     mission_movements = {mission.mission_id: MA.mission_movements(
-        mission, t0, air_bases.get(getattr(blocks[mission.block_id], 'side', None), ()),
-        tots.get(mission.mission_id))
+        mission, t0, air_bases.get(getattr(blocks[mission.block_id], 'side', None), ()))
         for mission in order.missions}
     movement_of = {movement.asset_id: movement for movements in mission_movements.values() for movement in movements}
     routes, starts, speeds = MA.session_movements(order.missions, t0)

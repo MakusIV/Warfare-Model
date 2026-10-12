@@ -59,15 +59,24 @@ opzione `--ignore KEY` in `Scenario_Baseline`. Verifica fatta da me (suite + com
 `F5_WAITS=True`: WAIT hold/orbit, ETA bloccate, TOT comune d'Operazione (`operation_tots`), `actual_etas` nel
 riassunto; scenario S23 (80 esecuzioni); nessuna esecuzione esistente cambiata. Orbita = presenza ferma nel punto
 (approssimazione dichiarata). Carburante nel tempo = F6. Verificata da me (suite, compare, doppia cattura identica).
-**Precisazione dell'utente sull'orbita (2026-10-12, DA RECEPIRE)**: l'orbita puo' avere una distanza di riferimento dal
-punto entro cui gli asset si muovono; in DCE le zone (CAP incluse) sono definite nel mission editor. Verificato nei
-documenti: ME `Orbit` = solo Race-Track/Circle + quota + velocita' (nessun raggio; Circle centrato sul waypoint,
-Race-Track fra waypoint corrente e successivo); raggio solo in `Search Then Engage in Zone` (`zoneRadius`, es. 5000 m,
-50000 nel .miz); DCE: zona CAP = refpoint (trigger zone ~5 m del base_mission, `DC_Refpoints.lua`) + `radius` dichiarato
-in `targetlist_init.lua` (50 km), racetrack generato da `ATO_RouteGenerator` (leg = vAttack*180 s). Il meccanismo
-«rotta di aereo non partecipante» dell'utente NON e' emerso dai file DCE disponibili (v. risposta in sessione).
+**Decisioni dell'utente 2026-10-12 dopo F5-C**:
+1. **TOT per missione, NON d'Operazione**: l'Operazione e' un insieme di missioni; es. Fighter Sweep che precede di un
+   intervallo dei bombardieri sulla stessa zona: due missioni, due TOT. Quindi `Operation.tot` e `operation_tots` (F5-C)
+   vengono RIMOSSI; resta `Mission.tot`. FATTA il 2026-10-12 (suite 4133, 4132 OK + 1 test instabile preesistente; fotografia
+   522: solo S23-TOT cambiato; S23-TOT = Sweep/Strike con TOT diversi, `SWEEP_LEAD`=120 s stima). Il manuale DES cita
+   ancora il «TOT comune» in `03_Strato0_Contratto_Porte.md` (:269, :283) e `10_Limiti_Estensioni_Divergenze.md` (:248, :596):
+   da aggiornare con `des-manual-writer` (Sonnet high) quando si aggiorna il manuale.
+   **Test instabile noto**: `Test_Tactical_Evaluation.TestEvaluateGroundTacticalAction.testCalcFightResult` usa `random`
+   globale senza seme in `calcFightResult` (assert `delta=3`): fallisce a volte nella suite, passa da solo.
+2. **Orbita**: l'approssimazione di F5-C (presenza ferma nel punto) va BENE per ora; il raffinamento (distanza di
+   riferimento / zona) si valutera' dopo.
+3. **Meccanismo DCE delle zone CAP**: RIMANDATO, l'utente deve rivedere il codice DCE e i `.miz` iniziali (la sua
+   ipotesi «rotta di un aereo non partecipante usata come zona» non e' emersa dai file in repo). Fatti verificati:
+   ME `Orbit` = solo Race-Track/Circle + quota + velocita' (nessun raggio); raggio solo in `Search Then Engage in
+   Zone` (`zoneRadius`); DCE: zona CAP = refpoint da trigger zone ~5 m del base_mission (`DC_Refpoints.lua`) + `radius`
+   in `targetlist_init.lua`, racetrack da `ATO_RouteGenerator` (leg = vAttack*180 s).
 
-## PROSSIMO: raffinamento orbita/zone (da decidere con l'utente), poi F6 (fine missione e carburante nel tempo), F7-F9
+## PROSSIMO: chiudere la correzione TOT, poi F6 (fine missione e carburante nel tempo, postura `destroyed` da rivalutare), F7-F9
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,

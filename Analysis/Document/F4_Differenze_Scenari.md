@@ -851,3 +851,190 @@ Suite 4101 test OK (7 skipped; +29 rispetto a 4072). Fotografia: prima delle mod
 IDENTICA su 370; dopo, `--compare <base> --ignore postures` = 2 esecuzioni cambiate (S6-0, S6-2) + 72
 nuove (S22), senza `--ignore` le 370 differiscono tutte per la voce `postures`. Cambio accettato dall'utente il
 2026-10-12 e `Test/baseline/scenario_baseline.json` rigenerato (442 esecuzioni).
+
+
+## F5 passo (c)-(d): attese WAIT, ETA bloccate, TOT comune, ETA effettive (F5-C, deviazione 13)
+
+**Base del confronto**: fotografia di F5-B (`Test/baseline/scenario_baseline.json`, 442 esecuzioni;
+ricontrollata IDENTICA al codice di partenza `b63ba53a` prima delle modifiche, 2026-10-12).
+**Dopo**: `Mission_Adapter.F5_WAITS = True` e TOT comune delle Operazioni cablato in sessione. Sulla
+STORIA (contatti, colpi, danni, esiti, carburante, posture) **442 esecuzioni identiche, nessuna
+cambiata**; in 401 il riassunto ha una voce nuova, `actual_etas` (ETA effettive delle missioni; le
+altre 41 non hanno missioni). 80 esecuzioni nuove (scenario S23). Fotografia del repository NON
+rigenerata (in attesa della decisione dell'utente): cattura finale fuori dal repository (522 esecuzioni).
+
+### Il cambio
+
+Decisioni del Piano (Fase 5, N2.b/N2.c):
+1. **Azione WAIT** (`MissionAction`, modo 'hold' o 'orbit', durata o fino all'istante t, con la sua
+   condizione d'avvio): un tratto FERMO nel punto della rotta (`AssetMovement.holds`,
+   `Mission_Adapter._timeline`); i tratti successivi sono spostati della durata. Le attese
+   sono le stesse per tutti gli asset della missione (regola A).
+2. **Orbita = presenza ferma nel punto** per la durata: approssimazione DICHIARATA, nessun circuito
+   geometrico (`MissionAction` non dichiara raggio ne' velocita' d'orbita: nessuna stima introdotta).
+   Le finestre di contatto di una CAP in orbita coprono quindi tutta l'attesa.
+3. **ETA bloccate e TOT**: con `start_time` la missione attende nel punto PRECEDENTE quello bloccato
+   quanto basta per arrivarci all'istante (`mission_holds`); senza `start_time` la partenza e'
+   derivata all'indietro (ETA o TOT meno percorrenza e attese di durata nota: anticipo, dalla F3 per
+   il TOT); un'ETA bloccata sul punto di partenza piu' tarda di `start_time` ritarda la partenza. In
+   ritardo: warning, l'ETA effettiva lo riporta (la velocita' non cambia).
+4. **TOT comune di un'Operazione** (`Operation.tot`, prima non letto da nessuno):
+   `Mission_Adapter.operation_tots(missioni, operazioni)` lo assegna alle missioni dell'Operazione che
+   non dichiarano un `tot` proprio; agisce come il TOT della missione (attese prima del punto
+   d'ancoraggio ATTACK/OBJECTIVE). Spento con `F5_WAITS = False`.
+5. **Tratti**: le attese entrano in `movement_legs`, quindi nei tratti dati allo scheduler (`legs`) e
+   al risolutore (stessi oggetti, come la presenza della F5-B).
+6. **Carburante INVARIATO** (Piano: consumo nel tempo = F6): il consumo e' in distanza sui soli tratti
+   di movimento e un tratto fermo ha lunghezza nulla, quindi attese e orbite NON consumano; il
+   `FuelEvent` resta uno per asset, all'istante di fine movimento (spostato dalle attese).
+7. **ETA effettive**: `MissionOutcome.actual_etas` esisteva gia' dalla F3 (immutabile, validato non
+   decrescente) ed era gia' calcolato da `Mission_Adapter.waypoint_times` (attese comprese); la F5-C
+   non cambia il campo ne' il calcolo, documenta che sono istanti d'ARRIVO ai punti dai tratti (prima
+   di un'eventuale attesa nel punto). `Scenario_Baseline` registra la voce `actual_etas`
+   (`{mission_id: [ETA | None]}`) solo se l'esito porta esiti di missione; `--ignore actual_etas`.
+
+Decisioni non coperte dal Piano, scelte le piu' semplici (DA CONFERMARE):
+- una missione con un `tot` proprio DIVERSO dal TOT comune della sua Operazione e' un ordine
+  incoerente: `ValueError` (in `operation_tots`, quindi in `run_session`); uguale e' accettato;
+- con `start_time` dichiarato il TOT comune NON sposta la partenza: si sincronizza con un'attesa
+  (la missione aspetta in volo/a terra nel punto prima dell'ancoraggio); la partenza e' anticipata
+  solo per le missioni senza `start_time`, dal proprio TOT o ETA bloccata (una missione ha sempre un
+  proprio istante bloccato, quindi il TOT comune non deriva mai da solo una partenza);
+- un TOT senza punto ATTACK/OBJECTIVE e con `start_time` e' ignorato con un warning (prima in
+  silenzio).
+
+### Come si attribuiscono le differenze
+
+| Cattura | Contro | Esito |
+|---|---|---|
+| codice di partenza (prima delle modifiche) | base | IDENTICA (442) |
+| FINALE, `--ignore actual_etas` | base | IDENTICA sulle 442, 80 nuove (S23) |
+| FINALE senza `--ignore` | base | 401 esecuzioni differiscono SOLO per la voce nuova `actual_etas` (assente nella base); 41 identiche (nessuna missione) |
+| FINALE | cattura con `F5_WAITS = False` (script fuori dal repository) | IDENTICA sulle 442 (anche `actual_etas`); nelle 80 di S23 differiscono solo le varianti che usano le attese: S23-CAP 'during' e 'after', S23-HOLD 'hold', S23-TOT 'operation' (32 esecuzioni) |
+
+Quindi: nessuna esecuzione esistente usa WAIT, ETA bloccate o TOT (verificato anche sulle fixture:
+nessuna dichiara azioni WAIT, `eta_locked`, `tot` o Operazioni con TOT), le attese non cambiano ne'
+la storia ne' le ETA effettive delle 442, e l'unica differenza e' il campo nuovo nel riassunto.
+Nessun cambio inatteso.
+
+### Scenario nuovo S23 (`Test_Session_Scenarios_S23.py`, 80 esecuzioni, 17 test)
+
+Ogni scenario ha una variante di controllo `waits_off` (`F5_WAITS` spento con un patch nel
+`setUpClass`, registrata nella fotografia come le altre).
+
+**S23-CAP** (8 seed, 4 varianti): Red-CAP 2 MiG-29S ('fighter', sensore 'air' dichiarato 30 km) da
+x = -75 km al punto O = (0, 0) a 250 m/s (arrivo 300 s), WAIT 'orbit' 1500 s, rientro a ovest;
+Blue-Bomber 2 F-16C che non sparano, da nord a sud per O. 'during' (passaggio a 1000 s): la CAP spara
+in 8/8 repliche, 32 lanci tutti fra 877 e 927 s (dentro l'orbita), 13/16 bombardieri distrutti;
+'after' (passaggio a 2200 s), 'no_wait' (stessa CAP senza WAIT) e 'waits_off': nessun lancio, nessun
+danno. Sonda dello scheduler (fuori dalla sessione): un osservatore fermo sotto O ha con ogni MiG una
+finestra che copre [300, 1800] s con l'orbita, non senza. Distanze di `FuelEvent` della CAP identiche
+con e senza orbita (limite F6).
+
+**S23-HOLD** (8 seed, 3 varianti): S22-E1 rifatto con una sosta: M1A2 da x = -12 km a W1 = (-4 km, 0)
+(800 s), WAIT 'hold' 600 s, poi a sud fino a (-4 km, -12 km); 3 BMP-2 con sensore 'ground' 4,2 km e
+tiro DICHIARATO senza effetto (precisione 0, il carro sopravvive e la ripartenza e' misurabile).
+'hold': Red spara in 7/8 repliche, in tutte e 7 anche dopo 948 s (uscita dal sensore senza sosta),
+colpi fra 811 e 1541 s (uscita con la sosta ~1548 s), ETA effettive (0, 800, 2600); 'no_hold' e
+'waits_off': colpi fra 811 e 941 s, ETA (0, 800, 2000).
+
+**S23-TOT** (8 seed, 3 varianti): Blue-Near (x = -60 km) e Blue-Far (x = -120 km), 2 F-16C ciascuno
+con lanci dichiarati senza effetto e sensore 'ground' dichiarato 10 km, missione NAV -> ATTACK
+(x = -15 km) -> LAND, nell'Operazione 'Op-Strike'; Red-Depot 3 depositi in (0, 0). 'operation'
+(partenza 0, `Operation.tot` = 600 s): ATTACK raggiunto a 600 s da entrambe (la vicina attende 420 s,
+la lontana 180 s al punto di partenza), distanza media fra i primi lanci 0,8 s; 'own_tot' (nessuna
+partenza, `tot` = 600 per missione): partenze derivate 420 s e 180 s, stessi arrivi e stessi lanci;
+'waits_off': ATTACK a 180 s e 420 s, distanza fra i primi lanci 240,8 s.
+
+**ETA effettive** (tutti gli scenari): `actual_etas` dell'esito = istanti d'arrivo dai tratti
+(`waypoint_times`, attese comprese) per ogni missione senza asset distrutti.
+
+Soglie DICHIARATE di test (non tarate sul risultato): `MIN_FIRING_FRACTION` = 0,5 (CAP che spara;
+carro ingaggiato durante la sosta, stessa stima di S22), `TOT_SPREAD_RATIO` = 0,5 (distanza media
+fra i primi lanci con il TOT al massimo la meta' di quella senza attese). Costanti dello scenario
+dichiarate di test: sensori 30 km (CAP), 10 km (strike), 20 km (sonda), 4,2 km (BMP); velocita' 250
+m/s e 10 m/s; tiri a precisione 0.
+
+Controllo con `F5_WAITS = False` su tutto il file (sonda fuori dal repository): 7 test su 17
+falliscono (CAP che spara, finestre per tutta l'orbita, ETA dell'orbita, TOT comune, lanci
+sincronizzati, carro ingaggiato nella sosta, ripartenza): lo scenario distingue la F5-C.
+
+### Test
+
+- `Test_Mission_Adapter`: `TestF5BSwitches` diventa `TestF5Switches` (default: presenza e attese
+  attive; una WAIT produce l'attesa; con le attese spente il comportamento della F5-B; ETA bloccata
+  sul punto di partenza ritarda `start_time`); nuova `TestOperationTot` (`operation_tots`, TOT
+  proprio uguale/diverso, interruttore spento, TOT senza ancoraggio con warning).
+- `Test_Session_Simulator.TestWaitsAndEtas` (nuova): sosta come tratto fermo a scheduler e
+  risolutore, ETA effettive con la sosta, carburante invariato (distanza della sola rotta, evento a
+  fine movimento), interruttore spento, TOT comune di un'Operazione in sessione, TOT incoerente.
+- `Test_Session_Scenarios_S23` (nuovo, 17 test).
+
+### Limiti noti
+
+- Attese e orbite NON consumano carburante (consumo in distanza, F6: `Fuel_Model` per tratto).
+- Orbita senza circuito: l'aereo e' fermo nel punto (errore di posizione pari al raggio del circuito
+  reale, qualche km per un caccia); nessuna velocita' d'orbita, quindi nessun effetto della cinematica
+  sul rilevamento o sul tiro durante l'attesa.
+- In ritardo su un'ETA bloccata la missione non accelera (warning + ETA effettiva).
+- Il TOT comune si applica con le attese: una missione con `start_time` troppo tardo non lo rispetta
+  (warning), nessuna ripianificazione.
+- Le ETA effettive sono gli istanti d'arrivo (non di partenza dopo l'attesa) e non tengono conto dei
+  criteri di fine missione (F6).
+- Osservazione non corretta (precedente alla F5-C, F5-B): se i tratti di un asset di missione cadono
+  tutti fuori dalla sessione e non c'e' presenza (aereo in volo che parte dopo la fine), lo scheduler
+  ricade sulla posizione registrata dell'asset (`_asset_legs`: tratti vuoti -> `static_legs`). Nessuno
+  scenario lo esercita.
+
+### Verifica
+
+Suite 4131 test OK (7 skipped; +30 rispetto a 4101: 17 S23, 7 `Test_Session_Simulator`, 6
+`Test_Mission_Adapter`). Fotografia: prima delle modifiche `--compare` IDENTICA su 442;
+dopo, `--compare <base> --ignore actual_etas` = 80 nuove (S23) e nessuna cambiata; senza `--ignore`
+le 401 esecuzioni con missioni differiscono solo per la voce `actual_etas`.
+
+### Correzione: TOT per missione (2026-10-12)
+
+**Decisione dell'utente (2026-10-12)**: il TOT (Time Over Target) e' SPECIFICO DI OGNI MISSIONE e NON e'
+condiviso dalle missioni di un'Operazione. Esempio: un'Operazione di due missioni che partono insieme,
+una Fighter Sweep su una zona che anticipa l'arrivo nella stessa zona dei bombardieri della seconda
+missione: le due missioni hanno TOT DIVERSI. Il TOT comune descritto sopra (punto 4 de "Il cambio" e
+la prima decisione "da confermare") non ha quindi senso ed e' stato RIMOSSO; le sezioni precedenti
+restano come storia della F5-C.
+
+Rimosso: il campo `Operation.tot` (con la sua validazione), `Mission_Adapter.operation_tots` e
+`_effective_tot`, il parametro `tot` di `_locked_targets`/`mission_holds`/`mission_movements`, la
+chiamata in `Session_Simulator.run_session`. La missione usa solo il proprio `Mission.tot`, come prima
+della F5-C; il resto del meccanismo resta invariato (TOT ancorato al primo ATTACK/OBJECTIVE, partenza
+derivata senza `start_time`, attesa prima del punto d'ancoraggio con `start_time`). Missioni
+coordinate dichiarano ciascuna il proprio TOT (uguali o sfalsati).
+
+**S23-TOT rifatto** (`TestS23TotPerMission`, il caso dell'utente): Blue-Sweep (2 F-16C 'CAP', missione
+'Fighter_Sweep', ruolo 'unarmed', a x = -60 km) e Blue-Strike (2 F-16C 'Strike', lanci dichiarati
+senza effetto e sensore 'ground' dichiarato 10 km, a x = -120 km), stessa Operazione senza TOT, stessa
+rotta NAV -> ATTACK (x = -15 km) -> LAND a 250 m/s. TOT dello strike 600 s, dello sweep 600 -
+`SWEEP_LEAD` = 480 s, con `SWEEP_LEAD` = 120 s STIMA DI TEST (non un dato dottrinale). Varianti:
+'own_tot' (partenza 0 per entrambe: ATTACK a 480 s e 600 s, attese 300 s e 180 s al punto di
+partenza), 'derived' (nessuna partenza: derivate 300 s e 180 s, stessi arrivi; nuova), 'waits_off'
+('own_tot' con `F5_WAITS` spento: ATTACK a 180 s e 420 s). Eliminata la variante 'operation'.
+Risultati su 8 seed: lo strike lancia in 8/8 repliche in ogni variante, primi lanci fra 627,5 e 627,9
+s con i TOT ('own_tot', 'derived') e fra 447,5 e 447,9 s con le attese spente; lo sweep non lancia mai.
+Test (5): ciascuna missione raggiunge il PROPRIO TOT; lo sweep precede lo strike esattamente di
+`SWEEP_LEAD` (240 s con le attese spente); partenze; lo strike lancia solo dopo il proprio ATTACK;
+ETA effettive = istanti dai tratti. Rimossa la soglia `TOT_SPREAD_RATIO` (non piu' usata).
+
+**Test**: `Test_Mission_Types` (Operation senza `tot`: il campo non esiste, `tot=` e' un TypeError);
+`Test_Mission_Adapter` `TestOperationTot` -> `TestTotPerMission` (due missioni della stessa
+Operazione con TOT diversi raggiungono ciascuna il proprio, con partenza comune e derivata; una
+missione senza TOT non ne eredita uno; TOT senza ancoraggio ignorato con warning);
+`Test_Session_Simulator.TestWaitsAndEtas` (`_tot_run` con TOT 780/900 s per missione; via il test del
+TOT incoerente con quello d'Operazione).
+
+**Fotografia** (`--compare` contro `Test/baseline/scenario_baseline.json`, 522 esecuzioni): prima delle
+modifiche IDENTICA; dopo, differenze SOLO in S23-TOT: 8 rimosse ('operation'), 16 cambiate ('own_tot'
+e 'waits_off', scenario rifatto: forze, tipi di missione e TOT), 8 nuove ('derived'); le altre 498
+identiche. Fotografia del repository NON rigenerata (cattura finale fuori dal repository, 522
+esecuzioni).
+
+Suite 4133 test OK (7 skipped; +2 rispetto a 4131: +1 `Test_Mission_Types`, +1 S23; in
+`Test_Mission_Adapter` e `Test_Session_Simulator` lo stesso numero, test sostituiti).
