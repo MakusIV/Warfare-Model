@@ -611,6 +611,79 @@ class TestGroundedAircraftRanges(unittest.TestCase):
                          [('striker', 'parked', 80000.0, None)])
 
 
+class TestGroundedSchedule(unittest.TestCase):
+    """F5: lo stato "a terra" dipende dal tempo; l'insieme semplice della F4c e' "sempre a terra"."""
+
+    def test_simple_set_is_always_grounded(self):
+        schedule = CS.GroundedSchedule.of({'p1', 'p2'})
+        self.assertTrue(schedule.always('p1'))
+        self.assertTrue(schedule.at('p2', -1e12) and schedule.at('p2', 1e12))
+        self.assertEqual(schedule.transitions('p1'), ())
+        self.assertEqual(schedule.always_ids(), frozenset({'p1', 'p2'}))
+        self.assertFalse(schedule.at('other', 0.0))
+
+    def test_intervals_are_half_open(self):
+        schedule = CS.GroundedSchedule.of({'p': [(float('-inf'), 100.0), (500.0, float('inf'))]})
+        self.assertTrue(schedule.at('p', 99.9))
+        self.assertFalse(schedule.at('p', 100.0))   # all'istante del decollo e' gia' in volo
+        self.assertFalse(schedule.at('p', 499.9))
+        self.assertTrue(schedule.at('p', 500.0))    # all'istante dell'atterraggio e' gia' a terra
+        self.assertFalse(schedule.always('p'))
+        self.assertTrue(schedule.ever('p'))
+        self.assertEqual(schedule.transitions('p'), (100.0, 500.0))
+
+    def test_overlapping_intervals_are_merged_and_validated(self):
+        schedule = CS.GroundedSchedule({'p': [(10.0, 20.0), (0.0, 15.0)]})
+        self.assertEqual(schedule.intervals('p'), ((0.0, 20.0),))
+
+        with self.assertRaises(ValueError):
+            CS.GroundedSchedule({'p': [(20.0, 10.0)]})
+
+        with self.assertRaises(TypeError):
+            CS.GroundedSchedule.of('p1')
+
+    def test_forms_and_equality(self):
+        self.assertFalse(CS.GroundedSchedule.of(None))
+        self.assertEqual(CS.GroundedSchedule.of(['p']), CS.GroundedSchedule({'p': [CS.ALWAYS]}))
+        schedule = CS.GroundedSchedule.of(['p'])
+        self.assertIs(CS.GroundedSchedule.of(schedule), schedule)
+
+
+class TestGroundedTransitionsSplitWindows(unittest.TestCase):
+    """F5: le finestre di una coppia sono spezzate agli istanti di decollo/atterraggio, ognuna a
+    stato costante: a terra l'aereo e' cercato in modo 'ground' e non osserva, in volo come prima."""
+
+    def setUp(self):
+        self.parked = Aircraft(asset_id='parked', position=Point3D(0, 0, 0), ranges={'air': 70000.0})
+        self.striker = Aircraft(asset_id='striker', position=Point3D(5000, 0, 3000),
+                                ranges={'air': 60000.0, 'ground': 80000.0})
+        self.blue = [_BlockStub('blue', 'blue', Point3D(5000, 0, 0), [self.striker], detection={'ground': 80000.0})]
+        self.red = [_BlockStub('red', 'red', Point3D(0, 0, 0), [self.parked], detection={'air': 70000.0})]
+
+    def _windows(self, grounded):
+        return [(w.t_start, w.t_end, w.range_a, w.range_b)
+                for w in CS.schedule_contacts(self.blue, self.red, horizon=100.0, grounded=grounded)]
+
+    def test_takeoff_splits_the_window(self):
+        self.assertEqual(self._windows({'parked': [(float('-inf'), 40.0)]}),
+                         [(0.0, 40.0, 80000.0, None), (40.0, 100.0, 60000.0, 70000.0)])
+
+    def test_landing_splits_the_window(self):
+        self.assertEqual(self._windows({'parked': [(60.0, float('inf'))]}),
+                         [(0.0, 60.0, 60000.0, 70000.0), (60.0, 100.0, 80000.0, None)])
+
+    def test_simple_set_and_no_transition_inside_do_not_split(self):
+        self.assertEqual(self._windows({'parked'}), [(0.0, 100.0, 80000.0, None)])
+        self.assertEqual(self._windows({'parked': [(float('-inf'), 0.0)]}), self._windows(None))
+        self.assertEqual(self._windows(None), [(0.0, 100.0, 60000.0, 70000.0)])
+
+    def test_given_legs_take_precedence_over_routes(self):
+        """`legs` (F5, tratti calcolati dalla sessione) sono usati tali e quali."""
+        legs = {'parked': CS.static_legs(Point3D(0, 0, 0), 50.0, 100.0)}
+        windows = CS.schedule_contacts(self.blue, self.red, horizon=100.0, legs=legs)
+        self.assertEqual([(w.t_start, w.t_end) for w in windows], [(50.0, 100.0)])
+
+
 class TestContactWindows(unittest.TestCase):
     """Chi vede per primo, da quando, e da quando si vedono entrambi.
 

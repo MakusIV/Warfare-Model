@@ -610,3 +610,248 @@ class TestCoordinationDomains(_Base):
             MA.coordination_domains([self._view('mA', 'b1', 'a1')])
         with self.assertRaises(TypeError):
             MA.coordination_domains(self._forces(self._view('mA', 'b1', 'a1')), ['op'])
+
+
+# ── ATTESE, ETA EFFETTIVE, PRESENZA E POSTURA FINALE (F5) ─────────────────────
+
+_INF = float('inf')
+
+
+def _wait(mode='hold', duration=None, until=None, start=None):
+    return MT.MissionAction(MT.ActionKind.WAIT, 'Wait', wait_mode=mode, wait_duration_s=duration,
+                            wait_until=until, start=start or MT.StartCondition())
+
+
+def _three_points(speed=200.0):
+    """Rotta aerea di tre punti, 100 s per tratto a 200 m/s."""
+    return _route([(0, 0, 3000), (20_000, 0, 3000), (40_000, 0, 3000)], speed=speed)
+
+
+def _with_actions(route, actions_at, roles=None, etas=None, locked=None):
+    plan = _plan(route, roles=roles, etas=etas, locked=locked)
+    return tuple(MT.MissionWaypoint(waypoint=mw.waypoint, role=mw.role, planned_eta=mw.planned_eta,
+                                    eta_locked=mw.eta_locked, actions=tuple(actions_at.get(index, ())))
+                 for index, mw in enumerate(plan))
+
+
+def _ground_mission(start_time=0.0, mission_type='Attack', points=((0, 0), (1000, 0)), speed=10.0, **overrides):
+    route = _route([(x, y, 0) for x, y in points], speed=speed, route_type='ground', path_type='offroad', name='g')
+    roles = [MT.WaypointRole.DEPARTURE] + [MT.WaypointRole.NAV] * (len(points) - 2) + [MT.WaypointRole.OBJECTIVE]
+    kwargs = dict(mission_id='g1', block_id='bde', domain='ground', mission_type=mission_type,
+                  assets=(MT.MissionAsset('t1', 'lead'),),
+                  target=MT.Target(kind=MT.TargetKind.GROUP, target_id='red', provenance=MT.TargetProvenance.OBSERVED,
+                                   observed_at=0.0),
+                  route=route, waypoints=_plan(route, roles=roles), start_time=start_time)
+    kwargs.update(overrides)
+    return MT.Mission(**kwargs)
+
+
+def _base_reference(is_air_base=True):
+    """Un `Asset` (finto, `spec`) il cui blocco dichiara `is_Air_Base()`."""
+    from Code.Dynamic_War_Manager.Source.Asset.Asset import Asset
+
+    reference = MagicMock(spec=Asset)
+    reference.block.is_Air_Base.return_value = is_air_base
+    return reference
+
+
+def _landing_route(reference):
+    wps = [_wp('d', 0, 0, 3000), _wp('n', 20_000, 0, 3000),
+           Waypoint(name='l', point=Point3D(40_000, 0, 0), obj_reference=reference)]
+    edges = {(a.name, b.name): Edge(wpA=a, wpB=b, path_type='air', danger_level=0.0, speed=200.0, name=f'{a.name}-{b.name}')
+             for a, b in zip(wps, wps[1:])}
+    return Route(route_type='air', edges=edges, name='land')
+
+
+class _F5Active(_Base):
+    """F5 (b)-(d) scritti ma non attivi (`MA.F5_PRESENCE_AND_WAITS`): i test li attivano per sé."""
+
+    def setUp(self):
+        super().setUp()
+        flag = patch.object(MA, 'F5_PRESENCE_AND_WAITS', True)
+        flag.start()
+        self.addCleanup(flag.stop)
+
+
+class TestHoldsAndEffectiveEtas(_F5Active):
+
+    def test_wait_duration_shifts_the_following_times(self):
+        route = _three_points()
+        mission = _mission(route=route, waypoints=_with_actions(route, {1: [_wait(duration=300.0)]}))
+        movement, = MA.mission_movements(mission)
+        self.assertEqual(movement.holds, ((1, 300.0),))
+        self.assertEqual(MA.waypoint_times(movement), (0.0, 100.0, 500.0))
+
+    def test_wait_until_an_instant(self):
+        route = _three_points()
+        mission = _mission(route=route, waypoints=_with_actions(route, {1: [_wait(until=250.0)]}))
+        movement, = MA.mission_movements(mission, t0=1_000.0)
+        self.assertEqual(MA.waypoint_times(movement), (1_000.0, 1_100.0, 1_350.0))
+
+    def test_orbit_is_a_static_presence_at_the_waypoint(self):
+        """'orbit' senza geometria di circuito (MissionAction non dichiara raggio): presenza ferma
+        nel punto per la durata (approssimazione dichiarata)."""
+        route = _three_points()
+        mission = _mission(route=route, waypoints=_with_actions(route, {1: [_wait('orbit', duration=1_800.0)]}))
+        movement, = MA.mission_movements(mission)
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        hold = [leg for leg in legs if leg.p_start == leg.p_end]
+        self.assertEqual([(leg.t_start, leg.t_end, leg.p_start) for leg in hold], [(100.0, 1_900.0, (20_000.0, 0.0, 3000.0))])
+        self.assertEqual(legs[-1].t_end, 2_000.0)   # AIR, ultimo LAND non su una base: esce di scena
+
+    def test_wait_start_conditions(self):
+        route = _three_points()
+        at_time = _wait(duration=50.0, start=MT.StartCondition.at_time(300.0))
+        after = _wait(duration=50.0, start=MT.StartCondition.after_duration(20.0))
+        for action, expected in ((at_time, 450.0), (after, 270.0)):
+            mission = _mission(route=route, waypoints=_with_actions(route, {1: [action]}))
+            self.assertEqual(MA.waypoint_times(MA.mission_movements(mission)[0])[-1], expected)
+
+    def test_locked_eta_is_reached_with_a_hold_before_the_point(self):
+        route = _three_points()
+        plan = _with_actions(route, {}, etas=[None, None, 600.0], locked=[False, False, True])
+        movement, = MA.mission_movements(_mission(route=route, waypoints=plan, start_time=0.0))
+        self.assertEqual(movement.holds, ((1, 400.0),))
+        self.assertEqual(MA.waypoint_times(movement), (0.0, 100.0, 600.0))
+
+    def test_late_locked_eta_is_reported_not_enforced(self):
+        route = _three_points()
+        plan = _with_actions(route, {}, etas=[None, None, 150.0], locked=[False, False, True])
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Mission_Adapter.logger') as mock_logger:
+            movement, = MA.mission_movements(_mission(route=route, waypoints=plan, start_time=0.0))
+
+        self.assertEqual(MA.waypoint_times(movement), (0.0, 100.0, 200.0))
+        mock_logger.warning.assert_called_once()
+
+    def test_common_tot_of_two_missions(self):
+        """Due missioni a distanze diverse, stessa partenza e stesso TOT sul punto ATTACK: l'attesa
+        prima del punto le sincronizza (N2.c, TOT comune)."""
+        roles = [MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND]
+        near, far = _three_points(), _route([(0, 0, 3000), (40_000, 0, 3000), (80_000, 0, 3000)], name='far')
+        times = [MA.waypoint_times(MA.mission_movements(_mission(mission_id=mid, route=r, waypoints=_plan(r, roles=roles),
+                                                                 start_time=0.0, tot=900.0))[0])
+                 for mid, r in (('near', near), ('far', far))]
+        self.assertEqual([t[1] for t in times], [900.0, 900.0])
+        self.assertEqual(times, [(0.0, 900.0, 1_000.0), (0.0, 900.0, 1_100.0)])
+
+    def test_waits_before_a_locked_anchor_advance_the_derived_departure(self):
+        route = _three_points()
+        plan = _with_actions(route, {1: [_wait(duration=300.0)]}, etas=[None, None, 1_000.0], locked=[False, False, True])
+        mission = _mission(route=route, waypoints=plan, start_time=None)
+        self.assertAlmostEqual(MA.mission_start(mission), 500.0)
+        self.assertEqual(MA.waypoint_times(MA.mission_movements(mission)[0]), (500.0, 600.0, 1_000.0))
+
+    def test_inactive_flag_is_the_previous_behaviour(self):
+        route = _three_points()
+        plan = _with_actions(route, {1: [_wait(duration=300.0)]})
+
+        with patch.object(MA, 'F5_PRESENCE_AND_WAITS', False):
+            movement, = MA.mission_movements(_mission(route=route, waypoints=plan))
+
+        self.assertEqual((movement.holds, movement.present_before, movement.present_after), ((), False, False))
+        self.assertEqual(MA.waypoint_times(movement), (0.0, 100.0, 200.0))
+
+    def test_without_waits_the_legs_are_the_route_legs(self):
+        route = _three_points()
+        movement, = MA.mission_movements(_mission(route=route, start_time=30.0))
+        self.assertEqual(MA.movement_legs(movement, 0.0, 3_600.0),
+                         CS.clamp_legs(CS.route_legs(route, t0=30.0), 0.0, 3_600.0))
+
+
+class TestPresenceBeforeAndAfter(_F5Active):
+
+    def test_ground_unit_is_present_before_departure_and_after_arrival(self):
+        movement, = MA.mission_movements(_ground_mission(start_time=1_000.0))
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        self.assertEqual((legs[0].t_start, legs[0].t_end, legs[0].p_start, legs[0].p_end),
+                         (0.0, 1_000.0, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        self.assertEqual((legs[-1].t_start, legs[-1].t_end, legs[-1].p_start), (1_100.0, 3_600.0, (1000.0, 0.0, 0.0)))
+        self.assertEqual(MA.movement_legs(movement, 0.0, 3_600.0, presence=False),
+                         CS.clamp_legs(CS.route_legs(movement.route, t0=1_000.0), 0.0, 3_600.0))
+        self.assertEqual(MA.grounded_intervals(movement), ())
+
+    def test_air_start_is_absent_before_and_exits_at_the_end_without_a_base(self):
+        movement, = MA.mission_movements(_mission(start_time=500.0))   # AIR, LAND senza riferimento
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        self.assertEqual((legs[0].t_start, legs[-1].t_end), (500.0, 700.0))
+        self.assertEqual(MA.grounded_intervals(movement), ())
+
+    def test_parked_start_is_grounded_until_takeoff(self):
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        plan = _plan(route, roles=[MT.WaypointRole.DEPARTURE, MT.WaypointRole.LAND])
+        mission = _mission(route=route, waypoints=plan, start_time=500.0, start_mode=MT.StartMode.PARKING_COLD)
+        movement, = MA.mission_movements(mission)
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        self.assertEqual((legs[0].t_start, legs[0].t_end, legs[0].p_start), (0.0, 500.0, (0.0, 0.0, 3000.0)))
+        self.assertEqual(MA.grounded_intervals(movement), ((-_INF, 500.0),))
+
+    def test_landing_on_a_real_air_base(self):
+        route = _landing_route(_base_reference())
+        mission = _mission(route=route, waypoints=_plan(route), start_time=0.0)
+        self.assertTrue(MA.lands_on_air_base(mission))
+        movement, = MA.mission_movements(mission)
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        landing = MA.waypoint_times(movement)[-1]   # discesa a quota 0: un po' oltre 200 s
+        self.assertEqual((legs[-1].t_start, legs[-1].t_end, legs[-1].p_start), (landing, 3_600.0, (40_000.0, 0.0, 0.0)))
+        self.assertEqual(MA.grounded_intervals(movement), ((landing, _INF),))
+
+    def test_a_land_waypoint_not_on_an_air_base_is_not_a_landing(self):
+        for reference in (None, _base_reference(is_air_base=False)):
+            route = _landing_route(reference)
+            mission = _mission(route=route, waypoints=_plan(route), start_time=0.0)
+            self.assertFalse(MA.lands_on_air_base(mission))
+            self.assertEqual(MA.grounded_intervals(MA.mission_movements(mission)[0]), ())
+
+    def test_grounded_schedule_joins_always_and_intervals(self):
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        plan = _plan(route, roles=[MT.WaypointRole.DEPARTURE, MT.WaypointRole.LAND])
+        movement, = MA.mission_movements(_mission(route=route, waypoints=plan, start_time=500.0, start_mode='parking_hot'))
+        block = _airbase(Aircraft('p1'), Vehicle('v1'))
+        schedule = MA.grounded_schedule({'base': block}, [movement])
+        self.assertEqual(schedule.always_ids(), frozenset({'p1'}))
+        self.assertTrue(schedule.at('a1', 499.0) and not schedule.at('a1', 500.0))
+
+
+class TestFinalPosture(_F5Active):
+
+    def _posture(self, mission, end=3_600.0, schedule=None):
+        movement, = MA.mission_movements(mission)
+        schedule = schedule or MA.grounded_schedule({}, [movement])
+        return MA.final_posture(mission, movement, schedule, end)
+
+    def test_ground_unit(self):
+        self.assertEqual(self._posture(_ground_mission()), MA.GROUND_DEFENSE_POSTURE)             # arrivata
+        self.assertEqual(self._posture(_ground_mission(), end=50.0), 'Attack')                   # in movimento
+        self.assertEqual(self._posture(_ground_mission(start_time=100.0), end=50.0), MA.GROUND_DEFENSE_POSTURE)
+        on_the_spot = MT.Mission(mission_id='g2', block_id='bde', domain='ground', mission_type='Movement',
+                                 assets=(MT.MissionAsset('t1', 'lead'),),
+                                 target=MT.Target(kind=MT.TargetKind.ZONE, position=Point3D(0, 0, 0), radius_m=100.0),
+                                 start_time=0.0)
+        self.assertEqual(self._posture(on_the_spot), 'Maintain')   # postura di riferimento del tipo
+
+    def test_aircraft(self):
+        self.assertEqual(self._posture(_mission(), end=100.0), 'CAS')                 # in volo
+        self.assertEqual(self._posture(_mission()), MA.OFF_SCENE_POSTURE)              # uscito di scena
+        route = _landing_route(_base_reference())
+        self.assertEqual(self._posture(_mission(route=route, waypoints=_plan(route))), MA.PARKED_POSTURE)
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        plan = _plan(route, roles=[MT.WaypointRole.DEPARTURE, MT.WaypointRole.LAND])
+        parked = _mission(route=route, waypoints=plan, start_time=500.0, start_mode=MT.StartMode.RUNWAY)
+        self.assertEqual(self._posture(parked, end=400.0), MA.PARKED_POSTURE)
+
+    def test_session_postures_cover_every_asset_in_id_order(self):
+        block = Military('base', 'Blue', ['a1', 'v1'])
+        block.assets['a1'] = Aircraft('a1')
+        block.assets['v1'] = Vehicle('v1')
+        lone = Military('red', 'Red', [])
+        lone.assets['s1'] = Ship('s1')
+        mission = _mission(block_id='base')
+        view = MA.MissionForce.of_mission(mission, block)
+        residual = MA.MissionForce.unassigned(block, [mission])
+        movement, = MA.mission_movements(mission)
+        postures = MA.session_postures({'m1': view, 'base': residual, 'red': lone}, {'a1': movement},
+                                       MA.grounded_schedule({}, [movement]), 3_600.0)
+        self.assertEqual(postures, {'a1': MA.OFF_SCENE_POSTURE, 's1': MA.SEA_DEFENSE_POSTURE,
+                                    'v1': MA.GROUND_DEFENSE_POSTURE})
+        self.assertEqual(list(postures), ['a1', 's1', 'v1'])

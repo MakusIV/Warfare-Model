@@ -38,6 +38,7 @@ from Code.Dynamic_War_Manager.Source.Context.Reaction_Profile import ReactionPro
 from Code.Dynamic_War_Manager.Source.DataType.Cylinder import Cylinder
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import ContactWindow, Leg
 
 _ER_LOGGER = 'Code.Dynamic_War_Manager.Source.Logic.Engagement_Resolver.logger'
@@ -3005,6 +3006,108 @@ class TestGroundedForceDisengagement(unittest.TestCase):
         assets = [_Asset('c0')] + [Aircraft(f'p{i}') for i in range(3)]
         _, outcome = self._run(assets, {'p0', 'p1', 'p2'})
         self.assertEqual((outcome.outcome, outcome.lost), (ER.DESTROYED, 4))
+
+
+class TestGroundedInTime(unittest.TestCase):
+    """F5: lo stato "a terra" dipende dal tempo (decollo dal parcheggio, atterraggio su una base).
+
+    Blue: l'attaccante 'b_atk' (aereo) e il SAM 'b_sam'; Red: 'r_park', a terra prima di T = 50 s
+    (o dopo). Finestre gia' spezzate a T, come le produce lo scheduler. Colpi sempre mancati
+    (accuracy 0), cosi' il tiro prosegue per tutta la finestra e si legge chi spara cosa e quando.
+    """
+
+    T = 50.0
+    BOMB_MISS = _miss(rounds=1, weapon='bomb', cycle_time=10.0)
+    AAM_MISS = _miss(rounds=1, weapon='aam', cycle_time=10.0)
+    SAM_MISS = _miss(rounds=1, weapon='sam', cycle_time=10.0)
+
+    def _fire(self, calls=None):
+        def fire_control(shooter, target, target_grounded=False):
+            if calls is not None:
+                calls.append((shooter.id, target.id, target_grounded))
+
+            airborne = isinstance(target, Aircraft) and not target_grounded
+
+            if shooter.id == 'b_sam':
+                return self.SAM_MISS if airborne else None
+
+            return self.AAM_MISS if airborne else self.BOMB_MISS
+
+        return fire_control
+
+    def _run(self, grounded, fire_control=None, profile=(2.0, 1.0), windows=None, spec_fire=None):
+        blue = _Force('blue', 'Blue', [Aircraft('b_atk'), _Asset('b_sam')])
+        red = _Force('red', 'Red', [Aircraft('r_park')])
+        windows = windows or [_window(b, 'r_park', t_start=lo, t_end=hi)
+                              for b in ('b_atk', 'b_sam') for lo, hi in ((0.0, self.T), (self.T, 100.0))]
+
+        with patch(_ER_LOGGER):
+            return ER.resolve_engagement(blue, red, windows, fire_control or self._fire(), random.Random(0),
+                                         reaction_profile_for=_profiles({}, default=profile),
+                                         thresholds=_LOOSE_DOCTRINE, fire_doctrine={}, grounded=grounded)
+
+    def test_parked_until_takeoff_then_airborne(self):
+        result = self._run({'r_park': [(float('-inf'), self.T)]})
+        by_weapon = {}
+
+        for salvo in result.salvos:
+            by_weapon.setdefault((salvo.shooter_id, salvo.spec.weapon), []).append(salvo.t_launch)
+
+        # Prima del decollo: bombe dell'attaccante, nessun colpo del SAM ne' del parcheggiato.
+        self.assertTrue(by_weapon[('b_atk', 'bomb')])
+        self.assertTrue(all(t < self.T for t in by_weapon[('b_atk', 'bomb')]))
+        # Dopo il decollo: aria-aria e SAM sul bersaglio in volo; l'aereo decollato spara e osserva.
+        self.assertTrue(all(t >= self.T for t in by_weapon[('b_atk', 'aam')]))
+        self.assertTrue(by_weapon[('b_sam', 'sam')] and all(t >= self.T for t in by_weapon[('b_sam', 'sam')]))
+        self.assertTrue(all(s.t_launch >= self.T for s in result.salvos if s.shooter_id == 'r_park'))
+        self.assertTrue(any(s.shooter_id == 'r_park' for s in result.salvos))
+        self.assertEqual({d.observer_id for d in result.detections if d.observer_id == 'r_park'}, {'r_park'})
+        self.assertTrue(all(d.time is None or d.time >= self.T for d in result.detections if d.observer_id == 'r_park'))
+
+    def test_landed_on_a_base_becomes_a_surface_target(self):
+        result = self._run({'r_park': [(self.T, float('inf'))]})
+        bombs = [s.t_launch for s in result.salvos if s.spec.weapon == 'bomb']
+        self.assertTrue(bombs and all(t >= self.T for t in bombs))
+        self.assertTrue(all(s.t_launch < self.T for s in result.salvos if s.shooter_id in ('b_sam', 'r_park')))
+        self.assertTrue(all(s.t_launch < self.T for s in result.salvos if s.spec.weapon == 'aam'))
+
+    def test_fire_control_keyword_follows_the_launch_instant(self):
+        calls = []
+        self._run({'r_park': [(float('-inf'), self.T)]}, fire_control=self._fire(calls))
+        self.assertIn(('b_atk', 'r_park', True), calls)
+        self.assertIn(('b_atk', 'r_park', False), calls)
+
+    def test_simple_set_equals_an_always_interval(self):
+        self.assertEqual(self._run({'r_park'}), self._run({'r_park': [CS.ALWAYS]}))
+
+    def test_salvo_in_flight_at_takeoff_still_hits(self):
+        """Bomba lanciata a t = 45 (prima del decollo a 50), impatto a 65 con l'aereo ormai in volo:
+        la classificazione vale al lancio e il danno e' applicato all'impatto (R4)."""
+        bomb = _kill(rounds=1, weapon='bomb', time_of_flight=20.0)
+        fire = lambda shooter, target, target_grounded=False: (
+            bomb if shooter.id == 'b_atk' and target_grounded else None)
+        result = self._run({'r_park': [(float('-inf'), self.T)]}, fire_control=fire, profile=(45.0, 1.0),
+                           windows=[_window('b_atk', 'r_park', t_start=0.0, t_end=self.T)])
+        first = result.salvos[0]
+        self.assertEqual((first.t_launch, first.t_impact, first.spec.weapon), (45.0, 65.0, 'bomb'))
+        self.assertTrue(all(s.t_launch < self.T for s in result.salvos))
+        self.assertEqual((result.damage_events[0].time, result.damage_events[0].target_id,
+                          result.damage_events[0].destroyed), (65.0, 'r_park', True))
+
+    def test_aircraft_grounded_only_before_takeoff_keeps_the_doctrine(self):
+        """Dieci aerei a terra fino a t = 1000, colpiti prima del decollo: nessuno puo' ritirarsi,
+        quindi nessun disingaggio (DESTROYED); a terra fino a t = 0 (gia' in volo) disingaggiano
+        alla terza perdita come prima; sempre a terra: nessuna dottrina (F4c)."""
+        def outcome(grounded):
+            parked = [Aircraft(f'p{i:02d}') for i in range(10)]
+
+            with patch(_ER_LOGGER):
+                return TestGroundedForceDisengagement._run(parked, {a.id: grounded for a in parked})[1]
+
+        self.assertEqual((outcome([(float('-inf'), 1000.0)]).outcome), ER.DESTROYED)
+        self.assertEqual((outcome([(float('-inf'), 0.0)]).outcome, outcome([(float('-inf'), 0.0)]).lost),
+                         (ER.DISENGAGED, 3))
+        self.assertEqual(outcome([CS.ALWAYS]).outcome, ER.DESTROYED)
 
 
 class TestGroundedTargetIsASurfaceLauncherTarget(TestLauncherPriority):

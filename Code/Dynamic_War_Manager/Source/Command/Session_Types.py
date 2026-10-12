@@ -117,6 +117,18 @@ def _check_mission_outcomes(value) -> Mapping[str, MissionOutcome]:
     return MappingProxyType(normalized)
 
 
+def _check_postures(value) -> Mapping[str, str]:
+    """`{asset_id: postura}` reso immutabile e ordinato per id (determinismo della serializzazione)."""
+    if not isinstance(value, Mapping):
+        raise TypeError(f"postures must be a mapping asset_id -> posture, got {type(value).__name__}")
+
+    for asset_id, posture in value.items():
+        _check_domain_id('postures key', asset_id)
+        _check_domain_id(f'postures[{asset_id!r}]', posture)
+
+    return MappingProxyType(dict(sorted(value.items())))
+
+
 def _check_interval(t_start: Optional[float], t_end: Optional[float]) -> None:
     if t_start is not None and t_end is not None and t_end < t_start - TIME_EPS:
         raise ValueError(f"t_end ({t_end}) precedes t_start ({t_start})")
@@ -320,6 +332,12 @@ class SessionOutcome:
         mission_outcomes: `{mission_id: MissionOutcome}`, mapping immutabile, una voce per
             missione dell'ordine (Fase 3 del piano della Missione; regola d'esito di prima
             forma in `Logic/Session_Simulator`). Vuoto se l'ordine non ha missioni.
+        postures: `{asset_id: postura}` alla fine della sessione (F5, deviazione 12 del piano della
+            Missione), mapping immutabile ordinato per id: TUTTI gli asset delle forze passate,
+            anche quelle senza missioni e senza contatti. Etichette di dominio (v.
+            `Logic/Mission_Adapter.session_postures`: aereo a terra, `Defense` di superficie,
+            postura di fine missione). Vuoto se l'esecutore non le riporta: F5 passo (d)
+            PREDISPOSTO, `Session_Simulator` non lo valorizza ancora (resta sempre vuoto).
     """
     session_id: str
     t_start: Optional[float]
@@ -330,11 +348,13 @@ class SessionOutcome:
     fuel_events: Tuple[FuelEvent, ...] = ()
     interception_events: Tuple[InterceptionEvent, ...] = ()
     mission_outcomes: Mapping[str, MissionOutcome] = field(default_factory=dict, hash=False)
+    postures: Mapping[str, str] = field(default_factory=dict, hash=False)
 
     def __post_init__(self):
         _check_domain_id('session_id', self.session_id)
         _check_interval(_check_time('t_start', self.t_start), _check_time('t_end', self.t_end))
         object.__setattr__(self, 'mission_outcomes', _check_mission_outcomes(self.mission_outcomes))
+        object.__setattr__(self, 'postures', _check_postures(self.postures))
 
     @property
     def force_outcomes(self) -> Tuple[ForceOutcome, ...]:
@@ -420,7 +440,8 @@ def assemble_session_outcome(session_id: str,
                              fuel_events: Iterable[FuelEvent] = (),
                              t_start: Optional[float] = None,
                              t_end: Optional[float] = None,
-                             mission_outcomes: Optional[Mapping[str, MissionOutcome]] = None
+                             mission_outcomes: Optional[Mapping[str, MissionOutcome]] = None,
+                             postures: Optional[Mapping[str, str]] = None
                              ) -> SessionOutcome:
     """Aggrega gli esiti di una sessione in un unico `SessionOutcome`. Funzione pura.
 
@@ -438,6 +459,8 @@ def assemble_session_outcome(session_id: str,
             eventi (min/max); se dichiarato, ogni ingaggio ed evento deve cadervi dentro.
         mission_outcomes: `{mission_id: MissionOutcome}` gia' calcolati dall'esecutore,
             riportati tali e quali (None = nessuna missione).
+        postures: `{asset_id: postura}` a fine sessione calcolate dall'esecutore (F5), riportate
+            tali e quali (None = nessuna).
 
     Ordine degli eventi nel risultato: per ciascun tipo, ordinamento STABILE per `time`
     sulla concatenazione degli eventi nell'ordine degli ingaggi. Dentro un ingaggio gli eventi
@@ -510,7 +533,8 @@ def assemble_session_outcome(session_id: str,
                           ammunition_events=ammunition,
                           interception_events=interceptions,
                           fuel_events=fuel,
-                          mission_outcomes=mission_outcomes if mission_outcomes is not None else {})
+                          mission_outcomes=mission_outcomes if mission_outcomes is not None else {},
+                          postures=postures if postures is not None else {})
 
 
 def _warn_shared_targets(session_id: str, results) -> None:

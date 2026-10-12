@@ -250,6 +250,25 @@ dalla sessione: `Mission_Adapter.grounded_assets`) e non legge ne' muta stati nu
 L'esito di forza (`committed`, `lost`, `erosion`) e le `SalvoResolution` contano tutti gli asset.
 Con `grounded` vuoto (default) ogni percorso e' quello di prima: stesse estrazioni, stessi esiti.
 
+**Dipendente dal tempo (F5 passo (a), D1.a/b).** Un aereo con missione sara' a terra prima del
+decollo (partenza dal parcheggio o dalla pista) e, se atterra su una base vera, dopo la fine della
+rotta (passo (b), non ancora cablato in sessione, che oggi passa l'insieme della F4c): `grounded`
+e' un `Contact_Scheduler.GroundedSchedule` (intervalli `[lo, hi)` per asset; l'insieme semplice
+della F4c e' "sempre a terra"). Ogni regola sopra legge lo stato all'istante in cui si applica:
+* rilevamento e RWR al rilevamento: lo stato della FINESTRA (al suo punto medio; lo scheduler spezza
+  le finestre a decolli e atterraggi, quindi e' costante su ognuna, v. `_grounded_in`);
+* tiro: all'istante di tiro previsto (`_schedule_next`), classificazione verso la fire control
+  all'istante del LANCIO (`_fire_control`): una salva gia' partita contro un aereo che decolla nel
+  frattempo arriva comunque con l'arma scelta al lancio (payload congelato, R4) e il danno e'
+  applicato all'impatto; RWR al lancio e lanciatori L2/L3 all'istante del lancio;
+* intercettazione all'istante della risoluzione della salva (`_on_resolve`);
+* peso di minaccia (`_perceived_ratio`) e dottrina di disingaggio (erosione e shock dei soli
+  combattenti, `_on_resolve`) all'istante della valutazione; `_gone` all'istante corrente;
+* SEMPRE a terra (`GroundedSchedule.always`, gli aerei senza missione): forza di soli aerei senza
+  dottrina, esclusi dagli intercettori, dai tiratori e dalla decisione "forza aerea" fin dalla
+  costruzione della run, come nella F4c. Un aereo a terra solo per un tratto e' un aereo: la sua
+  forza resta aerea e ha la dottrina del lato.
+
 ## Forze rotte: per-forza, non un flag globale
 
 Una forza che raggiunge DESTROYED o DISENGAGED entra in `broken_forces`. Da quel momento:
@@ -337,7 +356,12 @@ from Code.Dynamic_War_Manager.Source.Context import Doctrine
 from Code.Dynamic_War_Manager.Source.Context import Reaction_Profile as RP
 from Code.Dynamic_War_Manager.Source.DataType.State import HEALTH_LEVEL, StateCategory
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
-from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import TIME_EPS, position_on_legs, range_intervals
+from Code.Dynamic_War_Manager.Source.Logic.Contact_Scheduler import (
+    TIME_EPS,
+    GroundedSchedule,
+    position_on_legs,
+    range_intervals,
+)
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
 from Code.Dynamic_War_Manager.Source.Utility.Utility import validate_class
 
@@ -1334,9 +1358,10 @@ class _EngagementRun:
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
                  rwr_catalogue=None, coordination_of=None, grounded=None):
         self.fire_control = fire_control
-        # Aerei a terra (F4c, v. "Aerei a terra" nel docstring del modulo) e se la fire control
-        # accetta l'estensione `target_grounded` (letto solo se un bersaglio e' a terra).
-        self.grounded: FrozenSet[str] = frozenset(grounded or ())
+        # Aerei a terra (F4c; dalla F5 dipendenti dal tempo, v. "Aerei a terra" nel docstring del
+        # modulo) e se la fire control accetta l'estensione `target_grounded` (letto solo se un
+        # bersaglio e' a terra).
+        self.grounded: GroundedSchedule = GroundedSchedule.of(grounded)
         self.fire_control_knows_grounded: Optional[bool] = None
         self.rwr_catalogue = rwr_catalogue
         self.fire_doctrine = fire_doctrine
@@ -1478,9 +1503,11 @@ class _EngagementRun:
                 # rompere il contatto per definizione, nessuna dottrina da consultare e
                 # nessun warning (non e' una dottrina mancante).
                 side_thresholds = None
-            elif committed_ids and all(asset_id in self.grounded for asset_id in committed_ids):
-                # Solo aerei a terra (F4c): bersagli passivi, non possono ritirarsi; stessa
-                # rappresentazione del blocco non militare ("subisce fino alla fine").
+            elif committed_ids and all(self.grounded.always(asset_id) for asset_id in committed_ids):
+                # Solo aerei SEMPRE a terra (F4c): bersagli passivi, non possono ritirarsi; stessa
+                # rappresentazione del blocco non militare ("subisce fino alla fine"). Un aereo a
+                # terra solo per un tratto (F5: prima del decollo, dopo l'atterraggio) e' un
+                # combattente: la dottrina lo esclude solo mentre e' a terra (`_on_resolve`).
                 side_thresholds = None
             else:
                 side_thresholds = Doctrine.get_disengagement_thresholds(side, thresholds)
@@ -1598,8 +1625,9 @@ class _EngagementRun:
         for asset, channels in provider() or []:
             shadow = self.shadows.get(_domain_id(asset))
 
-            if shadow is None or shadow.force_id != force_id or shadow.id in self.grounded:
-                # Un aereo a terra (F4c) non intercetta: e' passivo.
+            if shadow is None or shadow.force_id != force_id or self.grounded.always(shadow.id):
+                # Un aereo sempre a terra (F4c) non intercetta: e' passivo. Uno a terra solo per un
+                # tratto (F5) e' escluso nella risoluzione, all'istante della salva (`_on_resolve`).
                 continue
 
             interceptors.append((shadow, int(channels)))
@@ -1643,7 +1671,7 @@ class _EngagementRun:
         if own_range is None or own_range <= 0:
             return
 
-        if observer.id in self.grounded:
+        if self._grounded_in(observer.id, window):
             # Aereo a terra (F4c): sensori spenti, non osserva (nessuna estrazione). Lo scheduler
             # gli da' gia' portata None; qui vale anche per finestre costruite dal chiamante.
             return
@@ -1669,7 +1697,7 @@ class _EngagementRun:
             # RWR (2026-09-29): il radar dell'osservatore illumina il bersaglio; se il bersaglio e'
             # un aereo il cui RWR identifica la categoria SAM dell'osservatore, la sua forza sa da
             # quell'istante chi la sta ingaggiando (percezione e fuoco senza risposta).
-            if target.id not in self.grounded \
+            if not self._grounded_in(target.id, window) \
                     and ADE.rwr_perception(target.asset, observer.asset) == ADE.PERCEIVED_AT_DETECTION:
                 self._perceive_rwr(target, observer, time)
 
@@ -1867,8 +1895,8 @@ class _EngagementRun:
         """
         shooter = self.shadows[shooter_id]
 
-        if shooter.force_id in self.broken_forces or shooter_id in self.grounded:
-            # Forza rotta, oppure aereo a terra (F4c): non spara mai.
+        if shooter.force_id in self.broken_forces or self.grounded.always(shooter_id):
+            # Forza rotta, oppure aereo sempre a terra (F4c): non spara mai.
             return
 
         if not shooter.operative or not shooter.has_stock():
@@ -1899,6 +1927,13 @@ class _EngagementRun:
 
                 if t_fire > candidate.t_end + TIME_EPS:
                     candidate.exhausted = True
+                    continue
+
+                if self.grounded.at(shooter_id, t_fire):
+                    # A terra all'istante di tiro (F5: prima del decollo, dopo l'atterraggio): non
+                    # spara. Con le finestre spezzate dallo scheduler non accade (il candidato nasce
+                    # da un rilevamento in volo e il tiro resta nella sua finestra); vale per le
+                    # finestre costruite dal chiamante.
                     continue
 
                 viable.append((t_fire, index, candidate))
@@ -1940,7 +1975,7 @@ class _EngagementRun:
                     best = key
 
             _, t_fire, _, target_id, index = best
-            choice = self._first_with_stock(shooter, self._fire_control(shooter, self.shadows[target_id]))
+            choice = self._first_with_stock(shooter, self._fire_control(shooter, self.shadows[target_id], t_fire))
 
             if choice is None:
                 # ROE o arma inadatta (None), oppure nessuna delle armi adatte ha piu'
@@ -2052,18 +2087,33 @@ class _EngagementRun:
 
         Eccezione (F4c): un aereo a terra non si ritira con la sua forza (una vista residua mista
         che disingaggia lascia sul piazzale gli aerei parcheggiati), quindi resta un bersaglio.
+        Dalla F5 lo stato e' quello dell'istante corrente della run.
         """
-        return target.force_id in self.broken_forces and target.id not in self.grounded
+        return target.force_id in self.broken_forces and not self.grounded.at(target.id, self.now)
 
-    def _fire_control(self, shooter: _Shadow, target: _Shadow):
+    def _grounded_in(self, asset_id: str, window) -> bool:
+        """L'asset e' a terra nella finestra di contatto (F5): stato al suo punto medio.
+
+        Lo scheduler spezza le finestre agli istanti di decollo e atterraggio
+        (`Contact_Scheduler._pair_windows`), quindi lo stato e' costante su tutta la finestra; per
+        una finestra costruita dal chiamante che attraversa una transizione vale lo stato a meta'.
+        """
+        return self.grounded.at(asset_id, 0.5 * (float(window.t_start) + float(window.t_end)))
+
+    def _fire_control(self, shooter: _Shadow, target: _Shadow, time: float):
         """La fire control iniettata sulla coppia, con l'estensione `target_grounded` (F4c).
 
         Bersaglio non a terra: `fire_control(shooter, target)`, la chiamata di sempre. Bersaglio
         a terra: `target_grounded=True` se la fire control dichiara il parametro (o `**kwargs`,
         `accepts_target_grounded`); altrimenti la chiamata di sempre e un warning una volta per
         run: quella fire control non conosce la postura e lo classifica come gli altri aerei.
+
+        Dalla F5 lo stato e' quello all'istante `time` del LANCIO (la classificazione vale
+        all'istante del lancio): un bersaglio che decolla mentre la salva e' in volo la riceve
+        comunque, con l'arma scelta al lancio (payload congelato, R4), e il danno e' applicato
+        all'impatto. Il tiro resta nella finestra del candidato, a stato costante.
         """
-        if target.id not in self.grounded:
+        if not self.grounded.at(target.id, time):
             return self.fire_control(shooter.asset, target.asset)
 
         if self.fire_control_knows_grounded is None:
@@ -2088,7 +2138,8 @@ class _EngagementRun:
         Stessa scelta d'arma e stesso controllo di portata della schedulazione, senza effetti
         collaterali sul candidato. Senza portata dichiarata: ingaggiabile.
         """
-        choice = self._first_with_stock(shooter, self._fire_control(shooter, self.shadows[candidate.target_id]))
+        choice = self._first_with_stock(shooter, self._fire_control(shooter, self.shadows[candidate.target_id],
+                                                                    t_fire))
 
         if choice is None:
             return False
@@ -2300,14 +2351,14 @@ class _EngagementRun:
 
         # RWR che rileva solo tracciamento/guida (SPO-10): la minaccia e' percepita al lancio. Un
         # aereo a terra (F4c) ha l'RWR spento.
-        if target.id not in self.grounded \
+        if not self.grounded.at(target.id, time) \
                 and ADE.rwr_perception(target.asset, shooter.asset) == ADE.PERCEIVED_AT_LAUNCH:
             self._perceive_rwr(target, shooter, time)
 
         # Lancio aria-superficie (L2/L3): anche contro un aereo a terra, che e' un bersaglio di
         # superficie (F4c).
         if validate_class(shooter.asset, 'Aircraft') \
-                and (not validate_class(target.asset, 'Aircraft') or target.id in self.grounded):
+                and (not validate_class(target.asset, 'Aircraft') or self.grounded.at(target.id, time)):
             self._register_launcher(time, shooter, target.force_id)
 
     # ── fase 3: impatto, saturazione, danno ───────────────────────────────────
@@ -2523,7 +2574,8 @@ class _EngagementRun:
         available = {}
 
         for shadow, channels in interceptors:
-            if shadow.operative:
+            # Un aereo a terra all'istante della salva (F5) non intercetta.
+            if shadow.operative and not self.grounded.at(shadow.id, time):
                 stock = shadow.interceptor_stock
                 channels = max(0, channels - spent.get(shadow.id, 0))
                 available[shadow.id] = channels if stock is None else min(channels, stock)
@@ -2612,7 +2664,7 @@ class _EngagementRun:
                                                 wasted=wasted, losses=losses, shock=shock,
                                                 erosion=erosion))
         self._touch(time)
-        fighting = [asset_id for asset_id in committed if asset_id not in self.grounded]
+        fighting = [asset_id for asset_id in committed if not self.grounded.at(asset_id, time)]
 
         if len(fighting) == len(committed):
             self._check_doctrine(time, state, shock, erosion, len(after), len(losses))
@@ -2622,7 +2674,7 @@ class _EngagementRun:
         # dottrina di disingaggio guarda solo chi puo' ritirarsi (gli asset non a terra): gli aerei
         # parcheggiati non entrano in erosione e shock, e senza combattenti ancora operativi non
         # c'e' nessuno da ritirare (resta HELD finche' restano aerei, poi DESTROYED).
-        fighting_lost = [asset_id for asset_id in losses if asset_id not in self.grounded]
+        fighting_lost = [asset_id for asset_id in losses if not self.grounded.at(asset_id, time)]
         fighting_after = [asset_id for asset_id in fighting if asset_id in after]
         self._check_doctrine(time, state,
                              len(fighting_lost) / len(fighting) if fighting else 0.0,
@@ -2697,9 +2749,10 @@ class _EngagementRun:
             if state.thresholds is None:
                 continue
 
-            # Forza AEREA: tutti gli asset impegnati che possono combattere sono aerei (gli aerei a
-            # terra, F4c, non contano: una base con difese e aerei parcheggiati e' di superficie).
-            fighting = [asset_id for asset_id in state.committed if asset_id not in self.grounded]
+            # Forza AEREA: tutti gli asset impegnati che possono combattere sono aerei (gli aerei
+            # sempre a terra, F4c, non contano: una base con difese e aerei parcheggiati e' di
+            # superficie; un aereo a terra solo prima del decollo o dopo l'atterraggio, F5, si').
+            fighting = [asset_id for asset_id in state.committed if not self.grounded.always(asset_id)]
             state.air = bool(fighting) and all(
                 validate_class(self.shadows[asset_id].asset, 'Aircraft') for asset_id in fighting)
             state.morale = self._morale_of(state)
@@ -2789,9 +2842,9 @@ class _EngagementRun:
         seen = self.seen_by.get(self.domain_of[state.force_id], {})
         enemies = [self.shadows[asset_id] for asset_id, t_seen in seen.items()
                    if t_seen <= time + TIME_EPS and self._is_enemy(state, self.shadows[asset_id])
-                   and not self.shadows[asset_id].destroyed and asset_id not in self.grounded]
+                   and not self.shadows[asset_id].destroyed and not self.grounded.at(asset_id, time)]
         own = [self.shadows[asset_id] for asset_id in state.committed
-               if self.shadows[asset_id].operative and asset_id not in self.grounded]
+               if self.shadows[asset_id].operative and not self.grounded.at(asset_id, time)]
 
         if state.air:
             n_aircraft = len(own)
@@ -3017,9 +3070,13 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             chiave. None (default) o una forza assente dalla mappa = la forza e' il proprio
             dominio, comportamento precedente al 2026-10-11. In sessione la costruisce
             `Mission_Adapter.coordination_domains` (blocco oppure Operazione).
-        grounded: id degli aerei A TERRA (F4c, v. "Aerei a terra" nel docstring del modulo):
-            bersagli di superficie passivi. In sessione li calcola
-            `Mission_Adapter.grounded_assets`. None o vuoto (default) = comportamento precedente.
+        grounded: aerei A TERRA (F4c, v. "Aerei a terra" nel docstring del modulo): bersagli di
+            superficie passivi. Un iterabile di id (sempre a terra, la forma della F4c), una mappa
+            `{asset_id: [(lo, hi), ...]}` di intervalli semiaperti o un
+            `Contact_Scheduler.GroundedSchedule` (F5: stato dipendente dal tempo). In sessione lo
+            passa l'insieme della F4c (`Mission_Adapter.grounded_assets`; predisposto
+            `Mission_Adapter.grounded_schedule`, non ancora cablato). None o vuoto (default) = comportamento
+            precedente.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset

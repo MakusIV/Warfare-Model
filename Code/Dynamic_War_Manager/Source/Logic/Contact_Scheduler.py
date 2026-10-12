@@ -66,7 +66,7 @@ meno numerosi degli asset.
 
 from dataclasses import dataclass
 from math import sqrt
-from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from sympy import Point3D, Segment3D
 
@@ -111,6 +111,9 @@ DETECTION_MODE_BY_CLASS = {
 # Modo con cui si interroga un aereo A TERRA (F4c, postura continua degli asset senza missione):
 # e' un bersaglio di superficie sul piazzale, quindi lo si cerca come un veicolo o una struttura.
 GROUNDED_DETECTION_MODE = 'ground'
+
+# Intervallo "sempre a terra" di un aereo dell'insieme semplice (F4c): tutta la linea del tempo.
+ALWAYS = (float('-inf'), float('inf'))
 
 
 # ── TIPI DI SCAMBIO ───────────────────────────────────────────────────────────
@@ -235,6 +238,119 @@ class ContactWindow:
     def is_mutual(self) -> bool:
         """True se esiste un intervallo in cui entrambi rilevano l'altro."""
         return self.t_mutual_start is not None
+
+
+class GroundedSchedule:
+    """Aerei A TERRA nel tempo (F5): per asset, gli intervalli `[t_inizio, t_fine)` a terra.
+
+    Nella F4c "a terra" era un INSIEME di id valido per tutta la sessione (aerei senza missione).
+    Dalla F5 un aereo con missione e' a terra prima del decollo (partenza dal parcheggio o dalla
+    pista) e, se atterra su una base vera, dopo la fine della rotta (v. `Mission_Adapter`): lo
+    stato dipende dal tempo. Questa e' la forma unica che scheduler e risolutore interrogano.
+
+    Retro-compatibile: l'insieme semplice di id e' un programma in cui ogni id e' a terra su
+    `ALWAYS` (-inf, +inf), quindi "sempre a terra" (`always`) e nessuna transizione: scheduler e
+    risolutore percorrono gli stessi rami di prima, finestra per finestra.
+
+    Intervalli semiaperti `[lo, hi)`: all'istante del decollo l'aereo e' gia' in volo, all'istante
+    dell'atterraggio e' gia' a terra. Immutabile; gli intervalli di un asset sono ordinati e fusi.
+    """
+
+    __slots__ = ('_intervals',)
+
+    def __init__(self, intervals: Optional[Mapping[str, Iterable[Tuple[float, float]]]] = None):
+        normalized: Dict[str, Tuple[Tuple[float, float], ...]] = {}
+
+        for asset_id, spans in (intervals or {}).items():
+            if not isinstance(asset_id, str) or not asset_id:
+                raise TypeError(f"grounded ids must be non-empty str, got {asset_id!r}")
+
+            ordered = []
+
+            for span in spans:
+                lo, hi = float(span[0]), float(span[1])
+
+                if not hi > lo:
+                    raise ValueError(f"grounded interval of {asset_id!r} must have t_end > t_start, got {span!r}")
+
+                ordered.append((lo, hi))
+
+            ordered.sort()
+            merged: List[Tuple[float, float]] = []
+
+            for lo, hi in ordered:
+                if merged and lo <= merged[-1][1]:
+                    merged[-1] = (merged[-1][0], max(merged[-1][1], hi))
+                else:
+                    merged.append((lo, hi))
+
+            if merged:
+                normalized[asset_id] = tuple(merged)
+
+        self._intervals = normalized
+
+    @classmethod
+    def of(cls, grounded) -> 'GroundedSchedule':
+        """Normalizza le forme ammesse: None (nessuno), un `GroundedSchedule` (se stesso), una mappa
+        `{asset_id: [(lo, hi), ...]}`, oppure un iterabile di id (l'insieme semplice della F4c, ogni
+        id a terra su `ALWAYS`)."""
+        if grounded is None:
+            return cls()
+
+        if isinstance(grounded, GroundedSchedule):
+            return grounded
+
+        if isinstance(grounded, Mapping):
+            return cls(grounded)
+
+        if isinstance(grounded, (str, bytes)):
+            raise TypeError(f"grounded must be an iterable of ids, a mapping or a GroundedSchedule, got {grounded!r}")
+
+        return cls({asset_id: (ALWAYS,) for asset_id in grounded})
+
+    def at(self, asset_id: Optional[str], t: float) -> bool:
+        """L'asset e' a terra all'istante `t`."""
+        for lo, hi in self._intervals.get(asset_id, ()):
+            if lo <= t < hi:
+                return True
+
+        return False
+
+    def always(self, asset_id: Optional[str]) -> bool:
+        """L'asset e' a terra su tutta la linea del tempo (insieme semplice, asset senza missione)."""
+        return self._intervals.get(asset_id) == (ALWAYS,)
+
+    def ever(self, asset_id: Optional[str]) -> bool:
+        """L'asset e' a terra in qualche istante."""
+        return asset_id in self._intervals
+
+    def intervals(self, asset_id: Optional[str]) -> Tuple[Tuple[float, float], ...]:
+        return self._intervals.get(asset_id, ())
+
+    def transitions(self, asset_id: Optional[str]) -> Tuple[float, ...]:
+        """Istanti FINITI in cui lo stato dell'asset cambia (decollo, atterraggio), ordinati."""
+        return tuple(sorted({t for span in self._intervals.get(asset_id, ()) for t in span
+                             if t not in (float('-inf'), float('inf'))}))
+
+    def always_ids(self) -> FrozenSet[str]:
+        """Id degli asset sempre a terra (l'insieme della F4c)."""
+        return frozenset(asset_id for asset_id in self._intervals if self.always(asset_id))
+
+    def ids(self) -> FrozenSet[str]:
+        """Id degli asset a terra in qualche istante."""
+        return frozenset(self._intervals)
+
+    def __bool__(self) -> bool:
+        return bool(self._intervals)
+
+    def __eq__(self, other) -> bool:
+        return isinstance(other, GroundedSchedule) and self._intervals == other._intervals
+
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self._intervals.items())))
+
+    def __repr__(self) -> str:
+        return f"GroundedSchedule({dict(sorted(self._intervals.items()))!r})"
 
 
 # ── ALGEBRA VETTORIALE MINIMA (terne di float) ────────────────────────────────
@@ -1222,7 +1338,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                       margin: float = 0.0,
                       range_type: str = DEFAULT_DETECTION_RANGE_TYPE,
                       skip_same_side: bool = True,
-                      grounded: Optional[Iterable[str]] = None) -> List[ContactWindow]:
+                      grounded=None,
+                      legs: Optional[Mapping[str, Sequence[Leg]]] = None) -> List[ContactWindow]:
     """Tutte le finestre di contatto fra due insiemi di blocchi, in `[t0, t0 + horizon]`.
 
     Mette insieme i tre meccanismi nell'ordine che li rende trattabili: prima la potatura a
@@ -1241,11 +1358,21 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
         speeds: `{asset_id: velocita' [m/s]}` che sovrascrive quella degli archi.
         t0: istante assoluto di inizio della finestra.
         margin/range_type/skip_same_side: v. `block_pair_candidates` e `contact_windows`.
-        grounded: id degli aerei A TERRA (F4c, calcolati dalla sessione:
-                  `Mission_Adapter.grounded_assets`): bersagli di superficie, senza sensori (v.
-                  `mutual_detection_ranges`). None o vuoto = comportamento di prima. La potatura
-                  per blocco non cambia (resta conservativa: un aereo a terra conta ancora con la
-                  propria velocita' e portata nell'inviluppo del blocco).
+        grounded: aerei A TERRA (F4c; dalla F5 dipendenti dal tempo): un iterabile di id (sempre a
+                  terra, la forma della F4c), una mappa `{asset_id: [(lo, hi), ...]}` o un
+                  `GroundedSchedule` (in sessione oggi l'insieme della F4c; predisposto
+                  `Mission_Adapter.grounded_schedule`, non ancora cablato). A terra =
+                  bersaglio di superficie senza sensori (v. `mutual_detection_ranges`). Le
+                  finestre di una coppia sono SPEZZATE agli istanti di decollo e atterraggio dei
+                  due asset (`GroundedSchedule.transitions`), cosi' che ogni finestra abbia uno
+                  stato costante per entrambi: il risolutore lo legge sulla finestra. None o vuoto =
+                  comportamento di prima; con l'insieme semplice nessuna transizione, nessuno
+                  spezzamento. La potatura per blocco non cambia (resta conservativa: un aereo a
+                  terra conta ancora con la propria velocita' e portata nell'inviluppo del blocco).
+        legs: `{asset_id: [Leg, ...]}` tratti GIA' calcolati dal chiamante (F5: in sessione la
+                  presenza prima della partenza e dopo la fine, le attese, v.
+                  `Mission_Adapter.movement_legs`, non ancora cablato in sessione); hanno la precedenza su `routes` per quegli
+                  asset (v. `_asset_legs`). None = tratti dalle rotte, come prima.
 
     Returns:
         Lista di `ContactWindow` ordinata per `(t_start, asset_a_id, asset_b_id)`. **L'ordine
@@ -1258,7 +1385,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
     routes = routes or {}
     starts = starts or {}
     speeds = speeds or {}
-    grounded = frozenset(grounded or ())
+    given_legs = legs or {}
+    grounded = GroundedSchedule.of(grounded)
 
     pairs = block_pair_candidates(blocks_a, blocks_b, horizon=horizon, margin=margin,
                                   skip_same_side=skip_same_side)
@@ -1273,7 +1401,7 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
         key = id(asset)
 
         if key not in legs_cache:
-            legs_cache[key] = _asset_legs(asset, routes, starts, speeds, t0, horizon)
+            legs_cache[key] = _asset_legs(asset, routes, starts, speeds, t0, horizon, given_legs)
 
         return legs_cache[key]
 
@@ -1293,14 +1421,46 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                 if not legs_b:
                     continue
 
-                windows.extend(contact_windows(asset_a, legs_a, asset_b, legs_b,
-                                               range_type=range_type,
-                                               grounded_a=_asset_id(asset_a) in grounded,
-                                               grounded_b=_asset_id(asset_b) in grounded))
+                windows.extend(_pair_windows(asset_a, legs_a, asset_b, legs_b, range_type, grounded))
 
     windows.sort(key=lambda w: (w.t_start, str(w.asset_a_id), str(w.asset_b_id)))
 
     return windows
+
+
+def _pair_windows(asset_a, legs_a: Sequence[Leg], asset_b, legs_b: Sequence[Leg], range_type: str,
+                  grounded: GroundedSchedule) -> List[ContactWindow]:
+    """Finestre di una coppia, spezzate agli istanti di decollo/atterraggio dei due asset (F5).
+
+    Senza transizioni dentro la sovrapposizione dei due span (sempre, con l'insieme semplice della
+    F4c) e' una sola chiamata a `contact_windows`, identica a prima. Con transizioni, i tratti sono
+    ritagliati a ogni sottointervallo a stato costante e le portate sono derivate per quello stato
+    (bersaglio in modo 'ground', osservatore senza sensori): ogni finestra prodotta ha uno stato
+    costante per entrambi gli asset, letto al suo punto medio.
+    """
+    id_a, id_b = _asset_id(asset_a), _asset_id(asset_b)
+    overlap = _overlap(legs_a, legs_b)
+    cuts = []
+
+    if overlap is not None:
+        cuts = sorted({t for t in grounded.transitions(id_a) + grounded.transitions(id_b)
+                       if overlap[0] + TIME_EPS < t < overlap[1] - TIME_EPS})
+
+    if not cuts:
+        probe = 0.5 * (overlap[0] + overlap[1]) if overlap is not None else 0.0
+        return contact_windows(asset_a, legs_a, asset_b, legs_b, range_type=range_type,
+                               grounded_a=grounded.at(id_a, probe), grounded_b=grounded.at(id_b, probe))
+
+    bounds = [overlap[0]] + cuts + [overlap[1]]
+    found: List[ContactWindow] = []
+
+    for lo, hi in zip(bounds, bounds[1:]):
+        middle = 0.5 * (lo + hi)
+        found.extend(contact_windows(asset_a, clamp_legs(legs_a, lo, hi), asset_b, clamp_legs(legs_b, lo, hi),
+                                     range_type=range_type,
+                                     grounded_a=grounded.at(id_a, middle), grounded_b=grounded.at(id_b, middle)))
+
+    return found
 
 
 def _operative_assets(block) -> List:
@@ -1314,9 +1474,29 @@ def _operative_assets(block) -> List:
             if not hasattr(asset, 'is_operative') or asset.is_operative()]
 
 
-def _asset_legs(asset, routes, starts, speeds, t0: float, horizon: float) -> List[Leg]:
-    """Tratti di un asset: dalla sua rotta se ne ha una, altrimenti fermo in posizione."""
+def _asset_legs(asset, routes, starts, speeds, t0: float, horizon: float,
+                given: Optional[Mapping[str, Sequence[Leg]]] = None) -> List[Leg]:
+    """Tratti di un asset: quelli dati dal chiamante, altrimenti dalla sua rotta se ne ha una,
+    altrimenti fermo in posizione.
+
+    Con la rotta l'asset esiste solo fra la partenza e l'arrivo (`legs_span`). Nella F5 la sessione
+    passera' i tratti completi (`given`, v. `Mission_Adapter.movement_legs`): presenza ferma prima
+    della partenza e dopo la fine (D1.a/b), attese (N2.c); per un aereo che esce di scena alla
+    fine della rotta i tratti finiscono all'arrivo, come prima. I tratti dati sono usati TALI E
+    QUALI se stanno nella finestra (un secondo ritaglio rifarebbe l'interpolazione degli estremi),
+    altrimenti ritagliati.
+    """
     asset_id = _asset_id(asset)
+    known = (given or {}).get(asset_id) if asset_id is not None else None
+
+    if known:
+        lo, hi = t0, t0 + horizon
+
+        if known[0].t_start >= lo - TIME_EPS and known[-1].t_end <= hi + TIME_EPS:
+            return list(known)
+
+        return clamp_legs(known, lo, hi)
+
     route = routes.get(asset_id) if asset_id is not None else None
 
     if route is not None:

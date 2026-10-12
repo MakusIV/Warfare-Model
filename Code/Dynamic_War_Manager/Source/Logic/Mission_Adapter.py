@@ -185,15 +185,18 @@ from typing import Dict, FrozenSet, Iterable, List, Mapping, Optional, Sequence,
 from sympy import Point3D
 
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    ActionKind,
     Activation,
     Mission,
+    MissionAction,
     MissionAsset,
     Operation,
+    StartConditionKind,
     StartMode,
     WaypointRole,
     route_waypoints,
 )
-from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Sea_Task
+from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Sea_Task, postures_for
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
@@ -236,6 +239,17 @@ _TOT_ANCHOR_ROLES = (WaypointRole.ATTACK, WaypointRole.OBJECTIVE)
 PARKED_POSTURE = StartMode.PARKING_COLD.value
 GROUND_DEFENSE_POSTURE = Ground_Action.DEFENSE.value
 SEA_DEFENSE_POSTURE = Sea_Task.DEFENSE.value
+# Postura finale (F5, nell'esito di sessione) di un aereo uscito di scena alla fine di una rotta che
+# non termina su una base vera: ETICHETTA PROVVISORIA, finche' la F6 non portera' il rientro (RTB)
+# nella rotta. Non e' un valore di Context ne' una grandezza.
+OFF_SCENE_POSTURE = 'off_scene'
+
+# F5 passi (b)-(d) (presenza prima/dopo, attese WAIT ed ETA bloccate, postura nell'esito): codice
+# SCRITTO MA NON ATTIVO (decisione del coordinatore 2026-10-11, fermata dopo il passo (a)). Con False
+# `mission_start` e `mission_movements` si comportano come prima della F5 (nessuna attesa, nessuna
+# presenza fuori dalla rotta) e `Session_Simulator` non usa `movement_legs`/`grounded_schedule`/
+# `session_postures`. Da attivare (True) con il cablaggio di `Session_Simulator` nel seguito della F5.
+F5_PRESENCE_AND_WAITS = False
 
 
 def kmh_to_ms(speed_kmh: float) -> float:
@@ -254,12 +268,26 @@ class AssetMovement:
         route: `DataType.Route` dell'asset (None = missione senza rotta: l'asset resta fermo).
         start: istante assoluto di partenza [s] (t0 + istante di missione).
         speed: velocita' [m/s] che sostituisce quella degli archi, None = quella degli archi.
+        holds: attese (F5, N2.c) come `((indice del waypoint, durata [s]), ...)` in ordine di
+            indice: l'asset resta fermo nel punto `indice` della sua rotta per la durata, dopo
+            l'arrivo (azioni WAIT e sincronizzazione delle ETA bloccate, v. `mission_holds`).
+            Vuota = nessuna attesa (comportamento precedente).
+        present_before/present_after: presente FERMO nella posizione di partenza prima di partire
+            e nella posizione finale dopo la fine (F5, D1.a/b). Default False = assente (prima
+            della F5).
+        grounded_before/grounded_after: in quei tratti l'asset e' un aereo A TERRA (parcheggio
+            prima del decollo, base vera dopo l'atterraggio).
     """
     mission_id: str
     asset_id: str
     route: Optional[Route]
     start: float
     speed: Optional[float] = None
+    holds: Tuple[Tuple[int, float], ...] = ()
+    present_before: bool = False
+    present_after: bool = False
+    grounded_before: bool = False
+    grounded_after: bool = False
 
 
 # ── ROTTA DI RIFERIMENTO E VELOCITA' ──────────────────────────────────────────
@@ -498,7 +526,14 @@ def mission_start(mission: Mission, t0: float = 0.0) -> float:
                          f"no executor runs it yet")
 
     if mission.start_time is not None:
-        return float(t0) + mission.start_time
+        start = float(t0) + mission.start_time
+
+        # F5: un'ETA bloccata sul punto di partenza piu' tarda di `start_time` ritarda la partenza
+        # (l'asset resta presente fermo nel punto, D1.b), invece di un'attesa "in movimento".
+        if F5_PRESENCE_AND_WAITS and mission.waypoints and mission.waypoints[0].eta_locked:
+            start = max(start, float(t0) + mission.waypoints[0].planned_eta)
+
+        return start
 
     route = reference_route(mission)
     locked = next((index for index, mw in enumerate(mission.waypoints) if mw.eta_locked), None)
@@ -523,6 +558,11 @@ def mission_start(mission: Mission, t0: float = 0.0) -> float:
             route, [_xyz(w.point) for w in route_waypoints(route)], per_leg, f'{mission.mission_id}:timing')
         travel = _travel_time_to(timed, uniform, anchor)
 
+    # F5: le attese DI DURATA sui punti prima dell'ancoraggio anticipano la partenza; quelle fino a
+    # un istante assoluto no (dipendono dalla partenza stessa): se ritardano l'arrivo, l'ETA
+    # effettiva lo riporta (v. `mission_holds`).
+    if F5_PRESENCE_AND_WAITS:
+        travel += sum(_relative_wait(mw.actions) for mw in mission.waypoints[:anchor])
     start = float(t0) + instant - travel
 
     if start < float(t0) - CS.TIME_EPS:
@@ -532,16 +572,294 @@ def mission_start(mission: Mission, t0: float = 0.0) -> float:
     return start
 
 
+# ── ATTESE E ETA BLOCCATE (F5, N2.b/N2.c) ─────────────────────────────────────
+
+def _wait_actions(actions) -> List[MissionAction]:
+    return [action for action in actions if action.kind is ActionKind.WAIT]
+
+
+def _relative_wait(actions) -> float:
+    """Somma delle attese di DURATA (avvio all'arrivo o dopo una durata) di un punto [s]; le attese
+    fino a un istante assoluto (`wait_until`, avvio AT_TIME) non hanno una durata nota a priori."""
+    total = 0.0
+
+    for action in _wait_actions(actions):
+        if action.wait_duration_s is None or action.start.kind is StartConditionKind.AT_TIME:
+            continue
+
+        total += action.wait_duration_s
+
+        if action.start.kind is StartConditionKind.AFTER_DURATION:
+            total += action.start.duration_s
+
+    return total
+
+
+def _wait_end(actions, arrival: float, t0: float) -> float:
+    """Istante [s] in cui l'asset lascia il punto dopo le azioni WAIT, in ordine di dichiarazione.
+
+    Ogni attesa comincia secondo la sua condizione d'avvio (N2.d) e l'asset resta fermo nel punto
+    dall'arrivo alla fine dell'ultima: ON_ARRIVAL alla fine della precedente (la prima all'arrivo),
+    AT_TIME non prima di `t0 + time`, AFTER_DURATION dopo `duration_s`. Fine = inizio + durata,
+    oppure `t0 + wait_until` (se gia' passato, nessuna attesa).
+    """
+    t = arrival
+
+    for action in _wait_actions(actions):
+        begin = t
+
+        if action.start.kind is StartConditionKind.AT_TIME:
+            begin = max(t, float(t0) + action.start.time)
+        elif action.start.kind is StartConditionKind.AFTER_DURATION:
+            begin = t + action.start.duration_s
+
+        if action.wait_duration_s is not None:
+            t = begin + action.wait_duration_s
+        else:
+            t = max(begin, float(t0) + action.wait_until)
+
+    return t
+
+
+def _locked_targets(mission: Mission, t0: float) -> Dict[int, float]:
+    """`{indice: istante assoluto}` dei punti con ETA bloccata e del punto d'ancoraggio del TOT."""
+    targets = {index: float(t0) + mw.planned_eta for index, mw in enumerate(mission.waypoints) if mw.eta_locked}
+
+    if mission.tot is not None:
+        anchor = next((index for role in _TOT_ANCHOR_ROLES
+                       for index, mw in enumerate(mission.waypoints) if mw.role is role), None)
+
+        if anchor is not None:
+            targets.setdefault(anchor, float(t0) + mission.tot)
+
+    return targets
+
+
+def mission_holds(mission: Mission, start: float, t0: float = 0.0) -> Tuple[Tuple[int, float], ...]:
+    """Attese della missione per punto: `((indice, durata [s]), ...)`, v. docstring del modulo.
+
+    Calcolate UNA volta sulla rotta di riferimento con le velocita' di missione (la stessa
+    temporizzazione di `mission_start`) e applicate a tutti gli asset: la formazione attende
+    insieme (regola A). Per ogni punto, nell'ordine:
+      * azioni WAIT del punto (`_wait_end`);
+      * sincronizzazione: se il punto SUCCESSIVO ha un'ETA bloccata (o e' l'ancoraggio del TOT) e
+        sarebbe raggiunto in anticipo, l'attesa si allunga fino a raggiungerlo esattamente
+        all'istante bloccato (attesa PRIMA del punto); in ritardo: un warning, l'ETA effettiva
+        dell'esito lo riporta (la velocita' non cambia).
+
+    Returns:
+        Tupla vuota se la missione non ha rotta o non ha attese.
+    """
+    route = reference_route(mission)
+
+    if route is None or not mission.waypoints:
+        return ()
+
+    uniform, per_leg = _leg_speeds(mission, route)
+    timed = route if per_leg is None else _rebuild_route(
+        route, [_xyz(w.point) for w in route_waypoints(route)], per_leg, f'{mission.mission_id}:timing')
+    legs = CS.route_legs(timed, t0=0.0, speed=uniform)
+
+    if len(legs) != len(mission.waypoints) - 1:
+        return ()
+
+    targets = _locked_targets(mission, t0)
+    holds = []
+    arrival = float(start)
+
+    for index, mw in enumerate(mission.waypoints):
+        leave = _wait_end(mw.actions, arrival, t0)
+
+        if index < len(legs):
+            travel = legs[index].duration
+            target = targets.get(index + 1)
+
+            if target is not None and leave + travel < target - CS.TIME_EPS:
+                leave = target - travel
+            elif target is not None and leave + travel > target + CS.TIME_EPS:
+                logger.warning(f"mission_holds: mission {mission.mission_id!r} reaches waypoint {index + 1} at "
+                               f"{leave + travel:.1f} s, after its locked time {target:.1f} s")
+
+            next_arrival = leave + travel
+        else:
+            next_arrival = None
+
+        if leave - arrival > CS.TIME_EPS:
+            holds.append((index, leave - arrival))
+
+        if next_arrival is not None:
+            arrival = next_arrival
+
+    return tuple(holds)
+
+
+# ── PRESENZA PRIMA DELLA PARTENZA E DOPO LA FINE (F5, D1.a/b) ─────────────────
+
+def is_air_base_reference(reference) -> bool:
+    """Il riferimento di un waypoint e' su una BASE AEREA VERA (criterio della F5, v. docstring).
+
+    `Waypoint.reference` e' un `Asset`; e' una base vera se il suo blocco (`asset.block`) dichiara
+    `is_Air_Base()` vero (`Military` di categoria `MILITARY_CATEGORY['Air_Base']`: 'Airbase',
+    'Heliport'). Un riferimento assente o di un altro blocco non lo e'.
+    """
+    block = getattr(reference, 'block', None)
+    check = getattr(block, 'is_Air_Base', None)
+
+    try:
+        return callable(check) and bool(check())
+    except Exception:   # noqa: BLE001 — un blocco senza categoria leggibile non e' una base
+        return False
+
+
+def lands_on_air_base(mission: Mission) -> bool:
+    """La missione aerea finisce con un punto LAND su una base vera (`is_air_base_reference`)."""
+    if mission.domain != 'air' or not mission.waypoints:
+        return False
+
+    last = mission.waypoints[-1]
+    return last.role is WaypointRole.LAND and is_air_base_reference(last.waypoint.reference)
+
+
+def _presence(mission: Mission) -> Dict[str, bool]:
+    """Presenza e stato a terra prima della partenza e dopo la fine (decisioni D1.a/b, F5)."""
+    if mission.domain != 'air':
+        return dict(present_before=True, present_after=True, grounded_before=False, grounded_after=False)
+
+    parked = mission.start_mode is not StartMode.AIR
+    landed = lands_on_air_base(mission)
+    return dict(present_before=parked, present_after=landed, grounded_before=parked, grounded_after=landed)
+
+
 def mission_movements(mission: Mission, t0: float = 0.0) -> Tuple[AssetMovement, ...]:
-    """Un `AssetMovement` per asset della missione, nell'ordine degli asset."""
+    """Un `AssetMovement` per asset della missione, nell'ordine degli asset (con attese e presenza
+    della F5: `mission_holds`, `_presence`)."""
     start = mission_start(mission, t0)
+
+    if F5_PRESENCE_AND_WAITS:
+        holds, presence = mission_holds(mission, start, t0), _presence(mission)
+    else:
+        holds, presence = (), {}
+
     movements = []
 
     for mission_asset in mission.assets:
         route, speed = asset_route(mission, mission_asset)
-        movements.append(AssetMovement(mission.mission_id, mission_asset.asset_id, route, start, speed))
+        movements.append(AssetMovement(mission.mission_id, mission_asset.asset_id, route, start, speed,
+                                       holds=holds, **presence))
 
     return tuple(movements)
+
+
+def _timeline(movement: AssetMovement) -> Tuple[List[CS.Leg], Tuple[float, ...]]:
+    """(tratti del movimento con le attese, istanti d'ARRIVO ai punti), senza taglio alla sessione.
+
+    Senza attese i tratti sono esattamente `route_legs` (stessi valori). Un'attesa al punto i e' un
+    tratto fermo nel punto i della rotta dell'asset; i tratti successivi sono spostati della sua
+    durata. Liste vuote se l'asset non ha rotta o la rotta non e' percorribile.
+    """
+    if movement.route is None:
+        return [], ()
+
+    legs = CS.route_legs(movement.route, t0=movement.start, speed=movement.speed)
+
+    if not legs:
+        return [], ()
+
+    arrivals = [legs[0].t_start] + [leg.t_end for leg in legs]
+
+    if not movement.holds:
+        return legs, tuple(arrivals)
+
+    holds = dict(movement.holds)
+    timeline: List[CS.Leg] = []
+    shift = 0.0
+    arrivals = []
+
+    for index in range(len(legs) + 1):
+        point = legs[index].p_start if index < len(legs) else legs[-1].p_end
+        here = legs[index].t_start + shift if index < len(legs) else legs[-1].t_end + shift
+        arrivals.append(here)
+        hold = holds.get(index, 0.0)
+
+        if hold > CS.TIME_EPS:
+            timeline.append(CS.Leg(t_start=here, t_end=here + hold, p_start=point, p_end=point, edge_name=None))
+            shift += hold
+
+        if index < len(legs):
+            leg = legs[index]
+            timeline.append(CS.Leg(t_start=leg.t_start + shift, t_end=leg.t_end + shift, p_start=leg.p_start,
+                                   p_end=leg.p_end, edge_name=leg.edge_name))
+
+    return timeline, tuple(arrivals)
+
+
+def movement_legs(movement: AssetMovement, t0: float, t_end: float, presence: bool = True) -> List[CS.Leg]:
+    """Tratti dell'asset nella sessione `[t0, t_end]` (F5), nella forma di `Contact_Scheduler`.
+
+    Movimento con le attese (`_timeline`); con `presence` anche il tratto fermo nella posizione di
+    partenza da `t0` alla partenza (`present_before`) e quello nella posizione finale dalla fine
+    del movimento a `t_end` (`present_after`). Ritagliati a `[t0, t_end]` con `clamp_legs`, come
+    faceva lo scheduler: senza attese ne' presenza i valori sono quelli di prima. `presence=False`
+    = solo il movimento (consumo di carburante, `Session_Simulator`). Lista vuota se l'asset non ha
+    una rotta percorribile (il chiamante lo tiene fermo nella sua posizione).
+    """
+    timeline, _ = _timeline(movement)
+
+    if not timeline:
+        return []
+
+    legs = list(timeline)
+
+    if presence and movement.present_before and timeline[0].t_start > t0 + CS.TIME_EPS:
+        point = timeline[0].p_start
+        legs.insert(0, CS.Leg(t_start=float(t0), t_end=timeline[0].t_start, p_start=point, p_end=point))
+
+    if presence and movement.present_after and timeline[-1].t_end < t_end - CS.TIME_EPS:
+        point = timeline[-1].p_end
+        legs.append(CS.Leg(t_start=timeline[-1].t_end, t_end=float(t_end), p_start=point, p_end=point))
+
+    return CS.clamp_legs(legs, t0, t_end)
+
+
+def grounded_intervals(movement: AssetMovement) -> Tuple[Tuple[float, float], ...]:
+    """Intervalli `[lo, hi)` in cui l'aereo di missione e' A TERRA (F5).
+
+    Prima del decollo (`grounded_before`): (-inf, fine delle attese al punto di partenza), cioe' il
+    parcheggio e un'eventuale sosta a terra prima del decollo. Dopo l'atterraggio su una base vera
+    (`grounded_after`): [arrivo all'ultimo punto, +inf), compresa un'eventuale sosta a terra.
+    """
+    _, arrivals = _timeline(movement)
+
+    if not arrivals:
+        return ()
+
+    holds = dict(movement.holds)
+    spans = []
+
+    if movement.grounded_before:
+        spans.append((float('-inf'), arrivals[0] + holds.get(0, 0.0)))
+
+    if movement.grounded_after:
+        spans.append((arrivals[-1], float('inf')))
+
+    return tuple(spans)
+
+
+def grounded_schedule(forces: Mapping[str, object], movements: Iterable[AssetMovement] = ()) -> CS.GroundedSchedule:
+    """Gli aerei A TERRA della sessione nel tempo (F5): `Contact_Scheduler.GroundedSchedule`.
+
+    Sempre a terra gli aerei senza missione (`grounded_assets`, F4c); a intervalli gli aerei di
+    missione prima del decollo e dopo l'atterraggio su una base vera (`grounded_intervals`).
+    """
+    intervals: Dict[str, List[Tuple[float, float]]] = {asset_id: [CS.ALWAYS] for asset_id in grounded_assets(forces)}
+
+    for movement in movements:
+        spans = grounded_intervals(movement)
+
+        if spans:
+            intervals.setdefault(movement.asset_id, []).extend(spans)
+
+    return CS.GroundedSchedule(intervals)
 
 
 def session_movements(missions: Iterable[Mission], t0: float = 0.0
@@ -581,17 +899,10 @@ def session_movements(missions: Iterable[Mission], t0: float = 0.0
 
 
 def waypoint_times(movement: AssetMovement) -> Tuple[float, ...]:
-    """Istanti assoluti [s] di passaggio ai punti della rotta dell'asset (0 = partenza), senza
-    taglio alla sessione; tupla vuota se l'asset non ha rotta o la rotta non e' percorribile."""
-    if movement.route is None:
-        return ()
-
-    legs = CS.route_legs(movement.route, t0=movement.start, speed=movement.speed)
-
-    if not legs:
-        return ()
-
-    return (legs[0].t_start,) + tuple(leg.t_end for leg in legs)
+    """Istanti assoluti [s] di ARRIVO ai punti della rotta dell'asset (0 = partenza), con le attese
+    (F5: ETA effettive, `_timeline`), senza taglio alla sessione; tupla vuota se l'asset non ha
+    rotta o la rotta non e' percorribile."""
+    return _timeline(movement)[1]
 
 
 def _max_speed(asset) -> Optional[float]:
@@ -739,6 +1050,67 @@ def grounded_assets(forces: Mapping[str, object]) -> FrozenSet[str]:
         grounded |= {asset_id for asset_id, posture in postures.items() if posture == PARKED_POSTURE}
 
     return frozenset(grounded)
+
+
+# ── POSTURA NELL'ESITO (F5, deviazione 12 del piano) ──────────────────────────
+
+def final_posture(mission: Mission, movement: AssetMovement, grounded: CS.GroundedSchedule,
+                  session_end: float) -> str:
+    """Postura di un asset DI MISSIONE alla fine della sessione (v. "Postura nell'esito").
+
+    * a terra a `session_end` (parcheggiato prima del decollo, atterrato su una base vera):
+      `PARKED_POSTURE`;
+    * aereo in volo: il tipo di missione (per l'aria il task E' l'asse della postura, N3.f);
+      uscito di scena alla fine della rotta: `OFF_SCENE_POSTURE`;
+    * terra e mare: `Defense` di fine missione (D1.a) se ha finito il movimento o non e' ancora
+      partito (D1.b); in movimento, o in missione sul posto (senza rotta), la postura di
+      riferimento del tipo di missione (`Context.postures_for`).
+    """
+    if grounded.at(movement.asset_id, session_end):
+        return PARKED_POSTURE
+
+    timeline, _ = _timeline(movement)
+
+    if mission.domain == 'air':
+        if timeline and timeline[-1].t_end <= session_end + CS.TIME_EPS and not movement.present_after:
+            return OFF_SCENE_POSTURE
+
+        return mission.mission_type
+
+    if timeline and (timeline[-1].t_end <= session_end + CS.TIME_EPS or timeline[0].t_start >= session_end):
+        return SEA_DEFENSE_POSTURE if mission.domain == 'sea' else GROUND_DEFENSE_POSTURE
+
+    return postures_for(mission.domain, mission.mission_type)[1]
+
+
+def session_postures(forces: Mapping[str, object], movements: Mapping[str, AssetMovement],
+                     grounded: CS.GroundedSchedule, session_end: float) -> Dict[str, str]:
+    """`{asset_id: postura finale}` di TUTTI gli asset delle forze d'ingaggio, in ordine di id (F5).
+
+    Asset di missione: `final_posture`; asset senza missione (vista residua o blocco senza
+    missioni, passato tale e quale): la postura continua della F4c (`continuous_posture`).
+
+    Args:
+        forces: `{force_id: forza}` come le costruisce `Session_Simulator._engagement_forces`.
+        movements: `{asset_id: AssetMovement}` degli asset di missione.
+    """
+    postures: Dict[str, str] = {}
+
+    for force in forces.values():
+        mission = force.mission if isinstance(force, MissionForce) else None
+
+        for asset in (getattr(force, 'assets', None) or {}).values():
+            asset_id = _domain_id(asset)
+
+            if asset_id is None:
+                continue
+
+            if mission is not None and asset_id in movements:
+                postures[asset_id] = final_posture(mission, movements[asset_id], grounded, session_end)
+            else:
+                postures[asset_id] = continuous_posture(asset)
+
+    return dict(sorted(postures.items()))
 
 
 class MissionForce:

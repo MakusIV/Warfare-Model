@@ -636,3 +636,50 @@ rigenerazione.
   (conservativa: piu' coppie esaminate, nessun contatto perso).
 - La presenza prima della partenza (aerei con missione ancora a terra) e' della F5: l'insieme
   `grounded` e' per l'intera sessione; la F5 dovra' renderlo dipendente dal tempo.
+
+
+## F5 passo (a): `grounded` dipendente dal tempo (deviazioni 12-13)
+
+**Base del confronto**: fotografia di F4c (`af2efbe6`, 370 esecuzioni).
+**Dopo**: motore con `grounded` come funzione del tempo. **370 esecuzioni IDENTICHE**, nessuna
+rigenerazione della fotografia (verificato 2026-10-12: `--compare` IDENTICAL; suite 4072 test OK,
+7 skipped). Il passo cambia la FORMA dello stato, non i dati di sessione: in sessione resta
+l'insieme costante della F4c (ogni id a terra su tutta la linea del tempo), quindi scheduler e
+risolutore percorrono gli stessi rami di prima.
+
+### Il cambio
+
+- `Contact_Scheduler.GroundedSchedule`: per asset, gli intervalli semiaperti `[lo, hi)` in cui e' a
+  terra (all'istante del decollo e' gia' in volo, a quello dell'atterraggio e' gia' a terra).
+  Immutabile, intervalli ordinati e fusi. `GroundedSchedule.of(...)` accetta `None`, uno schedule,
+  una mappa `{id: [(lo, hi)]}` o un iterabile di id (la forma F4c: ogni id su `ALWAYS` = (-inf,
+  +inf)). Interrogazioni: `at(id, t)`, `always(id)`, `ever(id)`, `transitions(id)`.
+- `schedule_contacts(grounded=...)` accetta le tre forme; le finestre di una coppia sono SPEZZATE
+  agli istanti di decollo/atterraggio (`_pair_windows`), cosi' ogni finestra ha stato costante per
+  entrambi gli asset. Senza transizioni (insieme semplice) e' la sola chiamata di prima.
+  Nuovo argomento facoltativo `legs`: tratti gia' calcolati dal chiamante, con precedenza sulle
+  rotte (`_asset_legs`).
+- `Engagement_Resolver`: ogni regola della F4c legge lo stato all'istante in cui si applica
+  (finestra: punto medio; tiro: istante di tiro; classificazione verso la fire control: istante del
+  LANCIO, una salva partita contro un aereo che decolla arriva comunque con l'arma scelta al lancio;
+  intercettazione: istante di risoluzione; peso di minaccia, dottrina, `_gone`: istante corrente).
+  Solo gli aerei SEMPRE a terra (`always`) restano esclusi fin dalla costruzione dalla dottrina,
+  dagli intercettori, dai tiratori e dalla decisione «forza aerea»: un aereo a terra per un tratto e'
+  un aereo e un combattente.
+- `SessionOutcome.postures` (`{asset_id: postura}`, immutabile, ordinato) e parametro `postures` di
+  `assemble_session_outcome`: predisposti, `Session_Simulator` non li valorizza ancora (restano
+  vuoti, quindi la fotografia non cambia).
+
+### Predisposto in `Mission_Adapter`, NON ancora cablato in sessione
+
+Funzioni con test propri che i passi successivi collegheranno: `grounded_schedule`,
+`grounded_intervals`, `movement_legs` (presenza ferma prima della partenza e dopo la fine, attese),
+`mission_holds` e le azioni WAIT (`_wait_actions`, `_wait_end`), `lands_on_air_base` /
+`is_air_base_reference` (aereo a terra dopo la fine SOLO su una base vera), `final_posture`,
+`session_postures`, `OFF_SCENE_POSTURE`. Cablaggio: F5-B (presenza, postura nell'esito, scenari
+E1/E3/aerei) e F5-C (WAIT, ETA, TOT, CAP in orbita).
+
+### Verifica
+
+Test nuovi in `Test_Contact_Scheduler`, `Test_Engagement_Resolver`, `Test_Mission_Adapter` (+33
+rispetto a 4039). Suite 4072 OK; fotografia IDENTICA su 370 esecuzioni.
