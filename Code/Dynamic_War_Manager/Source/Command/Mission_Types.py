@@ -187,6 +187,10 @@ class AssetEndReason(Enum):
     MISSION_ABORTED = 'mission_aborted'    # segue la missione che abortisce come gruppo (D3.d)
     DESTROYED = 'destroyed'
     SESSION_END = 'session_end'            # missione ancora in corso alla fine della sessione
+    # Carburante esaurito durante il movimento (F6-A): terra/mare fermi nel punto, aereo in planata su
+    # una base (stato non DESTROYED) oppure perso senza base raggiungibile (stato DESTROYED). Distinto
+    # da BINGO, riservato al bingo in volo con rientro (F6-B).
+    FUEL_EXHAUSTED = 'fuel_exhausted'
 
 
 # ── ELENCHI CHIUSI PER DOMINIO ────────────────────────────────────────────────
@@ -1101,7 +1105,9 @@ class AssetMissionOutcome:
         state: stato a fine missione.
         end_reason: motivo della fine (di missione o di attivita').
         end_time: istante di fine [s dall'inizio sessione], None se non definito.
-    `state` DESTROYED e `end_reason` DESTROYED vanno insieme.
+    `end_reason` DESTROYED richiede `state` DESTROYED; `state` DESTROYED ammette `end_reason`
+    DESTROYED (distruzione in combattimento) o FUEL_EXHAUSTED (F6-A: aereo a secco in volo senza una
+    base raggiungibile in planata).
     """
     asset_id: str
     state: AssetState
@@ -1116,9 +1122,12 @@ class AssetMissionOutcome:
         object.__setattr__(self, 'end_reason', reason)
         object.__setattr__(self, 'end_time', _check_time('end_time', self.end_time))
 
-        if (state is AssetState.DESTROYED) != (reason is AssetEndReason.DESTROYED):
-            raise ValueError(f"state DESTROYED and end_reason DESTROYED go together, got "
-                             f"{state.name}/{reason.name}")
+        destroyed_reasons = (AssetEndReason.DESTROYED, AssetEndReason.FUEL_EXHAUSTED)
+
+        if (reason is AssetEndReason.DESTROYED and state is not AssetState.DESTROYED) or \
+                (state is AssetState.DESTROYED and reason not in destroyed_reasons):
+            raise ValueError(f"state DESTROYED goes with end_reason DESTROYED or FUEL_EXHAUSTED, and "
+                             f"end_reason DESTROYED with state DESTROYED, got {state.name}/{reason.name}")
 
 
 @dataclass(frozen=True)

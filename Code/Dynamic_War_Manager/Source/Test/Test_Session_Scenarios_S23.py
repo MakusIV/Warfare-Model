@@ -9,7 +9,8 @@ orbita), il TOT di ogni missione e le ETA effettive nell'esito (N2.b/N2.c, devia
 `Logic/Mission_Adapter`, "Attese, ETA bloccate e TOT": un'attesa e' un tratto FERMO nel punto (anche
 l'orbita: approssimazione dichiarata, nessun circuito geometrico), le attese entrano nei tratti dati a
 scheduler e risolutore, e il `MissionOutcome.actual_etas` riporta gli istanti d'arrivo ai punti dai
-tratti, attese comprese. Le attese NON consumano carburante (consumo nel tempo: F6).
+tratti, attese comprese. Dalla F6-A le attese consumano carburante NEL TEMPO alla crociera (un
+`FuelEvent` per tratto, v. S24).
 
 Ogni scenario ha una variante di CONTROLLO `waits_off` eseguita con `Mission_Adapter.F5_WAITS`
 spento (comportamento precedente alla F5-C): la stessa missione dichiarata, ma nessuna attesa.
@@ -357,16 +358,18 @@ class TestS23CapOrbit(_EtaChecks, F.LoggerSilencer, unittest.TestCase):
                 spans = any(w.t_start <= ORBIT_ARRIVAL and w.t_end >= ORBIT_END for w in own)
                 self.assertEqual(spans, covers, (orbit, asset_id, [(w.t_start, w.t_end) for w in own]))
 
-    def test_the_orbit_does_not_consume_fuel(self):
-        """Limite noto (F6): l'orbita e' un tratto fermo, il consumo e' in distanza: stessa distanza
-        con e senza attesa."""
-        for (_, with_orbit, _), (_, without, _) in zip(self.runs['during'], self.runs['no_wait']):
-            distance = {e.asset_id: e.distance for e in with_orbit.fuel_events if e.asset_id.startswith(CAP)}
-            reference = {e.asset_id: e.distance for e in without.fuel_events if e.asset_id.startswith(CAP)}
-            self.assertEqual(set(distance), set(reference))
-
-            for asset_id, value in distance.items():
-                self.assertAlmostEqual(value, reference[asset_id], delta=1e-6)
+    def test_the_orbit_consumes_fuel_in_time(self):
+        """F6-A (prima un limite noto): l'orbita e' un tratto fermo che consuma NEL TEMPO alla crociera
+        del MiG; la distanza percorsa e' la stessa con e senza attesa, l'orbita aggiunge un FuelEvent
+        fermo di 1500 s."""
+        for (scenario, with_orbit, _), (_, without, _) in zip(self.runs['during'], self.runs['no_wait']):
+            for asset_id in scenario.force(CAP).assets:
+                events = [e for e in with_orbit.fuel_events if e.asset_id == asset_id]
+                reference = [e for e in without.fuel_events if e.asset_id == asset_id]
+                self.assertAlmostEqual(sum(e.distance for e in events), sum(e.distance for e in reference), delta=1e-6)
+                orbit, = [e for e in events if e.stationary]
+                self.assertAlmostEqual(orbit.duration, ORBIT_DURATION, delta=1e-6)
+                self.assertGreater(orbit.amount, 0.0)
 
 
 # ── S23-HOLD: sosta a terra ───────────────────────────────────────────────────

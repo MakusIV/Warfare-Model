@@ -23,6 +23,7 @@ Strategia di setup
 import dataclasses
 import json
 import unittest
+from math import sqrt
 from unittest.mock import MagicMock, patch
 
 from sympy import Point3D
@@ -31,6 +32,7 @@ from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    AbortReason,
     ActionKind,
     AssetEndReason,
     AssetState,
@@ -549,17 +551,105 @@ class TestSessionInterval(_Base):
 
 
 class TestFuelExhaustion(_Base):
+    """F6-A: il carburante vincola il movimento (tratti troncati all'esaurimento calcolato a monte)."""
 
-    def test_exhaustion_is_reported_not_simulated(self):
-        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0, 0, fuel=0.01, speed=200.0)])]
-        route = _route([(0, 0), (0, 40_000)], 200.0, 'r-b1')
+    def _dry_flight(self, constraint=True, base=None, z=1_000.0):
+        """b1 con carburante per 10 km su una rotta di 40 km a 200 m/s, quota 1000 m (planata 10 km):
+        si esaurisce a 50 s in (0, 10 km). `base`: posizione (x, y) di una base aerea Blue."""
+        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0, 0, z=z, fuel=0.01, speed=200.0)])]
+
+        if base is not None:
+            airbase = Military(mil_category=MILITARY_CATEGORY['Air_Base'][0], name='Blue-Base', side='Blue')
+            airbase.id = 'Blue-Base'
+            airbase._assets = {'bb1': _asset(Vehicle, 'bb1', *base)}
+            blue.append(airbase)
+
+        route = _route([(0, 0), (0, 40_000)], 200.0, 'r-b1', z=z)
         missions = (_air_mission('M-b1', blue[0], route, [('b1', 0.0)]),)
-        outcome = SS.run_session(self._order(missions=missions), blue, [], _fire)
 
+        with patch.object(SS, 'F6_FUEL_CONSTRAINT', constraint), \
+                patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
+            outcome = SS.run_session(self._order(missions=missions), blue, [], _fire)
+
+        return outcome, blue[0].assets['b1'], scheduler.call_args.kwargs['legs']['b1']
+
+    def test_without_the_constraint_exhaustion_is_only_reported(self):
+        """Interruttore spento: il comportamento di prima (E5), l'aereo completa la rotta a secco."""
+        # Quota 0, la sessione registrata nella fotografia prima della F6-A (unita' 'ORC-fuel').
+        outcome, b1, legs = self._dry_flight(constraint=False, z=0.0)
         event, = outcome.fuel_events
         self.assertTrue(event.exhausted)
         self.assertAlmostEqual(event.distance_covered, 10_000.0)
-        self.assertEqual(blue[0].assets['b1'].fuel, 0.0)
+        self.assertEqual(b1.fuel, 0.0)
+        self.assertAlmostEqual(legs[-1].t_end, 200.0)
+        self.assertFalse(b1.is_destroyed())
+
+    def test_aircraft_without_a_reachable_base_is_lost(self):
+        outcome, b1, legs = self._dry_flight()
+        self.assertAlmostEqual(legs[-1].t_end, 50.0)
+        self.assertEqual(legs[-1].p_end, (0.0, 10_000.0, 1_000.0))
+        event, = outcome.fuel_events
+        self.assertTrue(event.exhausted)
+        self.assertTrue(b1.is_destroyed())
+        self.assertEqual(outcome.damage_events, ())
+        mission = outcome.mission_outcomes['M-b1']
+        self.assertEqual(mission.status, MissionStatus.DESTROYED)
+        self.assertEqual(mission.asset_outcomes['b1'].end_reason, AssetEndReason.FUEL_EXHAUSTED)
+        self.assertEqual(outcome.postures['b1'], MA.OFF_SCENE_POSTURE)
+
+    def test_aircraft_glides_to_a_reachable_own_base(self):
+        """Base a 6 km dal punto di esaurimento (planata 10 km): planata a 200 m/s, poi a terra."""
+        outcome, b1, legs = self._dry_flight(base=(6_000.0, 10_000.0))
+        glide, parked = legs[-2], legs[-1]
+        self.assertEqual((glide.p_start, glide.p_end), ((0.0, 10_000.0, 1_000.0), (6_000.0, 10_000.0, 0.0)))
+        t_land = 50.0 + sqrt(6_000.0 ** 2 + 1_000.0 ** 2) / 200.0
+        self.assertAlmostEqual(glide.t_end, t_land)
+        self.assertEqual((parked.p_start, parked.t_end), ((6_000.0, 10_000.0, 0.0), 3_600.0))
+        self.assertFalse(b1.is_destroyed())
+        mission = outcome.mission_outcomes['M-b1']
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.FUEL))
+        asset = mission.asset_outcomes['b1']
+        self.assertEqual((asset.state, asset.end_reason, asset.end_time),
+                         (AssetState.OPERATIONAL, AssetEndReason.FUEL_EXHAUSTED, 50.0))
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+        self.assertEqual(mission.actual_etas, (0.0, None))
+
+    def test_parked_aircraft_with_an_empty_tank_stays_on_the_ground(self):
+        """Serbatoio vuoto sul parcheggio (quota 0): nessun decollo, resta A TERRA nel punto (non perso)."""
+        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0, 0, fuel=0.0, speed=200.0)])]
+        route = _route([(0, 0), (0, 40_000)], 200.0, 'r-b1')
+        mission = _air_mission('M-b1', blue[0], route, [('b1', 0.0)], start_time=100.0)
+        departure = dataclasses.replace(mission.waypoints[0], role=WaypointRole.DEPARTURE)
+        mission = dataclasses.replace(mission, start_mode=StartMode.PARKING_COLD,
+                                      waypoints=(departure,) + mission.waypoints[1:])
+
+        with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
+            outcome = SS.run_session(self._order(missions=(mission,)), blue, [], _fire)
+
+        legs = scheduler.call_args.kwargs['legs']['b1']
+        self.assertEqual([(leg.t_start, leg.t_end) for leg in legs], [(0.0, 100.0), (100.0, 3_600.0)])
+        self.assertTrue(scheduler.call_args.kwargs['grounded'].at('b1', 3_000.0))
+        self.assertFalse(blue[0].assets['b1'].is_destroyed())
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.ABORTED)
+
+    def test_ground_unit_halts_and_stays(self):
+        """Un veicolo a secco resta FERMO nel punto, presente fino a fine sessione, in difesa."""
+        blue = [_force('Blue', 'Blue', [_asset(Vehicle, 'v1', 0, 0, fuel=0.002, speed=10.0)])]
+        route = _ground_route([(0, 0), (0, 10_000)], 10.0, 'r-v1')
+
+        with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
+            outcome = SS.run_session(self._order(missions=(_ground_mission('M-v1', blue[0], route, 'v1'),)),
+                                     blue, [], _fire)
+
+        legs = scheduler.call_args.kwargs['legs']['v1']
+        # Autonomia di test 1000 km: 0,002 -> 2 km, a 200 s.
+        self.assertEqual([(leg.t_start, leg.t_end) for leg in legs], [(0.0, 200.0), (200.0, 3_600.0)])
+        self.assertEqual(legs[-1].p_start, (0.0, 2_000.0, 0.0))
+        mission = outcome.mission_outcomes['M-v1']
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.FUEL))
+        self.assertEqual(outcome.postures['v1'], MA.GROUND_DEFENSE_POSTURE)
+        self.assertFalse(blue[0].assets['v1'].is_destroyed())
 
 
 class TestMissions(_Base):
@@ -1042,9 +1132,26 @@ class TestWaitsAndEtas(_Base):
         outcome, _, _ = self._hold_run()
         self.assertEqual(outcome.mission_outcomes['M-armor'].actual_etas, (0.0, 800.0, 2_200.0))
 
-    def test_the_hold_does_not_consume_fuel(self):
-        """Limite noto (F6): distanza = la sola rotta; l'evento e' alla fine del movimento, sosta compresa."""
+    def test_the_hold_consumes_fuel_per_leg(self):
+        """F6-A: un FuelEvent per tratto (8 km, sosta di 600 s, 8 km); la sosta consuma nel tempo alla
+        crociera (10 m/s -> 6 km equivalenti), autonomia di test 1000 km."""
         outcome, _, _ = self._hold_run()
+        events = [event for event in outcome.fuel_events if event.asset_id == 'bv1']
+        self.assertEqual([(e.t_start, e.time, e.distance, e.stationary) for e in events],
+                         [(0.0, 800.0, 8_000.0, False), (800.0, 1_400.0, 0.0, True), (1_400.0, 2_200.0, 8_000.0, False)])
+        self.assertAlmostEqual(events[1].amount, 6_000.0 / AUTONOMY['nominal'])
+        self.assertEqual(events[1].regime, SS.CRUISE_REGIME)
+
+        # I tratti di movimento al regime della sessione (bv1 e' ingaggiato da rv1: 'max').
+        for event in (events[0], events[2]):
+            self.assertAlmostEqual(event.amount, 8_000.0 / AUTONOMY[event.regime])
+
+    def test_without_per_leg_fuel_the_hold_does_not_consume(self):
+        """Interruttore `F6_FUEL_PER_LEG` spento: un solo evento sulla distanza della rotta, alla fine del
+        movimento (sosta compresa), come la F5-C."""
+        with patch.object(SS, 'F6_FUEL_PER_LEG', False):
+            outcome, _, _ = self._hold_run()
+
         fuel = {event.asset_id: event for event in outcome.fuel_events}
         self.assertAlmostEqual(fuel['bv1'].distance, 16_000.0)
         self.assertAlmostEqual(fuel['bv1'].time, 2_200.0)

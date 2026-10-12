@@ -1038,3 +1038,165 @@ esecuzioni).
 
 Suite 4133 test OK (7 skipped; +2 rispetto a 4131: +1 `Test_Mission_Types`, +1 S23; in
 `Test_Mission_Adapter` e `Test_Session_Simulator` lo stesso numero, test sostituiti).
+
+## F6 passo A: carburante per tratto e vincolo del movimento (F6-A, deviazione 14)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` (522 esecuzioni), ricontrollata
+IDENTICA al codice di partenza (`03d77640` + Piano non committato) prima delle modifiche, 2026-10-12.
+**Dopo**: `Session_Simulator.F6_FUEL_PER_LEG = True` e `F6_FUEL_CONSTRAINT = True`. Sulla STORIA
+(contatti, colpi, danni, esiti, posture, ETA) **nessuna delle 522 esecuzioni cambia**; 126 cambiano
+nel carburante: 88 solo nella FORMA degli eventi (uno per tratto), 32 nel consumo delle attese, 6 per
+un arrotondamento all'ultima cifra. 88 esecuzioni nuove (scenario S24). Fotografia del repository NON
+rigenerata: cattura finale fuori dal repository (610 esecuzioni).
+
+### Il cambio
+
+Decisioni dell'utente (2026-10-12, vincolanti):
+1. **Un `FuelEvent` per tratto** (`Fuel_Model.build_leg_fuel_event`), di movimento o fermo; campi
+   nuovi con default (forma precedente compatibile): `t_start`, `duration`, `duration_covered`,
+   `stationary`. Tratto di movimento: in distanza come prima. **Tratto fermo** (attese e orbite della
+   F5-C): consumo NEL TEMPO pari al movimento alla velocita' di CROCIERA dell'asset
+   (`Fuel_Model.cruise_speed` = `speed['nominal']` del registro): `durata x crociera` metri equivalenti,
+   al regime di crociera (`HOLD_REGIME`) anche se l'asset ha combattuto. Nessuna costante nuova.
+   IPOTESI DICHIARATA: il loiter reale consuma meno della crociera (sovrastima pessimistica per gli
+   aerei); stesso criterio per terra e mare (un'unita' in sosta a motore acceso consuma come in marcia:
+   sovrastima, nessun dato di consumo da fermo nei registri). Un asset senza velocita' di crociera nota
+   non consuma nelle soste. Carburante di partenza e rifornimenti NON toccati (rifornimento: F8).
+2. **Vincolo del movimento e dei contatti**: il carburante dipende solo dai tratti e dal carburante di
+   partenza, quindi `Fuel_Model.fuel_exhaustion` calcola A MONTE (al regime di crociera) istante e
+   punto dell'esaurimento (interpolato nel tratto); `Session_Simulator` tronca i tratti di presenza a
+   quel punto PRIMA dello scheduler e li passa come `legs` (meccanismo della F5-A) a scheduler e
+   risolutore: oltre il punto l'asset non si muove e non ha contatti.
+3. **Esito dell'esaurimento** (`Session_Simulator.FuelEnd`):
+   * terra/mare: FERMI nel punto fino a fine sessione, presenti e bersagli (come la presenza fuori rotta
+     della F5-B), postura `Defense`, NON distrutti;
+   * aereo a secco in volo con una base aerea DEL PROPRIO LATO (`Mission_Adapter.air_base_points`)
+     entro quota x `Fuel_Model.GLIDE_RATIO`: planata in linea retta sulla base piu' vicina alla
+     velocita' di crociera, poi A TERRA sulla base (programma `grounded` dall'atterraggio, bersaglio di
+     superficie passivo, postura `parking_cold`);
+   * aereo a secco in volo senza base raggiungibile: PERSO all'esaurimento; salute a 0 con
+     `Asset.apply_damage` (stato `Destroyed` come in combattimento) SENZA `DamageEvent` nell'esito (non
+     e' un colpo); postura `off_scene` (la postura `destroyed` resta rimandata alla F6-B);
+   * aereo ancora a terra all'esaurimento, o a quota <= 0 (serbatoio vuoto al decollo): resta fermo a
+     terra nel punto (non perso).
+4. **Esiti**: nuovo `AssetEndReason.FUEL_EXHAUSTED` (BINGO resta riservato al bingo in volo della
+   F6-B); l'invariante di `AssetMissionOutcome` ammette `state` DESTROYED con FUEL_EXHAUSTED (aereo
+   perso). Per asset: perso = DESTROYED/FUEL_EXHAUSTED all'istante dell'esaurimento (una distruzione in
+   combattimento precedente prevale); fermo o atterrato = OPERATIONAL/DAMAGED, FUEL_EXHAUSTED; i punti
+   dopo l'esaurimento non sono raggiunti (ETA effettiva None). Missione: DESTROYED se tutti distrutti
+   (anche per carburante) > COMPLETED se qualcuno completa la rotta > **ABORTED (motivo FUEL)** se un
+   asset non distrutto e' fermo/atterrato per carburante > FAILED.
+5. **Interruttori**: `F6_FUEL_PER_LEG` (evento per tratto e consumo delle soste) e `F6_FUEL_CONSTRAINT`
+   (troncamento ed esiti), separati per attribuire le differenze; spenti entrambi la sessione e'
+   identica a prima (verificato sulle 522).
+6. `Contact_Scheduler._asset_legs`: una lista di tratti VUOTA data dal chiamante significa "l'asset non
+   esiste nella sessione" (aereo perso alla partenza), senza ricaduta sulla rotta o sulla posizione.
+
+Decisioni non coperte, scelte le piu' semplici (DA CONFERMARE):
+- precedenza dello stato di missione: COMPLETED prevale su ABORTED per carburante (se un asset completa
+  la rotta e un altro resta a secco la missione e' COMPLETED); un asset fermo a terra/mare per carburante
+  rende la missione ABORTED come l'aereo atterrato in planata;
+- le soste di un aereo A TERRA (parcheggio prima del decollo, sosta dopo l'atterraggio) non consumano;
+- planata: aereo "in volo" come gli altri durante la planata (puo' essere ingaggiato e, se armato,
+  sparare: la "fine di attivita'" e' della F6-B); punto d'atterraggio = l'asset di base piu' vicino a
+  quota 0; durata = distanza 3D / crociera;
+- `Scenario_Baseline`: l'unita' `ORC-fuel` esegue ora `test_without_the_constraint_exhaustion_is_only_reported`
+  (stessa sessione del vecchio `test_exhaustion_is_reported_not_simulated`, vincolo spento): IDENTICA.
+
+### Costanti stimate
+
+- `Fuel_Model.GLIDE_RATIO = 10.0`: STIMA DI PROGETTO, non un dato tarato (nessun dato di planata o di
+  efficienza in `Aircraft_Data`); ordine di grandezza indicato dall'utente per un caccia a motore spento,
+  unico per tutti gli aerei.
+- Nessun'altra costante: consumo delle soste = crociera del registro (ipotesi, non costante).
+- Scenario S24: costanti DI TEST dichiarate (carburante 0,002 dell'E5, 50 km di carburante dell'F-16C,
+  carburante della CAP per meta' orbita, sensori, velocita', tiri a precisione 0), soglia
+  `MIN_FIRING_FRACTION` = 0,5 dichiarata di test.
+
+### Come si attribuiscono le differenze
+
+Tre catture fuori dal repository con gli interruttori impostati (script nello scratchpad) e la finale:
+
+| Cattura | Contro | Esito |
+|---|---|---|
+| codice di partenza | base | IDENTICA (522) |
+| A: `F6_FUEL_PER_LEG` e `F6_FUEL_CONSTRAINT` spenti | base | IDENTICA sulle 522, 88 nuove (S24) |
+| B: solo `F6_FUEL_PER_LEG` | base | 126 cambiate; con `--ignore fuel_events` 38 |
+| C (finale, entrambi attivi) | B | IDENTICA sulle 522: il vincolo non cambia nessuna esecuzione esistente; nelle 88 di S24 cambiano le 48 varianti con l'esaurimento (E5 'far'/'near', GLIDE 'glide'/'no_base'/'enemy_base', ORBIT 'dry') |
+| C | base, `--ignore fuel_events` | 38 cambiate, SOLO in `assets.*.fuel` (nessun contatto, colpo, danno, esito, postura o ETA) |
+
+`--ignore fuel_events` (nuovo in `Scenario_Baseline`) esclude la voce `fuel` e i conteggi
+`counts.fuel_events`/`counts.fuel_exhausted`; il carburante finale per asset resta nel confronto.
+
+### Esecuzioni cambiate (126 su 522, nessuna nella storia)
+
+| Causa | Esecuzioni | Entita' |
+|---|---|---|
+| FORMA: un evento per tratto (rotte di piu' tratti) | 88: S22-AIR 40, S23-CAP 'no_wait'/'waits_off' 16, S23-HOLD 'no_hold'/'waits_off' 16, S23-TOT 'derived'/'waits_off' 16 | 192 asset passano da 1 a 2 eventi (112 restano a 1); somma di distanze e consumi per asset invariata (scarto massimo 1e-6, rumore di arrotondamento) |
+| SOSTANZA: le attese consumano alla crociera | 32: S23-CAP 'during'/'after' 16 (orbita di 1500 s dei MiG-29S: -0,294 del pieno), S23-HOLD 'hold' 8 (sosta di 600 s dell'M1A2: -0,0215), S23-TOT 'own_tot' 8 (attese in volo al punto di partenza: strike 180 s -0,0306, sweep 300 s -0,0471) | solo il carburante finale; nessun asset si esaurisce |
+| ARROTONDAMENTO: somma dei consumi per tratto | 6: S19AD 'strela_standoff' (4 A-10C) | carburante finale 0,954688 -> 0,954687 (ultima cifra di `ROUND_DIGITS`) |
+| VINCOLO del movimento / planata | 0 delle 522 | nessun asset delle fotografie esistenti esaurisce il carburante |
+
+Nessun cambio inatteso: la sola sorpresa apparente (S19AD) e' l'arrotondamento a 6 decimali della somma
+di due consumi per tratto rispetto al consumo unico.
+
+### Scenario nuovo S24 (`Test_Session_Scenarios_S24.py`, 88 esecuzioni, 13 test)
+
+**S24-E5** (8 seed, 4 varianti): M1A2 con `fuel` = 0,002 (autonomia del registro 426 km: 852 m) su 7
+km a 10 m/s, esaurimento a 85,2 s; 3 BMP-2 con sensore 'ground' dichiarato 4,2 km e tiro a precisione 0.
+'far' (rotta verso i BMP, fermo a 6,65 km): nessun colpo in 8/8; 'far_off' (vincolo spento, l'E5 di
+prima): Red spara in 8/8, primo colpo fra 361,0 e 362,9 s (oltre il punto di esaurimento, come i 370 s
+dell'analisi); 'near' (fermo a ~3,9 km dal BMP piu' vicino): Red spara in 8/8 anche dopo 664 s (uscita
+dal sensore senza vincolo), ultimi colpi a ~3597-3600 s; 'near_off': ultimi colpi fra 637 e 660 s.
+Esito: carro non distrutto, FUEL_EXHAUSTED a 85,2 s, missione ABORTED/FUEL, postura `Defense`, un
+FuelEvent esaurito su 852 m; con il vincolo spento rotta completata (COMPLETED) e FuelEvent esaurito.
+
+**S24-GLIDE** (8 seed, 4 varianti): F-16C con carburante per 50 km a 5000 m, esaurimento a 200 s in
+(-50 km, 0); raggio di planata 50 km. 'glide' (base Blue a 20 km): planata fino a ~277,3 s, a terra
+sulla base fino a fine sessione; lo strike Red (lanci a precisione 0 contro gli aerei a terra) lancia
+in 8/8 repliche, sempre dopo l'atterraggio; esito OPERATIONAL/FUEL_EXHAUSTED, missione ABORTED/FUEL.
+'no_base' (base a 60 km) ed 'enemy_base' (base Red a 20 km): perso a 200 s, DESTROYED/FUEL_EXHAUSTED,
+salute 0, nessun DamageEvent, missione DESTROYED, nessun lancio Red. 'off': rotta completata a secco
+(evento esaurito a 50 km di 200), nessun lancio.
+
+**S24-ORBIT** (8 seed, 3 varianti): MiG-29S 'CAP' (sensore 'air' dichiarato 30 km) in orbita in O per
+1500 s da 300 s; bombardieri che non sparano per O a 1400 s. 'full': tre FuelEvent per tratto
+(avvicinamento, orbita ferma da 1500 s alla crociera, rientro), la CAP spara in 8/8; 'dry' (carburante
+per avvicinamento e meta' orbita): due FuelEvent, orbita esaurita dopo 750 s, MiG perso in O a 1050 s
+(6000 m, nessuna base), nessun lancio in 8/8; 'per_leg_off' (`F6_FUEL_PER_LEG` spento): l'orbita non
+consuma, un solo evento, nessun esaurimento, la CAP spara in 8/8.
+
+### Test
+
+- `Test_Fuel_Model`: `TestLegFuelEvent`, `TestFuelExhaustion`, `TestGlide` (nuove, 13 test).
+- `Test_Session_Simulator.TestFuelExhaustion` riscritta (5 test: vincolo spento come prima, aereo perso,
+  planata sulla base, aereo a terra con serbatoio vuoto, veicolo fermo); `TestWaitsAndEtas`: la sosta
+  consuma per tratto (sostituisce il test del limite) + interruttore `F6_FUEL_PER_LEG` spento.
+- `Test_Mission_Types`: FUEL_EXHAUSTED con e senza distruzione. `Test_Contact_Scheduler`: tratti dati
+  vuoti = asset assente.
+- `Test_Session_Scenarios_S23`: `test_the_orbit_does_not_consume_fuel` diventa
+  `test_the_orbit_consumes_fuel_in_time`.
+- `Test_Session_Scenarios_S24` (nuovo, 13 test).
+
+### Limiti noti
+
+- Il vincolo e' calcolato a monte alla CROCIERA, la contabilita' al regime della sessione ('max' per chi
+  ha combattuto, solo per gli aerei: veicoli e navi hanno un'unica autonomia): un aereo che combatte puo'
+  risultare esaurito nella contabilita' prima del punto di troncamento senza che il movimento sia
+  ricalcolato (nessun ri-scheduling dopo gli ingaggi). Il consumo cambia per effetto di un ingaggio solo
+  per questo regime.
+- Idoneita' della base per tipo di aereo (pista, elicotteri, portaerei) non modellata; terreno non
+  modellato (quota = altezza sulla base); base = posizione di un asset non aereo di un blocco
+  `is_Air_Base` del lato.
+- Durante la planata l'aereo e' un aereo in volo come gli altri (puo' essere ingaggiato e sparare).
+- Consumo delle soste = crociera anche per il loiter (sovrastima) e per terra/mare (sovrastima).
+- Un asset distrutto a meta' rotta consuma comunque i tratti (troncati) interi.
+- Bingo in volo con rientro, criteri di fine attivita' e stato di missione completo: F6-B.
+
+### Verifica
+
+Suite 4166 test OK (7 skipped; +33 rispetto a 4133: 13 S24, 13 `Test_Fuel_Model`, 5 `Test_Session_Simulator`,
+1 `Test_Mission_Types`, 1 `Test_Contact_Scheduler`; il test instabile preesistente
+`Test_Tactical_Evaluation...testCalcFightResult` e' passato). Fotografia: prima delle modifiche
+`--compare` IDENTICA su 522; dopo, v. le tabelle sopra (cattura finale 610 esecuzioni, fuori dal
+repository).

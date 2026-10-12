@@ -147,5 +147,107 @@ class TestApplyFuelEvent(_Base):
             FM.apply_fuel_event(_FuelStub(), object())
 
 
+# ── F6-A: consumo per tratto, nel tempo, esaurimento a monte, planata ──────────
+
+class _Leg:
+    """Tratto minimo nella forma di Contact_Scheduler.Leg (letto per attributo)."""
+
+    def __init__(self, t_start, t_end, p_start, p_end):
+        self.t_start, self.t_end, self.p_start, self.p_end = t_start, t_end, p_start, p_end
+
+
+class _CruiseStub(_FuelStub):
+    """Stub con velocita' di crociera (profilo cinematico 'nominal' = 10 m/s)."""
+
+    def __init__(self, cruise=10.0, **kwargs):
+        super().__init__(**kwargs)
+        self.speed = {'nominal': cruise, 'max': 2 * cruise} if cruise is not None else None
+
+
+MOVE = _Leg(0.0, 100.0, (0.0, 0.0, 0.0), (1_000.0, 0.0, 0.0))     # 1 km in 100 s
+HOLD = _Leg(100.0, 400.0, (1_000.0, 0.0, 0.0), (1_000.0, 0.0, 0.0))  # 300 s fermo
+
+
+class TestLegFuelEvent(_Base):
+    """Un FuelEvent per tratto: movimento in distanza, sosta nel tempo alla crociera."""
+
+    def test_moving_leg(self):
+        event = FM.build_leg_fuel_event(_CruiseStub(autonomy=100_000.0), MOVE)
+        self.assertAlmostEqual(event.amount, 0.01)
+        self.assertEqual((event.distance, event.t_start, event.time, event.duration), (1_000.0, 0.0, 100.0, 100.0))
+        self.assertEqual(event.duration_covered, 100.0)
+        self.assertFalse(event.stationary)
+
+    def test_hold_consumes_in_time_at_cruise(self):
+        """300 s alla crociera di 10 m/s = 3 km equivalenti su 100 km di autonomia."""
+        event = FM.build_leg_fuel_event(_CruiseStub(autonomy=100_000.0), HOLD, regime='max')
+        self.assertAlmostEqual(event.amount, 0.03)
+        self.assertEqual((event.distance, event.distance_covered), (0.0, 0.0))
+        self.assertTrue(event.stationary)
+        self.assertEqual(event.regime, FM.HOLD_REGIME)
+        self.assertEqual((event.t_start, event.time, event.duration), (100.0, 400.0, 300.0))
+
+    def test_hold_exhausted_halfway(self):
+        event = FM.build_leg_fuel_event(_CruiseStub(fuel=0.015, autonomy=100_000.0), HOLD)
+        self.assertTrue(event.exhausted)
+        self.assertAlmostEqual(event.duration_covered, 150.0)
+
+    def test_hold_without_cruise_speed_does_not_consume(self):
+        self.assertIsNone(FM.build_leg_fuel_event(_CruiseStub(cruise=None), HOLD))
+        self.assertEqual(FM.leg_fuel_demand(_CruiseStub(cruise=None), HOLD), 0.0)
+
+    def test_fuel_not_modelled(self):
+        self.assertIsNone(FM.build_leg_fuel_event(_CruiseStub(fuel=None), MOVE))
+        self.assertIsNone(FM.leg_fuel_demand(_CruiseStub(fuel=None), MOVE))
+
+
+class TestFuelExhaustion(_Base):
+    """Istante e punto dell'esaurimento calcolati a monte, senza mutare l'asset."""
+
+    def test_enough_fuel(self):
+        asset = _CruiseStub(fuel=1.0, autonomy=100_000.0)
+        self.assertIsNone(FM.fuel_exhaustion(asset, [MOVE, HOLD]))
+        self.assertEqual(asset.fuel, 1.0)
+
+    def test_exhaustion_inside_a_moving_leg(self):
+        found = FM.fuel_exhaustion(_CruiseStub(fuel=0.004, autonomy=100_000.0), [MOVE, HOLD])
+        self.assertEqual(found.leg_index, 0)
+        self.assertAlmostEqual(found.time, 40.0)
+        self.assertAlmostEqual(found.point[0], 400.0)
+
+    def test_exhaustion_inside_a_hold(self):
+        """1 km di movimento (0,01) + 150 s di sosta (0,015): finisce a meta' sosta, fermo nel punto."""
+        found = FM.fuel_exhaustion(_CruiseStub(fuel=0.025, autonomy=100_000.0), [MOVE, HOLD])
+        self.assertEqual(found.leg_index, 1)
+        self.assertAlmostEqual(found.time, 250.0)
+        self.assertEqual(found.point, (1_000.0, 0.0, 0.0))
+
+    def test_empty_tank_at_the_start(self):
+        found = FM.fuel_exhaustion(_CruiseStub(fuel=0.0, autonomy=100_000.0), [MOVE])
+        self.assertEqual((found.time, found.point), (0.0, (0.0, 0.0, 0.0)))
+
+    def test_fuel_not_modelled_means_no_constraint(self):
+        self.assertIsNone(FM.fuel_exhaustion(_CruiseStub(fuel=None), [MOVE]))
+
+
+class TestGlide(_Base):
+
+    def test_glide_range_is_altitude_times_ratio(self):
+        self.assertEqual(FM.glide_range(5_000.0), 5_000.0 * FM.GLIDE_RATIO)
+        self.assertEqual(FM.glide_range(-10.0), 0.0)
+
+    def test_nearest_reachable_base(self):
+        point = (0.0, 0.0, 1_000.0)      # raggio 10 km con il rapporto di default
+        reach = FM.glide_range(1_000.0)
+        bases = [(reach + 1.0, 0.0), (0.0, 6_000.0), (3_000.0, 0.0)]
+        self.assertEqual(FM.nearest_reachable_base(point, bases), (3_000.0, 0.0))
+        self.assertIsNone(FM.nearest_reachable_base(point, [(reach + 1.0, 0.0)]))
+        self.assertIsNone(FM.nearest_reachable_base((0.0, 0.0, 0.0), [(1.0, 0.0)]))
+
+    def test_tie_is_deterministic(self):
+        self.assertEqual(FM.nearest_reachable_base((0.0, 0.0, 1_000.0), [(0.0, 5_000.0), (0.0, -5_000.0)]),
+                         (0.0, -5_000.0))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -786,6 +786,11 @@ class TestAssetMissionOutcome(_LoggerMock, unittest.TestCase):
         with self.assertRaises(ValueError):
             _asset_out('a', 'operational', 'destroyed')
 
+    def test_fuel_exhausted_with_or_without_destruction(self):
+        """F6-A: FUEL_EXHAUSTED vale per un asset fermo/atterrato (non distrutto) e per un aereo perso."""
+        self.assertIs(_asset_out('a', 'operational', 'fuel_exhausted').end_reason, MT.AssetEndReason.FUEL_EXHAUSTED)
+        self.assertIs(_asset_out('a', 'destroyed', 'fuel_exhausted').state, MT.AssetState.DESTROYED)
+
     def test_bad_values(self):
         with self.assertRaises(ValueError):
             _asset_out('a', 'missing')

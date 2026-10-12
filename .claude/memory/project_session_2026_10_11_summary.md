@@ -76,7 +76,19 @@ riassunto; scenario S23 (80 esecuzioni); nessuna esecuzione esistente cambiata. 
    Zone` (`zoneRadius`); DCE: zona CAP = refpoint da trigger zone ~5 m del base_mission (`DC_Refpoints.lua`) + `radius`
    in `targetlist_init.lua`, racetrack da `ATO_RouteGenerator` (leg = vAttack*180 s).
 
-## PROSSIMO: chiudere la correzione TOT, poi F6 (fine missione e carburante nel tempo, postura `destroyed` da rivalutare), F7-F9
+## F6-A FATTA (2026-10-12, vedi commit F6-A su origin; suite 4166 OK, fotografia 610 esecuzioni)
+Carburante per tratto + vincolo su movimento/contatti (interruttori `F6_FUEL_PER_LEG`, `F6_FUEL_CONSTRAINT` in
+`Session_Simulator`), attese al consumo di crociera, terra/mare fermi nel punto, aereo a secco: planata su base del lato
+(`Fuel_Model.GLIDE_RATIO`=10 STIMA, base idonea = qualunque base aerea del lato) -> ABORTED, altrimenti DESTROYED con
+`AssetEndReason.FUEL_EXHAUSTED`. Scenario S24. Cambi accettati dall'utente (38 esecuzioni solo carburante, 126 solo forma
+di `fuel_events`). Precedenza stato missione PROVVISORIA (DESTROYED > COMPLETED > ABORTED(FUEL) > FAILED) fino a F6-B.
+Limiti: vincolo calcolato alla crociera (il regime 'max' di chi combatte non ricalcola il movimento), basi non idonee per
+tipo, durante la planata l'aereo e' un aereo in volo normale, soste di terra/mare sovrastimate.
+Regola esaurimento aereo (utente): a bingo in rotta deve tornare indietro -> ABORTED (F6-B); a secco con base raggiungibile
+in planata -> ABORTED; a secco senza base -> DESTROYED.
+
+## PROSSIMO: F6-B (EndCriteria winchester/bersaglio distrutto/danno nel risolutore, MissionOutcome completo, bingo a priori
+nel validatore, bingo in volo con rientro, postura `destroyed`), poi F7-F9. Una sessione, `des-developer` Opus medium.
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,

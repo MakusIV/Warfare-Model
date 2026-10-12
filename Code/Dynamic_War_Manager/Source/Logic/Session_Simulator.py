@@ -27,7 +27,8 @@ Due tipi di evento di sessione, in un `heapq` con chiave `(t, tipo, id, sequenza
   con UNA chiamata a `resolve_engagement` (che ha la propria coda interna di
   lanci/impatti) e ne applica subito l'esito agli asset reali di tutte le sue forze.
 - **MOVEMENT** — uno per asset con rotta schedulabile nella sessione; istante = fine del
-  suo movimento dentro la sessione. Produce e applica il `FuelEvent` del tragitto.
+  suo movimento dentro la sessione (dalla F6-A troncato all'esaurimento del carburante). Produce e
+  applica i `FuelEvent` del tragitto, uno per tratto (v. "Carburante").
 
 ## Missioni (Fase 3 del piano della Missione)
 
@@ -103,7 +104,8 @@ La sessione ricava da `Mission_Adapter` i tratti di presenza (`movement_legs`, p
 scheduler come `legs` e al risolutore come tratti degli asset) e il programma degli aerei a terra
 (`grounded_schedule`: sempre gli aerei senza missione, a intervalli quelli di missione), passato
 allo scheduler (finestre spezzate a decolli e atterraggi) e a ogni ingaggio. Il carburante usa i
-soli tratti di MOVIMENTO (`movement_legs(..., presence=False)`): la presenza ferma non consuma.
+soli tratti di MOVIMENTO (`movement_legs(..., presence=False)`): la presenza ferma non consuma. Dalla
+F6-A tratti e programma a terra sono corretti per l'esaurimento del carburante (v. "Carburante").
 L'esito porta la postura di OGNI asset delle forze passate a fine sessione
 (`SessionOutcome.postures`, `Mission_Adapter.session_postures`), anche dei blocchi senza missioni:
 postura continua della F4c per gli asset senza missione, postura di fine missione per gli altri
@@ -120,10 +122,8 @@ un'approssimazione dichiarata), le ETA bloccate e il TOT della missione (`Missio
 di ogni missione, anche nella stessa Operazione, decisione dell'utente del 2026-10-12) entrano nel
 movimento di ogni asset come tratti fermi (`AssetMovement.holds`). Arrivano cosi' allo scheduler
 (`legs`) e al risolutore con gli stessi tratti della presenza: una CAP in orbita ha finestre di
-contatto per tutta l'attesa. Il carburante NON cambia: un tratto fermo ha lunghezza nulla e il
-consumo e' in distanza, quindi attese e orbite non consumano (consumo nel tempo: F6, limite
-noto); il `FuelEvent` resta uno per asset, all'istante di fine movimento (spostato dalle attese).
-Gli istanti effettivi di arrivo ai punti, attese comprese, sono nel `MissionOutcome.actual_etas`
+contatto per tutta l'attesa. Dalla F6-A attese e orbite consumano NEL TEMPO alla crociera, con un
+`FuelEvent` per tratto (v. "Carburante"); nella F5-C non consumavano. Gli istanti effettivi di arrivo ai punti, attese comprese, sono nel `MissionOutcome.actual_etas`
 (v. `_mission_outcome`).
 
 `SessionOrder.committed` resta chiavato per BLOCCO (la lingua della porta): per ogni forza
@@ -150,8 +150,15 @@ entro la sessione": manca uno stato "in corso", v. D4.e, che lo distinguerebbe d
 fallimento vero). ETA effettive per punto: il primo passaggio fra gli asset non ancora
 distrutti, None se nessuno ci arriva dentro la sessione; e' l'istante d'ARRIVO al punto (prima di
 un'eventuale attesa nel punto), calcolato dai tratti con le attese (`Mission_Adapter.waypoint_times`,
-F5-C), non dalle ETA pianificate. Nessun criterio di stato (bingo,
-winchester, danno, minaccia): F6.
+F5-C), non dalle ETA pianificate.
+Carburante (F6-A, v. "Carburante"): un aereo perso per esaurimento e' DESTROYED con motivo
+FUEL_EXHAUSTED all'istante dell'esaurimento (una distruzione in combattimento precedente prevale);
+un asset fermo (terra/mare) o atterrato in planata per esaurimento ha motivo FUEL_EXHAUSTED, stato
+OPERATIONAL/DAMAGED, e i punti dopo l'esaurimento non sono raggiunti (ETA None). Missione: DESTROYED
+se tutti distrutti (anche per carburante), poi COMPLETED se qualcuno ha completato la rotta, poi
+ABORTED con motivo FUEL se qualche asset non distrutto e' fermo o atterrato per carburante, altrimenti
+FAILED (precedenza minima di prima forma: la logica di stato completa e' della F6-B). Nessun altro
+criterio di stato (bingo, winchester, danno, minaccia): F6-B.
 
 A parita' d'istante ENGAGEMENT < MOVEMENT, poi l'id (stringa canonica, mai l'ordine di un
 dizionario Python). Le finestre di un asset mobile cadono tutte dentro lo span dei suoi
@@ -236,31 +243,69 @@ selezione dell'arma dai registri non sta nell'orchestratore: la fa la callable i
 che dichiara la keyword `target_grounded` la riceve per i bersagli a terra (v.
 `resolve_engagement`).
 
-## Carburante
+## Carburante (F6-A del piano della Missione, decisioni dell'utente del 2026-10-12)
 
-Per ogni asset con rotta (dalle missioni) si prendono i tratti di MOVIMENTO ritagliati alla
-sessione (`Mission_Adapter.movement_legs(..., presence=False)`: gli stessi tratti cercati dallo
-scheduler, senza la presenza ferma prima e dopo, che non consuma) e la distanza e' la somma delle
-lunghezze dei tratti. Un solo `FuelEvent` per asset, all'istante di fine movimento.
+Fino alla F5 il carburante era un vincolo A POSTERIORI: un solo `FuelEvent` per asset a fine
+movimento, per distanza, e un asset a secco continuava a muoversi e a combattere (esperimento E5
+dell'analisi: un carro a secco dopo 852 m di 7 km ingaggiato 3 km piu' avanti). Dalla F6-A, dietro
+due interruttori del modulo (`F6_FUEL_PER_LEG`, `F6_FUEL_CONSTRAINT`, entrambi attivi):
+
+**Tratti che consumano.** Per ogni asset di missione i tratti di MOVIMENTO ritagliati alla sessione
+(`Mission_Adapter.movement_legs(..., presence=False)`: senza la presenza ferma prima e dopo, che non
+consuma), comprese le attese (tratti fermi della F5-C). Le attese consumano NEL TEMPO alla crociera
+dell'asset (`Fuel_Model.build_leg_fuel_event`; ipotesi dichiarata, pessimistica: il loiter reale
+consuma meno); non consumano i tratti fermi di un aereo A TERRA (parcheggio prima del decollo, sosta
+dopo l'atterraggio: `_consuming_legs`). Stesso criterio per terra e mare.
+
+**Esaurimento a monte (`F6_FUEL_CONSTRAINT`).** Il carburante dipende solo dai tratti e dal carburante
+di partenza, quindi l'istante e il punto dell'esaurimento si calcolano PRIMA dello scheduler
+(`Fuel_Model.fuel_exhaustion`, al regime di crociera) e i tratti oltre quel punto NON esistono: i
+tratti troncati vanno allo scheduler (`legs`, il meccanismo della F5-A) e al risolutore, quindi i
+contatti sono calcolati sui tratti reali. Esito (`_fuel_end`, `FuelEnd`):
+  * terra/mare (o aereo ancora a terra): FERMO nel punto di esaurimento fino alla fine della sessione
+    (`FUEL_HALT`), presente e bersaglio come la presenza fuori rotta della F5-B, postura `Defense`;
+    NON distrutto;
+  * aereo in volo: planata in linea retta sulla base aerea DEL SUO LATO piu' vicina entro quota x
+    `Fuel_Model.GLIDE_RATIO` (`FUEL_GLIDE`; basi = `Mission_Adapter.air_base_points`, l'idoneita' per
+    tipo d'aereo, es. lunghezza della pista, NON e' modellata: approssimazione dichiarata), poi A TERRA
+    sulla base (programma `grounded` dall'atterraggio, bersaglio di superficie passivo come in F5-B);
+    durante la planata e' un aereo in volo come gli altri (limite noto, la "fine di attivita'" e' della
+    F6-B). Velocita' di planata = crociera dell'asset (semplificazione dichiarata); quota = quella del
+    punto di esaurimento, interpolata fra i waypoint, trattata come altezza sulla base (terreno non
+    modellato); punto d'atterraggio = l'asset di base piu' vicino, a quota 0;
+  * aereo in volo senza base raggiungibile in planata: PERSO (`FUEL_CRASH`): i tratti finiscono
+    all'esaurimento e, dopo gli ingaggi, la salute e' portata a 0 con `Asset.apply_damage` (lo stesso
+    canale del danno da combattimento, stato asset `Destroyed`) SENZA un `DamageEvent` nell'esito (non
+    e' un colpo: nessun tiratore ne' arma); l'esito per asset e' DESTROYED con motivo FUEL_EXHAUSTED.
+Un asset il cui consumo cambia per effetto di un ingaggio (regime 'max', sotto) puo' esaurire prima
+del punto calcolato a monte: limite noto, nessun ri-scheduling (v. sotto).
+
+**Contabilita' (`F6_FUEL_PER_LEG`).** All'evento MOVEMENT dell'asset (fine dei suoi tratti troncati)
+un `FuelEvent` per tratto che consuma, in ordine, applicato subito (`Fuel_Model.apply_fuel_event`);
+dopo un evento esaurito nessun altro. Spento: un solo FuelEvent per asset sulla distanza dei tratti di
+movimento, le attese non consumano (come la F5-C).
 
 Regime (scelta dichiarata, la piu' semplice che distingua combattimento da crociera):
 `'max'` se l'asset ha **combattuto** nella sessione — ha lanciato una salva, e' stato
-bersaglio di una salva, o ha intercettato — altrimenti `'nominal'`. Per gli aerei 'max'
+bersaglio di una salva, o ha intercettato — altrimenti `'nominal'`, per i tratti di MOVIMENTO; le
+attese sempre alla crociera (`Fuel_Model.HOLD_REGIME`). Per gli aerei 'max'
 legge il profilo `attack` del loadout, per veicoli e navi il registro non distingue (v.
-FUEL_FULL in `Asset/Mobile.py`). Tutto il tragitto e' consumato al regime scelto: per chi ha
+FUEL_FULL in `Asset/Mobile.py`). Tutto il movimento e' consumato al regime scelto: per chi ha
 combattuto e' una sovrastima **pessimistica** del consumo (il tratto di crociera e'
 contato a regime di combattimento), preferita a una ripartizione per intervalli che
 richiederebbe di inventare quando comincia e finisce la manovra di combattimento. Se il
 regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'.
 
 **Limiti dichiarati:**
-- nessun movimento fisico: se il carburante finisce a meta' (`FuelEvent.exhausted`,
-  `distance_covered < distance`) l'asset NON viene fermato sulla rotta e i contatti gia'
-  calcolati non vengono ricalcolati; l'informazione e' nel `FuelEvent`, e la usera' il
-  livello superiore (C2/campagna);
-- un asset distrutto a meta' rotta consuma comunque il tragitto intero (il carburante di un
+- il vincolo e' calcolato a monte al regime di CROCIERA: per un aereo che combatte la contabilita' al
+  regime 'max' puo' esaurire il carburante prima del punto di troncamento (`FuelEvent.exhausted` con
+  `distance_covered < distance` sull'ultimo tratto) senza che il movimento sia ricalcolato (nessun
+  ri-scheduling dopo gli ingaggi, P2/R4); per veicoli e navi i due regimi coincidono e il limite non
+  si presenta;
+- un asset distrutto a meta' rotta consuma comunque il tragitto (troncato) intero (il carburante di un
   relitto non ha conseguenze di campagna);
-- un asset senza rotta (fermo) non produce FuelEvent.
+- un asset senza rotta (fermo) non produce FuelEvent; il carburante di partenza e il rifornimento non
+  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B.
 
 ## Sessione aperta (`SessionOrder.t_end is None`)
 
@@ -284,11 +329,13 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 
 import heapq
 import json
+from dataclasses import dataclass
 from math import sqrt
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from Code.Dynamic_War_Manager.Source.Asset.Mobile import DEFAULT_DETECTION_RANGE_TYPE
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    AbortReason,
     AssetEndReason,
     AssetMissionOutcome,
     AssetState,
@@ -327,6 +374,43 @@ TEMPER_EVENT_TAG = 'temper'
 # Regimi di consumo (Mobile.FUEL_REGIMES).
 CRUISE_REGIME = 'nominal'
 COMBAT_REGIME = 'max'
+
+# F6-A, due interruttori separati (come F5_PRESENCE/F5_WAITS di Mission_Adapter), cosi' che la
+# fotografia attribuisca le differenze a una sola causa (v. "Carburante" nel docstring):
+#   * `F6_FUEL_PER_LEG` (ATTIVO): un `FuelEvent` per tratto e consumo nel tempo delle soste alla
+#     crociera. Spento: un solo FuelEvent per asset sulla distanza dei tratti di movimento, le soste
+#     non consumano (come la F5-C).
+#   * `F6_FUEL_CONSTRAINT` (ATTIVO): il carburante vincola movimento e contatti; tratti troncati
+#     all'esaurimento calcolato a monte, terra/mare fermi e presenti nel punto, aereo in planata su una
+#     base o perso. Spento: nessun vincolo, l'asset a secco continua (come prima, esperimento E5).
+F6_FUEL_PER_LEG = True
+F6_FUEL_CONSTRAINT = True
+
+# Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
+FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
+FUEL_GLIDE = 'glide'    # aereo in volo: planata sulla base raggiungibile piu' vicina, poi a terra
+FUEL_CRASH = 'crash'    # aereo in volo senza base raggiungibile in planata: perso
+
+
+@dataclass(frozen=True)
+class FuelEnd:
+    """Fine del movimento di un asset per esaurimento del carburante (F6-A), calcolata a monte.
+
+    Attributes:
+        asset_id: id di dominio.
+        kind: FUEL_HALT, FUEL_GLIDE o FUEL_CRASH.
+        time/point: istante [s] e posizione (x, y, z) dell'esaurimento (`Fuel_Model.FuelExhaustion`).
+        landing_time/landing_point: fine della planata sulla base (solo FUEL_GLIDE).
+        on_ground: aereo fermo A TERRA nel punto (FUEL_HALT di un aereo: a terra all'esaurimento, o a
+            quota <= 0, es. serbatoio vuoto al decollo).
+    """
+    asset_id: str
+    kind: str
+    time: float
+    point: Tuple[float, float, float]
+    landing_time: Optional[float] = None
+    landing_point: Optional[Tuple[float, float, float]] = None
+    on_ground: bool = False
 
 
 # ── IDENTITA' ─────────────────────────────────────────────────────────────────
@@ -599,6 +683,159 @@ def _build_fuel(asset, distance: float, time: float, regime: str, provenance: st
     return event
 
 
+def _build_leg_fuel(asset, leg, regime: str, provenance: str):
+    """`build_leg_fuel_event` al regime dato, con la stessa ricaduta su 'nominal' di `_build_fuel`
+    (le soste consumano comunque alla crociera, `Fuel_Model.HOLD_REGIME`)."""
+    event = FM.build_leg_fuel_event(asset, leg, regime=regime, provenance=provenance)
+
+    if event is None and regime != CRUISE_REGIME and not FM.is_stationary(leg):
+        logger.debug(f"run_session: no '{regime}' fuel autonomy for {_domain_id(asset)!r}, "
+                     f"falling back to '{CRUISE_REGIME}'")
+        event = FM.build_leg_fuel_event(asset, leg, regime=CRUISE_REGIME, provenance=provenance)
+
+    return event
+
+
+# ── CARBURANTE: ESAURIMENTO A MONTE (F6-A) ────────────────────────────────────
+
+def _consuming_legs(asset_id: str, legs, grounded: CS.GroundedSchedule) -> List[CS.Leg]:
+    """Tratti di movimento che CONSUMANO (v. "Carburante" nel docstring del modulo).
+
+    Esclusi i tratti degeneri (durata nulla) e i tratti FERMI di un aereo A TERRA (sosta sul
+    parcheggio prima del decollo o dopo l'atterraggio: motori spenti, nessun consumo). Con
+    `F6_FUEL_PER_LEG` spento i tratti fermi non consumano mai (come prima della F6-A)."""
+    consuming = []
+
+    for leg in legs:
+        stationary = FM.is_stationary(leg)
+
+        if stationary and (leg.duration <= CS.TIME_EPS or not F6_FUEL_PER_LEG
+                           or grounded.at(asset_id, 0.5 * (leg.t_start + leg.t_end))):
+            continue
+
+        consuming.append(leg)
+
+    return consuming
+
+
+def _moving_speed(legs, time: float) -> Optional[float]:
+    """Velocita' [m/s] del tratto di movimento in corso (o dell'ultimo prima) a `time`; in mancanza
+    quella del primo tratto di movimento; None se l'asset non ha tratti di movimento."""
+    moving = [leg for leg in legs if not FM.is_stationary(leg) and leg.duration > CS.TIME_EPS]
+    before = [leg for leg in moving if leg.t_start <= time + CS.TIME_EPS]
+    leg = before[-1] if before else (moving[0] if moving else None)
+
+    if leg is None:
+        return None
+
+    return sqrt(sum((e - s) ** 2 for s, e in zip(leg.p_start, leg.p_end))) / leg.duration
+
+
+def _fuel_end(asset, asset_id: str, domain: str, consuming, grounded: CS.GroundedSchedule,
+              air_bases) -> Optional[FuelEnd]:
+    """Esaurimento del carburante dell'asset sui suoi tratti e suo esito (F6-A), o None se basta.
+
+    Terra/mare, o aereo ancora A TERRA all'esaurimento (o a quota <= 0): FUEL_HALT (fermo nel punto;
+    l'aereo a terra, `on_ground`). Aereo in volo:
+    planata in linea retta sulla base del suo lato (`air_bases`, `Mission_Adapter.air_base_points`)
+    piu' vicina entro il raggio di planata (`Fuel_Model.nearest_reachable_base`), FUEL_GLIDE; nessuna
+    base raggiungibile: FUEL_CRASH. Punto d'atterraggio = la posizione dell'asset di base piu' vicino,
+    a quota 0 (il terreno non e' modellato). Velocita' di planata = la crociera dell'asset (in mancanza
+    quella del tratto in corso): semplificazione dichiarata."""
+    exhaustion = FM.fuel_exhaustion(asset, consuming, regime=CRUISE_REGIME)
+
+    if exhaustion is None:
+        return None
+
+    if domain != 'air':
+        return FuelEnd(asset_id, FUEL_HALT, exhaustion.time, exhaustion.point)
+
+    if grounded.at(asset_id, exhaustion.time) or exhaustion.point[2] <= 0.0:
+        # A terra (o a quota nulla, es. serbatoio vuoto al decollo): resta fermo a terra nel punto.
+        return FuelEnd(asset_id, FUEL_HALT, exhaustion.time, exhaustion.point, on_ground=True)
+
+    base = FM.nearest_reachable_base(exhaustion.point, air_bases)
+
+    if base is None:
+        return FuelEnd(asset_id, FUEL_CRASH, exhaustion.time, exhaustion.point)
+
+    landing = (base[0], base[1], 0.0)
+    speed = FM.cruise_speed(asset) or _moving_speed(consuming, exhaustion.time)
+    length = sqrt(sum((e - s) ** 2 for s, e in zip(exhaustion.point, landing)))
+    duration = length / speed if speed else 0.0
+    return FuelEnd(asset_id, FUEL_GLIDE, exhaustion.time, exhaustion.point,
+                   landing_time=exhaustion.time + duration, landing_point=landing)
+
+
+def _truncate_at_fuel_end(legs, end: FuelEnd, t0: float, session_end: float) -> List[CS.Leg]:
+    """Tratti di presenza dell'asset fino all'esaurimento, poi l'esito (F6-A): fermo nel punto fino
+    alla fine della sessione (FUEL_HALT), planata e sosta a terra sulla base (FUEL_GLIDE), nulla
+    (FUEL_CRASH). Senza tratti degeneri; lista vuota = l'asset non esiste nella sessione."""
+    kept = [leg for leg in CS.clamp_legs(legs, t0, end.time) if leg.duration > CS.TIME_EPS]
+
+    if end.kind == FUEL_HALT:
+        kept.append(CS.Leg(t_start=end.time, t_end=float(session_end), p_start=end.point, p_end=end.point))
+    elif end.kind == FUEL_GLIDE:
+        kept.append(CS.Leg(t_start=end.time, t_end=end.landing_time, p_start=end.point, p_end=end.landing_point))
+        kept.append(CS.Leg(t_start=end.landing_time, t_end=max(float(session_end), end.landing_time),
+                           p_start=end.landing_point, p_end=end.landing_point))
+
+    return [leg for leg in CS.clamp_legs(kept, t0, session_end) if leg.duration > CS.TIME_EPS]
+
+
+def _grounded_after_fuel(grounded: CS.GroundedSchedule, ends: Mapping[str, FuelEnd]) -> CS.GroundedSchedule:
+    """Programma degli aerei a terra corretto per gli esaurimenti (F6-A): gli intervalli a terra che
+    cominciano dopo l'esaurimento (atterraggio pianificato mai raggiunto) cadono; un aereo a terra
+    all'esaurimento ci resta; un aereo in planata e' a terra dall'atterraggio sulla base."""
+    if not ends:
+        return grounded
+
+    intervals = {asset_id: list(grounded.intervals(asset_id)) for asset_id in grounded.ids()}
+
+    for asset_id, end in ends.items():
+        spans = []
+
+        for lo, hi in intervals.get(asset_id, ()):
+            if lo <= end.time < hi:
+                spans.append((lo, float('inf')))
+            elif lo < end.time:
+                spans.append((lo, hi))
+
+        if end.kind == FUEL_GLIDE:
+            spans.append((end.landing_time, float('inf')))
+        elif end.on_ground:
+            spans.append((end.time, float('inf')))
+
+        if spans:
+            intervals[asset_id] = spans
+        else:
+            intervals.pop(asset_id, None)
+
+    return CS.GroundedSchedule(intervals)
+
+
+def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], domains: Mapping[str, str],
+                         mission_types: Mapping[str, str], grounded: CS.GroundedSchedule,
+                         session_end: float) -> Dict[str, str]:
+    """Postura a fine sessione degli asset a secco (F6-A): aereo perso `OFF_SCENE_POSTURE`
+    (la postura `destroyed` e' rimandata alla F6-B, come per le distruzioni in combattimento), a terra
+    `PARKED_POSTURE`, in planata il tipo di missione; terra/mare fermi in `Defense`."""
+    for asset_id, end in ends.items():
+        if asset_id not in postures:
+            continue
+
+        if end.kind == FUEL_CRASH:
+            postures[asset_id] = MA.OFF_SCENE_POSTURE
+        elif grounded.at(asset_id, session_end):
+            postures[asset_id] = MA.PARKED_POSTURE
+        elif end.kind == FUEL_GLIDE:
+            postures[asset_id] = mission_types[asset_id]
+        else:
+            postures[asset_id] = MA.SEA_DEFENSE_POSTURE if domains[asset_id] == 'sea' else MA.GROUND_DEFENSE_POSTURE
+
+    return postures
+
+
 def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
     """Ogni missione si riferisce a un blocco passato, i suoi asset gli appartengono e nessun suo
     tratto e' piu' veloce del mezzo piu' lento (regola A, `Mission_Adapter.check_mission_speed`)."""
@@ -708,24 +945,34 @@ def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict
 
 
 def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed: Mapping[str, float],
-                     session_end: float) -> MissionOutcome:
-    """Esito di missione di prima forma (regola nel docstring del modulo)."""
+                     session_end: float, fuel_ends: Optional[Mapping[str, FuelEnd]] = None) -> MissionOutcome:
+    """Esito di missione di prima forma (regola nel docstring del modulo; esaurimento del carburante
+    della F6-A in `fuel_ends`)."""
     asset_outcomes = {}
     reached = False
+    out_of_fuel = False
     passages: List[Tuple[Tuple[float, ...], Optional[float]]] = []
 
     for movement in movements:
         asset_id = movement.asset_id
-        times = MA.waypoint_times(movement)
-        arrival = times[-1] if times else None
+        end = (fuel_ends or {}).get(asset_id)
+        planned = MA.waypoint_times(movement)
+        # Oltre l'esaurimento (F6-A) l'asset non si muove: i punti successivi non sono raggiunti.
+        times = planned if end is None else tuple(t for t in planned if t <= end.time + CS.TIME_EPS)
+        arrival = times[-1] if times and len(times) == len(planned) else None
         destroyed_at = destroyed.get(asset_id)
+        crashed_at = end.time if end is not None and end.kind == FUEL_CRASH else None
         arrives = arrival is not None and arrival <= session_end + CS.TIME_EPS
 
         if arrives and (destroyed_at is None or destroyed_at > arrival + CS.TIME_EPS):
             reached = True
 
-        if destroyed_at is not None:
+        if destroyed_at is not None and (crashed_at is None or destroyed_at <= crashed_at + CS.TIME_EPS):
             outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.DESTROYED, destroyed_at)
+        elif crashed_at is not None:
+            # Aereo a secco in volo senza base raggiungibile (F6-A): perso per carburante.
+            outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, crashed_at)
+            destroyed_at = crashed_at
         else:
             asset = assets.get(asset_id)
             health = getattr(asset, 'health', None)
@@ -733,22 +980,33 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
 
             if arrives:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.ROUTE_COMPLETED, arrival)
+            elif end is not None:
+                # Fermo nel punto (terra/mare) o a terra sulla base dopo la planata (aereo), F6-A.
+                outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.FUEL_EXHAUSTED, end.time)
+                out_of_fuel = True
             else:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.SESSION_END, session_end)
 
         asset_outcomes[asset_id] = outcome
         passages.append((times, destroyed_at))
 
+    # F6-A: un asset fermo o atterrato per carburante rende la missione ABORTED (motivo FUEL) se
+    # nessun asset ha completato la rotta (la precedenza di COMPLETED e' la regola di prima forma;
+    # la logica di stato completa della missione e' della F6-B).
+    reason = None
+
     if all(o.state is AssetState.DESTROYED for o in asset_outcomes.values()):
         status = MissionStatus.DESTROYED
     elif reached:
         status = MissionStatus.COMPLETED
+    elif out_of_fuel:
+        status, reason = MissionStatus.ABORTED, AbortReason.FUEL
     else:
         status = MissionStatus.FAILED
 
     # ETA effettive: per punto, il primo passaggio dentro la sessione fra gli asset non ancora
     # distrutti. Con il percorso di riferimento i punti della rotta sono quelli della missione.
-    count = max((len(times) for times, _ in passages), default=0)
+    count = max((len(MA.waypoint_times(movement)) for movement in movements), default=0)
     etas = []
 
     for index in range(count):
@@ -757,7 +1015,8 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
                       and (destroyed_at is None or destroyed_at > times[index] + CS.TIME_EPS)]
         etas.append(min(candidates) if candidates else None)
 
-    return MissionOutcome(mission.mission_id, status, asset_outcomes=asset_outcomes, actual_etas=tuple(etas))
+    return MissionOutcome(mission.mission_id, status, reason=reason, asset_outcomes=asset_outcomes,
+                          actual_etas=tuple(etas))
 
 
 # ── API PUBBLICA ──────────────────────────────────────────────────────────────
@@ -845,15 +1104,56 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # Aerei a terra nel tempo (F4c + F5): sempre gli aerei senza missione, a intervalli quelli di
     # missione prima del decollo e dopo l'atterraggio su una base vera. V. docstring del modulo.
     grounded = MA.grounded_schedule(forces, movement_of.values())
+    assets_by_id: Dict[str, object] = {}
+
+    for force_id in sorted(blocks):
+        for asset in (getattr(blocks[force_id], 'assets', None) or {}).values():
+            asset_id = _domain_id(asset)
+
+            if asset_id is not None:
+                assets_by_id[asset_id] = asset
+
+    # Tratti di MOVIMENTO di ogni asset di missione (senza la presenza ferma prima e dopo, che non
+    # consuma) e, dalla F6-A, esaurimento del carburante calcolato A MONTE (v. "Carburante").
+    mission_of = {mission.mission_id: mission for mission in order.missions}
+    moving_legs: Dict[str, List[CS.Leg]] = {}
+    fuel_ends: Dict[str, FuelEnd] = {}
+
+    for asset_id, movement in movement_of.items():
+        moving_legs[asset_id] = MA.movement_legs(movement, t0, session_end, presence=False)
+        asset = assets_by_id.get(asset_id)
+
+        if not F6_FUEL_CONSTRAINT or asset is None or not moving_legs[asset_id]:
+            continue
+
+        mission = mission_of[movement.mission_id]
+        side = getattr(blocks[mission.block_id], 'side', None)
+        end = _fuel_end(asset, asset_id, mission.domain, _consuming_legs(asset_id, moving_legs[asset_id], grounded),
+                        grounded, air_bases.get(side, ()))
+
+        if end is not None:
+            fuel_ends[asset_id] = end
+            logger.info(f"run_session: asset {asset_id!r} runs out of fuel at t={end.time:.1f} "
+                        f"({end.kind}): its legs end there")
+
     # Tratti di presenza degli asset di missione (F5-B): movimento + presenza ferma prima della
     # partenza e dopo la fine (`Mission_Adapter.movement_legs`); vuoti = asset fermo in posizione.
+    # F6-A: troncati all'esaurimento del carburante (una lista VUOTA data allo scheduler = l'asset non
+    # esiste nella sessione, aereo perso alla partenza).
     presence_legs: Dict[str, List[CS.Leg]] = {}
 
     for asset_id, movement in movement_of.items():
         legs = MA.movement_legs(movement, t0, session_end)
+        end = fuel_ends.get(asset_id)
 
-        if legs:
+        if end is not None:
+            presence_legs[asset_id] = _truncate_at_fuel_end(legs, end, t0, session_end)
+            moving_legs[asset_id] = [leg for leg in CS.clamp_legs(moving_legs[asset_id], t0, end.time)
+                                     if leg.duration > CS.TIME_EPS]
+        elif legs:
             presence_legs[asset_id] = legs
+
+    grounded = _grounded_after_fuel(grounded, fuel_ends)
 
     # ── strato 1: tutti i contatti della sessione ─────────────────────────────
     windows = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts,
@@ -865,7 +1165,6 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # esatto di rilevamento; i soli tratti di MOVIMENTO (senza la presenza ferma) al carburante.
     all_legs: Dict[str, List[CS.Leg]] = {}
     movements: List[Tuple[str, object, List[CS.Leg]]] = []
-    assets_by_id: Dict[str, object] = {}
 
     for force_id in sorted(blocks):
         for asset in (getattr(blocks[force_id], 'assets', None) or {}).values():
@@ -874,9 +1173,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             if asset_id is None:
                 continue
 
-            assets_by_id[asset_id] = asset
-            movement = movement_of.get(asset_id)
-            moving = MA.movement_legs(movement, t0, session_end, presence=False) if movement is not None else []
+            moving = moving_legs.get(asset_id, [])
 
             if moving:
                 movements.append((asset_id, asset, moving))
@@ -938,12 +1235,30 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 engaged |= _engaged_assets(result)
         else:
             asset, legs = payload
+            regime = COMBAT_REGIME if key in engaged else CRUISE_REGIME
+
+            if F6_FUEL_PER_LEG:
+                # F6-A: un FuelEvent per tratto che consuma (movimento al regime della sessione, soste
+                # nel tempo alla crociera), applicato in ordine; dopo l'esaurimento nessun evento.
+                for leg in _consuming_legs(key, legs, grounded):
+                    event = _build_leg_fuel(asset, leg, regime, provenance)
+
+                    if event is None:
+                        continue
+
+                    FM.apply_fuel_event(asset, event)
+                    fuel_events.append(event)
+
+                    if event.exhausted:
+                        break
+
+                continue
+
             distance = _legs_distance(legs)
 
             if distance <= 0.0:
                 continue
 
-            regime = COMBAT_REGIME if key in engaged else CRUISE_REGIME
             event = _build_fuel(asset, distance, time, regime, provenance)
 
             if event is not None:
@@ -976,10 +1291,31 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
     destroyed = _destruction_times(results, assets_by_id, t0)
     mission_outcomes = {mission.mission_id: _mission_outcome(mission, mission_movements[mission.mission_id],
-                                                             assets_by_id, destroyed, session_end)
+                                                             assets_by_id, destroyed, session_end, fuel_ends)
                         for mission in order.missions}
+
+    # F6-A: un aereo perso per carburante (nessuna base raggiungibile in planata) e' distrutto come in
+    # combattimento: salute a 0 con `Asset.apply_damage`, lo stesso canale del danno, ma SENZA un
+    # DamageEvent nell'esito (non e' un colpo: nessun tiratore ne' arma). Il motivo e' nell'esito per
+    # asset (FUEL_EXHAUSTED). Applicata dopo gli ingaggi: oltre l'esaurimento l'aereo non ha tratti.
+    for asset_id, end in sorted(fuel_ends.items()):
+        asset = assets_by_id.get(asset_id)
+
+        if end.kind != FUEL_CRASH or asset is None or getattr(asset, 'is_destroyed', lambda: False)():
+            continue
+
+        health = getattr(asset, 'health', None)
+
+        if isinstance(health, int) and not isinstance(health, bool) and health > 0 and \
+                callable(getattr(asset, 'apply_damage', None)):
+            asset.apply_damage(-health)
+
     # Postura di ogni asset a fine sessione (F5-B, deviazione 12): anche dei blocchi senza missioni.
     postures = MA.session_postures(forces, movement_of, grounded, session_end)
+    postures = _postures_after_fuel(postures, fuel_ends,
+                                    {a: mission_of[m.mission_id].domain for a, m in movement_of.items()},
+                                    {a: mission_of[m.mission_id].mission_type for a, m in movement_of.items()},
+                                    grounded, session_end)
 
     return assemble_session_outcome(order.session_id, results, fuel_events,
                                     t_start=t0, t_end=latest, mission_outcomes=mission_outcomes,

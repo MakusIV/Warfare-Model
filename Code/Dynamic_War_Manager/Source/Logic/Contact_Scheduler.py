@@ -1490,6 +1490,11 @@ def _asset_legs(asset, routes, starts, speeds, t0: float, horizon: float,
     asset_id = _asset_id(asset)
     known = (given or {}).get(asset_id) if asset_id is not None else None
 
+    if known is not None and len(known) == 0:
+        # Lista VUOTA data dal chiamante (F6-A): l'asset non esiste nella sessione (aereo perso per
+        # carburante alla partenza), niente ricaduta sulla rotta o sulla posizione.
+        return []
+
     if known:
         lo, hi = t0, t0 + horizon
 

@@ -683,6 +683,11 @@ class TestGroundedTransitionsSplitWindows(unittest.TestCase):
         windows = CS.schedule_contacts(self.blue, self.red, horizon=100.0, legs=legs)
         self.assertEqual([(w.t_start, w.t_end) for w in windows], [(50.0, 100.0)])
 
+    def test_given_empty_legs_mean_the_asset_does_not_exist(self):
+        """F6-A: una lista VUOTA data (aereo perso per carburante alla partenza) non ricade sulla
+        posizione fissa: nessuna finestra."""
+        self.assertEqual(CS.schedule_contacts(self.blue, self.red, horizon=100.0, legs={'parked': []}), [])
+
 
 class TestContactWindows(unittest.TestCase):
     """Chi vede per primo, da quando, e da quando si vedono entrambi.

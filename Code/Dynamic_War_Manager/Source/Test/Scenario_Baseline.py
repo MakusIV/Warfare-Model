@@ -83,6 +83,16 @@ da `MissionOutcome.actual_etas`: istanti d'arrivo ai punti, attese WAIT/ETA bloc
 comprese), solo se l'esito porta esiti di missione. `--ignore actual_etas` la esclude dal
 confronto, come `postures`.
 
+## Carburante per tratto dopo la F6-A
+
+Dalla F6-A i `FuelEvent` sono uno per TRATTO (movimento e soste, che consumano nel tempo alla
+crociera) e il carburante vincola movimento e contatti (interruttori `Session_Simulator.F6_FUEL_PER_LEG`
+e `F6_FUEL_CONSTRAINT`). Nella voce `fuel` gli eventi di movimento hanno la forma di prima; quelli dei
+tratti fermi portano anche `stationary` e `duration`. `--ignore fuel_events` esclude la voce `fuel` e i
+conteggi `counts.fuel_events`/`counts.fuel_exhausted` su entrambi i lati (la sola FORMA degli eventi):
+il carburante finale per asset (`assets.*.fuel`) resta nel confronto, quindi un cambio di sostanza
+(consumo delle soste, esaurimento che ferma l'asset) resta visibile.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -97,6 +107,8 @@ confronto, come `postures`.
     # confronto senza una voce di primo livello (F5-B: la sola postura nell'esito; F5-C: le ETA effettive):
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore postures
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore actual_etas
+    # F6-A: senza la FORMA degli eventi di carburante (uno per tratto), il carburante finale resta:
+    python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore fuel_events
 
 Exit code: 0 se identiche, 1 se ci sono differenze (o errori di unita'), 2 per uso errato.
 """
@@ -207,8 +219,11 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('first', 'second', 'reversed_red')),
     ('ORC-interval', 'Test_Session_Simulator', 'TestSessionInterval',
      ('test_open_session_requires_horizon', 'test_salvos_in_flight_extend_the_outcome'), _single_or_index),
+    # F6-A: il metodo di prima (`test_exhaustion_is_reported_not_simulated`) e' diventato quello con il
+    # vincolo del carburante SPENTO (stessa sessione, stesso aereo); il caso con il vincolo e' nei nuovi
+    # test della classe.
     ('ORC-fuel', 'Test_Session_Simulator', 'TestFuelExhaustion',
-     ('test_exhaustion_is_reported_not_simulated',), _single_or_index),
+     ('test_without_the_constraint_exhaustion_is_only_reported',), _single_or_index),
     # ── S21 (F4c: postura continua, aerei parcheggiati colpibili) — in coda, nomi stabili ──
     ('S21', 'Test_Session_Scenarios_S21', 'TestS21ParkedAircraftStrike', None, _by_occurrence('parked', 'control')),
     ('S21R', 'Test_Session_Scenarios_S21', 'TestS21RParkedAircraftRegistry', None, _single_or_index),
@@ -228,6 +243,13 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('hold', 'no_hold', 'waits_off')),
     ('S23-TOT', 'Test_Session_Scenarios_S23', 'TestS23TotPerMission', None,
      _by_occurrence('own_tot', 'derived', 'waits_off')),
+    # ── S24 (F6-A: carburante per tratto, vincolo del movimento, planata) — in coda, nomi stabili ──
+    ('S24-E5', 'Test_Session_Scenarios_S24', 'TestS24DryTank', None,
+     _by_occurrence('far', 'far_off', 'near', 'near_off')),
+    ('S24-GLIDE', 'Test_Session_Scenarios_S24', 'TestS24DryAircraft', None,
+     _by_occurrence('glide', 'no_base', 'enemy_base', 'off')),
+    ('S24-ORBIT', 'Test_Session_Scenarios_S24', 'TestS24OrbitExhaustion', None,
+     _by_occurrence('dry', 'full', 'per_leg_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
@@ -372,6 +394,11 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
             'time': event.time, 'distance': event.distance, 'distance_covered': event.distance_covered,
             'amount': event.amount, 'fuel_before': event.fuel_before, 'fuel_after': event.fuel_after,
             'exhausted': event.exhausted, 'regime': event.regime})
+
+        # F6-A: un evento per tratto; i tratti FERMI (attese, orbite) consumano nel tempo. La voce
+        # `stationary` e `duration` solo per loro, cosi' gli eventi di movimento hanno la forma di prima.
+        if getattr(event, 'stationary', False):
+            fuel[event.asset_id][-1].update({'stationary': True, 'duration': event.duration})
 
     summary = {
         'session': {'session_id': outcome.session_id, 't_start': outcome.t_start, 't_end': outcome.t_end,
@@ -574,12 +601,33 @@ def _without_empty_routes(run: Dict) -> Dict:
     return {**run, 'call': {**run['call'], 'parameters': parameters}}
 
 
+# Pseudo-voce di `--ignore` (F6-A): la FORMA degli eventi di carburante (uno per tratto invece di uno
+# per asset), cioe' la voce `fuel` e i conteggi `counts.fuel_events`/`counts.fuel_exhausted`. Il
+# carburante finale di ogni asset resta in `assets.*.fuel`: un cambio di SOSTANZA (consumo delle soste,
+# esaurimento) resta visibile anche ignorando la forma.
+FUEL_EVENTS_KEY = 'fuel_events'
+_FUEL_EVENT_COUNTS = ('fuel_events', 'fuel_exhausted')
+
+
 def _without_keys(runs: Dict, ignore: Sequence[str]) -> Dict:
-    """Copia delle esecuzioni senza le voci di primo livello `ignore` (es. 'postures', F5-B)."""
+    """Copia delle esecuzioni senza le voci di primo livello `ignore` (es. 'postures', F5-B; con
+    `fuel_events`, F6-A, la voce `fuel` e i conteggi degli eventi di carburante)."""
     if not ignore:
         return runs
 
-    return {key: {name: value for name, value in run.items() if name not in ignore} for key, run in runs.items()}
+    def strip(run: Dict) -> Dict:
+        kept = {name: value for name, value in run.items() if name not in ignore}
+
+        if FUEL_EVENTS_KEY in ignore:
+            kept.pop('fuel', None)
+
+            if isinstance(kept.get('counts'), dict):
+                kept['counts'] = {name: value for name, value in kept['counts'].items()
+                                  if name not in _FUEL_EVENT_COUNTS}
+
+        return kept
+
+    return {key: strip(run) for key, run in runs.items()}
 
 
 def compare(baseline: Dict, current: Dict, only: Optional[str] = None, ignore: Sequence[str] = ()) -> List[str]:
@@ -720,7 +768,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         help='with --compare: readable per-run digest of what changed instead of the raw diff')
     parser.add_argument('--ignore', metavar='KEY', action='append', default=[],
                         help='with --compare: drop this top-level summary key on both sides (repeatable, '
-                             'e.g. postures, actual_etas)')
+                             'e.g. postures, actual_etas; fuel_events = the shape of the fuel events, F6-A)')
     args = parser.parse_args(argv)
 
     started = time.perf_counter()

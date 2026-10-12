@@ -219,12 +219,12 @@ partenza e' anticipata in proporzione alla distanza, con `start_time` la mission
 del punto d'ancoraggio.
 Gli istanti EFFETTIVI di arrivo ai punti (`waypoint_times`, dalle attese comprese) vanno nel
 `MissionOutcome.actual_etas` (`Session_Simulator`); le ETA pianificate restano nella missione.
-**Carburante**: le attese NON consumano (la sessione consuma in distanza sui soli tratti di
-movimento, e un tratto fermo ha lunghezza nulla): il consumo nel tempo per attese e orbite e'
-della F6 (`Fuel_Model` per tratto), limite noto.
+**Carburante**: dalla F6-A le attese consumano NEL TEMPO alla crociera dell'asset, con un `FuelEvent`
+per tratto, e l'esaurimento tronca i tratti (`Session_Simulator`, "Carburante"; `Fuel_Model`); qui i
+tratti non cambiano.
 
 ## Cosa NON fa
-- Nessun circuito d'orbita (v. sopra) e nessun consumo nel tempo durante le attese (F6).
+- Nessun circuito d'orbita (v. sopra); il carburante non e' calcolato qui (`Fuel_Model`, F6-A).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
 - Nessun rientro (RTB): un aereo che non atterra su una base vera esce di scena (F6).
 - Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
