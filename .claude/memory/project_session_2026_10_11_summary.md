@@ -8,13 +8,12 @@ metadata:
   modified: 2026-10-11T16:00:56.496Z
 ---
 
-**Macchina**: ProArt P16 (WSL2), branch `analysis/dce-dcs-persistence`. Python: `.direnv/python-3.12/bin/python3`
-(v. [[feedback-venv]]); suite completa ~8 min (4039 test), confronto fotografia ~6 min, mai in parallelo.
-**Ripresa prevista sulla STESSA macchina (ProArt P16), checkout `/home/marco/Sviluppo/Warfare-Model`**: il branch
-attuale e' `analysis/dce-dcs-persistence` (pulito, allineato a origin); fare comunque `git fetch` all'inizio. Il
-lavoro non verificato di F5-A sta sul branch `wip/f5-a-grounded-nel-tempo` (v. sotto). Scratchpad di log e script di
-misura della sessione: `/tmp/claude-1000/-home-marco-Sviluppo-Warfare-Model/*/scratchpad/` (temporanei, non
-necessari).
+**STATO AL 2026-10-12 (chiusura sessione su ProArt P16)**: tutto committato e pushato, HEAD `15ac3d3d` (F6-B1) su
+`analysis/dce-dcs-persistence`, suite 4195 OK (7 skipped), fotografia 722 esecuzioni. Fatte F5-A/B/C, TOT per missione,
+F6-A, F6-B1. **Ripresa sulla macchina osboxes**: `git pull` per prima cosa, poi usare l'interprete venv di QUELLA macchina
+(v. [[feedback-venv]]; il path `.direnv/python-3.12/bin/python3` e' di ProArt P16). Suite completa ~8 min, confronto
+fotografia ~6 min, mai in parallelo. Il branch `wip/f5-a-grounded-nel-tempo` e' stato eliminato. I file DCS non
+tracciati in `Analysis/Document/documentazione missioni dcs/` restano non tracciati per scelta dell'utente.
 
 ## LAVORO SVOLTO (v. [[project-mission-structure-decisions]] per le decisioni complete)
 1. **Revisione dello stato** all'inizio: l'utente aveva ragione che parte dell'elenco era già trattata (le 6 decisioni
@@ -94,10 +93,24 @@ carburante/munizioni/danno) > FAILED, confermato dall'utente; postura `destroyed
 (429 esecuzioni cambiate nel solo campo postures); scenario S25. Limiti: POINT/AREA per target_destroyed = F7; il criterio
 vede solo la propria run; `abort_on_threat`/`last_waypoint` non letti.
 
-## PROSSIMO: F6-B2 = bingo a priori nel validatore (missione che non rientra con la riserva rifiutata) + bingo in volo con
-rientro (cambio di rotta verso la base, ABORTED, motivo BINGO); poi F7 (filtro armi/bersagli per missione + salva su area:
-proposta separata prima, domanda Q3), F8, F9 (manuale: aggiornare anche TOT comune in 03 e 10). Una sessione per passo,
-`des-developer` Opus medium.
+## DA FARE (ordine) — procedura per ogni passo: brief a `des-developer` (Opus medium, proporre agente/modello/sforzo in una
+riga e attendere conferma), interruttore dedicato, baseline invariato finche' l'utente non accetta i cambi; io verifico
+(suite completa + `Scenario_Baseline.py --compare` con `--ignore` per separare le cause + mia `--capture` + `--compare
+--against` quella dell'agente), poi AskUserQuestion sui cambi di fotografia, poi installo baseline, aggiorno Piano §5 e
+memoria, commit e push.
+1. **F6-B2** = bingo a priori nel validatore (missione che non rientra con la riserva viene rifiutata) + bingo in volo con
+   rientro (cambio di rotta verso la base idonea piu' vicina, ABORTED, motivo `AbortReason.BINGO`); regola utente: aereo a
+   bingo in rotta deve tornare -> ABORTED. Scenario nuovo S26. Il vincolo F6-A e' calcolato alla crociera; "base idonea" =
+   qualunque base aerea amica (da affinare).
+2. **F7** = filtro armi/bersagli per missione (A4) + salva su area (POINT/AREA per `target_destroyed`): PRIMA una proposta
+   separata all'utente (domanda Q3), poi implementazione.
+3. **F8** = validatore di sessione, prontezza (turnaround, ricerca dedicata), posizione persistente (D1.d).
+4. **F9** = manuale DES (`des-manual-writer`, Sonnet high): rimuovere «TOT comune» in `03_Strato0_Contratto_Porte.md`
+   (:269, :283) e `10_Limiti_Estensioni_Divergenze.md` (:248, :596); documentare F5/F6 (presenza, postura, WAIT, ETA
+   effettive, carburante per tratto, criteri di fine attivita', stato di missione unico, postura destroyed).
+5. **Rimandato dall'utente**: raffinamento dell'orbita (distanza di riferimento entro cui muoversi) e meccanismo zone CAP
+   di DCE (rotta di un aereo non partecipante nel mission editor): l'utente deve rivedere il codice DCE e i .miz iniziali.
+6. Opzionale, lavoro separato: test instabile `testCalcFightResult` (random globale non seminato, delta=3; passa da solo).
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
