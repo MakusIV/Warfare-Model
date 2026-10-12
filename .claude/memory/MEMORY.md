@@ -1,7 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
-- [Session 2026-10-11 (ProArt P16) — CHIUSA, tutto pushato, suite 4039 OK: fuoco/rilevamenti per dominio (F4b+/++), test S3/S5 riprogettati, F4c (aerei senza missione a terra), manuale DES a 84a47670](project_session_2026_10_11_summary.md) — ripresa con git pull; F5 a meta': F5-A in WIP non verificato sul branch wip/f5-a-grounded-nel-tempo (94859d8a), poi F5-B, F5-C, F6-F9
+- [Session 2026-10-11 (ProArt P16) — CHIUSA, tutto pushato, suite 4039 OK: fuoco/rilevamenti per dominio (F4b+/++), test S3/S5 riprogettati, F4c (aerei senza missione a terra), manuale DES a 84a47670](project_session_2026_10_11_summary.md) — ripresa con git pull; F5-A FATTA e verificata 2026-10-12 (e723e82a, suite 4072 OK, fotografia identica su 370); prossimo F5-B (cablare presenza/postura), F5-C (WAIT/ETA), poi F6-F9
 - [Session 2026-10-08 (osboxes) — CHIUSA, tutto pushato, suite 3951 OK: F4b fatta (a4d8acf0, missione = unità di ingaggio), regola modelli/sforzi](project_session_2026_10_08_summary.md) — ripresa su ProArt P16 con git pull; decisioni su fuoco e test S3/S5 poi prese e chiuse il 2026-10-11
 - [Session 2026-10-05 (ProArt P16) — CHIUSA, tutto pushato, suite 3929 OK: struttura Missione F0-F3+F4a, doc missioni DCS ingerita, manuale DES a 533cd1f5](project_session_2026_10_05_summary.md) — ripresa con git pull; prossimo: F4b (missione = unità di ingaggio), F4c, poi F5-F9
 - [Struttura Missione: decisioni D1-D6/N1-N3 + regola A, piano F0-F9 (F0-F3, F4a, F4b, F4b+/++, test S3/S5 e F4c fatte; ultimo af2efbe6 2026-10-11, prossimo F5)](project_mission_structure_decisions.md) — Operazione ⊃ Missione, MissionWaypoint contiene Waypoint, loadout per asset, postura e tipo di missione su due assi

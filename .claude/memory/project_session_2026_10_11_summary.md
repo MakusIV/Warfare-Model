@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-11-summary
-description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A in WIP su un branch a parte), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
+description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A poi fatta il 2026-10-12, e723e82a), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
 metadata:
   node_type: memory
   type: project
@@ -38,38 +38,24 @@ Piano Missione: F0-F3, F4a, F4b, F4b+/++, F4c e riprogettazione S3/S5 FATTE; F5-
 regressione: 370 esecuzioni (`Test/baseline/scenario_baseline.json`, comando `--compare` nel docstring di
 `Test/Scenario_Baseline.py`). Suite 4039 OK (7 skipped).
 
-## F5 IN CORSO (scomposta per limite di utilizzo; agente fermato a meta' il 2026-10-11)
-Il lavoro dell'agente su F5-A (grounded dipendente dal tempo, insieme costante equivalente, fotografia attesa
-IDENTICA su 370) e' salvato NON VERIFICATO sul branch **`wip/f5-a-grounded-nel-tempo`** (commit `94859d8a`, pushato;
-7 file: Session_Types, Contact_Scheduler, Engagement_Resolver, Mission_Adapter + test). `analysis/dce-dcs-persistence`
-resta pulito e verificato (suite 4039 OK, fotografia 370).
-**Ripresa**: `git pull`, poi `git switch wip/f5-a-grounded-nel-tempo`; lanciare suite completa + `--compare` della
-fotografia (atteso IDENTICO); se verdi, scrivere la sezione «F5 passo (a)» in `F4_Differenze_Scenari.md` e la riga
-«F5-A» nel Piano §5, poi merge (o cherry-pick) in `analysis/dce-dcs-persistence`. Se l'albero e' incoerente, ripartire
-dal brief: Piano §5 dev. 12-13 + decisioni D1/N2 (il brief di delega integrale non e' salvato in un file: ricostruibile
-da questi). Poi F5-B (postura nell'esito + presenza prima/dopo + scenari E1/E3/aerei) e F5-C (WAIT, ETA, CAP in orbita).
+## F5-A FATTA E VERIFICATA (2026-10-12, stessa macchina)
+Verificata dal branch `wip/f5-a-grounded-nel-tempo`: suite 4072 OK (7 skipped), fotografia IDENTICA su 370.
+Documentata in `F4_Differenze_Scenari.md` («F5 passo (a)») e nel Piano §5; squash-merge in
+`analysis/dce-dcs-persistence` come **`e723e82a`**, pushato. I branch `wip/f5-a-grounded-nel-tempo` (locale e
+origin) sono eliminabili (non eliminati: chiedere/farlo a mano). In sessione resta l'insieme costante della F4c;
+sono PREDISPOSTI e NON cablati: `Mission_Adapter.movement_legs/grounded_schedule/session_postures/final_posture/
+lands_on_air_base/mission_holds`, `Contact_Scheduler.GroundedSchedule`, `SessionOutcome.postures`.
 Decisione dell'utente: aereo a terra dopo la fine della rotta SOLO su una base vera (LAND su base), altrimenti esce
 dalla scena come oggi finche' F6 non porta il rientro.
 
-## PRIMO PASSO ALLA RIPRESA (checklist)
-1. `git fetch`; `git switch wip/f5-a-grounded-nel-tempo`; suite completa (~8 min) e confronto fotografia
-   (`PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline
-   --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`, ~6 min), mai in parallelo;
-   usare nomi di log nuovi.
-2. Se IDENTICA su 370 e suite verde: sezione «F5 passo (a)» in `F4_Differenze_Scenari.md`, riga F5-A nel Piano §5,
-   merge in `analysis/dce-dcs-persistence`, push, poi si puo' eliminare il branch wip.
-3. Poi F5-B e F5-C con `des-developer` (Opus medium; modelli/sforzi: v. [[feedback-model-effort-delegation]]), un
-   passo alla volta, con commit dedicato e verifica mia di suite + fotografia prima di ogni commit. L'utente ha
-   chiesto di scomporre F5 in sessioni piu' piccole per i limiti di utilizzo di 5 ore: non lanciare piu' agenti
-   lunghi in coda a una sessione gia' avanzata.
-4. Contenuto di F5-B: postura nell'esito di forza (forma minimale, per asset, anche per i blocchi senza missioni);
-   presenza prima della partenza e dopo la fine (terra/mare `Defense`, aerei con start non AIR a terra fino al
-   decollo, aerei a terra dopo la fine SOLO se l'ultimo punto LAND e' su una base vera: riferimento del waypoint a
-   un asset/blocco Airbase o posizione nell'area di una base); scenari E1 (carro fermo a 4 km resta ingaggiabile),
-   E3 (partenza ritardata, presente prima), aerei (parcheggiato colpibile finche' e' a terra); fotografia
-   rigenerata UNA volta con ogni differenza attribuita alla causa (usare interruttori o `--only`).
-   Contenuto di F5-C: azione WAIT (`hold` sosta, `orbit` orbita come presenza ferma nel punto con approssimazione
-   dichiarata) con durata o fino a t, ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita.
+## PROSSIMO: F5-B poi F5-C (una sessione ciascuna, con `des-developer` Opus medium, v. [[feedback-model-effort-delegation]])
+Ogni passo: commit dedicato, verifica mia di suite (~8 min) + `--compare` (~6 min) mai in parallelo, log nuovi.
+- F5-B: cablare in `Session_Simulator` presenza prima/dopo (terra/mare `Defense`, aerei non partiti a terra),
+  postura nell'esito di forza anche per i blocchi senza missioni, scenari E1 (carro fermo a 4 km ingaggiabile),
+  E3 (partenza ritardata), aerei (parcheggiato colpibile finche' a terra); fotografia rigenerata UNA volta con
+  ogni differenza attribuita (interruttori o `--only`).
+- F5-C: azione WAIT (`hold`/`orbit`), ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita.
+Comando fotografia: `PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
