@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-11-summary
-description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A poi fatta il 2026-10-12, e723e82a), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
+description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A e F5-B poi fatte il 2026-10-12, e723e82a e 90f2d4de), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
 metadata:
   node_type: memory
   type: project
@@ -48,14 +48,18 @@ lands_on_air_base/mission_holds`, `Contact_Scheduler.GroundedSchedule`, `Session
 Decisione dell'utente: aereo a terra dopo la fine della rotta SOLO su una base vera (LAND su base), altrimenti esce
 dalla scena come oggi finche' F6 non porta il rientro.
 
-## PROSSIMO: F5-B poi F5-C (una sessione ciascuna, con `des-developer` Opus medium, v. [[feedback-model-effort-delegation]])
-Ogni passo: commit dedicato, verifica mia di suite (~8 min) + `--compare` (~6 min) mai in parallelo, log nuovi.
-- F5-B: cablare in `Session_Simulator` presenza prima/dopo (terra/mare `Defense`, aerei non partiti a terra),
-  postura nell'esito di forza anche per i blocchi senza missioni, scenari E1 (carro fermo a 4 km ingaggiabile),
-  E3 (partenza ritardata), aerei (parcheggiato colpibile finche' a terra); fotografia rigenerata UNA volta con
-  ogni differenza attribuita (interruttori o `--only`).
-- F5-C: azione WAIT (`hold`/`orbit`), ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita.
-Comando fotografia: `PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`
+## F5-B FATTA (2026-10-12, commit `90f2d4de`, pushato; suite 4101 OK, fotografia 442 esecuzioni)
+Presenza fuori dalla rotta + postura nell'esito cablate in `Session_Simulator`; interruttori in `Mission_Adapter`:
+`F5_PRESENCE=True`, `F5_WAITS=False`. Nuovo scenario S22 (E1/E3/aerei, 72 esecuzioni). Cambiate solo S6-0 e S6-2
+(flotta presente in Defense dopo l'arrivo), ACCETTATE dall'utente. `AIR_BASE_AREA_RADIUS_M` = 3000 m e' una STIMA
+(da sostituire col modulo mappe). Utente: postura `destroyed` RIMANDATA, da rivalutare con F6. Strumento: nuova
+opzione `--ignore KEY` in `Scenario_Baseline`. Verifica fatta da me (suite + compare + doppia cattura byte-identica).
+
+## PROSSIMO: F5-C (una sessione, `des-developer` Opus medium, v. [[feedback-model-effort-delegation]])
+Azione WAIT (`hold` sosta, `orbit` orbita come presenza ferma con approssimazione dichiarata) con durata o fino a t,
+ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita: attiva `F5_WAITS` (codice gia' scritto:
+`mission_holds`, `_wait_actions`). Stessa procedura (commit dedicato, verifica mia, fotografia con cambi attribuiti).
+Poi F6-F9. Comando fotografia: `PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
