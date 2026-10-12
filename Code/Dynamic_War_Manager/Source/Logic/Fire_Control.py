@@ -279,6 +279,31 @@ _KIND_BY_TYPE = {
             'CANNONS': 'gun', 'MACHINE_GUNS': 'gun'},
 }
 
+# Registro d'arma per DOMINIO DI MISSIONE ('air' | 'ground' | 'sea', `Context.MILITARY_FORCES`): lo
+# stesso che `_candidate_weapons` legge per Aircraft, Vehicle e Ship.
+_REGISTRY_BY_MISSION_DOMAIN = {'air': AIR_WEAPONS, 'ground': GROUND_WEAPONS, 'sea': SHIP_WEAPONS}
+
+
+def weapon_category(domain: str, model: Optional[str]) -> Optional[str]:
+    """Categoria d'arma del registro del dominio (chiave di primo livello, es. 'MISSILES_AAM',
+    'CANNONS') che contiene il modello `model`, o None se il modello non e' nel registro.
+
+    E' la stessa categoria (`_Weapon.weapon_type`) con cui la fire control dai registri seleziona le
+    armi; serve al criterio winchester dei criteri di fine missione (F6-B1, `EndCriteria.winchester`).
+    Nei registri attuali nessun modello compare in due categorie dello stesso dominio; se accadesse,
+    vale la prima nell'ordine del registro (lo stesso criterio di `_candidate_weapons`).
+    """
+    registry = _REGISTRY_BY_MISSION_DOMAIN.get(domain)
+
+    if registry is None or not isinstance(model, str):
+        return None
+
+    for category, models in registry.items():
+        if isinstance(models, dict) and model in models:
+            return category
+
+    return None
+
 
 # ── ARMI CANDIDATE ────────────────────────────────────────────────────────────
 

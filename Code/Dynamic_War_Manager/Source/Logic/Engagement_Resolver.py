@@ -269,6 +269,28 @@ della F4c e' "sempre a terra"). Ogni regola sopra legge lo stato all'istante in 
   costruzione della run, come nella F4c. Un aereo a terra solo per un tratto e' un aereo: la sua
   forza resta aerea e ha la dottrina del lato.
 
+## Fine di attivita' (F6-B1 del piano della Missione, D2.a)
+
+Decisione dell'utente: un criterio di stato della missione (winchester, danno oltre soglia, bersaglio
+distrutto, durata) chiude l'ATTIVITA' dell'asset senza cambiarne la rotta: l'asset prosegue passivo
+sulla rotta pianificata, resta presente e bersaglio. Il risolutore riceve `activity_criteria`
+(`{asset_id: ActivityCriteria}`, costruiti dalla sessione dai criteri dichiarati) e:
+* **dall'istante della fine non lancia piu' salve offensive**: niente nuovi lanci in `_schedule_next`
+  (anche per un tiro previsto dopo la fine), un lancio gia' schedulato per un istante non anteriore
+  alla fine e' annullato (`_on_launch`, generazione come la prelazione L3); le salve GIA' partite
+  arrivano comunque (payload congelato, R4);
+* **continua a fare tutto il resto**: rileva e condivide i rilevamenti, percepisce con l'RWR, conta
+  nel rapporto di forze e nella dottrina della sua forza, e INTERCETTA le salve dirette al suo dominio
+  (difesa di salva, non un ingaggio offensivo: scelta dichiarata);
+* criteri valutati dopo ogni lancio e ogni risoluzione di salva (`_check_activity`, deterministico,
+  nessuna estrazione): **winchester** = scorta zero di tutte le armi elencate nello stato ombra (le
+  intercettazioni consumano le stesse voci); **danno** = salute persa / salute all'ingresso nella run
+  >= soglia; **bersaglio distrutto** = tutti i bersagli distrutti, nella run (istante della risoluzione
+  che li distrugge) o fuori (`destroyed_targets`, anche un istante futuro: la fine vale da li');
+  **fine nota a monte** (`until`: durata massima, winchester gia' all'inizio) letta come gli altri.
+Le fini scattate sono in `EngagementResult.activity_ends`. Senza criteri (default) ogni percorso e'
+quello di prima: stesse estrazioni, stessi esiti.
+
 ## Forze rotte: per-forza, non un flag globale
 
 Una forza che raggiunge DESTROYED o DISENGAGED entra in `broken_forces`. Da quel momento:
@@ -435,6 +457,14 @@ TRIGGER_SHOCK = Doctrine.DISENGAGEMENT_SHOCK
 TRIGGER_ANNIHILATION = 'annihilation'
 
 # Tipi di evento, nell'ordine di risoluzione a parita' di istante (v. docstring).
+# Motivi di "fine di attivita'" che il risolutore fa scattare (F6-B1, v. "Fine di attivita'" nel
+# docstring del modulo): gli stessi VALORI di `Command.Mission_Types.AssetEndReason`, ripetuti qui come
+# stringhe perche' il risolutore non importa `Command` (la sessione li converte).
+ACTIVITY_DAMAGE = 'damage'
+ACTIVITY_WINCHESTER = 'winchester'
+ACTIVITY_TARGET_DESTROYED = 'target_destroyed'
+ACTIVITY_REASONS = (ACTIVITY_DAMAGE, ACTIVITY_WINCHESTER, ACTIVITY_TARGET_DESTROYED)
+
 _LAUNCH = 0
 _IMPACT = 1
 _RESOLVE = 2
@@ -638,6 +668,45 @@ class InterceptionEvent:
 
 
 @dataclass(frozen=True)
+class ActivityCriteria:
+    """Criteri di "fine di attivita'" di un asset nella forma del risolutore (F6-B1, D2.a).
+
+    Li costruisce la sessione dai criteri DICHIARATI della missione (`Mission_Types.EndCriteria`,
+    `Session_Simulator._activity_criteria`); il risolutore non legge la missione. Quando un criterio
+    scatta l'asset non lancia piu' salve offensive (v. "Fine di attivita'" nel docstring del modulo).
+
+    Attributes:
+        winchester_weapons: modelli d'arma (voci della scorta per arma) il cui esaurimento chiude
+            l'attivita': scatta quando TUTTI sono a scorta zero nello stato ombra. Vuoto = criterio
+            non attivo.
+        damage_threshold: frazione di salute persa (rispetto alla salute all'ingresso nella run, che
+            in sessione e' quella d'inizio sessione: un asset sta in una sola run) oltre la quale
+            l'asset chiude l'attivita' (mission kill); None = non attivo.
+        target_ids: id degli asset bersaglio della missione; scatta quando sono tutti distrutti.
+            Vuoto = non attivo.
+        destroyed_targets: `{target_id: istante}` dei bersagli gia' distrutti fuori da questa run
+            (in una run gia' risolta, prima della sessione, o persi per carburante a un istante noto
+            a monte), anche in un istante futuro rispetto agli eventi della run.
+        until: istante dal quale l'asset non lancia piu' (fine di attivita' nota a monte: durata
+            massima, winchester gia' all'inizio), None = nessuno. Il motivo lo riporta la sessione.
+    """
+    winchester_weapons: FrozenSet[str] = frozenset()
+    damage_threshold: Optional[float] = None
+    target_ids: FrozenSet[str] = frozenset()
+    destroyed_targets: Mapping[str, float] = field(default_factory=dict, hash=False)
+    until: Optional[float] = None
+
+
+@dataclass(frozen=True)
+class ActivityEnd:
+    """Fine di attivita' di un asset scattata nella run (F6-B1): `reason` in `ACTIVITY_REASONS`,
+    `time` istante dal quale l'asset non lancia piu' salve (quelle gia' partite arrivano, R4)."""
+    time: float
+    asset_id: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class ForceOutcome:
     """Esito di una forza. Pensato per essere promosso a voce del futuro `SessionOutcome`.
 
@@ -682,7 +751,8 @@ class EngagementResult:
 
     Contiene tutto cio' che serve ad applicare l'esito (`damage_events`,
     `ammunition_events` per le salve, `interception_events` per le intercettazioni) e a
-    spiegarlo (`detections`, `salvos`, `resolutions`).
+    spiegarlo (`detections`, `salvos`, `resolutions`). `activity_ends` (F6-B1): le fini di
+    attivita' scattate nella run, nell'ordine in cui sono scattate (vuota senza criteri).
     """
     t_start: Optional[float]
     t_end: Optional[float]
@@ -693,6 +763,7 @@ class EngagementResult:
     damage_events: Tuple[DM.DamageEvent, ...] = ()
     ammunition_events: Tuple[AmmunitionEvent, ...] = ()
     interception_events: Tuple[InterceptionEvent, ...] = ()
+    activity_ends: Tuple[ActivityEnd, ...] = ()
 
     def outcome_of(self, force_id: str) -> Optional[ForceOutcome]:
         """L'esito della forza `force_id`, None se non partecipa."""
@@ -1356,8 +1427,15 @@ class _EngagementRun:
     def __init__(self, forces, contacts, fire_control, rng, legs, committed, thresholds,
                  reaction_profile_for, detection_factor, salvo_window, provenance,
                  breakpoint_rng=None, morale_for=None, enemy_estimate_for=None, fire_doctrine=None,
-                 rwr_catalogue=None, coordination_of=None, grounded=None):
+                 rwr_catalogue=None, coordination_of=None, grounded=None, activity_criteria=None):
         self.fire_control = fire_control
+        # Fine di attivita' (F6-B1, v. docstring del modulo): criteri per asset, salute all'ingresso
+        # nella run, istante di distruzione nella run, fine registrata `{asset: (istante, motivo)}`.
+        self.activity_criteria: Dict[str, ActivityCriteria] = dict(activity_criteria or {})
+        self.initial_health: Dict[str, int] = {}
+        self.destroyed_at: Dict[str, float] = {}
+        self.activity_end: Dict[str, Tuple[float, str]] = {}
+        self.activity_ends: List[ActivityEnd] = []
         # Aerei a terra (F4c; dalla F5 dipendenti dal tempo, v. "Aerei a terra" nel docstring del
         # modulo) e se la fire control accetta l'estensione `target_grounded` (letto solo se un
         # bersaglio e' a terra).
@@ -1448,6 +1526,12 @@ class _EngagementRun:
 
         if self.usable:
             self._init_breakpoints()
+
+            if self.activity_criteria:
+                self.initial_health = {asset_id: self.shadows[asset_id].health
+                                       for asset_id in self.activity_criteria if asset_id in self.shadows}
+                # Bersagli tutti gia' distrutti fuori dalla run: la fine e' nota prima del primo evento.
+                self._check_activity(float('-inf'), targets_only=True)
 
     # ── costruzione ───────────────────────────────────────────────────────────
 
@@ -1806,6 +1890,87 @@ class _EngagementRun:
     def _touch(self, time: float) -> None:
         self.t_end = time if self.t_end is None else max(self.t_end, time)
 
+    # ── fine di attivita' (F6-B1, D2.a) ───────────────────────────────────────
+
+    def _activity_end_time(self, asset_id: str) -> Optional[float]:
+        """Istante dal quale l'asset non lancia piu': la prima fra la fine scattata nella run e quella
+        nota a monte (`ActivityCriteria.until`); None se nessuna (sempre None senza criteri)."""
+        if not self.activity_criteria:
+            return None
+
+        times = [self.activity_end[asset_id][0]] if asset_id in self.activity_end else []
+        criteria = self.activity_criteria.get(asset_id)
+
+        if criteria is not None and criteria.until is not None:
+            times.append(float(criteria.until))
+
+        return min(times) if times else None
+
+    def _targets_destroyed_at(self, criteria: ActivityCriteria) -> Optional[float]:
+        """Istante in cui TUTTI i bersagli del criterio sono distrutti (nella run o fuori, il primo dei
+        due), oppure None se qualcuno non lo e'."""
+        times = []
+
+        for target_id in sorted(criteria.target_ids):
+            known = [t for t in (self.destroyed_at.get(target_id), criteria.destroyed_targets.get(target_id))
+                     if t is not None]
+
+            if not known:
+                return None
+
+            times.append(min(known))
+
+        return max(times) if times else None
+
+    def _check_activity(self, time: float, targets_only: bool = False) -> None:
+        """Verifica i criteri di fine di attivita' all'istante `time` (dopo un lancio, dopo una
+        risoluzione di salva) e registra quelli scattati. All'avvio (`time` = -inf, `targets_only`) solo
+        i bersagli gia' distrutti fuori dalla run: un asset che entra nella run gia' senza le armi del
+        winchester lo dichiara il chiamante con `until` (in sessione: winchester all'inizio della
+        missione, `Session_Simulator._activity_criteria`).
+
+        Per asset, in ordine di id, con la precedenza fissa DANNO, WINCHESTER, BERSAGLIO DISTRUTTO
+        (scelta dichiarata, rilevante solo se scattano nello stesso istante): un asset distrutto o gia'
+        a fine attivita' non e' piu' valutato. Deterministica: nessuna estrazione.
+        """
+        for asset_id in sorted(self.activity_criteria):
+            shadow = self.shadows.get(asset_id)
+
+            if shadow is None or asset_id in self.activity_end or shadow.destroyed:
+                continue
+
+            criteria = self.activity_criteria[asset_id]
+            initial = self.initial_health.get(asset_id)
+
+            if not targets_only and criteria.damage_threshold is not None and initial and \
+                    (initial - shadow.health) / initial >= criteria.damage_threshold - FRACTION_EPS:
+                self._end_activity(time, asset_id, ACTIVITY_DAMAGE)
+                continue
+
+            if not targets_only and criteria.winchester_weapons and shadow.stores is not None \
+                    and all(shadow.stores.get(weapon, 0) <= 0 for weapon in criteria.winchester_weapons):
+                self._end_activity(time, asset_id, ACTIVITY_WINCHESTER)
+                continue
+
+            if criteria.target_ids:
+                destroyed = self._targets_destroyed_at(criteria)
+
+                if destroyed is not None:
+                    self._end_activity(max(destroyed, time), asset_id, ACTIVITY_TARGET_DESTROYED)
+
+    def _end_activity(self, time: float, asset_id: str, reason: str) -> None:
+        """Registra la fine di attivita' e, se e' gia' in vigore, annulla il lancio programmato
+        dell'asset (generazione, come la prelazione L3): le salve gia' partite arrivano (R4)."""
+        self.activity_end[asset_id] = (time, reason)
+        self.activity_ends.append(ActivityEnd(time=time, asset_id=asset_id, reason=reason))
+        logger.debug(f"resolve_engagement: asset {asset_id!r} ends its activity at t={time} ({reason})")
+
+        if time <= self.now + TIME_EPS:
+            self.launch_generation[asset_id] = self.launch_generation.get(asset_id, 0) + 1
+            self.assigned.pop(asset_id, None)
+            self.assigned_shot.pop(asset_id, None)
+            self.pending_decide.discard(asset_id)
+
     # ── fase 2: scelta del bersaglio e lancio ─────────────────────────────────
 
     def _engaged_shooters(self, target_id: str, force_id: str, exclude: str) -> int:
@@ -1903,6 +2068,12 @@ class _EngagementRun:
             # Nessuna arma con scorta (le armi non modellate non hanno vincolo).
             return
 
+        # Fine di attivita' (F6-B1): nessun lancio dall'istante della fine in poi.
+        activity_end = self._activity_end_time(shooter_id)
+
+        if activity_end is not None and t_earliest >= activity_end - TIME_EPS:
+            return
+
         candidates = self.candidates.get(shooter_id, [])
 
         while True:
@@ -1927,6 +2098,10 @@ class _EngagementRun:
 
                 if t_fire > candidate.t_end + TIME_EPS:
                     candidate.exhausted = True
+                    continue
+
+                if activity_end is not None and t_fire >= activity_end - TIME_EPS:
+                    # Il tiro cadrebbe dopo la fine di attivita' (F6-B1): non per questo tiratore.
                     continue
 
                 if self.grounded.at(shooter_id, t_fire):
@@ -2311,6 +2486,13 @@ class _EngagementRun:
             # Lanciatore fuori combattimento prima del lancio: la salva non parte.
             return
 
+        activity_end = self._activity_end_time(shooter_id)
+
+        if activity_end is not None and time >= activity_end - TIME_EPS:
+            # Fine di attivita' (F6-B1) scattata dopo lo scheduling: il lancio e' annullato (R4) e il
+            # tiratore non ne schedula altri.
+            return
+
         candidate = self.candidates[shooter_id][index]
         target = self.shadows[candidate.target_id]
         next_time = time + self._refire_interval(shooter_id, spec)
@@ -2347,6 +2529,11 @@ class _EngagementRun:
         self.in_flight[salvo.salvo_id] = salvo
         self._touch(time)
         self._push(salvo.t_impact, _IMPACT, target.force_id, salvo)
+
+        if self.activity_criteria:
+            # Winchester (F6-B1): la salva appena partita puo' aver esaurito le armi del criterio.
+            self._check_activity(time)
+
         self._schedule_next(shooter_id, next_time)
 
         # RWR che rileva solo tracciamento/guida (SPO-10): la minaccia e' percepita al lancio. Un
@@ -2648,6 +2835,9 @@ class _EngagementRun:
                 target.health = event.health_after
                 self.damage_events.append(event)
 
+                if event.destroyed:
+                    self.destroyed_at.setdefault(target.id, time)
+
                 if was_operative and not target.operative:
                     # Chi ha messo fuori combattimento l'asset (fuoco senza risposta, D5).
                     state.loss_shooters[target.id] = (salvo.shooter_id, time)
@@ -2664,6 +2854,11 @@ class _EngagementRun:
                                                 wasted=wasted, losses=losses, shock=shock,
                                                 erosion=erosion))
         self._touch(time)
+
+        if self.activity_criteria:
+            # Danno oltre soglia, bersagli distrutti, armi AD consumate dalle intercettazioni (F6-B1).
+            self._check_activity(time)
+
         fighting = [asset_id for asset_id in committed if not self.grounded.at(asset_id, time)]
 
         if len(fighting) == len(committed):
@@ -2989,7 +3184,8 @@ class _EngagementRun:
                                 resolutions=tuple(self.resolutions),
                                 damage_events=tuple(self.damage_events),
                                 ammunition_events=tuple(self.ammunition_events),
-                                interception_events=tuple(self.interception_events))
+                                interception_events=tuple(self.interception_events),
+                                activity_ends=tuple(self.activity_ends))
 
 
 def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Callable, rng, *,
@@ -3007,7 +3203,9 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
                        fire_doctrine: Optional[Dict] = None,
                        rwr_catalogue: Optional[Sequence] = None,
                        coordination_of: Optional[Mapping[str, str]] = None,
-                       grounded: Optional[Iterable[str]] = None) -> Optional[EngagementResult]:
+                       grounded: Optional[Iterable[str]] = None,
+                       activity_criteria: Optional[Mapping[str, ActivityCriteria]] = None
+                       ) -> Optional[EngagementResult]:
     """Risolve un ingaggio fra due o piu' forze, in un'unica timeline. Non muta alcun asset.
 
     Args:
@@ -3077,6 +3275,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
             dalla F5-B, il programma di `Mission_Adapter.grounded_schedule` (sempre a terra gli
             aerei senza missione, a intervalli quelli di missione prima del decollo e dopo
             l'atterraggio su una base vera). None o vuoto (default) = comportamento precedente.
+        activity_criteria: `{asset_id: ActivityCriteria}`, i criteri di "fine di attivita'" (F6-B1,
+            v. docstring del modulo): dall'istante in cui uno scatta l'asset non lancia piu' salve
+            offensive. None o vuoto (default) = comportamento precedente. In sessione li costruisce
+            `Session_Simulator` dai criteri dichiarati delle missioni (`EndCriteria`).
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset
@@ -3111,12 +3313,23 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         if fn is not None and not callable(fn):
             raise TypeError(f"{name} must be callable")
 
+    if activity_criteria is not None:
+        if not isinstance(activity_criteria, abc.Mapping):
+            raise TypeError(f"activity_criteria must be a mapping asset_id -> ActivityCriteria, "
+                            f"got {type(activity_criteria).__name__}")
+
+        for asset_id, criteria in activity_criteria.items():
+            if not isinstance(criteria, ActivityCriteria):
+                raise TypeError(f"activity_criteria[{asset_id!r}] must be an ActivityCriteria, "
+                                f"got {type(criteria).__name__}")
+
     run = _EngagementRun((force_a, force_b) + extra_forces, contacts, fire_control, rng, legs,
                          committed, thresholds, reaction_profile_for, detection_factor,
                          salvo_window, provenance, breakpoint_rng=breakpoint_rng,
                          morale_for=morale_for, enemy_estimate_for=enemy_estimate_for,
                          fire_doctrine=fire_doctrine, rwr_catalogue=rwr_catalogue,
-                         coordination_of=coordination_of, grounded=grounded)
+                         coordination_of=coordination_of, grounded=grounded,
+                         activity_criteria=activity_criteria)
 
     if not run.usable:
         return None

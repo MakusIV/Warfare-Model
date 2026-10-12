@@ -36,6 +36,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     ActionKind,
     AssetEndReason,
     AssetState,
+    EndCriteria,
     Mission,
     MissionAction,
     MissionAsset,
@@ -595,6 +596,13 @@ class TestFuelExhaustion(_Base):
         mission = outcome.mission_outcomes['M-b1']
         self.assertEqual(mission.status, MissionStatus.DESTROYED)
         self.assertEqual(mission.asset_outcomes['b1'].end_reason, AssetEndReason.FUEL_EXHAUSTED)
+        # F6-B1: un aereo perso per carburante ha postura `destroyed`; con l'interruttore spento quella
+        # della F6-A (uscito di scena).
+        self.assertEqual(outcome.postures['b1'], MA.DESTROYED_POSTURE)
+
+        with patch.object(SS, 'F6_DESTROYED_POSTURE', False):
+            outcome, _, _ = self._dry_flight()
+
         self.assertEqual(outcome.postures['b1'], MA.OFF_SCENE_POSTURE)
 
     def test_aircraft_glides_to_a_reachable_own_base(self):
@@ -1027,7 +1035,17 @@ class TestPresenceAndPostures(_Base):
         self.assertAlmostEqual(fuel['ba1'].distance, 40_000.0)
 
     def test_postures_of_every_asset_in_the_outcome(self):
+        """Il carro `bv1` e' distrutto in questa sessione: postura `destroyed` (F6-B1); con
+        `F6_DESTROYED_POSTURE` spento la postura di piano della F5-B (`Defense` a movimento finito)."""
         outcome, _, _ = self._run()
+        self.assertTrue(any(event.destroyed and event.target_id == 'bv1' for event in outcome.damage_events))
+        self.assertEqual(dict(outcome.postures), {'ba1': MA.OFF_SCENE_POSTURE, 'ba2': MA.PARKED_POSTURE,
+                                                  'bv1': MA.DESTROYED_POSTURE,
+                                                  'rv1': MA.GROUND_DEFENSE_POSTURE})
+
+        with patch.object(SS, 'F6_DESTROYED_POSTURE', False):
+            outcome, _, _ = self._run()
+
         self.assertEqual(dict(outcome.postures), {'ba1': MA.OFF_SCENE_POSTURE, 'ba2': MA.PARKED_POSTURE,
                                                   'bv1': MA.GROUND_DEFENSE_POSTURE,
                                                   'rv1': MA.GROUND_DEFENSE_POSTURE})
@@ -1193,6 +1211,138 @@ class TestWaitsAndEtas(_Base):
 
         self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 100.0, 200.0))
         self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 200.0, 300.0))
+
+
+# ── FINE DI ATTIVITA' E STATO DI MISSIONE (F6-B1) ─────────────────────────────
+
+def _with_criteria(mission, **criteria):
+    """Copia della missione con i criteri di fine dichiarati."""
+    return dataclasses.replace(mission, end_criteria=EndCriteria(**criteria))
+
+
+KILL = ER.ShotSpec(accuracy=1.0, destroy_capacity=1.0, rounds=1, time_of_flight=1.0)
+
+
+def _blue_only(spec):
+    """Fire control: spara solo Blue (i veicoli rossi non rispondono), sempre `spec`."""
+    return lambda shooter, target: spec if shooter.id.startswith('b') else None
+
+
+class TestEndCriteria(_Base):
+    """F6-B1: i criteri dichiarati in `EndCriteria` chiudono l'attivita' (senza cambio di rotta) e lo
+    stato di missione segue la regola unica DESTROYED > COMPLETED > ABORTED(motivo) > FAILED."""
+
+    FIGHT_ON = {'Blue': {'erosion': 1.0, 'shock': 1.0}, 'Red': {'erosion': 1.0, 'shock': 1.0}}
+
+    def _north(self, fire, session_id='S-end', stores=None, **criteria):
+        blue, red, missions = self._scenario()
+        north, south = missions
+        missions = (_with_criteria(north, **criteria) if criteria else north, south)
+
+        if stores is not None:
+            for asset in blue[0].assets.values():
+                asset.stores = dict(stores)
+
+        # Nessun disingaggio (erosione e shock a 1): Red-East subisce fino all'ultimo veicolo.
+        outcome = SS.run_session(self._order(session_id, missions), blue, red, fire,
+                                 reaction_profile_for=_profile, thresholds=self.FIGHT_ON)
+        return outcome, blue, red
+
+    def _launches(self, outcome, prefix='bn'):
+        return [event.time for event in outcome.ammunition_events if event.asset_id.startswith(prefix)]
+
+    def test_default_criteria_read_nothing(self):
+        """Nei default nessun criterio di stato e' attivo: nessun piano, la sessione e' quella di prima."""
+        blue, red, missions = self._scenario()
+        movement_of = {m.asset_id: m for mission in missions for m in MA.mission_movements(mission)}
+        assets = {a.id: a for force in blue + red for a in force.assets.values()}
+        blocks = {force.id: force for force in blue + red}
+        mission_of = {mission.mission_id: mission for mission in missions}
+        self.assertEqual(SS._activity_plans(self._order(missions=missions), movement_of, mission_of, assets, blocks), {})
+
+    def test_target_destroyed_completes_the_mission(self):
+        """Red-East (2 veicoli) e' il bersaglio di M-north: distrutti entrambi, la missione e'
+        COMPLETED, gli asset chiudono TARGET_DESTROYED all'istante dell'ultima distruzione e non
+        lanciano piu'; con il criterio spento la rotta completata (200 s)."""
+        outcome, _, _ = self._north(_blue_only(KILL), target_destroyed=True)
+        mission = outcome.mission_outcomes['M-north']
+        last = max(e.time for e in outcome.damage_events if e.destroyed and e.target_id in ('re1', 're2'))
+        self.assertEqual(mission.status, MissionStatus.COMPLETED)
+
+        for asset_id in ('bn1', 'bn2'):
+            self.assertEqual((mission.asset_outcomes[asset_id].end_reason, mission.asset_outcomes[asset_id].end_time),
+                             (AssetEndReason.TARGET_DESTROYED, last))
+
+        self.assertTrue(all(t <= last for t in self._launches(outcome)))
+
+        with patch.object(SS, 'F6_END_CRITERIA', False):
+            off, _, _ = self._north(_blue_only(KILL), target_destroyed=True)
+
+        self.assertEqual(off.mission_outcomes['M-north'].asset_outcomes['bn1'].end_reason, AssetEndReason.ROUTE_COMPLETED)
+
+    def test_route_completed_without_the_declared_target_is_failed(self):
+        """Con `target_destroyed` dichiarato la sola rotta completata non e' l'obiettivo: FAILED."""
+        outcome, _, _ = self._north(lambda s, t: None, target_destroyed=True)
+        mission = outcome.mission_outcomes['M-north']
+        self.assertEqual(mission.status, MissionStatus.FAILED)
+        self.assertEqual(mission.asset_outcomes['bn1'].end_reason, AssetEndReason.ROUTE_COMPLETED)
+
+    def test_max_duration_ends_the_activity(self):
+        """Durata di 10 s dalla partenza: il contatto con Red-East comincia dopo, nessun lancio; motivo
+        MAX_DURATION a 10 s, fine regolare (COMPLETED). Senza criterio Blue spara."""
+        outcome, _, _ = self._north(_blue_only(SPEC), max_duration_s=10.0)
+        mission = outcome.mission_outcomes['M-north']
+        self.assertEqual(self._launches(outcome), [])
+        self.assertEqual(mission.status, MissionStatus.COMPLETED)
+        self.assertEqual((mission.asset_outcomes['bn1'].end_reason, mission.asset_outcomes['bn1'].end_time),
+                         (AssetEndReason.MAX_DURATION, 10.0))
+        free, _, _ = self._north(_blue_only(SPEC))
+        self.assertTrue(self._launches(free))
+
+    def test_winchester_aborts_for_ammunition(self):
+        """Un AGM-65D a testa e il cannone: con winchester su 'MISSILES_ASM' una salva per asset, poi
+        passivi; missione ABORTED per munizioni. Senza criterio il cannone continua."""
+        options = (ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, weapon='AGM-65D', time_of_flight=1.0),
+                   ER.ShotSpec(accuracy=0.0, destroy_capacity=1.0, weapon='M61A1', stock_per_round=50))
+        stores = {'AGM-65D': 1, 'M61A1': 500}
+        outcome, _, _ = self._north(_blue_only(options), stores=stores, winchester=('MISSILES_ASM',))
+        mission = outcome.mission_outcomes['M-north']
+        self.assertEqual(len(self._launches(outcome)), 2)
+        self.assertEqual((mission.status, mission.reason), (MissionStatus.ABORTED, AbortReason.AMMUNITION))
+        self.assertEqual({o.end_reason for o in mission.asset_outcomes.values()}, {AssetEndReason.WINCHESTER})
+        free, _, _ = self._north(_blue_only(options), stores=stores)
+        self.assertGreater(len(self._launches(free)), 2)
+
+    def test_winchester_weapons_by_registry_category(self):
+        """Categoria = chiave del registro d'arma del dominio; un'arma della categoria non modellata, o
+        nessuna, disattiva il criterio."""
+        asset = _asset(Aircraft, 'x1', 0, 0)
+        asset.stores = {'AIM-9M': 2, 'AGM-65D': 2, 'M61A1': 500}
+        self.assertEqual(SS._winchester_weapons(asset, 'x1', 'air', ('MISSILES_AAM',)), frozenset({'AIM-9M'}))
+        self.assertEqual(SS._winchester_weapons(asset, 'x1', 'air', ('MISSILES_AAM', 'CANNONS')),
+                         frozenset({'AIM-9M', 'M61A1'}))
+        self.assertEqual(SS._winchester_weapons(asset, 'x1', 'air', ('BOMBS',)), frozenset())
+        asset._unmodelled_weapons = frozenset({'M61A1'})
+        self.assertEqual(SS._winchester_weapons(asset, 'x1', 'air', ('CANNONS',)), frozenset())
+
+    def test_target_ids_by_target_kind(self):
+        blue, red, missions = self._scenario()
+        blocks = {force.id: force for force in blue + red}
+        mission_of = {mission.mission_id: mission for mission in missions}
+        assets = {a.id: a for force in blue + red for a in force.assets.values()}
+        north = missions[0]
+        self.assertEqual(SS._mission_target_ids(north, blocks, mission_of, assets), frozenset({'re1', 're2'}))
+        by_mission = dataclasses.replace(north, target=Target(kind=TargetKind.GROUP, target_id='M-south',
+                                                              provenance=TargetProvenance.OBSERVED, observed_at=0.0))
+        self.assertEqual(SS._mission_target_ids(by_mission, blocks, mission_of, assets), frozenset({'bs1'}))
+        single = dataclasses.replace(north, target=Target(kind=TargetKind.ASSET, target_id='rw1',
+                                                          provenance=TargetProvenance.OBSERVED, observed_at=0.0))
+        self.assertEqual(SS._mission_target_ids(single, blocks, mission_of, assets), frozenset({'rw1'}))
+        point = dataclasses.replace(north, target=Target(kind=TargetKind.POINT, position=Point3D(0, 0, 0)))
+        self.assertEqual(SS._mission_target_ids(point, blocks, mission_of, assets), frozenset())
+        unknown = dataclasses.replace(north, target=Target(kind=TargetKind.ASSET, target_id='nobody',
+                                                           provenance=TargetProvenance.OBSERVED, observed_at=0.0))
+        self.assertEqual(SS._mission_target_ids(unknown, blocks, mission_of, assets), frozenset())
 
 
 if __name__ == '__main__':

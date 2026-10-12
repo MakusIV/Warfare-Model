@@ -410,7 +410,7 @@ class TestS24DryAircraft(F.LoggerSilencer, unittest.TestCase):
     def test_without_a_reachable_own_base_the_aircraft_is_lost(self):
         """'no_base' (base oltre il raggio di planata) e 'enemy_base' (base del nemico): l'aereo e'
         perso all'esaurimento: DESTROYED con motivo FUEL_EXHAUSTED, salute a 0, nessun DamageEvent,
-        missione DESTROYED, nessun tratto dopo i 200 s."""
+        missione DESTROYED, nessun tratto dopo i 200 s, postura `destroyed` (F6-B1)."""
         for variant in ('no_base', 'enemy_base'):
             for outcome, legs, grounded, jet in self.runs[variant]:
                 mission = outcome.mission_outcomes[self.MISSION]
@@ -422,7 +422,8 @@ class TestS24DryAircraft(F.LoggerSilencer, unittest.TestCase):
                 self.assertEqual(jet.health, 0)
                 self.assertEqual([e for e in outcome.damage_events if e.target_id == self.JET], [])
                 self.assertAlmostEqual(legs[self.JET][-1].t_end, AIR_EXHAUSTION_TIME, delta=1e-6)
-                self.assertEqual(outcome.postures[self.JET], MA.OFF_SCENE_POSTURE)
+                # F6-B1: postura `destroyed` (con `F6_DESTROYED_POSTURE` spento: `off_scene`).
+                self.assertEqual(outcome.postures[self.JET], MA.DESTROYED_POSTURE)
                 self.assertFalse(grounded.ever(self.JET))
 
     def test_without_the_constraint_the_aircraft_flies_on_dry(self):

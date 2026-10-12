@@ -93,6 +93,15 @@ conteggi `counts.fuel_events`/`counts.fuel_exhausted` su entrambi i lati (la sol
 il carburante finale per asset (`assets.*.fuel`) resta nel confronto, quindi un cambio di sostanza
 (consumo delle soste, esaurimento che ferma l'asset) resta visibile.
 
+## Fine di attivita' e postura `destroyed` dopo la F6-B1
+
+Dalla F6-B1 i criteri di stato dichiarati in `EndCriteria` chiudono l'attivita' degli asset
+(`Session_Simulator.F6_END_CRITERIA`) e un asset distrutto a fine sessione ha postura `destroyed`
+(`Session_Simulator.F6_DESTROYED_POSTURE`). Nessuna voce nuova nel riassunto: la postura `destroyed`
+cambia solo i valori della voce `postures` (separabile con `--ignore postures`); lo stato di missione
+e i motivi di fine per asset NON sono registrati nella fotografia (si verificano nei test di S25 e con
+una cattura estesa fuori dal repository, v. `F4_Differenze_Scenari.md`, "F6 passo B1").
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -250,6 +259,17 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('glide', 'no_base', 'enemy_base', 'off')),
     ('S24-ORBIT', 'Test_Session_Scenarios_S24', 'TestS24OrbitExhaustion', None,
      _by_occurrence('dry', 'full', 'per_leg_off')),
+    # ── S25 (F6-B1: criteri di fine di attivita', stato di missione, postura `destroyed`) — in coda ──
+    ('S25-WIN', 'Test_Session_Scenarios_S25', 'TestS25Winchester', None,
+     _by_occurrence('winchester', 'undeclared', 'switch_off')),
+    ('S25-DUR', 'Test_Session_Scenarios_S25', 'TestS25MaxDuration', None,
+     _by_occurrence('duration', 'undeclared', 'switch_off')),
+    ('S25-POST', 'Test_Session_Scenarios_S25', 'TestS25DestroyedPosture', None,
+     _by_occurrence('on', 'posture_off')),
+    ('S25-DMG', 'Test_Session_Scenarios_S25', 'TestS25DamageThreshold', None,
+     _by_occurrence('damage', 'undeclared', 'switch_off')),
+    ('S25-TGT', 'Test_Session_Scenarios_S25', 'TestS25TargetDestroyed', None,
+     _by_occurrence('target', 'undeclared', 'switch_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

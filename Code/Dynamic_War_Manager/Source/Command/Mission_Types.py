@@ -176,6 +176,9 @@ class AssetEndReason(Enum):
 
     I criteri di stato (bingo, winchester, danno, minaccia, bersaglio distrutto) nel DES producono
     una "fine di attivita'" senza cambio di rotta (D2.a = B): l'asset resta sulla rotta pianificata.
+    Dalla F6-B1 il motore produce WINCHESTER, DAMAGE, TARGET_DESTROYED e MAX_DURATION
+    (`Logic/Session_Simulator`, "Fine di attivita' e stato di missione"); BINGO e' della F6-B2, THREAT
+    e MISSION_ABORTED non sono ancora prodotti.
     """
     ROUTE_COMPLETED = 'route_completed'    # ultimo waypoint raggiunto
     MAX_DURATION = 'max_duration'          # durata / tempo sulla stazione esaurito
@@ -189,7 +192,7 @@ class AssetEndReason(Enum):
     SESSION_END = 'session_end'            # missione ancora in corso alla fine della sessione
     # Carburante esaurito durante il movimento (F6-A): terra/mare fermi nel punto, aereo in planata su
     # una base (stato non DESTROYED) oppure perso senza base raggiungibile (stato DESTROYED). Distinto
-    # da BINGO, riservato al bingo in volo con rientro (F6-B).
+    # da BINGO, riservato al bingo in volo con rientro (F6-B2).
     FUEL_EXHAUSTED = 'fuel_exhausted'
 
 
@@ -722,6 +725,14 @@ class EndCriteria:
         target_destroyed: fine a bersaglio distrutto.
     Almeno uno fra `last_waypoint` e `max_duration_s` e' obbligatorio: senza una fine geometrica o
     temporale la missione non finirebbe mai se nessun criterio di stato scatta.
+
+    Lettura nel motore (F6-B1, `Logic/Session_Simulator`, "Fine di attivita' e stato di missione",
+    interruttore `F6_END_CRITERIA`): `winchester`, `damage_threshold`, `target_destroyed` (bersaglio
+    ASSET/GROUP; POINT/AREA solo dalla F7) e `max_duration_s` (contata dalla partenza della missione)
+    chiudono l'attivita' dell'asset, che prosegue passivo sulla rotta; motivi WINCHESTER, DAMAGE,
+    TARGET_DESTROYED, MAX_DURATION nell'esito per asset. NON letti: `bingo` (F6-B2),
+    `abort_on_threat` (fuori dal piano della F6), `last_waypoint` (la rotta completata resta sempre una
+    fine, anche con False).
     """
     last_waypoint: bool = True
     max_duration_s: Optional[float] = None

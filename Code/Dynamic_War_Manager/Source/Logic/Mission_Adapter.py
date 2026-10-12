@@ -295,6 +295,11 @@ SEA_DEFENSE_POSTURE = Sea_Task.DEFENSE.value
 # non termina su una base vera: ETICHETTA PROVVISORIA, finche' la F6 non portera' il rientro (RTB)
 # nella rotta. Non e' un valore di Context ne' una grandezza.
 OFF_SCENE_POSTURE = 'off_scene'
+# Postura finale (F6-B1, nell'esito di sessione) di un asset DISTRUTTO a fine sessione, in combattimento o
+# per carburante: ETICHETTA, non un valore di Context ne' una grandezza. La assegna
+# `Session_Simulator.run_session` (interruttore `F6_DESTROYED_POSTURE`): `session_postures` resta la
+# postura di piano (non legge lo stato dell'asset).
+DESTROYED_POSTURE = 'destroyed'
 # Raggio [m] dell'AREA di una base aerea per il criterio d'atterraggio (F5-B, `lands_on_air_base`):
 # un punto LAND entro questa distanza orizzontale da un asset non aereo di una base vera e' un
 # atterraggio sulla base. STIMA DI PROGETTO, non un dato: ordine di grandezza di una pista (2-3,5 km

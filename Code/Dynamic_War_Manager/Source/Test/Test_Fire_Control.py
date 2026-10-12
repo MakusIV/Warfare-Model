@@ -679,5 +679,28 @@ class TestFireControlGroundedAircraft(_FireControlFixture, unittest.TestCase):
         self.assertTrue(ER.accepts_target_grounded(F.make_fire_control()))
 
 
+
+class TestWeaponCategory(F.LoggerSilencer, unittest.TestCase):
+    """F6-B1: categoria d'arma del registro del dominio (criterio winchester di `EndCriteria`)."""
+
+    def test_category_is_the_registry_key_of_the_domain(self):
+        self.assertEqual(FC.weapon_category('air', 'AIM-9M'), 'MISSILES_AAM')
+        self.assertEqual(FC.weapon_category('air', 'AGM-65D'), 'MISSILES_ASM')
+        self.assertEqual(FC.weapon_category('air', 'M61A1'), 'CANNONS')
+        self.assertEqual(FC.weapon_category('ground', '2A42'), 'AUTO_CANNONS')
+
+    def test_every_registry_model_maps_to_its_own_category(self):
+        for domain, registry in (('air', AWD.AIR_WEAPONS), ('ground', GWD.GROUND_WEAPONS), ('sea', SWD.SHIP_WEAPONS)):
+            for category, models in registry.items():
+                for model in models:
+                    with self.subTest(domain=domain, model=model):
+                        self.assertEqual(FC.weapon_category(domain, model), category)
+
+    def test_unknown_model_or_domain(self):
+        self.assertIsNone(FC.weapon_category('air', 'test:aam'))
+        self.assertIsNone(FC.weapon_category('air', None))
+        self.assertIsNone(FC.weapon_category('space', 'AIM-9M'))
+
+
 if __name__ == '__main__':
     unittest.main()

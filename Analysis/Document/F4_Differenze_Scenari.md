@@ -1200,3 +1200,181 @@ Suite 4166 test OK (7 skipped; +33 rispetto a 4133: 13 S24, 13 `Test_Fuel_Model`
 `Test_Tactical_Evaluation...testCalcFightResult` e' passato). Fotografia: prima delle modifiche
 `--compare` IDENTICA su 522; dopo, v. le tabelle sopra (cattura finale 610 esecuzioni, fuori dal
 repository).
+
+## F6 passo B1: fine di attivita', stato di missione, postura `destroyed` (F6-B1, D2.a/D2.d)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` (610 esecuzioni), ricontrollata IDENTICA
+al codice di partenza (`00b6b531`) prima delle modifiche, 2026-10-12. Poiche' la fotografia NON registra
+lo stato di missione ne' i motivi di fine per asset, gli esiti di missione sono stati verificati con una
+CATTURA ESTESA fuori dal repository (script nello scratchpad: fotografia standard + voce
+`mission_outcomes` con stato, motivo ed esito per asset), eseguita sul codice di partenza (esportazione di
+`HEAD`, non un worktree) e sul codice finale.
+**Dopo**: `Session_Simulator.F6_END_CRITERIA = True` e `F6_DESTROYED_POSTURE = True`. Sulla STORIA
+(contatti, colpi, danni, esiti di forza, carburante, ETA) e sugli ESITI DI MISSIONE **nessuna delle 610
+esecuzioni cambia**; 429 cambiano nella sola voce `postures` (1431 asset distrutti passano a
+`destroyed`). 112 esecuzioni nuove (scenario S25). Fotografia del repository NON rigenerata: cattura
+finale fuori dal repository (722 esecuzioni).
+
+### Il cambio
+
+1. **Fine di attivita' nel risolutore senza cambio di rotta (D2.a)**. `Engagement_Resolver` riceve
+   `activity_criteria` (`{asset_id: ActivityCriteria}`): dall'istante in cui un criterio scatta l'asset
+   non lancia piu' salve offensive (nessuno scheduling oltre la fine, lancio gia' programmato annullato
+   per generazione come la prelazione L3), le salve partite arrivano (R4), l'asset prosegue PASSIVO sulla
+   rotta pianificata, resta presente, bersaglio e intercettore. Le fini scattate sono in
+   `EngagementResult.activity_ends`. Senza criteri ogni percorso e' quello di prima (nessuna estrazione
+   aggiunta o tolta).
+2. **Criteri letti** (tutti inattivi nei default di `EndCriteria`), costruiti dalla sessione
+   (`Session_Simulator._activity_plans`):
+   * `winchester`: le voci della scorta per arma nelle categorie elencate; categoria = chiave di primo
+     livello del registro d'arma del dominio (`Fire_Control.weapon_category`, nuova: la stessa categoria
+     `weapon_type` con cui la fire control dai registri sceglie le armi; nessun modello compare in due
+     categorie dello stesso dominio). Scatta a scorta zero di TUTTE quelle voci nello stato ombra;
+   * `damage_threshold`: salute persa / salute a inizio sessione >= soglia, asset non distrutto;
+   * `target_destroyed`: bersaglio ASSET (l'asset) o GROUP (asset del blocco, oppure della missione, con
+     quell'id); fine all'ultima distruzione (combattimento, gia' all'inizio, perdita per carburante),
+     non prima della partenza;
+   * `max_duration_s`: fine a partenza della missione + durata (fine nota a monte, `until`).
+3. **Esito per asset**: la prima fine di attivita' dentro la sessione (a parita' d'istante: danno,
+   winchester, bersaglio, durata) se precede l'arrivo all'ultimo punto e l'esaurimento del carburante;
+   motivo WINCHESTER / DAMAGE / TARGET_DESTROYED / MAX_DURATION all'istante della fine.
+4. **Stato di missione, regola unica (D2.d)**, che sostituisce la precedenza provvisoria della F6-A:
+   DESTROYED (tutti persi) > COMPLETED (obiettivo raggiunto) > ABORTED con motivo (FUEL, AMMUNITION,
+   DAMAGE) > FAILED.
+5. **Postura `destroyed`** (`Mission_Adapter.DESTROYED_POSTURE`, interruttore separato): un asset
+   distrutto a fine sessione (in combattimento o per carburante) ha postura `destroyed` in
+   `SessionOutcome.postures`. `Mission_Adapter.session_postures` resta la postura di piano.
+6. **Interruttori**: `F6_END_CRITERIA` (criteri e regola unica; spento: criteri non letti e precedenza
+   della F6-A) e `F6_DESTROYED_POSTURE` (solo la postura), separati per attribuire le differenze.
+
+Decisioni non coperte dal Piano, scelte le piu' semplici (DA CONFERMARE):
+- **ABORTED solo se OGNI asset superstite** ha chiuso per carburante, munizioni o danno (prima, nella
+  F6-A, bastava UN asset a secco); motivo = quello dell'asset che ha chiuso per ULTIMO (a parita'
+  d'istante FUEL, poi AMMUNITION, poi DAMAGE). Un gregario winchester con il capo ancora in missione non
+  fa abortire la missione;
+- **obiettivo** = i bersagli distrutti se `target_destroyed` e' dichiarato e rappresentabile (allora la
+  sola rotta completata e' FAILED), altrimenti l'ultimo punto raggiunto prima di distruzione e fine di
+  attivita'; **la durata massima e' una fine regolare** (COMPLETED senza criterio di bersaglio): "tempo
+  sulla stazione esaurito" di una CAP;
+- un arrivo all'ultimo punto DOPO la fine di attivita' non completa la missione (l'asset vi arriva
+  passivo); un asset che completa la rotta PRIMA resta ROUTE_COMPLETED anche se un criterio scatta dopo
+  (es. un'unita' terrestre in `Defense` danneggiata dopo l'arrivo smette comunque di sparare);
+- l'asset a fine attivita' **continua a intercettare** (difesa di salva, non ingaggio offensivo);
+- `max_duration_s` contata dalla **partenza della missione** (non dall'arrivo sulla stazione);
+- winchester: criterio INATTIVO (warning) per un asset senza scorta per arma (pool anonimo, nomi 'test:*'),
+  senza armi delle categorie, o con un'arma delle categorie NON modellata (contata a unita': non si
+  esaurisce mai); gia' a zero alla partenza: fine alla partenza;
+- soglia di danno: `>=` soglia (frazione rispetto alla salute a inizio sessione, non a 100);
+- bersaglio GROUP: l'id e' cercato prima fra i blocchi passati, poi fra le missioni, poi fra gli asset;
+  id sconosciuto: criterio ignorato con un warning.
+
+### Costanti stimate
+
+- Nessuna costante nuova nel motore.
+- Scenario S25: costanti DI TEST dichiarate (scorta imposta {AIM-9M: 2, M61A1: 500}, tiri senza effetto a
+  precisione 0, colpo "che graffia" a precisione 1 e capacita' distruttiva 0, scorta Red di 5 unita',
+  soglia di danno 0,05, durata 120 s, sensori 30 km / 10 km / 4,2 km, velocita' 250 m/s e 2 m/s);
+  soglia `MIN_FIRING_FRACTION` = 0,5 dichiarata di test (stessa stima di S22-S24).
+
+### Come si attribuiscono le differenze
+
+| Cattura (estesa, con `mission_outcomes`) | Contro | Esito |
+|---|---|---|
+| codice di partenza, fotografia standard | base del repository | IDENTICA (610) |
+| finale con `F6_DESTROYED_POSTURE` spento | partenza estesa | IDENTICA sulle 610 (posture ed esiti di missione compresi), 112 nuove (S25) |
+| finale | partenza estesa, `--ignore postures` | IDENTICA sulle 610 (esiti di missione compresi), 112 nuove |
+| finale | partenza estesa | 429 cambiate SOLO in `postures` |
+| finale (forma standard) | base del repository, `--ignore postures` | IDENTICA sulle 610, 112 nuove |
+
+Quindi: nessuna missione delle fixture dichiara un criterio di stato o una durata (i criteri sono
+inattivi nei default), la regola unica dello stato di missione non cambia nessun esito esistente (nessuna
+missione con un asset a secco e un altro superstite che non lo e'), e l'unica differenza e' la postura
+degli asset distrutti.
+
+### Esecuzioni cambiate (429 su 610, solo `postures`)
+
+Ogni asset cambiato e' DISTRUTTO a fine sessione (verificato asset per asset sullo stato registrato,
+nessuna eccezione) e ogni asset distrutto ha ora `destroyed`. Transizioni: `Defense` -> `destroyed` 774
+(unita' di superficie e strutture), `off_scene` -> `destroyed` 595 (aerei a fine rotta, compresi i persi
+per carburante di S24), `parking_cold` -> `destroyed` 62 (aerei a terra, S21/S21R/S22-AIR). Per unita'
+(esecuzioni / asset): S1 15/31, S2 23/68, S3 40/240, S4 13/30, S5 35/96, S6 4/21, S7 6/27, S8 1/63, S9
+12/21, S9R 20/28, S10 26/66, S11 6/24, S12 12/47, S13 6/30, S14 6/23, S15 12/55, S16 4/52, S17 15/109,
+S18 8/41, S19 4/8, S19AD 24/107, S20 10/21, S21 13/43, S21R 6/43, S22-AIR 21/27, S22-E1 10/10, S22-E3
+12/12, S23-CAP 8/13, S24-GLIDE 16/16, S24-ORBIT 22/26, VAL-det 1/2, VAL-agn 4/8, ORC-base 1/1, ORC-seed
+2/4, ORC-interval 2/6, ORC-twofronts 9/12. Nessun cambio inatteso.
+
+### Scenario nuovo S25 (`Test_Session_Scenarios_S25.py`, 112 esecuzioni, 12 test)
+
+Ogni scenario ha due controlli: criterio non dichiarato ('undeclared') e criterio dichiarato con
+`F6_END_CRITERIA` spento ('switch_off'), identici fra loro.
+
+**S25-WIN** (8 seed): F-16C con scorta imposta {AIM-9M: 2, M61A1: 500} e fire control "prima l'AIM-9M,
+poi il cannone" (tiri senza effetto), affiancato a 10 km da 3 MiG-29S (uno lancia salve senza effetto
+contro di lui). 'winchester' (`winchester=('MISSILES_AAM',)`): in 8/8 due salve AIM-9M (1,5 s e 16,5 s),
+poi nessuna, cannone intatto (500); WINCHESTER a 16,5 s, missione ABORTED/AMMUNITION, ETA dell'ultimo
+punto presente (prosegue passivo); la scorta Red gli lancia contro 32 salve dopo la fine. Controlli: 12
+salve (2 AIM-9M e 10 raffiche di cannone fino a 121,5 s, scorta del cannone esaurita), COMPLETED.
+
+**S25-DUR** (8 seed): stessa geometria, tiro 'fighter' senza effetto, `max_duration_s` = 120: 8 lanci fra
+1,5 e 106,5 s, nessuno dopo 120 s, MAX_DURATION a 120 s, COMPLETED. Controlli: 32 lanci fino a 466,5 s,
+ROUTE_COMPLETED a 480 s.
+
+**S25-POST** (8 seed): stessa geometria, tiro 'aam' letale, Red non spara: 2 MiG distrutti in 8/8;
+'on': postura `destroyed` per i distrutti, `off_scene` per gli altri; 'posture_off' (`F6_DESTROYED_POSTURE`
+spento): nessuna postura `destroyed`, stessi danni.
+
+**S25-DMG** (8 seed): M1A2 lungo x = -3 km a 2 m/s per 1500 s (tiro senza effetto), 3 BMP-2 con colpo che
+graffia (5 punti a salva, mai un KILL) e una salva di scorta ciascuno. 'damage' (`damage_threshold` =
+0,05): un solo lancio del carro (31 s), DAMAGE alla prima risoluzione Red a 32,5 s, salute finale 85-90
+(non distrutto), DAMAGED, missione ABORTED/DAMAGE. Controlli: 42 lanci fino a 441 s, COMPLETED a 1500 s.
+
+**S25-TGT** (8 seed): 2 F-16C 'strike' (tiro di riferimento 'agm') a 3000 m su un deposito bersaglio
+(Red-Depot, bersaglio GROUP) e due depositi di Red-Other a ~2 km, dottrina senza disingaggio. 'target'
+(`target_destroyed=True`): deposito distrutto in 8/8 fra 133,4 e 149,2 s, 2-4 lanci tutti non posteriori
+alla distruzione, Red-Other mai attaccato dopo (in un seed un colpo lanciato PRIMA arriva dopo, R4),
+TARGET_DESTROYED all'istante della distruzione, COMPLETED, postura `destroyed` del deposito. Controlli:
+4-7 lanci, 2-5 colpi su Red-Other dopo la distruzione, ROUTE_COMPLETED a 320 s.
+
+Controllo con `F6_END_CRITERIA` e `F6_DESTROYED_POSTURE` spenti su tutto il file (sonda fuori dal
+repository): 10 test su 12 falliscono (passano solo i 2 test dei soli controlli): lo scenario distingue
+la F6-B1.
+
+### Test
+
+- `Test_Engagement_Resolver.TestActivityEnd` (nuova, 7 test): winchester, soglia di danno (anche il lancio
+  gia' programmato annullato), bersaglio distrutto nella run e fuori dalla run (istante futuro), `until`,
+  nessun criterio = identico, input non validi.
+- `Test_Session_Simulator.TestEndCriteria` (nuova, 7 test): default senza piani, bersaglio distrutto ->
+  COMPLETED (e interruttore spento), rotta completata senza bersaglio -> FAILED, durata massima,
+  winchester -> ABORTED/AMMUNITION, voci del winchester per categoria, bersagli per forma. Adeguati
+  `test_aircraft_without_a_reachable_base_is_lost` e `test_postures_of_every_asset_in_the_outcome`
+  (postura `destroyed`, con l'interruttore spento quella di prima).
+- `Test_Fire_Control.TestWeaponCategory` (nuova, 3 test).
+- `Test_Session_Scenarios_S22.test_final_postures` e `Test_Session_Scenarios_S24` (aereo perso):
+  postura `destroyed` per gli asset distrutti.
+- `Test_Session_Scenarios_S25` (nuovo, 12 test); `Scenario_Baseline`: unita' S25-WIN, S25-DUR, S25-POST,
+  S25-DMG, S25-TGT in coda.
+
+### Limiti noti
+
+- Bersagli POINT/AREA (e ZONE): `target_destroyed` non rappresentabile prima della F7 (bersagli
+  espliciti), ignorato con un warning.
+- Nel risolutore il bersaglio distrutto vede solo le distruzioni della propria run e degli ingaggi gia'
+  risolti (ordine della coda di sessione): una distruzione in un ingaggio risolto DOPO, anche se anteriore
+  nel tempo, non ferma i lanci; l'esito (motivo e stato) e' invece calcolato sull'intera sessione.
+- `abort_on_threat` non letto (fuori dal piano della F6); `bingo` non letto (F6-B2, con il rientro);
+  `last_waypoint` non letto (la rotta completata e' sempre una fine).
+- Nessun cambio di rotta: la fine di attivita' non porta l'asset a casa (il rientro e' della F6-B2); un
+  aereo in planata per carburante non chiude l'attivita'.
+- Fine di attivita' all'istante del lancio che esaurisce le armi (winchester) o della risoluzione (danno,
+  bersaglio): nessuna latenza di valutazione.
+- `MISSION_ABORTED` (gregari che seguono la missione che abortisce, D3.d) e `THREAT` non sono prodotti.
+
+### Verifica
+
+Suite 4195 test OK (7 skipped; +29 rispetto a 4166: 12 S25, 7 `Test_Engagement_Resolver`, 7
+`Test_Session_Simulator`, 3 `Test_Fire_Control`; adeguati senza cambiare il numero i test di postura di
+`Test_Session_Simulator`, S22 (E1, E3, AIR) e S24; il test instabile preesistente
+`Test_Tactical_Evaluation...testCalcFightResult` e' passato). Fotografia: prima delle modifiche
+`--compare` IDENTICA su 610; dopo, v. le tabelle sopra (cattura finale 722 esecuzioni, fuori dal
+repository).

@@ -3142,5 +3142,114 @@ class TestGroundedTargetIsASurfaceLauncherTarget(TestLauncherPriority):
         self.assertEqual(self._targets_of(self._run(grounded=False), 'r_ad')[0], 'a_esc')
 
 
+# ── FINE DI ATTIVITA' (F6-B1, D2.a) ───────────────────────────────────────────
+
+class TestActivityEnd(unittest.TestCase):
+    """Un criterio di fine di attivita' ferma i NUOVI lanci dell'asset dall'istante in cui scatta; le
+    salve partite arrivano, l'asset resta un bersaglio. Senza criteri il risolutore e' quello di prima."""
+
+    AAM = _miss(rounds=1, weapon='AIM-9M', time_of_flight=5.0)
+    GUN = _miss(rounds=1, weapon='M61A1', stock_per_round=50, time_of_flight=1.0)
+    FIGHT_ON = {'Blue': {'erosion': 1.0, 'shock': 1.0}, 'Red': {'erosion': 1.0, 'shock': 1.0}}
+
+    def setUp(self):
+        patcher = patch(_ER_LOGGER)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _duel(self, blue_fc, red_fc, criteria=None, blue=None, reds=('r1',), t_end=100.0):
+        blue = _Force('blue', 'Blue', [blue or _Asset('b1', stores={'AIM-9M': 2, 'M61A1': 500})])
+        red = _Force('red', 'Red', [_Asset(r) for r in reds])
+        windows = [_window('b1', r, t_end=t_end) for r in reds]
+
+        def fire_control(shooter, target):
+            return blue_fc(target) if shooter.id == 'b1' else red_fc(target)
+
+        # Nessun disingaggio (erosione e shock a 1): la run dura quanto la finestra.
+        return ER.resolve_engagement(blue, red, windows, fire_control, random.Random(0),
+                                     reaction_profile_for=_profiles({'b1': (1.0, 1.0)}, default=(15.0, 10.0)),
+                                     thresholds=self.FIGHT_ON, activity_criteria=criteria)
+
+    def _launches(self, result, shooter_id):
+        return [s.t_launch for s in result.salvos if s.shooter_id == shooter_id]
+
+    def test_winchester_stops_after_the_listed_weapons_run_out(self):
+        """2 AIM-9M e il cannone: senza criterio il cannone continua dopo i missili; con winchester
+        sugli AIM-9M due salve sole, la fine all'istante della seconda; Red continua a sparargli."""
+        options = (self.AAM, self.GUN)
+        free = self._duel(lambda t: options, lambda t: _miss())
+        self.assertGreater(len(self._launches(free, 'b1')), 2)
+        self.assertEqual(free.activity_ends, ())
+
+        criteria = {'b1': ER.ActivityCriteria(winchester_weapons=frozenset({'AIM-9M'}))}
+        result = self._duel(lambda t: options, lambda t: _miss(), criteria)
+        launches = self._launches(result, 'b1')
+        self.assertEqual([s.spec.weapon for s in result.salvos if s.shooter_id == 'b1'], ['AIM-9M', 'AIM-9M'])
+        end, = result.activity_ends
+        self.assertEqual((end.asset_id, end.reason, end.time), ('b1', ER.ACTIVITY_WINCHESTER, launches[-1]))
+        self.assertTrue(any(t > end.time for t in self._launches(result, 'r1')))
+
+    def test_damage_threshold_ends_the_activity_without_destruction(self):
+        """Red toglie 5 punti a salva (precisione 1, capacita' distruttiva 0: mai un KILL); soglia 0,05:
+        la fine scatta alla prima risoluzione su b1, che non lancia piu' (anche il lancio gia'
+        programmato e' annullato) e non e' distrutto."""
+        scratch = ER.ShotSpec(accuracy=1.0, destroy_capacity=0.0, rounds=5, time_of_flight=1.0)
+        free = self._duel(lambda t: _miss(), lambda t: scratch)
+        criteria = {'b1': ER.ActivityCriteria(damage_threshold=0.05)}
+        result = self._duel(lambda t: _miss(), lambda t: scratch, criteria)
+        end, = result.activity_ends
+        first_hit = min(e.time for e in result.damage_events if e.target_id == 'b1')
+        self.assertEqual((end.reason, end.time), (ER.ACTIVITY_DAMAGE, first_hit))
+        # A parita' d'istante il lancio precede la risoluzione (LANCIO < RISOLUZIONE): ammesso.
+        self.assertTrue(all(t <= end.time for t in self._launches(result, 'b1')))
+        self.assertTrue(any(t > end.time for t in self._launches(free, 'b1')))
+        self.assertFalse(any(e.destroyed for e in result.damage_events))
+
+    def test_target_destroyed_stops_the_attack_on_other_enemies(self):
+        """b1 distrugge r1 al primo colpo (impatto prima del lancio successivo); con il bersaglio r1
+        non ingaggia piu' r2."""
+        free = self._duel(lambda t: _kill(time_of_flight=0.5), lambda t: None, reds=('r1', 'r2'))
+        self.assertEqual({s.target_id for s in free.salvos}, {'r1', 'r2'})
+        criteria = {'b1': ER.ActivityCriteria(target_ids=frozenset({'r1'}))}
+        result = self._duel(lambda t: _kill(time_of_flight=0.5), lambda t: None, criteria, reds=('r1', 'r2'))
+        self.assertEqual([s.target_id for s in result.salvos], ['r1'])
+        end, = result.activity_ends
+        self.assertEqual(end.reason, ER.ACTIVITY_TARGET_DESTROYED)
+        self.assertEqual(end.time, next(e.time for e in result.damage_events if e.destroyed))
+
+    def test_targets_destroyed_outside_the_run_end_the_activity_at_their_time(self):
+        """Bersaglio di un'altra run distrutto a 30 s (anche nel "futuro" della run): lanci solo prima."""
+        criteria = {'b1': ER.ActivityCriteria(target_ids=frozenset({'x'}), destroyed_targets={'x': 30.0})}
+        result = self._duel(lambda t: self.GUN, lambda t: None, criteria)
+        launches = self._launches(result, 'b1')
+        self.assertTrue(launches and all(t < 30.0 for t in launches))
+        self.assertEqual([(e.reason, e.time) for e in result.activity_ends], [(ER.ACTIVITY_TARGET_DESTROYED, 30.0)])
+
+    def test_until_blocks_launches_from_that_instant(self):
+        criteria = {'b1': ER.ActivityCriteria(until=10.0)}
+        result = self._duel(lambda t: self.GUN, lambda t: None, criteria)
+        launches = self._launches(result, 'b1')
+        self.assertTrue(launches and all(t < 10.0 for t in launches))
+        self.assertEqual(result.activity_ends, ())
+
+    def test_without_criteria_nothing_changes(self):
+        """Mappa vuota o criteri di un asset assente: stesse salve, stessi danni, stesse estrazioni."""
+        options = (self.AAM, self.GUN)
+        base = self._duel(lambda t: options, lambda t: _kill())
+
+        for criteria in ({}, {'ghost': ER.ActivityCriteria(damage_threshold=0.1)}):
+            with self.subTest(criteria=criteria):
+                other = self._duel(lambda t: options, lambda t: _kill(), criteria)
+                self.assertEqual(other.salvos, base.salvos)
+                self.assertEqual(other.damage_events, base.damage_events)
+
+    def test_bad_criteria_raise(self):
+        with self.assertRaises(TypeError):
+            self._duel(lambda t: None, lambda t: None, criteria=['b1'])
+
+        with self.assertRaises(TypeError):
+            self._duel(lambda t: None, lambda t: None, criteria={'b1': 0.5})
+
+
 if __name__ == '__main__':
     unittest.main()

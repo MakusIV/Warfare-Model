@@ -227,9 +227,17 @@ class TestS22E1FinishedMissionStaysEngageable(_GroundChecks, F.LoggerSilencer, u
         self.assertLessEqual(abs(engaged['finished'] - engaged['static']), 2, engaged)
 
     def test_final_posture_is_defense(self):
+        """`Defense` a fine missione; dalla F6-B1 un carro DISTRUTTO ha postura `destroyed`."""
         for scenario, outcome in self._all():
-            self.assertEqual(outcome.postures[_tank(scenario)], MA.GROUND_DEFENSE_POSTURE, outcome.session_id)
+            self.assertEqual(outcome.postures[_tank(scenario)], _ground_posture(scenario, outcome), outcome.session_id)
             self.assertEqual(outcome.postures[next(iter(scenario.force(POST).assets))], MA.GROUND_DEFENSE_POSTURE)
+
+
+def _ground_posture(scenario, outcome) -> str:
+    """Postura attesa del carro a fine sessione: `Defense` (F5-B), `destroyed` se distrutto (F6-B1)."""
+    tank = _tank(scenario)
+    destroyed = any(e.destroyed and e.target_id == tank for e in outcome.damage_events)
+    return MA.DESTROYED_POSTURE if destroyed else MA.GROUND_DEFENSE_POSTURE
 
 
 class TestS22E3LateDepartureIsPresent(_GroundChecks, F.LoggerSilencer, unittest.TestCase):
@@ -256,9 +264,10 @@ class TestS22E3LateDepartureIsPresent(_GroundChecks, F.LoggerSilencer, unittest.
             self.assertTrue(all(e.time < DEPARTURE for e in _shots_by(outcome, POST)), outcome.session_id)
 
     def test_final_postures(self):
-        """Missione finita (arrivo a 1800 s) o non ancora partita: `Defense` in entrambi i casi."""
+        """Missione finita (arrivo a 1800 s) o non ancora partita: `Defense` in entrambi i casi (dalla
+        F6-B1 `destroyed` se il carro e' distrutto)."""
         for scenario, outcome in self._all():
-            self.assertEqual(outcome.postures[_tank(scenario)], MA.GROUND_DEFENSE_POSTURE, outcome.session_id)
+            self.assertEqual(outcome.postures[_tank(scenario)], _ground_posture(scenario, outcome), outcome.session_id)
 
 
 # ── S22-AIR: aerei a terra prima del decollo e dopo l'atterraggio ─────────────
@@ -403,14 +412,19 @@ class TestS22AircraftOnTheGround(F.LoggerSilencer, unittest.TestCase):
         self.assertGreaterEqual(hit / total, MIN_HIT_FRACTION)
 
     def test_final_postures(self):
+        """Postura di piano per variante; dalla F6-B1 un MiG DISTRUTTO dallo strike ha postura
+        `destroyed` (`Session_Simulator.F6_DESTROYED_POSTURE`)."""
         expected = {'parked': MA.OFF_SCENE_POSTURE, 'airborne': MA.OFF_SCENE_POSTURE,
                     'landed': MA.PARKED_POSTURE, 'no_base': MA.OFF_SCENE_POSTURE,
                     'base_area': MA.PARKED_POSTURE}
 
         for variant, pairs in self.runs.items():
             for scenario, outcome in pairs:
+                destroyed = {e.target_id for e in outcome.damage_events if e.destroyed}
+
                 for mig in _mig_ids(scenario):
-                    self.assertEqual(outcome.postures[mig], expected[variant], outcome.session_id)
+                    want = MA.DESTROYED_POSTURE if mig in destroyed else expected[variant]
+                    self.assertEqual(outcome.postures[mig], want, outcome.session_id)
 
                 self.assertEqual(outcome.postures[f'{BASE}/fuel0'], MA.GROUND_DEFENSE_POSTURE)
 

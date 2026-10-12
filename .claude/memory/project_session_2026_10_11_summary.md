@@ -87,8 +87,17 @@ tipo, durante la planata l'aereo e' un aereo in volo normale, soste di terra/mar
 Regola esaurimento aereo (utente): a bingo in rotta deve tornare indietro -> ABORTED (F6-B); a secco con base raggiungibile
 in planata -> ABORTED; a secco senza base -> DESTROYED.
 
-## PROSSIMO: F6-B (EndCriteria winchester/bersaglio distrutto/danno nel risolutore, MissionOutcome completo, bingo a priori
-nel validatore, bingo in volo con rientro, postura `destroyed`), poi F7-F9. Una sessione, `des-developer` Opus medium.
+## F6-B1 FATTA (2026-10-12, commit F6-B1 su origin; suite 4195 OK, fotografia 722 esecuzioni)
+Criteri di fine attivita' (winchester, damage_threshold, target_destroyed asset/gruppo, max_duration_s) letti dal risolutore
+con `F6_END_CRITERIA`; stato di missione unico DESTROYED > COMPLETED > ABORTED(motivo; solo se OGNI superstite ha chiuso per
+carburante/munizioni/danno) > FAILED, confermato dall'utente; postura `destroyed` (`F6_DESTROYED_POSTURE`) ACCETTATA
+(429 esecuzioni cambiate nel solo campo postures); scenario S25. Limiti: POINT/AREA per target_destroyed = F7; il criterio
+vede solo la propria run; `abort_on_threat`/`last_waypoint` non letti.
+
+## PROSSIMO: F6-B2 = bingo a priori nel validatore (missione che non rientra con la riserva rifiutata) + bingo in volo con
+rientro (cambio di rotta verso la base, ABORTED, motivo BINGO); poi F7 (filtro armi/bersagli per missione + salva su area:
+proposta separata prima, domanda Q3), F8, F9 (manuale: aggiornare anche TOT comune in 03 e 10). Una sessione per passo,
+`des-developer` Opus medium.
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,

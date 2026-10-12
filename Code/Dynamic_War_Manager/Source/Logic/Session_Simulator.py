@@ -144,21 +144,64 @@ stessa ragione per cui `SessionOutcome` non fonde gli esiti di ingaggi diversi.
     (stato DAMAGED se la salute finale e' < 100, altrimenti OPERATIONAL);
   * altrimenti SESSION_END alla fine della sessione: rotta tagliata dalla fine della sessione, o
     missione senza rotta (sul posto), ancora in corso.
-Per missione: DESTROYED se tutti gli asset sono distrutti; COMPLETED se almeno un asset ha
+  * (F6-B1) la fine di attivita' per un criterio dichiarato (WINCHESTER, DAMAGE, TARGET_DESTROYED,
+    MAX_DURATION) se precede l'arrivo, v. "Fine di attivita' e stato di missione".
+Per missione (prima forma): DESTROYED se tutti gli asset sono distrutti; COMPLETED se almeno un asset ha
 raggiunto l'ultimo punto PRIMA di un'eventuale distruzione; altrimenti FAILED ("non completata
 entro la sessione": manca uno stato "in corso", v. D4.e, che lo distinguerebbe da un
-fallimento vero). ETA effettive per punto: il primo passaggio fra gli asset non ancora
+fallimento vero); dalla F6-B1 la regola unica sotto. ETA effettive per punto: il primo passaggio fra gli asset non ancora
 distrutti, None se nessuno ci arriva dentro la sessione; e' l'istante d'ARRIVO al punto (prima di
 un'eventuale attesa nel punto), calcolato dai tratti con le attese (`Mission_Adapter.waypoint_times`,
 F5-C), non dalle ETA pianificate.
 Carburante (F6-A, v. "Carburante"): un aereo perso per esaurimento e' DESTROYED con motivo
 FUEL_EXHAUSTED all'istante dell'esaurimento (una distruzione in combattimento precedente prevale);
 un asset fermo (terra/mare) o atterrato in planata per esaurimento ha motivo FUEL_EXHAUSTED, stato
-OPERATIONAL/DAMAGED, e i punti dopo l'esaurimento non sono raggiunti (ETA None). Missione: DESTROYED
-se tutti distrutti (anche per carburante), poi COMPLETED se qualcuno ha completato la rotta, poi
-ABORTED con motivo FUEL se qualche asset non distrutto e' fermo o atterrato per carburante, altrimenti
-FAILED (precedenza minima di prima forma: la logica di stato completa e' della F6-B). Nessun altro
-criterio di stato (bingo, winchester, danno, minaccia): F6-B.
+OPERATIONAL/DAMAGED, e i punti dopo l'esaurimento non sono raggiunti (ETA None). Dalla F6-B1 lo stato
+di missione segue la regola unica di "Fine di attivita' e stato di missione" (sotto); la precedenza
+provvisoria della F6-A (ABORTED(FUEL) se ALMENO un asset superstite e' a secco) resta solo con
+`F6_END_CRITERIA` spento.
+
+## Fine di attivita' e stato di missione (F6-B1 del piano della Missione, D2.a/D2.d)
+
+Interruttore `F6_END_CRITERIA` (attivo). I criteri di stato DICHIARATI in `EndCriteria` (nei default
+nessuno e' attivo) chiudono l'ATTIVITA' dell'asset senza cambiarne la rotta (D2.a): dall'istante della
+fine l'asset non lancia piu' salve offensive (quelle partite arrivano, R4), prosegue PASSIVO sulla
+rotta pianificata, resta presente, bersaglio e intercettore (v. "Fine di attivita'" in
+`Engagement_Resolver`). Per asset (`_activity_plans`, `ActivityPlan`):
+  * `winchester`: le voci della scorta per arma dell'asset nelle categorie elencate (categoria =
+    chiave del registro d'arma del dominio, `Fire_Control.weapon_category`, la stessa della fire
+    control dai registri); scatta quando sono TUTTE a zero nello stato ombra del risolutore. Criterio
+    inattivo (warning) per un asset senza scorta per arma, senza armi di quelle categorie o con
+    un'arma di quelle categorie non modellata (contata a unita': non si esaurisce mai). Gia' a zero
+    alla partenza: fine alla partenza della missione;
+  * `damage_threshold`: salute persa / salute a inizio sessione >= soglia (mission kill, asset non
+    distrutto);
+  * `target_destroyed`: bersaglio ASSET (l'asset) o GROUP (gli asset del blocco o della missione con
+    quell'id); tutti distrutti (in combattimento, gia' all'inizio o persi per carburante) -> fine
+    all'istante dell'ultima distruzione (non prima della partenza). Bersagli POINT/AREA: non
+    rappresentabili prima della F7 (bersagli espliciti), criterio ignorato con un warning. Nel
+    risolutore il criterio vede le distruzioni degli ingaggi gia' risolti e della propria run;
+    l'esito lo valuta sull'intera sessione (`_activity_ends`);
+  * `max_duration_s`: fine all'istante partenza della missione + durata (semantica scelta, la piu'
+    semplice: "durata o tempo sulla stazione" contato dalla partenza), passata al risolutore come
+    fine nota a monte (`until`).
+Per asset la fine e' la PRIMA fra quelle scattate (a parita' d'istante: danno, winchester, bersaglio,
+durata) se cade nella sessione e prima dell'esaurimento del carburante; un asset che completa la rotta
+PRIMA della fine di attivita' resta ROUTE_COMPLETED, un arrivo DOPO non completa la missione.
+`abort_on_threat` e `bingo` NON sono letti (bingo: F6-B2; minaccia: fuori dal piano della F6).
+
+**Stato di missione, regola unica** (sostituisce la precedenza provvisoria della F6-A):
+DESTROYED (tutti gli asset persi, anche per carburante) > COMPLETED (obiettivo raggiunto: con
+`target_destroyed` dichiarato e rappresentabile i bersagli tutti distrutti nella sessione, altrimenti
+un asset all'ultimo punto prima di distruzione e fine di attivita', oppure fine per durata massima,
+che e' una fine regolare) > ABORTED (OGNI asset superstite ha chiuso per carburante, munizioni o
+danno; motivo FUEL / AMMUNITION / DAMAGE di quello che ha chiuso per ULTIMO, a parita' d'istante
+FUEL, poi AMMUNITION, poi DAMAGE) > FAILED (fine senza obiettivo e senza motivo, incluso "ancora in
+corso" a fine sessione). Con `target_destroyed` dichiarato la sola rotta completata non e' l'obiettivo:
+FAILED.
+
+**Postura `destroyed`** (interruttore `F6_DESTROYED_POSTURE`, attivo): un asset distrutto a fine
+sessione (in combattimento o per carburante) ha postura `Mission_Adapter.DESTROYED_POSTURE` nell'esito.
 
 A parita' d'istante ENGAGEMENT < MOVEMENT, poi l'id (stringa canonica, mai l'ordine di un
 dizionario Python). Le finestre di un asset mobile cadono tutte dentro lo span dei suoi
@@ -269,14 +312,15 @@ contatti sono calcolati sui tratti reali. Esito (`_fuel_end`, `FuelEnd`):
     `Fuel_Model.GLIDE_RATIO` (`FUEL_GLIDE`; basi = `Mission_Adapter.air_base_points`, l'idoneita' per
     tipo d'aereo, es. lunghezza della pista, NON e' modellata: approssimazione dichiarata), poi A TERRA
     sulla base (programma `grounded` dall'atterraggio, bersaglio di superficie passivo come in F5-B);
-    durante la planata e' un aereo in volo come gli altri (limite noto, la "fine di attivita'" e' della
-    F6-B). Velocita' di planata = crociera dell'asset (semplificazione dichiarata); quota = quella del
+    durante la planata e' un aereo in volo come gli altri (limite noto: l'esaurimento non e' fra i
+    criteri di fine di attivita' della F6-B1). Velocita' di planata = crociera dell'asset (semplificazione dichiarata); quota = quella del
     punto di esaurimento, interpolata fra i waypoint, trattata come altezza sulla base (terreno non
     modellato); punto d'atterraggio = l'asset di base piu' vicino, a quota 0;
   * aereo in volo senza base raggiungibile in planata: PERSO (`FUEL_CRASH`): i tratti finiscono
     all'esaurimento e, dopo gli ingaggi, la salute e' portata a 0 con `Asset.apply_damage` (lo stesso
     canale del danno da combattimento, stato asset `Destroyed`) SENZA un `DamageEvent` nell'esito (non
-    e' un colpo: nessun tiratore ne' arma); l'esito per asset e' DESTROYED con motivo FUEL_EXHAUSTED.
+    e' un colpo: nessun tiratore ne' arma); l'esito per asset e' DESTROYED con motivo FUEL_EXHAUSTED
+    e (F6-B1) la postura `destroyed`.
 Un asset il cui consumo cambia per effetto di un ingaggio (regime 'max', sotto) puo' esaurire prima
 del punto calcolato a monte: limite noto, nessun ri-scheduling (v. sotto).
 
@@ -305,7 +349,7 @@ regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'.
 - un asset distrutto a meta' rotta consuma comunque il tragitto (troncato) intero (il carburante di un
   relitto non ha conseguenze di campagna);
 - un asset senza rotta (fermo) non produce FuelEvent; il carburante di partenza e il rifornimento non
-  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B.
+  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B2.
 
 ## Sessione aperta (`SessionOrder.t_end is None`)
 
@@ -341,6 +385,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     AssetState,
     MissionOutcome,
     MissionStatus,
+    TargetKind,
     check_mission_assets,
 )
 from Code.Dynamic_War_Manager.Source.Command.Session_Types import (
@@ -351,6 +396,7 @@ from Code.Dynamic_War_Manager.Source.Command.Session_Types import (
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Logic import Engagement_Resolver as ER
+from Code.Dynamic_War_Manager.Source.Logic import Fire_Control as FC
 from Code.Dynamic_War_Manager.Source.Logic import Fuel_Model as FM
 from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -385,6 +431,18 @@ COMBAT_REGIME = 'max'
 #     base o perso. Spento: nessun vincolo, l'asset a secco continua (come prima, esperimento E5).
 F6_FUEL_PER_LEG = True
 F6_FUEL_CONSTRAINT = True
+
+# F6-B1, due interruttori separati (stessa ragione di quelli della F6-A):
+#   * `F6_END_CRITERIA` (ATTIVO): i criteri di stato DICHIARATI in `EndCriteria` (winchester, soglia di
+#     danno, bersaglio distrutto, durata massima) chiudono l'attivita' dell'asset (v. "Fine di
+#     attivita' e stato di missione" nel docstring) e l'esito di missione segue la regola unica
+#     DESTROYED > COMPLETED > ABORTED(motivo) > FAILED. Spento: i criteri non sono letti (come prima
+#     della F6-B1). Nei default di `EndCriteria` nessuno di questi criteri e' attivo.
+#   * `F6_DESTROYED_POSTURE` (ATTIVO): un asset DISTRUTTO a fine sessione ha postura
+#     `Mission_Adapter.DESTROYED_POSTURE` nell'esito invece dell'etichetta di dominio. Spento: la
+#     postura della F5-B/F6-A (`off_scene`, `Defense`, ...). Cambia solo `SessionOutcome.postures`.
+F6_END_CRITERIA = True
+F6_DESTROYED_POSTURE = True
 
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
@@ -818,7 +876,8 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
                          mission_types: Mapping[str, str], grounded: CS.GroundedSchedule,
                          session_end: float) -> Dict[str, str]:
     """Postura a fine sessione degli asset a secco (F6-A): aereo perso `OFF_SCENE_POSTURE`
-    (la postura `destroyed` e' rimandata alla F6-B, come per le distruzioni in combattimento), a terra
+    (dalla F6-B1, con `F6_DESTROYED_POSTURE` attivo, `run_session` la sostituisce con `destroyed`, come
+    per le distruzioni in combattimento), a terra
     `PARKED_POSTURE`, in planata il tipo di missione; terra/mare fermi in `Defense`."""
     for asset_id, end in ends.items():
         if asset_id not in postures:
@@ -834,6 +893,235 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
             postures[asset_id] = MA.SEA_DEFENSE_POSTURE if domains[asset_id] == 'sea' else MA.GROUND_DEFENSE_POSTURE
 
     return postures
+
+
+# ── FINE DI ATTIVITA' (F6-B1) ─────────────────────────────────────────────────
+
+# Precedenza a parita' d'istante fra le fini di attivita' di un asset (scelta dichiarata, conta solo
+# per fini simultanee): danno, winchester, bersaglio distrutto, durata.
+_ACTIVITY_ORDER = (AssetEndReason.DAMAGE, AssetEndReason.WINCHESTER, AssetEndReason.TARGET_DESTROYED,
+                   AssetEndReason.MAX_DURATION)
+# Motivi di fine di un asset che fanno ABORTIRE la missione e il motivo d'aborto corrispondente.
+_ABORT_REASON_OF = {AssetEndReason.FUEL_EXHAUSTED: AbortReason.FUEL,
+                    AssetEndReason.WINCHESTER: AbortReason.AMMUNITION,
+                    AssetEndReason.DAMAGE: AbortReason.DAMAGE}
+
+
+@dataclass(frozen=True)
+class ActivityPlan:
+    """Criteri di fine di attivita' di un asset di missione, letti da `EndCriteria` (F6-B1).
+
+    Attributes:
+        asset_id/mission_id: id di dominio.
+        winchester_weapons: voci della scorta dell'asset nelle categorie del criterio winchester (vuota
+            = criterio non attivo per l'asset).
+        damage_threshold: soglia di danno dichiarata, None = non attiva.
+        target_ids: asset bersaglio della missione (vuoto = criterio non attivo o non rappresentabile).
+        static_end: fine nota prima di ogni ingaggio, `(istante, AssetEndReason)`: durata massima
+            (partenza della missione + `max_duration_s`) o winchester gia' all'inizio (alla partenza);
+            None se nessuna.
+    """
+    asset_id: str
+    mission_id: str
+    winchester_weapons: frozenset = frozenset()
+    damage_threshold: Optional[float] = None
+    target_ids: frozenset = frozenset()
+    static_end: Optional[Tuple[float, AssetEndReason]] = None
+
+
+def _mission_target_ids(mission, blocks: Mapping[str, object], mission_of: Mapping[str, object],
+                        assets: Mapping[str, object]) -> frozenset:
+    """Asset bersaglio della missione per il criterio `target_destroyed` (F6-B1).
+
+    ASSET: l'asset `target_id`. GROUP: gli asset del blocco `target_id` fra quelli passati, oppure della
+    missione `target_id` (un gruppo di missione), oppure l'asset `target_id`. POINT/AREA: il bersaglio
+    non e' un asset del modello (bersagli espliciti: F7), criterio non rappresentabile (warning).
+    Vuoto (con un warning) se l'id non corrisponde a nulla fra le forze passate.
+    """
+    target = mission.target
+
+    if target.kind not in (TargetKind.ASSET, TargetKind.GROUP):
+        logger.warning(f"run_session: mission {mission.mission_id!r} declares target_destroyed on a "
+                       f"{target.kind.name} target: not representable before F7 (explicit targets), ignored")
+        return frozenset()
+
+    target_id = target.target_id
+
+    if target.kind is TargetKind.GROUP and target_id in blocks:
+        return frozenset(asset_id for asset_id in (_domain_id(a) for a in (getattr(blocks[target_id], 'assets', None)
+                                                                          or {}).values())
+                         if asset_id is not None)
+
+    if target.kind is TargetKind.GROUP and target_id in mission_of:
+        return frozenset(mission_of[target_id].asset_ids)
+
+    if target_id in assets:
+        return frozenset((target_id,))
+
+    logger.warning(f"run_session: mission {mission.mission_id!r}: target {target_id!r} matches no asset, "
+                   f"block or mission passed: target_destroyed ignored")
+    return frozenset()
+
+
+def _winchester_weapons(asset, asset_id: str, domain: str, categories) -> frozenset:
+    """Voci della scorta per arma dell'asset nelle categorie `categories` del registro d'arma del suo
+    dominio (`Fire_Control.weapon_category`). Vuota, con un warning, se l'asset non ha scorta per arma,
+    non ha armi di quelle categorie, o ne ha una NON MODELLATA (contata a unita', senza vincolo di
+    scorta: non si esaurisce mai, quindi il criterio non puo' scattare)."""
+    stores = getattr(asset, 'stores', None)
+    wanted = set(categories)
+
+    if not isinstance(stores, Mapping):
+        logger.warning(f"run_session: asset {asset_id!r} has no per-weapon stores: winchester ignored")
+        return frozenset()
+
+    unmodelled = [weapon for weapon in (getattr(asset, 'unmodelled_weapons', None) or ())
+                  if FC.weapon_category(domain, weapon) in wanted]
+
+    if unmodelled:
+        logger.warning(f"run_session: asset {asset_id!r} has unmodelled weapons {sorted(unmodelled)} in the "
+                       f"winchester categories {sorted(wanted)}: they never run out, winchester ignored")
+        return frozenset()
+
+    weapons = frozenset(weapon for weapon in stores if FC.weapon_category(domain, weapon) in wanted)
+
+    if not weapons:
+        logger.warning(f"run_session: asset {asset_id!r} has no weapon of the winchester categories "
+                       f"{sorted(wanted)}: winchester ignored")
+
+    return weapons
+
+
+def _activity_plans(order: SessionOrder, movement_of: Mapping[str, object], mission_of: Mapping[str, object],
+                    assets: Mapping[str, object], blocks: Mapping[str, object]) -> Dict[str, ActivityPlan]:
+    """Piani di fine di attivita' degli asset delle missioni che dichiarano un criterio di stato o una
+    durata (F6-B1). Vuoto con `F6_END_CRITERIA` spento o senza criteri dichiarati (i default)."""
+    if not F6_END_CRITERIA:
+        return {}
+
+    plans: Dict[str, ActivityPlan] = {}
+
+    for mission in order.missions:
+        criteria = mission.end_criteria
+
+        if not (criteria.winchester or criteria.damage_threshold is not None or criteria.target_destroyed
+                or criteria.max_duration_s is not None):
+            continue
+
+        targets = _mission_target_ids(mission, blocks, mission_of, assets) if criteria.target_destroyed \
+            else frozenset()
+
+        for asset_id in mission.asset_ids:
+            movement = movement_of.get(asset_id)
+            asset = assets.get(asset_id)
+
+            if movement is None or asset is None:
+                continue
+
+            weapons = _winchester_weapons(asset, asset_id, mission.domain, criteria.winchester) \
+                if criteria.winchester else frozenset()
+            ends = []
+
+            if criteria.max_duration_s is not None:
+                ends.append((movement.start + criteria.max_duration_s, AssetEndReason.MAX_DURATION))
+
+            stores = getattr(asset, 'stores', None) or {}
+
+            if weapons and all(stores.get(weapon, 0) <= 0 for weapon in weapons):
+                # Gia' senza le armi del criterio alla partenza: fine di attivita' alla partenza.
+                ends.append((movement.start, AssetEndReason.WINCHESTER))
+
+            static_end = min(ends, key=lambda end: (end[0], _ACTIVITY_ORDER.index(end[1]))) if ends else None
+            plans[asset_id] = ActivityPlan(asset_id, mission.mission_id, weapons, criteria.damage_threshold,
+                                           targets, static_end)
+
+    return plans
+
+
+def _known_destructions(results, assets: Mapping[str, object], t0: float,
+                        fuel_ends: Mapping[str, FuelEnd]) -> Dict[str, float]:
+    """`{asset_id: istante}` delle distruzioni note: in combattimento (ingaggi gia' risolti) o gia'
+    distrutti all'inizio (`_destruction_times`), e i persi per carburante (FUEL_CRASH, istante noto a
+    monte)."""
+    known = _destruction_times(results, assets, t0)
+
+    for asset_id, end in fuel_ends.items():
+        if end.kind == FUEL_CRASH:
+            known[asset_id] = min(end.time, known.get(asset_id, end.time))
+
+    return known
+
+
+def _activity_criteria(plans: Mapping[str, ActivityPlan], known: Optional[Mapping[str, float]]
+                       ) -> Dict[str, ER.ActivityCriteria]:
+    """I criteri nella forma del risolutore (`ER.ActivityCriteria`) per un ingaggio, con le distruzioni
+    dei bersagli gia' note (`known`, None se nessun piano ha bersagli)."""
+    criteria = {}
+
+    for asset_id, plan in plans.items():
+        destroyed = {target_id: known[target_id] for target_id in plan.target_ids if target_id in known} \
+            if known is not None and plan.target_ids else {}
+        criteria[asset_id] = ER.ActivityCriteria(
+            winchester_weapons=plan.winchester_weapons, damage_threshold=plan.damage_threshold,
+            target_ids=plan.target_ids, destroyed_targets=destroyed,
+            until=plan.static_end[0] if plan.static_end is not None else None)
+
+    return criteria
+
+
+def _targets_destroyed_time(target_ids, destroyed: Mapping[str, float]) -> Optional[float]:
+    """Istante in cui tutti i bersagli sono distrutti (l'ultima distruzione), None se qualcuno non lo e'
+    o non ci sono bersagli."""
+    if not target_ids or any(target_id not in destroyed for target_id in target_ids):
+        return None
+
+    return max(destroyed[target_id] for target_id in target_ids)
+
+
+def _activity_ends(plans: Mapping[str, ActivityPlan], movement_of: Mapping[str, object], results,
+                   destroyed: Mapping[str, float]) -> Tuple[Dict[str, Tuple[float, AssetEndReason]],
+                                                            Dict[str, Optional[float]]]:
+    """Fine di attivita' di ogni asset con un piano (la prima fra: fine nota a monte, winchester o danno
+    scattati negli ingaggi, bersagli tutti distrutti) e istante di distruzione dei bersagli per missione.
+
+    Il bersaglio distrutto e' valutato QUI sulle distruzioni dell'intera sessione (`destroyed`), non
+    sulle fini del risolutore: un ingaggio risolto prima puo' non sapere di una distruzione avvenuta in
+    un ingaggio risolto dopo (limite dichiarato del risolutore, v. docstring); l'esito usa il dato
+    completo. La fine per bersaglio distrutto non e' anteriore alla partenza della missione.
+    """
+    dynamic: Dict[str, Tuple[float, AssetEndReason]] = {}
+
+    for result in results:
+        if result is None:
+            continue
+
+        for event in result.activity_ends:
+            if event.reason == ER.ACTIVITY_TARGET_DESTROYED:
+                continue
+
+            reason = AssetEndReason(event.reason)
+            known = dynamic.get(event.asset_id)
+
+            if known is None or (event.time, _ACTIVITY_ORDER.index(reason)) < (known[0], _ACTIVITY_ORDER.index(known[1])):
+                dynamic[event.asset_id] = (event.time, reason)
+
+    target_times: Dict[str, Optional[float]] = {}
+    ends: Dict[str, Tuple[float, AssetEndReason]] = {}
+
+    for asset_id, plan in plans.items():
+        if plan.target_ids and plan.mission_id not in target_times:
+            target_times[plan.mission_id] = _targets_destroyed_time(plan.target_ids, destroyed)
+
+        candidates = [end for end in (plan.static_end, dynamic.get(asset_id)) if end is not None]
+        target_time = target_times.get(plan.mission_id) if plan.target_ids else None
+
+        if target_time is not None:
+            candidates.append((max(target_time, movement_of[asset_id].start), AssetEndReason.TARGET_DESTROYED))
+
+        if candidates:
+            ends[asset_id] = min(candidates, key=lambda end: (end[0], _ACTIVITY_ORDER.index(end[1])))
+
+    return ends, target_times
 
 
 def _check_missions(order: SessionOrder, blocks: Mapping[str, object]) -> None:
@@ -945,12 +1233,15 @@ def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict
 
 
 def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed: Mapping[str, float],
-                     session_end: float, fuel_ends: Optional[Mapping[str, FuelEnd]] = None) -> MissionOutcome:
-    """Esito di missione di prima forma (regola nel docstring del modulo; esaurimento del carburante
-    della F6-A in `fuel_ends`)."""
+                     session_end: float, fuel_ends: Optional[Mapping[str, FuelEnd]] = None,
+                     activity_ends: Optional[Mapping[str, Tuple[float, AssetEndReason]]] = None,
+                     target_declared: bool = False, target_time: Optional[float] = None) -> MissionOutcome:
+    """Esito di missione (regola nel docstring del modulo, "Fine di attivita' e stato di missione"):
+    esaurimento del carburante della F6-A in `fuel_ends`, fini di attivita' della F6-B1 in
+    `activity_ends` (`{asset_id: (istante, motivo)}`, `_activity_ends`), criterio del bersaglio
+    distrutto dichiarato e rappresentabile in `target_declared` con l'istante in `target_time`."""
     asset_outcomes = {}
     reached = False
-    out_of_fuel = False
     passages: List[Tuple[Tuple[float, ...], Optional[float]]] = []
 
     for movement in movements:
@@ -963,8 +1254,16 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
         destroyed_at = destroyed.get(asset_id)
         crashed_at = end.time if end is not None and end.kind == FUEL_CRASH else None
         arrives = arrival is not None and arrival <= session_end + CS.TIME_EPS
+        # Fine di attivita' (F6-B1) dentro la sessione: l'asset prosegue passivo sulla rotta, quindi
+        # un arrivo all'ultimo punto DOPO la fine non completa la missione.
+        activity = (activity_ends or {}).get(asset_id)
 
-        if arrives and (destroyed_at is None or destroyed_at > arrival + CS.TIME_EPS):
+        if activity is not None and activity[0] > session_end + CS.TIME_EPS:
+            activity = None
+
+        completes = arrives and (activity is None or arrival <= activity[0] + CS.TIME_EPS)
+
+        if completes and (destroyed_at is None or destroyed_at > arrival + CS.TIME_EPS):
             reached = True
 
         if destroyed_at is not None and (crashed_at is None or destroyed_at <= crashed_at + CS.TIME_EPS):
@@ -978,29 +1277,41 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
             health = getattr(asset, 'health', None)
             state = AssetState.DAMAGED if isinstance(health, (int, float)) and health < 100 else AssetState.OPERATIONAL
 
-            if arrives:
+            if completes:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.ROUTE_COMPLETED, arrival)
+            elif activity is not None and (end is None or activity[0] < end.time - CS.TIME_EPS):
+                outcome = AssetMissionOutcome(asset_id, state, activity[1], activity[0])
+
+                if activity[1] is AssetEndReason.MAX_DURATION:
+                    # Durata / tempo sulla stazione esaurito: fine REGOLARE, come l'ultimo punto.
+                    reached = True
             elif end is not None:
                 # Fermo nel punto (terra/mare) o a terra sulla base dopo la planata (aereo), F6-A.
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.FUEL_EXHAUSTED, end.time)
-                out_of_fuel = True
             else:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.SESSION_END, session_end)
 
         asset_outcomes[asset_id] = outcome
         passages.append((times, destroyed_at))
 
-    # F6-A: un asset fermo o atterrato per carburante rende la missione ABORTED (motivo FUEL) se
-    # nessun asset ha completato la rotta (la precedenza di COMPLETED e' la regola di prima forma;
-    # la logica di stato completa della missione e' della F6-B).
+    # Regola unica (F6-B1, sostituisce la precedenza provvisoria della F6-A):
+    # DESTROYED (tutti persi) > COMPLETED (obiettivo raggiunto: bersagli distrutti se il criterio e'
+    # dichiarato, altrimenti ultimo punto o durata) > ABORTED (ogni asset superstite ha chiuso per
+    # carburante, munizioni o danno; motivo = quello dell'ultima chiusura) > FAILED.
+    # Con `F6_END_CRITERIA` spento resta la precedenza provvisoria della F6-A: ABORTED(FUEL) se ALMENO
+    # un asset superstite e' fermo o atterrato per carburante.
     reason = None
+    survivors = [o for o in asset_outcomes.values() if o.state is not AssetState.DESTROYED]
+    aborts = [o for o in survivors if o.end_reason in _ABORT_REASON_OF]
+    aborted = (len(aborts) == len(survivors)) if F6_END_CRITERIA else bool(aborts)
 
-    if all(o.state is AssetState.DESTROYED for o in asset_outcomes.values()):
+    if not survivors:
         status = MissionStatus.DESTROYED
-    elif reached:
+    elif (target_time is not None) if target_declared else reached:
         status = MissionStatus.COMPLETED
-    elif out_of_fuel:
-        status, reason = MissionStatus.ABORTED, AbortReason.FUEL
+    elif aborted:
+        last = max(aborts, key=lambda o: (o.end_time, -list(_ABORT_REASON_OF).index(o.end_reason)))
+        status, reason = MissionStatus.ABORTED, _ABORT_REASON_OF[last.end_reason]
     else:
         status = MissionStatus.FAILED
 
@@ -1154,6 +1465,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             presence_legs[asset_id] = legs
 
     grounded = _grounded_after_fuel(grounded, fuel_ends)
+    # F6-B1: criteri di fine di attivita' dichiarati dalle missioni (vuoto senza criteri o spento).
+    activity_plans = _activity_plans(order, movement_of, mission_of, assets_by_id, blocks)
+    plans_with_targets = any(plan.target_ids for plan in activity_plans.values())
 
     # ── strato 1: tutti i contatti della sessione ─────────────────────────────
     windows = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts,
@@ -1209,6 +1523,14 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         if kind == ENGAGEMENT_EVENT:
             force_ids, group = payload
             component = [forces[force_id] for force_id in force_ids]
+            # F6-B1: criteri passati solo se dichiarati (senza, la chiamata e' quella di prima), con le
+            # distruzioni dei bersagli note a questo punto (ingaggi gia' risolti, carburante).
+            extra = {}
+
+            if activity_plans:
+                known = _known_destructions(results, assets_by_id, t0, fuel_ends) if plans_with_targets else None
+                extra['activity_criteria'] = _activity_criteria(activity_plans, known)
+
             result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                            order.rng(mission_id=None, event_id=key, counter=0),
                                            extra_forces=component[2:],
@@ -1225,7 +1547,7 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                            enemy_estimate_for=enemy_estimate_for,
                                            fire_doctrine=fire_doctrine,
                                            coordination_of=coordination,
-                                           grounded=grounded)
+                                           grounded=grounded, **extra)
             results.append(result)
 
             if result is not None:
@@ -1290,8 +1612,15 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                     f"beyond its end t={session_end} (salvos in flight): outcome interval extended")
 
     destroyed = _destruction_times(results, assets_by_id, t0)
+    # F6-B1: fine di attivita' per asset e distruzione dei bersagli per missione (sull'intera sessione).
+    activity_ends, target_times = _activity_ends(activity_plans, movement_of, results,
+                                                 _known_destructions(results, assets_by_id, t0, fuel_ends)) \
+        if activity_plans else ({}, {})
     mission_outcomes = {mission.mission_id: _mission_outcome(mission, mission_movements[mission.mission_id],
-                                                             assets_by_id, destroyed, session_end, fuel_ends)
+                                                             assets_by_id, destroyed, session_end, fuel_ends,
+                                                             activity_ends,
+                                                             target_declared=mission.mission_id in target_times,
+                                                             target_time=target_times.get(mission.mission_id))
                         for mission in order.missions}
 
     # F6-A: un aereo perso per carburante (nessuna base raggiungibile in planata) e' distrutto come in
@@ -1316,6 +1645,15 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                     {a: mission_of[m.mission_id].domain for a, m in movement_of.items()},
                                     {a: mission_of[m.mission_id].mission_type for a, m in movement_of.items()},
                                     grounded, session_end)
+
+    if F6_DESTROYED_POSTURE:
+        # F6-B1 (postura rimandata dalla F5-B, decisione dell'utente del 2026-10-12): un asset DISTRUTTO
+        # a fine sessione, in combattimento o per carburante (F6-A), ha postura `destroyed`.
+        for asset_id in postures:
+            asset = assets_by_id.get(asset_id)
+
+            if asset is not None and getattr(asset, 'is_destroyed', lambda: False)():
+                postures[asset_id] = MA.DESTROYED_POSTURE
 
     return assemble_session_outcome(order.session_id, results, fuel_events,
                                     t_start=t0, t_end=latest, mission_outcomes=mission_outcomes,
