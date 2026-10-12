@@ -664,8 +664,8 @@ def _landing_route(reference):
 
 
 class _F5Active(_Base):
-    """F5 (b)-(d): presenza (`MA.F5_PRESENCE`, attiva dalla F5-B) e attese (`MA.F5_WAITS`, spente
-    fino alla F5-C): i test le attivano entrambe per sé."""
+    """F5 (b)-(d): presenza (`MA.F5_PRESENCE`, attiva dalla F5-B) e attese (`MA.F5_WAITS`, attive
+    dalla F5-C): i test le attivano entrambe per sé, indipendentemente dal default."""
 
     def setUp(self):
         super().setUp()
@@ -860,20 +860,37 @@ class TestFinalPosture(_F5Active):
         self.assertEqual(list(postures), ['a1', 's1', 'v1'])
 
 
-class TestF5BSwitches(_Base):
-    """F5-B: interruttori di default (nessun patch): presenza ATTIVA, attese SPENTE (F5-C)."""
+class TestF5Switches(_Base):
+    """Interruttori di default (nessun patch): presenza ATTIVA (F5-B) e attese ATTIVE (F5-C); con le
+    attese spente il comportamento e' quello della F5-B."""
 
-    def test_default_switches(self):
-        self.assertTrue(MA.F5_PRESENCE)
-        self.assertFalse(MA.F5_WAITS)
-
-    def test_presence_without_waits(self):
-        """Una WAIT dichiarata non produce attese (F5-C), ma la presenza prima e dopo c'e'."""
+    def _ground_plan(self):
         route = _route([(0, 0, 0), (1000, 0, 0), (2000, 0, 0)], speed=10.0, route_type='ground',
                        path_type='offroad', name='g')
         roles = [MT.WaypointRole.DEPARTURE, MT.WaypointRole.NAV, MT.WaypointRole.OBJECTIVE]
-        plan = _with_actions(route, {1: [_wait(duration=300.0)]}, roles=roles)
+        return route, _with_actions(route, {1: [_wait(duration=300.0)]}, roles=roles)
+
+    def test_default_switches(self):
+        self.assertTrue(MA.F5_PRESENCE)
+        self.assertTrue(MA.F5_WAITS)
+
+    def test_presence_and_waits_by_default(self):
+        """Una WAIT dichiarata produce l'attesa (F5-C), con la presenza prima e dopo (F5-B)."""
+        route, plan = self._ground_plan()
         movement, = MA.mission_movements(_ground_mission(start_time=500.0, waypoints=plan, route=route))
+        self.assertEqual(movement.holds, ((1, 300.0),))
+        self.assertEqual(MA.waypoint_times(movement), (500.0, 600.0, 1_000.0))
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        self.assertEqual((legs[0].t_start, legs[0].t_end, legs[-1].t_start, legs[-1].t_end),
+                         (0.0, 500.0, 1_000.0, 3_600.0))
+
+    def test_presence_without_waits(self):
+        """Attese spente: una WAIT dichiarata non produce attese, ma la presenza prima e dopo c'e'."""
+        route, plan = self._ground_plan()
+
+        with patch.object(MA, 'F5_WAITS', False):
+            movement, = MA.mission_movements(_ground_mission(start_time=500.0, waypoints=plan, route=route))
+
         self.assertEqual(movement.holds, ())
         self.assertEqual((movement.present_before, movement.present_after), (True, True))
         self.assertEqual(MA.waypoint_times(movement), (500.0, 600.0, 700.0))
@@ -881,12 +898,62 @@ class TestF5BSwitches(_Base):
         self.assertEqual((legs[0].t_start, legs[0].t_end, legs[-1].t_start, legs[-1].t_end),
                          (0.0, 500.0, 700.0, 3_600.0))
 
-    def test_waits_do_not_move_a_locked_departure(self):
-        """ETA bloccata sul punto di partenza oltre `start_time`: con le attese spente la partenza
-        resta `start_time` (comportamento precedente alla F5)."""
+    def test_a_locked_departure_delays_the_start_time(self):
+        """ETA bloccata sul punto di partenza oltre `start_time`: con le attese attive la partenza e'
+        ritardata all'ETA; spente resta `start_time` (comportamento precedente alla F5)."""
         route = _three_points()
         plan = _with_actions(route, {}, etas=[900.0, None, None], locked=[True, False, False])
-        self.assertEqual(MA.mission_start(_mission(route=route, waypoints=plan, start_time=0.0)), 0.0)
+        mission = _mission(route=route, waypoints=plan, start_time=0.0)
+        self.assertEqual(MA.mission_start(mission), 900.0)
+
+        with patch.object(MA, 'F5_WAITS', False):
+            self.assertEqual(MA.mission_start(mission), 0.0)
+
+
+class TestOperationTot(_Base):
+    """F5-C: TOT comune di un'Operazione (`operation_tots`) e attese prima dell'ancoraggio."""
+
+    ROLES = [MT.WaypointRole.NAV, MT.WaypointRole.ATTACK, MT.WaypointRole.LAND]
+
+    def _missions(self, near_tot=None):
+        near, far = _three_points(), _route([(0, 0, 3000), (40_000, 0, 3000), (80_000, 0, 3000)], name='far')
+        return (_mission(mission_id='near', route=near, waypoints=_plan(near, roles=self.ROLES), tot=near_tot),
+                _mission(mission_id='far', route=far, waypoints=_plan(far, roles=self.ROLES)))
+
+    def test_common_tot_applies_to_missions_without_their_own(self):
+        missions = self._missions()
+        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
+        tots = MA.operation_tots(missions, (operation,))
+        self.assertEqual(tots, {'near': 900.0, 'far': 900.0})
+        times = [MA.waypoint_times(MA.mission_movements(m, tot=tots[m.mission_id])[0]) for m in missions]
+        self.assertEqual(times, [(0.0, 900.0, 1_000.0), (0.0, 900.0, 1_100.0)])
+
+    def test_operation_without_tot_and_missions_outside_operations(self):
+        missions = self._missions()
+        self.assertEqual(MA.operation_tots(missions, (MT.Operation('op', 'strike', ('near',)),)), {})
+        self.assertEqual(MA.operation_tots(missions), {})
+
+    def test_same_own_tot_is_accepted_a_different_one_raises(self):
+        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
+        self.assertEqual(MA.operation_tots(self._missions(near_tot=900.0), (operation,))['near'], 900.0)
+
+        with self.assertRaises(ValueError):
+            MA.operation_tots(self._missions(near_tot=800.0), (operation,))
+
+    def test_waits_off_ignores_the_common_tot(self):
+        operation = MT.Operation('op', 'strike', ('near', 'far'), tot=900.0)
+
+        with patch.object(MA, 'F5_WAITS', False):
+            self.assertEqual(MA.operation_tots(self._missions(), (operation,)), {})
+
+    def test_tot_without_an_anchor_is_ignored_with_a_warning(self):
+        route = _three_points()
+
+        with patch('Code.Dynamic_War_Manager.Source.Logic.Mission_Adapter.logger') as mock_logger:
+            movement, = MA.mission_movements(_mission(route=route), tot=900.0)
+
+        self.assertEqual(movement.holds, ())
+        mock_logger.warning.assert_called_once()
 
 
 class _BaseBlock:

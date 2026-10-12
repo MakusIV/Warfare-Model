@@ -61,11 +61,13 @@ Conversione km/h -> m/s: `kmh / 3.6`.
 
 Gli istanti della missione sono in secondi dall'inizio della sessione; la partenza assoluta e'
 `t0 + ...` con `t0 = SessionOrder.t_start`. In ordine di precedenza:
-  1. `start_time`;
+  1. `start_time` (dalla F5-C ritardata da un'ETA bloccata piu' tarda sul punto di partenza);
   2. il primo waypoint con `eta_locked`: partenza = ETA - tempo di percorrenza fino a quel punto
-     sulla rotta di riferimento (con le velocita' di missione);
+     sulla rotta di riferimento (con le velocita' di missione e, dalla F5-C, le attese di durata
+     nota prima del punto);
   3. `tot`, ancorato al primo waypoint ATTACK (o, in mancanza, OBJECTIVE): stessa derivazione;
-     senza un punto d'ancoraggio ValueError.
+     senza un punto d'ancoraggio ValueError. Il TOT comune di un'Operazione non entra qui (una
+     missione ha sempre un proprio istante bloccato): agisce con le attese, v. sotto.
 Tutti gli asset di una missione partono insieme (la formazione e' una). Una partenza derivata
 anteriore all'inizio della sessione e' un errore (le missioni fuori finestra saranno rifiutate dal
 validatore di sessione della F8; qui non si tagliano in silenzio). `Activation.ON_EVENT` e' solo
@@ -189,8 +191,36 @@ nel dominio delle missioni del blocco.
     della missione della vista (`SessionOrder` ne garantisce la coerenza): le missioni arrivano
     con le viste, non serve passarle a parte.
 
+## Attese, ETA bloccate e TOT (F5 passi (c)-(d), N2.b/N2.c, cablati dalla F5-C)
+
+Con `F5_WAITS` (attivo dalla F5-C) `mission_movements` dichiara le ATTESE della missione
+(`mission_holds`, `AssetMovement.holds`): tratti FERMI nel punto della rotta, inseriti nel
+movimento da `_timeline` (i tratti successivi sono spostati della durata). Le stesse attese per
+tutti gli asset della missione (la formazione attende insieme, regola A). Fonti di un'attesa:
+  * azione WAIT del punto (`_wait_end`): durata data o fino all'istante t, con la sua condizione
+    d'avvio; 'hold' (sosta) e 'orbit' (circuito) sono la STESSA cosa per il motore: presenza
+    ferma nel punto per la durata. Per l'orbita e' un'APPROSSIMAZIONE DICHIARATA: nessun circuito
+    geometrico (MissionAction non dichiara raggio ne' velocita' d'orbita, e non se ne inventano);
+    le finestre di contatto coprono quindi tutta l'attesa intorno al punto. Errore di posizione
+    pari al raggio del circuito reale (qualche km per un caccia);
+  * ETA bloccata di un punto (`eta_locked`) e TOT (della missione o, se la missione non ne ha uno,
+    quello COMUNE della sua Operazione, `operation_tots`): se il punto sarebbe raggiunto in
+    anticipo l'asset attende nel punto PRECEDENTE quanto basta per arrivarci all'istante; in
+    ritardo un warning e l'ETA effettiva lo riporta (la velocita' non cambia);
+  * partenza (`mission_start`): senza `start_time` e' derivata all'indietro dall'ETA bloccata o
+    dal TOT, comprese le attese di durata nota prima del punto (ANTICIPO); un'ETA bloccata sul
+    punto di partenza piu' tarda di `start_time` la RITARDA.
+Il TOT comune di un'Operazione si ottiene quindi in due modi: missioni senza `start_time` con lo
+stesso TOT (partenze anticipate in proporzione alla distanza), oppure missioni con `start_time` e
+l'`Operation.tot` (attese prima del punto d'ancoraggio).
+Gli istanti EFFETTIVI di arrivo ai punti (`waypoint_times`, dalle attese comprese) vanno nel
+`MissionOutcome.actual_etas` (`Session_Simulator`); le ETA pianificate restano nella missione.
+**Carburante**: le attese NON consumano (la sessione consuma in distanza sui soli tratti di
+movimento, e un tratto fermo ha lunghezza nulla): il consumo nel tempo per attese e orbite e'
+della F6 (`Fuel_Model` per tratto), limite noto.
+
 ## Cosa NON fa
-- Nessuna attesa (WAIT), ETA bloccata o TOT nel movimento: scritte, ma spente (`F5_WAITS`, F5-C).
+- Nessun circuito d'orbita (v. sopra) e nessun consumo nel tempo durante le attese (F6).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
 - Nessun rientro (RTB): un aereo che non atterra su una base vera esce di scena (F6).
 - Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
@@ -276,11 +306,12 @@ AIR_BASE_AREA_RADIUS_M = 3_000.0
 #     presenza (l'asset esiste solo sulla rotta, come prima della F5) e la sessione cablata da F5-B
 #     e' identica alla F5-A (verificato con la fotografia). La postura nell'esito
 #     (`session_postures`) e' riportata in ogni caso: e' un'uscita, non cambia la storia.
-#   * `F5_WAITS` (passi (c)-(d), SPENTO, F5-C): attese WAIT, ETA bloccate e TOT (`mission_holds`,
-#     anticipo della partenza in `mission_start`). Con False nessuna attesa: partenza e ETA come
-#     prima della F5.
+#   * `F5_WAITS` (passi (c)-(d), ATTIVO dalla F5-C): attese WAIT, ETA bloccate e TOT, anche quello
+#     comune di un'Operazione (`mission_holds`, anticipo della partenza in `mission_start`,
+#     `operation_tots`). Con False nessuna attesa: partenza e ETA come prima della F5 (il TOT
+#     della missione deriva comunque la partenza, come dalla F3; quello dell'Operazione e' ignorato).
 F5_PRESENCE = True
-F5_WAITS = False
+F5_WAITS = True
 
 
 def kmh_to_ms(speed_kmh: float) -> float:
@@ -652,21 +683,65 @@ def _wait_end(actions, arrival: float, t0: float) -> float:
     return t
 
 
-def _locked_targets(mission: Mission, t0: float) -> Dict[int, float]:
-    """`{indice: istante assoluto}` dei punti con ETA bloccata e del punto d'ancoraggio del TOT."""
-    targets = {index: float(t0) + mw.planned_eta for index, mw in enumerate(mission.waypoints) if mw.eta_locked}
+def operation_tots(missions: Iterable[Mission], operations: Iterable[Operation] = ()) -> Dict[str, float]:
+    """`{mission_id: TOT comune [s dall'inizio sessione]}` delle missioni di un'Operazione con TOT.
 
-    if mission.tot is not None:
+    Il TOT comune (`Operation.tot`, D3.a/N2.c) vale per le missioni dell'Operazione che NON
+    dichiarano un proprio `tot`; una missione con un `tot` proprio DIVERSO da quello comune e' un
+    ordine incoerente (ValueError: due istanti bloccati per lo stesso punto). Vuoto con
+    `F5_WAITS` spento (comportamento precedente alla F5-C).
+
+    Raises:
+        ValueError: TOT della missione diverso dal TOT comune della sua Operazione.
+    """
+    if not F5_WAITS:
+        return {}
+
+    common = {mission_id: operation.tot for operation in operations if operation.tot is not None
+              for mission_id in operation.mission_ids}
+    tots = {}
+
+    for mission in missions:
+        tot = common.get(mission.mission_id)
+
+        if tot is None:
+            continue
+
+        if mission.tot is not None and abs(mission.tot - tot) > CS.TIME_EPS:
+            raise ValueError(f"mission {mission.mission_id!r} declares tot {mission.tot} s, different from "
+                             f"the common tot {tot} s of its operation")
+
+        tots[mission.mission_id] = tot
+
+    return tots
+
+
+def _effective_tot(mission: Mission, tot: Optional[float]) -> Optional[float]:
+    """TOT della missione, o in mancanza quello comune della sua Operazione (`tot`)."""
+    return mission.tot if mission.tot is not None else tot
+
+
+def _locked_targets(mission: Mission, t0: float, tot: Optional[float] = None) -> Dict[int, float]:
+    """`{indice: istante assoluto}` dei punti con ETA bloccata e del punto d'ancoraggio del TOT
+    (della missione o, `tot`, comune dell'Operazione); un'ETA bloccata sull'ancoraggio prevale."""
+    targets = {index: float(t0) + mw.planned_eta for index, mw in enumerate(mission.waypoints) if mw.eta_locked}
+    tot = _effective_tot(mission, tot)
+
+    if tot is not None:
         anchor = next((index for role in _TOT_ANCHOR_ROLES
                        for index, mw in enumerate(mission.waypoints) if mw.role is role), None)
 
         if anchor is not None:
-            targets.setdefault(anchor, float(t0) + mission.tot)
+            targets.setdefault(anchor, float(t0) + tot)
+        else:
+            logger.warning(f"_locked_targets: mission {mission.mission_id!r} has a tot but no ATTACK or "
+                           f"OBJECTIVE waypoint to anchor it: tot ignored")
 
     return targets
 
 
-def mission_holds(mission: Mission, start: float, t0: float = 0.0) -> Tuple[Tuple[int, float], ...]:
+def mission_holds(mission: Mission, start: float, t0: float = 0.0,
+                  tot: Optional[float] = None) -> Tuple[Tuple[int, float], ...]:
     """Attese della missione per punto: `((indice, durata [s]), ...)`, v. docstring del modulo.
 
     Calcolate UNA volta sulla rotta di riferimento con le velocita' di missione (la stessa
@@ -677,6 +752,7 @@ def mission_holds(mission: Mission, start: float, t0: float = 0.0) -> Tuple[Tupl
         sarebbe raggiunto in anticipo, l'attesa si allunga fino a raggiungerlo esattamente
         all'istante bloccato (attesa PRIMA del punto); in ritardo: un warning, l'ETA effettiva
         dell'esito lo riporta (la velocita' non cambia).
+    `tot`: TOT comune dell'Operazione (`operation_tots`), usato se la missione non ne ha uno.
 
     Returns:
         Tupla vuota se la missione non ha rotta o non ha attese.
@@ -694,7 +770,7 @@ def mission_holds(mission: Mission, start: float, t0: float = 0.0) -> Tuple[Tupl
     if len(legs) != len(mission.waypoints) - 1:
         return ()
 
-    targets = _locked_targets(mission, t0)
+    targets = _locked_targets(mission, t0, tot)
     holds = []
     arrival = float(start)
 
@@ -808,13 +884,15 @@ def _presence(mission: Mission, air_bases: Iterable[Tuple[float, float]] = ()) -
 
 
 def mission_movements(mission: Mission, t0: float = 0.0,
-                      air_bases: Iterable[Tuple[float, float]] = ()) -> Tuple[AssetMovement, ...]:
+                      air_bases: Iterable[Tuple[float, float]] = (),
+                      tot: Optional[float] = None) -> Tuple[AssetMovement, ...]:
     """Un `AssetMovement` per asset della missione, nell'ordine degli asset (con attese e presenza
     della F5: `mission_holds` con `F5_WAITS`, `_presence` con `F5_PRESENCE`). `air_bases`: le
     posizioni dell'area delle basi aeree (`air_base_points`) per il criterio d'atterraggio; vuoto =
-    solo il riferimento del waypoint."""
+    solo il riferimento del waypoint. `tot`: TOT comune della sua Operazione (`operation_tots`),
+    None = nessuno."""
     start = mission_start(mission, t0)
-    holds = mission_holds(mission, start, t0) if F5_WAITS else ()
+    holds = mission_holds(mission, start, t0, tot) if F5_WAITS else ()
     presence = _presence(mission, tuple(air_bases)) if F5_PRESENCE else {}
 
     movements = []
@@ -944,7 +1022,9 @@ def session_movements(missions: Iterable[Mission], t0: float = 0.0
     """`(routes, starts, speeds)` per `schedule_contacts`/`run_session` da tutte le missioni.
 
     Solo gli asset con rotta compaiono nelle mappe (gli altri restano fermi, come prima); `speeds`
-    solo per gli asset con velocita' uniforme dichiarata.
+    solo per gli asset con velocita' uniforme dichiarata. Le mappe NON portano le attese ne' la
+    presenza (F5): in sessione i tratti completi vanno allo scheduler come `legs`
+    (`movement_legs`), che hanno la precedenza; la partenza non dipende dal TOT comune.
 
     Raises:
         ValueError: un asset in due missioni (lo vieta gia' `SessionOrder`; qui per chi chiama

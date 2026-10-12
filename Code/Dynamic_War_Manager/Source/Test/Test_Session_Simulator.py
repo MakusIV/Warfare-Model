@@ -20,6 +20,7 @@ Strategia di setup
   Le coppie di aerei della stessa forza su rotte parallele sono UNA missione con offset laterale.
 """
 
+import dataclasses
 import json
 import unittest
 from unittest.mock import MagicMock, patch
@@ -30,9 +31,11 @@ from Code.Dynamic_War_Manager.Source.Asset.Mobile import Mobile
 from Code.Dynamic_War_Manager.Source.Block.Block import Block
 from Code.Dynamic_War_Manager.Source.Block.Military import Military
 from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
+    ActionKind,
     AssetEndReason,
     AssetState,
     Mission,
+    MissionAction,
     MissionAsset,
     MissionStatus,
     MissionWaypoint,
@@ -984,6 +987,102 @@ class TestPresenceAndPostures(_Base):
             intervals = scheduler.call_args.kwargs['grounded'].intervals('ba1')
             self.assertEqual(intervals == ((1_200.0, float('inf')),), grounded_after, side)
             self.assertEqual(outcome.postures['ba1'], MA.PARKED_POSTURE if grounded_after else MA.OFF_SCENE_POSTURE)
+
+
+# ── ATTESE, ETA BLOCCATE E TOT (F5-C) ─────────────────────────────────────────
+
+def _wait_action(duration, mode='hold'):
+    return MissionAction(kind=ActionKind.WAIT, name=f'Wait_{mode}', wait_mode=mode, wait_duration_s=duration)
+
+
+def _with_actions(mission, actions, **overrides):
+    """Copia della missione con le azioni `{indice: [MissionAction]}` sui punti."""
+    waypoints = tuple(dataclasses.replace(mw, actions=tuple(actions.get(index, ())))
+                      for index, mw in enumerate(mission.waypoints))
+    return dataclasses.replace(mission, waypoints=waypoints, **overrides)
+
+
+def _strike_mission(mission_id, force, asset_id, x0, y0, start_time=0.0, tot=None, operation_id=None):
+    """Missione aerea da (x0, y0) a (x0, 0) ATTACK e (x0, 20 km) LAND, a 200 m/s."""
+    route = _route([(x0, y0), (x0, 0), (x0, 20_000)], 200.0, f'r-{asset_id}')
+    roles = [WaypointRole.NAV, WaypointRole.ATTACK, WaypointRole.LAND]
+    target = Target(kind=TargetKind.GROUP, target_id='Red', provenance=TargetProvenance.OBSERVED, observed_at=0.0)
+    return Mission(mission_id=mission_id, block_id=force.id, domain='air', mission_type='CAS',
+                   assets=(MissionAsset(asset_id, 'lead'),), target=target, route=route,
+                   waypoints=tuple(MissionWaypoint(wp, role) for wp, role in zip(route_waypoints(route), roles)),
+                   start_time=start_time, tot=tot, start_mode=StartMode.AIR, operation_id=operation_id)
+
+
+class TestWaitsAndEtas(_Base):
+    """F5-C: attese WAIT, TOT comune dell'Operazione ed ETA effettive cablati in sessione."""
+
+    def _hold_run(self, session_id='S-hold'):
+        armor = _force('Blue-Armor', 'Blue', [_asset(Vehicle, 'bv1', -12_000, 0, speed=10.0)])
+        red = _force('Red', 'Red', [_asset(Vehicle, 'rv1', 0, 0)])
+        route = _ground_route([(-12_000, 0), (-4_000, 0), (-4_000, -8_000)], 10.0, 'r-bv1')
+        mission = _with_actions(_ground_mission('M-armor', armor, route, 'bv1'), {1: [_wait_action(600.0)]})
+
+        with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler, \
+                patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
+            outcome = SS.run_session(self._order(session_id, (mission,)), [armor], [red], _fire,
+                                     reaction_profile_for=_profile)
+
+        return outcome, scheduler, resolver
+
+    def test_a_hold_is_a_static_leg_for_scheduler_and_resolver(self):
+        outcome, scheduler, resolver = self._hold_run()
+        legs = scheduler.call_args.kwargs['legs']['bv1']
+        hold = [(leg.t_start, leg.t_end, leg.p_start) for leg in legs
+                if leg.p_start == leg.p_end and leg.p_start == (-4_000.0, 0.0, 0.0) and leg.t_end < 3_600.0]
+        self.assertEqual(hold, [(800.0, 1_400.0, (-4_000.0, 0.0, 0.0))])
+        self.assertTrue(resolver.call_args_list)
+        self.assertTrue(all(call.kwargs['legs']['bv1'] == legs for call in resolver.call_args_list))
+
+    def test_actual_etas_include_the_hold(self):
+        outcome, _, _ = self._hold_run()
+        self.assertEqual(outcome.mission_outcomes['M-armor'].actual_etas, (0.0, 800.0, 2_200.0))
+
+    def test_the_hold_does_not_consume_fuel(self):
+        """Limite noto (F6): distanza = la sola rotta; l'evento e' alla fine del movimento, sosta compresa."""
+        outcome, _, _ = self._hold_run()
+        fuel = {event.asset_id: event for event in outcome.fuel_events}
+        self.assertAlmostEqual(fuel['bv1'].distance, 16_000.0)
+        self.assertAlmostEqual(fuel['bv1'].time, 2_200.0)
+
+    def test_without_waits_the_hold_is_ignored(self):
+        with patch.object(MA, 'F5_WAITS', False):
+            outcome, _, _ = self._hold_run()
+
+        self.assertEqual(outcome.mission_outcomes['M-armor'].actual_etas, (0.0, 800.0, 1_600.0))
+
+    def _tot_run(self, operation_tot=900.0, near_tot=None):
+        """M-near (bn1, 20 km dall'ATTACK) e M-far (bs1, 40 km) partono a 0 nell'Operazione 'Op'."""
+        blue = _force('Blue', 'Blue', [_asset(Aircraft, 'bn1', 0, -20_000, speed=200.0),
+                                       _asset(Aircraft, 'bs2', 100_000, -40_000, speed=200.0)])
+        red = _force('Red', 'Red', [_asset(Vehicle, 'rv1', 50_000, 0)])
+        missions = (_strike_mission('M-near', blue, 'bn1', 0, -20_000, tot=near_tot, operation_id='Op'),
+                    _strike_mission('M-far', blue, 'bs2', 100_000, -40_000, operation_id='Op'))
+        order = self._order('S-tot', missions,
+                            operations=(Operation('Op', 'strike', ('M-near', 'M-far'), tot=operation_tot),))
+        return SS.run_session(order, [blue], [red], _fire, reaction_profile_for=_profile)
+
+    def test_common_tot_of_an_operation(self):
+        """Partenza a 0 per entrambe: ciascuna attende al punto di partenza quanto basta per essere
+        sull'ATTACK all'istante comune (100 s e 200 s di volo)."""
+        outcome = self._tot_run()
+        self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 900.0, 1_000.0))
+        self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 900.0, 1_000.0))
+
+    def test_without_waits_the_operation_tot_is_ignored(self):
+        with patch.object(MA, 'F5_WAITS', False):
+            outcome = self._tot_run()
+
+        self.assertEqual(outcome.mission_outcomes['M-near'].actual_etas, (0.0, 100.0, 200.0))
+        self.assertEqual(outcome.mission_outcomes['M-far'].actual_etas, (0.0, 200.0, 300.0))
+
+    def test_mission_tot_different_from_the_operation_tot_raises(self):
+        with self.assertRaises(ValueError):
+            self._tot_run(near_tot=800.0)
 
 
 if __name__ == '__main__':

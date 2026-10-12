@@ -76,6 +76,13 @@ la registra nella voce `postures` (solo se l'esito la porta, quindi assente nell
 precedenti). `--ignore postures` la esclude dal confronto su entrambi i lati, per separare le
 esecuzioni cambiate nella storia (contatti, colpi, danni) da quelle cambiate solo per la postura.
 
+## ETA effettive dopo la F5-C
+
+Dalla F5-C il riassunto registra anche `actual_etas` (`{mission_id: [ETA effettiva | None, ...]}`
+da `MissionOutcome.actual_etas`: istanti d'arrivo ai punti, attese WAIT/ETA bloccate/TOT
+comprese), solo se l'esito porta esiti di missione. `--ignore actual_etas` la esclude dal
+confronto, come `postures`.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -87,8 +94,9 @@ esecuzioni cambiate nella storia (contatti, colpi, danni) da quelle cambiate sol
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json>
     # riepilogo leggibile per esecuzione (esiti, perdite, colpi, carburante per forza; F4a):
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --summary
-    # confronto senza una voce di primo livello (F5-B: la sola postura nell'esito):
+    # confronto senza una voce di primo livello (F5-B: la sola postura nell'esito; F5-C: le ETA effettive):
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore postures
+    python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore actual_etas
 
 Exit code: 0 se identiche, 1 se ci sono differenze (o errori di unita'), 2 per uso errato.
 """
@@ -211,6 +219,13 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('late', 'not_departed')),
     ('S22-AIR', 'Test_Session_Scenarios_S22', 'TestS22AircraftOnTheGround', None,
      _by_occurrence('parked', 'airborne', 'landed', 'no_base', 'base_area')),
+    # ── S23 (F5-C: attese WAIT, CAP in orbita, sosta a terra, TOT comune, ETA effettive) ──
+    ('S23-CAP', 'Test_Session_Scenarios_S23', 'TestS23CapOrbit', None,
+     _by_occurrence('during', 'after', 'no_wait', 'waits_off')),
+    ('S23-HOLD', 'Test_Session_Scenarios_S23', 'TestS23GroundHold', None,
+     _by_occurrence('hold', 'no_hold', 'waits_off')),
+    ('S23-TOT', 'Test_Session_Scenarios_S23', 'TestS23CommonTot', None,
+     _by_occurrence('operation', 'own_tot', 'waits_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
@@ -396,6 +411,15 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
 
     if postures:
         summary['postures'] = dict(postures)
+
+    # F5-C: ETA effettive di ogni missione (`MissionOutcome.actual_etas`, istanti d'arrivo ai punti
+    # con le attese comprese; None = punto non raggiunto). Registrate solo se l'esito porta esiti di
+    # missione, cosi' le fotografie precedenti restano leggibili; v. `--ignore actual_etas`.
+    mission_outcomes = getattr(outcome, 'mission_outcomes', None)
+
+    if mission_outcomes:
+        summary['actual_etas'] = {mission_id: list(mo.actual_etas)
+                                  for mission_id, mo in sorted(mission_outcomes.items())}
 
     return norm(summary)
 
@@ -694,7 +718,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                         help='with --compare: readable per-run digest of what changed instead of the raw diff')
     parser.add_argument('--ignore', metavar='KEY', action='append', default=[],
                         help='with --compare: drop this top-level summary key on both sides (repeatable, '
-                             'e.g. postures)')
+                             'e.g. postures, actual_etas)')
     args = parser.parse_args(argv)
 
     started = time.perf_counter()

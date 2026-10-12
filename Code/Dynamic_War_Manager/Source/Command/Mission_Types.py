@@ -1132,7 +1132,9 @@ class MissionOutcome:
         reason: motivo d'aborto, obbligatorio se ABORTED e vietato altrimenti.
         asset_outcomes: {asset_id: AssetMissionOutcome}, mapping immutabile.
         actual_etas: ETA effettive [s] per waypoint, nell'ordine della missione; None = punto non
-            raggiunto. Le ETA presenti sono non decrescenti.
+            raggiunto. Le ETA presenti sono non decrescenti. In sessione sono gli istanti d'ARRIVO
+            ai punti dai tratti percorsi, attese comprese (N2.b, F5-C), mentre le ETA pianificate
+            restano nei `MissionWaypoint`.
     Coerenza: DESTROYED se e solo se tutti gli esiti per asset (se presenti) sono DESTROYED.
     """
     mission_id: str
