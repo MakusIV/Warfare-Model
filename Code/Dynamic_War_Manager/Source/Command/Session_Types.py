@@ -336,8 +336,8 @@ class SessionOutcome:
             Missione), mapping immutabile ordinato per id: TUTTI gli asset delle forze passate,
             anche quelle senza missioni e senza contatti. Etichette di dominio (v.
             `Logic/Mission_Adapter.session_postures`: aereo a terra, `Defense` di superficie,
-            postura di fine missione). Vuoto se l'esecutore non le riporta: F5 passo (d)
-            PREDISPOSTO, `Session_Simulator` non lo valorizza ancora (resta sempre vuoto).
+            postura di fine missione). Valorizzato da `Session_Simulator` dalla F5-B; vuoto se
+            l'esecutore non le riporta.
     """
     session_id: str
     t_start: Optional[float]

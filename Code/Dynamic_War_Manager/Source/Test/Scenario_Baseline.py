@@ -69,6 +69,13 @@ per BLOCCO (gli esiti delle sue forze d'ingaggio, nell'ordine degli ingaggi), co
 missione per blocco ha la forma di prima. Il riepilogo `--summary` aggiunge, per i blocchi con
 piu' forze d'ingaggio, l'esito di ciascuna (`<mission_id>.mission_outcome`).
 
+## Postura nell'esito dopo la F5-B
+
+Dalla F5-B `SessionOutcome.postures` porta la postura a fine sessione di ogni asset: il riassunto
+la registra nella voce `postures` (solo se l'esito la porta, quindi assente nelle fotografie
+precedenti). `--ignore postures` la esclude dal confronto su entrambi i lati, per separare le
+esecuzioni cambiate nella storia (contatti, colpi, danni) da quelle cambiate solo per la postura.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -80,6 +87,8 @@ piu' forze d'ingaggio, l'esito di ciascuna (`<mission_id>.mission_outcome`).
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json>
     # riepilogo leggibile per esecuzione (esiti, perdite, colpi, carburante per forza; F4a):
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --summary
+    # confronto senza una voce di primo livello (F5-B: la sola postura nell'esito):
+    python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare <a.json> --against <b.json> --ignore postures
 
 Exit code: 0 se identiche, 1 se ci sono differenze (o errori di unita'), 2 per uso errato.
 """
@@ -195,6 +204,13 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S21 (F4c: postura continua, aerei parcheggiati colpibili) — in coda, nomi stabili ──
     ('S21', 'Test_Session_Scenarios_S21', 'TestS21ParkedAircraftStrike', None, _by_occurrence('parked', 'control')),
     ('S21R', 'Test_Session_Scenarios_S21', 'TestS21RParkedAircraftRegistry', None, _single_or_index),
+    # ── S22 (F5-B: presenza fuori dalla rotta, aerei a terra prima del decollo e dopo l'atterraggio) ──
+    ('S22-E1', 'Test_Session_Scenarios_S22', 'TestS22E1FinishedMissionStaysEngageable', None,
+     _by_occurrence('finished', 'static')),
+    ('S22-E3', 'Test_Session_Scenarios_S22', 'TestS22E3LateDepartureIsPresent', None,
+     _by_occurrence('late', 'not_departed')),
+    ('S22-AIR', 'Test_Session_Scenarios_S22', 'TestS22AircraftOnTheGround', None,
+     _by_occurrence('parked', 'airborne', 'landed', 'no_base', 'base_area')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per
@@ -372,6 +388,15 @@ def summarize_run(order, forces_a, forces_b, kwargs: Dict, outcome) -> Dict:
         'interception_events': [[e.time, e.asset_id, e.weapon, e.interceptions, e.force_id, list(e.salvo_ids)]
                                 for e in outcome.interception_events],
     }
+
+    # F5-B: postura di ogni asset a fine sessione (`SessionOutcome.postures`). Registrata solo se
+    # l'esito la porta, cosi' le fotografie precedenti alla F5-B restano leggibili; per separare le
+    # differenze di storia da quelle di sola postura v. `--ignore postures` in `compare`.
+    postures = getattr(outcome, 'postures', None)
+
+    if postures:
+        summary['postures'] = dict(postures)
+
     return norm(summary)
 
 
@@ -523,8 +548,20 @@ def _without_empty_routes(run: Dict) -> Dict:
     return {**run, 'call': {**run['call'], 'parameters': parameters}}
 
 
-def compare(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[str]:
-    """Differenze fra due fotografie, per scenario e chiave. Lista vuota = identiche."""
+def _without_keys(runs: Dict, ignore: Sequence[str]) -> Dict:
+    """Copia delle esecuzioni senza le voci di primo livello `ignore` (es. 'postures', F5-B)."""
+    if not ignore:
+        return runs
+
+    return {key: {name: value for name, value in run.items() if name not in ignore} for key, run in runs.items()}
+
+
+def compare(baseline: Dict, current: Dict, only: Optional[str] = None, ignore: Sequence[str] = ()) -> List[str]:
+    """Differenze fra due fotografie, per scenario e chiave. Lista vuota = identiche.
+
+    `ignore`: voci di primo livello del riassunto escluse dal confronto su entrambi i lati (per
+    attribuire le differenze a una causa, es. `postures` per separare la sola postura nell'esito
+    dalla storia della sessione)."""
     pattern = re.compile(only) if only else None
     lines: List[str] = []
 
@@ -535,8 +572,8 @@ def compare(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[s
         if selected(label):
             lines.append(f'ERROR {label}: {error}')
 
-    base_runs = {k: v for k, v in baseline.get('runs', {}).items() if selected(k)}
-    cur_runs = {k: v for k, v in current.get('runs', {}).items() if selected(k)}
+    base_runs = _without_keys({k: v for k, v in baseline.get('runs', {}).items() if selected(k)}, ignore)
+    cur_runs = _without_keys({k: v for k, v in current.get('runs', {}).items() if selected(k)}, ignore)
 
     for key in sorted(set(base_runs) - set(cur_runs)):
         lines.append(f'MISSING {key}: in the baseline, not in the current capture')
@@ -611,11 +648,13 @@ def run_digest(run: Dict) -> 'OrderedDict[str, object]':
     return digest
 
 
-def summarize_differences(baseline: Dict, current: Dict, only: Optional[str] = None) -> List[str]:
+def summarize_differences(baseline: Dict, current: Dict, only: Optional[str] = None,
+                          ignore: Sequence[str] = ()) -> List[str]:
     """Per ogni esecuzione che differisce: le sole grandezze di `run_digest` cambiate, `vecchio ->
     nuovo`; poi l'elenco delle esecuzioni invariate. (Le differenze fini restano in `compare`.)"""
     pattern = re.compile(only) if only else None
-    base_runs, cur_runs = baseline.get('runs', {}), current.get('runs', {})
+    base_runs = _without_keys(baseline.get('runs', {}), ignore)
+    cur_runs = _without_keys(current.get('runs', {}), ignore)
     lines, unchanged = [], []
 
     for key in sorted(set(base_runs) & set(cur_runs)):
@@ -653,13 +692,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument('--quiet', action='store_true', help='no per-unit progress on stderr')
     parser.add_argument('--summary', action='store_true',
                         help='with --compare: readable per-run digest of what changed instead of the raw diff')
+    parser.add_argument('--ignore', metavar='KEY', action='append', default=[],
+                        help='with --compare: drop this top-level summary key on both sides (repeatable, '
+                             'e.g. postures)')
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
 
     if args.capture:
-        if args.against or args.save or args.summary:
-            parser.error('--against/--save/--summary only with --compare')   # esce con 2
+        if args.against or args.save or args.summary or args.ignore:
+            parser.error('--against/--save/--summary/--ignore only with --compare')   # esce con 2
 
         snapshot = capture(args.only, verbose=not args.quiet)
         dump(snapshot, args.capture)
@@ -677,9 +719,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.save:
             dump(current, args.save)
 
-    lines = compare(baseline, current, args.only)
+    lines = compare(baseline, current, args.only, args.ignore)
 
-    for line in (summarize_differences(baseline, current, args.only) if args.summary else lines):
+    for line in (summarize_differences(baseline, current, args.only, args.ignore) if args.summary else lines):
         print(line)
 
     compared = len([k for k in current.get('runs', {})

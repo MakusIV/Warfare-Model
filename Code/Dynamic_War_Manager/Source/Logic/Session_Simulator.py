@@ -36,7 +36,8 @@ Dal 2026-10-05 le rotte arrivano SOLO dalle missioni dell'ordine (`SessionOrder.
 asset (rotta di riferimento + offset di formazione, partenza della missione, velocita' di
 missione), che il resto della fila consuma esattamente come prima. I parametri `routes`/
 `starts`/`speeds` di `run_session` sono stati RIMOSSI (decisione Q2 dell'utente: una sola
-strada). Gli asset senza missione restano fermi, come gli asset senza rotta di prima. Ogni
+strada). Gli asset senza missione restano fermi, come gli asset senza rotta di prima (dalla
+F5-B quelli di missione sono presenti anche prima della partenza e dopo la fine, v. sotto). Ogni
 missione deve riferirsi a un blocco passato fra le forze, e ogni suo asset deve appartenere a
 quel blocco (`Mission_Types.check_mission_assets`). Regola A (F4a, decisione dell'utente): la
 missione si muove insieme, nessun tratto piu' veloce della velocita' massima del suo mezzo piu'
@@ -83,8 +84,33 @@ blocchi senza missioni e delle viste residue) e lo passa allo scheduler (`ground
 modo 'ground', nessun sensore) e a ogni ingaggio (`grounded` di `resolve_engagement`: niente
 rilevamento ne' tiro, classificazione di superficie verso la fire control, peso di minaccia nullo,
 nessun disingaggio per loro). Nessuno stato nuovo nell'asset, nessuna mutazione: l'insieme e'
-della sessione. Gli aerei di una missione NON sono a terra (la presenza prima della partenza e'
-della F5). Senza aerei fuori missione l'insieme e' vuoto e la sessione e' identica a prima.
+della sessione. Senza aerei fuori missione l'insieme e' vuoto e la sessione e' identica a prima.
+Dalla F5 l'insieme e' un programma nel tempo (sotto).
+
+## Presenza e postura nell'esito (F5 passo (b), D1.a/b, deviazione 12 del piano della Missione)
+
+Decisioni dell'utente: un asset di missione NON sparisce fuori dalla sua rotta.
+  * unita' terrestri e navali: presenti FERME nella posizione di partenza prima di partire e in
+    quella finale dopo la fine, in postura `Defense`, quindi rilevabili e ingaggiabili in quei
+    tratti (il carro fermo a 4 km dal nemico resta un bersaglio, esperimenti E1/E3);
+  * aerei che non partono in volo (parcheggio, pista): presenti e A TERRA fino al decollo,
+    bersagli di superficie passivi come gli aerei senza missione; dopo la fine della rotta a terra
+    SOLO se l'ultimo punto e' LAND su una base vera (`Mission_Adapter.lands_on_air_base`:
+    riferimento del waypoint a un asset di una base, oppure punto nell'area di una base del lato
+    della missione, calcolata qui dalle forze passate con `Mission_Adapter.air_base_points`),
+    altrimenti escono di scena all'arrivo come prima (fino al rientro della F6).
+La sessione ricava da `Mission_Adapter` i tratti di presenza (`movement_legs`, passati allo
+scheduler come `legs` e al risolutore come tratti degli asset) e il programma degli aerei a terra
+(`grounded_schedule`: sempre gli aerei senza missione, a intervalli quelli di missione), passato
+allo scheduler (finestre spezzate a decolli e atterraggi) e a ogni ingaggio. Il carburante usa i
+soli tratti di MOVIMENTO (`movement_legs(..., presence=False)`): la presenza ferma non consuma.
+L'esito porta la postura di OGNI asset delle forze passate a fine sessione
+(`SessionOutcome.postures`, `Mission_Adapter.session_postures`), anche dei blocchi senza missioni:
+postura continua della F4c per gli asset senza missione, postura di fine missione per gli altri
+(`Defense` a movimento finito o non ancora iniziato, tipo di missione in movimento, aereo a terra
+`parking_cold`, aereo uscito di scena `off_scene`). Interruttore `Mission_Adapter.F5_PRESENCE`
+(attivo): spento, i tratti sono quelli della sola rotta e la storia e' quella della F5-A (la
+postura e' riportata comunque). Attese WAIT/ETA/TOT: F5-C, spente (`F5_WAITS`).
 
 `SessionOrder.committed` resta chiavato per BLOCCO (la lingua della porta): per ogni forza
 d'ingaggio vale la restrizione del suo blocco intersecata con i suoi asset
@@ -196,9 +222,9 @@ che dichiara la keyword `target_grounded` la riceve per i bersagli a terra (v.
 
 ## Carburante
 
-Per ogni asset con rotta (dalle missioni) si prendono i tratti della rotta ritagliati alla
-sessione (stessa costruzione di `Contact_Scheduler.schedule_contacts`: `route_legs` +
-`clamp_legs`, partenza e velocita' dalla missione) e la distanza e' la somma delle
+Per ogni asset con rotta (dalle missioni) si prendono i tratti di MOVIMENTO ritagliati alla
+sessione (`Mission_Adapter.movement_legs(..., presence=False)`: gli stessi tratti cercati dallo
+scheduler, senza la presenza ferma prima e dopo, che non consuma) e la distanza e' la somma delle
 lunghezze dei tratti. Un solo `FuelEvent` per asset, all'istante di fine movimento.
 
 Regime (scelta dichiarata, la piu' semplice che distingua combattimento da crociera):
@@ -422,26 +448,6 @@ def _collect_forces(order: SessionOrder, forces_a: Iterable, forces_b: Iterable)
                            f"(force ids are {sorted(blocks)}): their restriction is ignored")
 
     return items[0], items[1], blocks, owner
-
-
-def _movement_legs(asset_id, routes, starts, speeds, t0: float, horizon: float) -> List[CS.Leg]:
-    """Tratti di MOVIMENTO dell'asset nella sessione, lista vuota se non si muove.
-
-    Stessa costruzione di `Contact_Scheduler._asset_legs` per il ramo con rotta: cosi' il
-    tragitto consumato e' esattamente quello su cui sono stati cercati i contatti.
-    """
-    route = routes.get(asset_id) if asset_id is not None else None
-
-    if route is None:
-        return []
-
-    start = float(starts.get(asset_id, t0))
-    legs = CS.route_legs(route, t0=start, speed=speeds.get(asset_id))
-
-    if not legs:
-        return []
-
-    return CS.clamp_legs(legs, t0, t0 + horizon)
 
 
 def _legs_distance(legs) -> float:
@@ -766,7 +772,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             `missions`, da cui vengono rotta, partenza e velocita' di ogni asset
             (`Mission_Adapter.session_movements`) e le forze d'ingaggio (una per missione, F4b).
             Asset senza missione = fermo in posizione, nella forza del suo blocco, con la postura
-            continua della F4c (aereo a terra, unita' di superficie in difesa).
+            continua della F4c (aereo a terra, unita' di superficie in difesa); asset di missione
+            presenti anche prima della partenza e dopo la fine (F5-B, v. docstring del modulo).
         forces_a/forces_b: `Military`/`Block`/`BlockItem` dei due schieramenti contrapposti.
             Si combatte solo fra A e B, mai dentro lo stesso lato.
         fire_control: `(shooter, target) -> ShotSpec | None`, v. `resolve_engagement`.
@@ -781,9 +788,10 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             `order.operations` (v. "Dominio di coordinamento").
 
     Returns:
-        Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine e un `ForceOutcome`
-            per forza d'ingaggio (missione) che ha combattuto; vuoto ma valido
-        se nessuno si incontra e nessuno si muove.
+        Il `SessionOutcome`, con un `MissionOutcome` per missione dell'ordine, un `ForceOutcome`
+            per forza d'ingaggio (missione) che ha combattuto e la postura a fine sessione di ogni
+            asset delle forze passate (`postures`, F5-B); senza ingaggi ne' movimenti resta valido,
+            con le sole posture.
 
     Raises:
         TypeError: `order` non e' un SessionOrder, `fire_control` non chiamabile.
@@ -808,19 +816,37 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     _check_missions(order, blocks)
     forces, owner = _engagement_forces(order, blocks, block_owner)
     coordination = MA.coordination_domains(forces, order.operations)
-    # Aerei a terra (F4c, postura continua degli asset senza missione): v. docstring del modulo.
-    grounded = MA.grounded_assets(forces)
-    mission_movements = {mission.mission_id: MA.mission_movements(mission, t0) for mission in order.missions}
+    # Area delle basi aeree per lato (F5-B): un aereo atterra su una base vera anche senza
+    # riferimento del waypoint, se l'ultimo punto e' nell'area di una base del suo lato.
+    air_bases = {side: MA.air_base_points(blocks.values(), side)
+                 for side in {getattr(blocks[mission.block_id], 'side', None) for mission in order.missions
+                              if mission.domain == 'air'}}
+    mission_movements = {mission.mission_id: MA.mission_movements(
+        mission, t0, air_bases.get(getattr(blocks[mission.block_id], 'side', None), ()))
+        for mission in order.missions}
+    movement_of = {movement.asset_id: movement for movements in mission_movements.values() for movement in movements}
     routes, starts, speeds = MA.session_movements(order.missions, t0)
+    # Aerei a terra nel tempo (F4c + F5): sempre gli aerei senza missione, a intervalli quelli di
+    # missione prima del decollo e dopo l'atterraggio su una base vera. V. docstring del modulo.
+    grounded = MA.grounded_schedule(forces, movement_of.values())
+    # Tratti di presenza degli asset di missione (F5-B): movimento + presenza ferma prima della
+    # partenza e dopo la fine (`Mission_Adapter.movement_legs`); vuoti = asset fermo in posizione.
+    presence_legs: Dict[str, List[CS.Leg]] = {}
+
+    for asset_id, movement in movement_of.items():
+        legs = MA.movement_legs(movement, t0, session_end)
+
+        if legs:
+            presence_legs[asset_id] = legs
 
     # ── strato 1: tutti i contatti della sessione ─────────────────────────────
     windows = CS.schedule_contacts(items_a, items_b, horizon, routes=routes, starts=starts,
                                    speeds=speeds, t0=t0, margin=margin, range_type=range_type,
-                                   grounded=grounded)
+                                   grounded=grounded, legs=presence_legs)
     groups = _group_windows(windows, owner)
 
-    # Tratti di ogni asset (movimento o posizione fissa): servono al risolutore per l'istante
-    # esatto di rilevamento, e i tratti di movimento al consumo di carburante.
+    # Tratti di ogni asset (presenza o posizione fissa): servono al risolutore per l'istante
+    # esatto di rilevamento; i soli tratti di MOVIMENTO (senza la presenza ferma) al carburante.
     all_legs: Dict[str, List[CS.Leg]] = {}
     movements: List[Tuple[str, object, List[CS.Leg]]] = []
     assets_by_id: Dict[str, object] = {}
@@ -833,11 +859,14 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                 continue
 
             assets_by_id[asset_id] = asset
-            moving = _movement_legs(asset_id, routes, starts, speeds, t0, horizon)
+            movement = movement_of.get(asset_id)
+            moving = MA.movement_legs(movement, t0, session_end, presence=False) if movement is not None else []
 
             if moving:
-                all_legs[asset_id] = moving
                 movements.append((asset_id, asset, moving))
+
+            if asset_id in presence_legs:
+                all_legs[asset_id] = presence_legs[asset_id]
             else:
                 all_legs[asset_id] = CS.static_legs(getattr(asset, 'position', None), t0, session_end)
 
@@ -933,6 +962,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     mission_outcomes = {mission.mission_id: _mission_outcome(mission, mission_movements[mission.mission_id],
                                                              assets_by_id, destroyed, session_end)
                         for mission in order.missions}
+    # Postura di ogni asset a fine sessione (F5-B, deviazione 12): anche dei blocchi senza missioni.
+    postures = MA.session_postures(forces, movement_of, grounded, session_end)
 
     return assemble_session_outcome(order.session_id, results, fuel_events,
-                                    t_start=t0, t_end=latest, mission_outcomes=mission_outcomes)
+                                    t_start=t0, t_end=latest, mission_outcomes=mission_outcomes,
+                                    postures=postures)

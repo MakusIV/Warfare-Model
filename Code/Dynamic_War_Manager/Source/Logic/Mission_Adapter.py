@@ -144,10 +144,28 @@ Decisioni dell'utente (2026-10-11), `continuous_posture`:
 La postura vale per asset, non per forza: una vista residua mista (aerei parcheggiati e difese
 della base) ha aerei a terra e unita' in difesa.
 
-Predisposizione per la F5 (presenza prima della partenza, NON implementata): anche un aereo con
-missione non ancora partito sara' a terra. Il criterio e' quindi un INSIEME di asset a terra
-passato al motore, non una proprieta' della forza: la F5 lo estendera' (con la finestra temporale
-del parcheggio) senza toccare la vista ne' il protocollo di fire control.
+Dalla F5 (passo (a) la forma, passo (b) il cablaggio) anche un aereo con missione non ancora
+decollato e' a terra: il criterio e' un PROGRAMMA nel tempo (`grounded_schedule`, sotto), non una
+proprieta' della forza; la vista e il protocollo di fire control non cambiano.
+
+## Presenza prima della partenza e dopo la fine (F5 passo (b), D1.a/b, decisioni dell'utente)
+
+Con `F5_PRESENCE` (attivo dalla F5-B) `mission_movements` dichiara per ogni asset di missione
+(`_presence`) se e' presente FERMO nella posizione di partenza prima di partire e in quella finale
+dopo la fine, e se in quei tratti e' un aereo a terra:
+  * terra e mare: presenti prima e dopo, in postura `Defense` (`final_posture`), quindi rilevabili
+    e ingaggiabili come un'unita' ferma; il tiro e' quello di sempre;
+  * aereo che NON parte in volo (`start_mode` parcheggio o pista): presente e A TERRA dalla
+    sessione al decollo (bersaglio di superficie passivo, come gli aerei senza missione);
+  * aereo dopo la fine della rotta: a terra SOLO se l'ultimo punto e' LAND su una base vera
+    (`lands_on_air_base`: riferimento del waypoint a un asset di una base, oppure punto nell'area
+    di una base del suo lato, `air_base_points` entro `AIR_BASE_AREA_RADIUS_M`, stima); altrimenti
+    esce di scena all'arrivo, come prima (postura
+    `OFF_SCENE_POSTURE`), finche' la F6 non portera' il rientro nella rotta.
+`movement_legs` costruisce i tratti (movimento + presenza) che `Session_Simulator` passa a scheduler
+e risolutore, `grounded_schedule` gli intervalli a terra, `session_postures` la postura di ogni
+asset a fine sessione nel `SessionOutcome`. Senza `F5_PRESENCE` i tratti sono quelli della sola
+rotta e il programma contiene solo gli aerei senza missione: la sessione e' quella della F5-A.
 
 ## Dominio di coordinamento (2026-10-11, decisioni dell'utente 6 e 7)
 
@@ -172,9 +190,9 @@ nel dominio delle missioni del blocco.
     con le viste, non serve passarle a parte.
 
 ## Cosa NON fa
-- Nessuna attesa (WAIT), nessuna presenza prima della partenza o dopo la fine (F5).
-- Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F5-F7.
-- Nessuna postura per gli asset CON missione (arriva con la postura di fine missione, F5).
+- Nessuna attesa (WAIT), ETA bloccata o TOT nel movimento: scritte, ma spente (`F5_WAITS`, F5-C).
+- Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
+- Nessun rientro (RTB): un aereo che non atterra su una base vera esce di scena (F6).
 - Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
 """
 
@@ -243,13 +261,26 @@ SEA_DEFENSE_POSTURE = Sea_Task.DEFENSE.value
 # non termina su una base vera: ETICHETTA PROVVISORIA, finche' la F6 non portera' il rientro (RTB)
 # nella rotta. Non e' un valore di Context ne' una grandezza.
 OFF_SCENE_POSTURE = 'off_scene'
+# Raggio [m] dell'AREA di una base aerea per il criterio d'atterraggio (F5-B, `lands_on_air_base`):
+# un punto LAND entro questa distanza orizzontale da un asset non aereo di una base vera e' un
+# atterraggio sulla base. STIMA DI PROGETTO, non un dato: ordine di grandezza di una pista (2-3,5 km
+# negli aeroporti delle carte DCS, es. 2900 m) con le installazioni a lato. Da sostituire con il
+# perimetro reale della base quando arrivera' il modulo mappe.
+AIR_BASE_AREA_RADIUS_M = 3_000.0
 
-# F5 passi (b)-(d) (presenza prima/dopo, attese WAIT ed ETA bloccate, postura nell'esito): codice
-# SCRITTO MA NON ATTIVO (decisione del coordinatore 2026-10-11, fermata dopo il passo (a)). Con False
-# `mission_start` e `mission_movements` si comportano come prima della F5 (nessuna attesa, nessuna
-# presenza fuori dalla rotta) e `Session_Simulator` non usa `movement_legs`/`grounded_schedule`/
-# `session_postures`. Da attivare (True) con il cablaggio di `Session_Simulator` nel seguito della F5.
-F5_PRESENCE_AND_WAITS = False
+# F5, due interruttori separati (F5-B, 2026-10-12), cosi' che la fotografia di ogni passo attribuisca
+# le differenze a una sola causa:
+#   * `F5_PRESENCE` (passo (b), ATTIVO): presenza ferma prima della partenza e dopo la fine (D1.a/b,
+#     `_presence`): terra/mare presenti in `Defense`, aerei a terra prima del decollo se non partono
+#     in volo e dopo l'atterraggio SOLO su una base vera. Con False `mission_movements` non dichiara
+#     presenza (l'asset esiste solo sulla rotta, come prima della F5) e la sessione cablata da F5-B
+#     e' identica alla F5-A (verificato con la fotografia). La postura nell'esito
+#     (`session_postures`) e' riportata in ogni caso: e' un'uscita, non cambia la storia.
+#   * `F5_WAITS` (passi (c)-(d), SPENTO, F5-C): attese WAIT, ETA bloccate e TOT (`mission_holds`,
+#     anticipo della partenza in `mission_start`). Con False nessuna attesa: partenza e ETA come
+#     prima della F5.
+F5_PRESENCE = True
+F5_WAITS = False
 
 
 def kmh_to_ms(speed_kmh: float) -> float:
@@ -530,7 +561,7 @@ def mission_start(mission: Mission, t0: float = 0.0) -> float:
 
         # F5: un'ETA bloccata sul punto di partenza piu' tarda di `start_time` ritarda la partenza
         # (l'asset resta presente fermo nel punto, D1.b), invece di un'attesa "in movimento".
-        if F5_PRESENCE_AND_WAITS and mission.waypoints and mission.waypoints[0].eta_locked:
+        if F5_WAITS and mission.waypoints and mission.waypoints[0].eta_locked:
             start = max(start, float(t0) + mission.waypoints[0].planned_eta)
 
         return start
@@ -561,7 +592,7 @@ def mission_start(mission: Mission, t0: float = 0.0) -> float:
     # F5: le attese DI DURATA sui punti prima dell'ancoraggio anticipano la partenza; quelle fino a
     # un istante assoluto no (dipendono dalla partenza stessa): se ritardano l'arrivo, l'ETA
     # effettiva lo riporta (v. `mission_holds`).
-    if F5_PRESENCE_AND_WAITS:
+    if F5_WAITS:
         travel += sum(_relative_wait(mw.actions) for mw in mission.waypoints[:anchor])
     start = float(t0) + instant - travel
 
@@ -711,34 +742,80 @@ def is_air_base_reference(reference) -> bool:
         return False
 
 
-def lands_on_air_base(mission: Mission) -> bool:
-    """La missione aerea finisce con un punto LAND su una base vera (`is_air_base_reference`)."""
+def air_base_points(blocks: Iterable, side: Optional[str] = None) -> Tuple[Tuple[float, float], ...]:
+    """Posizioni orizzontali (x, y) che definiscono l'AREA delle basi aeree vere (F5-B).
+
+    Gli asset NON aerei (strutture, difese, veicoli) dei blocchi che dichiarano `is_Air_Base()`
+    vero, del solo lato `side` se dato (None = tutti). Gli aerei sono esclusi: la loro posizione
+    registrata non e' la base (possono essere in volo o in missione altrove). Ordine: blocchi e
+    asset nell'ordine dato (le posizioni servono solo a un test di distanza).
+    """
+    points = []
+
+    for block in blocks:
+        check = getattr(block, 'is_Air_Base', None)
+
+        try:
+            is_base = callable(check) and bool(check())
+        except Exception:   # noqa: BLE001 — un blocco senza categoria leggibile non e' una base
+            is_base = False
+
+        if not is_base or (side is not None and getattr(block, 'side', None) != side):
+            continue
+
+        for asset in (getattr(block, 'assets', None) or {}).values():
+            position = getattr(asset, 'position', None)
+
+            if position is None or validate_class(asset, 'Aircraft'):
+                continue
+
+            points.append((float(position.x), float(position.y)))
+
+    return tuple(points)
+
+
+def lands_on_air_base(mission: Mission, air_bases: Iterable[Tuple[float, float]] = ()) -> bool:
+    """La missione aerea finisce con un punto LAND su una base vera.
+
+    Due criteri, basta uno (decisione dell'utente, F5-B):
+      * il riferimento del waypoint e' un asset di una base vera (`is_air_base_reference`);
+      * il punto sta nell'AREA di una base: entro `AIR_BASE_AREA_RADIUS_M` (in orizzontale) da una
+        delle posizioni `air_bases` (`air_base_points`, in sessione quelle del lato della missione).
+    """
     if mission.domain != 'air' or not mission.waypoints:
         return False
 
     last = mission.waypoints[-1]
-    return last.role is WaypointRole.LAND and is_air_base_reference(last.waypoint.reference)
+
+    if last.role is not WaypointRole.LAND:
+        return False
+
+    if is_air_base_reference(last.waypoint.reference):
+        return True
+
+    x, y, _ = _xyz(last.waypoint.point)
+    return any(math.hypot(x - bx, y - by) <= AIR_BASE_AREA_RADIUS_M for bx, by in air_bases)
 
 
-def _presence(mission: Mission) -> Dict[str, bool]:
+def _presence(mission: Mission, air_bases: Iterable[Tuple[float, float]] = ()) -> Dict[str, bool]:
     """Presenza e stato a terra prima della partenza e dopo la fine (decisioni D1.a/b, F5)."""
     if mission.domain != 'air':
         return dict(present_before=True, present_after=True, grounded_before=False, grounded_after=False)
 
     parked = mission.start_mode is not StartMode.AIR
-    landed = lands_on_air_base(mission)
+    landed = lands_on_air_base(mission, air_bases)
     return dict(present_before=parked, present_after=landed, grounded_before=parked, grounded_after=landed)
 
 
-def mission_movements(mission: Mission, t0: float = 0.0) -> Tuple[AssetMovement, ...]:
+def mission_movements(mission: Mission, t0: float = 0.0,
+                      air_bases: Iterable[Tuple[float, float]] = ()) -> Tuple[AssetMovement, ...]:
     """Un `AssetMovement` per asset della missione, nell'ordine degli asset (con attese e presenza
-    della F5: `mission_holds`, `_presence`)."""
+    della F5: `mission_holds` con `F5_WAITS`, `_presence` con `F5_PRESENCE`). `air_bases`: le
+    posizioni dell'area delle basi aeree (`air_base_points`) per il criterio d'atterraggio; vuoto =
+    solo il riferimento del waypoint."""
     start = mission_start(mission, t0)
-
-    if F5_PRESENCE_AND_WAITS:
-        holds, presence = mission_holds(mission, start, t0), _presence(mission)
-    else:
-        holds, presence = (), {}
+    holds = mission_holds(mission, start, t0) if F5_WAITS else ()
+    presence = _presence(mission, tuple(air_bases)) if F5_PRESENCE else {}
 
     movements = []
 
@@ -1034,7 +1111,8 @@ def grounded_assets(forces: Mapping[str, object]) -> FrozenSet[str]:
         forces: `{force_id: forza}` come le costruisce `Session_Simulator._engagement_forces`. A
             terra sono gli aerei della vista residua (`MissionForce.grounded`) e di un blocco
             senza missioni (passato tale e quale: stessa regola, `continuous_posture`); gli aerei
-            di una vista di missione no (la presenza prima della partenza e' della F5).
+            di una vista di missione no (a terra solo a intervalli, prima del decollo e dopo
+            l'atterraggio: `grounded_schedule`, F5).
 
     Returns:
         Insieme (vuoto se non ce ne sono: comportamento identico a prima della F4c).
@@ -1056,7 +1134,8 @@ def grounded_assets(forces: Mapping[str, object]) -> FrozenSet[str]:
 
 def final_posture(mission: Mission, movement: AssetMovement, grounded: CS.GroundedSchedule,
                   session_end: float) -> str:
-    """Postura di un asset DI MISSIONE alla fine della sessione (v. "Postura nell'esito").
+    """Postura di un asset DI MISSIONE alla fine della sessione (F5, deviazione 12 del piano; v.
+    "Presenza prima della partenza e dopo la fine" nel docstring del modulo).
 
     * a terra a `session_end` (parcheggiato prima del decollo, atterrato su una base vera):
       `PARKED_POSTURE`;

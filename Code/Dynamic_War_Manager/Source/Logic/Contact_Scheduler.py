@@ -1360,8 +1360,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
         margin/range_type/skip_same_side: v. `block_pair_candidates` e `contact_windows`.
         grounded: aerei A TERRA (F4c; dalla F5 dipendenti dal tempo): un iterabile di id (sempre a
                   terra, la forma della F4c), una mappa `{asset_id: [(lo, hi), ...]}` o un
-                  `GroundedSchedule` (in sessione oggi l'insieme della F4c; predisposto
-                  `Mission_Adapter.grounded_schedule`, non ancora cablato). A terra =
+                  `GroundedSchedule` (in sessione, dalla F5-B, quello di
+                  `Mission_Adapter.grounded_schedule`). A terra =
                   bersaglio di superficie senza sensori (v. `mutual_detection_ranges`). Le
                   finestre di una coppia sono SPEZZATE agli istanti di decollo e atterraggio dei
                   due asset (`GroundedSchedule.transitions`), cosi' che ogni finestra abbia uno
@@ -1371,7 +1371,8 @@ def schedule_contacts(blocks_a: Iterable, blocks_b: Iterable, horizon: float,
                   terra conta ancora con la propria velocita' e portata nell'inviluppo del blocco).
         legs: `{asset_id: [Leg, ...]}` tratti GIA' calcolati dal chiamante (F5: in sessione la
                   presenza prima della partenza e dopo la fine, le attese, v.
-                  `Mission_Adapter.movement_legs`, non ancora cablato in sessione); hanno la precedenza su `routes` per quegli
+                  `Mission_Adapter.movement_legs`, cablato dalla F5-B; le attese dalla F5-C); hanno
+                  la precedenza su `routes` per quegli
                   asset (v. `_asset_legs`). None = tratti dalle rotte, come prima.
 
     Returns:
@@ -1479,9 +1480,9 @@ def _asset_legs(asset, routes, starts, speeds, t0: float, horizon: float,
     """Tratti di un asset: quelli dati dal chiamante, altrimenti dalla sua rotta se ne ha una,
     altrimenti fermo in posizione.
 
-    Con la rotta l'asset esiste solo fra la partenza e l'arrivo (`legs_span`). Nella F5 la sessione
-    passera' i tratti completi (`given`, v. `Mission_Adapter.movement_legs`): presenza ferma prima
-    della partenza e dopo la fine (D1.a/b), attese (N2.c); per un aereo che esce di scena alla
+    Con la rotta l'asset esiste solo fra la partenza e l'arrivo (`legs_span`). Dalla F5-B la sessione
+    passa i tratti completi (`given`, v. `Mission_Adapter.movement_legs`): presenza ferma prima
+    della partenza e dopo la fine (D1.a/b), attese (N2.c, F5-C); per un aereo che esce di scena alla
     fine della rotta i tratti finiscono all'arrivo, come prima. I tratti dati sono usati TALI E
     QUALI se stanno nella finestra (un secondo ritaglio rifarebbe l'interpolazione degli estremi),
     altrimenti ritagliati.

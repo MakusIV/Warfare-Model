@@ -683,3 +683,171 @@ E1/E3/aerei) e F5-C (WAIT, ETA, TOT, CAP in orbita).
 
 Test nuovi in `Test_Contact_Scheduler`, `Test_Engagement_Resolver`, `Test_Mission_Adapter` (+33
 rispetto a 4039). Suite 4072 OK; fotografia IDENTICA su 370 esecuzioni.
+
+
+## F5 passo (b): presenza fuori dalla rotta e postura nell'esito (F5-B, deviazioni 12-13)
+
+**Base del confronto**: fotografia di F4c/F5-A (`Test/baseline/scenario_baseline.json`, 370
+esecuzioni; ricontrollata IDENTICA al codice di partenza `c6051fc8` prima delle modifiche,
+2026-10-12).
+**Dopo**: motore con presenza e postura cablate in sessione. Sulla STORIA (contatti, colpi, danni,
+esiti, carburante) **368 esecuzioni identiche, 2 cambiate** (S6-0, S6-2, sotto); in TUTTE le 370 il
+riassunto ha una voce nuova, `postures` (postura di ogni asset a fine sessione). 72 esecuzioni
+nuove (scenario S22). Cambio ACCETTATO dall'utente il 2026-10-12; fotografia del repository rigenerata a 442
+esecuzioni (370 + 72 nuove; due catture indipendenti identiche byte per byte).
+
+### Il cambio
+
+Decisioni dell'utente (D1.a/b, deviazione 13):
+1. **unita' terrestri e navali di missione**: presenti FERME nella posizione di partenza prima di
+   partire e in quella finale dopo la fine, in postura `Defense`, quindi rilevabili e ingaggiabili
+   in quei tratti (tiro di sempre);
+2. **aerei che non partono in volo** (parcheggio, pista): A TERRA dall'inizio della sessione al
+   decollo, bersagli di superficie passivi come gli aerei senza missione della F4c;
+3. **aerei dopo la fine della rotta**: a terra SOLO se l'ultimo punto e' LAND su una base vera
+   (`Mission_Adapter.lands_on_air_base`: riferimento del waypoint a un asset di un blocco
+   `is_Air_Base()`, OPPURE punto nell'area di una base del lato della missione: entro
+   `AIR_BASE_AREA_RADIUS_M` = 3000 m, STIMA di progetto, da un asset non aereo di un blocco
+   `is_Air_Base()`, `air_base_points`); altrimenti escono di scena all'arrivo come prima (postura
+   `off_scene`) finche' la F6 non porta il rientro;
+4. **postura nell'esito** (`SessionOutcome.postures`) per OGNI asset delle forze passate, anche dei
+   blocchi senza missioni (deviazione 12): postura continua della F4c per gli asset senza missione
+   (`parking_cold` aereo, `Defense` terra/mare), postura di fine missione per gli altri (`Defense` a
+   movimento finito o non ancora iniziato, tipo di missione in movimento, `parking_cold` aereo a
+   terra, tipo di missione aereo in volo, `off_scene` aereo uscito di scena).
+
+Cablaggio (`Session_Simulator.run_session`):
+- `Mission_Adapter.grounded_schedule(forze, movimenti)` al posto dell'insieme costante: allo
+  scheduler e a ogni `resolve_engagement` (sempre a terra gli aerei senza missione, a intervalli
+  quelli di missione);
+- `Mission_Adapter.movement_legs` (movimento + presenza ferma) allo scheduler (`legs`) e al
+  risolutore (tratti degli asset); il carburante usa i soli tratti di MOVIMENTO
+  (`presence=False`): la presenza ferma non consuma, `FuelEvent` invariati;
+- `Mission_Adapter.session_postures` -> `assemble_session_outcome(postures=...)`.
+- Interruttori separati in `Mission_Adapter` (il vecchio `F5_PRESENCE_AND_WAITS` diviso in due):
+  `F5_PRESENCE = True` (presenza, F5-B) e `F5_WAITS = False` (WAIT/ETA bloccate/TOT, F5-C, come
+  prima: nessuna attesa, partenza invariata). La postura e' riportata in ogni caso (e' un'uscita).
+- `Scenario_Baseline`: il riassunto registra `postures` se l'esito la porta; nuova opzione
+  `--ignore KEY` (es. `--ignore postures`) per confrontare la sola storia.
+
+### Come si attribuiscono le differenze
+
+Catture complete (434 esecuzioni ciascuna, script di misura fuori dal repository che sostituisce
+`Mission_Adapter._presence` o l'interruttore), confrontate sulle 370 esecuzioni della base (le
+prime quattro prima dell'aggiunta del criterio d'area; la cattura finale, con il criterio d'area e
+la variante S22-AIR 'base_area', e' nell'ultima riga):
+
+| Cattura | Contro | Storia (`--ignore postures`) | Postura |
+|---|---|---|---|
+| cablaggio F5-B con `F5_PRESENCE = False` | base | IDENTICA (370) | voce nuova in 370 |
+| solo presenza AEREI (prima del decollo + dopo l'atterraggio), terra/mare spenta | `F5_PRESENCE = False` | IDENTICA (370) | identica |
+| solo presenza TERRA/MARE, aerei spenti (S6) | cattura finale | IDENTICA (4 esecuzioni S6, posture comprese) | identica |
+| tutto attivo, senza criterio d'area | base | 2 cambiate (S6-0, S6-2) | voce nuova in 370 |
+| FINALE: tutto attivo, con criterio d'area (442 esecuzioni) | base | 2 cambiate (S6-0, S6-2), identica alla riga sopra su 402 esecuzioni (posture comprese) | voce nuova in 370 |
+
+Quindi: (a) il cablaggio in se' (programma a terra, tratti dati allo scheduler, carburante sul solo
+movimento) non cambia nulla; (b) la presenza degli aerei non tocca nessuna esecuzione esistente (tutte
+le missioni aeree delle fixture partono in volo, `StartMode.AIR`, e l'ultimo LAND non riferisce una
+base); (c) le due esecuzioni cambiate sono dovute alla presenza di unita' navali dopo la fine
+della rotta; (d) la postura nell'esito e' la stessa con o senza presenza in tutte le 370 (nessun
+movimento delle fixture e' tagliato dalla fine della sessione, quindi nessuna postura "in
+movimento").
+
+Distribuzione delle posture nelle 370 esecuzioni (4742 asset): `Defense` 3263, `off_scene` 1419,
+`parking_cold` 60 (gli aerei senza missione della F4c: VAL-agn, S21, S21R).
+
+### Esecuzioni cambiate nella storia (2 su 370): presenza navale dopo l'arrivo
+
+`S6/S6-0` e `S6/S6-2` (`TestS6CarrierGroupVersusCoastalDefence`, sessione di 7200 s): il gruppo
+navale Blue-CSG (missione `Shore_Bombardment` da x = -150 km a x = -60 km) arriva a t = 6043 s. Prima
+della F5-B spariva all'arrivo; ora resta fermo nel punto finale (in `Defense`) e continua a lanciare
+missili antinave contro la Red-Flotilla (a ~108 km), che li intercetta:
+- S6-0: salve Blue-CSG 9 -> 29 (colpi 18 -> 58, l'ultimo a 7185 s), intercettazioni Red-Flotilla
+  18 -> 58; nessun danno nuovo, esiti di forza invariati;
+- S6-2: salve Blue-CSG 26 -> 41 (colpi 52 -> 82), intercettazioni Red-Flotilla 52 -> 80; una corvetta
+  (`Red-Flotilla/fsg1`) distrutta a 6945 s da un missile del CG-65, Red-Flotilla HELD -> DISENGAGED
+  (6945 s), eventi di danno 10 -> 11.
+`S6-1` e `S6-3` invariate: la Red-Flotilla aveva gia' disingaggiato prima dell'arrivo (5806 s e
+6045 s). E' l'effetto ATTESO della decisione 1 (una nave arrivata e' ancora li', con il tiro di
+sempre). I test di S6 verificano la fusione delle finestre e i domini, non i conteggi, e passano.
+
+Nessun cambio inatteso: nessuna esecuzione con unita' terrestri cambia, perche' nelle fixture le
+missioni terrestri partono a t = 0 (nessun tratto prima) e quelle che arrivano prima della fine non
+hanno piu' nemici a portata dopo l'arrivo (o il loro ingaggio era gia' concluso).
+
+### Scenario nuovo S22 (`Test_Session_Scenarios_S22.py`, 72 esecuzioni)
+
+**S22-E1** (esperimento E1 dell'analisi del 26/09, 8 seed): Red-Post 3 BMP-2 fermi in (0, 0) con
+sensore 'ground' dichiarato di 4,2 km; Blue-Armor 1 M1A2 che non spara (ruolo 'unarmed').
+'finished': missione da -12 km a -4 km a 10 m/s, arrivo a 800 s (contatto da 780 s: prima della
+F5-B 20 s di finestra, meno del rilevamento + reazione, nessun colpo possibile); 'static': lo stesso
+carro senza missione a -4 km (E2, riferimento). Misura: Red spara in 8/8 repliche in entrambe le
+varianti; in 'finished' ogni colpo parte dopo l'arrivo (811-828 s) e il carro e' messo fuori
+combattimento in 8/8; in 'static' i colpi partono a 31-41 s.
+
+**S22-E3** (E3, 8 seed): il carro e' a -4 km e parte a 1000 s verso -12 km (esce dal sensore a
+1020 s); 'not_departed': partenza oltre la fine della sessione. Red spara in 7/8 repliche in
+entrambe le varianti, ogni colpo PRIMA della partenza (31-61 s); postura finale `Defense` (finita a
+1800 s, o non partita).
+
+**S22-AIR** (8 seed, 5 varianti): Red-Airbase (Military 'Airbase': 2 MiG-29S 'CAP' + deposito
+`Structure` 'Oil_Tank', riferimento della base) e Blue-Strike (2 F-16C 'Strike', sorvolo a 3000 m,
+fuoco solo sui bersagli 'parked'). 'parked': missione Red dal parcheggio con decollo a 900 s, strike a
+t = 0: MiG colpiti in 8/8 repliche (16/16 danneggiati, 9/16 distrutti), solo da 'test:agm', colpi
+tutti prima del decollo; 'airborne': strike a 1500 s, MiG gia' decollati e usciti di scena: nessun
+colpo; 'landed': MiG in volo da est, LAND sul deposito della base a 240 s, strike a 1500 s: di nuovo a
+terra e colpiti (16/16 danneggiati, colpi solo dopo l'atterraggio), postura `parking_cold`;
+'no_base': stesso volo, LAND senza riferimento a 30 km dalla base (fuori area): escono di scena,
+nessun colpo, postura `off_scene`; 'base_area': LAND senza riferimento a 1,9 km dal deposito (dentro
+l'area): a terra e colpiti come 'landed', postura `parking_cold`.
+I MiG non sparano ne' intercettano mai.
+
+Controllo con `F5_PRESENCE = False` (sonda fuori dal repository): E1 'finished' e E3 'late' 0 colpi
+su 8 seed, nessun danno ai MiG in 'parked' e 'landed': lo scenario distingue la F5-B.
+
+Asserzioni: invarianti per replica (chi spara, a chi, quando rispetto ad arrivo/partenza/decollo/
+atterraggio; postura nell'esito) e frazioni aggregate con soglie DICHIARATE (stime di test, non
+tarate): `MIN_ENGAGED_FRACTION` = 0,5 (attesa a priori ~0,93: Pd ~0,59 per osservatore a 4 km con
+3 osservatori), `MIN_HIT_FRACTION` = 0,5 (misura 1,0); 'finished' e 'static' ingaggiati in un numero
+di repliche che differisce al piu' di 2 (margine dichiarato). Costanti dello scenario dichiarate di
+test: portata 4,2 km, velocita' 10 m/s (carro) e 250 m/s (MiG), istanti 900 s e 1500 s.
+
+### Test
+
+- `Test_Session_Simulator.TestPresenceAndPostures` (nuova): tratti di presenza a scheduler e
+  risolutore, aereo in volo assente fuori dalla rotta, programma a terra di un aereo dal parcheggio,
+  carburante sul solo movimento, posture di tutti gli asset (anche di blocchi senza missioni), postura
+  in movimento / prima del decollo, interruttore spento = tratti della sola rotta. Adeguati
+  `test_aircraft_without_mission_are_grounded...` e `test_every_aircraft_in_a_mission...` (il
+  risolutore riceve un `GroundedSchedule`, non piu' un frozenset) e
+  `test_nothing_moves_nothing_meets` (l'esito porta le posture).
+  Nuovo `test_landing_in_the_area_of_an_own_air_base` (area di una base del proprio lato: a terra
+  dall'arrivo; base nemica: esce di scena).
+- `Test_Mission_Adapter`: `_F5Active` attiva i due interruttori; nuova `TestF5BSwitches` (default:
+  presenza attiva, attese spente; una WAIT dichiarata non produce attese; ETA bloccata sul punto di
+  partenza non sposta la partenza); nuova `TestAirBaseArea` (`air_base_points`: asset non aerei
+  delle basi vere, filtro di lato; LAND dentro/fuori `AIR_BASE_AREA_RADIUS_M`).
+- `Test_Session_Scenarios_S22` (nuovo, 16 test).
+
+### Limiti noti
+
+- La postura nell'esito NON tiene conto della distruzione: un aereo distrutto sul parcheggio prima
+  del decollo e' riportato `off_scene` (dove sarebbe secondo il piano); lo stato distrutto e' negli
+  asset e nel `MissionOutcome`. Decisione dell'utente (2026-10-12): rimandata, da rivalutare con la F6 (fine missione).
+- La presenza dopo la fine e' nella posizione finale della rotta, senza criteri di fine missione
+  (F6): un asset senza carburante resta comunque "arrivato" (P4).
+- Un aereo che parte dal parcheggio e' a terra nel PRIMO punto della rotta, alla sua quota: la rotta
+  deve cominciare sulla base (quota del terreno), il motore non la porta a terra.
+- Un aereo che atterra su una base vera e' a terra dall'istante d'arrivo all'ultimo punto (nessuna
+  fase di rullaggio). L'area di una base e' un cerchio di `AIR_BASE_AREA_RADIUS_M` (stima) intorno
+  a ciascun asset non aereo della base, non il perimetro reale (modulo mappe); conta solo il lato
+  della missione (atterrare su una base nemica non e' un atterraggio), e una base senza asset non
+  aerei ha area vuota (resta il criterio del riferimento).
+- Attese WAIT, ETA bloccate e TOT restano spente (F5-C).
+
+### Verifica
+
+Suite 4101 test OK (7 skipped; +29 rispetto a 4072). Fotografia: prima delle modifiche `--compare`
+IDENTICA su 370; dopo, `--compare <base> --ignore postures` = 2 esecuzioni cambiate (S6-0, S6-2) + 72
+nuove (S22), senza `--ignore` le 370 differiscono tutte per la voce `postures`. Cambio accettato dall'utente il
+2026-10-12 e `Test/baseline/scenario_baseline.json` rigenerato (442 esecuzioni).

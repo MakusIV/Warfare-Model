@@ -664,13 +664,16 @@ def _landing_route(reference):
 
 
 class _F5Active(_Base):
-    """F5 (b)-(d) scritti ma non attivi (`MA.F5_PRESENCE_AND_WAITS`): i test li attivano per sé."""
+    """F5 (b)-(d): presenza (`MA.F5_PRESENCE`, attiva dalla F5-B) e attese (`MA.F5_WAITS`, spente
+    fino alla F5-C): i test le attivano entrambe per sé."""
 
     def setUp(self):
         super().setUp()
-        flag = patch.object(MA, 'F5_PRESENCE_AND_WAITS', True)
-        flag.start()
-        self.addCleanup(flag.stop)
+
+        for name in ('F5_PRESENCE', 'F5_WAITS'):
+            flag = patch.object(MA, name, True)
+            flag.start()
+            self.addCleanup(flag.stop)
 
 
 class TestHoldsAndEffectiveEtas(_F5Active):
@@ -746,7 +749,7 @@ class TestHoldsAndEffectiveEtas(_F5Active):
         route = _three_points()
         plan = _with_actions(route, {1: [_wait(duration=300.0)]})
 
-        with patch.object(MA, 'F5_PRESENCE_AND_WAITS', False):
+        with patch.object(MA, 'F5_PRESENCE', False), patch.object(MA, 'F5_WAITS', False):
             movement, = MA.mission_movements(_mission(route=route, waypoints=plan))
 
         self.assertEqual((movement.holds, movement.present_before, movement.present_after), ((), False, False))
@@ -855,3 +858,73 @@ class TestFinalPosture(_F5Active):
         self.assertEqual(postures, {'a1': MA.OFF_SCENE_POSTURE, 's1': MA.SEA_DEFENSE_POSTURE,
                                     'v1': MA.GROUND_DEFENSE_POSTURE})
         self.assertEqual(list(postures), ['a1', 's1', 'v1'])
+
+
+class TestF5BSwitches(_Base):
+    """F5-B: interruttori di default (nessun patch): presenza ATTIVA, attese SPENTE (F5-C)."""
+
+    def test_default_switches(self):
+        self.assertTrue(MA.F5_PRESENCE)
+        self.assertFalse(MA.F5_WAITS)
+
+    def test_presence_without_waits(self):
+        """Una WAIT dichiarata non produce attese (F5-C), ma la presenza prima e dopo c'e'."""
+        route = _route([(0, 0, 0), (1000, 0, 0), (2000, 0, 0)], speed=10.0, route_type='ground',
+                       path_type='offroad', name='g')
+        roles = [MT.WaypointRole.DEPARTURE, MT.WaypointRole.NAV, MT.WaypointRole.OBJECTIVE]
+        plan = _with_actions(route, {1: [_wait(duration=300.0)]}, roles=roles)
+        movement, = MA.mission_movements(_ground_mission(start_time=500.0, waypoints=plan, route=route))
+        self.assertEqual(movement.holds, ())
+        self.assertEqual((movement.present_before, movement.present_after), (True, True))
+        self.assertEqual(MA.waypoint_times(movement), (500.0, 600.0, 700.0))
+        legs = MA.movement_legs(movement, 0.0, 3_600.0)
+        self.assertEqual((legs[0].t_start, legs[0].t_end, legs[-1].t_start, legs[-1].t_end),
+                         (0.0, 500.0, 700.0, 3_600.0))
+
+    def test_waits_do_not_move_a_locked_departure(self):
+        """ETA bloccata sul punto di partenza oltre `start_time`: con le attese spente la partenza
+        resta `start_time` (comportamento precedente alla F5)."""
+        route = _three_points()
+        plan = _with_actions(route, {}, etas=[900.0, None, None], locked=[True, False, False])
+        self.assertEqual(MA.mission_start(_mission(route=route, waypoints=plan, start_time=0.0)), 0.0)
+
+
+class _BaseBlock:
+    """Blocco duck-typed con `is_Air_Base()` e lato (criterio d'area della F5-B)."""
+
+    def __init__(self, side, is_base, assets):
+        self.side = side
+        self._is_base = is_base
+        self.assets = {asset.id: asset for asset in assets}
+
+    def is_Air_Base(self):
+        return self._is_base
+
+
+def _placed(cls, asset_id, x, y):
+    asset = cls(asset_id)
+    asset.position = Point3D(x, y, 0)
+    return asset
+
+
+class TestAirBaseArea(_Base):
+    """F5-B: atterraggio su una base vera anche senza riferimento, se il punto LAND e' nell'area di
+    una base (`air_base_points`, `AIR_BASE_AREA_RADIUS_M`)."""
+
+    def test_points_of_the_non_aircraft_assets_of_real_bases(self):
+        base = _BaseBlock('Red', True, [_placed(Vehicle, 'sam', 1_000, 0), _placed(Aircraft, 'mig', 50_000, 0)])
+        other = _BaseBlock('Red', False, [_placed(Vehicle, 'tank', 0, 0)])
+        enemy = _BaseBlock('Blue', True, [_placed(Vehicle, 'depot', 5_000, 0)])
+        self.assertEqual(MA.air_base_points([base, other, enemy], 'Red'), ((1_000.0, 0.0),))
+        self.assertEqual(MA.air_base_points([base, other, enemy]), ((1_000.0, 0.0), (5_000.0, 0.0)))
+
+    def test_landing_in_the_area_of_a_base(self):
+        route = _landing_route(None)   # LAND in (40 km, 0, 0), senza riferimento
+        mission = _mission(route=route, waypoints=_plan(route), start_time=0.0)
+        near = ((40_000.0 + MA.AIR_BASE_AREA_RADIUS_M - 1.0, 0.0),)
+        far = ((40_000.0 + MA.AIR_BASE_AREA_RADIUS_M + 1.0, 0.0),)
+        self.assertFalse(MA.lands_on_air_base(mission))
+        self.assertTrue(MA.lands_on_air_base(mission, near))
+        self.assertFalse(MA.lands_on_air_base(mission, far))
+        movement, = MA.mission_movements(mission, 0.0, near)
+        self.assertTrue(movement.present_after and movement.grounded_after)

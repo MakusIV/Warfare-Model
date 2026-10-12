@@ -250,9 +250,9 @@ dalla sessione: `Mission_Adapter.grounded_assets`) e non legge ne' muta stati nu
 L'esito di forza (`committed`, `lost`, `erosion`) e le `SalvoResolution` contano tutti gli asset.
 Con `grounded` vuoto (default) ogni percorso e' quello di prima: stesse estrazioni, stessi esiti.
 
-**Dipendente dal tempo (F5 passo (a), D1.a/b).** Un aereo con missione sara' a terra prima del
+**Dipendente dal tempo (F5 passo (a), D1.a/b).** Un aereo con missione e' a terra prima del
 decollo (partenza dal parcheggio o dalla pista) e, se atterra su una base vera, dopo la fine della
-rotta (passo (b), non ancora cablato in sessione, che oggi passa l'insieme della F4c): `grounded`
+rotta (cablato in sessione dal passo (b), `Mission_Adapter.grounded_schedule`): `grounded`
 e' un `Contact_Scheduler.GroundedSchedule` (intervalli `[lo, hi)` per asset; l'insieme semplice
 della F4c e' "sempre a terra"). Ogni regola sopra legge lo stato all'istante in cui si applica:
 * rilevamento e RWR al rilevamento: lo stato della FINESTRA (al suo punto medio; lo scheduler spezza
@@ -3073,10 +3073,10 @@ def resolve_engagement(force_a, force_b, contacts: Iterable, fire_control: Calla
         grounded: aerei A TERRA (F4c, v. "Aerei a terra" nel docstring del modulo): bersagli di
             superficie passivi. Un iterabile di id (sempre a terra, la forma della F4c), una mappa
             `{asset_id: [(lo, hi), ...]}` di intervalli semiaperti o un
-            `Contact_Scheduler.GroundedSchedule` (F5: stato dipendente dal tempo). In sessione lo
-            passa l'insieme della F4c (`Mission_Adapter.grounded_assets`; predisposto
-            `Mission_Adapter.grounded_schedule`, non ancora cablato). None o vuoto (default) = comportamento
-            precedente.
+            `Contact_Scheduler.GroundedSchedule` (F5: stato dipendente dal tempo). In sessione,
+            dalla F5-B, il programma di `Mission_Adapter.grounded_schedule` (sempre a terra gli
+            aerei senza missione, a intervalli quelli di missione prima del decollo e dopo
+            l'atterraggio su una base vera). None o vuoto (default) = comportamento precedente.
 
     Returns:
         `EngagementResult`, oppure None (con un log) se meno di due forze hanno asset

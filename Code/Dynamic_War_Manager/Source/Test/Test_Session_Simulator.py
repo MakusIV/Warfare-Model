@@ -365,7 +365,12 @@ class TestNoContact(_Base):
     def test_nothing_moves_nothing_meets(self):
         blue, red, _ = self._scenario(red_offset=10_000_000.0)
         outcome = SS.run_session(self._order(), blue, red, _fire)
-        self.assertEqual(outcome, SessionOutcome('S-test', 0.0, 3600.0))
+        # Dalla F5-B l'esito porta comunque la postura di ogni asset: aerei senza missione a terra,
+        # veicoli in difesa.
+        postures = {'bn1': MA.PARKED_POSTURE, 'bn2': MA.PARKED_POSTURE, 'bs1': MA.PARKED_POSTURE,
+                    're1': MA.GROUND_DEFENSE_POSTURE, 're2': MA.GROUND_DEFENSE_POSTURE,
+                    'rw1': MA.GROUND_DEFENSE_POSTURE}
+        self.assertEqual(outcome, SessionOutcome('S-test', 0.0, 3600.0, postures=postures))
 
     def test_empty_sides(self):
         outcome = SS.run_session(self._order(), [], [], _fire)
@@ -799,9 +804,13 @@ class TestMissionAsEngagementUnit(_Base):
                 patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
             SS.run_session(self._order('S-grounded', only_bn1), blue, red, _fire, reaction_profile_for=_profile)
 
-        self.assertEqual(scheduler.call_args.kwargs['grounded'], frozenset({'bn2', 'bs1'}))
+        # Dalla F5-B un programma nel tempo (`GroundedSchedule`): gli aerei senza missione sono a
+        # terra SEMPRE, nessun altro (le missioni partono in volo).
+        expected = CS.GroundedSchedule.of({'bn2', 'bs1'})
+        self.assertEqual(scheduler.call_args.kwargs['grounded'], expected)
+        self.assertEqual(scheduler.call_args.kwargs['grounded'].always_ids(), frozenset({'bn2', 'bs1'}))
         self.assertTrue(resolver.call_args_list)
-        self.assertTrue(all(call.kwargs['grounded'] == frozenset({'bn2', 'bs1'}) for call in resolver.call_args_list))
+        self.assertTrue(all(call.kwargs['grounded'] == expected for call in resolver.call_args_list))
 
     def test_residual_view_carries_the_continuous_posture(self):
         """Vista residua mista (aereo + veicolo dello stesso blocco): aereo a terra, veicolo in difesa."""
@@ -820,13 +829,161 @@ class TestMissionAsEngagementUnit(_Base):
         with patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
             self._run('S-nobody-grounded')
 
-        self.assertTrue(all(call.kwargs['grounded'] == frozenset() for call in resolver.call_args_list))
+        self.assertTrue(all(not call.kwargs['grounded'] for call in resolver.call_args_list))
 
     def test_mission_id_equal_to_a_block_id_is_rejected(self):
         blue, red, _ = self._scenario()
         clash = (_air_mission('Red-East', blue[0], self._north_route(), [('bn1', 0.0)], target_block='Red-East'),)
         with self.assertRaisesRegex(ValueError, 'also the id of a block'):
             SS.run_session(self._order('S-clash', clash), blue, red, _fire)
+
+
+
+# ── PRESENZA E POSTURA NELL'ESITO (F5-B) ──────────────────────────────────────
+
+def _ground_route(points, speed, name):
+    """Rotta terrestre di test (archi 'offroad', quota 0)."""
+    waypoints = [Waypoint(name=f'{name}-W{i}', point=Point3D(x, y, 0), obj_reference=None)
+                 for i, (x, y) in enumerate(points)]
+    edges = {(a.name, b.name): Edge(wpA=a, wpB=b, path_type='offroad', danger_level=0.0, speed=speed,
+                                    name=f'{name}-E{i}')
+             for i, (a, b) in enumerate(zip(waypoints, waypoints[1:]))}
+    return Route(route_type='ground', edges=edges, name=name)
+
+
+def _ground_mission(mission_id, force, route, asset_id, start_time=0.0, target_block='Red'):
+    waypoints = route_waypoints(route)
+    roles = [WaypointRole.DEPARTURE] + [WaypointRole.NAV] * (len(waypoints) - 2) + [WaypointRole.OBJECTIVE]
+    target = Target(kind=TargetKind.GROUP, target_id=target_block, provenance=TargetProvenance.OBSERVED,
+                    observed_at=0.0)
+    return Mission(mission_id=mission_id, block_id=force.id, domain='ground', mission_type='Attack',
+                   assets=(MissionAsset(asset_id, 'lead'),), target=target, route=route,
+                   waypoints=tuple(MissionWaypoint(wp, role) for wp, role in zip(waypoints, roles)),
+                   start_time=start_time)
+
+
+class TestPresenceAndPostures(_Base):
+    """F5-B: tratti di presenza a scheduler e risolutore, programma degli aerei a terra, carburante
+    sul solo movimento, postura di ogni asset nell'esito (anche dei blocchi senza missioni)."""
+
+    def _scenario(self, start_time=1_000.0, air_start_mode=StartMode.AIR):
+        """Blue-Armor: bv1 da (-12 km, 0) a (-4 km, 0) a 10 m/s, partenza `start_time` (800 s di
+        movimento); Blue-Air: ba1 in missione (rotta di 40 km a 200 m/s, 200 s) e ba2 senza missione;
+        Red: rv1 fermo in (0, 0), nessuna missione."""
+        armor = _force('Blue-Armor', 'Blue', [_asset(Vehicle, 'bv1', -12_000, 0, speed=10.0)])
+        air = _force('Blue-Air', 'Blue', [_asset(Aircraft, 'ba1', -50_000, 0, speed=200.0),
+                                          _asset(Aircraft, 'ba2', -50_000, 500, speed=200.0)])
+        red = _force('Red', 'Red', [_asset(Vehicle, 'rv1', 0, 0)])
+        air_route = _route([(-50_000, 0), (-10_000, 0)], 200.0, 'r-ba1')
+        air_mission = _air_mission('M-air', air, air_route, [('ba1', 0.0)], start_time=start_time)
+
+        if air_start_mode is not StartMode.AIR:
+            roles = [WaypointRole.DEPARTURE, WaypointRole.LAND]
+            air_mission = Mission(mission_id='M-air', block_id='Blue-Air', domain='air', mission_type='CAS',
+                                  assets=air_mission.assets, target=air_mission.target, route=air_route,
+                                  waypoints=tuple(MissionWaypoint(wp, role)
+                                                  for wp, role in zip(route_waypoints(air_route), roles)),
+                                  start_time=start_time, start_mode=air_start_mode)
+
+        missions = (_ground_mission('M-armor', armor, _ground_route([(-12_000, 0), (-4_000, 0)], 10.0, 'r-bv1'),
+                                    'bv1', start_time=start_time),
+                    air_mission)
+        return [armor, air], [red], missions
+
+    def _run(self, session_id='S-presence', **kwargs):
+        blue, red, missions = self._scenario(**kwargs)
+
+        with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler, \
+                patch.object(ER, 'resolve_engagement', wraps=ER.resolve_engagement) as resolver:
+            outcome = SS.run_session(self._order(session_id, missions), blue, red, _fire,
+                                     reaction_profile_for=_profile)
+
+        return outcome, scheduler, resolver
+
+    def test_ground_unit_is_present_before_departure_and_after_arrival(self):
+        _, scheduler, resolver = self._run()
+        legs = scheduler.call_args.kwargs['legs']['bv1']
+        self.assertEqual((legs[0].t_start, legs[0].t_end, legs[0].p_start, legs[0].p_end),
+                         (0.0, 1_000.0, (-12_000.0, 0.0, 0.0), (-12_000.0, 0.0, 0.0)))
+        self.assertEqual((legs[-1].t_start, legs[-1].t_end, legs[-1].p_start), (1_800.0, 3_600.0, (-4_000.0, 0.0, 0.0)))
+        # Il risolutore riceve gli stessi tratti (istante esatto di rilevamento).
+        self.assertTrue(resolver.call_args_list)
+        self.assertTrue(all(call.kwargs['legs']['bv1'] == legs for call in resolver.call_args_list))
+
+    def test_air_start_aircraft_is_absent_outside_its_route(self):
+        _, scheduler, _ = self._run()
+        legs = scheduler.call_args.kwargs['legs']['ba1']
+        self.assertEqual((legs[0].t_start, legs[-1].t_end), (1_000.0, 1_200.0))
+        self.assertEqual(scheduler.call_args.kwargs['grounded'].intervals('ba1'), ())
+
+    def test_parked_aircraft_is_grounded_until_takeoff(self):
+        _, scheduler, resolver = self._run(air_start_mode=StartMode.PARKING_COLD)
+        grounded = scheduler.call_args.kwargs['grounded']
+        self.assertEqual(grounded.intervals('ba1'), ((float('-inf'), 1_000.0),))
+        self.assertTrue(grounded.always('ba2'))
+        legs = scheduler.call_args.kwargs['legs']['ba1']
+        self.assertEqual((legs[0].t_start, legs[0].t_end), (0.0, 1_000.0))
+        self.assertTrue(all(call.kwargs['grounded'] == grounded for call in resolver.call_args_list))
+
+    def test_fuel_is_consumed_on_the_movement_only(self):
+        """La presenza ferma non consuma: distanza = la sola rotta, evento a fine movimento."""
+        outcome, _, _ = self._run()
+        fuel = {event.asset_id: event for event in outcome.fuel_events}
+        self.assertAlmostEqual(fuel['bv1'].distance, 8_000.0)
+        self.assertAlmostEqual(fuel['bv1'].time, 1_800.0)
+        self.assertAlmostEqual(fuel['ba1'].distance, 40_000.0)
+
+    def test_postures_of_every_asset_in_the_outcome(self):
+        outcome, _, _ = self._run()
+        self.assertEqual(dict(outcome.postures), {'ba1': MA.OFF_SCENE_POSTURE, 'ba2': MA.PARKED_POSTURE,
+                                                  'bv1': MA.GROUND_DEFENSE_POSTURE,
+                                                  'rv1': MA.GROUND_DEFENSE_POSTURE})
+
+    def test_postures_while_moving_and_before_takeoff(self):
+        """Partenza a 3500 s: a fine sessione il carro e' in movimento (postura del tipo di missione)
+        e l'aereo in volo (il tipo di missione). Partenza a 4000 s, oltre la fine: carro non ancora
+        partito (`Defense`, D1.b), aereo dal parcheggio ancora a terra."""
+        moving, _, _ = self._run(start_time=3_500.0, air_start_mode=StartMode.PARKING_HOT)
+        self.assertEqual((moving.postures['bv1'], moving.postures['ba1']), ('Attack', 'CAS'))
+        waiting, _, _ = self._run(start_time=4_000.0, air_start_mode=StartMode.PARKING_HOT)
+        self.assertEqual((waiting.postures['bv1'], waiting.postures['ba1']),
+                         (MA.GROUND_DEFENSE_POSTURE, MA.PARKED_POSTURE))
+
+    def test_without_presence_the_legs_are_the_route_legs(self):
+        """Interruttore spento: tratti della sola rotta, nessun intervallo a terra di missione (la
+        sessione della F5-A); la postura e' riportata comunque."""
+        with patch.object(MA, 'F5_PRESENCE', False):
+            outcome, scheduler, _ = self._run(air_start_mode=StartMode.PARKING_COLD)
+
+        legs = scheduler.call_args.kwargs['legs']['bv1']
+        self.assertEqual((legs[0].t_start, legs[-1].t_end), (1_000.0, 1_800.0))
+        self.assertEqual(scheduler.call_args.kwargs['grounded'].ids(), frozenset({'ba2'}))
+        self.assertTrue(outcome.postures)
+
+
+    def _with_base(self, side):
+        """Lo scenario con una base aerea vera (Military 'Airbase', un veicolo a 500 m dalla fine
+        della rotta di ba1) del lato `side`."""
+        blue, red, missions = self._scenario()
+        base = Military(mil_category=MILITARY_CATEGORY['Air_Base'][0], name=f'{side}-Base', side=side)
+        base.id = f'{side}-Base'
+        base._assets = {'bb1': _asset(Vehicle, 'bb1', -10_000, 500)}
+        (blue if side == 'Blue' else red).append(base)
+        return blue, red, missions
+
+    def test_landing_in_the_area_of_an_own_air_base(self):
+        """F5-B: l'ultimo LAND di ba1 senza riferimento ma nell'area di una base Blue -> a terra
+        dall'arrivo; la base del NEMICO non conta."""
+        for side, grounded_after in (('Blue', True), ('Red', False)):
+            blue, red, missions = self._with_base(side)
+
+            with patch.object(CS, 'schedule_contacts', wraps=CS.schedule_contacts) as scheduler:
+                outcome = SS.run_session(self._order(f'S-area-{side}', missions), blue, red, _fire,
+                                         reaction_profile_for=_profile)
+
+            intervals = scheduler.call_args.kwargs['grounded'].intervals('ba1')
+            self.assertEqual(intervals == ((1_200.0, float('inf')),), grounded_after, side)
+            self.assertEqual(outcome.postures['ba1'], MA.PARKED_POSTURE if grounded_after else MA.OFF_SCENE_POSTURE)
 
 
 if __name__ == '__main__':
