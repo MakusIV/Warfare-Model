@@ -1,6 +1,6 @@
 ---
 name: project-session-2026-10-11-summary
-description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A e F5-B poi fatte il 2026-10-12, e723e82a e 90f2d4de), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
+description: "Sessione 2026-10-11 (ProArt P16) CHIUSA, committato e pushato (F5-A/B/C poi fatte il 2026-10-12, e723e82a, 90f2d4de, 4da618b1), suite 4039 OK: decisioni su fuoco/rilevamenti/test S3-S5 prese e implementate (F4b+, F4b++), test S3/S5 riprogettati, F4c fatta (aerei senza missione a terra), manuale DES aggiornato; prossimo: F5 (presenza e attese, postura nell'esito)"
 metadata:
   node_type: memory
   type: project
@@ -55,11 +55,19 @@ Presenza fuori dalla rotta + postura nell'esito cablate in `Session_Simulator`; 
 (da sostituire col modulo mappe). Utente: postura `destroyed` RIMANDATA, da rivalutare con F6. Strumento: nuova
 opzione `--ignore KEY` in `Scenario_Baseline`. Verifica fatta da me (suite + compare + doppia cattura byte-identica).
 
-## PROSSIMO: F5-C (una sessione, `des-developer` Opus medium, v. [[feedback-model-effort-delegation]])
-Azione WAIT (`hold` sosta, `orbit` orbita come presenza ferma con approssimazione dichiarata) con durata o fino a t,
-ETA effettive nel `MissionOutcome`, TOT comune, scenario CAP in orbita: attiva `F5_WAITS` (codice gia' scritto:
-`mission_holds`, `_wait_actions`). Stessa procedura (commit dedicato, verifica mia, fotografia con cambi attribuiti).
-Poi F6-F9. Comando fotografia: `PYTHONPATH=$PWD/Code:$PWD .direnv/python-3.12/bin/python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --compare Code/Dynamic_War_Manager/Source/Test/baseline/scenario_baseline.json`
+## F5-C FATTA (2026-10-12, commit `4da618b1`, pushato; suite 4131 OK, fotografia 522 esecuzioni)
+`F5_WAITS=True`: WAIT hold/orbit, ETA bloccate, TOT comune d'Operazione (`operation_tots`), `actual_etas` nel
+riassunto; scenario S23 (80 esecuzioni); nessuna esecuzione esistente cambiata. Orbita = presenza ferma nel punto
+(approssimazione dichiarata). Carburante nel tempo = F6. Verificata da me (suite, compare, doppia cattura identica).
+**Precisazione dell'utente sull'orbita (2026-10-12, DA RECEPIRE)**: l'orbita puo' avere una distanza di riferimento dal
+punto entro cui gli asset si muovono; in DCE le zone (CAP incluse) sono definite nel mission editor. Verificato nei
+documenti: ME `Orbit` = solo Race-Track/Circle + quota + velocita' (nessun raggio; Circle centrato sul waypoint,
+Race-Track fra waypoint corrente e successivo); raggio solo in `Search Then Engage in Zone` (`zoneRadius`, es. 5000 m,
+50000 nel .miz); DCE: zona CAP = refpoint (trigger zone ~5 m del base_mission, `DC_Refpoints.lua`) + `radius` dichiarato
+in `targetlist_init.lua` (50 km), racetrack generato da `ATO_RouteGenerator` (leg = vAttack*180 s). Il meccanismo
+«rotta di aereo non partecipante» dell'utente NON e' emerso dai file DCE disponibili (v. risposta in sessione).
+
+## PROSSIMO: raffinamento orbita/zone (da decidere con l'utente), poi F6 (fine missione e carburante nel tempo), F7-F9
 
 ## PROSSIME ATTIVITA' (in ordine proposto)
 1. **F5** — presenza, tempi e attese (D1.a/b, N2.b/c): tratti fermi prima/dopo la rotta in `Contact_Scheduler`,
