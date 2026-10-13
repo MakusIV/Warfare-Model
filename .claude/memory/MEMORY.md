@@ -1,6 +1,7 @@
 # Warfare-Model Project Memory
 
 ## Start here
+- [Sessione 2026-10-13 (osboxes) — CHIUSA, F6-B2 fatta (6b1b7225), suite 4224 OK](project_session_2026_10_13_summary.md) — RIPRESA SU ASUS ProArt P16 con git pull; PRIMA riproporre all'utente: installare baseline fotografia (+40 S26, cp negata), decisione S24-GLIDE (F6-B3), conferma scelte bingo; poi F7, F8, F9
 - [Sessione 2026-10-11/12 (ProArt P16) — CHIUSA 2026-10-12, tutto pushato (HEAD 15ac3d3d), suite 4195 OK, fotografia 722: F4b+/++, F4c, F5-A/B/C, TOT per missione, F6-A, F6-B1 FATTE](project_session_2026_10_11_summary.md) — RIPRESA SU osboxes con git pull (venv di quella macchina); prossimo F6-B2 (bingo a priori + in volo), poi F7 (prima proposta separata), F8, F9 (manuale: togliere 'TOT comune' in 03 e 10 + documentare F5/F6); orbita/zone CAP DCE rimandati (l'utente rivede codice DCE e .miz); test instabile noto testCalcFightResult
 - [Session 2026-10-08 (osboxes) — CHIUSA, tutto pushato, suite 3951 OK: F4b fatta (a4d8acf0, missione = unità di ingaggio), regola modelli/sforzi](project_session_2026_10_08_summary.md) — ripresa su ProArt P16 con git pull; decisioni su fuoco e test S3/S5 poi prese e chiuse il 2026-10-11
 - [Session 2026-10-05 (ProArt P16) — CHIUSA, tutto pushato, suite 3929 OK: struttura Missione F0-F3+F4a, doc missioni DCS ingerita, manuale DES a 533cd1f5](project_session_2026_10_05_summary.md) — ripresa con git pull; prossimo: F4b (missione = unità di ingaggio), F4c, poi F5-F9
