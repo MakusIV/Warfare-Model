@@ -39,7 +39,8 @@ spara (ruolo 'unarmed'). Varianti per seed:
 
 Blue-Flight: un F-16C 'Strike' (ruolo 'unarmed') a 5000 m da x = -100 km verso x = +100 km a 250 m/s,
 con carburante per 50 km (`AIR_FUEL_RANGE`): si esaurisce a 200 s in (-50 km, 0, 5000 m); raggio di
-planata 5000 x 10 = 50 km. Blue-Base / Red-Base: base aerea (Military 'Airbase') con un deposito
+planata 5000 x 10 = 50 km. Dalla F6-B2 la missione dichiara `EndCriteria(bingo=False)` (nessun rientro
+al bingo): lo scenario e' quello dell'esaurimento, il bingo e' in S26. Blue-Base / Red-Base: base aerea (Military 'Airbase') con un deposito
 (`Structure` 'Oil_Tank'). Red-Strike: 2 F-16C 'Strike' (ruolo 'strike', lanci DICHIARATI senza effetto
 contro gli aerei a terra, nessun tiro contro il deposito) che sorvolano il punto della base da sud a
 nord, sopra la base a ~840 s (dopo l'atterraggio in planata). Varianti per seed:
@@ -78,6 +79,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     ActionKind,
     AssetEndReason,
     AssetState,
+    EndCriteria,
     Mission,
     MissionAction,
     MissionAsset,
@@ -309,6 +311,10 @@ def _glide_scenario(variant: str) -> F.Scenario:
 
     mission, = F.missions_for(flight, [(FLIGHT_END_X, 0.0)], mission_type='Strike',
                               target=F.zone_target((FLIGHT_END_X, 0.0), 10_000.0), speed=AIR_SPEED)
+    # F6-B2: la missione dichiara di NON rientrare al bingo (`EndCriteria.bingo` False), cosi' lo scenario
+    # resta quello dell'esaurimento della F6-A anche con la base Blue (con il bingo l'aereo, sotto la riserva
+    # gia' alla partenza, tornerebbe subito verso la base: v. S26).
+    mission = dataclasses.replace(mission, end_criteria=EndCriteria(bingo=False))
     base_id, side = (RED_BASE, 'Red') if variant == 'enemy_base' else (BLUE_BASE, 'Blue')
     base = F.make_force(base_id, side, F.AIR_UNIT)
     bx, by = BASE_POSITION[variant]

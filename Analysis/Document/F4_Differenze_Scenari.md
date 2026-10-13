@@ -1378,3 +1378,169 @@ Suite 4195 test OK (7 skipped; +29 rispetto a 4166: 12 S25, 7 `Test_Engagement_R
 `Test_Tactical_Evaluation...testCalcFightResult` e' passato). Fotografia: prima delle modifiche
 `--compare` IDENTICA su 610; dopo, v. le tabelle sopra (cattura finale 722 esecuzioni, fuori dal
 repository).
+
+## F6 passo B2: bingo a priori e bingo in volo con rientro (F6-B2, decisione 14)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` (722 esecuzioni), ricontrollata IDENTICA
+al codice di partenza (`60b3b14e`) prima delle modifiche, 2026-10-13 (cattura fuori dal repository).
+**Dopo**: `Session_Simulator.F6_BINGO = True`. Con le fixture S24-GLIDE che dichiarano `bingo=False` (v.
+sotto) **nessuna delle 722 esecuzioni cambia**; 40 esecuzioni nuove (scenario S26). Con le fixture S24
+NON adeguate (bingo di default) cambierebbero 24 esecuzioni di S24-GLIDE, elencate sotto per
+l'accettazione dell'utente. Fotografia del repository NON rigenerata: cattura finale fuori dal repository
+(762 esecuzioni).
+
+### Il cambio
+
+1. **Riserva e punto di bingo** (`Fuel_Model`): `BINGO_RESERVE` (riserva [frazione del carico pieno], stima
+   sotto); `return_margin` = carburante attuale - fabbisogno dei tratti alla crociera (soste nel tempo come
+   nella F6-A) - rientro in linea retta 3D dall'ultimo punto alla base idonea piu' vicina (a quota 0) -
+   riserva; `bingo_point` = primo istante in cui il residuo basta appena per rientrare alla base piu' vicina
+   con la riserva. La condizione `H(t) = residuo - riserva - distanza dalla base piu' vicina` (in metri di
+   crociera) e' NON CRESCENTE lungo i tratti (la distanza da una base cambia al piu' di 1 m per metro
+   percorso), quindi il bingo e' unico e si calcola in forma chiusa per tratto (`u = (A^2 - |w|^2) / (2 (A +
+   w.e))` per base, massimo fra le basi). Esiste se e solo se il margine e' negativo.
+2. **Bingo a priori, validatore di pianificazione** (`Mission_Adapter.check_mission_bingo`): per ogni asset
+   di una missione AEREA con `EndCriteria.bingo` (default True) il margine sulla missione intera pianificata
+   (`airborne_legs`: andata, attese, ritorno, senza taglio alla sessione; le soste a terra non consumano)
+   deve essere >= 0, altrimenti `ValueError` con il motivo (quanto carburante manca, dove cadrebbe il bingo
+   in volo). Nessuna base idonea del lato: rifiuto. Missioni di terra/mare o con `bingo` False: non
+   controllate (None). Asset con carburante non modellato: non controllati.
+3. **Bingo in volo con rientro** (`Session_Simulator`, interruttore `F6_BINGO`): per un aereo di missione
+   aerea con `bingo` e almeno una base aerea del lato fra le forze passate, il bingo e' calcolato A MONTE sui
+   tratti che consumano (ritagliati alla sessione), prima dell'esaurimento e dello scheduler: i tratti oltre il
+   bingo non esistono; dal punto di bingo l'aereo vola in linea retta alla base piu' vicina (a quota 0, alla
+   crociera, come la planata della F6-A), poi resta A TERRA sulla base (programma `grounded`, postura
+   `parking_cold`); il rientro consuma (arriva con la riserva alla crociera). Dal bingo l'aereo non lancia piu'
+   salve offensive (`ActivityCriteria.until` del risolutore, il meccanismo della durata massima della F6-B1),
+   resta bersaglio e intercettore.
+4. **Esiti**: `AbortReason.BINGO` (nuovo); per asset BINGO all'istante del bingo (OPERATIONAL/DAMAGED), punti
+   successivi non raggiunti; missione con la regola unica della F6-B1, ABORTED(BINGO) (a parita' d'istante
+   dopo FUEL). A secco anche sul rientro (carburante insufficiente per la base gia' al bingo, es. alla
+   partenza): regole della F6-A sui tratti col rientro (planata su base raggiungibile -> ABORTED(FUEL),
+   altrimenti DESTROYED/FUEL_EXHAUSTED), motivo dell'asset FUEL_EXHAUSTED (l'ultimo fatto).
+5. Senza base idonea, con `bingo` False o con l'interruttore spento: nessun rientro, l'aereo vola fino
+   all'esaurimento (F6-A). Terra e mare: nessun bingo (invariati, fermi nel punto di esaurimento).
+
+Decisioni non coperte dal Piano, scelte le piu' semplici (DA CONFERMARE):
+- **il validatore NON e' chiamato da `run_session`**: e' del pianificatore (il futuro C2, o il validatore di
+  sessione della F8). Motivi: l'esecutore (sintetico o DCS, "RTB on bingo") esegue l'ordine e fa tornare
+  l'aereo, non rifiuta; e, poiche' a priori e in volo usano lo stesso criterio alla crociera, un rifiuto
+  dentro `run_session` renderebbe il bingo in volo irraggiungibile (e farebbe sollevare `run_session` sugli
+  scenari di esaurimento S24). Equivalenza verificata in S26: la missione rifiutata a priori e' esattamente
+  quella che in sessione torna al bingo, allo stesso istante;
+- **base idonea** = qualunque base aerea del lato (`air_base_points`, come la planata della F6-A); idoneita'
+  per tipo d'aereo (pista, portaerei, elicotteri) non modellata;
+- **`EndCriteria.bingo` False** = nessun controllo a priori e nessun rientro in volo (la missione dichiara di
+  non rientrare al bingo);
+- **dal bingo l'aereo non lancia piu'** (fine di attivita' come la F6-B1: la decisione 14 non dice nulla sul
+  tiro; il rientro e' una fine di attivita' dichiarata dalla dottrina "RTB on bingo");
+- **rientro in linea retta 3D** dal punto di bingo alla base a quota 0 (stessa convenzione della planata):
+  l'aereo scende lungo tutto il rientro, quindi se resta a secco sul rientro la quota (e il raggio di
+  planata) e' minore di quella di crociera;
+- il bingo e' valutato sui tratti RITAGLIATI ALLA SESSIONE (come l'esaurimento della F6-A): una missione che
+  arriverebbe al bingo dopo la fine della sessione non torna in questa sessione; a priori invece si valuta la
+  missione intera;
+- **interruttore indipendente** da `F6_FUEL_CONSTRAINT`: con il vincolo spento il bingo resta attivo (e'
+  una regola di condotta, non il vincolo del carburante);
+- precedenza a parita' d'istante fra i motivi d'aborto: FUEL, BINGO, AMMUNITION, DAMAGE.
+
+### Costanti stimate
+
+- `Fuel_Model.BINGO_RESERVE = 0.10` del carico pieno: STIMA DI PROGETTO, non un dato tarato (nessuna riserva
+  per tipo d'aereo nei registri); ordine di grandezza delle riserve finali di dottrina (10% del carburante,
+  20-30 minuti in attesa), unica per tutti gli aerei.
+- Scenario S26: costanti DI TEST dichiarate (carburante 0,3 e 0,15 del pieno, sensore 'air' del sito Red 40
+  km, tiro a precisione 0, velocita' 250 m/s, quota 5000 m), soglia `MIN_FIRING_FRACTION` = 0,5 dichiarata di
+  test (stessa stima di S22-S25).
+
+### Come si attribuiscono le differenze
+
+Catture fuori dal repository (script nello scratchpad che imposta `F6_BINGO` prima di
+`Scenario_Baseline.main`; mai un worktree):
+
+| Cattura | Contro | Esito |
+|---|---|---|
+| codice di partenza (`60b3b14e`) | base del repository | IDENTICA (722) |
+| finale con `F6_BINGO` spento | base del repository | IDENTICA sulle 722, 40 nuove (S26) |
+| finale con `F6_BINGO` attivo, S24-GLIDE con il bingo di default | codice di partenza | 24 cambiate (S24-GLIDE, tabella sotto), 40 nuove |
+| finale (`F6_BINGO` attivo, S24-GLIDE `bingo=False`) | base del repository | IDENTICA sulle 722, 40 nuove |
+| finale | finale con `F6_BINGO` spento | cambiano solo le 8 esecuzioni S26 'bingo' (il rientro) |
+
+Quindi: nessuna fixture esistente oltre a S24-GLIDE ha un aereo di missione che arriva al bingo con una
+base aerea del suo lato fra le forze passate (dove le basi ci sono, il carburante basta con la riserva).
+
+### Esecuzioni che cambierebbero con il bingo di default (24 su 722, solo S24-GLIDE)
+
+Cattura con `F6_BINGO` attivo e la missione di S24-GLIDE con il bingo di DEFAULT (`bingo=True`), contro il
+codice di partenza: cambiano le 24 esecuzioni `S24-GLIDE/S24-GLIDE-{0..7}/{glide,no_base,off}`, nient'altro
+(`enemy_base` no: il lato Blue non ha basi). Con 50 km di carburante (0,032 del pieno) l'F-16C e' sotto la
+riserva (0,1) gia' alla partenza: bingo a t = 0 e rientro verso la base Blue.
+
+| Variante (8 seed ciascuna) | Campi cambiati | Entita' |
+|---|---|---|
+| `glide` (base a 20 km dal punto di esaurimento) | `fuel`, `assets` (F-16C e strike Red), `postures`, `engagements`, `force_outcomes.Blue-Flight`, `ammunition_*`, `damage_events`, `counts.{rounds,salvos,damage_events}`, `fuel` dello strike | rientro verso la base a 54 km dalla partenza: a secco a 187,5 s sul rientro, a ~380 m di quota (il rientro scende verso la base: raggio di planata ~3,8 km, base a ~4,1 km): PERSO (salute 0, postura `parking_cold` -> `destroyed`), lo strike Red non trova piu' l'aereo a terra (64 -> 0 lanci senza effetto) |
+| `no_base` (base Blue a 60 km da x = -50 km) | `fuel` (solo l'istante dell'evento) | rientro verso la base lontana: a secco a 187,5 s invece di 200 s (alla crociera di 266,7 m/s invece dei 250 m/s di rotta), perso come prima |
+| `off` (`F6_FUEL_CONSTRAINT` spento) | `fuel`, `actual_etas`, `postures`, lanci/danni dello strike | col vincolo spento il bingo resta attivo (interruttori indipendenti): rientro a t = 0, l'aereo vola a secco fino alla base (54 km, 202,8 s) e resta a terra (`off_scene` -> `parking_cold`); ultimo punto non raggiunto (ETA 800 -> None); lo strike Red lo trova a terra (0 -> 64 lanci) |
+
+Per tenere S24-GLIDE come scenario dell'esaurimento della F6-A, la sua missione dichiara ora
+`EndCriteria(bingo=False)` (il rientro al bingo e' coperto da S26): con questa scelta la cattura finale e'
+IDENTICA sulle 722. Se l'utente preferisce tenere il bingo di default anche in S24-GLIDE, le 24 esecuzioni
+sopra vanno accettate e i test di S24-GLIDE riscritti.
+
+### Scenario nuovo S26 (`Test_Session_Scenarios_S26.py`, 40 esecuzioni, 7 test)
+
+**S26-BINGO** (8 seed, 5 varianti): F-16C 'Strike' (autonomia di crociera del registro col loadout 'Strike'
+1570 km, crociera 266,7 m/s) in volo a 5000 m da (10 km, 0) a (310 km, 0) a 250 m/s; base Blue in (0, 0);
+BMP-2 Red in (260 km, 0) con sensore 'air' dichiarato di 40 km e tiro senza effetto.
+- 'bingo' (carburante 0,3): il validatore RIFIUTA ("0.1886 of a full load is missing ... bingo at
+  t=607.8 s"); in sessione bingo a 607,8 s in (161,96 km, 0, 5000) (lo stesso istante annunciato dal
+  validatore, e quello ricavato nel test per bisezione), rientro e atterraggio a 1215,5 s con 0,1 a bordo
+  (la riserva), BINGO/OPERATIONAL, ABORTED(BINGO), ETA (0, None), postura `parking_cold`, due FuelEvent; Red
+  non spara mai (0 colpi in 8/8);
+- 'none' (pieno): validatore accetta (margine 0,511); rotta completata, Red spara in 8/8 (26-28 colpi, primo
+  fra 872 e 889 s);
+- 'switch_off' (0,3, `F6_BINGO` spento): rotta completata come prima, Red spara in 8/8 come in 'none'
+  (carburante finale 0,037: il volo e' contato al regime di combattimento);
+- 'no_base' (0,15, nessuna base Blue): validatore rifiuta ("no suitable air base"); nessun rientro,
+  esaurimento a 942 s (235,5 km), perso (DESTROYED/FUEL_EXHAUSTED, postura `destroyed`); Red spara 5-6
+  colpi prima dell'esaurimento;
+- 'bingo_off' (0,15, base, `EndCriteria(bingo=False)`): validatore non controlla; identico a 'no_base'
+  (base a ~245 km, oltre il raggio di planata).
+Controllo con `F6_BINGO` spento su tutto il file (sonda fuori dal repository): 4 test su 7 falliscono
+(passano il test del validatore, che non dipende dall'interruttore, e i due dei soli controlli): lo scenario
+distingue la F6-B2.
+
+### Test
+
+- `Test_Fuel_Model.TestBingo` (nuova, 9 test): riserva dichiarata, margine, bingo in un tratto di movimento,
+  in una sosta, alla partenza, base davanti, rientro 3D con la riserva, nessun controllo senza carburante,
+  basi o tratti, base piu' vicina deterministica.
+- `Test_Mission_Adapter.TestBingoValidator` (nuova, 7 test): accettata con il margine, rifiutata, riserva di
+  default, nessuna base, non applicabile (terra, `bingo` False), carburante non modellato, orbita che consuma
+  e sosta a terra che non consuma.
+- `Test_Session_Simulator.TestBingo` (nuova, 6 test): rientro sulla base piu' vicina con la riserva,
+  interruttore spento, nessun bingo senza base o con `bingo` False, carburante sufficiente, nessuna salva
+  dopo il bingo (`until` al risolutore), a secco sul rientro (perso). `TestFuelExhaustion._dry_flight`
+  dichiara `bingo=False` (test della F6-A).
+- `Test_Session_Scenarios_S24`: la missione di S24-GLIDE dichiara `bingo=False` (scenario dell'esaurimento).
+- `Test_Session_Scenarios_S26` (nuovo, 7 test); `Scenario_Baseline`: unita' S26-BINGO in coda.
+
+### Limiti noti
+
+- Bingo calcolato alla CROCIERA come l'esaurimento: un aereo che combatte consuma di piu' nella contabilita'
+  (regime 'max') e puo' arrivare a secco prima della base senza ri-scheduling.
+- Riserva unica per tutti gli aerei (stima); idoneita' della base per tipo d'aereo non modellata; rientro in
+  linea retta senza quota di rientro, rotte di avvicinamento ne' terreno.
+- Il validatore non e' chiamato da nessun codice di produzione (non esiste ancora un pianificatore); il
+  validatore di sessione della F8 potra' chiamarlo.
+- Il bingo e' valutato nella sola sessione (tratti ritagliati alla sessione).
+- `MISSION_ABORTED` (gregari che seguono il capo che rientra, D3.d) non prodotto: ogni aereo ha il proprio
+  bingo.
+
+### Verifica
+
+Suite 4224 test OK (7 skipped; +29 rispetto a 4195: 7 S26, 9 `Test_Fuel_Model`, 7 `Test_Mission_Adapter`, 6
+`Test_Session_Simulator`; adeguati senza cambiare il numero `Test_Session_Simulator.TestFuelExhaustion` e S24
+(`bingo=False`); il test instabile preesistente `Test_Tactical_Evaluation...testCalcFightResult` e' passato).
+Fotografia: prima delle modifiche IDENTICA su 722; dopo, v. le tabelle sopra (cattura finale 762 esecuzioni,
+fuori dal repository).

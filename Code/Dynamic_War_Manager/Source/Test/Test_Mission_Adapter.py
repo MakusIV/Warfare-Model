@@ -17,6 +17,7 @@ from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
 from Code.Dynamic_War_Manager.Source.Logic import Contact_Scheduler as CS
+from Code.Dynamic_War_Manager.Source.Logic import Fuel_Model as FM
 from Code.Dynamic_War_Manager.Source.Logic import Mission_Adapter as MA
 
 _LOGGERS = ['Code.Dynamic_War_Manager.Source.' + name + '.logger'
@@ -997,3 +998,73 @@ class TestAirBaseArea(_Base):
         self.assertFalse(MA.lands_on_air_base(mission, far))
         movement, = MA.mission_movements(mission, 0.0, near)
         self.assertTrue(movement.present_after and movement.grounded_after)
+
+
+# ── BINGO A PRIORI (F6-B2) ────────────────────────────────────────────────────
+
+class _FuelAsset:
+    """Asset minimo con carburante (frazione del pieno), autonomia [m] e crociera [m/s], come `Mobile`."""
+
+    def __init__(self, asset_id='a1', fuel=1.0, autonomy=100_000.0, cruise=200.0):
+        self.id = asset_id
+        self.fuel = fuel
+        self._autonomy = autonomy
+        self.speed = {'nominal': cruise, 'max': cruise}
+
+    def fuel_for_distance(self, distance, regime='nominal'):
+        return None if self._autonomy is None else distance / self._autonomy
+
+
+class TestBingoValidator(_Base):
+    """`check_mission_bingo`: la missione aerea che non rientra con la riserva e' rifiutata (F6-B2).
+    Rotta di 40 km a 3000 m, base alla partenza (0, 0): andata 40 km + rientro ~40,1 km (3D)."""
+
+    BASE = ((0.0, 0.0),)
+
+    def test_enough_fuel_is_accepted_with_its_margin(self):
+        margins = MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
+        rate = 1.0 / 100_000.0
+        expected = 1.0 - 40_000.0 * rate - math.hypot(40_000.0, 3_000.0) * rate - 0.1
+        self.assertAlmostEqual(margins['a1'], expected, delta=1e-12)
+
+    def test_not_returning_with_the_reserve_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "'a1' does not return with the fuel reserve"):
+            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=0.85)}, self.BASE, reserve=0.1)
+
+    def test_default_reserve_is_the_fuel_model_one(self):
+        fuel = 0.4 + math.hypot(40_000.0, 3_000.0) / 100_000.0 + FM.BINGO_RESERVE
+        self.assertIsNotNone(MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=fuel + 1e-6)}, self.BASE))
+        with self.assertRaises(ValueError):
+            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=fuel - 1e-6)}, self.BASE)
+
+    def test_no_suitable_base_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, 'no suitable air base'):
+            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, ())
+
+    def test_not_applicable(self):
+        """Missione di terra, o `EndCriteria.bingo` False: nessun controllo (None)."""
+        no_bingo = _mission(end_criteria=MT.EndCriteria(bingo=False))
+        self.assertIsNone(MA.check_mission_bingo(no_bingo, {'a1': _FuelAsset(fuel=0.01)}, ()))
+        self.assertIsNone(MA.check_mission_bingo(_ground_mission(), {'t1': _FuelAsset('t1', fuel=0.0)}, ()))
+
+    def test_unmodelled_fuel_is_not_checked(self):
+        self.assertEqual(MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=None)}, self.BASE), {})
+        self.assertEqual(MA.check_mission_bingo(_mission(), {}, self.BASE), {})
+
+    def test_holds_consume_and_ground_stays_do_not(self):
+        """Un'orbita di 600 s alla crociera (120 km equivalenti) rende la missione non rientrabile; una sosta
+        A TERRA di 6000 s prima del decollo (parcheggio) non consuma."""
+        route = _three_points()
+        orbit = _mission(route=route, waypoints=_with_actions(route, {1: [_wait('orbit', 600.0)]}))
+        with self.assertRaises(ValueError):
+            MA.check_mission_bingo(orbit, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
+
+        route = _route([(0, 0, 3000), (40_000, 0, 3000)])
+        roles = [MT.WaypointRole.DEPARTURE, MT.WaypointRole.LAND]
+        parked = _mission(route=route, waypoints=_with_actions(route, {0: [_wait('hold', 6_000.0)]}, roles=roles),
+                          start_mode=MT.StartMode.PARKING_COLD)
+        movement, = MA.mission_movements(parked)
+        self.assertEqual([FM.is_stationary(leg) for leg in MA._timeline(movement)[0]], [True, False])
+        self.assertEqual(len(MA.airborne_legs(movement)), 1)
+        self.assertIsNotNone(MA.check_mission_bingo(parked, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1))
+

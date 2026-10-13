@@ -48,6 +48,18 @@ Dalla F6-A:
     quota x `GLIDE_RATIO` (stima dichiarata, sotto).
 Il carburante di partenza e il rifornimento NON cambiano (rifornimento: F8).
 
+## Bingo (F6-B2 del piano della Missione, decisione 14)
+
+  * **margine di rientro** (`return_margin`): carburante attuale - fabbisogno dei tratti alla crociera -
+    rientro in linea retta dall'ultimo punto alla base idonea piu' vicina - riserva `BINGO_RESERVE`
+    (stima dichiarata, sotto). E' il controllo A PRIORI del validatore
+    (`Mission_Adapter.check_mission_bingo`): margine negativo = la missione non rientra con la riserva;
+  * **punto di bingo** (`bingo_point`): il primo istante in cui il residuo basta appena per rientrare
+    alla base piu' vicina con la riserva; l'orchestratore lo usa PRIMA dello scheduler per far tornare
+    l'aereo (v. `Session_Simulator`, "Bingo"). Esiste se e solo se il margine e' negativo: con lo stesso
+    carburante e le stesse basi la missione rifiutata a priori e' esattamente quella che in volo arriva
+    al bingo (al regime di crociera).
+
 ## Cosa NON fa
 - Non integra il consumo nel risolutore d'ingaggio: `Engagement_Resolver` non modella il
   movimento fra un contatto e l'altro. L'orchestratore tronca i tratti all'esaurimento prima di
@@ -406,3 +418,188 @@ def nearest_reachable_base(point: Sequence[float], bases: Iterable[Tuple[float, 
             best = (distance, float(bx), float(by))
 
     return None if best is None else (best[1], best[2])
+
+
+# ── BINGO: RIENTRO CON LA RISERVA (F6-B2) ─────────────────────────────────────
+#
+# Bingo = il carburante residuo basta appena per rientrare alla base idonea piu' vicina con la
+# riserva `BINGO_RESERVE`. In metri di crociera (`E` = residuo / consumo per metro alla crociera,
+# `R` = riserva / consumo per metro, `d` = distanza in linea retta dalla base piu' vicina):
+#
+#     H(t) = E(t) - R - min_b d_b(P(t))        bingo al primo istante con H(t) <= 0
+#
+# `H` e' NON CRESCENTE lungo i tratti che consumano: in movimento E cala di 1 m per metro percorso e
+# la distanza da una base cambia al piu' di 1 m per metro (|d'| <= 1); in sosta E cala e d e' costante.
+# Per un tratto di movimento e una base b, con A = E all'inizio del tratto - R, w = P0 - B e versore e,
+# `A - u = |w + u e|` ha la soluzione unica u = (A^2 - |w|^2) / (2 (A + w.e)); il bingo nel tratto e'
+# il MASSIMO degli u_b (H <= 0 quando TUTTE le basi sono fuori portata). Nessuna estrazione casuale.
+# Il rientro e' in linea retta 3D dal punto alla base a quota 0 (stessa convenzione della planata:
+# terreno non modellato), consumato al regime di crociera: arriva con la riserva.
+
+# Riserva di carburante [frazione del carico pieno] con cui un aereo deve rientrare (F6-B2). STIMA DI
+# PROGETTO, NON UN DATO TARATO: i registri non hanno una riserva per tipo d'aereo. 0,10 del carico pieno
+# e' l'ordine di grandezza delle riserve finali di dottrina (10% del carburante, o 20-30 minuti di volo
+# in attesa), unica per tutti gli aerei; da sostituire con un dato per modello o con la dottrina del lato.
+BINGO_RESERVE = 0.10
+
+
+@dataclass(frozen=True)
+class BingoPoint:
+    """Istante e punto del bingo di un asset lungo i suoi tratti (F6-B2), calcolati A MONTE.
+
+    Attributes:
+        asset_id: id di dominio.
+        time/point: istante assoluto [s] e posizione (x, y, z) del bingo, interpolata nel tratto.
+        leg_index: indice del tratto (nella sequenza passata a `bingo_point`) in cui cade.
+        base: punto d'atterraggio (x, y, 0) della base idonea piu' vicina al punto di bingo.
+        fuel: carburante residuo [frazione] al bingo.
+        margin: margine [frazione] a fine tratti: residuo - rientro dall'ultimo punto - riserva (< 0:
+            e' il carburante che manca per rientrare con la riserva, v. `return_margin`).
+    """
+    asset_id: str
+    time: float
+    point: Tuple[float, float, float]
+    leg_index: int
+    base: Tuple[float, float, float]
+    fuel: float
+    margin: float
+
+
+def nearest_base(point: Sequence[float], bases: Iterable[Tuple[float, float]]
+                 ) -> Optional[Tuple[float, Tuple[float, float, float]]]:
+    """(distanza 3D, punto d'atterraggio (x, y, 0)) della base piu' vicina a `point`, None senza basi.
+
+    A parita' di distanza vince la coppia (x, y) minore: deterministico, mai l'ordine d'ingresso."""
+    best = None
+
+    for bx, by in bases:
+        landing = (float(bx), float(by), 0.0)
+        distance = math.dist(tuple(float(c) for c in point), landing)
+
+        if best is None or (distance, landing[0], landing[1]) < (best[0], best[1][0], best[1][1]):
+            best = (distance, landing)
+
+    return best
+
+
+def _cruise_rate(asset) -> Optional[float]:
+    """Consumo [frazione per metro] alla crociera (`fuel_for_distance` e' lineare nella distanza)."""
+    fuel_for_distance = getattr(asset, 'fuel_for_distance', None)
+
+    if getattr(asset, 'fuel', None) is None or not callable(fuel_for_distance):
+        return None
+
+    rate = fuel_for_distance(1.0, HOLD_REGIME)
+    return rate if rate is not None and rate > 0.0 else None
+
+
+def return_margin(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], reserve: float = BINGO_RESERVE,
+                  hold_regime: str = HOLD_REGIME) -> Optional[float]:
+    """Margine [frazione del carico pieno] a fine `legs`: carburante attuale - fabbisogno dei tratti (alla
+    crociera, soste nel tempo come `leg_fuel_demand`) - rientro in linea retta dall'ultimo punto alla base
+    piu' vicina - `reserve`. >= 0: l'asset rientra con la riserva.
+
+    Returns:
+        Il margine, oppure None se il carburante non e' modellato, non ci sono tratti o basi (nessun
+        controllo possibile: il chiamante decide).
+    """
+    bases = tuple(bases)
+    rate = _cruise_rate(asset)
+
+    if rate is None or not legs or not bases:
+        return None
+
+    remaining = float(asset.fuel)
+
+    for leg in legs:
+        demand = leg_fuel_demand(asset, leg, HOLD_REGIME, hold_regime)
+
+        if demand is None:
+            return None
+
+        remaining -= demand
+
+    distance, _ = nearest_base(legs[-1].p_end, bases)
+    return remaining - rate * distance - float(reserve)
+
+
+def bingo_point(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], reserve: float = BINGO_RESERVE,
+                hold_regime: str = HOLD_REGIME) -> Optional[BingoPoint]:
+    """Il bingo di `asset` lungo `legs` (F6-B2): il primo istante in cui il residuo basta appena per
+    rientrare alla base piu' vicina di `bases` con la riserva (regola e formula sopra), calcolato A MONTE
+    alla crociera sul carburante attuale (non mutato).
+
+    Args:
+        legs: i tratti che CONSUMANO, in ordine di tempo (come `fuel_exhaustion`).
+        bases: posizioni (x, y) delle basi idonee (in sessione: `Mission_Adapter.air_base_points` del lato).
+
+    Returns:
+        Il `BingoPoint`, oppure None se l'asset rientra con la riserva dalla fine dei tratti
+        (`return_margin` >= 0, a meno del rumore `_FUEL_EPS`) o se il controllo non e' possibile
+        (carburante non modellato, nessun tratto, nessuna base).
+    """
+    bases = tuple(bases)
+    margin = return_margin(asset, legs, bases, reserve, hold_regime)
+    asset_id = _domain_id(asset)
+
+    if margin is None or asset_id is None or margin >= -_FUEL_EPS:
+        return None
+
+    rate = _cruise_rate(asset)
+    landings = [(float(bx), float(by), 0.0) for bx, by in bases]
+    remaining = float(asset.fuel)
+    found = None
+
+    for index, leg in enumerate(legs):
+        demand = leg_fuel_demand(asset, leg, HOLD_REGIME, hold_regime)
+        start = tuple(float(c) for c in leg.p_start)
+        reach = (remaining - float(reserve)) / rate       # A: metri di crociera oltre la riserva
+
+        if is_stationary(leg):
+            gap = reach - nearest_base(start, bases)[0]
+            spent = demand / rate
+
+            if gap <= 0.0:
+                fraction = 0.0
+            elif spent > 0.0 and gap <= spent:
+                fraction = gap / spent
+            else:
+                fraction = None
+        else:
+            end = tuple(float(c) for c in leg.p_end)
+            length = _leg_length(leg)
+            direction = tuple((e - s) / length for s, e in zip(start, end))
+            crossing = 0.0
+
+            for landing in landings:
+                w = tuple(s - b for s, b in zip(start, landing))
+                distance0 = math.sqrt(sum(c * c for c in w))
+
+                if reach - distance0 <= 0.0:
+                    u = 0.0
+                elif reach - length - math.dist(end, landing) > 0.0:
+                    u = math.inf
+                else:
+                    u = (reach * reach - distance0 * distance0) / (2.0 * (reach + sum(a * b for a, b in zip(w, direction))))
+                    u = min(max(u, 0.0), length)
+
+                crossing = max(crossing, u)
+
+            fraction = None if math.isinf(crossing) else crossing / length
+
+        if fraction is not None:
+            found = (index, leg, min(max(fraction, 0.0), 1.0), remaining - fraction * demand)
+            break
+
+        remaining -= demand
+
+    if found is None:
+        # Non puo' accadere con H non crescente e margine negativo, se non per arrotondamento: bingo a fine tratti.
+        found = (len(legs) - 1, legs[-1], 1.0, remaining)
+
+    index, leg, fraction, fuel = found
+    time = float(leg.t_start) + fraction * _leg_duration(leg)
+    point = tuple(float(s) + fraction * (float(e) - float(s)) for s, e in zip(leg.p_start, leg.p_end))
+    _, base = nearest_base(point, bases)
+    return BingoPoint(asset_id=asset_id, time=time, point=point, leg_index=index, base=base,
+                      fuel=max(0.0, fuel), margin=margin)

@@ -287,7 +287,8 @@ sulla rotta pianificata, resta presente e bersaglio. Il risolutore riceve `activ
   intercettazioni consumano le stesse voci); **danno** = salute persa / salute all'ingresso nella run
   >= soglia; **bersaglio distrutto** = tutti i bersagli distrutti, nella run (istante della risoluzione
   che li distrugge) o fuori (`destroyed_targets`, anche un istante futuro: la fine vale da li');
-  **fine nota a monte** (`until`: durata massima, winchester gia' all'inizio) letta come gli altri.
+  **fine nota a monte** (`until`: durata massima, winchester gia' all'inizio, bingo della F6-B2) letta
+  come gli altri.
 Le fini scattate sono in `EngagementResult.activity_ends`. Senza criteri (default) ogni percorso e'
 quello di prima: stesse estrazioni, stessi esiti.
 
@@ -688,7 +689,8 @@ class ActivityCriteria:
             (in una run gia' risolta, prima della sessione, o persi per carburante a un istante noto
             a monte), anche in un istante futuro rispetto agli eventi della run.
         until: istante dal quale l'asset non lancia piu' (fine di attivita' nota a monte: durata
-            massima, winchester gia' all'inizio), None = nessuno. Il motivo lo riporta la sessione.
+            massima, winchester gia' all'inizio, bingo con rientro della F6-B2), None = nessuno. Il motivo
+            lo riporta la sessione.
     """
     winchester_weapons: FrozenSet[str] = frozenset()
     damage_threshold: Optional[float] = None

@@ -188,7 +188,7 @@ rotta pianificata, resta presente, bersaglio e intercettore (v. "Fine di attivit
 Per asset la fine e' la PRIMA fra quelle scattate (a parita' d'istante: danno, winchester, bersaglio,
 durata) se cade nella sessione e prima dell'esaurimento del carburante; un asset che completa la rotta
 PRIMA della fine di attivita' resta ROUTE_COMPLETED, un arrivo DOPO non completa la missione.
-`abort_on_threat` e `bingo` NON sono letti (bingo: F6-B2; minaccia: fuori dal piano della F6).
+`abort_on_threat` NON e' letto (fuori dal piano della F6); `bingo` lo legge la F6-B2 (v. "Bingo").
 
 **Stato di missione, regola unica** (sostituisce la precedenza provvisoria della F6-A):
 DESTROYED (tutti gli asset persi, anche per carburante) > COMPLETED (obiettivo raggiunto: con
@@ -349,7 +349,38 @@ regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'.
 - un asset distrutto a meta' rotta consuma comunque il tragitto (troncato) intero (il carburante di un
   relitto non ha conseguenze di campagna);
 - un asset senza rotta (fermo) non produce FuelEvent; il carburante di partenza e il rifornimento non
-  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B2.
+  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B2 (sotto).
+
+## Bingo (F6-B2 del piano della Missione, decisione 14 dell'utente)
+
+Interruttore `F6_BINGO` (attivo). Per ogni aereo di una missione AEREA con `EndCriteria.bingo` (default
+True) e con almeno una base aerea del suo lato fra le forze passate (`Mission_Adapter.air_base_points`;
+"base idonea" = qualunque base aerea amica, come la planata della F6-A: l'idoneita' per tipo d'aereo non
+e' modellata), il bingo e' calcolato A MONTE sui tratti che consumano, prima dell'esaurimento e dello
+scheduler (`Fuel_Model.bingo_point`, alla crociera): il primo istante in cui il residuo basta appena per
+rientrare in linea retta alla base piu' vicina con la riserva `Fuel_Model.BINGO_RESERVE` (stima). Se
+l'aereo rientra con la riserva dalla fine dei suoi tratti nella sessione, nessun bingo. Altrimenti
+(`_bingo_end`, `BingoEnd`):
+  * i tratti oltre il bingo NON esistono: dal punto di bingo l'aereo vola in linea retta alla base piu'
+    vicina (punto d'atterraggio = l'asset di base a quota 0, alla crociera dell'asset, come la planata)
+    e resta A TERRA sulla base fino a fine sessione (programma `grounded` dall'atterraggio, bersaglio di
+    superficie passivo, postura `parking_cold`); i tratti con il rientro vanno a scheduler e risolutore e
+    al carburante (il rientro consuma: arriva con la riserva alla crociera);
+  * dal bingo l'aereo NON lancia piu' salve offensive (fine di attivita' nota a monte, `until` del
+    risolutore, come la durata massima della F6-B1), resta bersaglio e intercettore;
+  * esito per asset BINGO all'istante del bingo (stato OPERATIONAL/DAMAGED), punti successivi non
+    raggiunti; per la missione la regola unica della F6-B1 con il motivo ABORTED(BINGO) (a parita'
+    d'istante dopo FUEL);
+  * a secco anche sul rientro (carburante gia' insufficiente per raggiungere la base, es. al decollo):
+    le regole della F6-A sui tratti col rientro (planata su una base raggiungibile, ABORTED(FUEL); altrimenti
+    perso, DESTROYED/FUEL_EXHAUSTED); il motivo dell'asset e' l'ultimo fatto, FUEL_EXHAUSTED.
+Senza base idonea, o con `bingo` False, nessun rientro: l'aereo vola fino all'esaurimento (F6-A). Terra e
+mare non hanno bingo (fermi nel punto di esaurimento, F6-A).
+Il bingo A PRIORI e' del pianificatore (`Mission_Adapter.check_mission_bingo`, non chiamato qui): stesso
+criterio, quindi la missione che quel validatore rifiuta e' esattamente quella che qui torna al bingo.
+Limiti: il bingo e' calcolato alla CROCIERA come l'esaurimento (un aereo che combatte consuma di piu' nella
+contabilita' e puo' arrivare a secco prima della base senza ri-scheduling); rientro in linea retta senza
+quota di rientro ne' terreno; la riserva e' unica per tutti gli aerei.
 
 ## Sessione aperta (`SessionOrder.t_end is None`)
 
@@ -371,6 +402,7 @@ attivita', con un log. I contatti invece sono cercati solo dentro la sessione.
 - Nessun componente LLM, in nessuna forma.
 """
 
+import dataclasses
 import heapq
 import json
 from dataclasses import dataclass
@@ -444,6 +476,15 @@ F6_FUEL_CONSTRAINT = True
 F6_END_CRITERIA = True
 F6_DESTROYED_POSTURE = True
 
+# F6-B2, interruttore dedicato (stessa ragione dei precedenti):
+#   * `F6_BINGO` (ATTIVO): bingo in volo con rientro (v. "Bingo" nel docstring): un aereo di una missione
+#     con `EndCriteria.bingo` che arriva al bingo (`Fuel_Model.bingo_point`, riserva
+#     `Fuel_Model.BINGO_RESERVE`) torna in linea retta alla base aerea del suo lato piu' vicina, smette di
+#     lanciare salve offensive dal bingo, e l'esito e' BINGO / ABORTED(BINGO). Spento: nessun bingo, l'aereo
+#     vola fino all'esaurimento (come la F6-A/F6-B1). Il bingo A PRIORI (`Mission_Adapter.check_mission_bingo`)
+#     e' del pianificatore e non dipende dall'interruttore.
+F6_BINGO = True
+
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
 FUEL_GLIDE = 'glide'    # aereo in volo: planata sulla base raggiungibile piu' vicina, poi a terra
@@ -469,6 +510,23 @@ class FuelEnd:
     landing_time: Optional[float] = None
     landing_point: Optional[Tuple[float, float, float]] = None
     on_ground: bool = False
+
+
+@dataclass(frozen=True)
+class BingoEnd:
+    """Rientro di un aereo al bingo (F6-B2), calcolato a monte.
+
+    Attributes:
+        asset_id: id di dominio.
+        time/point: istante [s] e posizione (x, y, z) del bingo (`Fuel_Model.BingoPoint`).
+        landing_point: punto d'atterraggio (x, y, 0) sulla base idonea piu' vicina al punto di bingo.
+        landing_time: fine del rientro in linea retta alla crociera dell'asset.
+    """
+    asset_id: str
+    time: float
+    point: Tuple[float, float, float]
+    landing_point: Tuple[float, float, float]
+    landing_time: float
 
 
 # ── IDENTITA' ─────────────────────────────────────────────────────────────────
@@ -895,6 +953,66 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
     return postures
 
 
+# ── BINGO: RIENTRO IN VOLO (F6-B2) ────────────────────────────────────────────
+
+def _bingo_end(asset, asset_id: str, consuming, air_bases) -> Optional[BingoEnd]:
+    """Bingo dell'aereo sui suoi tratti che consumano e suo rientro (F6-B2), o None se rientra con la
+    riserva dalla fine dei tratti (o il controllo non e' possibile).
+
+    Rientro in linea retta dal punto di bingo alla base del lato piu' vicina (`Fuel_Model.bingo_point`),
+    alla crociera dell'asset (in mancanza quella del tratto in corso), come la planata della F6-A."""
+    bingo = FM.bingo_point(asset, consuming, air_bases)
+
+    if bingo is None:
+        return None
+
+    speed = FM.cruise_speed(asset) or _moving_speed(consuming, bingo.time)
+    length = sqrt(sum((e - s) ** 2 for s, e in zip(bingo.point, bingo.base)))
+    duration = length / speed if speed else 0.0
+    return BingoEnd(asset_id, bingo.time, bingo.point, bingo.base, bingo.time + duration)
+
+
+def _legs_after_bingo(legs, end: BingoEnd, t0: float, session_end: float, park: bool) -> List[CS.Leg]:
+    """Tratti dell'asset fino al bingo, poi il rientro in linea retta sulla base (F6-B2) e, con `park`
+    (tratti di presenza), la sosta a terra sulla base fino alla fine della sessione. Senza tratti degeneri."""
+    kept = [leg for leg in CS.clamp_legs(legs, t0, end.time) if leg.duration > CS.TIME_EPS]
+    kept.append(CS.Leg(t_start=end.time, t_end=end.landing_time, p_start=end.point, p_end=end.landing_point))
+
+    if park:
+        kept.append(CS.Leg(t_start=end.landing_time, t_end=max(float(session_end), end.landing_time),
+                           p_start=end.landing_point, p_end=end.landing_point))
+
+    return [leg for leg in CS.clamp_legs(kept, t0, session_end) if leg.duration > CS.TIME_EPS]
+
+
+def _grounded_after_bingo(grounded: CS.GroundedSchedule, ends: Mapping[str, BingoEnd]) -> CS.GroundedSchedule:
+    """Programma degli aerei a terra corretto per i rientri al bingo (F6-B2): gli intervalli a terra che
+    cominciano dopo il bingo (atterraggio pianificato mai raggiunto) cadono; l'aereo e' a terra sulla base
+    dall'atterraggio del rientro."""
+    if not ends:
+        return grounded
+
+    intervals = {asset_id: list(grounded.intervals(asset_id)) for asset_id in grounded.ids()}
+
+    for asset_id, end in ends.items():
+        spans = [(lo, min(hi, end.time)) for lo, hi in intervals.get(asset_id, ()) if lo < end.time]
+        spans.append((end.landing_time, float('inf')))
+        intervals[asset_id] = spans
+
+    return CS.GroundedSchedule(intervals)
+
+
+def _postures_after_bingo(postures: Dict[str, str], ends: Mapping[str, BingoEnd], mission_types: Mapping[str, str],
+                          grounded: CS.GroundedSchedule, session_end: float) -> Dict[str, str]:
+    """Postura a fine sessione degli aerei rientrati al bingo (F6-B2): a terra sulla base `PARKED_POSTURE`,
+    ancora in volo verso la base il tipo di missione (un esaurimento successivo la corregge dopo, F6-A)."""
+    for asset_id, end in ends.items():
+        if asset_id in postures:
+            postures[asset_id] = MA.PARKED_POSTURE if grounded.at(asset_id, session_end) else mission_types[asset_id]
+
+    return postures
+
+
 # ── FINE DI ATTIVITA' (F6-B1) ─────────────────────────────────────────────────
 
 # Precedenza a parita' d'istante fra le fini di attivita' di un asset (scelta dichiarata, conta solo
@@ -902,7 +1020,9 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
 _ACTIVITY_ORDER = (AssetEndReason.DAMAGE, AssetEndReason.WINCHESTER, AssetEndReason.TARGET_DESTROYED,
                    AssetEndReason.MAX_DURATION)
 # Motivi di fine di un asset che fanno ABORTIRE la missione e il motivo d'aborto corrispondente.
+# L'ordine e' la precedenza a parita' d'istante (F6-B2: il bingo subito dopo il carburante esaurito).
 _ABORT_REASON_OF = {AssetEndReason.FUEL_EXHAUSTED: AbortReason.FUEL,
+                    AssetEndReason.BINGO: AbortReason.BINGO,
                     AssetEndReason.WINCHESTER: AbortReason.AMMUNITION,
                     AssetEndReason.DAMAGE: AbortReason.DAMAGE}
 
@@ -1235,11 +1355,13 @@ def _destruction_times(results, assets: Mapping[str, object], t0: float) -> Dict
 def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed: Mapping[str, float],
                      session_end: float, fuel_ends: Optional[Mapping[str, FuelEnd]] = None,
                      activity_ends: Optional[Mapping[str, Tuple[float, AssetEndReason]]] = None,
-                     target_declared: bool = False, target_time: Optional[float] = None) -> MissionOutcome:
+                     target_declared: bool = False, target_time: Optional[float] = None,
+                     bingo_ends: Optional[Mapping[str, BingoEnd]] = None) -> MissionOutcome:
     """Esito di missione (regola nel docstring del modulo, "Fine di attivita' e stato di missione"):
     esaurimento del carburante della F6-A in `fuel_ends`, fini di attivita' della F6-B1 in
     `activity_ends` (`{asset_id: (istante, motivo)}`, `_activity_ends`), criterio del bersaglio
-    distrutto dichiarato e rappresentabile in `target_declared` con l'istante in `target_time`."""
+    distrutto dichiarato e rappresentabile in `target_declared` con l'istante in `target_time`,
+    rientri al bingo della F6-B2 in `bingo_ends`."""
     asset_outcomes = {}
     reached = False
     passages: List[Tuple[Tuple[float, ...], Optional[float]]] = []
@@ -1247,9 +1369,12 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
     for movement in movements:
         asset_id = movement.asset_id
         end = (fuel_ends or {}).get(asset_id)
+        bingo = (bingo_ends or {}).get(asset_id)
         planned = MA.waypoint_times(movement)
-        # Oltre l'esaurimento (F6-A) l'asset non si muove: i punti successivi non sono raggiunti.
-        times = planned if end is None else tuple(t for t in planned if t <= end.time + CS.TIME_EPS)
+        # Oltre l'esaurimento (F6-A) o il bingo (F6-B2) l'asset non segue piu' la rotta: i punti successivi
+        # non sono raggiunti.
+        stop = min([e.time for e in (end, bingo) if e is not None], default=None)
+        times = planned if stop is None else tuple(t for t in planned if t <= stop + CS.TIME_EPS)
         arrival = times[-1] if times and len(times) == len(planned) else None
         destroyed_at = destroyed.get(asset_id)
         crashed_at = end.time if end is not None and end.kind == FUEL_CRASH else None
@@ -1279,15 +1404,19 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
 
             if completes:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.ROUTE_COMPLETED, arrival)
-            elif activity is not None and (end is None or activity[0] < end.time - CS.TIME_EPS):
+            elif activity is not None and (stop is None or activity[0] < stop - CS.TIME_EPS):
                 outcome = AssetMissionOutcome(asset_id, state, activity[1], activity[0])
 
                 if activity[1] is AssetEndReason.MAX_DURATION:
                     # Durata / tempo sulla stazione esaurito: fine REGOLARE, come l'ultimo punto.
                     reached = True
             elif end is not None:
-                # Fermo nel punto (terra/mare) o a terra sulla base dopo la planata (aereo), F6-A.
+                # Fermo nel punto (terra/mare) o a terra sulla base dopo la planata (aereo), F6-A; anche a
+                # secco sul rientro dopo il bingo (F6-B2): conta l'ultimo fatto, l'esaurimento.
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.FUEL_EXHAUSTED, end.time)
+            elif bingo is not None:
+                # Rientro al bingo (F6-B2): l'asset ha lasciato la rotta all'istante del bingo.
+                outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.BINGO, bingo.time)
             else:
                 outcome = AssetMissionOutcome(asset_id, state, AssetEndReason.SESSION_END, session_end)
 
@@ -1432,6 +1561,33 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
     for asset_id, movement in movement_of.items():
         moving_legs[asset_id] = MA.movement_legs(movement, t0, session_end, presence=False)
+
+    # F6-B2: bingo in volo, calcolato A MONTE sui tratti che consumano (come l'esaurimento, v. "Bingo"):
+    # oltre il bingo l'aereo torna in linea retta alla base del lato piu' vicina. Prima dell'esaurimento,
+    # che e' poi cercato sui tratti con il rientro (a secco sul rientro: planata o perdita, F6-A).
+    bingo_ends: Dict[str, BingoEnd] = {}
+
+    for asset_id, movement in movement_of.items():
+        asset = assets_by_id.get(asset_id)
+        mission = mission_of[movement.mission_id]
+
+        if not F6_BINGO or asset is None or not moving_legs[asset_id] or mission.domain != 'air' \
+                or not mission.end_criteria.bingo:
+            continue
+
+        bases = air_bases.get(getattr(blocks[mission.block_id], 'side', None), ())
+        end = _bingo_end(asset, asset_id, _consuming_legs(asset_id, moving_legs[asset_id], grounded), bases) \
+            if bases else None
+
+        if end is not None:
+            bingo_ends[asset_id] = end
+            moving_legs[asset_id] = _legs_after_bingo(moving_legs[asset_id], end, t0, session_end, park=False)
+            logger.info(f"run_session: asset {asset_id!r} reaches bingo at t={end.time:.1f}: it returns to the "
+                        f"nearest air base, landing at t={end.landing_time:.1f}")
+
+    grounded = _grounded_after_bingo(grounded, bingo_ends)
+
+    for asset_id, movement in movement_of.items():
         asset = assets_by_id.get(asset_id)
 
         if not F6_FUEL_CONSTRAINT or asset is None or not moving_legs[asset_id]:
@@ -1455,6 +1611,11 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
     for asset_id, movement in movement_of.items():
         legs = MA.movement_legs(movement, t0, session_end)
+
+        if asset_id in bingo_ends:
+            # F6-B2: fino al bingo, rientro e sosta a terra sulla base.
+            legs = _legs_after_bingo(legs, bingo_ends[asset_id], t0, session_end, park=True)
+
         end = fuel_ends.get(asset_id)
 
         if end is not None:
@@ -1526,10 +1687,23 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             # F6-B1: criteri passati solo se dichiarati (senza, la chiamata e' quella di prima), con le
             # distruzioni dei bersagli note a questo punto (ingaggi gia' risolti, carburante).
             extra = {}
+            criteria = {}
 
             if activity_plans:
                 known = _known_destructions(results, assets_by_id, t0, fuel_ends) if plans_with_targets else None
-                extra['activity_criteria'] = _activity_criteria(activity_plans, known)
+                criteria = _activity_criteria(activity_plans, known)
+
+            # F6-B2: dal bingo l'aereo rientra e non lancia piu' salve offensive (fine nota a monte, `until`).
+            for asset_id, bingo in bingo_ends.items():
+                known_criteria = criteria.get(asset_id)
+
+                if known_criteria is None:
+                    criteria[asset_id] = ER.ActivityCriteria(until=bingo.time)
+                elif known_criteria.until is None or bingo.time < known_criteria.until:
+                    criteria[asset_id] = dataclasses.replace(known_criteria, until=bingo.time)
+
+            if criteria:
+                extra['activity_criteria'] = criteria
 
             result = ER.resolve_engagement(component[0], component[1], group, fire_control,
                                            order.rng(mission_id=None, event_id=key, counter=0),
@@ -1620,7 +1794,8 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
                                                              assets_by_id, destroyed, session_end, fuel_ends,
                                                              activity_ends,
                                                              target_declared=mission.mission_id in target_times,
-                                                             target_time=target_times.get(mission.mission_id))
+                                                             target_time=target_times.get(mission.mission_id),
+                                                             bingo_ends=bingo_ends)
                         for mission in order.missions}
 
     # F6-A: un aereo perso per carburante (nessuna base raggiungibile in planata) e' distrutto come in
@@ -1641,6 +1816,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
     # Postura di ogni asset a fine sessione (F5-B, deviazione 12): anche dei blocchi senza missioni.
     postures = MA.session_postures(forces, movement_of, grounded, session_end)
+    postures = _postures_after_bingo(postures, bingo_ends,
+                                     {a: mission_of[m.mission_id].mission_type for a, m in movement_of.items()},
+                                     grounded, session_end)
     postures = _postures_after_fuel(postures, fuel_ends,
                                     {a: mission_of[m.mission_id].domain for a, m in movement_of.items()},
                                     {a: mission_of[m.mission_id].mission_type for a, m in movement_of.items()},

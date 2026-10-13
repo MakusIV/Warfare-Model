@@ -102,6 +102,13 @@ cambia solo i valori della voce `postures` (separabile con `--ignore postures`);
 e i motivi di fine per asset NON sono registrati nella fotografia (si verificano nei test di S25 e con
 una cattura estesa fuori dal repository, v. `F4_Differenze_Scenari.md`, "F6 passo B1").
 
+## Bingo dopo la F6-B2
+
+Dalla F6-B2 un aereo che arriva al bingo torna alla base idonea piu' vicina
+(`Session_Simulator.F6_BINGO`): cambiano i tratti, i contatti e il carburante, quindi le voci di sempre
+(nessuna voce nuova). Il motivo BINGO e lo stato ABORTED(BINGO) sono negli esiti di missione, NON
+registrati nella fotografia (si verificano nei test di S26).
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -270,6 +277,9 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
      _by_occurrence('damage', 'undeclared', 'switch_off')),
     ('S25-TGT', 'Test_Session_Scenarios_S25', 'TestS25TargetDestroyed', None,
      _by_occurrence('target', 'undeclared', 'switch_off')),
+    # ── S26 (F6-B2: bingo in volo con rientro, bingo a priori) — in coda ──
+    ('S26-BINGO', 'Test_Session_Scenarios_S26', 'TestS26Bingo', None,
+     _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

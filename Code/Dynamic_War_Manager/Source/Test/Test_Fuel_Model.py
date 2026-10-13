@@ -249,5 +249,83 @@ class TestGlide(_Base):
                          (0.0, -5_000.0))
 
 
+# ── F6-B2: bingo (margine di rientro, punto di bingo) ─────────────────────────
+
+EAST = _Leg(0.0, 10_000.0, (0.0, 0.0, 0.0), (100_000.0, 0.0, 0.0))   # 100 km in 10000 s
+
+
+class TestBingo(_Base):
+    """Bingo = primo istante in cui il residuo basta appena per rientrare alla base piu' vicina con la
+    riserva (autonomia 100 km: 0,01 del pieno = 1 km)."""
+
+    def test_reserve_is_a_declared_fraction(self):
+        self.assertGreater(FM.BINGO_RESERVE, 0.0)
+        self.assertLess(FM.BINGO_RESERVE, 1.0)
+
+    def test_return_margin(self):
+        """Pieno, 40 km di andata e 40 di rientro, riserva 0,1: margine 0,1."""
+        leg = _Leg(0.0, 4_000.0, (0.0, 0.0, 0.0), (40_000.0, 0.0, 0.0))
+        asset = _CruiseStub(fuel=1.0, autonomy=100_000.0)
+        self.assertAlmostEqual(FM.return_margin(asset, [leg], [(0.0, 0.0)], reserve=0.1), 0.1)
+        self.assertIsNone(FM.bingo_point(asset, [leg], [(0.0, 0.0)], reserve=0.1))
+
+    def test_bingo_inside_a_moving_leg(self):
+        """Carburante 0,5 (50 km), riserva 0,1 (10 km), base alla partenza: 40 - u = u -> bingo a 20 km,
+        2000 s, con 0,3 a bordo; il margine a fine tratto e' 0,5 - 1 - 1 - 0,1."""
+        asset = _CruiseStub(fuel=0.5, autonomy=100_000.0)
+        bingo = FM.bingo_point(asset, [EAST], [(0.0, 0.0)], reserve=0.1)
+        self.assertEqual((bingo.asset_id, bingo.leg_index, bingo.base), ('a1', 0, (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(bingo.time, 2_000.0)
+        self.assertAlmostEqual(bingo.point[0], 20_000.0)
+        self.assertAlmostEqual(bingo.fuel, 0.3)
+        self.assertAlmostEqual(bingo.margin, -1.6)
+        self.assertEqual(asset.fuel, 0.5)
+
+    def test_bingo_inside_a_hold(self):
+        """1 km di movimento (0,01), poi sosta a 1 km dalla base (3 km equivalenti in 300 s), riserva 0:
+        con 0,035 il residuo scende a 1 km (il rientro) a meta' sosta, 250 s."""
+        bingo = FM.bingo_point(_CruiseStub(fuel=0.035, autonomy=100_000.0), [MOVE, HOLD], [(0.0, 0.0)], reserve=0.0)
+        self.assertEqual(bingo.leg_index, 1)
+        self.assertAlmostEqual(bingo.time, 250.0)
+        self.assertEqual(bingo.point, (1_000.0, 0.0, 0.0))
+
+    def test_bingo_at_the_start(self):
+        """Sotto la riserva gia' alla partenza: bingo all'istante iniziale."""
+        bingo = FM.bingo_point(_CruiseStub(fuel=0.05, autonomy=100_000.0), [EAST], [(0.0, 0.0)], reserve=0.1)
+        self.assertEqual((bingo.time, bingo.point), (0.0, (0.0, 0.0, 0.0)))
+
+    def test_a_base_ahead_counts(self):
+        """Rotta di 60 km verso una seconda base: con 0,7 e senza riserva la base davanti resta sempre in
+        portata (avvicinarsi non costa margine), nessun bingo; con riserva 0,15 la base davanti non basta
+        mai e il bingo e' rispetto a quella di partenza (55 - u = u: 27,5 km)."""
+        leg = _Leg(0.0, 6_000.0, (0.0, 0.0, 0.0), (60_000.0, 0.0, 0.0))
+        bases = [(0.0, 0.0), (60_000.0, 0.0)]
+        asset = _CruiseStub(fuel=0.7, autonomy=100_000.0)
+        self.assertIsNone(FM.bingo_point(asset, [leg], bases, reserve=0.0))
+        bingo = FM.bingo_point(asset, [leg], bases, reserve=0.15)
+        self.assertAlmostEqual(bingo.point[0], 27_500.0)
+        self.assertEqual(bingo.base, (0.0, 0.0, 0.0))
+
+    def test_at_bingo_the_fuel_is_the_return_plus_the_reserve(self):
+        """In quota e con una base fuori asse il rientro (3D, alla base a quota 0) consuma esattamente il
+        residuo meno la riserva."""
+        leg = _Leg(0.0, 10_000.0, (0.0, 0.0, 5_000.0), (100_000.0, 0.0, 5_000.0))
+        base = (10_000.0, 20_000.0)
+        bingo = FM.bingo_point(_CruiseStub(fuel=0.6, autonomy=100_000.0), [leg], [base], reserve=0.1)
+        distance = sum((p - b) ** 2 for p, b in zip(bingo.point, (*base, 0.0))) ** 0.5
+        self.assertAlmostEqual(bingo.fuel - 0.1, distance / 100_000.0, delta=1e-12)
+
+    def test_no_check_without_fuel_bases_or_legs(self):
+        self.assertIsNone(FM.bingo_point(_CruiseStub(fuel=None), [EAST], [(0.0, 0.0)]))
+        self.assertIsNone(FM.bingo_point(_CruiseStub(fuel=0.1), [EAST], []))
+        self.assertIsNone(FM.bingo_point(_CruiseStub(fuel=0.1), [], [(0.0, 0.0)]))
+        self.assertIsNone(FM.return_margin(_CruiseStub(fuel=0.1), [EAST], []))
+
+    def test_nearest_base_tie_is_deterministic(self):
+        distance, base = FM.nearest_base((0.0, 0.0, 0.0), [(0.0, 5_000.0), (0.0, -5_000.0)])
+        self.assertEqual((distance, base), (5_000.0, (0.0, -5_000.0, 0.0)))
+        self.assertIsNone(FM.nearest_base((0.0, 0.0, 0.0), []))
+
+
 if __name__ == '__main__':
     unittest.main()
