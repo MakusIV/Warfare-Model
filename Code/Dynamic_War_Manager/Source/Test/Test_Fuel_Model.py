@@ -327,5 +327,153 @@ class TestBingo(_Base):
         self.assertIsNone(FM.nearest_base((0.0, 0.0, 0.0), []))
 
 
+
+# ── F6-B2bis: bingo con rientro lungo la rotta a ritroso ──────────────────────
+
+KM = 1_000.0
+AUTONOMY_1000 = 1_000_000.0     # 1000 km: 0,001 del pieno = 1 km
+DEPARTURE = FM.ReturnRule(departure=True)
+LOOP = FM.ReturnRule(departure=True, loop=True)
+IN_AIR = FM.ReturnRule(departure=False)
+
+
+def _square(hold=0.0):
+    """Anello di 120 km a 10 m/s (quadrato di lato 30 km che torna nel punto di partenza), con una sosta
+    di `hold` secondi nel terzo vertice (0, 30 km) prima dell'ultimo lato."""
+    corners = [(0.0, 0.0, 0.0), (30 * KM, 0.0, 0.0), (30 * KM, 30 * KM, 0.0), (0.0, 30 * KM, 0.0)]
+    legs, t = [], 0.0
+
+    for a, b in zip(corners, corners[1:]):
+        legs.append(_Leg(t, t + 3_000.0, a, b))
+        t += 3_000.0
+
+    if hold > 0.0:
+        legs.append(_Leg(t, t + hold, corners[-1], corners[-1]))
+        t += hold
+
+    legs.append(_Leg(t, t + 3_000.0, corners[-1], corners[0]))
+    return legs
+
+
+class TestReverseRouteBingo(_Base):
+    """F6-B2bis: fabbisogno di bingo = `BINGO_RETURN_FACTOR` x il ritorno lungo la rotta a ritroso (soste
+    escluse), con il tratto diretto alla base per la partenza in volo e la via piu' breve sull'anello.
+    Crociera dello stub 10 m/s, autonomia 1000 km (i numeri si fanno a mano)."""
+
+    def _stub(self, fuel):
+        return _CruiseStub(fuel=fuel, autonomy=AUTONOMY_1000)
+
+    def test_factor_is_a_declared_estimate_above_one(self):
+        self.assertEqual(FM.BINGO_RETURN_FACTOR, 1.2)
+        self.assertEqual(DEPARTURE.factor, FM.BINGO_RETURN_FACTOR)
+
+        with self.assertRaises(ValueError):
+            FM.ReturnRule(departure=True, factor=0.9)
+
+        with self.assertRaises(ValueError):
+            FM.ReturnRule(departure=False, loop=True)
+
+    def test_reverse_route_skips_the_holds(self):
+        """Partenza da una base in (0, 0): 10 km a est, sosta di 1000 s (10 km equivalenti), 20 km verso nord.
+        Carburante 0,05 (50 km): prima della sosta H = 40 - 1,2 x 10 = 28, dopo 18; nel secondo tratto
+        18 - 2,2 u = 0 -> u = 8,18 km. Il rientro torna al vertice (10 km, 0) senza ripetere la sosta e
+        finisce sul DEPARTURE; al bingo il residuo e' esattamente 1,2 x il ritorno."""
+        legs = [_Leg(0.0, 1_000.0, (0.0, 0.0, 0.0), (10 * KM, 0.0, 0.0)),
+                _Leg(1_000.0, 2_000.0, (10 * KM, 0.0, 0.0), (10 * KM, 0.0, 0.0)),
+                _Leg(2_000.0, 4_000.0, (10 * KM, 0.0, 0.0), (10 * KM, 20 * KM, 0.0))]
+        asset = self._stub(0.05)
+        bingo = FM.bingo_point(asset, legs, (), rule=DEPARTURE)
+        u = 18 * KM / (1.0 + FM.BINGO_RETURN_FACTOR)
+        self.assertEqual((bingo.leg_index, bingo.via), (2, FM.RETURN_REVERSE))
+        self.assertAlmostEqual(bingo.point[1], u, delta=1e-6)
+        self.assertAlmostEqual(bingo.time, 2_000.0 + u / 10.0, delta=1e-6)
+        self.assertEqual(bingo.route[1:], ((10 * KM, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        self.assertEqual(bingo.base, (0.0, 0.0, 0.0))
+        self.assertAlmostEqual(bingo.return_length, 10 * KM + u, delta=1e-6)
+        self.assertAlmostEqual(bingo.fuel, FM.BINGO_RETURN_FACTOR * bingo.return_length / AUTONOMY_1000, delta=1e-12)
+        self.assertEqual(asset.fuel, 0.05)
+
+    def test_margin_is_the_minimum_and_matches_the_bingo(self):
+        """Margine = minimo di residuo - 1,2 x ritorno: senza anello e' a fine tratti (H decresce); bingo se
+        e solo se negativo."""
+        leg = _Leg(0.0, 4_000.0, (0.0, 0.0, 0.0), (40 * KM, 0.0, 0.0))
+        enough = 2.2 * 40 * KM / AUTONOMY_1000
+        self.assertAlmostEqual(FM.return_margin(self._stub(enough), [leg], (), rule=DEPARTURE), 0.0, delta=1e-12)
+        self.assertIsNone(FM.bingo_point(self._stub(enough + 1e-6), [leg], (), rule=DEPARTURE))
+        self.assertIsNotNone(FM.bingo_point(self._stub(enough - 1e-6), [leg], (), rule=DEPARTURE))
+
+    def test_loop_takes_the_reverse_when_it_is_shorter(self):
+        """Anello di 120 km senza soste, carburante 0,12 (120 km): H minimo a meta' (120 - 60 - 1,2 x 60 < 0);
+        il bingo e' a s = 120 / 2,2 = 54,5 km (secondo lato), dove il ritroso (54,5) e' piu' corto del
+        resto (65,5): torna indietro per il primo vertice."""
+        bingo = FM.bingo_point(self._stub(0.12), _square(), (), rule=LOOP)
+        s = 120 * KM / (1.0 + FM.BINGO_RETURN_FACTOR)
+        self.assertEqual((bingo.leg_index, bingo.via), (1, FM.RETURN_REVERSE))
+        self.assertAlmostEqual(bingo.point[1], s - 30 * KM, delta=1e-6)
+        self.assertEqual(bingo.route[1:], ((30 * KM, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(bingo.return_length, s, delta=1e-6)
+
+    def test_loop_takes_the_rest_of_the_route_when_it_is_shorter(self):
+        """Anello con una sosta di 3000 s (30 km equivalenti) nel terzo vertice, carburante 0,15 (150 km): mai
+        bingo in movimento (minimo a meta' 150 - 60 - 72 = 18 km), ma nella sosta il resto della rotta (30 km)
+        e' piu' corto del ritroso (90 km): all'inizio della sosta H = 60 - 36 = 24 km, zero dopo 2400 s.
+        Rientro in avanti sull'ultimo lato, senza ripetere la sosta; la ritirata non varrebbe (H < 0 da subito)."""
+        bingo = FM.bingo_point(self._stub(0.15), _square(hold=3_000.0), (), rule=LOOP)
+        self.assertEqual((bingo.leg_index, bingo.via), (3, FM.RETURN_FORWARD))
+        self.assertAlmostEqual(bingo.time, 9_000.0 + 2_400.0, delta=1e-6)
+        self.assertEqual(bingo.route, ((0.0, 30 * KM, 0.0), (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(bingo.fuel, FM.BINGO_RETURN_FACTOR * 30 * KM / AUTONOMY_1000, delta=1e-12)
+        # Margine = il minimo, a fine sosta (24 - 30 = -6 km), non a fine tratti (dove il residuo e' 0).
+        self.assertAlmostEqual(bingo.margin, -6 * KM / AUTONOMY_1000, delta=1e-12)
+        # Senza l'anello la stessa rotta va in bingo molto prima (la ritirata costa 2,2 m per metro).
+        self.assertLess(FM.bingo_point(self._stub(0.15), _square(hold=3_000.0), (), rule=DEPARTURE).time,
+                        bingo.time)
+
+    def test_a_loop_is_safe_with_about_1_1_times_its_route(self):
+        """Anello di 120 km senza soste: nessun bingo con carburante appena sopra (1 + (f - 1) / 2) x 120 km,
+        bingo appena sotto (1,1 x con f = 1,2)."""
+        safe = (1.0 + (FM.BINGO_RETURN_FACTOR - 1.0) / 2.0) * 120 * KM / AUTONOMY_1000
+        self.assertIsNone(FM.bingo_point(self._stub(safe + 1e-6), _square(), (), rule=LOOP))
+        self.assertIsNotNone(FM.bingo_point(self._stub(safe - 1e-6), _square(), (), rule=LOOP))
+
+    def test_air_start_returns_to_the_spawn_then_to_the_nearest_base(self):
+        """Partenza in volo da (10 km, 0, 5000) verso est, basi in (0, 0) e (0, 50 km): la piu' vicina al punto
+        di comparsa e' (0, 0); il rientro torna al punto di comparsa (in quota) e poi scende sulla base con
+        il tratto diretto; fabbisogno 1,2 x (ritroso + diretto)."""
+        leg = _Leg(0.0, 10_000.0, (10 * KM, 0.0, 5 * KM), (110 * KM, 0.0, 5 * KM))
+        bases = [(0.0, 50 * KM), (0.0, 0.0)]
+        direct = ((10 * KM) ** 2 + (5 * KM) ** 2) ** 0.5     # comparsa (in quota) -> base a quota 0
+        bingo = FM.bingo_point(self._stub(0.1), [leg], bases, rule=IN_AIR)
+        u = (100 * KM - FM.BINGO_RETURN_FACTOR * direct) / (1.0 + FM.BINGO_RETURN_FACTOR)
+        self.assertAlmostEqual(bingo.point[0], 10 * KM + u, delta=1e-6)
+        self.assertEqual(bingo.route[1:], ((10 * KM, 0.0, 5 * KM), (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(bingo.return_length, u + direct, delta=1e-6)
+        self.assertAlmostEqual(bingo.fuel, FM.BINGO_RETURN_FACTOR * (u + direct) / AUTONOMY_1000, delta=1e-12)
+
+    def test_air_start_without_bases_has_no_check(self):
+        """Partenza in volo senza basi: nessun controllo (None, valgono le regole della F6-A); partendo da una
+        base le basi non servono."""
+        self.assertIsNone(FM.bingo_point(self._stub(0.01), [EAST], (), rule=IN_AIR))
+        self.assertIsNone(FM.return_margin(self._stub(0.01), [EAST], (), rule=IN_AIR))
+        self.assertIsNotNone(FM.bingo_point(self._stub(0.01), [EAST], (), rule=DEPARTURE))
+
+    def test_bingo_at_the_start_with_an_air_start(self):
+        """Il solo tratto diretto alla base costa gia' piu' del residuo: bingo all'istante iniziale, rientro
+        diretto dal punto di comparsa."""
+        bingo = FM.bingo_point(self._stub(0.01), [EAST], [(0.0, -20 * KM)], rule=IN_AIR)
+        self.assertEqual((bingo.time, bingo.point, bingo.leg_index), (0.0, (0.0, 0.0, 0.0), 0))
+        self.assertEqual(bingo.route, ((0.0, 0.0, 0.0), (0.0, -20 * KM, 0.0)))
+
+    def test_no_check_without_fuel_or_legs(self):
+        self.assertIsNone(FM.bingo_point(_CruiseStub(fuel=None), [EAST], (), rule=DEPARTURE))
+        self.assertIsNone(FM.bingo_point(self._stub(0.1), [], (), rule=DEPARTURE))
+
+    def test_straight_rule_is_unchanged_without_a_rule(self):
+        """`rule` None = la F6-B2: rientro diretto con la riserva, spezzata (punto, base)."""
+        bingo = FM.bingo_point(_CruiseStub(fuel=0.5, autonomy=100_000.0), [EAST], [(0.0, 0.0)], reserve=0.1)
+        self.assertEqual((bingo.via, bingo.route), (FM.RETURN_DIRECT, (bingo.point, bingo.base)))
+        self.assertAlmostEqual(bingo.return_length, 20_000.0)
+
+
 if __name__ == '__main__':
     unittest.main()

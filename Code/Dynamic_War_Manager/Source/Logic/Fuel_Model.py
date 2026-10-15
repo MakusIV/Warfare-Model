@@ -48,7 +48,7 @@ Dalla F6-A:
     quota x `GLIDE_RATIO` (stima dichiarata, sotto).
 Il carburante di partenza e il rifornimento NON cambiano (rifornimento: F8).
 
-## Bingo (F6-B2 del piano della Missione, decisione 14)
+## Bingo (F6-B2 del piano della Missione, decisione 14; rifatto dalla F6-B2bis, sotto)
 
   * **margine di rientro** (`return_margin`): carburante attuale - fabbisogno dei tratti alla crociera -
     rientro in linea retta dall'ultimo punto alla base idonea piu' vicina - riserva `BINGO_RESERVE`
@@ -60,6 +60,18 @@ Il carburante di partenza e il rifornimento NON cambiano (rifornimento: F8).
     carburante e le stesse basi la missione rifiutata a priori e' esattamente quella che in volo arriva
     al bingo (al regime di crociera).
 
+### Rientro lungo la rotta a ritroso (F6-B2bis, decisioni dell'utente del 2026-10-15)
+
+Con una `ReturnRule` (`Session_Simulator.F6_BINGO_REVERSE_ROUTE` acceso, il default) il rientro non e'
+piu' una retta: l'aereo ripercorre AL CONTRARIO i suoi tratti di movimento (senza le soste, alle quote dei
+waypoint) fino al DEPARTURE, oppure, partito in volo, fino al punto di comparsa e poi diretto alla base
+del lato piu' vicina; su una missione ad ANELLO (LAND sulla base del DEPARTURE) prende il piu' breve fra
+il ritroso e il resto della rotta. Il fabbisogno di bingo e' `BINGO_RETURN_FACTOR` (1,2, stima dichiarata
+dall'utente) x il carburante del ritorno, al posto della riserva fissa `BINGO_RESERVE` (che resta solo per
+la regola F6-B2, a interruttore spento). Il LAND su un'altra base (divert) non conta. Il margine e' il
+MINIMO lungo i tratti (sull'anello non e' a fine tratti); il `BingoPoint` porta la spezzata del rientro
+(`route`). Formula e casi nella sezione BINGO del codice.
+
 ## Cosa NON fa
 - Non integra il consumo nel risolutore d'ingaggio: `Engagement_Resolver` non modella il
   movimento fra un contatto e l'altro. L'orchestratore tronca i tratti all'esaurimento prima di
@@ -70,7 +82,7 @@ Il carburante di partenza e il rifornimento NON cambiano (rifornimento: F8).
 
 import math
 from dataclasses import dataclass, replace
-from typing import Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from Code.Dynamic_War_Manager.Source.Logic import Damage_Model as DM
 from Code.Dynamic_War_Manager.Source.Utility.LoggerClass import Logger
@@ -420,11 +432,16 @@ def nearest_reachable_base(point: Sequence[float], bases: Iterable[Tuple[float, 
     return None if best is None else (best[1], best[2])
 
 
-# ── BINGO: RIENTRO CON LA RISERVA (F6-B2) ─────────────────────────────────────
+# ── BINGO (F6-B2, rifatto dalla F6-B2bis) ─────────────────────────────────────
 #
-# Bingo = il carburante residuo basta appena per rientrare alla base idonea piu' vicina con la
-# riserva `BINGO_RESERVE`. In metri di crociera (`E` = residuo / consumo per metro alla crociera,
-# `R` = riserva / consumo per metro, `d` = distanza in linea retta dalla base piu' vicina):
+# Due regole, scelte dal chiamante con `rule` (None = la prima); `Session_Simulator` le seleziona con
+# l'interruttore `F6_BINGO_REVERSE_ROUTE`, il validatore `Mission_Adapter.check_mission_bingo` con il
+# parametro corrispondente: i due usano sempre la STESSA.
+#
+# 1) F6-B2, RIENTRO RETTILINEO CON LA RISERVA (`rule` None, interruttore spento). Bingo = il residuo basta
+# appena per rientrare alla base idonea piu' vicina con la riserva `BINGO_RESERVE`. In metri di crociera
+# (`E` = residuo / consumo per metro alla crociera, `R` = riserva / consumo per metro, `d` = distanza in
+# linea retta dalla base piu' vicina):
 #
 #     H(t) = E(t) - R - min_b d_b(P(t))        bingo al primo istante con H(t) <= 0
 #
@@ -432,29 +449,100 @@ def nearest_reachable_base(point: Sequence[float], bases: Iterable[Tuple[float, 
 # la distanza da una base cambia al piu' di 1 m per metro (|d'| <= 1); in sosta E cala e d e' costante.
 # Per un tratto di movimento e una base b, con A = E all'inizio del tratto - R, w = P0 - B e versore e,
 # `A - u = |w + u e|` ha la soluzione unica u = (A^2 - |w|^2) / (2 (A + w.e)); il bingo nel tratto e'
-# il MASSIMO degli u_b (H <= 0 quando TUTTE le basi sono fuori portata). Nessuna estrazione casuale.
-# Il rientro e' in linea retta 3D dal punto alla base a quota 0 (stessa convenzione della planata:
-# terreno non modellato), consumato al regime di crociera: arriva con la riserva.
+# il MASSIMO degli u_b (H <= 0 quando TUTTE le basi sono fuori portata). Il rientro e' in linea retta 3D
+# dal punto alla base a quota 0 (terreno non modellato), consumato alla crociera: arriva con la riserva.
+#
+# 2) F6-B2bis, RIENTRO LUNGO LA ROTTA A RITROSO (`rule` = `ReturnRule`, decisioni dell'utente del
+# 2026-10-15). Il rientro ripercorre al contrario i tratti di MOVIMENTO gia' volati (il DES non devia le
+# rotte negli ingaggi: la rotta percorsa e' quella pianificata), senza le soste, alle quote dei waypoint
+# (la discesa e' sul tratto finale), fino al punto di partenza:
+#   * partenza da una base (`rule.departure`, `start_mode` diverso da AIR): il primo punto dei tratti, il
+#     DEPARTURE, e' il punto d'atterraggio;
+#   * partenza in volo: il punto di comparsa, poi un tratto diretto (3D) alla base del lato piu' vicina a
+#     quel punto, a quota 0; senza basi nessun bingo (valgono le regole della F6-A);
+#   * missione ad ANELLO (`rule.loop`, LAND sulla base del DEPARTURE): il ritorno e' il piu' breve fra il
+#     ritroso e il RESTO della rotta fino al LAND (tratti di movimento rimanenti, senza le soste);
+#   * il LAND su una base diversa (divert) NON conta: la destinazione finale e' esclusa.
+# Fabbisogno = `BINGO_RETURN_FACTOR` x il carburante del ritorno, alla crociera (niente riserva fissa).
+# In metri di crociera, con `s` = metri di movimento percorsi dall'inizio dei tratti, `S` = movimento
+# totale, `D0` = tratto diretto alla base (0 con partenza da una base), `f` = il fattore:
+#
+#     Lb(s) = s + D0    Lf(s) = S - s (solo anello)    H = E - f * min(Lb, Lf)    bingo al primo H <= 0
+#
+# Lungo un tratto di movimento E cala di 1 per metro, Lb cresce di 1, Lf cala di 1: H e' il massimo di
+# due funzioni lineari, `Hb(u) = Hb(0) - (1 + f) u` (decrescente) e `Hf(u) = Hf(0) + (f - 1) u`
+# (crescente per f > 1), quindi l'insieme {H <= 0} nel tratto e' un intervallo in forma chiusa. Nelle
+# soste E cala e le lunghezze sono costanti. H NON e' monotono sull'anello (cresce oltre il punto in cui
+# conviene proseguire): il margine (`return_margin`) e' il MINIMO di H sui tratti, e il bingo esiste se e
+# solo se e' negativo. A parita' fra ritroso e resto della rotta vince il ritroso (scelta deterministica).
+# Nessuna estrazione casuale in nessuna delle due regole.
 
-# Riserva di carburante [frazione del carico pieno] con cui un aereo deve rientrare (F6-B2). STIMA DI
-# PROGETTO, NON UN DATO TARATO: i registri non hanno una riserva per tipo d'aereo. 0,10 del carico pieno
-# e' l'ordine di grandezza delle riserve finali di dottrina (10% del carburante, o 20-30 minuti di volo
-# in attesa), unica per tutti gli aerei; da sostituire con un dato per modello o con la dottrina del lato.
+# Riserva di carburante [frazione del carico pieno] con cui un aereo deve rientrare nella regola F6-B2
+# (rientro rettilineo). Dalla F6-B2bis serve SOLO all'interruttore `F6_BINGO_REVERSE_ROUTE` spento (e al
+# validatore con `reverse_route` False). STIMA DI PROGETTO, NON UN DATO TARATO: i registri non hanno una
+# riserva per tipo d'aereo. 0,10 del carico pieno e' l'ordine di grandezza delle riserve finali di dottrina
+# (10% del carburante, o 20-30 minuti di volo in attesa), unica per tutti gli aerei.
 BINGO_RESERVE = 0.10
+
+# Fabbisogno di bingo nella regola F6-B2bis = questo fattore x il carburante del ritorno (alla crociera):
+# il +20% SOSTITUISCE la riserva fissa `BINGO_RESERVE`, quindi la riserva all'arrivo e' proporzionale al
+# ritorno (piccola vicino alla base). DECISIONE DELL'UTENTE (2026-10-15), STIMA, NON UN DATO TARATO:
+# unico per tutti gli aerei, nessun registro ne' dottrina del lato lo fornisce.
+BINGO_RETURN_FACTOR = 1.2
+
+# Via del rientro al bingo (`BingoPoint.via`).
+RETURN_DIRECT = 'direct'     # F6-B2: retta alla base piu' vicina
+RETURN_REVERSE = 'reverse'   # F6-B2bis: rotta a ritroso (con partenza in volo, poi diretto alla base)
+RETURN_FORWARD = 'forward'   # F6-B2bis, anello: resto della rotta fino al LAND
+
+
+@dataclass(frozen=True)
+class ReturnRule:
+    """Regola di rientro al bingo lungo la rotta a ritroso (F6-B2bis, v. il commento sopra).
+
+    La costruisce dalla missione `Mission_Adapter.bingo_return_rule`; i tratti passati a `bingo_point`
+    devono essere quelli della missione INTERA (fino al LAND), perche' l'anello legge il resto della rotta.
+
+    Attributes:
+        departure: la missione parte da una base (`start_mode` diverso da AIR, primo punto DEPARTURE): il
+            ritroso finisce nel primo punto dei tratti, che e' il punto d'atterraggio. False = partenza in
+            volo: dopo il ritroso, tratto diretto alla base piu' vicina al punto di comparsa.
+        loop: missione ad anello (LAND sulla stessa base del DEPARTURE): ritorno = il piu' breve fra ritroso
+            e resto della rotta. Ha senso solo con `departure`.
+        factor: fabbisogno = factor x ritorno (default `BINGO_RETURN_FACTOR`).
+    """
+    departure: bool
+    loop: bool = False
+    factor: float = BINGO_RETURN_FACTOR
+
+    def __post_init__(self):
+        if isinstance(self.factor, bool) or not isinstance(self.factor, (int, float)) or self.factor < 1.0:
+            raise ValueError(f"factor must be a number >= 1, got {self.factor!r}")
+
+        if self.loop and not self.departure:
+            raise ValueError("a loop mission (LAND on the departure base) needs a departure from a base")
 
 
 @dataclass(frozen=True)
 class BingoPoint:
-    """Istante e punto del bingo di un asset lungo i suoi tratti (F6-B2), calcolati A MONTE.
+    """Istante e punto del bingo di un asset lungo i suoi tratti (F6-B2, F6-B2bis), calcolati A MONTE.
 
     Attributes:
         asset_id: id di dominio.
         time/point: istante assoluto [s] e posizione (x, y, z) del bingo, interpolata nel tratto.
         leg_index: indice del tratto (nella sequenza passata a `bingo_point`) in cui cade.
-        base: punto d'atterraggio (x, y, 0) della base idonea piu' vicina al punto di bingo.
+        base: punto d'atterraggio, l'ultimo di `route`: la base piu' vicina (x, y, 0) nel rientro diretto e
+            dopo il ritroso con partenza in volo, il DEPARTURE dell'asset nel ritroso da una base, l'ultimo
+            punto della rotta (LAND) nell'anello che prosegue.
         fuel: carburante residuo [frazione] al bingo.
-        margin: margine [frazione] a fine tratti: residuo - rientro dall'ultimo punto - riserva (< 0:
-            e' il carburante che manca per rientrare con la riserva, v. `return_margin`).
+        margin: margine [frazione del carico pieno], < 0 quando c'e' il bingo. F6-B2: a fine tratti, residuo
+            - rientro dall'ultimo punto - riserva. F6-B2bis: il MINIMO lungo i tratti di residuo - fattore x
+            ritorno (sull'anello il minimo e' a meta' strada, non a fine tratti). In entrambi i casi e' il
+            carburante che manca, v. `return_margin`.
+        route: punti del rientro, dal punto di bingo a `base` compresi (la spezzata che l'aereo vola alla
+            crociera); F6-B2: (point, base).
+        via: RETURN_DIRECT, RETURN_REVERSE o RETURN_FORWARD.
+        return_length: lunghezza [m] di `route`.
     """
     asset_id: str
     time: float
@@ -463,6 +551,9 @@ class BingoPoint:
     base: Tuple[float, float, float]
     fuel: float
     margin: float
+    route: Tuple[Tuple[float, float, float], ...] = ()
+    via: str = RETURN_DIRECT
+    return_length: float = 0.0
 
 
 def nearest_base(point: Sequence[float], bases: Iterable[Tuple[float, float]]
@@ -493,17 +584,205 @@ def _cruise_rate(asset) -> Optional[float]:
     return rate if rate is not None and rate > 0.0 else None
 
 
+
+
+def _path_length(points: Sequence[Sequence[float]]) -> float:
+    return sum(math.dist(a, b) for a, b in zip(points, points[1:]))
+
+
+def _dedup(points) -> Tuple[Tuple[float, float, float], ...]:
+    """Spezzata senza punti consecutivi coincidenti (entro `_LENGTH_EPS`)."""
+    kept = []
+
+    for point in points:
+        point = tuple(float(c) for c in point)
+
+        if not kept or math.dist(kept[-1], point) > _LENGTH_EPS:
+            kept.append(point)
+
+    return tuple(kept)
+
+
+# ── F6-B2bis: profilo del rientro lungo la rotta a ritroso ───────────────────
+
+@dataclass(frozen=True)
+class _Step:
+    """Un tratto nel profilo della regola F6-B2bis, in metri di crociera."""
+    energy: float     # E all'inizio del tratto
+    travelled: float  # s all'inizio del tratto (metri di movimento gia' percorsi)
+    spent: float      # E consumata dal tratto intero
+    length: float     # metri di movimento del tratto (0 per una sosta)
+
+
+def _reverse_profile(asset, legs: Sequence, bases: Tuple[Tuple[float, float], ...], rule: ReturnRule,
+                     hold_regime: str):
+    """(consumo per metro, D0, base del tratto diretto | None, passi, S) della regola F6-B2bis, oppure None se il
+    controllo non e' possibile (carburante non modellato, nessun tratto, partenza in volo senza basi)."""
+    rate = _cruise_rate(asset)
+
+    if rate is None or not legs:
+        return None
+
+    direct, home = 0.0, None
+
+    if not rule.departure:
+        nearest = nearest_base(legs[0].p_start, bases)
+
+        if nearest is None:
+            return None
+
+        direct, home = nearest
+
+    steps = []
+    energy = float(asset.fuel) / rate
+    travelled = 0.0
+
+    for leg in legs:
+        demand = leg_fuel_demand(asset, leg, HOLD_REGIME, hold_regime)
+
+        if demand is None:
+            return None
+
+        length = 0.0 if is_stationary(leg) else _leg_length(leg)
+        steps.append(_Step(energy, travelled, demand / rate, length))
+        energy -= demand / rate
+        travelled += length
+
+    return rate, direct, home, steps, travelled
+
+
+def _pieces(step: _Step, rule: ReturnRule, direct: float, total: float) -> List[Tuple[float, float]]:
+    """H nel tratto come massimo di funzioni lineari a + b u della frazione u in [0, 1]: il ritroso
+    (Hb) e, sull'anello, il resto della rotta (Hf). V. il commento-formula della sezione BINGO."""
+    f = float(rule.factor)
+    pieces = [(step.energy - f * (step.travelled + direct), -(step.spent + f * step.length))]
+
+    if rule.loop:
+        pieces.append((step.energy - f * (total - step.travelled), -(step.spent - f * step.length)))
+
+    return pieces
+
+
+def _value(pieces, u: float) -> float:
+    return max(a + b * u for a, b in pieces)
+
+
+def _first_nonpositive(pieces) -> Optional[float]:
+    """La minima u in [0, 1] in cui TUTTE le funzioni lineari sono <= 0 (H = loro massimo <= 0), None se
+    nessuna: intersezione degli intervalli {a + b u <= 0}, in forma chiusa."""
+    lo, hi = 0.0, 1.0
+
+    for a, b in pieces:
+        if b == 0.0:
+            if a > 0.0:
+                return None
+        elif b > 0.0:
+            hi = min(hi, -a / b)
+        else:
+            lo = max(lo, -a / b)
+
+    return lo if lo <= hi else None
+
+
+def _leg_minimum(pieces) -> float:
+    """Minimo di H nel tratto: agli estremi o, sull'anello, dove ritroso e resto della rotta si equivalgono."""
+    candidates = [0.0, 1.0]
+
+    if len(pieces) == 2:
+        (a1, b1), (a2, b2) = pieces
+
+        if b1 != b2:
+            cross = (a2 - a1) / (b1 - b2)
+
+            if 0.0 < cross < 1.0:
+                candidates.append(cross)
+
+    return min(_value(pieces, u) for u in candidates)
+
+
+def _reverse_margin(profile, rule: ReturnRule) -> float:
+    rate, direct, _, steps, total = profile
+    return rate * min(_leg_minimum(_pieces(step, rule, direct, total)) for step in steps)
+
+
+def _return_route(legs: Sequence, index: int, fraction: float, point, forward: bool, home
+                  ) -> Tuple[Tuple[float, float, float], ...]:
+    """Punti del rientro dal punto di bingo (tratto `index`, frazione `fraction`): a ritroso i punti
+    d'inizio dei tratti di MOVIMENTO gia' percorsi fino al primo (piu' `home` con partenza in volo), oppure
+    in avanti i punti di fine dei tratti di movimento rimanenti fino all'ultimo (anello). Le soste non si
+    ripercorrono: un tratto fermo non aggiunge punti."""
+    points = [point]
+
+    if forward:
+        if not is_stationary(legs[index]) and fraction < 1.0:
+            points.append(legs[index].p_end)
+
+        points.extend(leg.p_end for leg in legs[index + 1:] if not is_stationary(leg))
+    else:
+        if not is_stationary(legs[index]) and fraction > 0.0:
+            points.append(legs[index].p_start)
+
+        points.extend(leg.p_start for leg in reversed(legs[:index]) if not is_stationary(leg))
+
+        if home is not None:
+            points.append(home)
+
+    return _dedup(points)
+
+
+def _reverse_bingo_point(asset, asset_id: str, legs: Sequence, profile, rule: ReturnRule,
+                         margin: float) -> BingoPoint:
+    rate, direct, home, steps, total = profile
+    found = None
+
+    for index, step in enumerate(steps):
+        fraction = _first_nonpositive(_pieces(step, rule, direct, total))
+
+        if fraction is not None:
+            found = (index, fraction)
+            break
+
+    if found is None:
+        # Non puo' accadere con il margine (minimo di H) negativo, se non per arrotondamento: bingo a fine tratti.
+        found = (len(legs) - 1, 1.0)
+
+    index, fraction = found
+    leg, step = legs[index], steps[index]
+    time = float(leg.t_start) + fraction * _leg_duration(leg)
+    point = tuple(float(s) + fraction * (float(e) - float(s)) for s, e in zip(leg.p_start, leg.p_end))
+    travelled = step.travelled + fraction * step.length
+    # Anello: prosegue sul resto della rotta solo se strettamente piu' breve del ritroso (parita': ritroso).
+    forward = rule.loop and (total - travelled) < travelled + direct
+    route = _return_route(legs, index, fraction, point, forward, home)
+    fuel = (step.energy - fraction * step.spent) * rate
+    return BingoPoint(asset_id=asset_id, time=time, point=point, leg_index=index, base=route[-1],
+                      fuel=max(0.0, fuel), margin=margin, route=route,
+                      via=RETURN_FORWARD if forward else RETURN_REVERSE, return_length=_path_length(route))
+
+
+# ── margine e punto di bingo ──────────────────────────────────────────────────
+
 def return_margin(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], reserve: float = BINGO_RESERVE,
-                  hold_regime: str = HOLD_REGIME) -> Optional[float]:
-    """Margine [frazione del carico pieno] a fine `legs`: carburante attuale - fabbisogno dei tratti (alla
+                  hold_regime: str = HOLD_REGIME, rule: Optional[ReturnRule] = None) -> Optional[float]:
+    """Margine [frazione del carico pieno] del rientro al bingo lungo `legs`; >= 0: nessun bingo.
+
+    `rule` None (F6-B2, rientro rettilineo): a fine `legs`, carburante attuale - fabbisogno dei tratti (alla
     crociera, soste nel tempo come `leg_fuel_demand`) - rientro in linea retta dall'ultimo punto alla base
-    piu' vicina - `reserve`. >= 0: l'asset rientra con la riserva.
+    piu' vicina - `reserve`.
+    `rule` dato (F6-B2bis, rotta a ritroso, v. la sezione BINGO): il MINIMO lungo `legs` di carburante
+    residuo - `rule.factor` x carburante del ritorno; `reserve` non e' usata. `bases` serve solo alla
+    partenza in volo.
 
     Returns:
-        Il margine, oppure None se il carburante non e' modellato, non ci sono tratti o basi (nessun
-        controllo possibile: il chiamante decide).
+        Il margine, oppure None se il controllo non e' possibile (il chiamante decide): carburante non
+        modellato, nessun tratto, nessuna base (F6-B2) o partenza in volo senza basi (F6-B2bis).
     """
     bases = tuple(bases)
+
+    if rule is not None:
+        profile = _reverse_profile(asset, legs, bases, rule, hold_regime)
+        return None if profile is None else _reverse_margin(profile, rule)
+
     rate = _cruise_rate(asset)
 
     if rate is None or not legs or not bases:
@@ -524,23 +803,36 @@ def return_margin(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], r
 
 
 def bingo_point(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], reserve: float = BINGO_RESERVE,
-                hold_regime: str = HOLD_REGIME) -> Optional[BingoPoint]:
-    """Il bingo di `asset` lungo `legs` (F6-B2): il primo istante in cui il residuo basta appena per
-    rientrare alla base piu' vicina di `bases` con la riserva (regola e formula sopra), calcolato A MONTE
-    alla crociera sul carburante attuale (non mutato).
+                hold_regime: str = HOLD_REGIME, rule: Optional[ReturnRule] = None) -> Optional[BingoPoint]:
+    """Il bingo di `asset` lungo `legs`: il primo istante in cui il residuo basta appena per il rientro
+    (regole e formule nella sezione BINGO), calcolato A MONTE alla crociera sul carburante attuale (non
+    mutato). Il `BingoPoint` porta anche la spezzata del rientro (`route`).
 
     Args:
-        legs: i tratti che CONSUMANO, in ordine di tempo (come `fuel_exhaustion`).
+        legs: i tratti che CONSUMANO, in ordine di tempo (come `fuel_exhaustion`); con `rule` quelli della
+            missione INTERA fino al LAND (v. `ReturnRule`).
         bases: posizioni (x, y) delle basi idonee (in sessione: `Mission_Adapter.air_base_points` del lato).
+        reserve: riserva della regola F6-B2 (ignorata con `rule`).
+        rule: None = F6-B2 (rientro rettilineo con la riserva); `ReturnRule` = F6-B2bis (rotta a ritroso,
+            fabbisogno `rule.factor` x il ritorno).
 
     Returns:
-        Il `BingoPoint`, oppure None se l'asset rientra con la riserva dalla fine dei tratti
-        (`return_margin` >= 0, a meno del rumore `_FUEL_EPS`) o se il controllo non e' possibile
-        (carburante non modellato, nessun tratto, nessuna base).
+        Il `BingoPoint`, oppure None se non c'e' bingo (`return_margin` >= 0, a meno del rumore
+        `_FUEL_EPS`) o se il controllo non e' possibile (v. `return_margin`).
     """
     bases = tuple(bases)
-    margin = return_margin(asset, legs, bases, reserve, hold_regime)
     asset_id = _domain_id(asset)
+
+    if rule is not None:
+        profile = None if asset_id is None else _reverse_profile(asset, legs, bases, rule, hold_regime)
+
+        if profile is None:
+            return None
+
+        margin = _reverse_margin(profile, rule)
+        return None if margin >= -_FUEL_EPS else _reverse_bingo_point(asset, asset_id, legs, profile, rule, margin)
+
+    margin = return_margin(asset, legs, bases, reserve, hold_regime)
 
     if margin is None or asset_id is None or margin >= -_FUEL_EPS:
         return None
@@ -602,4 +894,5 @@ def bingo_point(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], res
     point = tuple(float(s) + fraction * (float(e) - float(s)) for s, e in zip(leg.p_start, leg.p_end))
     _, base = nearest_base(point, bases)
     return BingoPoint(asset_id=asset_id, time=time, point=point, leg_index=index, base=base,
-                      fuel=max(0.0, fuel), margin=margin)
+                      fuel=max(0.0, fuel), margin=margin, route=(point, base), via=RETURN_DIRECT,
+                      return_length=math.dist(point, base))

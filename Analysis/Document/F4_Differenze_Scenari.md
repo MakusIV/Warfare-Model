@@ -1544,3 +1544,109 @@ Suite 4224 test OK (7 skipped; +29 rispetto a 4195: 7 S26, 9 `Test_Fuel_Model`, 
 (`bingo=False`); il test instabile preesistente `Test_Tactical_Evaluation...testCalcFightResult` e' passato).
 Fotografia: prima delle modifiche IDENTICA su 722; dopo, v. le tabelle sopra (cattura finale 762 esecuzioni,
 fuori dal repository).
+
+## F6 passo B2bis: bingo con rientro lungo la rotta a ritroso (decisioni dell'utente del 2026-10-15)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (722 esecuzioni, SENZA S26: la
+baseline B2 non e' stata installata). **Dopo**: `Session_Simulator.F6_BINGO_REVERSE_ROUTE = True`.
+`--compare`, 2026-10-15 su osboxes: **770 esecuzioni confrontate, le 722 della base IDENTICHE**, 48 righe di
+differenza tutte `NEW` (S26-BINGO: 8 seed x 6 varianti). Nessuno scenario aereo esistente arriva (o smette di
+arrivare) al bingo con la nuova regola. Fotografia del repository NON rigenerata.
+
+### Il cambio
+
+1. **Rientro = rotta percorsa a ritroso** (`Fuel_Model.bingo_point` con una `ReturnRule`): dal punto di bingo
+   l'aereo ripercorre al contrario i tratti di MOVIMENTO gia' volati (il DES non devia le rotte, quindi sono
+   quelli pianificati), alle quote dei waypoint (la discesa e' sul tratto finale), senza le soste (WAIT,
+   orbite), fino al DEPARTURE, dove atterra e resta a terra (`parking_cold`).
+2. **Partenza in volo** (`start_mode` AIR): ritroso fino al punto di comparsa, poi tratto diretto (3D) alla
+   base del lato piu' vicina a quel punto, a quota 0; senza base del lato nessun bingo (F6-A come prima).
+3. **Missione ad anello** (`Mission_Adapter.is_loop_mission`): ritorno = min(ritroso, resto della rotta fino al
+   LAND), soli tratti di movimento; l'aereo prende la via piu' breve (`BingoPoint.via` = `reverse` o
+   `forward`; parita' -> ritroso).
+4. **Fabbisogno di bingo = `BINGO_RETURN_FACTOR` (1,2) x il carburante del ritorno** alla crociera, al posto
+   della riserva fissa 0,10. Bingo al primo istante con `E - 1,2 min(Lb, Lf) <= 0` (metri di crociera; v. il
+   commento-formula della sezione BINGO di `Fuel_Model`): in un tratto di movimento H e' il massimo di due
+   funzioni lineari, in forma chiusa; il margine (`return_margin`, `BingoPoint.margin`) e' ora il MINIMO di H
+   lungo i tratti (sull'anello H non e' monotono), e il bingo esiste se e solo se e' negativo.
+5. **Destinazione finale esclusa**: il LAND su un'altra base (divert) non conta.
+6. **Calcolo sulla missione intera**: in sessione il bingo usa `Mission_Adapter.airborne_legs` (gli stessi
+   tratti del validatore, anche oltre la fine della sessione, cosi' l'anello legge il resto della rotta fino
+   al LAND); un bingo che cadrebbe dopo la fine della sessione non c'e' nella sessione. I tratti del rientro
+   (`Session_Simulator._return_legs`, spezzata `BingoEnd.route` a velocita' costante di crociera) vanno a
+   scheduler, risolutore e carburante.
+7. **Validatore** (`check_mission_bingo`, parametro nuovo `reverse_route`, default True come l'interruttore):
+   stessa regola (`bingo_return_rule`) e stessi tratti dell'esecutore; base del lato richiesta solo con la
+   partenza in volo (chi parte da una base rientra sul suo DEPARTURE).
+8. **Interruttore** `F6_BINGO_REVERSE_ROUTE`: spento = la F6-B2 esattamente com'era (rientro rettilineo con la
+   riserva, tratti ritagliati alla sessione, codice invariato); il validatore con `reverse_route=False`.
+
+Invariati: niente salve offensive dal bingo, bersaglio e intercettore, BINGO / ABORTED(BINGO), `bingo` False
+= nessun controllo, a secco sul rientro le regole della F6-A.
+
+Scelte dove le decisioni lasciavano margine:
+- **"stessa base" dell'anello**: se i riferimenti di DEPARTURE e LAND sono entrambi asset di una base vera
+  decide il blocco (stesso oggetto); altrimenti decide la distanza orizzontale fra i due punti, entro
+  `AIR_BASE_AREA_RADIUS_M` (3000 m, stima gia' dichiarata della F5-B). Stesso modello di `lands_on_air_base`;
+- **rotta oltre la fine della sessione**: si usa la rotta della missione fino al LAND (`airborne_legs`), sempre
+  disponibile dalla missione: nessun limite residuo per l'anello;
+- **partenza "da una base"** = `start_mode` diverso da AIR (la `Mission` impone allora il primo punto
+  DEPARTURE); il punto d'atterraggio e' il primo punto della rotta DELL'ASSET (con l'offset di formazione);
+- **`BingoPoint`**: campi nuovi `route` (punti del rientro dal bingo all'atterraggio), `via`, `return_length`;
+  `base` = ultimo punto di `route`; nella regola F6-B2 `route` = (punto, base).
+
+### Costanti stimate
+
+- `Fuel_Model.BINGO_RETURN_FACTOR = 1.2`: DECISIONE DELL'UTENTE, STIMA, non un dato tarato; unico per tutti
+  gli aerei.
+- `Fuel_Model.BINGO_RESERVE = 0.10` resta (stima della F6-B2) solo per l'interruttore spento.
+- S26: costanti DI TEST, carburante `BINGO_FUEL` 0,28 (era 0,3) e `DRY_FUEL` 0,15; 0,28 scelto perche' basta
+  per i 300 km anche al regime di combattimento (autonomia 'max' 1140 km: 0,263) in 'switch_off', e mette il
+  bingo a ~56 km dal sito Red (fuori dal sensore di 40 km).
+
+### Scenario S26 rifatto (`Test_Session_Scenarios_S26.py`, 48 esecuzioni, 8 test)
+
+F-16C 'Strike' (autonomia di crociera 1570 km, crociera 266,7 m/s) in volo a 5000 m da (10 km, 0) a
+(310 km, 0) a 250 m/s; base Blue in (0, 0); tratto diretto dal punto di comparsa alla base ~11,2 km.
+- 'bingo' (0,28): validatore rifiuta ("does not keep the bingo fuel ... bingo at t=774.9 s"); in sessione
+  bingo a ~775 s in (203,7 km, 0, 5000) (stesso istante del validatore e della bisezione del test), ritroso
+  fino a (10 km, 0, 5000), discesa sulla base, atterraggio a ~1543 s con ~0,026 a bordo (20% del ritorno di
+  204,9 km); tre FuelEvent (andata e due tratti di rientro); Red non spara mai;
+- 'reverse_off' (nuova, 0,28, `F6_BINGO_REVERSE_ROUTE` spento): la F6-B2, bingo rettilineo a ~545 s in
+  (146,3 km, 0, 5000), atterraggio a ~1094 s con la riserva 0,1; validatore con `reverse_route=False` rifiuta
+  per la riserva;
+- 'none', 'switch_off', 'no_base', 'bingo_off': stesso significato di prima ('switch_off' = `F6_BINGO`
+  spento: rotta completata, Red spara nella maggior parte delle repliche).
+
+### Test
+
+- `Test_Fuel_Model.TestReverseRouteBingo` (nuova, 11 test): fattore dichiarato e validazione di `ReturnRule`,
+  ritroso con sosta esclusa e residuo = 1,2 x ritorno, margine = minimo, anello con ritroso piu' breve, anello
+  con resto della rotta piu' breve (bingo in una sosta), anello sicuro con ~1,1 volte la rotta, partenza in
+  volo con tratto diretto alla base piu' vicina al punto di comparsa, nessuna base, bingo alla partenza,
+  nessun controllo senza carburante/tratti, regola F6-B2 invariata senza regola. `TestBingo` (F6-B2) invariata.
+- `Test_Mission_Adapter.TestReverseRouteBingoValidator` (nuova, 7 test): riconoscimento dell'anello (distanza,
+  stesso blocco, basi diverse, partenza in volo), regola della missione, partenza in volo con base e senza,
+  partenza da base senza basi, anello sicuro a ~1,1 x e divert escluso, coincidenza validatore/`bingo_point`
+  su una serie di carburanti, interruttore spento = F6-B2. `TestBingoValidator` passa `reverse_route=False`.
+- `Test_Session_Simulator.TestBingo`: rientro a ritroso sulla base (valori nuovi), interruttore spento =
+  F6-B2, test d'integrazione nuovo con DEPARTURE da pista, sosta non ripercorsa, LAND su altra base, punti
+  ripercorsi W2, W1, W0, atterraggio sul DEPARTURE, istante uguale a quello del validatore (+2 test).
+- `Test_Session_Scenarios_S26`: docstring e asserzioni al nuovo comportamento, variante 'reverse_off', test
+  nuovo sul rientro rettilineo; `Scenario_Baseline`: 'reverse_off' in coda all'unita' S26-BINGO.
+
+### Limiti noti
+
+- Idoneita' della base per tipo d'aereo non modellata (qualunque base aerea amica, per la partenza in volo).
+- Consumo deterministico alla crociera: un aereo che combatte consuma di piu' nella contabilita' (regime
+  'max') e puo' arrivare a secco prima della base, senza ri-scheduling.
+- Il ritroso ripassa sulle minacce incontrate all'andata; la discesa e' quella dei waypoint (nessun profilo
+  di avvicinamento, terreno non modellato).
+- Divert escluso per decisione: una missione di trasferimento verso un'altra base richiede carburante per
+  circa 2,2 volte la rotta per non andare in bingo.
+- Il validatore resta non chiamato dal codice di produzione (come nella F6-B2).
+
+### Verifica
+
+Suite completa: **4245 test OK (7 skipped)**, +21 rispetto a 4224 (11 `Test_Fuel_Model`, 7
+`Test_Mission_Adapter`, 2 `Test_Session_Simulator`, 1 S26). Fotografia: 722 IDENTICHE, 48 nuove (S26).

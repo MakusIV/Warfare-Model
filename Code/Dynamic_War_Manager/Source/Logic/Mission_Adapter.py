@@ -223,7 +223,7 @@ Gli istanti EFFETTIVI di arrivo ai punti (`waypoint_times`, dalle attese compres
 per tratto, e l'esaurimento tronca i tratti (`Session_Simulator`, "Carburante"; `Fuel_Model`); qui i
 tratti non cambiano.
 
-## Bingo a priori (F6-B2 del piano della Missione, decisione 14)
+## Bingo a priori (F6-B2 del piano della Missione, decisione 14; rientro rifatto dalla F6-B2bis, sotto)
 
 `check_mission_bingo` e' il VALIDATORE di pianificazione del carburante: una missione aerea che non
 rientra con la riserva (`Fuel_Model.BINGO_RESERVE`, stima) e' RIFIUTATA con un `ValueError` che dice
@@ -238,6 +238,18 @@ che decide con lo stato della campagna; l'esecutore (sintetico o DCS, "RTB on bi
 ordine ma fa tornare l'aereo al bingo in volo (`Session_Simulator`, "Bingo"). I due usano lo stesso
 criterio (`Fuel_Model.bingo_point`): con lo stesso carburante e le stesse basi la missione rifiutata qui
 e' esattamente quella che in sessione arriva al bingo.
+
+**F6-B2bis (decisioni dell'utente del 2026-10-15).** Con `reverse_route` True (default, come
+`Session_Simulator.F6_BINGO_REVERSE_ROUTE` acceso) il rientro non e' piu' la retta dall'ultimo punto: e'
+la rotta percorsa A RITROSO (tratti di movimento senza le soste) fino al DEPARTURE, o, partendo in volo,
+fino al punto di comparsa e poi diretto alla base del lato piu' vicina; il fabbisogno e'
+`Fuel_Model.BINGO_RETURN_FACTOR` (1,2, stima) x il carburante del ritorno, al posto della riserva fissa.
+La regola della missione e' `bingo_return_rule`; la missione ad ANELLO (`is_loop_mission`: LAND sulla
+stessa base del DEPARTURE, per blocco del riferimento o, in mancanza, entro `AIR_BASE_AREA_RADIUS_M`)
+rientra per la via piu' breve fra ritroso e resto della rotta, quindi e' sicura con circa 1,1 volte il
+carburante della rotta. Il LAND su un'altra base (divert) non conta. Base idonea richiesta solo con la
+partenza in volo: chi parte da una base rientra sul suo DEPARTURE. Con False la regola della F6-B2 qui
+sopra, invariata.
 
 ## Cosa NON fa
 - Nessun circuito d'orbita (v. sopra); il carburante non e' calcolato qui (`Fuel_Model`, F6-A).
@@ -1147,14 +1159,57 @@ def airborne_legs(movement: AssetMovement) -> List[CS.Leg]:
     return legs
 
 
-def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_bases: Iterable[Tuple[float, float]],
-                        t0: float = 0.0, reserve: Optional[float] = None) -> Optional[Dict[str, float]]:
-    """Bingo A PRIORI (F6-B2, v. "Bingo" nel docstring del modulo): una missione aerea che non rientra con la
-    riserva e' RIFIUTATA.
+def is_loop_mission(mission: Mission) -> bool:
+    """La missione aerea e' ad ANELLO: parte da una base (`start_mode` diverso da AIR, primo punto DEPARTURE) e
+    finisce con un LAND sulla STESSA base (F6-B2bis, v. "Bingo a priori" nel docstring del modulo).
 
-    Per ogni asset della missione: carburante attuale - fabbisogno della missione intera alla crociera
-    (`airborne_legs`: andata, attese, ritorno pianificati, senza taglio alla sessione) - rientro in linea
-    retta dall'ultimo punto alla base idonea piu' vicina - riserva (`Fuel_Model.return_margin`) >= 0.
+    "Stessa base", deterministico, con lo stesso modello di `lands_on_air_base` (F5-B):
+      * se i riferimenti di DEPARTURE e LAND sono ENTRAMBI asset di una base vera (`is_air_base_reference`),
+        decide il blocco: stessa base se e solo se e' lo stesso oggetto blocco;
+      * altrimenti decide la distanza orizzontale fra i due punti: entro `AIR_BASE_AREA_RADIUS_M` (l'area di
+        una base, stima gia' dichiarata della F5-B) sono la stessa base.
+    """
+    if mission.domain != 'air' or mission.start_mode is StartMode.AIR or len(mission.waypoints) < 2:
+        return False
+
+    first, last = mission.waypoints[0], mission.waypoints[-1]
+
+    if first.role is not WaypointRole.DEPARTURE or last.role is not WaypointRole.LAND:
+        return False
+
+    origin, landing = first.waypoint.reference, last.waypoint.reference
+
+    if is_air_base_reference(origin) and is_air_base_reference(landing):
+        return origin.block is landing.block
+
+    (x0, y0, _), (x1, y1, _) = _xyz(first.waypoint.point), _xyz(last.waypoint.point)
+    return math.hypot(x1 - x0, y1 - y0) <= AIR_BASE_AREA_RADIUS_M
+
+
+def bingo_return_rule(mission: Mission) -> FM.ReturnRule:
+    """La regola di rientro al bingo lungo la rotta a ritroso (F6-B2bis) della missione aerea: partenza da una
+    base se `start_mode` non e' AIR (il primo punto e' allora il DEPARTURE, `Mission` lo impone), anello se
+    `is_loop_mission`; fattore `Fuel_Model.BINGO_RETURN_FACTOR`. La usano il validatore (`check_mission_bingo`)
+    e l'esecutore (`Session_Simulator`): stesso criterio."""
+    departure = mission.start_mode is not StartMode.AIR
+    return FM.ReturnRule(departure=departure, loop=departure and is_loop_mission(mission))
+
+
+def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_bases: Iterable[Tuple[float, float]],
+                        t0: float = 0.0, reserve: Optional[float] = None,
+                        reverse_route: bool = True) -> Optional[Dict[str, float]]:
+    """Bingo A PRIORI (v. "Bingo a priori" nel docstring del modulo): una missione aerea che in volo
+    arriverebbe al bingo e' RIFIUTATA.
+
+    Per ogni asset della missione, sulla missione intera alla crociera (`airborne_legs`: andata, attese,
+    ritorno pianificati, senza taglio alla sessione):
+      * `reverse_route` True (F6-B2bis, come `Session_Simulator.F6_BINGO_REVERSE_ROUTE` acceso): il
+        carburante non scende mai sotto `Fuel_Model.BINGO_RETURN_FACTOR` x il ritorno lungo la rotta a
+        ritroso (regola `bingo_return_rule`); `reserve` non e' usata;
+      * `reverse_route` False (F6-B2, interruttore spento): carburante - fabbisogno - rientro in linea retta
+        dall'ultimo punto alla base idonea piu' vicina - riserva >= 0.
+    Il chiamante passa `reverse_route` uguale all'interruttore dell'esecutore: e' lo stesso criterio
+    (`Fuel_Model.bingo_point`).
 
     Args:
         mission: la missione.
@@ -1162,34 +1217,38 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
         air_bases: posizioni (x, y) delle basi IDONEE (`air_base_points` del lato della missione: qualunque
             base aerea amica, come la planata della F6-A; idoneita' per tipo d'aereo non modellata).
         t0: inizio della sessione (serve solo a derivare i movimenti).
-        reserve: riserva [frazione del carico pieno], None = `Fuel_Model.BINGO_RESERVE`.
+        reserve: riserva della regola F6-B2 [frazione del carico pieno], None = `Fuel_Model.BINGO_RESERVE`.
+        reverse_route: regola del rientro (sopra).
 
     Returns:
-        `{asset_id: margine}` [frazione del carico pieno, >= 0] degli asset controllati; None se il
-        controllo non si applica (missione non aerea, o `EndCriteria.bingo` False: la missione dichiara di
-        non rientrare al bingo). Un asset con carburante non modellato o senza rotta non e' controllato
-        (debug).
+        `{asset_id: margine}` [frazione del carico pieno, >= 0, v. `Fuel_Model.return_margin`] degli asset
+        controllati; None se il controllo non si applica (missione non aerea, o `EndCriteria.bingo` False: la
+        missione dichiara di non rientrare al bingo). Un asset con carburante non modellato o senza rotta
+        non e' controllato (debug).
 
     Raises:
-        ValueError: nessuna base idonea a cui rientrare, oppure un asset non rientra con la riserva (il
-            messaggio dice quanto carburante manca e dove cadrebbe il bingo in volo).
+        ValueError: nessuna base idonea a cui rientrare quando serve (F6-B2 sempre; F6-B2bis solo con
+            partenza in volo: partendo da una base il rientro finisce sul DEPARTURE), oppure un asset
+            arriverebbe al bingo (il messaggio dice quanto carburante manca e dove cadrebbe il bingo in volo).
     """
     if mission.domain != 'air' or not mission.end_criteria.bingo:
         return None
 
     reserve = FM.BINGO_RESERVE if reserve is None else float(reserve)
+    rule = bingo_return_rule(mission) if reverse_route else None
     bases = tuple(air_bases)
 
-    if not bases:
-        raise ValueError(f"mission {mission.mission_id!r}: no suitable air base of its side to return to: it cannot "
-                         f"return with the fuel reserve (bingo)")
+    if not bases and (rule is None or not rule.departure):
+        reason = "it cannot return with the fuel reserve (bingo)" if rule is None else \
+            "an aircraft starting in the air cannot return at bingo"
+        raise ValueError(f"mission {mission.mission_id!r}: no suitable air base of its side to return to: {reason}")
 
     margins: Dict[str, float] = {}
 
     for movement in mission_movements(mission, t0, bases):
         asset = assets.get(movement.asset_id)
         legs = airborne_legs(movement)
-        margin = None if asset is None else FM.return_margin(asset, legs, bases, reserve)
+        margin = None if asset is None else FM.return_margin(asset, legs, bases, reserve, rule=rule)
 
         if margin is None:
             logger.debug(f"check_mission_bingo: mission {mission.mission_id!r}, asset {movement.asset_id!r}: fuel "
@@ -1198,13 +1257,19 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
 
         # Lo stesso criterio del bingo in volo (`Fuel_Model.bingo_point`, che esiste se e solo se il margine
         # e' negativo): la missione rifiutata qui e' esattamente quella che in sessione tornerebbe al bingo.
-        bingo = FM.bingo_point(asset, legs, bases, reserve)
+        bingo = FM.bingo_point(asset, legs, bases, reserve, rule=rule)
 
-        if bingo is not None:
+        if bingo is not None and rule is None:
             raise ValueError(f"mission {mission.mission_id!r}: asset {movement.asset_id!r} does not return with the "
                              f"fuel reserve ({reserve:.3f} of a full load): {-margin:.4f} of a full load is missing "
                              f"for the route and the return to the nearest air base (fuel {float(asset.fuel):.4f}); "
                              f"in flight it would reach bingo at t={bingo.time:.1f} s")
+
+        if bingo is not None:
+            raise ValueError(f"mission {mission.mission_id!r}: asset {movement.asset_id!r} does not keep the bingo "
+                             f"fuel ({rule.factor:.2f} x the return along its route): {-margin:.4f} of a full load "
+                             f"is missing (fuel {float(asset.fuel):.4f}); in flight it would reach bingo at "
+                             f"t={bingo.time:.1f} s and return {bingo.via} ({bingo.return_length:.0f} m)")
 
         margins[movement.asset_id] = margin
 

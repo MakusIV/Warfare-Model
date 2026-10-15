@@ -349,10 +349,12 @@ regime 'max' non e' ricavabile per l'asset si ricade su 'nominal'.
 - un asset distrutto a meta' rotta consuma comunque il tragitto (troncato) intero (il carburante di un
   relitto non ha conseguenze di campagna);
 - un asset senza rotta (fermo) non produce FuelEvent; il carburante di partenza e il rifornimento non
-  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B2 (sotto).
+  sono toccati (rifornimento: F8); bingo in volo con rientro: F6-B2 e F6-B2bis (sotto).
 
-## Bingo (F6-B2 del piano della Missione, decisione 14 dell'utente)
+## Bingo (F6-B2 del piano della Missione, decisione 14 dell'utente; rientro rifatto dalla F6-B2bis)
 
+Regola della F6-B2 (rientro rettilineo con la riserva), valida con `F6_BINGO_REVERSE_ROUTE` SPENTO; con
+l'interruttore acceso (default) il rientro e' lungo la rotta a ritroso, v. il paragrafo F6-B2bis sotto.
 Interruttore `F6_BINGO` (attivo). Per ogni aereo di una missione AEREA con `EndCriteria.bingo` (default
 True) e con almeno una base aerea del suo lato fra le forze passate (`Mission_Adapter.air_base_points`;
 "base idonea" = qualunque base aerea amica, come la planata della F6-A: l'idoneita' per tipo d'aereo non
@@ -381,6 +383,31 @@ criterio, quindi la missione che quel validatore rifiuta e' esattamente quella c
 Limiti: il bingo e' calcolato alla CROCIERA come l'esaurimento (un aereo che combatte consuma di piu' nella
 contabilita' e puo' arrivare a secco prima della base senza ri-scheduling); rientro in linea retta senza
 quota di rientro ne' terreno; la riserva e' unica per tutti gli aerei.
+
+**Rientro lungo la rotta a ritroso (F6-B2bis, decisioni dell'utente del 2026-10-15, interruttore
+`F6_BINGO_REVERSE_ROUTE`, attivo).** Il bingo e il rientro sono calcolati sulla missione INTERA
+(`Mission_Adapter.airborne_legs`: gli stessi tratti del validatore, anche oltre la fine della sessione) con
+la regola della missione (`Mission_Adapter.bingo_return_rule`, `Fuel_Model.bingo_point`):
+  * il rientro ripercorre AL CONTRARIO i tratti di movimento gia' volati (il DES non devia le rotte negli
+    ingaggi, quindi sono quelli pianificati fino al bingo), alle quote dei waypoint, senza le soste
+    (WAIT/orbite non si ripercorrono), fino al DEPARTURE, dove atterra; partita in volo (`start_mode` AIR):
+    fino al punto di comparsa, poi un tratto diretto alla base del lato piu' vicina a quel punto, a quota 0
+    (la discesa e' sul tratto finale); senza base del lato nessun bingo (regole della F6-A, come prima);
+  * missione ad ANELLO (`Mission_Adapter.is_loop_mission`, LAND sulla base del DEPARTURE): la via piu' breve
+    fra il ritroso e il resto della rotta fino al LAND (tratti di movimento rimanenti, senza le soste);
+  * il LAND su un'altra base (divert) non conta: la destinazione finale e' esclusa;
+  * fabbisogno di bingo = `Fuel_Model.BINGO_RETURN_FACTOR` (1,2, stima dell'utente) x il carburante del
+    ritorno alla crociera, al posto della riserva fissa; il rientro si consuma alla crociera;
+  * un bingo che cadrebbe dopo la fine della sessione non c'e' nella sessione;
+  * i tratti del rientro (`_return_legs`, la spezzata `BingoEnd.route` a velocita' costante) vanno a
+    scheduler, risolutore e carburante come il rientro rettilineo; tutto il resto (nessuna salva offensiva
+    dal bingo, bersaglio e intercettore, a terra `parking_cold` sulla base raggiunta, BINGO /
+    ABORTED(BINGO), a secco sul rientro le regole della F6-A) e' invariato.
+Spento: la regola rettilinea con la riserva qui sopra, esattamente come la F6-B2.
+Limiti: idoneita' della base per tipo d'aereo non modellata (qualunque base aerea amica); consumo
+deterministico alla crociera (lo stesso limite della F6-B2 per chi combatte); il rientro non evita le
+minacce incontrate all'andata (le ripercorre); un tratto di rotta lungo e quasi rettilineo rende il
+ritroso piu' lungo della retta, un percorso tortuoso molto di piu'.
 
 ## Sessione aperta (`SessionOrder.t_end is None`)
 
@@ -478,12 +505,22 @@ F6_DESTROYED_POSTURE = True
 
 # F6-B2, interruttore dedicato (stessa ragione dei precedenti):
 #   * `F6_BINGO` (ATTIVO): bingo in volo con rientro (v. "Bingo" nel docstring): un aereo di una missione
-#     con `EndCriteria.bingo` che arriva al bingo (`Fuel_Model.bingo_point`, riserva
-#     `Fuel_Model.BINGO_RESERVE`) torna in linea retta alla base aerea del suo lato piu' vicina, smette di
-#     lanciare salve offensive dal bingo, e l'esito e' BINGO / ABORTED(BINGO). Spento: nessun bingo, l'aereo
+#     con `EndCriteria.bingo` che arriva al bingo (`Fuel_Model.bingo_point`) torna alla base (dalla F6-B2bis
+#     lungo la rotta a ritroso, `F6_BINGO_REVERSE_ROUTE`; senza, in linea retta alla base del lato piu'
+#     vicina con la riserva `Fuel_Model.BINGO_RESERVE`), smette di lanciare salve offensive dal bingo, e
+#     l'esito e' BINGO / ABORTED(BINGO). Spento: nessun bingo, l'aereo
 #     vola fino all'esaurimento (come la F6-A/F6-B1). Il bingo A PRIORI (`Mission_Adapter.check_mission_bingo`)
 #     e' del pianificatore e non dipende dall'interruttore.
 F6_BINGO = True
+
+# F6-B2bis, interruttore dedicato (stessa ragione dei precedenti), letto solo con `F6_BINGO` acceso:
+#   * `F6_BINGO_REVERSE_ROUTE` (ATTIVO): rientro al bingo lungo la rotta percorsa A RITROSO fino al DEPARTURE
+#     (partenza in volo: fino al punto di comparsa, poi diretto alla base del lato piu' vicina; anello: il
+#     piu' breve fra ritroso e resto della rotta), fabbisogno `Fuel_Model.BINGO_RETURN_FACTOR` x il ritorno,
+#     calcolato sulla missione intera (v. "Bingo" nel docstring). Spento: il rientro rettilineo con la
+#     riserva `Fuel_Model.BINGO_RESERVE` della F6-B2, esattamente come prima. Il validatore
+#     `Mission_Adapter.check_mission_bingo` segue lo stesso criterio con il suo parametro `reverse_route`.
+F6_BINGO_REVERSE_ROUTE = True
 
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
@@ -514,19 +551,23 @@ class FuelEnd:
 
 @dataclass(frozen=True)
 class BingoEnd:
-    """Rientro di un aereo al bingo (F6-B2), calcolato a monte.
+    """Rientro di un aereo al bingo (F6-B2, F6-B2bis), calcolato a monte.
 
     Attributes:
         asset_id: id di dominio.
         time/point: istante [s] e posizione (x, y, z) del bingo (`Fuel_Model.BingoPoint`).
-        landing_point: punto d'atterraggio (x, y, 0) sulla base idonea piu' vicina al punto di bingo.
-        landing_time: fine del rientro in linea retta alla crociera dell'asset.
+        landing_point: punto d'atterraggio, l'ultimo di `route` (`Fuel_Model.BingoPoint.base`).
+        landing_time: fine del rientro alla crociera dell'asset.
+        route: punti del rientro dal punto di bingo a `landing_point` compresi (F6-B2: la retta (point,
+            landing_point); F6-B2bis: la rotta a ritroso o, sull'anello, il resto della rotta), volati a
+            velocita' costante; vuota = (point, landing_point).
     """
     asset_id: str
     time: float
     point: Tuple[float, float, float]
     landing_point: Tuple[float, float, float]
     landing_time: float
+    route: Tuple[Tuple[float, float, float], ...] = ()
 
 
 # ── IDENTITA' ─────────────────────────────────────────────────────────────────
@@ -955,28 +996,52 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
 
 # ── BINGO: RIENTRO IN VOLO (F6-B2) ────────────────────────────────────────────
 
-def _bingo_end(asset, asset_id: str, consuming, air_bases) -> Optional[BingoEnd]:
-    """Bingo dell'aereo sui suoi tratti che consumano e suo rientro (F6-B2), o None se rientra con la
-    riserva dalla fine dei tratti (o il controllo non e' possibile).
+def _bingo_end(asset, asset_id: str, consuming, air_bases, rule: Optional[FM.ReturnRule] = None) -> Optional[BingoEnd]:
+    """Bingo dell'aereo sui suoi tratti che consumano e suo rientro, o None se non arriva al bingo (o il
+    controllo non e' possibile).
 
-    Rientro in linea retta dal punto di bingo alla base del lato piu' vicina (`Fuel_Model.bingo_point`),
-    alla crociera dell'asset (in mancanza quella del tratto in corso), come la planata della F6-A."""
-    bingo = FM.bingo_point(asset, consuming, air_bases)
+    `rule` None (F6-B2): rientro in linea retta dal punto di bingo alla base del lato piu' vicina con la
+    riserva. `rule` dato (F6-B2bis): rientro lungo la spezzata `Fuel_Model.BingoPoint.route` (rotta a
+    ritroso, o resto della rotta sull'anello), e `consuming` sono i tratti della missione intera. In
+    entrambi i casi alla crociera dell'asset (in mancanza quella del tratto in corso), come la planata della
+    F6-A."""
+    bingo = FM.bingo_point(asset, consuming, air_bases, rule=rule)
 
     if bingo is None:
         return None
 
     speed = FM.cruise_speed(asset) or _moving_speed(consuming, bingo.time)
-    length = sqrt(sum((e - s) ** 2 for s, e in zip(bingo.point, bingo.base)))
-    duration = length / speed if speed else 0.0
-    return BingoEnd(asset_id, bingo.time, bingo.point, bingo.base, bingo.time + duration)
+    duration = bingo.return_length / speed if speed else 0.0
+    return BingoEnd(asset_id, bingo.time, bingo.point, bingo.base, bingo.time + duration, bingo.route)
+
+
+def _return_legs(end: BingoEnd) -> List[CS.Leg]:
+    """Tratti del rientro al bingo lungo `end.route`, a velocita' costante da `end.time` a `end.landing_time`
+    (istanti proporzionali alla lunghezza percorsa). Nessun tratto se il rientro e' nullo."""
+    points = end.route or (end.point, end.landing_point)
+    lengths = [sqrt(sum((e - s) ** 2 for s, e in zip(a, b))) for a, b in zip(points, points[1:])]
+    total = sum(lengths)
+
+    if total <= 0.0:
+        return []
+
+    legs, done = [], 0.0
+
+    for (a, b), length in zip(zip(points, points[1:]), lengths):
+        t_start = end.time + (end.landing_time - end.time) * done / total
+        done += length
+        t_end = end.landing_time if done >= total else end.time + (end.landing_time - end.time) * done / total
+        legs.append(CS.Leg(t_start=t_start, t_end=t_end, p_start=tuple(a), p_end=tuple(b)))
+
+    return legs
 
 
 def _legs_after_bingo(legs, end: BingoEnd, t0: float, session_end: float, park: bool) -> List[CS.Leg]:
-    """Tratti dell'asset fino al bingo, poi il rientro in linea retta sulla base (F6-B2) e, con `park`
-    (tratti di presenza), la sosta a terra sulla base fino alla fine della sessione. Senza tratti degeneri."""
+    """Tratti dell'asset fino al bingo, poi il rientro sulla base (`_return_legs`: la retta della F6-B2 o la
+    spezzata della F6-B2bis) e, con `park` (tratti di presenza), la sosta a terra sulla base fino alla fine
+    della sessione. Senza tratti degeneri."""
     kept = [leg for leg in CS.clamp_legs(legs, t0, end.time) if leg.duration > CS.TIME_EPS]
-    kept.append(CS.Leg(t_start=end.time, t_end=end.landing_time, p_start=end.point, p_end=end.landing_point))
+    kept.extend(_return_legs(end))
 
     if park:
         kept.append(CS.Leg(t_start=end.landing_time, t_end=max(float(session_end), end.landing_time),
@@ -1563,8 +1628,11 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
         moving_legs[asset_id] = MA.movement_legs(movement, t0, session_end, presence=False)
 
     # F6-B2: bingo in volo, calcolato A MONTE sui tratti che consumano (come l'esaurimento, v. "Bingo"):
-    # oltre il bingo l'aereo torna in linea retta alla base del lato piu' vicina. Prima dell'esaurimento,
-    # che e' poi cercato sui tratti con il rientro (a secco sul rientro: planata o perdita, F6-A).
+    # oltre il bingo l'aereo torna alla base. Prima dell'esaurimento, che e' poi cercato sui tratti con il
+    # rientro (a secco sul rientro: planata o perdita, F6-A). F6-B2bis (`F6_BINGO_REVERSE_ROUTE`): rientro
+    # lungo la rotta a ritroso, calcolato sulla missione INTERA (`Mission_Adapter.airborne_legs`, gli stessi
+    # tratti del validatore, anche oltre la fine della sessione: l'anello legge il resto della rotta fino al
+    # LAND); un bingo che cadrebbe dopo la fine della sessione non c'e' nella sessione.
     bingo_ends: Dict[str, BingoEnd] = {}
 
     for asset_id, movement in movement_of.items():
@@ -1576,14 +1644,22 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
             continue
 
         bases = air_bases.get(getattr(blocks[mission.block_id], 'side', None), ())
-        end = _bingo_end(asset, asset_id, _consuming_legs(asset_id, moving_legs[asset_id], grounded), bases) \
-            if bases else None
+
+        if F6_BINGO_REVERSE_ROUTE:
+            end = _bingo_end(asset, asset_id, _consuming_legs(asset_id, MA.airborne_legs(movement), grounded),
+                             bases, MA.bingo_return_rule(mission))
+
+            if end is not None and end.time >= session_end - CS.TIME_EPS:
+                end = None
+        else:
+            end = _bingo_end(asset, asset_id, _consuming_legs(asset_id, moving_legs[asset_id], grounded), bases) \
+                if bases else None
 
         if end is not None:
             bingo_ends[asset_id] = end
             moving_legs[asset_id] = _legs_after_bingo(moving_legs[asset_id], end, t0, session_end, park=False)
             logger.info(f"run_session: asset {asset_id!r} reaches bingo at t={end.time:.1f}: it returns to the "
-                        f"nearest air base, landing at t={end.landing_time:.1f}")
+                        f"air base at {end.landing_point}, landing at t={end.landing_time:.1f}")
 
     grounded = _grounded_after_bingo(grounded, bingo_ends)
 

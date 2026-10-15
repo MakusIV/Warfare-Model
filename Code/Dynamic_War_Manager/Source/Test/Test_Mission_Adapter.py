@@ -1016,36 +1016,43 @@ class _FuelAsset:
 
 
 class TestBingoValidator(_Base):
-    """`check_mission_bingo`: la missione aerea che non rientra con la riserva e' rifiutata (F6-B2).
-    Rotta di 40 km a 3000 m, base alla partenza (0, 0): andata 40 km + rientro ~40,1 km (3D)."""
+    """`check_mission_bingo` con `reverse_route` False: la regola della F6-B2, invariata (la missione aerea che
+    non rientra con la riserva e' rifiutata). Rotta di 40 km a 3000 m, base alla partenza (0, 0): andata
+    40 km + rientro ~40,1 km (3D)."""
 
     BASE = ((0.0, 0.0),)
 
+    def _check(self, *args, **kwargs):
+        return MA.check_mission_bingo(*args, reverse_route=False, **kwargs)
+
     def test_enough_fuel_is_accepted_with_its_margin(self):
-        margins = MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
+        margins = self._check(_mission(), {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
         rate = 1.0 / 100_000.0
         expected = 1.0 - 40_000.0 * rate - math.hypot(40_000.0, 3_000.0) * rate - 0.1
         self.assertAlmostEqual(margins['a1'], expected, delta=1e-12)
 
     def test_not_returning_with_the_reserve_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "'a1' does not return with the fuel reserve"):
-            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=0.85)}, self.BASE, reserve=0.1)
+            self._check(_mission(), {'a1': _FuelAsset(fuel=0.85)}, self.BASE, reserve=0.1)
 
     def test_default_reserve_is_the_fuel_model_one(self):
         fuel = 0.4 + math.hypot(40_000.0, 3_000.0) / 100_000.0 + FM.BINGO_RESERVE
-        self.assertIsNotNone(MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=fuel + 1e-6)}, self.BASE))
+        self.assertIsNotNone(self._check(_mission(), {'a1': _FuelAsset(fuel=fuel + 1e-6)}, self.BASE))
         with self.assertRaises(ValueError):
-            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=fuel - 1e-6)}, self.BASE)
+            self._check(_mission(), {'a1': _FuelAsset(fuel=fuel - 1e-6)}, self.BASE)
 
     def test_no_suitable_base_is_rejected(self):
         with self.assertRaisesRegex(ValueError, 'no suitable air base'):
-            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, ())
+            self._check(_mission(), {'a1': _FuelAsset(fuel=1.0)}, ())
 
     def test_not_applicable(self):
-        """Missione di terra, o `EndCriteria.bingo` False: nessun controllo (None)."""
+        """Missione di terra, o `EndCriteria.bingo` False: nessun controllo (None), con entrambe le regole."""
         no_bingo = _mission(end_criteria=MT.EndCriteria(bingo=False))
-        self.assertIsNone(MA.check_mission_bingo(no_bingo, {'a1': _FuelAsset(fuel=0.01)}, ()))
-        self.assertIsNone(MA.check_mission_bingo(_ground_mission(), {'t1': _FuelAsset('t1', fuel=0.0)}, ()))
+
+        for reverse in (False, True):
+            self.assertIsNone(MA.check_mission_bingo(no_bingo, {'a1': _FuelAsset(fuel=0.01)}, (), reverse_route=reverse))
+            self.assertIsNone(MA.check_mission_bingo(_ground_mission(), {'t1': _FuelAsset('t1', fuel=0.0)}, (),
+                                                     reverse_route=reverse))
 
     def test_unmodelled_fuel_is_not_checked(self):
         self.assertEqual(MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=None)}, self.BASE), {})
@@ -1057,7 +1064,7 @@ class TestBingoValidator(_Base):
         route = _three_points()
         orbit = _mission(route=route, waypoints=_with_actions(route, {1: [_wait('orbit', 600.0)]}))
         with self.assertRaises(ValueError):
-            MA.check_mission_bingo(orbit, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
+            self._check(orbit, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1)
 
         route = _route([(0, 0, 3000), (40_000, 0, 3000)])
         roles = [MT.WaypointRole.DEPARTURE, MT.WaypointRole.LAND]
@@ -1066,5 +1073,132 @@ class TestBingoValidator(_Base):
         movement, = MA.mission_movements(parked)
         self.assertEqual([FM.is_stationary(leg) for leg in MA._timeline(movement)[0]], [True, False])
         self.assertEqual(len(MA.airborne_legs(movement)), 1)
-        self.assertIsNotNone(MA.check_mission_bingo(parked, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1))
+        self.assertIsNotNone(self._check(parked, {'a1': _FuelAsset(fuel=1.0)}, self.BASE, reserve=0.1))
+
+
+# ── BINGO A PRIORI CON RIENTRO A RITROSO (F6-B2bis) ───────────────────────────
+
+_SQUARE = [(0, 0, 0), (30_000, 0, 3000), (30_000, 30_000, 3000), (0, 30_000, 3000)]
+
+
+def _from_base(points, land=None, start_mode=MT.StartMode.RUNWAY, references=(None, None)):
+    """Missione aerea che parte da una base (DEPARTURE) sui punti dati e finisce in `land` (LAND); i
+    riferimenti di DEPARTURE e LAND sono `references`."""
+    land = land if land is not None else points[0]
+    wps = [Waypoint(name=f'w{i}', point=Point3D(*p), obj_reference=references[0] if i == 0 else None)
+           for i, p in enumerate(points)]
+    wps.append(Waypoint(name='land', point=Point3D(*land), obj_reference=references[1]))
+    edges = {(a.name, b.name): Edge(wpA=a, wpB=b, path_type='air', danger_level=0.0, speed=200.0,
+                                    name=f'{a.name}-{b.name}')
+             for a, b in zip(wps, wps[1:])}
+    route = Route(route_type='air', edges=edges, name='loop')
+    roles = [MT.WaypointRole.DEPARTURE] + [MT.WaypointRole.NAV] * (len(wps) - 2) + [MT.WaypointRole.LAND]
+    return _mission(route=route, waypoints=_plan(route, roles=roles), start_mode=start_mode)
+
+
+def _length(points):
+    return sum(math.dist(a, b) for a, b in zip(points, points[1:]))
+
+
+class TestReverseRouteBingoValidator(_Base):
+    """`check_mission_bingo` con la regola F6-B2bis (default `reverse_route` True): fabbisogno 1,2 x il ritorno
+    lungo la rotta a ritroso; anello per la via piu' breve; partenza in volo con il tratto alla base.
+    Autonomia di test 100 km (0,01 del pieno = 1 km) sulla rotta di 40 km, 1000 km (`_jet`) sul quadrato."""
+
+    @staticmethod
+    def _jet(fuel):
+        return _FuelAsset(fuel=fuel, autonomy=1_000_000.0)
+
+    def test_loop_mission_is_recognised(self):
+        """Stessa base: punto LAND entro l'area di una base dal DEPARTURE, o riferimenti nello STESSO blocco
+        base; riferimenti su due basi diverse non sono un anello; partenza in volo mai."""
+        self.assertTrue(MA.is_loop_mission(_from_base(_SQUARE)))
+        near = (MA.AIR_BASE_AREA_RADIUS_M - 1.0, 0.0, 0.0)
+        far = (MA.AIR_BASE_AREA_RADIUS_M + 1.0, 0.0, 0.0)
+        self.assertTrue(MA.is_loop_mission(_from_base(_SQUARE, land=near)))
+        self.assertFalse(MA.is_loop_mission(_from_base(_SQUARE, land=far)))
+        origin, other = _base_reference(), _base_reference()
+        same = _base_reference()
+        same.block = origin.block
+        self.assertTrue(MA.is_loop_mission(_from_base(_SQUARE, land=(25_000, 0, 0), references=(origin, same))))
+        self.assertFalse(MA.is_loop_mission(_from_base(_SQUARE, references=(origin, other))))
+        self.assertFalse(MA.is_loop_mission(_mission(route=_route([(0, 0, 3000), (0, 0, 0)]))))
+
+    def test_return_rule_of_the_mission(self):
+        self.assertEqual(MA.bingo_return_rule(_mission()), FM.ReturnRule(departure=False))
+        self.assertEqual(MA.bingo_return_rule(_from_base(_SQUARE)), FM.ReturnRule(departure=True, loop=True))
+        self.assertEqual(MA.bingo_return_rule(_from_base(_SQUARE, land=(90_000, 0, 0))), FM.ReturnRule(departure=True))
+
+    def test_air_start_needs_a_base_and_the_direct_leg(self):
+        """Partenza in volo da (0, 0, 3000) per 40 km, base in (0, 0): ritorno al bingo = metri percorsi + tratto
+        diretto di 3 km; a fine rotta 1 - 0,4 - 1,2 x (40 + 3) km. Senza base: rifiuto."""
+        base = ((0.0, 0.0),)
+        margins = MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, base)
+        expected = 1.0 - 0.4 - FM.BINGO_RETURN_FACTOR * (40_000.0 + 3_000.0) / 100_000.0
+        self.assertAlmostEqual(margins['a1'], expected, delta=1e-12)
+
+        with self.assertRaisesRegex(ValueError, "'a1' does not keep the bingo fuel"):
+            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=0.4 + 0.4 * 1.2)}, base)
+
+        with self.assertRaisesRegex(ValueError, 'no suitable air base'):
+            MA.check_mission_bingo(_mission(), {'a1': _FuelAsset(fuel=1.0)}, ())
+
+    def test_from_a_base_no_base_list_is_needed(self):
+        """Partenza da una base: il rientro finisce sul DEPARTURE, le basi del lato non servono."""
+        mission = _from_base(_SQUARE, land=(90_000, 0, 0))
+        self.assertIn('a1', MA.check_mission_bingo(mission, {'a1': self._jet(1.0)}, ()))
+
+    def test_loop_is_safe_with_about_1_1_times_its_route(self):
+        """Anello DEPARTURE -> quadrato -> LAND sul DEPARTURE: accettato con (1 + (f - 1) / 2) x la rotta (+1e-6),
+        rifiutato appena sotto; la stessa rotta con il LAND su un'altra base (divert escluso) richiede ben di
+        piu' (ritorno a ritroso lungo tutto il percorso)."""
+        mission = _from_base(_SQUARE)
+        movement, = MA.mission_movements(mission)
+        route = _length([leg.p_start for leg in MA.airborne_legs(movement)] + [MA.airborne_legs(movement)[-1].p_end])
+        safe = (1.0 + (FM.BINGO_RETURN_FACTOR - 1.0) / 2.0) * route / 1_000_000.0
+        self.assertIsNotNone(MA.check_mission_bingo(mission, {'a1': self._jet(safe + 1e-6)}, ()))
+
+        with self.assertRaises(ValueError):
+            MA.check_mission_bingo(mission, {'a1': self._jet(safe - 1e-6)}, ())
+
+        divert = _from_base(_SQUARE, land=(-1_000, 30_000 + MA.AIR_BASE_AREA_RADIUS_M + 1.0, 0))
+
+        with self.assertRaises(ValueError):
+            MA.check_mission_bingo(divert, {'a1': self._jet(safe + 0.05)}, ())
+
+    def test_validator_and_executor_use_the_same_criterion(self):
+        """Per una serie di carburanti la missione e' rifiutata se e solo se `Fuel_Model.bingo_point` sui tratti
+        della missione intera e con la regola della missione (cio' che usa `Session_Simulator`) da' un bingo,
+        e l'istante annunciato e' quello."""
+        mission = _from_base(_SQUARE, land=(60_000, 30_000, 0))
+        movement, = MA.mission_movements(mission)
+        legs, rule = MA.airborne_legs(movement), MA.bingo_return_rule(mission)
+        answers = set()
+
+        for fuel in (0.1, 0.2, 0.3, 0.5, 1.0):
+            asset = self._jet(fuel)
+            bingo = FM.bingo_point(asset, legs, (), rule=rule)
+
+            try:
+                MA.check_mission_bingo(mission, {'a1': asset}, ())
+                rejected = None
+            except ValueError as error:
+                rejected = str(error)
+
+            self.assertEqual(rejected is not None, bingo is not None, fuel)
+            answers.add(rejected is not None)
+
+            if bingo is not None:
+                self.assertIn(f't={bingo.time:.1f} s', rejected)
+
+        self.assertEqual(answers, {True, False})    # la serie copre rifiuti e accettazioni
+
+    def test_switch_off_is_the_straight_rule(self):
+        """`reverse_route` False = la F6-B2: stessa risposta di `Fuel_Model.bingo_point` senza regola."""
+        movement, = MA.mission_movements(_mission())
+        asset = _FuelAsset(fuel=0.85)
+        self.assertIsNotNone(FM.bingo_point(asset, MA.airborne_legs(movement), ((0.0, 0.0),), 0.1))
+
+        with self.assertRaisesRegex(ValueError, 'fuel reserve'):
+            MA.check_mission_bingo(_mission(), {'a1': asset}, ((0.0, 0.0),), reserve=0.1, reverse_route=False)
 

@@ -160,7 +160,7 @@ class AbortReason(Enum):
     THREAT = 'threat'
     DAMAGE = 'damage'
     FUEL = 'fuel'            # carburante esaurito (F6-A: fermo nel punto, o aereo atterrato in planata)
-    BINGO = 'bingo'          # rientro al bingo in volo (F6-B2): l'aereo torna alla base con la riserva
+    BINGO = 'bingo'          # rientro al bingo in volo (F6-B2; dalla F6-B2bis lungo la rotta a ritroso)
     AMMUNITION = 'ammunition'
     SUPPORT_MISSING = 'support_missing'
 
@@ -179,7 +179,8 @@ class AssetEndReason(Enum):
     una "fine di attivita'" senza cambio di rotta (D2.a = B): l'asset resta sulla rotta pianificata.
     Dalla F6-B1 il motore produce WINCHESTER, DAMAGE, TARGET_DESTROYED e MAX_DURATION
     (`Logic/Session_Simulator`, "Fine di attivita' e stato di missione"); dalla F6-B2 BINGO, che invece
-    CAMBIA la rotta (rientro alla base idonea piu' vicina, `Logic/Session_Simulator`, "Bingo"); THREAT
+    CAMBIA la rotta (rientro alla base, dalla F6-B2bis lungo la rotta a ritroso, `Logic/Session_Simulator`,
+    "Bingo"); THREAT
     e MISSION_ABORTED non sono ancora prodotti.
     """
     ROUTE_COMPLETED = 'route_completed'    # ultimo waypoint raggiunto
@@ -734,8 +735,13 @@ class EndCriteria:
     chiudono l'attivita' dell'asset, che prosegue passivo sulla rotta; motivi WINCHESTER, DAMAGE,
     TARGET_DESTROYED, MAX_DURATION nell'esito per asset. `bingo` (F6-B2, interruttore `F6_BINGO`, solo
     missioni aeree): a priori nel validatore di pianificazione `Mission_Adapter.check_mission_bingo`
-    (missione che non rientra con la riserva rifiutata), in volo rientro alla base idonea piu' vicina con
-    motivo BINGO; False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A).
+    (missione che arriverebbe al bingo rifiutata), in volo rientro con motivo BINGO. Dalla F6-B2bis
+    (decisioni dell'utente del 2026-10-15, interruttore `F6_BINGO_REVERSE_ROUTE`) il rientro e' la rotta
+    percorsa a ritroso fino al DEPARTURE (partenza in volo: fino al punto di comparsa, poi diretto alla base
+    del lato piu' vicina; missione ad anello: la via piu' breve fra ritroso e resto della rotta) e il bingo
+    scatta quando il residuo e' 1,2 x il carburante del ritorno (`Fuel_Model.BINGO_RETURN_FACTOR`, stima);
+    il LAND su un'altra base (divert) non conta; a interruttore spento il rientro rettilineo con la riserva
+    della F6-B2. False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A).
     NON letti: `abort_on_threat` (fuori dal piano della F6), `last_waypoint` (la rotta completata resta
     sempre una fine, anche con False).
     """
