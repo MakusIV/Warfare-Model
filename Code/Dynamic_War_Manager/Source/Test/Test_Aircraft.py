@@ -497,6 +497,37 @@ class TestAircraftLoadoutFuel(unittest.TestCase):
         with self.assertRaises(ValueError):
             aircraft.fuel_autonomy('afterburner')
 
+    def test_military_fuel_flow_is_the_registry_emergency_consume(self):
+        """G1: `emergency_fuel_flow` legge `speed_data['emergency']['consume']` del registro [kg/h], senza
+        dipendere dal loadout assegnato."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+
+        aircraft = self._aircraft()
+        expected = float(Aircraft_Data._registry[self.MODEL].speed_data['emergency']['consume'])
+        self.assertEqual(aircraft.emergency_fuel_flow(), expected)
+
+        aircraft.assigned_loadout = "Sparrow CAP/Escort"
+        self.assertEqual(aircraft.emergency_fuel_flow(), expected)
+
+    def test_military_fuel_flow_exists_for_every_registry_model(self):
+        """Sui dati reali: ogni modello del registro ha un consumo militare positivo, maggiore di quello di
+        crociera (`sustained`)."""
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data
+
+        for model, record in Aircraft_Data._registry.items():
+            flow = self._aircraft(model=model).emergency_fuel_flow()
+            self.assertIsNotNone(flow, model)
+            self.assertGreater(flow, record.speed_data['sustained']['consume'], model)
+
+    def test_military_fuel_flow_unknown_or_missing_is_none(self):
+        aircraft = self._aircraft(model="Unknown model")
+        self.assertIsNone(aircraft.emergency_fuel_flow())
+
+        aircraft = self._aircraft()
+        with patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data.Aircraft_Data._registry',
+                   {self.MODEL: MagicMock(speed_data={'emergency': {'airspeed': 2000}})}):
+            self.assertIsNone(aircraft.emergency_fuel_flow())
+
 
 if __name__ == '__main__':
     unittest.main()

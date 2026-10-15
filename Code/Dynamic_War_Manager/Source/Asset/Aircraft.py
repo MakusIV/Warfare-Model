@@ -389,6 +389,37 @@ class Aircraft(Mobile) :
 
         return float(internal) + external
 
+    def emergency_fuel_flow(self) -> Optional[float]:
+        """Consumo orario [kg/h] alla massima spinta MILITARE: `speed_data['emergency']['consume']` del
+        registro (G1 del nuovo modello di bingo, riserva di disimpegno: v. Fuel_Model.disengagement_reserve).
+
+        UNITA' DEDOTTA, NON DOCUMENTATA nel registro (intestazione dei dati di Aircraft_Data: solo
+        velocita', quota e portate): kg/h, per coerenza con il regime `sustained` (F-16: 1100-1200 contro
+        circa 1300-1400 kg/h reali in crociera; autonomia interna 2,5-4 h) e con gli aerei SENZA
+        postbruciatore (A-10: 3000 contro circa 2 x 1500 kg/h dei TF34 alla spinta massima). Le ipotesi
+        lb/h, kg/min e "kg nel `time` del regime" danno valori incompatibili (verifica del 2026-10-15).
+
+        STIMA NON TARATA: per i caccia con postbruciatore il valore e' circa la spinta militare (100% a
+        secco) o meno, e SOTTOSTIMA il consumo reale a postbruciatore pieno di circa 1/6 (F-16A: 4200
+        contro circa 25 000-27 000 kg/h). Correzione del registro rimandata (Piano della Missione,
+        deviazione 17). Indipendente dal loadout.
+
+        Returns:
+            float > 0, oppure None se il modello non e' nel registro o il dato manca o non e' valido.
+        """
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Data import Aircraft_Data as _AircraftData
+
+        record = _AircraftData._registry.get(self._model)
+        speed_data = getattr(record, 'speed_data', None)
+        emergency = speed_data.get('emergency') if isinstance(speed_data, dict) else None
+        flow = emergency.get('consume') if isinstance(emergency, dict) else None
+
+        if isinstance(flow, bool) or not isinstance(flow, (int, float)) or flow <= 0:
+            logger.debug(f"emergency_fuel_flow: model {self._model!r} declares no usable emergency consume")
+            return None
+
+        return float(flow)
+
     def air_combat_power(self) -> float:
         """Combat power aggregata dell'aereo, indipendente dal task aereo (v. set_combat_power).
 

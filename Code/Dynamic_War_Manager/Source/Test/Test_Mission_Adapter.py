@@ -1202,3 +1202,98 @@ class TestReverseRouteBingoValidator(_Base):
         with self.assertRaisesRegex(ValueError, 'fuel reserve'):
             MA.check_mission_bingo(_mission(), {'a1': asset}, ((0.0, 0.0),), reserve=0.1, reverse_route=False)
 
+
+# ── MINIMO DI PIANIFICAZIONE DEL CARBURANTE (G1) ──────────────────────────────
+
+class TestMissionFuelMinimum(_Base):
+    """`check_mission_fuel`: carburante caricato > rotta intera + riserva di disimpegno, con un aereo REALE del
+    registro (F-14A, loadout "Phoenix Fleet Defense") sulla rotta di 40 km."""
+
+    MODEL = "F-14A Tomcat"
+    LOADOUT = "Phoenix Fleet Defense"
+
+    def setUp(self):
+        super().setUp()
+        more = [patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score', return_value=0.5)]
+        more += [patch('Code.Dynamic_War_Manager.Source.' + name + '.logger', MagicMock())
+                 for name in ('Asset.Aircraft', 'Asset.Mobile', 'Asset.Asset', 'Logic.Fuel_Model')]
+        for p in more:
+            p.start()
+        self._patches.extend(more)
+
+    def _aircraft(self, loadout=LOADOUT):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
+        from Code.Dynamic_War_Manager.Source.Block.Block import Block
+        from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type
+
+        block = MagicMock(spec=Block)
+        block.block_class = "Military"
+        aircraft = Aircraft(block=block, asset_type=Air_Asset_Type.FIGHTER, model=self.MODEL)
+        aircraft.assigned_loadout = loadout
+        return aircraft
+
+    def _minimum(self, mission, aircraft):
+        """Rotta intera (alla crociera, `airborne_legs`) + riserva: il minimo, calcolato con le stesse funzioni."""
+        movement, = MA.mission_movements(mission)
+        return MA.route_fuel_demand(aircraft, MA.airborne_legs(movement)) + FM.disengagement_reserve(aircraft)
+
+    def _with_fuel(self, fuel):
+        aircraft = self._aircraft()
+        aircraft.consume_fuel(1.0 - fuel)
+        return aircraft
+
+    def test_full_load_is_accepted_with_its_margin(self):
+        aircraft = self._aircraft()
+        mission = _mission()
+        margins = MA.check_mission_fuel(mission, {'a1': aircraft})
+        self.assertAlmostEqual(margins['a1'], 1.0 - self._minimum(mission, aircraft), delta=1e-12)
+        self.assertGreater(margins['a1'], 0.0)
+
+    def test_just_above_and_below_the_minimum(self):
+        minimum = self._minimum(_mission(), self._aircraft())
+        self.assertIn('a1', MA.check_mission_fuel(_mission(), {'a1': self._with_fuel(minimum + 1e-6)}))
+
+        with self.assertRaisesRegex(ValueError, r"'a1' loads fuel .* disengagement reserve .*military_flow.* is missing"):
+            MA.check_mission_fuel(_mission(), {'a1': self._with_fuel(minimum - 1e-6)})
+
+    def test_the_reserve_matters(self):
+        """Carburante che basta per la sola rotta ma non per rotta + riserva: rifiutato."""
+        aircraft = self._aircraft()
+        movement, = MA.mission_movements(_mission())
+        route = MA.route_fuel_demand(aircraft, MA.airborne_legs(movement))
+
+        with self.assertRaises(ValueError):
+            MA.check_mission_fuel(_mission(), {'a1': self._with_fuel(route + 0.5 * FM.disengagement_reserve(aircraft))})
+
+    def test_holds_count_in_the_whole_route(self):
+        """Un'orbita alla crociera aumenta il fabbisogno: lo stesso carburante, accettato senza, e' rifiutato con."""
+        route = _three_points()
+        plain = _mission(route=route)
+        orbit = _mission(route=route, waypoints=_with_actions(route, {1: [_wait('orbit', 1_800.0)]}))
+        fuel = self._minimum(plain, self._aircraft()) + 1e-3
+        self.assertIn('a1', MA.check_mission_fuel(plain, {'a1': self._with_fuel(fuel)}))
+
+        with self.assertRaises(ValueError):
+            MA.check_mission_fuel(orbit, {'a1': self._with_fuel(fuel)})
+
+    def test_not_applicable(self):
+        """`EndCriteria.bingo` False o missione di terra: nessun controllo (None), anche a serbatoio quasi vuoto."""
+        no_bingo = _mission(end_criteria=MT.EndCriteria(bingo=False))
+        self.assertIsNone(MA.check_mission_fuel(no_bingo, {'a1': self._with_fuel(0.001)}))
+        self.assertIsNone(MA.check_mission_fuel(_ground_mission(), {'t1': _FuelAsset('t1', fuel=0.0)}))
+
+    def test_unmodelled_fuel_is_not_checked(self):
+        """Aereo senza loadout (carburante non modellato), asset assente, stub senza riserva: non controllati."""
+        self.assertEqual(MA.check_mission_fuel(_mission(), {'a1': self._aircraft(loadout=None)}), {})
+        self.assertEqual(MA.check_mission_fuel(_mission(), {}), {})
+        no_reserve = _FuelAsset(fuel=0.01)
+        no_reserve.speed = {'nominal': 200.0, 'max': None}
+        self.assertEqual(MA.check_mission_fuel(_mission(), {'a1': no_reserve}), {})
+
+    def test_not_called_by_the_session(self):
+        """G1 non cambia la sessione: `run_session` non chiama il validatore."""
+        import inspect
+        from Code.Dynamic_War_Manager.Source.Logic import Session_Simulator as SS
+
+        self.assertNotIn('check_mission_fuel', inspect.getsource(SS))
+

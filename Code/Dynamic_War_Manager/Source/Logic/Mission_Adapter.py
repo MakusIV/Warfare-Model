@@ -251,6 +251,17 @@ carburante della rotta. Il LAND su un'altra base (divert) non conta. Base idonea
 partenza in volo: chi parte da una base rientra sul suo DEPARTURE. Con False la regola della F6-B2 qui
 sopra, invariata.
 
+**G1, minimo di pianificazione (decisioni dell'utente del 2026-10-15).** `check_mission_fuel` e' un secondo
+validatore, distinto da `check_mission_bingo`: ogni aereo deve caricare PIU' del carburante della rotta
+INTERA (`airborne_legs` alla crociera, attese comprese, `route_fuel_demand`) + la riserva di disimpegno
+(`Fuel_Model.disengagement_reserve`: 5 minuti alla massima spinta militare, stima; ripiego sul regime 'max'
+del loadout); altrimenti `ValueError` con asset, carburante, fabbisogno, riserva e mancanza. Funzione
+separata e non parametro di `check_mission_bingo` perche' e' un'altra regola: il bingo verifica il criterio
+del rientro in volo dell'esecutore (lo stesso di `Fuel_Model.bingo_point`), il minimo verifica il carico; i
+passi G2-G4 rifaranno il bingo sopra la stessa riserva. Stessa applicabilita' (solo aerea, `EndCriteria.bingo`
+False = nessun controllo); un asset senza carburante o riserva modellati non e' controllato. Come l'altro,
+NON e' chiamato da `run_session` (nessun interruttore: il comportamento in sessione non cambia).
+
 ## Cosa NON fa
 - Nessun circuito d'orbita (v. sopra); il carburante non e' calcolato qui (`Fuel_Model`, F6-A).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
@@ -1271,6 +1282,82 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
                              f"is missing (fuel {float(asset.fuel):.4f}); in flight it would reach bingo at "
                              f"t={bingo.time:.1f} s and return {bingo.via} ({bingo.return_length:.0f} m)")
 
+        margins[movement.asset_id] = margin
+
+    return margins
+
+
+def route_fuel_demand(asset, legs: Sequence) -> Optional[float]:
+    """Carburante [frazione del carico pieno] dei tratti `legs` (la rotta intera, `airborne_legs`) alla
+    crociera, attese comprese nel tempo (`Fuel_Model.leg_fuel_demand`); None se non modellato."""
+    total = 0.0
+
+    for leg in legs:
+        demand = FM.leg_fuel_demand(asset, leg)
+
+        if demand is None:
+            return None
+
+        total += demand
+
+    return total
+
+
+def check_mission_fuel(mission: Mission, assets: Mapping[str, object], t0: float = 0.0,
+                       air_bases: Iterable[Tuple[float, float]] = ()) -> Optional[Dict[str, float]]:
+    """Minimo di PIANIFICAZIONE del carburante (G1, v. "Bingo a priori" nel docstring del modulo): ogni aereo
+    della missione deve caricare PIU' del carburante della rotta intera + la riserva di disimpegno.
+
+    Per ogni asset con carburante modellato: `asset.fuel > fabbisogno + riserva`, dove il fabbisogno e' la
+    rotta INTERA pianificata alla crociera (`airborne_legs`: andata, attese, ritorno; le soste a terra non
+    consumano) e la riserva e' `Fuel_Model.disengagement_reserve` (5 minuti alla massima spinta militare,
+    stima). E' un controllo distinto da `check_mission_bingo` (che verifica il criterio del bingo in volo
+    dell'esecutore): i due si possono chiamare entrambi. NON e' chiamato da `Session_Simulator.run_session`.
+
+    Args:
+        mission: la missione.
+        assets: `{asset_id: asset}` che contiene almeno gli asset della missione.
+        t0: inizio della sessione (serve solo a derivare i movimenti).
+        air_bases: posizioni (x, y) delle basi aeree del lato (`air_base_points`), solo per riconoscere
+            l'atterraggio su una base vera (la sosta dopo non consuma), come `mission_movements`.
+
+    Returns:
+        `{asset_id: margine}` [frazione del carico pieno, > 0: carburante - fabbisogno - riserva] degli asset
+        controllati; None se il controllo non si applica (missione non aerea, o `EndCriteria.bingo` False).
+        Un asset senza carburante modellato, senza rotta o senza riserva modellata non e' controllato (debug).
+
+    Raises:
+        ValueError: un asset non carica piu' di rotta intera + riserva (il messaggio dice asset, carburante,
+            fabbisogno, riserva con la sua provenienza e mancanza).
+    """
+    if mission.domain != 'air' or not mission.end_criteria.bingo:
+        return None
+
+    margins: Dict[str, float] = {}
+
+    for movement in mission_movements(mission, t0, tuple(air_bases)):
+        asset = assets.get(movement.asset_id)
+        fuel = None if asset is None else getattr(asset, 'fuel', None)
+        legs = airborne_legs(movement)
+        demand = None if fuel is None or not legs else route_fuel_demand(asset, legs)
+        reserve = None if demand is None else FM.disengagement_reserve_with_source(asset)
+
+        if reserve is None:
+            logger.debug(f"check_mission_fuel: mission {mission.mission_id!r}, asset {movement.asset_id!r}: fuel or "
+                         f"reserve not modelled, or no route: not checked")
+            continue
+
+        reserve, source = reserve
+        margin = float(fuel) - demand - reserve
+
+        if margin <= 0.0:
+            raise ValueError(f"mission {mission.mission_id!r}: asset {movement.asset_id!r} loads fuel "
+                             f"{float(fuel):.4f} of a full load, not more than the whole route {demand:.4f} + the "
+                             f"disengagement reserve {reserve:.4f} ({source}, {FM.DISENGAGE_TIME:.0f} s at max "
+                             f"military thrust): {-margin:.4f} of a full load is missing")
+
+        logger.debug(f"check_mission_fuel: mission {mission.mission_id!r}, asset {movement.asset_id!r}: fuel "
+                     f"{float(fuel):.4f} > route {demand:.4f} + reserve {reserve:.4f} ({source})")
         margins[movement.asset_id] = margin
 
     return margins

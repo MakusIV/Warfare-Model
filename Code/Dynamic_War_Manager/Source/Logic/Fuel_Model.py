@@ -72,6 +72,21 @@ la regola F6-B2, a interruttore spento). Il LAND su un'altra base (divert) non c
 MINIMO lungo i tratti (sull'anello non e' a fine tratti); il `BingoPoint` porta la spezzata del rientro
 (`route`). Formula e casi nella sezione BINGO del codice.
 
+## Riserva di disimpegno (G1 del nuovo modello di bingo, decisioni dell'utente del 2026-10-15)
+
+Modello complessivo dell'utente (G1-G5): la **riserva** e' il carburante per `DISENGAGE_TIME` (5 minuti,
+stima dell'utente: disimpegno da un'intercettazione e ritorno in rotta) alla **massima spinta militare**
+(senza postbruciatore); il **minimo di pianificazione** e' carburante caricato > rotta intera + riserva; la
+**soglia di bingo in volo** (G2, non ancora fatta) sara' residuo < resto della rotta + riserva.
+  * `disengagement_reserve` / `disengagement_reserve_with_source`: la riserva in frazione del carico pieno,
+    dal consumo militare del registro (`Aircraft.emergency_fuel_flow`, kg/h: unita' dedotta, non
+    documentata; per i caccia con postbruciatore sottostima il postbruciatore pieno di circa 1/6) diviso la
+    capacita' del loadout (`Aircraft.fuel_capacity_kg`); ripiego dichiarato sul regime 'max' del loadout
+    (`velocita' massima x DISENGAGE_TIME`); None se non modellata. Formula nella sezione RISERVA DI
+    DISIMPEGNO del codice;
+  * la usa il validatore `Mission_Adapter.check_mission_fuel`, NON chiamato da `run_session`: in G1 il
+    comportamento in sessione non cambia.
+
 ## Cosa NON fa
 - Non integra il consumo nel risolutore d'ingaggio: `Engagement_Resolver` non modella il
   movimento fra un contatto e l'altro. L'orchestratore tronca i tratti all'esaurimento prima di
@@ -896,3 +911,88 @@ def bingo_point(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], res
     return BingoPoint(asset_id=asset_id, time=time, point=point, leg_index=index, base=base,
                       fuel=max(0.0, fuel), margin=margin, route=(point, base), via=RETURN_DIRECT,
                       return_length=math.dist(point, base))
+
+
+# ── RISERVA DI DISIMPEGNO (G1 del nuovo modello di bingo) ─────────────────────
+#
+# Riserva = il carburante per `DISENGAGE_TIME` secondi alla massima spinta MILITARE (senza postbruciatore),
+# in frazione del carico pieno del loadout (l'unita' del contatore `Mobile.fuel`):
+#
+#     riserva = consumo_militare [kg/h] x DISENGAGE_TIME / 3600 / fuel_capacity_kg()
+#
+# Fonti, in ordine (la provenienza e' restituita da `disengagement_reserve_with_source`):
+#   1) RESERVE_FROM_MILITARY_FLOW: `asset.emergency_fuel_flow()` (registro `Aircraft_Data`,
+#      `speed_data['emergency']['consume']`, in kg/h: unita' DEDOTTA per coerenza con il regime `sustained` e
+#      con dati reali noti, non documentata nel registro, v. il docstring di `Aircraft.emergency_fuel_flow`) e
+#      `asset.fuel_capacity_kg()` (interno + serbatoi esterni del loadout, coerente con il contatore). STIMA
+#      NON TARATA: il dato e' circa la spinta militare; per i caccia con postbruciatore SOTTOSTIMA il consumo
+#      a postbruciatore pieno (circa 1/6). Scelta dell'utente del 2026-10-15 (strada A);
+#   2) RESERVE_FROM_MAX_REGIME (ripiego dichiarato, se manca il dato o la capacita'): il carburante per volare
+#      `velocita' massima x DISENGAGE_TIME` al regime 'max' del loadout (`fuel_for_distance(..., 'max')`, il
+#      profilo `attack`);
+#   3) None: riserva non modellata (il chiamante non controlla).
+# Nessuna estrazione casuale.
+
+# Durata [s] del disimpegno da un'intercettazione e del riposizionamento in rotta, alla massima spinta
+# militare. STIMA DELL'UTENTE (2026-10-15), NON UN DATO TARATO: unica per tutti gli aerei.
+DISENGAGE_TIME = 300.0
+
+# Provenienza della riserva di disimpegno (v. sopra).
+RESERVE_FROM_MILITARY_FLOW = 'military_flow'
+RESERVE_FROM_MAX_REGIME = 'max_regime'
+
+_SECONDS_PER_HOUR = 3600.0
+
+
+def _positive_number(value) -> Optional[float]:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        return None
+
+    return float(value)
+
+
+def _call(asset, name: str):
+    method = getattr(asset, name, None)
+    return method() if callable(method) else None
+
+
+def max_speed(asset) -> Optional[float]:
+    """Velocita' massima [m/s] dell'asset: il regime 'max' del profilo cinematico (`Mobile.speed`), None se
+    non disponibile."""
+    profile = getattr(asset, 'speed', None)
+    return _positive_number(profile.get('max')) if isinstance(profile, Mapping) else None
+
+
+def disengagement_reserve_with_source(asset, duration: float = DISENGAGE_TIME
+                                      ) -> Optional[Tuple[float, str]]:
+    """(riserva di disimpegno [frazione del carico pieno], provenienza), None se non modellata.
+
+    V. la sezione RISERVA DI DISIMPEGNO: consumo alla massima spinta militare x `duration` / capacita' del
+    loadout; ripiego sul regime 'max' del loadout; altrimenti None. Non dipende dal carburante attuale.
+    """
+    flow = _positive_number(_call(asset, 'emergency_fuel_flow'))
+    capacity = _positive_number(_call(asset, 'fuel_capacity_kg'))
+
+    if flow is not None and capacity is not None:
+        return flow * float(duration) / _SECONDS_PER_HOUR / capacity, RESERVE_FROM_MILITARY_FLOW
+
+    speed = max_speed(asset)
+    fuel_for_distance = getattr(asset, 'fuel_for_distance', None)
+
+    if speed is not None and callable(fuel_for_distance):
+        required = fuel_for_distance(speed * float(duration), 'max')
+
+        if required is not None:
+            logger.debug(f"disengagement_reserve: asset {_domain_id(asset)!r} has no military fuel flow or fuel "
+                         f"capacity, fallback on the loadout 'max' regime")
+            return float(required), RESERVE_FROM_MAX_REGIME
+
+    logger.debug(f"disengagement_reserve: asset {_domain_id(asset)!r}: reserve not modelled")
+    return None
+
+
+def disengagement_reserve(asset, duration: float = DISENGAGE_TIME) -> Optional[float]:
+    """Riserva di disimpegno [frazione del carico pieno] (G1), None se non modellata; v.
+    `disengagement_reserve_with_source` per la provenienza."""
+    result = disengagement_reserve_with_source(asset, duration)
+    return None if result is None else result[0]

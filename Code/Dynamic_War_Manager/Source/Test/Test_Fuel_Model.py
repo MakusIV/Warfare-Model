@@ -475,5 +475,103 @@ class TestReverseRouteBingo(_Base):
         self.assertAlmostEqual(bingo.return_length, 20_000.0)
 
 
+# ── RISERVA DI DISIMPEGNO (G1) ────────────────────────────────────────────────
+
+_REAL_MODEL = "F-14A Tomcat"
+_NO_TANKS = "Phoenix Fleet Defense"      # nessun serbatoio esterno
+_WITH_TANKS = "Sparrow CAP/Escort"       # 2 serbatoi esterni
+
+
+class _MaxSpeedStub(_FuelStub):
+    """Stub senza consumo militare ne' capacita': solo autonomia e profilo di velocita'."""
+
+    def __init__(self, max_speed=500.0, **kwargs):
+        super().__init__(**kwargs)
+        self.speed = {'nominal': 200.0, 'max': max_speed}
+
+
+class TestDisengagementReserve(_Base):
+    """`disengagement_reserve`: consumo alla massima spinta militare x DISENGAGE_TIME / capacita' del loadout,
+    con aerei REALI del registro (F-14A) e un loadout assegnato; ripiego sul regime 'max'; None."""
+
+    def setUp(self):
+        super().setUp()
+        more = [patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.get_aircraft_combat_score', return_value=0.5),
+                patch('Code.Dynamic_War_Manager.Source.Asset.Aircraft.logger', MagicMock()),
+                patch('Code.Dynamic_War_Manager.Source.Asset.Asset.logger', MagicMock())]
+        for p in more:
+            p.start()
+        self._patches.extend(more)
+
+    @staticmethod
+    def _aircraft(loadout=_NO_TANKS, model=_REAL_MODEL):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft import Aircraft
+        from Code.Dynamic_War_Manager.Source.Block.Block import Block
+        from Code.Dynamic_War_Manager.Source.Context.Context import Air_Asset_Type
+
+        block = MagicMock(spec=Block)
+        block.block_class = "Military"
+        aircraft = Aircraft(block=block, asset_type=Air_Asset_Type.FIGHTER, model=model)
+        aircraft.assigned_loadout = loadout
+        return aircraft
+
+    def test_disengage_time_is_five_minutes(self):
+        self.assertEqual(FM.DISENGAGE_TIME, 300.0)
+
+    def test_reserve_from_the_military_flow_of_a_real_aircraft(self):
+        """La formula sui dati dell'asset: flusso [kg/h] x 300 s / 3600 / capacita' [kg], provenienza dichiarata,
+        frazione fra 0 e il pieno; indipendente dal carburante attuale."""
+        aircraft = self._aircraft()
+        reserve, source = FM.disengagement_reserve_with_source(aircraft)
+        expected = aircraft.emergency_fuel_flow() * FM.DISENGAGE_TIME / 3600.0 / aircraft.fuel_capacity_kg()
+        self.assertEqual(source, FM.RESERVE_FROM_MILITARY_FLOW)
+        self.assertAlmostEqual(reserve, expected, delta=1e-12)
+        self.assertTrue(0.0 < reserve < 1.0)
+
+        aircraft.consume_fuel(0.5)
+        self.assertAlmostEqual(FM.disengagement_reserve(aircraft), expected, delta=1e-12)
+
+    def test_reserve_is_proportional_to_the_duration(self):
+        aircraft = self._aircraft()
+        self.assertAlmostEqual(FM.disengagement_reserve(aircraft, 2 * FM.DISENGAGE_TIME),
+                               2 * FM.disengagement_reserve(aircraft), delta=1e-12)
+
+    def test_drop_tanks_lower_the_reserve_fraction(self):
+        """Stesso flusso, carico pieno piu' grande (serbatoi esterni): frazione minore."""
+        self.assertLess(FM.disengagement_reserve(self._aircraft(_WITH_TANKS)),
+                        FM.disengagement_reserve(self._aircraft(_NO_TANKS)))
+
+    def test_every_model_with_a_loadout_has_a_reserve_below_a_full_load(self):
+        from Code.Dynamic_War_Manager.Source.Asset.Aircraft_Loadouts import AIRCRAFT_LOADOUTS
+
+        for model, loadouts in AIRCRAFT_LOADOUTS.items():
+            result = FM.disengagement_reserve_with_source(self._aircraft(next(iter(loadouts)), model))
+            self.assertIsNotNone(result, model)
+            self.assertEqual(result[1], FM.RESERVE_FROM_MILITARY_FLOW, model)
+            self.assertTrue(0.0 < result[0] < 1.0, model)
+
+    def test_fallback_on_the_max_regime_without_military_flow(self):
+        """Senza consumo militare (o senza capacita'): il carburante per `velocita' massima x DISENGAGE_TIME` al
+        regime 'max' del loadout, con la provenienza del ripiego."""
+        aircraft = self._aircraft()
+        with patch.object(type(aircraft), 'emergency_fuel_flow', return_value=None):
+            reserve, source = FM.disengagement_reserve_with_source(aircraft)
+        self.assertEqual(source, FM.RESERVE_FROM_MAX_REGIME)
+        self.assertAlmostEqual(reserve, aircraft.fuel_for_distance(aircraft.speed['max'] * FM.DISENGAGE_TIME, 'max'),
+                               delta=1e-12)
+
+        stub = _MaxSpeedStub(max_speed=500.0, autonomy=1_000_000.0)
+        self.assertEqual(FM.disengagement_reserve_with_source(stub),
+                         (500.0 * FM.DISENGAGE_TIME / 1_000_000.0, FM.RESERVE_FROM_MAX_REGIME))
+
+    def test_not_modelled_is_none(self):
+        """Nessun dato: aereo senza loadout (ne' capacita' ne' autonomia), stub senza velocita' massima o
+        senza autonomia."""
+        self.assertIsNone(FM.disengagement_reserve(self._aircraft(loadout=None)))
+        self.assertIsNone(FM.disengagement_reserve(_FuelStub()))
+        self.assertIsNone(FM.disengagement_reserve(_MaxSpeedStub(autonomy=None)))
+        self.assertIsNone(FM.disengagement_reserve(object()))
+
+
 if __name__ == '__main__':
     unittest.main()
