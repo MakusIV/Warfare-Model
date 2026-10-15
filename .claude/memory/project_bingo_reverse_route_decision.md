@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 1e331bbd-207a-4b3c-b85b-2e41ee3532b4
-  modified: 2026-10-15T13:46:03.240Z
+  modified: 2026-10-15T14:07:14.471Z
 ---
 
 ## F6-B2bis (2026-10-15, osboxes): FATTA, verificata da me
@@ -28,6 +28,12 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
     frazione del pieno con `Aircraft.fuel_capacity_kg`.
   - PRIMA va verificata l'unita' di `consume`, che non e' documentata: 4200 per un caccia, se sono kg/h, e' circa 1/6 del consumo reale
     in postbruciatore.
+  - **VERIFICATO 2026-10-15 (agente G1)**: `consume` e' in kg/h (coerente su `sustained`), ma `emergency` corrisponde circa alla
+    spinta MILITARE, non al postbruciatore: F-16 4500 contro circa 25.000 kg/h reali; anche `time` = 60' non e' plausibile.
+  - **DECISO dall'utente (strada A)**: la riserva diventa "5 minuti alla massima spinta militare", dichiarata come stima non tarata.
+    Valori: F-16C circa 12%, F-15C circa 8%, A-10C circa 5% del carburante interno.
+  - Ripiego quando il dato manca: regime `'max'` del loadout.
+  - ARRETRATO: correggere `emergency`/`time` nel registro con dati reali documentati, ed eventuale indicazione del postbruciatore.
 - **Minimo di pianificazione**: carburante caricato > rotta intera + riserva. Si controlla nel validatore a priori.
 - **Soglia di bingo in volo**: residuo < resto della rotta + riserva (si comincia a intaccare la riserva).
 - **Classificazione delle missioni** (mia proposta, implicitamente accettata): per geometria. Trasferimento = LAND non sulla base di
