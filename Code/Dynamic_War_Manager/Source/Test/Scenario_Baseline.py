@@ -109,6 +109,11 @@ Dalla F6-B2 un aereo che arriva al bingo torna alla base idonea piu' vicina
 i tratti, i contatti e il carburante, quindi le voci di sempre (nessuna voce nuova). Il motivo BINGO e lo stato ABORTED(BINGO) sono negli esiti di missione, NON
 registrati nella fotografia (si verificano nei test di S26).
 
+Dal G2 (soglia di bingo con la riserva di disimpegno e albero di decisione, `F6_BINGO_DISENGAGE_RESERVE`) vale lo
+stesso: cambiano tratti, contatti e carburante, nessuna voce nuova. Il nuovo campo
+`AssetMissionOutcome.crew_recovered` (equipaggio recuperato dell'aereo perso per esaurimento) e' nell'esito per
+asset, che la fotografia non registra: non cambia la fotografia di nessuna esecuzione.
+
 ## Uso (dalla root del repo, con l'interprete della macchina)
 
     python3 -m Code.Dynamic_War_Manager.Source.Test.Scenario_Baseline --capture out.json
@@ -280,8 +285,11 @@ UNITS: Sequence[Tuple[str, str, str, Optional[Tuple[str, ...]], Callable]] = (
     # ── S26 (F6-B2: bingo in volo con rientro, bingo a priori) — in coda ──
     # F6-B2bis (2026-10-15): rientro lungo la rotta a ritroso; nuova variante 'reverse_off' (in coda) con
     # `F6_BINGO_REVERSE_ROUTE` spento, cioe' il rientro rettilineo della F6-B2.
+    # G2 (2026-10-15): soglia con la riserva di disimpegno e albero di decisione; nuove varianti in coda
+    # 'reserve_off' (G2 spento: la F6-B2bis), 'transfer_continue' e 'transfer_return' (missione 'Transport').
     ('S26-BINGO', 'Test_Session_Scenarios_S26', 'TestS26Bingo', None,
-     _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off', 'reverse_off')),
+     _by_occurrence('bingo', 'none', 'switch_off', 'no_base', 'bingo_off', 'reverse_off', 'reserve_off',
+                    'transfer_continue', 'transfer_return')),
 )
 # Esclusi di proposito da Test_Session_Simulator: TestInputs (solo chiamate che sollevano),
 # TestNoContact.test_nothing_moves_nothing_meets/test_empty_sides (esito vuoto per

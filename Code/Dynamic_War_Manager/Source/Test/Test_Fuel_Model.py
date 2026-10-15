@@ -573,5 +573,182 @@ class TestDisengagementReserve(_Base):
         self.assertIsNone(FM.disengagement_reserve(object()))
 
 
+# ── SOGLIA DI BINGO E ALBERO DI DECISIONE (G2) ────────────────────────────────
+
+# Rotta a L da una base: 100 km verso est, poi 100 km verso nord (10 m/s: 10000 s per lato).
+NORTH = _Leg(10_000.0, 20_000.0, (100 * KM, 0.0, 0.0), (100 * KM, 100 * KM, 0.0))
+RESERVE = 0.01    # riserva di disimpegno imposta nei test: 10 km di crociera (autonomia 1000 km)
+
+
+class TestBingoDecision(_Base):
+    """`bingo_decision` in posizioni e con residui ARBITRARI (G2): soglia = resto della rotta + riserva,
+    albero del trasferimento e del combattimento, raggiungibilita' senza riserva. Stub con crociera 10 m/s e
+    autonomia 1000 km (0,001 del pieno = 1 km), riserva imposta `RESERVE` salvo dove si verifica il default."""
+
+    @staticmethod
+    def _stub(fuel):
+        return _CruiseStub(fuel=fuel, autonomy=AUTONOMY_1000)
+
+    def _decide(self, fuel, legs, bases=(), rule=DEPARTURE, transfer=False, time=None, reserve=RESERVE):
+        return FM.bingo_decision(self._stub(fuel), legs, bases, rule, transfer=transfer, time=time, reserve=reserve)
+
+    # -- soglia --
+
+    def test_remaining_route_demand_and_threshold(self):
+        """Resto della rotta dal punto (frazione rimanente del tratto in corso + tratti successivi, soste nel
+        tempo alla crociera) e soglia = resto + riserva; default della riserva = `disengagement_reserve`."""
+        stub = self._stub(1.0)
+        self.assertAlmostEqual(FM.remaining_route_demand(stub, [EAST, NORTH]), 0.2, delta=1e-12)
+        self.assertAlmostEqual(FM.remaining_route_demand(stub, [EAST, NORTH], time=2_500.0), 0.175, delta=1e-12)
+        self.assertAlmostEqual(FM.remaining_route_demand(stub, [EAST, NORTH], time=25_000.0), 0.0, delta=1e-12)
+        hold = _Leg(10_000.0, 11_000.0, (100 * KM, 0.0, 0.0), (100 * KM, 0.0, 0.0))     # 10 km equivalenti
+        self.assertAlmostEqual(FM.remaining_route_demand(stub, [EAST, hold], time=10_500.0), 0.005, delta=1e-12)
+        self.assertAlmostEqual(FM.bingo_threshold(stub, [EAST], reserve=RESERVE), 0.11, delta=1e-12)
+        self.assertAlmostEqual(FM.bingo_threshold(stub, [EAST]), 0.1 + FM.disengagement_reserve(stub), delta=1e-12)
+        self.assertIsNone(FM.bingo_threshold(_FuelStub(), [EAST]))     # riserva non modellata
+        self.assertIsNone(FM.remaining_route_demand(stub, []))
+
+    def test_threshold_is_strict(self):
+        """Bingo se e solo se residuo < soglia, in un punto qualunque (qui a 30 km, resto 0,17 + riserva 0,01)."""
+        legs = [EAST, NORTH]
+        self.assertIsNone(self._decide(0.18 + 1e-6, legs, time=3_000.0))
+        self.assertIsNone(self._decide(0.18, legs, time=3_000.0))
+        decision = self._decide(0.18 - 1e-6, legs, time=3_000.0)
+        self.assertEqual((decision.time, decision.point, decision.leg_index), (3_000.0, (30 * KM, 0.0, 0.0), 0))
+        self.assertAlmostEqual(decision.rest, 0.17, delta=1e-12)
+        self.assertAlmostEqual(decision.threshold, 0.18, delta=1e-12)
+
+    def test_default_position_and_fuel_are_the_start_and_the_asset(self):
+        stub = self._stub(0.05)
+        decision = FM.bingo_decision(stub, [EAST], (), DEPARTURE, reserve=RESERVE)
+        self.assertEqual((decision.time, decision.point, decision.fuel), (0.0, (0.0, 0.0, 0.0), 0.05))
+        self.assertEqual(stub.fuel, 0.05)
+
+    def test_no_check(self):
+        """Carburante o riserva non modellati, nessun tratto: None."""
+        self.assertIsNone(FM.bingo_decision(_CruiseStub(fuel=None), [EAST], (), DEPARTURE))
+        self.assertIsNone(FM.bingo_decision(_FuelStub(fuel=0.01), [EAST], (), DEPARTURE))
+        self.assertIsNone(self._decide(0.01, []))
+
+    # -- trasferimento --
+
+    def test_transfer_continues_when_the_rest_of_the_route_is_covered(self):
+        """Residuo fra il resto della rotta e la soglia: CONTINUA, nessun rientro (consuma la riserva)."""
+        decision = self._decide(0.105, [EAST], transfer=True)
+        self.assertEqual((decision.action, decision.route, decision.base, decision.returns),
+                         (FM.BINGO_CONTINUE, (), None, False))
+
+    def test_transfer_returns_along_the_route_to_the_departure(self):
+        """A 30 km, residuo 0,05 < resto 0,17: ritroso fino al DEPARTURE (30 km, raggiungibile)."""
+        decision = self._decide(0.05, [EAST, NORTH], transfer=True, time=3_000.0)
+        self.assertEqual((decision.action, decision.via), (FM.BINGO_DEPARTURE, FM.RETURN_REVERSE))
+        self.assertEqual(decision.route, ((30 * KM, 0.0, 0.0), (0.0, 0.0, 0.0)))
+        self.assertAlmostEqual(decision.return_length, 30 * KM, delta=1e-6)
+
+    def test_transfer_at_the_start_from_a_base_stays_on_the_departure(self):
+        """All'inizio dei tratti il ritroso ha lunghezza zero: atterraggio sul DEPARTURE, nessun movimento."""
+        decision = self._decide(0.05, [EAST], transfer=True)
+        self.assertEqual((decision.action, decision.base, decision.return_length), (FM.BINGO_DEPARTURE,
+                                                                                    (0.0, 0.0, 0.0), 0.0))
+
+    def test_transfer_from_the_air_goes_to_the_base_nearest_to_the_spawn(self):
+        """Partenza in volo: ritroso fino al punto di comparsa, poi diretto alla base del lato piu' vicina."""
+        spawn = _Leg(0.0, 10_000.0, (0.0, 0.0, 3 * KM), (100 * KM, 0.0, 3 * KM))
+        decision = self._decide(0.05, [spawn], bases=[(0.0, -4 * KM), (0.0, 50 * KM)], rule=IN_AIR, transfer=True,
+                                time=1_000.0)
+        self.assertEqual(decision.route, ((10 * KM, 0.0, 3 * KM), (0.0, 0.0, 3 * KM), (0.0, -4 * KM, 0.0)))
+        self.assertEqual(decision.via, FM.RETURN_REVERSE)
+
+    def test_transfer_then_the_nearest_base_in_a_straight_line(self):
+        """A (100 km, 30 km) sulla L il ritroso (130 km) non e' raggiungibile con 0,02: la base piu' vicina in
+        linea retta (2 km a est della rotta), raggiungibile. Il trasferimento non usa le basi alternative."""
+        decision = self._decide(0.02, [EAST, NORTH], bases=[(102 * KM, 30 * KM)], transfer=True, time=13_000.0)
+        self.assertEqual((decision.action, decision.via), (FM.BINGO_NEAREST, FM.RETURN_DIRECT))
+        self.assertEqual(decision.route, ((100 * KM, 30 * KM, 0.0), (102 * KM, 30 * KM, 0.0)))
+        self.assertTrue(decision.reachable)
+
+    def test_transfer_without_a_reachable_base_heads_for_the_nearest(self):
+        """Nessuna base raggiungibile: verso la piu' vicina comunque (UNREACHABLE, le regole della F6-A)."""
+        decision = self._decide(0.001, [EAST, NORTH], bases=[(110 * KM, 30 * KM), (120 * KM, 30 * KM)], transfer=True,
+                                time=13_000.0)
+        self.assertEqual((decision.action, decision.reachable), (FM.BINGO_UNREACHABLE, False))
+        self.assertEqual(decision.base, (110 * KM, 30 * KM, 0.0))
+
+    # -- combattimento --
+
+    def test_combat_never_continues(self):
+        """Lo stesso residuo che fa continuare un trasferimento interrompe il combattimento (qui alla partenza:
+        resta sul DEPARTURE)."""
+        decision = self._decide(0.105, [EAST])
+        self.assertEqual((decision.action, decision.return_length), (FM.BINGO_DEPARTURE, 0.0))
+
+    def test_combat_alternate_base_ahead(self):
+        """A 30 km verso est, base a 2 km dalla rotta in (40 km, 2 km): in avanti fino a (40 km, 0) e poi
+        diretta, 12 km, piu' corta del ritroso (30 km)."""
+        decision = self._decide(0.05, [EAST, NORTH], bases=[(40 * KM, 2 * KM)], time=3_000.0)
+        self.assertEqual((decision.action, decision.via), (FM.BINGO_ALTERNATE, FM.RETURN_ALONG))
+        self.assertEqual(decision.route, ((30 * KM, 0.0, 0.0), (40 * KM, 0.0, 0.0), (40 * KM, 2 * KM, 0.0)))
+        self.assertAlmostEqual(decision.return_length, 12 * KM, delta=1e-6)
+
+    def test_combat_alternate_base_behind(self):
+        """A (100 km, 50 km) sulla L, base a 2 km dalla rotta in (70 km, -2 km): a ritroso per il vertice
+        (100 km, 0) fino a (70 km, 0), poi diretta (82 km), piu' corta del ritroso al DEPARTURE (150 km). Riserva
+        0,1 perche' 0,1 di residuo sia sotto la soglia (resto 0,05)."""
+        decision = self._decide(0.1, [EAST, NORTH], bases=[(70 * KM, -2 * KM)], time=15_000.0, reserve=0.1)
+        self.assertEqual(decision.action, FM.BINGO_ALTERNATE)
+        self.assertEqual(decision.route, ((100 * KM, 50 * KM, 0.0), (100 * KM, 0.0, 0.0), (70 * KM, 0.0, 0.0),
+                                          (70 * KM, -2 * KM, 0.0)))
+        self.assertAlmostEqual(decision.return_length, 82 * KM, delta=1e-6)
+
+    def test_combat_alternate_descends_to_the_base(self):
+        """In quota la base alternativa si raggiunge con un tratto diretto che scende a quota 0."""
+        high = _Leg(0.0, 10_000.0, (0.0, 0.0, 3 * KM), (100 * KM, 0.0, 3 * KM))
+        decision = self._decide(0.05, [high], bases=[(40 * KM, 2 * KM)], time=3_000.0)
+        self.assertEqual(decision.route[-2:], ((40 * KM, 0.0, 3 * KM), (40 * KM, 2 * KM, 0.0)))
+
+    def test_alternate_offset_limit(self):
+        """Base a 3,0 km dalla rotta: alternativa; a 3,1 km: esclusa (ritroso al DEPARTURE)."""
+        self.assertEqual(FM.ALTERNATE_BASE_MAX_OFFSET, 3_000.0)
+        inside = self._decide(0.05, [EAST], bases=[(40 * KM, 3.0 * KM)], time=3_000.0)
+        outside = self._decide(0.05, [EAST], bases=[(40 * KM, 3.1 * KM)], time=3_000.0)
+        self.assertEqual(inside.action, FM.BINGO_ALTERNATE)
+        self.assertEqual((outside.action, outside.base), (FM.BINGO_DEPARTURE, (0.0, 0.0, 0.0)))
+
+    def test_ties_prefer_the_departure_then_x_y(self):
+        """A 30 km: una base SULLA rotta a 60 km (30 km, come il ritroso) perde con la base di partenza; a 50 km
+        due alternative alla stessa distanza (11 km) vince quella con (x, y) minore."""
+        tie = self._decide(0.05, [EAST], bases=[(60 * KM, 0.0)], time=3_000.0)
+        self.assertEqual((tie.action, tie.base), (FM.BINGO_DEPARTURE, (0.0, 0.0, 0.0)))
+        pair = self._decide(0.05, [EAST], bases=[(60 * KM, KM), (40 * KM, KM)], time=5_000.0)
+        self.assertEqual((pair.action, pair.base), (FM.BINGO_ALTERNATE, (40 * KM, KM, 0.0)))
+
+    def test_combat_loop_takes_the_rest_of_the_route_when_shorter(self):
+        """Anello (quadrato di 120 km): a 100 km il resto della rotta (20 km) e' piu' corto del ritroso; residuo
+        0,025 sotto la soglia 0,03."""
+        decision = self._decide(0.025, _square(), rule=LOOP, time=10_000.0)
+        self.assertEqual((decision.action, decision.via), (FM.BINGO_DEPARTURE, FM.RETURN_FORWARD))
+        self.assertAlmostEqual(decision.return_length, 20 * KM, delta=1e-6)
+
+    def test_reachability_needs_no_reserve(self):
+        """A 30 km il ritroso costa 0,03: con 0,03 e' raggiungibile (la riserva si consuma nel rientro); appena
+        sotto no, e senza altre basi l'aereo punta comunque alla piu' vicina in linea retta, qui il DEPARTURE."""
+        exact = self._decide(0.03, [EAST], time=3_000.0)
+        self.assertEqual((exact.action, exact.reachable), (FM.BINGO_DEPARTURE, True))
+        short = self._decide(0.03 - 1e-6, [EAST], time=3_000.0)
+        self.assertEqual((short.action, short.base), (FM.BINGO_UNREACHABLE, (0.0, 0.0, 0.0)))
+
+    def test_combat_without_a_reachable_candidate_takes_the_nearest_reachable_base(self):
+        """A 50 km con 0,03: ritroso (50 km) irraggiungibile, nessuna alternativa entro 3 km; la base a 20 km
+        dalla rotta e' raggiungibile in linea retta."""
+        decision = self._decide(0.03, [EAST], bases=[(50 * KM, 20 * KM)], time=5_000.0)
+        self.assertEqual((decision.action, decision.base), (FM.BINGO_NEAREST, (50 * KM, 20 * KM, 0.0)))
+
+    def test_no_base_at_all(self):
+        """Partenza in volo senza basi: nessun rientro possibile (NO_BASE, regole della F6-A); un trasferimento
+        che puo' concludere continua comunque."""
+        self.assertEqual(self._decide(0.05, [EAST], rule=IN_AIR).action, FM.BINGO_NO_BASE)
+        self.assertEqual(self._decide(0.105, [EAST], rule=IN_AIR, transfer=True).action, FM.BINGO_CONTINUE)
+
+
 if __name__ == '__main__':
     unittest.main()

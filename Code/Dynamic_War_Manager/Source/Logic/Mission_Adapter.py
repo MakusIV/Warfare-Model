@@ -223,7 +223,7 @@ Gli istanti EFFETTIVI di arrivo ai punti (`waypoint_times`, dalle attese compres
 per tratto, e l'esaurimento tronca i tratti (`Session_Simulator`, "Carburante"; `Fuel_Model`); qui i
 tratti non cambiano.
 
-## Bingo a priori (F6-B2 del piano della Missione, decisione 14; rientro rifatto dalla F6-B2bis, sotto)
+## Bingo a priori (F6-B2 del piano della Missione, decisione 14; rientro rifatto dalla F6-B2bis e dal G2, sotto)
 
 `check_mission_bingo` e' il VALIDATORE di pianificazione del carburante: una missione aerea che non
 rientra con la riserva (`Fuel_Model.BINGO_RESERVE`, stima) e' RIFIUTATA con un `ValueError` che dice
@@ -262,11 +262,24 @@ passi G2-G4 rifaranno il bingo sopra la stessa riserva. Stessa applicabilita' (s
 False = nessun controllo); un asset senza carburante o riserva modellati non e' controllato. Come l'altro,
 NON e' chiamato da `run_session` (nessun interruttore: il comportamento in sessione non cambia).
 
+**G2, soglia di bingo e albero di decisione (decisioni dell'utente del 2026-10-15).** Con `disengage_reserve`
+True (default, come `Session_Simulator.F6_BINGO_DISENGAGE_RESERVE` acceso) `check_mission_bingo` applica la
+soglia del G2 all'inizio dei tratti (`mission_bingo_decision` -> `Fuel_Model.bingo_decision`): rifiuta la
+missione se un aereo parte con carburante < rotta intera + riserva di disimpegno, cioe' esattamente quella che
+in sessione va in bingo (anche un trasferimento che poi CONTINUA consumando la riserva: e' sotto il minimo);
+`reserve` e `reverse_route` sono ignorati, le basi non sono richieste. Rapporto con `check_mission_fuel` (G1):
+stessa grandezza, rotta intera + riserva; il G1 rifiuta con carburante <= minimo (decisione "caricato >
+minimo"), il G2 con carburante < soglia (decisione "bingo se residuo < soglia"): differiscono solo
+all'uguaglianza esatta (e al rumore `Fuel_Model._FUEL_EPS`). Il G1 resta il controllo del CARICO, il G2 quello
+che annuncia cosa fara' l'esecutore (istante e decisione dell'albero). Il tipo di missione per l'albero e'
+`is_transfer_mission` (categoria TRANSPORT della mappa di Context; ogni altro tipo = combattimento).
+
 ## Cosa NON fa
 - Nessun circuito d'orbita (v. sopra); il carburante non e' calcolato qui (`Fuel_Model`, F6-A).
 - Non usa ruoli, regole, bersaglio, criteri di fine: arrivano con F6-F7.
 - Nessun rientro (RTB) nella rotta: un aereo che non atterra su una base vera esce di scena; il rientro
-  al bingo lo costruisce la sessione (F6-B2, `Session_Simulator`, "Bingo").
+  al bingo lo costruisce la sessione (F6-B2, `Session_Simulator`, "Bingo"; dal G2 dalla decisione di
+  `mission_bingo_decision`).
 - Nessun RNG, nessuna mutazione: funzioni pure (la vista non copia ne' muta gli asset).
 """
 
@@ -288,7 +301,7 @@ from Code.Dynamic_War_Manager.Source.Command.Mission_Types import (
     WaypointRole,
     route_waypoints,
 )
-from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Sea_Task, postures_for
+from Code.Dynamic_War_Manager.Source.Context.Context import Ground_Action, Mission_Category, Sea_Task, postures_for
 from Code.Dynamic_War_Manager.Source.DataType.Edge import Edge
 from Code.Dynamic_War_Manager.Source.DataType.Route import Route
 from Code.Dynamic_War_Manager.Source.DataType.Waypoint import Waypoint
@@ -1206,14 +1219,40 @@ def bingo_return_rule(mission: Mission) -> FM.ReturnRule:
     return FM.ReturnRule(departure=departure, loop=departure and is_loop_mission(mission))
 
 
+def is_transfer_mission(mission: Mission) -> bool:
+    """La missione aerea e' un TRASFERIMENTO per l'albero di bingo del G2: categoria TRANSPORT nella mappa tipo
+    -> categoria di Context (`Mission.category`, oggi il solo task 'Transport'). Ogni altra missione aerea
+    (combattimento aria-aria e aria-suolo, AWACS, Tanker, Recon, ...) segue la regola di COMBATTIMENTO."""
+    return mission.domain == 'air' and mission.category is Mission_Category.TRANSPORT
+
+
+def mission_bingo_decision(mission: Mission, movement: AssetMovement, asset, air_bases: Iterable[Tuple[float, float]],
+                           time: Optional[float] = None, fuel: Optional[float] = None,
+                           legs: Optional[Sequence] = None) -> Optional[FM.BingoDecision]:
+    """Soglia di bingo e albero di decisione del G2 (`Fuel_Model.bingo_decision`) per un asset della missione:
+    tratti della missione INTERA (`airborne_legs`, o `legs` se dati: in sessione quelli che consumano),
+    partenza e anello dalla regola della missione (`bingo_return_rule`), trasferimento o combattimento dal tipo
+    (`is_transfer_mission`). `time` None = l'inizio dei tratti, `fuel` None = il carburante dell'asset. La
+    usano il validatore (`check_mission_bingo`) e l'esecutore (`Session_Simulator`): stesso criterio."""
+    legs = airborne_legs(movement) if legs is None else legs
+    return FM.bingo_decision(asset, legs, air_bases, bingo_return_rule(mission),
+                             transfer=is_transfer_mission(mission), time=time, fuel=fuel)
+
+
 def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_bases: Iterable[Tuple[float, float]],
                         t0: float = 0.0, reserve: Optional[float] = None,
-                        reverse_route: bool = True) -> Optional[Dict[str, float]]:
+                        reverse_route: bool = True, disengage_reserve: bool = True) -> Optional[Dict[str, float]]:
     """Bingo A PRIORI (v. "Bingo a priori" nel docstring del modulo): una missione aerea che in volo
     arriverebbe al bingo e' RIFIUTATA.
 
-    Per ogni asset della missione, sulla missione intera alla crociera (`airborne_legs`: andata, attese,
-    ritorno pianificati, senza taglio alla sessione):
+    `disengage_reserve` True (G2, come `Session_Simulator.F6_BINGO_DISENGAGE_RESERVE` acceso, il default):
+    rifiutata se un asset parte in bingo (`mission_bingo_decision` all'inizio dei tratti: carburante < rotta
+    intera + riserva di disimpegno), cioe' ESATTAMENTE la missione che in sessione va in bingo (anche un
+    trasferimento che poi continua consumando la riserva); `reserve` e `reverse_route` non sono usati e le
+    basi non sono richieste (servono al rientro, non alla soglia). Il margine e' carburante - soglia.
+
+    Con `disengage_reserve` False, per ogni asset della missione, sulla missione intera alla crociera
+    (`airborne_legs`: andata, attese, ritorno pianificati, senza taglio alla sessione):
       * `reverse_route` True (F6-B2bis, come `Session_Simulator.F6_BINGO_REVERSE_ROUTE` acceso): il
         carburante non scende mai sotto `Fuel_Model.BINGO_RETURN_FACTOR` x il ritorno lungo la rotta a
         ritroso (regola `bingo_return_rule`); `reserve` non e' usata;
@@ -1229,7 +1268,8 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
             base aerea amica, come la planata della F6-A; idoneita' per tipo d'aereo non modellata).
         t0: inizio della sessione (serve solo a derivare i movimenti).
         reserve: riserva della regola F6-B2 [frazione del carico pieno], None = `Fuel_Model.BINGO_RESERVE`.
-        reverse_route: regola del rientro (sopra).
+        reverse_route: regola del rientro (sopra), con `disengage_reserve` False.
+        disengage_reserve: regola del G2 (sopra).
 
     Returns:
         `{asset_id: margine}` [frazione del carico pieno, >= 0, v. `Fuel_Model.return_margin`] degli asset
@@ -1239,11 +1279,15 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
 
     Raises:
         ValueError: nessuna base idonea a cui rientrare quando serve (F6-B2 sempre; F6-B2bis solo con
-            partenza in volo: partendo da una base il rientro finisce sul DEPARTURE), oppure un asset
-            arriverebbe al bingo (il messaggio dice quanto carburante manca e dove cadrebbe il bingo in volo).
+            partenza in volo: partendo da una base il rientro finisce sul DEPARTURE; G2 mai), oppure un asset
+            arriverebbe al bingo (il messaggio dice quanto carburante manca e dove cadrebbe il bingo in volo;
+            G2: soglia, riserva e decisione dell'albero).
     """
     if mission.domain != 'air' or not mission.end_criteria.bingo:
         return None
+
+    if disengage_reserve:
+        return _check_reserve_bingo(mission, assets, tuple(air_bases), t0)
 
     reserve = FM.BINGO_RESERVE if reserve is None else float(reserve)
     rule = bingo_return_rule(mission) if reverse_route else None
@@ -1287,6 +1331,40 @@ def check_mission_bingo(mission: Mission, assets: Mapping[str, object], air_base
     return margins
 
 
+def _check_reserve_bingo(mission: Mission, assets: Mapping[str, object], bases: Tuple[Tuple[float, float], ...],
+                         t0: float) -> Dict[str, float]:
+    """`check_mission_bingo` con la regola del G2 (v. il suo docstring)."""
+    margins: Dict[str, float] = {}
+
+    for movement in mission_movements(mission, t0, bases):
+        asset = assets.get(movement.asset_id)
+        legs = airborne_legs(movement)
+        threshold = None if asset is None or getattr(asset, 'fuel', None) is None else FM.bingo_threshold(asset, legs)
+
+        if threshold is None:
+            logger.debug(f"check_mission_bingo: mission {mission.mission_id!r}, asset {movement.asset_id!r}: fuel "
+                         f"or reserve not modelled, or no route, not checked")
+            continue
+
+        # Lo stesso criterio del bingo in sessione (`mission_bingo_decision` all'inizio dei tratti): la missione
+        # rifiutata qui e' esattamente quella che in sessione va in bingo.
+        decision = mission_bingo_decision(mission, movement, asset, bases, legs=legs)
+
+        if decision is not None:
+            where = 'continues on its route consuming the reserve' if decision.action == FM.BINGO_CONTINUE else \
+                f"decides {decision.action!r}" + ('' if decision.via is None else
+                                                  f" ({decision.via}, {decision.return_length:.0f} m)")
+            raise ValueError(f"mission {mission.mission_id!r}: asset {movement.asset_id!r} starts under the bingo "
+                             f"threshold: fuel {decision.fuel:.4f} < rest of the route {decision.rest:.4f} + "
+                             f"disengagement reserve {decision.reserve:.4f}: {decision.threshold - decision.fuel:.4f} "
+                             f"of a full load is missing; in flight it reaches bingo at t={decision.time:.1f} s and "
+                             f"{where}")
+
+        margins[movement.asset_id] = float(asset.fuel) - threshold
+
+    return margins
+
+
 def route_fuel_demand(asset, legs: Sequence) -> Optional[float]:
     """Carburante [frazione del carico pieno] dei tratti `legs` (la rotta intera, `airborne_legs`) alla
     crociera, attese comprese nel tempo (`Fuel_Model.leg_fuel_demand`); None se non modellato."""
@@ -1312,7 +1390,10 @@ def check_mission_fuel(mission: Mission, assets: Mapping[str, object], t0: float
     rotta INTERA pianificata alla crociera (`airborne_legs`: andata, attese, ritorno; le soste a terra non
     consumano) e la riserva e' `Fuel_Model.disengagement_reserve` (5 minuti alla massima spinta militare,
     stima). E' un controllo distinto da `check_mission_bingo` (che verifica il criterio del bingo in volo
-    dell'esecutore): i due si possono chiamare entrambi. NON e' chiamato da `Session_Simulator.run_session`.
+    dell'esecutore): i due si possono chiamare entrambi. Dal G2 `check_mission_bingo` usa la stessa grandezza
+    come soglia di bingo (rifiuto con carburante < minimo, qui con carburante <= minimo: differiscono solo
+    all'uguaglianza, v. "Bingo a priori" nel docstring del modulo). NON e' chiamato da
+    `Session_Simulator.run_session`.
 
     Args:
         mission: la missione.

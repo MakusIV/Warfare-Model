@@ -155,7 +155,9 @@ un'eventuale attesa nel punto), calcolato dai tratti con le attese (`Mission_Ada
 F5-C), non dalle ETA pianificate.
 Carburante (F6-A, v. "Carburante"): un aereo perso per esaurimento e' DESTROYED con motivo
 FUEL_EXHAUSTED all'istante dell'esaurimento (una distruzione in combattimento precedente prevale);
-un asset fermo (terra/mare) o atterrato in planata per esaurimento ha motivo FUEL_EXHAUSTED, stato
+dal G2 con l'equipaggio recuperato (`crew_recovered` True; None in ogni altro esito, comprese le perdite in
+combattimento: l'equipaggio non e' modellato); un asset fermo (terra/mare) o atterrato in planata per
+esaurimento ha motivo FUEL_EXHAUSTED, stato
 OPERATIONAL/DAMAGED, e i punti dopo l'esaurimento non sono raggiunti (ETA None). Dalla F6-B1 lo stato
 di missione segue la regola unica di "Fine di attivita' e stato di missione" (sotto); la precedenza
 provvisoria della F6-A (ABORTED(FUEL) se ALMENO un asset superstite e' a secco) resta solo con
@@ -188,7 +190,8 @@ rotta pianificata, resta presente, bersaglio e intercettore (v. "Fine di attivit
 Per asset la fine e' la PRIMA fra quelle scattate (a parita' d'istante: danno, winchester, bersaglio,
 durata) se cade nella sessione e prima dell'esaurimento del carburante; un asset che completa la rotta
 PRIMA della fine di attivita' resta ROUTE_COMPLETED, un arrivo DOPO non completa la missione.
-`abort_on_threat` NON e' letto (fuori dal piano della F6); `bingo` lo legge la F6-B2 (v. "Bingo").
+`abort_on_threat` NON e' letto (fuori dal piano della F6); `bingo` lo legge la F6-B2 (v. "Bingo"; dal G2
+soglia con la riserva di disimpegno e albero di decisione).
 
 **Stato di missione, regola unica** (sostituisce la precedenza provvisoria della F6-A):
 DESTROYED (tutti gli asset persi, anche per carburante) > COMPLETED (obiettivo raggiunto: con
@@ -409,6 +412,36 @@ deterministico alla crociera (lo stesso limite della F6-B2 per chi combatte); il
 minacce incontrate all'andata (le ripercorre); un tratto di rotta lungo e quasi rettilineo rende il
 ritroso piu' lungo della retta, un percorso tortuoso molto di piu'.
 
+**Soglia di bingo e albero di decisione (G2 del nuovo modello di bingo, decisioni dell'utente del 2026-10-15,
+interruttore `F6_BINGO_DISENGAGE_RESERVE`, attivo).** Sostituisce la regola 1,2 della F6-B2bis (e
+`F6_BINGO_REVERSE_ROUTE` non e' letto). Soglia: l'aereo e' in bingo al primo istante in cui il residuo e' sotto
+il carburante per il resto della rotta pianificata fino al LAND (attese comprese, alla crociera) + la riserva
+di disimpegno (`Fuel_Model.disengagement_reserve`, G1). La funzione di decisione e' GENERALE
+(`Fuel_Model.bingo_decision`, via `Mission_Adapter.mission_bingo_decision`: posizione e residuo qualunque),
+ma con il consumo deterministico di oggi (G3 e G4 non ci sono ancora) residuo e resto della rotta calano
+insieme, quindi la soglia scatta all'inizio dei tratti oppure mai: la sessione la valuta UNA volta, all'inizio
+dei tratti della missione intera (`airborne_legs`, come la F6-B2bis), con il carburante di partenza
+(`_decision_end`). Albero per tipo di missione (`Mission_Adapter.is_transfer_mission`, categoria TRANSPORT):
+  * TRASFERIMENTO: se il residuo basta a CONCLUDERE la rotta (senza riserva) l'aereo CONTINUA, consuma la
+    riserva, nessun aborto; altrimenti ritroso fino al DEPARTURE (all'inizio: lunghezza zero, resta a terra
+    sul DEPARTURE con esito BINGO all'istante della partenza; partito in volo: diretto alla base del lato piu'
+    vicina al punto di comparsa); altrimenti la base piu' vicina in linea retta; altrimenti verso la base piu'
+    vicina e, a secco, le regole della F6-A (planata: ABORTED(FUEL); altrimenti perso, DESTROYED /
+    FUEL_EXHAUSTED con l'equipaggio recuperato, `AssetMissionOutcome.crew_recovered`);
+  * COMBATTIMENTO (ogni altro tipo): la missione si interrompe sempre; la candidata raggiungibile col percorso
+    piu' breve fra la base di partenza (via piu' breve della F6-B2bis) e le basi del lato entro
+    `Fuel_Model.ALTERNATE_BASE_MAX_OFFSET` (3000 m) dalla rotta programmata (lungo la rotta fino al punto piu'
+    vicino, poi diretto con discesa); parita': la base di partenza, poi (x, y); nessuna raggiungibile: i passi
+    3 e 4 del trasferimento. All'inizio dei tratti: resta a terra sul DEPARTURE o, partito in volo, va alla
+    candidata migliore (per la disuguaglianza triangolare il diretto alla base piu' vicina al punto di comparsa
+    non e' mai piu' lungo del percorso verso una base alternativa: le alternative contano lungo la rotta, G4).
+Raggiungibile = il residuo basta per il solo percorso alla crociera. Senza alcuna base (partenza in volo senza
+basi del lato): nessun rientro, regole della F6-A (come la F6-B2bis). Il rientro deciso diventa un `BingoEnd`
+con la stessa meccanica della F6-B2bis (`_return_legs`, `_legs_after_bingo`, nessuna salva offensiva dal bingo,
+a terra `parking_cold` sulla base raggiunta, BINGO / ABORTED(BINGO), un bingo oltre la fine della sessione non
+c'e'). Il validatore `Mission_Adapter.check_mission_bingo` (con `disengage_reserve` True) rifiuta esattamente le
+missioni che qui vanno in bingo. Spento: la F6-B2bis o la F6-B2, esattamente come prima.
+
 ## Sessione aperta (`SessionOrder.t_end is None`)
 
 Regola conservativa: la durata **non si deduce**. Con `t_end` None il chiamante deve
@@ -513,7 +546,8 @@ F6_DESTROYED_POSTURE = True
 #     e' del pianificatore e non dipende dall'interruttore.
 F6_BINGO = True
 
-# F6-B2bis, interruttore dedicato (stessa ragione dei precedenti), letto solo con `F6_BINGO` acceso:
+# F6-B2bis, interruttore dedicato (stessa ragione dei precedenti), letto solo con `F6_BINGO` acceso e (dal G2)
+# `F6_BINGO_DISENGAGE_RESERVE` spento:
 #   * `F6_BINGO_REVERSE_ROUTE` (ATTIVO): rientro al bingo lungo la rotta percorsa A RITROSO fino al DEPARTURE
 #     (partenza in volo: fino al punto di comparsa, poi diretto alla base del lato piu' vicina; anello: il
 #     piu' breve fra ritroso e resto della rotta), fabbisogno `Fuel_Model.BINGO_RETURN_FACTOR` x il ritorno,
@@ -521,6 +555,17 @@ F6_BINGO = True
 #     riserva `Fuel_Model.BINGO_RESERVE` della F6-B2, esattamente come prima. Il validatore
 #     `Mission_Adapter.check_mission_bingo` segue lo stesso criterio con il suo parametro `reverse_route`.
 F6_BINGO_REVERSE_ROUTE = True
+
+# G2 del nuovo modello di bingo, interruttore dedicato (stessa ragione dei precedenti), letto solo con `F6_BINGO`
+# acceso:
+#   * `F6_BINGO_DISENGAGE_RESERVE` (ATTIVO): soglia di bingo = resto della rotta + riserva di disimpegno e
+#     albero di decisione per tipo di missione (`Fuel_Model.bingo_decision` via
+#     `Mission_Adapter.mission_bingo_decision`, v. "Bingo" nel docstring), valutato una sola volta all'inizio
+#     dei tratti della missione (consumo deterministico, fino a G4); SOSTITUISCE la regola 1,2 della F6-B2bis e
+#     `F6_BINGO_REVERSE_ROUTE` non e' letto. Spento: la F6-B2bis o la F6-B2 secondo `F6_BINGO_REVERSE_ROUTE`,
+#     esattamente come prima. Il validatore `Mission_Adapter.check_mission_bingo` lo segue con il parametro
+#     `disengage_reserve`.
+F6_BINGO_DISENGAGE_RESERVE = True
 
 # Esiti dell'esaurimento del carburante (F6-A, decisioni dell'utente).
 FUEL_HALT = 'halt'      # terra/mare (o aereo ancora a terra): fermo e presente nel punto
@@ -996,6 +1041,15 @@ def _postures_after_fuel(postures: Dict[str, str], ends: Mapping[str, FuelEnd], 
 
 # ── BINGO: RIENTRO IN VOLO (F6-B2) ────────────────────────────────────────────
 
+def _return_end(asset, asset_id: str, consuming, found) -> BingoEnd:
+    """Il `BingoEnd` di un rientro gia' deciso (`Fuel_Model.BingoPoint` o `Fuel_Model.BingoDecision`: istante,
+    punto, spezzata `route`, `base` e `return_length`), volato alla crociera dell'asset (in mancanza quella del
+    tratto in corso), come la planata della F6-A."""
+    speed = FM.cruise_speed(asset) or _moving_speed(consuming, found.time)
+    duration = found.return_length / speed if speed else 0.0
+    return BingoEnd(asset_id, found.time, found.point, found.base, found.time + duration, found.route)
+
+
 def _bingo_end(asset, asset_id: str, consuming, air_bases, rule: Optional[FM.ReturnRule] = None) -> Optional[BingoEnd]:
     """Bingo dell'aereo sui suoi tratti che consumano e suo rientro, o None se non arriva al bingo (o il
     controllo non e' possibile).
@@ -1003,16 +1057,29 @@ def _bingo_end(asset, asset_id: str, consuming, air_bases, rule: Optional[FM.Ret
     `rule` None (F6-B2): rientro in linea retta dal punto di bingo alla base del lato piu' vicina con la
     riserva. `rule` dato (F6-B2bis): rientro lungo la spezzata `Fuel_Model.BingoPoint.route` (rotta a
     ritroso, o resto della rotta sull'anello), e `consuming` sono i tratti della missione intera. In
-    entrambi i casi alla crociera dell'asset (in mancanza quella del tratto in corso), come la planata della
-    F6-A."""
+    entrambi i casi alla crociera dell'asset (`_return_end`)."""
     bingo = FM.bingo_point(asset, consuming, air_bases, rule=rule)
+    return None if bingo is None else _return_end(asset, asset_id, consuming, bingo)
 
-    if bingo is None:
+
+def _decision_end(asset, asset_id: str, mission, movement, consuming, air_bases) -> Optional[BingoEnd]:
+    """G2: la decisione al bingo all'inizio dei tratti della missione intera (`consuming`, quelli che consumano
+    di `Mission_Adapter.airborne_legs`), con il carburante attuale (`Mission_Adapter.mission_bingo_decision`), e
+    il suo rientro; None se l'aereo non e' in bingo, se CONTINUA (trasferimento: il residuo basta a concludere)
+    o se non ha alcuna base a cui tornare (regole della F6-A). Rientro irraggiungibile (`BINGO_UNREACHABLE`):
+    il `BingoEnd` verso la base piu' vicina; l'esaurimento lungo il rientro lo trattano poi le regole della
+    F6-A."""
+    decision = MA.mission_bingo_decision(mission, movement, asset, air_bases, legs=consuming)
+
+    if decision is None:
         return None
 
-    speed = FM.cruise_speed(asset) or _moving_speed(consuming, bingo.time)
-    duration = bingo.return_length / speed if speed else 0.0
-    return BingoEnd(asset_id, bingo.time, bingo.point, bingo.base, bingo.time + duration, bingo.route)
+    if not decision.returns:
+        logger.info(f"run_session: asset {asset_id!r} starts under the bingo threshold (fuel {decision.fuel:.4f} < "
+                    f"{decision.threshold:.4f}): {decision.action}, no return")
+        return None
+
+    return _return_end(asset, asset_id, consuming, decision)
 
 
 def _return_legs(end: BingoEnd) -> List[CS.Leg]:
@@ -1459,8 +1526,10 @@ def _mission_outcome(mission, movements, assets: Mapping[str, object], destroyed
         if destroyed_at is not None and (crashed_at is None or destroyed_at <= crashed_at + CS.TIME_EPS):
             outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.DESTROYED, destroyed_at)
         elif crashed_at is not None:
-            # Aereo a secco in volo senza base raggiungibile (F6-A): perso per carburante.
-            outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, crashed_at)
+            # Aereo a secco in volo senza base raggiungibile (F6-A, anche sul rientro al bingo del G2): perso per
+            # carburante, con l'equipaggio recuperato (decisione dell'utente del 2026-10-15).
+            outcome = AssetMissionOutcome(asset_id, AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, crashed_at,
+                                          crew_recovered=True)
             destroyed_at = crashed_at
         else:
             asset = assets.get(asset_id)
@@ -1632,7 +1701,9 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
     # rientro (a secco sul rientro: planata o perdita, F6-A). F6-B2bis (`F6_BINGO_REVERSE_ROUTE`): rientro
     # lungo la rotta a ritroso, calcolato sulla missione INTERA (`Mission_Adapter.airborne_legs`, gli stessi
     # tratti del validatore, anche oltre la fine della sessione: l'anello legge il resto della rotta fino al
-    # LAND); un bingo che cadrebbe dopo la fine della sessione non c'e' nella sessione.
+    # LAND); un bingo che cadrebbe dopo la fine della sessione non c'e' nella sessione. G2
+    # (`F6_BINGO_DISENGAGE_RESERVE`): soglia resto della rotta + riserva e albero di decisione, valutati una
+    # volta all'inizio dei tratti della missione intera (`_decision_end`).
     bingo_ends: Dict[str, BingoEnd] = {}
 
     for asset_id, movement in movement_of.items():
@@ -1645,7 +1716,13 @@ def run_session(order: SessionOrder, forces_a: Iterable, forces_b: Iterable,
 
         bases = air_bases.get(getattr(blocks[mission.block_id], 'side', None), ())
 
-        if F6_BINGO_REVERSE_ROUTE:
+        if F6_BINGO_DISENGAGE_RESERVE:
+            end = _decision_end(asset, asset_id, mission, movement,
+                                _consuming_legs(asset_id, MA.airborne_legs(movement), grounded), bases)
+
+            if end is not None and end.time >= session_end - CS.TIME_EPS:
+                end = None
+        elif F6_BINGO_REVERSE_ROUTE:
             end = _bingo_end(asset, asset_id, _consuming_legs(asset_id, MA.airborne_legs(movement), grounded),
                              bases, MA.bingo_return_rule(mission))
 

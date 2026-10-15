@@ -48,7 +48,7 @@ Dalla F6-A:
     quota x `GLIDE_RATIO` (stima dichiarata, sotto).
 Il carburante di partenza e il rifornimento NON cambiano (rifornimento: F8).
 
-## Bingo (F6-B2 del piano della Missione, decisione 14; rifatto dalla F6-B2bis, sotto)
+## Bingo (F6-B2 del piano della Missione, decisione 14; rifatto dalla F6-B2bis, sotto; dal G2 regole a interruttore spento)
 
   * **margine di rientro** (`return_margin`): carburante attuale - fabbisogno dei tratti alla crociera -
     rientro in linea retta dall'ultimo punto alla base idonea piu' vicina - riserva `BINGO_RESERVE`
@@ -77,7 +77,7 @@ MINIMO lungo i tratti (sull'anello non e' a fine tratti); il `BingoPoint` porta 
 Modello complessivo dell'utente (G1-G5): la **riserva** e' il carburante per `DISENGAGE_TIME` (5 minuti,
 stima dell'utente: disimpegno da un'intercettazione e ritorno in rotta) alla **massima spinta militare**
 (senza postbruciatore); il **minimo di pianificazione** e' carburante caricato > rotta intera + riserva; la
-**soglia di bingo in volo** (G2, non ancora fatta) sara' residuo < resto della rotta + riserva.
+**soglia di bingo in volo** (G2, sotto) e' residuo < resto della rotta + riserva.
   * `disengagement_reserve` / `disengagement_reserve_with_source`: la riserva in frazione del carico pieno,
     dal consumo militare del registro (`Aircraft.emergency_fuel_flow`, kg/h: unita' dedotta, non
     documentata; per i caccia con postbruciatore sottostima il postbruciatore pieno di circa 1/6) diviso la
@@ -86,6 +86,24 @@ stima dell'utente: disimpegno da un'intercettazione e ritorno in rotta) alla **m
     DISIMPEGNO del codice;
   * la usa il validatore `Mission_Adapter.check_mission_fuel`, NON chiamato da `run_session`: in G1 il
     comportamento in sessione non cambia.
+
+## Soglia di bingo e albero di decisione (G2, decisioni dell'utente del 2026-10-15)
+
+Sostituisce la regola 1,2 della F6-B2bis quando `Session_Simulator.F6_BINGO_DISENGAGE_RESERVE` e' acceso (il
+default). `bingo_decision` e' la funzione GENERALE: dato l'aereo, i tratti della missione intera, un istante
+qualunque lungo la rotta e un residuo qualunque, dice se l'aereo e' in bingo (`bingo_threshold`: residuo <
+resto della rotta fino al LAND, attese comprese, + riserva di disimpegno) e cosa fa (`BingoDecision`):
+  * TRASFERIMENTO (categoria TRANSPORT): continua se il residuo basta a concludere; altrimenti ritroso fino al
+    DEPARTURE (partenza in volo: fino al punto di comparsa e poi diretto alla base del lato piu' vicina);
+    altrimenti la base piu' vicina in linea retta; altrimenti verso la base piu' vicina e, a secco, le regole
+    della F6-A;
+  * COMBATTIMENTO (ogni altro tipo): interrompe sempre; fra la base di partenza (via piu' breve della
+    F6-B2bis) e le basi entro `ALTERNATE_BASE_MAX_OFFSET` (3000 m, stima dell'utente) dalla rotta programmata
+    (lungo la rotta fino al punto piu' vicino, poi diretto) la raggiungibile piu' vicina in percorso; poi i
+    passi 3 e 4 del trasferimento.
+Raggiungibile = il residuo basta per il solo percorso alla crociera. Con consumo deterministico (G3 e G4 non
+ci sono ancora) residuo e resto della rotta calano insieme, quindi la soglia scatta all'inizio dei tratti o
+mai: la sessione la valuta una sola volta, alla partenza. Formule e casi nella sezione G2 del codice.
 
 ## Cosa NON fa
 - Non integra il consumo nel risolutore d'ingaggio: `Engagement_Resolver` non modella il
@@ -996,3 +1014,351 @@ def disengagement_reserve(asset, duration: float = DISENGAGE_TIME) -> Optional[f
     `disengagement_reserve_with_source` per la provenienza."""
     result = disengagement_reserve_with_source(asset, duration)
     return None if result is None else result[0]
+
+
+# ── SOGLIA DI BINGO E ALBERO DI DECISIONE (G2 del nuovo modello di bingo) ────
+#
+# Decisioni dell'utente del 2026-10-15. In un punto qualunque della rotta (istante `time` lungo i tratti
+# della missione INTERA, `legs` come `Mission_Adapter.airborne_legs`) con residuo `fuel`:
+#
+#     SOGLIA:  bingo  <=>  fuel < resto della rotta + riserva di disimpegno
+#
+# `resto della rotta` = il carburante dei tratti dal punto al LAND alla crociera, attese comprese nel tempo
+# (`leg_fuel_demand`, la stessa somma di `Mission_Adapter.route_fuel_demand`), `riserva` =
+# `disengagement_reserve(asset)` (G1). Riserva non modellata = nessun controllo (come il validatore G1).
+#
+# Al bingo l'albero dipende dal TIPO di missione (`transfer`: la categoria TRANSPORT di Context, la decide
+# `Mission_Adapter.is_transfer_mission`):
+#   * TRASFERIMENTO, nell'ordine:
+#       1. `fuel` >= resto della rotta (senza riserva): CONTINUA (`BINGO_CONTINUE`), consuma la riserva;
+#       2. RITROSO fino al DEPARTURE (partenza in volo: fino al punto di comparsa, poi diretto alla base del
+#          lato piu' vicina a quel punto, la meccanica della F6-B2bis, `_return_route`), se raggiungibile;
+#       3. la base piu' vicina in linea retta (`BINGO_NEAREST`), se raggiungibile;
+#       4. altrimenti verso la base piu' vicina comunque (`BINGO_UNREACHABLE`): all'esaurimento valgono le
+#          regole della F6-A (planata su una base raggiungibile, o perdita con l'equipaggio recuperato).
+#   * COMBATTIMENTO (ogni altro tipo): la missione si interrompe sempre; candidate:
+#       a. la base di partenza per la "via piu' breve" della F6-B2bis (`BINGO_DEPARTURE`: ritroso, o resto
+#          della rotta sull'anello; partenza in volo: ritroso fino al punto di comparsa e poi diretto);
+#       b. ogni base entro `ALTERNATE_BASE_MAX_OFFSET` in orizzontale dalla rotta programmata
+#          (`BINGO_ALTERNATE`): lungo la rotta, in avanti o a ritroso, fino al punto della rotta piu' vicino
+#          alla base, poi un tratto diretto con discesa a quota 0 (`_alternate_option`);
+#     vince la raggiungibile col percorso piu' breve (parita': la base di partenza, poi (x, y)); nessuna
+#     raggiungibile: i passi 3 e 4 del trasferimento.
+# Raggiungibile = `fuel` basta per il SOLO percorso alla crociera (la riserva si puo' consumare nel rientro).
+# Basi della linea retta (passi 3 e 4): le basi del lato e, partendo da una base, il DEPARTURE (base amica
+# anch'esso). Nessuna base possibile (partenza in volo senza basi del lato): `BINGO_NO_BASE`, nessun rientro
+# (come la F6-B2bis: valgono le regole della F6-A).
+# Nessuna estrazione casuale.
+
+# Distanza orizzontale massima [m] di una base aerea amica dalla rotta programmata perche' sia una base
+# ALTERNATIVA al bingo di una missione di combattimento (G2). DECISIONE DELL'UTENTE (2026-10-15), STIMA, NON
+# UN DATO TARATO: distinta da `Mission_Adapter.AIR_BASE_AREA_RADIUS_M` (area di una base per il criterio
+# d'atterraggio) anche se oggi vale uguale, perche' e' un'altra grandezza.
+ALTERNATE_BASE_MAX_OFFSET = 3_000.0
+
+# Azione decisa al bingo (`BingoDecision.action`).
+BINGO_CONTINUE = 'continue'         # trasferimento: il residuo basta per concludere, consuma la riserva
+BINGO_DEPARTURE = 'departure'       # base di partenza (ritroso, anello in avanti, partenza in volo + diretto)
+BINGO_ALTERNATE = 'alternate'       # combattimento: base entro ALTERNATE_BASE_MAX_OFFSET dalla rotta
+BINGO_NEAREST = 'nearest'           # base piu' vicina in linea retta, raggiungibile
+BINGO_UNREACHABLE = 'unreachable'   # nessuna base raggiungibile: verso la piu' vicina, poi regole della F6-A
+BINGO_NO_BASE = 'no_base'           # nessuna base a cui tornare: nessun rientro (regole della F6-A)
+
+# Via del rientro verso una base alternativa: lungo la rotta programmata, poi diretto.
+RETURN_ALONG = 'along'
+
+
+@dataclass(frozen=True)
+class BingoDecision:
+    """Decisione al bingo in un punto della rotta (G2, v. il commento della sezione).
+
+    Attributes:
+        asset_id: id di dominio.
+        time/point: istante [s] e posizione (x, y, z) della decisione lungo i tratti.
+        leg_index: indice del tratto in cui cade.
+        fuel: residuo [frazione del carico pieno] valutato.
+        rest: carburante per il resto della rotta fino al LAND [frazione], alla crociera, attese comprese.
+        reserve: riserva di disimpegno [frazione] (`disengagement_reserve`).
+        action: una di BINGO_CONTINUE, BINGO_DEPARTURE, BINGO_ALTERNATE, BINGO_NEAREST, BINGO_UNREACHABLE,
+            BINGO_NO_BASE.
+        route: punti del rientro dal punto della decisione all'atterraggio compresi; vuota per CONTINUE e
+            NO_BASE.
+        base: punto d'atterraggio (l'ultimo di `route`), None per CONTINUE e NO_BASE.
+        via: RETURN_REVERSE, RETURN_FORWARD, RETURN_ALONG o RETURN_DIRECT; None per CONTINUE e NO_BASE.
+        return_length: lunghezza [m] di `route`.
+        reachable: il residuo basta per `route` alla crociera (False solo per UNREACHABLE).
+    """
+    asset_id: str
+    time: float
+    point: Tuple[float, float, float]
+    leg_index: int
+    fuel: float
+    rest: float
+    reserve: float
+    action: str
+    route: Tuple[Tuple[float, float, float], ...] = ()
+    base: Optional[Tuple[float, float, float]] = None
+    via: Optional[str] = None
+    return_length: float = 0.0
+    reachable: bool = True
+
+    @property
+    def threshold(self) -> float:
+        """Soglia di bingo [frazione]: resto della rotta + riserva di disimpegno."""
+        return self.rest + self.reserve
+
+    @property
+    def returns(self) -> bool:
+        """L'aereo lascia la rotta per una base (tutte le azioni tranne CONTINUE e NO_BASE)."""
+        return self.action not in (BINGO_CONTINUE, BINGO_NO_BASE)
+
+
+def _locate(legs: Sequence, time: float) -> Tuple[int, float]:
+    """(indice del tratto, frazione in [0, 1]) dell'istante `time` lungo `legs`; prima del primo tratto
+    (0, 0), dopo l'ultimo (ultimo, 1)."""
+    for index, leg in enumerate(legs):
+        if float(time) <= float(leg.t_end):
+            duration = _leg_duration(leg)
+            fraction = 0.0 if duration <= 0.0 else (float(time) - float(leg.t_start)) / duration
+            return index, min(max(fraction, 0.0), 1.0)
+
+    return len(legs) - 1, 1.0
+
+
+def _interpolate(leg, fraction: float) -> Tuple[float, float, float]:
+    return tuple(float(s) + fraction * (float(e) - float(s)) for s, e in zip(leg.p_start, leg.p_end))
+
+
+def remaining_route_demand(asset, legs: Sequence, time: Optional[float] = None,
+                           hold_regime: str = HOLD_REGIME) -> Optional[float]:
+    """Carburante [frazione del carico pieno] per il resto della rotta da `time` alla fine di `legs` (G2), alla
+    crociera con le attese nel tempo (`leg_fuel_demand`, la somma di `Mission_Adapter.route_fuel_demand`): la
+    parte rimanente del tratto in corso e i tratti successivi. `time` None = l'inizio dei tratti (la rotta
+    intera). None se il carburante non e' modellato o non ci sono tratti."""
+    if not legs:
+        return None
+
+    index, fraction = _locate(legs, legs[0].t_start if time is None else time)
+    total = 0.0
+
+    for position, leg in enumerate(legs[index:]):
+        demand = leg_fuel_demand(asset, leg, HOLD_REGIME, hold_regime)
+
+        if demand is None:
+            return None
+
+        total += demand * ((1.0 - fraction) if position == 0 else 1.0)
+
+    return total
+
+
+def bingo_threshold(asset, legs: Sequence, time: Optional[float] = None,
+                    reserve: Optional[float] = None) -> Optional[float]:
+    """Soglia di bingo [frazione] in `time` (G2): resto della rotta (`remaining_route_demand`) + riserva di
+    disimpegno (`reserve`, None = `disengagement_reserve(asset)`). None se uno dei due non e' modellato."""
+    rest = remaining_route_demand(asset, legs, time)
+    reserve = disengagement_reserve(asset) if reserve is None else float(reserve)
+    return None if rest is None or reserve is None else rest + reserve
+
+
+# ── G2: geometria dei rientri ─────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class _Segment:
+    """Un tratto di MOVIMENTO della rotta programmata, con l'ascissa curvilinea del suo inizio [m]."""
+    start: float
+    length: float
+    p_start: Tuple[float, float, float]
+    p_end: Tuple[float, float, float]
+
+
+def _segments(legs: Sequence) -> List[_Segment]:
+    """La rotta programmata come spezzata dei soli tratti di movimento (le soste non hanno lunghezza)."""
+    segments, travelled = [], 0.0
+
+    for leg in legs:
+        if is_stationary(leg):
+            continue
+
+        length = _leg_length(leg)
+        segments.append(_Segment(travelled, length, tuple(float(c) for c in leg.p_start),
+                                 tuple(float(c) for c in leg.p_end)))
+        travelled += length
+
+    return segments
+
+
+def _travelled(legs: Sequence, index: int, fraction: float) -> float:
+    """Metri di movimento dall'inizio dei tratti al punto (tratto `index`, frazione `fraction`)."""
+    before = sum(_leg_length(leg) for leg in legs[:index] if not is_stationary(leg))
+    return before + (0.0 if is_stationary(legs[index]) else fraction * _leg_length(legs[index]))
+
+
+def _closest_on_route(segments: Sequence[_Segment], base: Tuple[float, float]
+                      ) -> List[Tuple[float, float, Tuple[float, float, float]]]:
+    """Punti della rotta piu' vicini in ORIZZONTALE alla base: `[(distanza, ascissa, punto 3D), ...]` per
+    tratto (il minimo di ogni tratto; il chiamante tiene il minimo globale)."""
+    found = []
+
+    for segment in segments:
+        (x0, y0, _), (x1, y1, _) = segment.p_start, segment.p_end
+        dx, dy = x1 - x0, y1 - y0
+        squared = dx * dx + dy * dy
+        t = 0.0 if squared <= 0.0 else min(max(((base[0] - x0) * dx + (base[1] - y0) * dy) / squared, 0.0), 1.0)
+        point = tuple(s + t * (e - s) for s, e in zip(segment.p_start, segment.p_end))
+        found.append((math.hypot(base[0] - point[0], base[1] - point[1]), segment.start + t * segment.length, point))
+
+    return found
+
+
+def _path_along(segments: Sequence[_Segment], point, s_from: float, s_to: float, target
+                ) -> List[Tuple[float, float, float]]:
+    """Punti lungo la rotta programmata da `point` (ascissa `s_from`) a `target` (ascissa `s_to`), in avanti o
+    a ritroso, con i vertici intermedi."""
+    points = [point]
+
+    if s_to >= s_from:
+        points.extend(seg.p_end for seg in segments if s_from < seg.start + seg.length < s_to)
+    else:
+        points.extend(seg.p_start for seg in reversed(segments) if s_to < seg.start < s_from)
+
+    points.append(target)
+    return points
+
+
+def _alternate_option(segments: Sequence[_Segment], point, travelled: float, base: Tuple[float, float],
+                      max_offset: float):
+    """(lunghezza, punti) del rientro alla base alternativa `base`, o None se la base e' oltre `max_offset`
+    dalla rotta: lungo la rotta fino al punto piu' vicino alla base (fra i punti a distanza minima, quello
+    col percorso piu' breve), poi diretto con discesa a quota 0."""
+    closest = _closest_on_route(segments, base)
+
+    if not closest:
+        return None
+
+    nearest = min(distance for distance, _, _ in closest)
+
+    if nearest > max_offset:
+        return None
+
+    landing = (float(base[0]), float(base[1]), 0.0)
+    best = None
+
+    for distance, s_closest, on_route in closest:
+        if distance > nearest + _LENGTH_EPS:
+            continue
+
+        points = _dedup(_path_along(segments, point, travelled, s_closest, on_route) + [landing])
+        length = _path_length(points)
+
+        if best is None or length < best[0]:
+            best = (length, points)
+
+    return best
+
+
+def _base_options(asset_id: str, legs: Sequence, index: int, fraction: float, point, bases, rule: 'ReturnRule',
+                  transfer: bool, max_offset: float):
+    """Candidate di rientro (G2) come `(lunghezza, priorita', x, y, azione, via, punti)`: la base di partenza
+    (ritroso; anello: anche il resto della rotta, solo per il combattimento) e, per il combattimento, le basi
+    alternative. Priorita' 0 = base di partenza (vince a parita' di lunghezza)."""
+    options = []
+    home = None
+
+    if not rule.departure:
+        nearest = nearest_base(legs[0].p_start, bases)
+        home = None if nearest is None else nearest[1]
+
+    if rule.departure or home is not None:
+        ways = [False] + ([True] if rule.loop and not transfer else [])
+
+        for forward in ways:
+            points = _return_route(legs, index, fraction, point, forward, None if forward else home)
+            options.append((_path_length(points), 0, points[-1][0], points[-1][1], BINGO_DEPARTURE,
+                            RETURN_FORWARD if forward else RETURN_REVERSE, points))
+
+    if not transfer:
+        segments = _segments(legs)
+        travelled = _travelled(legs, index, fraction)
+
+        for base in bases:
+            option = _alternate_option(segments, point, travelled, base, max_offset)
+
+            if option is not None:
+                options.append((option[0], 1, float(base[0]), float(base[1]), BINGO_ALTERNATE, RETURN_ALONG,
+                                option[1]))
+
+    return options
+
+
+def bingo_decision(asset, legs: Sequence, bases: Iterable[Tuple[float, float]], rule: 'ReturnRule',
+                   transfer: bool = False, time: Optional[float] = None, fuel: Optional[float] = None,
+                   reserve: Optional[float] = None,
+                   max_offset: float = ALTERNATE_BASE_MAX_OFFSET) -> Optional[BingoDecision]:
+    """Soglia di bingo e albero di decisione (G2, v. il commento della sezione) in un punto QUALUNQUE della
+    rotta: la funzione e' generale (G4 la richiamera' dopo ogni ingaggio); oggi la sessione la chiama una sola
+    volta, all'inizio dei tratti.
+
+    Args:
+        legs: i tratti che CONSUMANO della missione INTERA fino al LAND (`Mission_Adapter.airborne_legs`).
+        bases: posizioni (x, y) delle basi aeree amiche (`Mission_Adapter.air_base_points` del lato).
+        rule: partenza da una base e anello (`Mission_Adapter.bingo_return_rule`; il fattore della F6-B2bis
+            non e' usato).
+        transfer: missione di TRASFERIMENTO (categoria TRANSPORT, `Mission_Adapter.is_transfer_mission`);
+            False = regola di combattimento.
+        time: istante [s] lungo i tratti, None = l'inizio dei tratti.
+        fuel: residuo [frazione], None = il carburante attuale dell'asset (non mutato).
+        reserve: riserva [frazione], None = `disengagement_reserve(asset)`.
+        max_offset: distanza massima di una base alternativa dalla rotta [m].
+
+    Returns:
+        La `BingoDecision`, oppure None se l'aereo non e' in bingo (`fuel` >= soglia, a meno del rumore
+        `_FUEL_EPS`) o se il controllo non e' possibile (carburante o riserva non modellati, nessun tratto,
+        asset senza id).
+    """
+    asset_id = _domain_id(asset)
+    rate = _cruise_rate(asset)
+
+    if asset_id is None or rate is None or not legs:
+        return None
+
+    fuel = float(asset.fuel) if fuel is None else float(fuel)
+    time = float(legs[0].t_start) if time is None else float(time)
+    rest = remaining_route_demand(asset, legs, time)
+    reserve = disengagement_reserve(asset) if reserve is None else float(reserve)
+
+    if rest is None or reserve is None or fuel >= rest + reserve - _FUEL_EPS:
+        return None
+
+    index, fraction = _locate(legs, time)
+    point = _interpolate(legs[index], fraction)
+    decided = dict(asset_id=asset_id, time=time, point=point, leg_index=index, fuel=fuel, rest=rest, reserve=reserve)
+
+    if transfer and fuel >= rest - _FUEL_EPS:
+        return BingoDecision(action=BINGO_CONTINUE, **decided)
+
+    bases = tuple((float(bx), float(by)) for bx, by in bases)
+
+    def reachable(length: float) -> bool:
+        return rate * length <= fuel + _FUEL_EPS
+
+    options = [option for option in _base_options(asset_id, legs, index, fraction, point, bases, rule, transfer,
+                                                  max_offset) if reachable(option[0])]
+
+    if options:
+        length, _, _, _, action, via, points = min(options, key=lambda option: option[:4])
+        return BingoDecision(action=action, route=tuple(points), base=tuple(points[-1]), via=via,
+                             return_length=length, **decided)
+
+    # Passi 3 e 4: la base piu' vicina in linea retta (le basi del lato e, partendo da una base, il DEPARTURE).
+    straight = bases + ((float(legs[0].p_start[0]), float(legs[0].p_start[1])),) if rule.departure else bases
+    nearest = nearest_base(point, straight)
+
+    if nearest is None:
+        return BingoDecision(action=BINGO_NO_BASE, **decided)
+
+    distance, landing = nearest
+    points = _dedup((point, landing))
+    return BingoDecision(action=BINGO_NEAREST if reachable(distance) else BINGO_UNREACHABLE, route=points,
+                         base=landing, via=RETURN_DIRECT, return_length=_path_length(points),
+                         reachable=reachable(distance), **decided)

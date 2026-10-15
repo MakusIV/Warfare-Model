@@ -160,7 +160,7 @@ class AbortReason(Enum):
     THREAT = 'threat'
     DAMAGE = 'damage'
     FUEL = 'fuel'            # carburante esaurito (F6-A: fermo nel punto, o aereo atterrato in planata)
-    BINGO = 'bingo'          # rientro al bingo in volo (F6-B2; dalla F6-B2bis lungo la rotta a ritroso)
+    BINGO = 'bingo'          # rientro al bingo in volo (F6-B2; F6-B2bis a ritroso; G2 albero di decisione)
     AMMUNITION = 'ammunition'
     SUPPORT_MISSING = 'support_missing'
 
@@ -179,8 +179,8 @@ class AssetEndReason(Enum):
     una "fine di attivita'" senza cambio di rotta (D2.a = B): l'asset resta sulla rotta pianificata.
     Dalla F6-B1 il motore produce WINCHESTER, DAMAGE, TARGET_DESTROYED e MAX_DURATION
     (`Logic/Session_Simulator`, "Fine di attivita' e stato di missione"); dalla F6-B2 BINGO, che invece
-    CAMBIA la rotta (rientro alla base, dalla F6-B2bis lungo la rotta a ritroso, `Logic/Session_Simulator`,
-    "Bingo"); THREAT
+    CAMBIA la rotta (rientro alla base, dalla F6-B2bis lungo la rotta a ritroso, dal G2 con l'albero di
+    decisione per tipo di missione, `Logic/Session_Simulator`, "Bingo"); THREAT
     e MISSION_ABORTED non sono ancora prodotti.
     """
     ROUTE_COMPLETED = 'route_completed'    # ultimo waypoint raggiunto
@@ -741,7 +741,13 @@ class EndCriteria:
     del lato piu' vicina; missione ad anello: la via piu' breve fra ritroso e resto della rotta) e il bingo
     scatta quando il residuo e' 1,2 x il carburante del ritorno (`Fuel_Model.BINGO_RETURN_FACTOR`, stima);
     il LAND su un'altra base (divert) non conta; a interruttore spento il rientro rettilineo con la riserva
-    della F6-B2. False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A).
+    della F6-B2. Dal G2 (decisioni dell'utente del 2026-10-15, interruttore `F6_BINGO_DISENGAGE_RESERVE`, che
+    sostituisce la regola 1,2 quando e' acceso) il bingo scatta quando il residuo e' sotto il resto della rotta
+    + la riserva di disimpegno (`Fuel_Model.bingo_decision`) e l'albero dipende dal tipo di missione:
+    trasferimento (categoria TRANSPORT) continua se il residuo basta a concludere, altrimenti ritroso, base piu'
+    vicina, regole della F6-A; combattimento interrompe sempre e va alla piu' vicina in percorso fra base di
+    partenza e basi entro 3 km dalla rotta; con consumo deterministico solo alla partenza (fino a G4).
+    False = la missione non rientra al bingo (vola fino all'esaurimento, regole della F6-A).
     NON letti: `abort_on_threat` (fuori dal piano della F6), `last_waypoint` (la rotta completata resta
     sempre una fine, anche con False).
     """
@@ -1127,6 +1133,11 @@ class AssetMissionOutcome:
         state: stato a fine missione.
         end_reason: motivo della fine (di missione o di attivita').
         end_time: istante di fine [s dall'inizio sessione], None se non definito.
+        crew_recovered: equipaggio recuperato (G2 del nuovo modello di bingo, decisione dell'utente del
+            2026-10-15): True per l'aereo PERSO per esaurimento del carburante in volo (FUEL_EXHAUSTED, F6-A e
+            G2: l'equipaggio si eietta e viene recuperato); None = non indicato, comprese le perdite in
+            combattimento (l'equipaggio non e' modellato). Un valore booleano e' ammesso solo con `state`
+            DESTROYED.
     `end_reason` DESTROYED richiede `state` DESTROYED; `state` DESTROYED ammette `end_reason`
     DESTROYED (distruzione in combattimento) o FUEL_EXHAUSTED (F6-A: aereo a secco in volo senza una
     base raggiungibile in planata).
@@ -1135,6 +1146,7 @@ class AssetMissionOutcome:
     state: AssetState
     end_reason: AssetEndReason
     end_time: Optional[float] = None
+    crew_recovered: Optional[bool] = None
 
     def __post_init__(self):
         _check_domain_id('asset_id', self.asset_id)
@@ -1150,6 +1162,13 @@ class AssetMissionOutcome:
                 (state is AssetState.DESTROYED and reason not in destroyed_reasons):
             raise ValueError(f"state DESTROYED goes with end_reason DESTROYED or FUEL_EXHAUSTED, and "
                              f"end_reason DESTROYED with state DESTROYED, got {state.name}/{reason.name}")
+
+        if self.crew_recovered is not None:
+            _check_bool('crew_recovered', self.crew_recovered)
+
+            if state is not AssetState.DESTROYED:
+                raise ValueError(f"crew_recovered is declared only for a lost asset (state DESTROYED), got "
+                                 f"{state.name}")
 
 
 @dataclass(frozen=True)

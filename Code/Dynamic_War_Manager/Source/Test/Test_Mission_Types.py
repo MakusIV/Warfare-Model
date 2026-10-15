@@ -798,6 +798,20 @@ class TestAssetMissionOutcome(_LoggerMock, unittest.TestCase):
         with self.assertRaises(ValueError):
             _asset_out('a', t=-1)
 
+    def test_crew_recovered(self):
+        """G2: equipaggio recuperato dichiarabile solo per un asset perso; default None (non indicato)."""
+        self.assertIsNone(_asset_out('a').crew_recovered)
+        lost = MT.AssetMissionOutcome('a', 'destroyed', 'fuel_exhausted', 900.0, crew_recovered=True)
+        self.assertIs(lost.crew_recovered, True)
+        self.assertIs(MT.AssetMissionOutcome('a', 'destroyed', 'destroyed', 900.0, crew_recovered=False).crew_recovered,
+                      False)
+
+        with self.assertRaises(ValueError):
+            MT.AssetMissionOutcome('a', 'operational', 'fuel_exhausted', 900.0, crew_recovered=True)
+
+        with self.assertRaises(TypeError):
+            MT.AssetMissionOutcome('a', 'destroyed', 'fuel_exhausted', 900.0, crew_recovered=1)
+
 
 class TestMissionOutcome(_LoggerMock, unittest.TestCase):
 

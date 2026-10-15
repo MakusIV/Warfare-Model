@@ -1650,3 +1650,90 @@ F-16C 'Strike' (autonomia di crociera 1570 km, crociera 266,7 m/s) in volo a 500
 
 Suite completa: **4245 test OK (7 skipped)**, +21 rispetto a 4224 (11 `Test_Fuel_Model`, 7
 `Test_Mission_Adapter`, 2 `Test_Session_Simulator`, 1 S26). Fotografia: 722 IDENTICHE, 48 nuove (S26).
+
+## G2: soglia di bingo con la riserva di disimpegno e albero di decisione (decisioni dell'utente del 2026-10-15)
+
+**Base del confronto**: `Test/baseline/scenario_baseline.json` installata (770 esecuzioni, con S26 della F6-B2bis).
+**Dopo**: `Session_Simulator.F6_BINGO_DISENGAGE_RESERVE = True`. `--compare`, 2026-10-15 su osboxes: **794
+esecuzioni**; delle 770 della base **762 IDENTICHE**, **8 cambiate** (tutte `S26-BINGO/S26-BINGO-k/bingo`,
+k = 0..7), **24 nuove** (`reserve_off`, `transfer_continue`, `transfer_return` x 8 seed). Nessuno scenario
+aereo esistente fuori da S26 e' sotto il nuovo minimo (rotta intera + riserva di disimpegno): nessuno cambia.
+Il campo `crew_recovered` e' nell'esito per asset, che la fotografia non registra: nessuna esecuzione cambia
+per il campo (neppure gli aerei FUEL_EXHAUSTED di S24-GLIDE, S26 'no_base'/'bingo_off'). Fotografia del
+repository NON rigenerata.
+
+### Il cambio
+
+1. **Soglia** (`Fuel_Model.bingo_threshold`): bingo se residuo < resto della rotta fino al LAND (attese comprese,
+   alla crociera, `remaining_route_demand`) + `disengagement_reserve(asset)` (G1).
+2. **Tipo di missione** (`Mission_Adapter.is_transfer_mission`): trasferimento = categoria TRANSPORT della mappa
+   di Context; ogni altra missione aerea = combattimento.
+3. **Albero** (`Fuel_Model.bingo_decision` -> `BingoDecision`, azioni `BINGO_CONTINUE`, `BINGO_DEPARTURE`,
+   `BINGO_ALTERNATE`, `BINGO_NEAREST`, `BINGO_UNREACHABLE`, `BINGO_NO_BASE`): trasferimento continua / ritroso /
+   base piu' vicina / F6-A; combattimento interrompe e prende la raggiungibile piu' breve fra base di partenza
+   (via piu' breve della F6-B2bis, `_return_route` riusato) e basi entro `ALTERNATE_BASE_MAX_OFFSET` = 3000 m
+   dalla rotta (lungo la rotta fino al punto piu' vicino, poi diretto in discesa); parita' -> partenza, poi (x, y);
+   poi base piu' vicina in linea retta / F6-A. Raggiungibile = il solo percorso alla crociera.
+4. **Funzione generale, applicazione alla partenza**: `bingo_decision` accetta un istante e un residuo qualunque
+   (G4); `run_session` la chiama una volta all'inizio dei tratti della missione intera (`_decision_end`), con il
+   carburante di partenza; il rientro deciso diventa un `BingoEnd` con la meccanica della F6-B2bis
+   (`_return_end`, `_return_legs`, `_legs_after_bingo`, `until` del risolutore).
+5. **Equipaggio**: `AssetMissionOutcome.crew_recovered` = True per l'aereo perso per esaurimento in volo (F6-A e
+   G2), None altrimenti; ammesso solo con stato DESTROYED.
+6. **Validatore**: `check_mission_bingo(..., disengage_reserve=True)` (default) rifiuta esattamente le missioni
+   che in sessione vanno in bingo (anche il trasferimento che continua), con soglia, riserva, istante e decisione;
+   basi non richieste. Con `disengage_reserve=False` la F6-B2bis/F6-B2 come prima.
+7. **Interruttore**: spento, la F6-B2bis (o la F6-B2 con `F6_BINGO_REVERSE_ROUTE` spento) esattamente come prima
+   (verificato: le 8 esecuzioni 'reserve_off' sono identiche, valore per valore, alle 'bingo' della base).
+
+### Differenze della fotografia, esecuzione per esecuzione
+
+- `S26-BINGO/S26-BINGO-k/bingo` (k = 0..7), ATTESA: carburante di test portato da 0,28 (`BINGO_FUEL`, ora
+  sopra la soglia del G2 ~0,276) a 0,27 (`G2_FUEL`, sotto la soglia). Con il G2 l'F-16C e' in bingo alla
+  partenza (t = 0), missione di combattimento partita in volo: diretto dal punto di comparsa alla base (0, 0) a
+  quota 0, ~11,2 km, atterraggio a ~41,9 s; nessun ingaggio (prima: un ingaggio HELD/HELD senza colpi a segno),
+  un solo FuelEvent (prima 3), carburante finale 0,2629 (prima 0,0261), `movement_end` 41,9 s (prima 1543,3).
+- Nuove: 'reserve_off' (G2 spento, 0,28: identica alla vecchia 'bingo'), 'transfer_continue' ('Transport',
+  0,27: continua, rotta completata, Red spara, 0,0068 a bordo al regime di combattimento), 'transfer_return'
+  ('Transport', 0,15 < rotta: diretto alla base come 'bingo', 0,1429 a bordo).
+
+### Scelte dove le decisioni lasciavano margine
+
+- Istante del bingo in sessione = inizio del primo tratto che consuma (dopo la sosta a terra, se c'e').
+- Basi della linea retta (passi 3 e 4) = basi del lato piu', partendo da una base, il DEPARTURE.
+- Partenza in volo senza basi del lato: `BINGO_NO_BASE`, nessun rientro, regole della F6-A (come la F6-B2bis);
+  il validatore rifiuta comunque (sotto la soglia).
+- Il trasferimento a ritroso non considera il resto della rotta dell'anello (se il residuo non basta a
+  concludere, il resto non e' raggiungibile).
+- Punto della rotta piu' vicino a una base alternativa = minimo globale della distanza orizzontale dalla
+  spezzata dei tratti di movimento; a parita' di distanza, il percorso piu' breve.
+- Alla partenza in volo una base alternativa non vince mai sul diretto alla base piu' vicina al punto di comparsa
+  (disuguaglianza triangolare): il test d'integrazione verifica l'atterraggio sulla base della rotta quando e'
+  la piu' vicina; le alternative lungo la rotta sono verificate nei test unitari (G4 le rendera' operative).
+- Rapporto con il G1: il G1 rifiuta con carburante <= minimo, il G2 con carburante < soglia (solo l'uguaglianza
+  esatta differisce).
+
+### Costanti stimate
+
+- `Fuel_Model.ALTERNATE_BASE_MAX_OFFSET = 3000.0` m: decisione dell'utente, STIMA, non tarata.
+- Invariate: `DISENGAGE_TIME` 300 s (G1), `BINGO_RETURN_FACTOR` 1,2 e `BINGO_RESERVE` 0,10 (solo a G2 spento).
+- S26, costanti DI TEST verificate nel test (`test_declared_fuels`): `G2_FUEL` 0,27 (fra rotta al regime di
+  combattimento 0,263 e soglia 0,276), `BINGO_FUEL` 0,28 (varianti a G2 spento), `DRY_FUEL` 0,15.
+
+### Limiti noti
+
+- Consumo deterministico: la soglia scatta solo alla partenza; il bingo dopo un ingaggio arriva con G3/G4.
+- Idoneita' della base per tipo d'aereo non modellata; terreno non modellato (discesa rettilinea a quota 0).
+- Un trasferimento che continua consumando la riserva, se combatte, consuma al regime 'max' nella contabilita'
+  senza ri-scheduling (limite gia' noto della F6-A).
+- Il validatore resta non chiamato dal codice di produzione.
+
+### Test
+
+- `Test_Fuel_Model.TestBingoDecision` (nuova, 20 test): soglia, posizioni e residui arbitrari, rami di entrambi
+  gli alberi, alternative avanti/indietro, limite 3,0/3,1 km, parita', raggiungibilita' senza riserva, nessuna base.
+- `Test_Mission_Adapter.TestReserveBingoValidator` (nuova, 5 test); `TestBingoValidator` e
+  `TestReverseRouteBingoValidator` girano con `disengage_reserve=False`.
+- `Test_Mission_Types`: `crew_recovered` (+1).
+- `Test_Session_Simulator.TestReserveBingo` (nuova, 8 test); `TestBingo` gira con il G2 spento.
+- `Test_Session_Scenarios_S26`: riscritto per il G2, 9 varianti, 10 test (+2: soglia dei carburanti di test, discesa immediata; il vecchio test del ritroso ora su `reserve_off`).

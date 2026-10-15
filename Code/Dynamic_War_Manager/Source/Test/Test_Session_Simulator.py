@@ -1365,7 +1365,14 @@ class TestBingo(_Base):
     """F6-B2bis: al bingo l'aereo rientra lungo la rotta a ritroso (partito in volo: fino al punto di comparsa,
     poi diretto alla base del lato piu' vicina) con il fabbisogno `Fuel_Model.BINGO_RETURN_FACTOR` x il
     ritorno (autonomia di test 1000 km alla crociera: 0,1 del pieno = 100 km). Con
-    `F6_BINGO_REVERSE_ROUTE` spento il rientro rettilineo con la riserva della F6-B2."""
+    `F6_BINGO_REVERSE_ROUTE` spento il rientro rettilineo con la riserva della F6-B2. Dal G2 la classe gira con
+    `F6_BINGO_DISENGAGE_RESERVE` SPENTO: le regole precedenti restano invariate (v. `TestReserveBingo`)."""
+
+    def setUp(self):
+        super().setUp()
+        switch = patch.object(SS, 'F6_BINGO_DISENGAGE_RESERVE', False)
+        switch.start()
+        self._patches.append(switch)
 
     def _flight(self, fuel=0.2, base=(0.0, 0.0), length=150_000.0, bingo=True, start=(0.0, 0.0), z=0.0, red=None):
         """b1 a 200 m/s da `start` verso nord per `length` metri; base aerea Blue in `base` (None = nessuna);
@@ -1509,7 +1516,7 @@ class TestBingo(_Base):
                                  rule=MA.bingo_return_rule(mission))
 
         with self.assertRaisesRegex(ValueError, f't={planned.time:.1f} s'):
-            MA.check_mission_bingo(mission, blue[0].assets, ())
+            MA.check_mission_bingo(mission, blue[0].assets, (), disengage_reserve=False)
 
         outcome, _, scheduler, _ = self._execute(mission, blue)
         self.assertAlmostEqual(outcome.mission_outcomes['M-b1'].asset_outcomes['b1'].end_time, planned.time, delta=1e-6)
@@ -1527,6 +1534,155 @@ class TestBingo(_Base):
         self.assertTrue(scheduler['grounded'].at('b1', parked.t_start + 1.0))
         self.assertEqual(outcome.mission_outcomes['M-b1'].reason, AbortReason.BINGO)
         self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+
+
+# ── G2: SOGLIA DI BINGO CON LA RISERVA DI DISIMPEGNO E ALBERO DI DECISIONE ─────
+
+class TestReserveBingo(_Base):
+    """G2 (`F6_BINGO_DISENGAGE_RESERVE`, attivo): bingo se il carburante e' sotto la rotta intera + la riserva di
+    disimpegno, valutato all'inizio dei tratti; albero per tipo di missione. Aereo di test: autonomia 1000 km
+    alla crociera (0,1 del pieno = 100 km), riserva di ripiego = 200 m/s x 300 s al regime 'max' (autonomia
+    500 km) = 0,12 del pieno. Rotta di 150 km = 0,15: soglia 0,27; con 0,2 l'aereo e' sotto la soglia ma ha
+    carburante per la rotta."""
+
+    _execute = TestBingo._execute
+
+    def _airbase(self, base, name='Blue-Base'):
+        airbase = Military(mil_category=MILITARY_CATEGORY['Air_Base'][0], name=name, side='Blue')
+        airbase.id = name
+        airbase._assets = {f'{name}/a': _asset(Vehicle, f'{name}/a', *base)}
+        return airbase
+
+    def _air(self, fuel=0.2, bases=((0.0, -10_000.0),), mission_type='CAS', bingo=True, z=1_000.0):
+        """b1 in volo da (0, 0, z) verso nord per 150 km a 200 m/s; basi aeree Blue nelle posizioni `bases`."""
+        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0.0, 0.0, z=z, fuel=fuel, speed=200.0)])]
+        blue += [self._airbase(base, f'Blue-Base-{index}') for index, base in enumerate(bases)]
+        mission = _air_mission('M-b1', blue[0], _route([(0.0, 0.0), (0.0, 150_000.0)], 200.0, 'r-b1', z=z),
+                               [('b1', 0.0)])
+        mission = dataclasses.replace(mission, mission_type=mission_type, end_criteria=EndCriteria(bingo=bingo))
+        return mission, blue
+
+    def test_the_rule_is_active_by_default(self):
+        self.assertTrue(SS.F6_BINGO_DISENGAGE_RESERVE)
+
+    def test_combat_from_a_base_under_the_threshold_stays_on_the_ground(self):
+        """Partenza da pista alle 100 s, rotta di ~150 km fino a un'altra base, carburante 0,2 < 0,15 + 0,12: bingo
+        alla partenza (istante calcolato, = partenza), ritroso di lunghezza zero: resta a terra sul DEPARTURE per
+        tutta la sessione, nessun FuelEvent, BINGO e ABORTED(BINGO); il validatore la rifiuta con lo stesso
+        istante."""
+        points = [(0.0, 0.0, 0.0), (0.0, 50_000.0, 5_000.0), (0.0, 150_000.0, 0.0)]
+        route = _route3d(points, 200.0, 'r-dep')
+        roles = [WaypointRole.DEPARTURE, WaypointRole.NAV, WaypointRole.LAND]
+        blue = [_force('Blue', 'Blue', [_asset(Aircraft, 'b1', 0.0, 0.0, fuel=0.2, speed=200.0)])]
+        target = Target(kind=TargetKind.GROUP, target_id='Red', provenance=TargetProvenance.OBSERVED, observed_at=0.0)
+        mission = Mission(mission_id='M-b1', block_id='Blue', domain='air', mission_type='CAS', target=target,
+                          assets=(MissionAsset('b1', 'lead'),), route=route,
+                          waypoints=tuple(MissionWaypoint(wp, role) for wp, role in zip(route_waypoints(route), roles)),
+                          start_time=100.0, start_mode=StartMode.RUNWAY)
+        movement, = MA.mission_movements(mission)
+        decision = MA.mission_bingo_decision(mission, movement, blue[0].assets['b1'], ())
+        self.assertEqual((decision.action, decision.return_length), (FM.BINGO_DEPARTURE, 0.0))
+
+        with self.assertRaisesRegex(ValueError, f't={decision.time:.1f} s'):
+            MA.check_mission_bingo(mission, blue[0].assets, ())
+
+        outcome, b1, scheduler, _ = self._execute(mission, blue)
+        legs = scheduler['legs']['b1']
+        self.assertTrue(all(leg.p_start == leg.p_end == points[0] for leg in legs))
+        self.assertAlmostEqual(legs[-1].t_end, 3_600.0)
+        self.assertTrue(all(scheduler['grounded'].at('b1', t) for t in (50.0, 100.0, 1_000.0)))
+        result = outcome.mission_outcomes['M-b1']
+        self.assertEqual((result.status, result.reason), (MissionStatus.ABORTED, AbortReason.BINGO))
+        self.assertEqual(result.asset_outcomes['b1'].end_reason, AssetEndReason.BINGO)
+        self.assertAlmostEqual(result.asset_outcomes['b1'].end_time, decision.time, delta=1e-9)
+        self.assertAlmostEqual(decision.time, movement.start, delta=1e-9)
+        self.assertEqual(len(outcome.fuel_events), 0)
+        self.assertEqual(b1.fuel, 0.2)
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+
+    def test_transfer_under_the_reserve_continues(self):
+        """Trasferimento ('Transport') con 0,2: sotto la soglia ma con carburante per la rotta: continua, rotta
+        completata consumando la riserva (0,05 a bordo), nessun bingo. Lo stesso volo di combattimento ('CAS')
+        interrompe alla partenza e scende sulla base (10 km a sud, ~10,05 km dal punto di comparsa)."""
+        mission, blue = self._air(mission_type='Transport')
+        outcome, b1, scheduler, _ = self._execute(mission, blue)
+        result = outcome.mission_outcomes['M-b1']
+        self.assertEqual(result.status, MissionStatus.COMPLETED)
+        self.assertEqual(result.asset_outcomes['b1'].end_reason, AssetEndReason.ROUTE_COMPLETED)
+        self.assertAlmostEqual(scheduler['legs']['b1'][-1].t_end, 750.0)
+        self.assertAlmostEqual(b1.fuel, 0.05)
+
+        mission, blue = self._air(mission_type='CAS')
+        outcome, b1, scheduler, _ = self._execute(mission, blue)
+        result = outcome.mission_outcomes['M-b1']
+        self.assertEqual((result.status, result.reason), (MissionStatus.ABORTED, AbortReason.BINGO))
+        self.assertEqual(result.asset_outcomes['b1'].end_time, 0.0)
+        descent, parked = scheduler['legs']['b1']
+        self.assertEqual((descent.p_start, descent.p_end), ((0.0, 0.0, 1_000.0), (0.0, -10_000.0, 0.0)))
+        self.assertAlmostEqual(descent.t_end, sqrt(10_000.0 ** 2 + 1_000.0 ** 2) / 200.0, delta=1e-6)
+        self.assertEqual(parked.p_start, parked.p_end)
+
+    def test_air_start_lands_on_the_alternate_base_of_its_route(self):
+        """Partenza in volo, due basi: una 60 km dietro, l'altra a 2 km dalla rotta 40 km avanti (base alternativa
+        entro 3 km). All'inizio dei tratti il diretto alla base piu' vicina al punto di comparsa (quella sulla
+        rotta, ~40,06 km) non e' piu' lungo del percorso lungo la rotta (40 km + ~2,24 km): l'aereo scende sulla
+        base della rotta, non su quella dietro, e vi resta a terra."""
+        alternate = (2_000.0, 40_000.0)
+        mission, blue = self._air(bases=((0.0, -60_000.0), alternate))
+        movement, = MA.mission_movements(mission)
+        bases = MA.air_base_points(blue, 'Blue')
+        decision = MA.mission_bingo_decision(mission, movement, blue[0].assets['b1'], bases)
+        self.assertEqual(decision.base, (*alternate, 0.0))
+
+        outcome, _, scheduler, _ = self._execute(mission, blue)
+        descent, parked = scheduler['legs']['b1']
+        self.assertEqual(descent.p_end, (*alternate, 0.0))
+        self.assertAlmostEqual(descent.t_end, decision.return_length / 200.0, delta=1e-6)
+        self.assertTrue(scheduler['grounded'].at('b1', descent.t_end + 1.0))
+        self.assertEqual(outcome.mission_outcomes['M-b1'].reason, AbortReason.BINGO)
+        self.assertEqual(outcome.postures['b1'], MA.PARKED_POSTURE)
+
+    def test_no_reachable_base_lost_with_the_crew_recovered(self):
+        """0,05 del pieno (50 km) e la sola base a 100 km: nessuna raggiungibile, l'aereo punta comunque alla base,
+        resta a secco a meta' strada (planata di 5 km da ~500 m): perso, DESTROYED/FUEL_EXHAUSTED con
+        l'equipaggio recuperato. Senza bingo dichiarato (F6-A) e senza base: perso, equipaggio recuperato."""
+        mission, blue = self._air(fuel=0.05, bases=((0.0, -100_000.0),))
+        outcome, b1, scheduler, _ = self._execute(mission, blue)
+        asset = outcome.mission_outcomes['M-b1'].asset_outcomes['b1']
+        self.assertEqual((asset.state, asset.end_reason, asset.crew_recovered),
+                         (AssetState.DESTROYED, AssetEndReason.FUEL_EXHAUSTED, True))
+        self.assertAlmostEqual(scheduler['legs']['b1'][-1].p_end[1], -50_000.0, delta=10.0)
+        self.assertTrue(b1.is_destroyed())
+
+        mission, blue = self._air(fuel=0.05, bases=(), bingo=False)
+        outcome, _, _, _ = self._execute(mission, blue)
+        asset = outcome.mission_outcomes['M-b1'].asset_outcomes['b1']
+        self.assertEqual((asset.end_reason, asset.crew_recovered), (AssetEndReason.FUEL_EXHAUSTED, True))
+
+    def test_bingo_declared_off_flies_the_route(self):
+        """`EndCriteria.bingo` False: nessun controllo, la rotta basta (0,15 < 0,2): COMPLETED."""
+        mission, blue = self._air(bingo=False)
+        outcome, _, _, _ = self._execute(mission, blue)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.COMPLETED)
+
+    def test_enough_fuel_no_bingo(self):
+        mission, blue = self._air(fuel=0.3)
+        outcome, _, _, _ = self._execute(mission, blue)
+        self.assertEqual(outcome.mission_outcomes['M-b1'].status, MissionStatus.COMPLETED)
+
+    def test_switch_off_is_the_reverse_route_rule(self):
+        """Interruttore spento: la F6-B2bis com'era (bingo a meta' rotta, alla distanza della bisezione di
+        `Fuel_Model.bingo_point` con la regola della missione), non alla partenza."""
+        mission, blue = self._air()
+        movement, = MA.mission_movements(mission)
+        planned = FM.bingo_point(blue[0].assets['b1'], MA.airborne_legs(movement), MA.air_base_points(blue, 'Blue'),
+                                 rule=MA.bingo_return_rule(mission))
+
+        with patch.object(SS, 'F6_BINGO_DISENGAGE_RESERVE', False):
+            outcome, _, _, _ = self._execute(mission, blue)
+
+        self.assertGreater(planned.time, 0.0)
+        self.assertAlmostEqual(outcome.mission_outcomes['M-b1'].asset_outcomes['b1'].end_time, planned.time, delta=1e-6)
 
 
 if __name__ == '__main__':
