@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 1e331bbd-207a-4b3c-b85b-2e41ee3532b4
-  modified: 2026-10-15T14:07:14.471Z
+  modified: 2026-10-15T16:46:33.008Z
 ---
 
 ## F6-B2bis (2026-10-15, osboxes): FATTA, verificata da me
@@ -51,9 +51,17 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
   G3 e G4.
 
 **Piano**:
-- **G0**: commit della B2bis con la fotografia 770.
-- **G1**: riserva + validatore.
-- **G2**: soglia + albero, con nuovo interruttore.
+- **G0 FATTO**: `96942ca7`, pushato.
+- **G1 FATTO**: `c1c0f576`, pushato. `Fuel_Model.DISENGAGE_TIME`, `disengagement_reserve[_with_source]`, `Aircraft.emergency_fuel_flow`,
+  `Mission_Adapter.check_mission_fuel` (non chiamato da `run_session`). Suite 4262, fotografia 770 identiche. Piano §5 deviazione 17.
+- **G2 COMMITTATO 2026-10-15** "da approvare": suite 4298 OK, confronto con la fotografia NON eseguito, baseline NON aggiornata (v.
+  [[project-session-2026-10-15-summary]]). Soglia + albero, nuovo interruttore. DECISO dall'utente 2026-10-15:
+  - trasferimento = task 'Transport' (categoria TRANSPORT); tutto il resto, AWACS e Tanker compresi, segue la regola di combattimento;
+  - un'opzione di rientro e' raggiungibile se il residuo basta per il solo percorso: la riserva si puo' consumare;
+  - G2 = funzione di decisione + applicazione SOLO alla partenza. Con consumo deterministico la soglia scatta al t0 o mai: gli aerei
+    sotto il minimo non decollano. In volo la funzione si attivera' con G4;
+  - default comunicati all'utente: senza base raggiungibile l'aereo punta alla base piu' vicina e valgono le regole F6-A; campo
+    "equipaggio recuperato" nell'esito; costante 3 km.
 - **G3**: consumo di 5 minuti alla massima spinta a ogni ingaggio, nell'istante dell'ingaggio, al posto della sovrastima attuale
   "tutto il movimento a 'max' se ha combattuto".
 - **G4**: ri-scheduling dopo l'ingaggio (limite noto P2/R4 di `Session_Simulator`: cancellare le finestre future dell'asset e
