@@ -54,7 +54,7 @@ Implementata dall'agente `des-developer` (Opus medium). Suite 4245 OK (7 skipped
 - **G0 FATTO**: `96942ca7`, pushato.
 - **G1 FATTO**: `c1c0f576`, pushato. `Fuel_Model.DISENGAGE_TIME`, `disengagement_reserve[_with_source]`, `Aircraft.emergency_fuel_flow`,
   `Mission_Adapter.check_mission_fuel` (non chiamato da `run_session`). Suite 4262, fotografia 770 identiche. Piano §5 deviazione 17.
-- **G2 COMMITTATO 2026-10-15** "da approvare": suite 4298 OK, confronto con la fotografia NON eseguito, baseline NON aggiornata (v.
+- **G2 APPROVATO 2026-10-16**: fotografia 794 installata (`e5465b31`). Era: COMMITTATO 2026-10-15 "da approvare": suite 4298 OK, confronto con la fotografia NON eseguito, baseline NON aggiornata (v.
   [[project-session-2026-10-15-summary]]). Soglia + albero, nuovo interruttore. DECISO dall'utente 2026-10-15:
   - trasferimento = task 'Transport' (categoria TRANSPORT); tutto il resto, AWACS e Tanker compresi, segue la regola di combattimento;
   - un'opzione di rientro e' raggiungibile se il residuo basta per il solo percorso: la riserva si puo' consumare;

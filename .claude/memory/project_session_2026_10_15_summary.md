@@ -30,6 +30,10 @@ della macchina (osboxes `/usr/bin/python3`; ProArt `.direnv/python-3.12/bin/pyth
    chiudere. L'agente e' stato fermato prima di consegnare il rapporto finale, quindi le scelte dove il brief lasciava margine vanno lette
    nel Piano (dev. 18) e in `F4_Differenze` (sezione G2).
 
+## AGGIORNAMENTO 2026-10-16 (osboxes)
+Punti 1 e 2 FATTI: `--compare` ripetuto (794: 762 identiche, 8 cambiate S26 'bingo', 24 nuove; 'reserve_off' identiche alle vecchie
+'bingo'), G2 e scelte dell'agente approvati dall'utente, fotografia installata (794), commit `e5465b31` pushato. Prossimo: G3.
+
 ## DA FARE ALLA RIPRESA (in ordine)
 1. **Verifica G2**: `--compare` con la baseline installata (770). Atteso: differenze su S26 (72 esecuzioni contro 48: varianti cambiate o
    nuove). Ogni altra differenza va spiegata, perche' un aereo di altri scenari sotto il nuovo minimo ora non decolla. Leggere la
